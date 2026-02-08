@@ -120,7 +120,7 @@ data_upload_server <- function(id) {
         # Handle Errors
         if (length(found_data) > 0) {
           tryCatch({
-            loaded_data <- successful_loads %>%
+            loaded_data <- found_data %>%
               purrr::map("content") %>%
               dplyr::bind_rows() %>%
               #mutate all to character to prevent errors
