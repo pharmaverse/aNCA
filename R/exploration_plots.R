@@ -99,6 +99,7 @@ exploration_meanplot <- function(
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE) {
+
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
@@ -386,7 +387,8 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
     dose_data %>%
       dplyr::mutate(TIME_DOSE = !!rlang::sym(dose_time_col)) %>%
       dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE"))),
-    by = dose_group_vars
+    by = dose_group_vars,
+    relationship = "many-to-many"
   ) %>%
     dplyr::filter(TIME_DOSE <= !!rlang::sym(conc_time_col)) %>%
     dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), "TIME_DOSE"))) %>%
