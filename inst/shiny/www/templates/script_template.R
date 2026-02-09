@@ -12,9 +12,9 @@ data_path <- "../data/data.rds"
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data ########################################
-mapping <- session$userData$mapping
+mapping <- settings_list$mapping
 names(mapping) <- gsub("select_", "", names(mapping))
-applied_filters <- session$userData$applied_filters
+applied_filters <- settings_list$applied_filters
 
 preprocessed_adnca <- adnca_data %>%
 
@@ -40,11 +40,12 @@ preprocessed_adnca <- adnca_data %>%
   adjust_class_and_length(metadata_nca_variables)
 
 ## Setup NCA settings in the PKNCA object ########################
-int_parameters <- session$userData$settings$int_parameters
-units_table <- session$userData$final_units
-parameters_selected_per_study <- session$userData$settings$parameters$selections
-study_types_df <- session$userData$settings$parameters$types_df
-extra_vars_to_keep <-  session$userData$extra_vars_to_keep
+int_parameters <- settings_list$settings$int_parameters
+units_table <- settings_list$final_units
+parameters_selected_per_study <- settings_list$settings$parameters$selections
+study_types_df <- settings_list$settings$parameters$types_df
+extra_vars_to_keep <-  settings_list$extra_vars_to_keep
+slope_rules <- settings_list$slope_rules
 
 pknca_obj <- preprocessed_adnca %>%
 
@@ -55,12 +56,13 @@ pknca_obj <- preprocessed_adnca %>%
 
   # Setup basic settings
   PKNCA_update_data_object(
-    method = session$userData$settings$method,
-    selected_analytes = session$userData$settings$analyte,
-    selected_profile = session$userData$settings$profile,
-    selected_pcspec = session$userData$settings$pcspec,
-    should_impute_c0 = session$userData$settings$data_imputation$impute_c0,
-    exclusion_list = session$userData$settings$general_exclusions,
+    method = settings_list$settings$method,
+    selected_analytes = settings_list$settings$analyte,
+    selected_profile = settings_list$settings$profile,
+    selected_pcspec = settings_list$settings$pcspec,
+    should_impute_c0 = settings_list$settings$data_imputation$impute_c0,
+    exclusion_list = settings_list$settings$general_exclusions,
+    hl_adj_rules = slope_rules,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE"))
   ) %>%
 
@@ -68,7 +70,7 @@ pknca_obj <- preprocessed_adnca %>%
     int_parameters = int_parameters,
     parameter_selections = parameters_selected_per_study,
     study_types_df =  study_types_df,
-    impute = session$userData$settings$data_imputation$impute_c0
+    impute = settings_list$settings$data_imputation$impute_c0
   ) %>%
 
   # Define the desired units for the parameters (PPSTRESU)
@@ -81,23 +83,11 @@ pknca_obj <- preprocessed_adnca %>%
   }
 
 ## Run NCA calculations ########################################
-slope_rules <- list(
-  manual_slopes = session$userData$slope_rules$manual_slopes,
-  profiles_per_subject = session$userData$slope_rules$profiles_per_subject,
-  slopes_groups = session$userData$slope_rules$slopes_groups
-)
-flag_rules <- session$userData$settings$flags
-ratio_table <- session$userData$ratio_table
-blq_rule <- session$userData$settings$data_imputation$blq_imputation_rule
+flag_rules <- settings_list$settings$flags
+ratio_table <- settings_list$ratio_table
+blq_rule <- settings_list$settings$data_imputation$blq_imputation_rule
 
 pknca_res <- pknca_obj %>%
-
-  # Apply half-life adjustments
-  filter_slopes(
-    slope_rules$manual_slopes,
-    slope_rules$profiles_per_subject,
-    slope_rules$slopes_groups
-  ) %>%
 
   # Run pk.nca and join subject and dose information to the results
   # Consider the BLQ imputation rule before calculations (if any)
@@ -106,7 +96,7 @@ pknca_res <- pknca_obj %>%
   ) %>%
 
   # Add bioavailability results if requested
-  add_f_to_pknca_results(session$userData$settings$bioavailability) %>%
+  add_f_to_pknca_results(settings_list$settings$bioavailability) %>%
 
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
