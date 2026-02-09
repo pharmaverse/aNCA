@@ -13,7 +13,7 @@ get_code <- function(
   template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
 ) {
 
-  # Helper to get value from yaml_settings by path (e.g., 'settings$method')
+  # Helper to get value from settings_list by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
     obj <- setts_obj
@@ -33,12 +33,12 @@ get_code <- function(
   script <- readLines(template_path, warn = FALSE) %>%
     paste(collapse = "\n")
 
-  # Find all yaml_settings$...
-  pattern <- "yaml_settings(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
+  # Find all settings_list$...
+  pattern <- "settings_list(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
   if (matches[1] == -1) {
     stop(
-      "Template has no placeholders (yaml_settings...) to substitute.",
+      "Template has no placeholders (settings_list...) to substitute.",
       "This may be due to an incorrect file path, a missing template, ",
       "or a modified template without placeholders."
     )
@@ -49,8 +49,8 @@ get_code <- function(
     start <- matches[i]
     len <- attr(matches, "match.length")[i]
     matched <- substr(script, start, start + len - 1)
-    # Extract the path after yaml_settings$
-    path <- sub("^yaml_settings\\$", "", matched)
+    # Extract the path after settings_list$
+    path <- sub("^settings_list\\$", "", matched)
     value <- get_session_value(path)
 
     deparsed <- clean_deparse(value, max_per_line = 15)
@@ -72,7 +72,7 @@ get_code <- function(
 #' This internal S3 generic converts common R objects (data frames, lists,
 #' atomic vectors, etc.) into character strings containing R code that will
 #' reconstruct the object. It is used by the app script generator to
-#' serialize `yaml_settings` values into a runnable R script.
+#' serialize `settings_list` values into a runnable R script.
 #'
 #' @param obj An R object to convert to a string of R code.
 #' @param max_per_line Maximum number of elements to include per line for

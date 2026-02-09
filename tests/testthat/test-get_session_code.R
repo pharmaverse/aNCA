@@ -186,7 +186,7 @@ describe("get_settings_code: ", {
   setts_file <- testthat::test_path("data/test-settings.yaml")
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   output_file <- tempfile(fileext = ".R")
-  placeholder <- "yaml_settings"
+  placeholder <- "settings_list"
 
   get_settings_code(
     settings_file_path = setts_file,
@@ -208,7 +208,7 @@ describe("get_session_code: ", {
   setts_file <- testthat::test_path("data/test-settings.yaml")
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   output_file <- tempfile(fileext = ".R")
-  placeholder <- "yaml_settings"
+  placeholder <- "settings_list"
 
   default_mapping <- list(
     select_STUDYID = "STUDYID",
@@ -240,7 +240,7 @@ describe("get_session_code: ", {
   setts <- read_settings(setts_file)
   session <- list(
     userData = list(
-      yaml_settings = setts,
+      settings_list = setts,
       data_path = data_file,
       mapping = default_mapping,
       ratio_table = data.frame()
