@@ -91,6 +91,14 @@ slope_selector_ui <- function(id) {
         ),
       )
     ),
+    fluidRow(
+      orderInput(
+        ns("order_groups"),
+        label = "Order plots by:",
+        items = NULL,
+        width = "100%"
+      )
+    ),
     br(),
     # Plots display #
     uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
@@ -145,6 +153,15 @@ slope_selector_server <- function( # nolint
           choices = unique(new_pknca_data$intervals$USUBJID)
         )
       }
+      # Update the order input widget options based on the new data
+      if (changes$in_data) {
+        updateOrderInput(
+          session = session,
+          inputId = "order_groups",
+          items = group_vars(new_pknca_data)
+        )
+      }
+
       # Save the plots for the zip download (nca_results.R)
       session$userData$results$slope_selector <- plot_outputs()
 
@@ -169,6 +186,8 @@ slope_selector_server <- function( # nolint
         plot_outputs() %>%
           # Filter plots based on user search
           .[page_search$is_plot_searched()] %>%
+          # Arrange plots by the specified group order
+          arrange_plots_by_groups(input$order_groups) %>%
           # Display only the plots for the current page
           .[page_search$page_start():page_search$page_end()]
       })
