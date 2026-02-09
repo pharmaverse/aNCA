@@ -188,7 +188,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         choices = full_grouping_vars,
         selected = NULL
       )
-    })  
+    })
 
     filtering_list <- reactive({
       lst <- list(
