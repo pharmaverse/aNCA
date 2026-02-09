@@ -35,7 +35,6 @@ exploration_individualplot <- function(
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE) {
-
   individual_data <- process_data_individual(
     pknca_data = pknca_data,
     filtering_list = filtering_list,
@@ -100,7 +99,6 @@ exploration_meanplot <- function(
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE) {
-
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
@@ -181,7 +179,6 @@ process_data_individual <- function(pknca_data,
                                     conc_col = "AVAL",
                                     show_dose = FALSE,
                                     use_time_since_last_dose = FALSE) {
-
   # Derive dose times if requested
   data <- if (show_dose || use_time_since_last_dose) {
     data <- derive_last_dose_time(
@@ -269,9 +266,6 @@ process_data_mean <- function(pknca_data,
     pknca_data$conc$data
   }
 
-  # Always create a TIME_NOMINAL column for the x variable
-  # data <- dplyr::mutate(data, TIME_NOMINAL = !!rlang::sym(x_var))
-
   # Apply filtering
   processed <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!rlang::sym(y_var)))
@@ -300,8 +294,7 @@ process_data_mean <- function(pknca_data,
       SD_max = Mean + SD,
       CI_lower = Mean - 1.96 * SE,
       CI_upper = Mean + 1.96 * SE
-    )  %>%
-
+    ) %>%
     # Make sure the nominal time column is always the first column
     select(any_of(c(x_var)), everything())
 
