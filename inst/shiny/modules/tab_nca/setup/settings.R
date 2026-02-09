@@ -484,5 +484,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 }
 
 INT_PARAMS <- metadata_nca_parameters %>%
-  filter(grepl("INT", PPTESTCD)) %>%
+  filter(
+    grepl("INT", PPTESTCD),
+    TYPE != "PKNCA-not-covered"
+  ) %>%
   arrange(PPTESTCD)
