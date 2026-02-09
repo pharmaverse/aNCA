@@ -3,7 +3,7 @@
 This internal S3 generic converts common R objects (data frames, lists,
 atomic vectors, etc.) into character strings containing R code that will
 reconstruct the object. It is used by the app script generator to
-serialize `session$userData` values into a runnable R script.
+serialize `settings_list` values into a runnable R script.
 
 ## Usage
 

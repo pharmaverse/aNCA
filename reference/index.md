@@ -222,9 +222,8 @@
 - [`get_label()`](https://pharmaverse.github.io/aNCA/reference/get_label.md)
   : Get the Label of a Heading
 
-- [`get_session_code()`](https://pharmaverse.github.io/aNCA/reference/get_session_code.md)
-  : Generate a session script code in R that can replicate the App
-  outputs
+- [`get_settings_code()`](https://pharmaverse.github.io/aNCA/reference/get_settings_code.md)
+  : Generate a session script from settings and mapping files
 
 - [`interval_add_impute()`](https://pharmaverse.github.io/aNCA/reference/interval_add_impute.md)
   : Add specified imputation methods to the intervals in a PKNCAdata or
