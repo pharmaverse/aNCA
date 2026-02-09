@@ -155,6 +155,15 @@ describe("process_data_mean functions correctly", {
     )
     expect_true(all(p$Mean > 0))
   })
+
+  it("time variable used is always in the first column output", {
+    p <- process_data_mean(
+      pknca_data = pknca_data,
+      filtering_list = filter_param_pcspec,
+      extra_grouping_vars = c("ATPTREF", "PARAM", "PCSPEC")
+    )
+    expect_equal(names(p)[1], "NFRLT")
+  })
 })
 
 describe("exploration_individualplot:", {
