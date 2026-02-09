@@ -33,7 +33,7 @@ create_start_impute <- function(pknca_data) {
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
   nca_excl_column <- pknca_data$conc$columns$exclude
 
-    mydata_with_int <- merge(
+  mydata_with_int <- merge(
     x = pknca_data$conc$data %>%
       filter(!!sym(nca_excl_column) %in% c("", NA_character_)) %>%
       select(any_of(c(conc_group_columns, conc_column,
@@ -44,8 +44,9 @@ create_start_impute <- function(pknca_data) {
   ) %>%
     merge(
       pknca_data$intervals %>%
-      # Each interval operation has to be treated later independently for is.possible.c0.logslope
-      mutate(INT_ROWID = row_number())
+        # Each interval operation has to be treated later independently
+        # to prevent issues in is.possible.c0.logslope
+        mutate(INT_ROWID = row_number())
     ) %>%
     filter(!!sym(time_column) >= start, !!sym(time_column) <= end) %>%
     unique()
