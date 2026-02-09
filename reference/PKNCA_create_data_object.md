@@ -109,7 +109,7 @@ adnca_data <- data.frame(
 PKNCA_create_data_object(adnca_data)
 #> Formula for concentration:
 #>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM
-#> <environment: 0x560c137980f8>
+#> <environment: 0x55ef3566f300>
 #> Data are dense PK.
 #> With 1 subjects defined in the 'USUBJID' column.
 #> Nominal time column is: NFRLT
@@ -130,12 +130,12 @@ PKNCA_create_data_object(adnca_data)
 #>      4     4     4      0.5  hour       0             intravascular      1
 #>      6     6     6      0.5  hour       0             intravascular      1
 #>  is.excluded.hl is.included.hl REASON exclude_half.life volume
-#>           FALSE          FALSE     NA             FALSE     NA
-#>           FALSE          FALSE     NA             FALSE     NA
-#>           FALSE          FALSE     NA             FALSE     NA
-#>           FALSE          FALSE     NA             FALSE     NA
-#>           FALSE          FALSE     NA             FALSE     NA
-#>           FALSE          FALSE     NA             FALSE     NA
+#>           FALSE          FALSE                    FALSE     NA
+#>           FALSE          FALSE                    FALSE     NA
+#>           FALSE          FALSE                    FALSE     NA
+#>           FALSE          FALSE                    FALSE     NA
+#>           FALSE          FALSE                    FALSE     NA
+#>           FALSE          FALSE                    FALSE     NA
 #>  include_half.life
 #>                 NA
 #>                 NA
@@ -153,7 +153,7 @@ PKNCA_create_data_object(adnca_data)
 #>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU CONCDUR nca_exclude     std_route DOSNOA
 #>      0     0     0      0.5  hour       0             intravascular      1
 #>  is.excluded.hl is.included.hl REASON exclude_half.life exclude
-#>           FALSE          FALSE     NA             FALSE    <NA>
+#>           FALSE          FALSE                    FALSE    <NA>
 #> 
 #> With 1 rows of interval specifications.
 #> With units

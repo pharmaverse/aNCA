@@ -51,6 +51,9 @@
 - WTBL and WTBLU columns added to the data mapping, for optional
   conversion of dose to adjust to body weight for excretion calculations
   ([\#959](https://github.com/pharmaverse/aNCA/issues/959))
+- Slope selector table for half life adjustments uses time to choose the
+  point of interest. Also it is aesthetics have been polished
+  ([\#956](https://github.com/pharmaverse/aNCA/issues/956)).
 
 ### Bugs fixed
 
@@ -92,6 +95,9 @@
 - NCA results flagging logic updated to include Missing column and
   correctly identify difference between missing and not requested
   ([\#934](https://github.com/pharmaverse/aNCA/issues/934))
+- Pagination controls in the slope selector and the interactivity of the
+  plots is less buggy
+  ([\#956](https://github.com/pharmaverse/aNCA/issues/956))
 
 ## aNCA 0.1.0
 

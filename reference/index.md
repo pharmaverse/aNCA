@@ -92,9 +92,6 @@
 - [`calculate_table_ratios()`](https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.md)
   : Apply Ratio Calculations to PKNCAresult Object
 
-- [`check_slope_rule_overlap()`](https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.md)
-  : Check overlap between existing and new slope rulesets
-
 - [`check_valid_pknca_data()`](https://pharmaverse.github.io/aNCA/reference/check_valid_pknca_data.md)
   : Checks Before Running NCA
 
@@ -133,9 +130,6 @@
   : Create duplicates in concentration data with Pre-dose and Last
   Values for Dosing Cycles
 
-- [`.apply_slope_rules()`](https://pharmaverse.github.io/aNCA/reference/dot-apply_slope_rules.md)
-  : Apply Slope Rules to Update Data
-
 - [`.compress_range()`](https://pharmaverse.github.io/aNCA/reference/dot-compress_range.md)
   : Compresses a numeric vector into the simplest possible character
   string that, when evaluated, will create the same numeric vector.
@@ -161,9 +155,6 @@
 
 - [`filter_breaks()`](https://pharmaverse.github.io/aNCA/reference/filter_breaks.md)
   : Filter Breaks for X-Axis
-
-- [`filter_slopes()`](https://pharmaverse.github.io/aNCA/reference/filter_slopes.md)
-  : Filter dataset based on slope selections and exclusions
 
 - [`flexible_violinboxplot()`](https://pharmaverse.github.io/aNCA/reference/flexible_violinboxplot.md)
   : Flexible Violin/Box Plot
@@ -249,9 +240,6 @@
 - [`l_pkcl01()`](https://pharmaverse.github.io/aNCA/reference/l_pkcl01.md)
   : Create PK Concentration Listing
 
-- [`lambda_slope_plot()`](https://pharmaverse.github.io/aNCA/reference/lambda_slope_plot.md)
-  : Generate a Lambda Slope Plot
-
 - [`metadata_nca_parameters`](https://pharmaverse.github.io/aNCA/reference/metadata_nca_parameters.md)
   : metadata_nca_parameters
 
@@ -336,6 +324,9 @@
 - [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)
   : Update an intervals data frame with user-selected parameters by
   study type
+
+- [`update_pknca_with_rules()`](https://pharmaverse.github.io/aNCA/reference/update_pknca_with_rules.md)
+  : Apply Slope Rules to Update Data
 
 - [`validate_pk()`](https://pharmaverse.github.io/aNCA/reference/validate_pk.md)
   : Validates data table with raw pk data.

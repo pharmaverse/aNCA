@@ -13,6 +13,7 @@ PKNCA_update_data_object(
   selected_profile,
   selected_pcspec,
   should_impute_c0 = TRUE,
+  hl_adj_rules = NULL,
   exclusion_list = NULL,
   keep_interval_cols = NULL
 )
@@ -43,6 +44,12 @@ PKNCA_update_data_object(
 - should_impute_c0:
 
   Logical indicating whether to impute start concentration values
+
+- hl_adj_rules:
+
+  A data frame containing half-life adjustment rules. It must contain
+  group columns and rule specification columns; TYPE: (Inclusion,
+  Exclusion), RANGE: (start-end).
 
 - exclusion_list:
 
@@ -77,6 +84,8 @@ Step 3: Format intervals using
 Step 4: Apply filtering based on user selections and partial aucs
 
 Step 5: Impute start values if requested
+
+Step 6: Indicate points excluded / selected manually for half-life
 
 Note\*: The function assumes that the `adnca_data` object has been
 created using the

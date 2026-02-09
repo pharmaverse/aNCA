@@ -45,7 +45,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/check_slope_rule_overlap.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/check_valid_pknca_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/clean_deparse.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_to_iso8601_duration.html</loc></url>
@@ -59,7 +58,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_start_impute.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/detect_study_types.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dose_profile_duplicates.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/dot-apply_slope_rules.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-compress_range.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-create_filter_expr.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-eval_range.html</loc></url>
@@ -69,7 +67,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/error_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/export_cdisc.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/filter_breaks.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/filter_slopes.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/flexible_violinboxplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncaconc_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/format_pkncadata_intervals.html</loc></url>
@@ -93,7 +90,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/interval_remove_impute.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/keep_blq_timepoints.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/l_pkcl01.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/lambda_slope_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/log_conversion.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/metadata_nca_parameters.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/metadata_nca_variables.html</loc></url>
@@ -122,6 +118,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/simplify_unit.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/update_main_intervals.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/update_pknca_with_rules.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/validate_pk.html</loc></url>
 </urlset>
 
