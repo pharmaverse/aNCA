@@ -146,7 +146,8 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
 
     # Automatically update the units table when settings are uploaded.
     observeEvent(imported_settings(), {
-      req(imported_settings()$units)
+      # require units in settings, and that it is a data frame with rows
+      req(imported_settings()$units, nrow(imported_settings()$units) > 0)
       session$userData$units_table(imported_settings()$units)
     })
 
