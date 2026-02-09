@@ -421,9 +421,10 @@ prepare_export_files <- function(target_dir,
 #' @noRd
 .export_script <- function(target_dir, session) {
   path <- file.path(target_dir, "code")
+  template_path <- "shiny/www/templates/script_template.R"
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
   get_session_code(
-    "www/templates/script_template.R",
+    template_path = system.file(template_path, package = "aNCA"),
     session,
     file.path(path, "session_code.R")
   )
