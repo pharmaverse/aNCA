@@ -29,13 +29,17 @@ pre-processed by either \code{process_data_individual} or \code{process_data_mea
 
 \item{y_var}{A character string specifying the column name for the y-axis.}
 
+\item{x_unit}{Optional character string specifying the column name for the x-axis unit.}
+
+\item{y_unit}{Optional character string specifying the column name for the y-axis unit.}
+
 \item{color_by}{A character vector specifying the column(s) from the original
 dataset that are used to determine the color of the lines and points.}
 
 \item{facet_by}{A character vector of column names to facet the plot by.
 Default is \code{NULL} for no faceting.}
 
-\item{group_by}{A character string specifying the column name used to group
+\item{group_by}{A character vector specifying the column names used to group
 the lines. Default is NULL for no grouping.}
 
 \item{ylog_scale}{A logical value (\code{TRUE} or \code{FALSE}) indicating whether to use
@@ -50,6 +54,9 @@ Only used if \code{show_threshold} is \code{TRUE}.}
 \item{tooltip_vars}{Character vector of column names to include in the tooltip.}
 
 \item{labels_df}{A data.frame for variable label lookups.}
+
+\item{vline_var}{Optional character string specifying the column name for vertical
+lines.}
 }
 \value{
 A \code{ggplot} object representing the line plot.

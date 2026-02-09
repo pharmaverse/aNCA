@@ -9,11 +9,13 @@
 #'   pre-processed by either `process_data_individual` or `process_data_mean`.
 #' @param x_var A character string specifying the column name for the x-axis.
 #' @param y_var A character string specifying the column name for the y-axis.
+#' @param x_unit Optional character string specifying the column name for the x-axis unit.
+#' @param y_unit Optional character string specifying the column name for the y-axis unit.
 #' @param color_by A character vector specifying the column(s) from the original
 #'   dataset that are used to determine the color of the lines and points.
 #' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
-#' @param group_by A character string specifying the column name used to group
+#' @param group_by A character vector specifying the column names used to group
 #'  the lines. Default is NULL for no grouping.
 #' @param ylog_scale A logical value (`TRUE` or `FALSE`) indicating whether to use
 #'  a logarithmic scale for the y-axis.
@@ -23,7 +25,8 @@
 #'   "default" palette.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
 #' @param labels_df A data.frame for variable label lookups.
-#'
+#' @param vline_var Optional character string specifying the column name for vertical
+#' lines.
 #' @returns A `ggplot` object representing the line plot.
 #'
 #' @import ggplot2
@@ -96,7 +99,8 @@ g_lineplot <- function(data,
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
-      color_var = interaction(!!!syms(color_by), sep = ", ")
+      color_var = interaction(!!!syms(color_by), sep = ", "),
+      group_var = if (!is.null(group_by)) interaction(!!!syms(group_by)) else NULL
     ) %>%
     arrange(!!sym(x_var))
 
@@ -104,7 +108,7 @@ g_lineplot <- function(data,
     x = !!sym(x_var),
     y = !!sym(y_var),
     color = color_var,
-    group = if (!is.null(group_by)) !!!syms(group_by) else NULL,
+    group = if (!is.null(group_by)) group_var else NULL,
     text = tooltip_text
   )) +
     geom_line() +
@@ -119,7 +123,7 @@ g_lineplot <- function(data,
 
   # Add optional layers
   optional_layers <- list(
-    .add_palette(palette, color_by, plot_data),
+    .add_colour_palette(palette),
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_thr(threshold_value),
@@ -196,51 +200,12 @@ g_lineplot <- function(data,
   list(error_bar_layer, ci_ribbon_layer)
 }
 
-#' Get a Persistent Color Palette for a Set of Variables
-#'
-#' @param data The full, unfiltered data.frame.
-#' @param colorby_vars A character vector of one or more column names.
-#' @param palette_name The name of the color theme (e.g., "default", "viridis").
-#' @return A single named color vector (palette).
+#' @importFrom ggplot2 scale_color_viridis_d
 #' @noRd
-.get_persistent_palette <- function(data, colorby_vars, palette_name = "default") {
-  # Return NULL if no variables are provided
-  if (is.null(colorby_vars) || length(colorby_vars) == 0) {
-    return(NULL)
+.add_colour_palette <- function(palette) {
+  if (palette %in% c("plasma", "cividis", "inferno")) {
+    scale_color_viridis_d(option = palette)
+  } else {
+    NULL
   }
-
-  # Create a temporary column in the data representing the interaction of the variables
-  # and get all unique values
-  all_levels <- data %>%
-    mutate(interaction_col = interaction(!!!syms(colorby_vars), sep = ", ")) %>%
-    pull(interaction_col) %>%
-    na.omit() %>%
-    unique() %>%
-    sample()
-
-  n <- length(all_levels)
-
-  if (n == 0) return(NULL)
-
-  switch(
-    palette_name,
-    "default" = scales::hue_pal()(n),
-    "viridis" = viridisLite::viridis(n),
-    "spectral" = if (n > 11) {
-      grDevices::colorRampPalette(RColorBrewer::brewer.pal(11, "Spectral"))(n)
-    } else {
-      RColorBrewer::brewer.pal(max(n, 3), "Spectral")[1:n]
-    },
-    scales::hue_pal()(n)  # Fallback to default hue palette
-  ) %>%
-    setNames(all_levels)
-}
-
-#' @noRd
-.add_palette <- function(palette, color_by, data) {
-  palette <- .get_persistent_palette(data, color_by, palette_name = palette)
-  if (is.null(palette)) {
-    return(NULL)
-  }
-  scale_color_manual(values = palette)
 }

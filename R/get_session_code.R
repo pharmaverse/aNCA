@@ -1,15 +1,22 @@
 #' Generate a session script code in R that can replicate the App outputs
 #'
 #' @param template_path Path to the R script template (e.g., script_template.R)
-#' @param session The session object containing userData, etc.
+#' @param setts_obj The read settings object with all analysis specifications
+#' or the full session object from the App.
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R")
 #' @return The output_path (invisibly)
-#' @export
-get_session_code <- function(template_path, session, output_path) {
-  # Helper to get value from session$userData by path (e.g., 'settings$method')
+#' @keywords internal
+#' @noRd
+get_code <- function(
+  setts_obj,
+  output_path,
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+) {
+
+  # Helper to get value from settings_list by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
-    obj <- session$userData
+    obj <- setts_obj
     for (p in parts) {
       if (inherits(obj[[p]], "reactive")) {
         obj <- obj[[p]]()
@@ -26,12 +33,12 @@ get_session_code <- function(template_path, session, output_path) {
   script <- readLines(template_path, warn = FALSE) %>%
     paste(collapse = "\n")
 
-  # Find all session$userData$...
-  pattern <- "session\\$userData(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
+  # Find all settings_list$...
+  pattern <- "settings_list(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
   if (matches[1] == -1) {
     stop(
-      "Template has no placeholders (session$userData...) to substitute.",
+      "Template has no placeholders (settings_list...) to substitute.",
       "This may be due to an incorrect file path, a missing template, ",
       "or a modified template without placeholders."
     )
@@ -42,8 +49,8 @@ get_session_code <- function(template_path, session, output_path) {
     start <- matches[i]
     len <- attr(matches, "match.length")[i]
     matched <- substr(script, start, start + len - 1)
-    # Extract the path after session$userData$
-    path <- sub("^session\\$userData\\$", "", matched)
+    # Extract the path after settings_list$
+    path <- sub("^settings_list\\$", "", matched)
     value <- get_session_value(path)
 
     deparsed <- clean_deparse(value, max_per_line = 15)
@@ -65,7 +72,7 @@ get_session_code <- function(template_path, session, output_path) {
 #' This internal S3 generic converts common R objects (data frames, lists,
 #' atomic vectors, etc.) into character strings containing R code that will
 #' reconstruct the object. It is used by the app script generator to
-#' serialize `session$userData` values into a runnable R script.
+#' serialize `settings_list` values into a runnable R script.
 #'
 #' @param obj An R object to convert to a string of R code.
 #' @param max_per_line Maximum number of elements to include per line for
@@ -77,11 +84,14 @@ get_session_code <- function(template_path, session, output_path) {
 #'   reconstruct `obj` (or a close approximation for complex types).
 #' @keywords internal
 clean_deparse <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
+  # Handle tbl_df objects as data.frame
+  if (inherits(obj, "tbl_df")) obj <- as.data.frame(obj)
+
   # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(class(obj)[1], "()"))
   }
-  UseMethod("clean_deparse")
+  UseMethod("clean_deparse", obj)
 }
 
 #' @noRd
@@ -186,6 +196,95 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
   }
 }
 
-# TODO (Gerardo): Create a linked function
-# to obtain the code from a settings file
-# (#826)
+default_mapping <- list(
+  select_STUDYID = "STUDYID",
+  select_USUBJID = "USUBJID",
+  select_DOSEA = "DOSEA",
+  select_DOSEU = "DOSEU",
+  select_DOSETRT = "DOSETRT",
+  select_PARAM = "PARAM",
+  select_Metabolites = "Metab-DrugA",
+  select_ARRLT = "ARRLT",
+  select_NRRLT = "NRRLT",
+  select_AFRLT = "AFRLT",
+  select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
+  select_NFRLT = "NFRLT",
+  select_PCSPEC = "PCSPEC",
+  select_ROUTE = "ROUTE",
+  select_TRTRINT = "TRTRINT",
+  select_ADOSEDUR = "ADOSEDUR",
+  select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
+  select_RRLTU = "RRLTU",
+  select_VOLUME = "VOLUME",
+  select_VOLUMEU = "VOLUMEU",
+  select_AVAL = "AVAL",
+  select_AVALU = "AVALU",
+  select_ATPTREF = "ATPTREF"
+)
+
+#' Generate a session script from settings and mapping files
+#'
+#' This function reads a settings yaml file and data path, and generates an R script
+#' that can reproduce the session using a template.
+#'
+#' @param settings_file_path Path to the yaml file containing the settings list.
+#' @param data_path Path to the data file to be referenced in the script.
+#' @param template_path Path to the R script template file. By default, uses the one
+#' installed from your aNCA package version.
+#' @param output_path Path to write the resulting script file.
+#' @param mapping Named list mapping variable names (default: \code{default_mapping}).
+#' @param ratio_table Data frame containing ratio definitions (default: empty data frame).
+#'
+#' @return Invisibly returns the output_path.
+#' @export
+get_settings_code <- function(
+  settings_file_path,
+  data_path,
+  output_path = "settings_code.R",
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+  # TODO: mapping & ratio_table should be included in the settings file as well
+  # so they keep working as expected also from the settings file
+  mapping = default_mapping,
+  ratio_table = data.frame()
+) {
+  settings <- read_settings(settings_file_path)
+  session <- list(
+    settings = settings[["settings"]],
+    slope_rules = settings[["slope_rules"]],
+    data_path = data_path,
+    mapping = mapping,
+    ratio_table = ratio_table
+  )
+  get_code(
+    template_path = template_path,
+    setts_obj = session,
+    output_path = output_path
+  )
+  invisible(output_path)
+}
+
+#' Generate a session script from a Shiny session object
+#'
+#' This function generates an R script that can reproduce the outputs of a Shiny app session.
+#' It extracts the session's user data, substitutes it into a script template, and writes
+#' the result to a file.
+#'
+#' @param session The Shiny session object containing user data (typically from a running app).
+#' @param output_path Path to write the resulting script file (e.g., "output_script.R").
+#' @param template_path Path to the R script template file. By default, uses the one
+#' installed from your aNCA package version.
+#' @return Invisibly returns the output_path.
+#' @keywords Internal
+#' @noRd
+get_session_code <- function(
+  session,
+  output_path,
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+) {
+  get_code(
+    template_path = template_path,
+    setts_obj = session$userData,
+    output_path = output_path
+  )
+  invisible(output_path)
+}

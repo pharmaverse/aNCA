@@ -54,11 +54,25 @@ describe("process_data_individual functions correctly", {
     expect_true(all(p$ATPTREF == 1))
   })
 
-  it("handles predose duplication if filtering_list is used", {
-    p <- process_data_individual(data = pknca_data, filtering_list = default_filter)
-    predose_record_in_plot <- p %>% filter(NFRLT == 168)
-    expect_true(nrow(predose_record_in_plot) == 1)
-    expect_true(predose_record_in_plot$ATPTREF == pknca_data$ATPTREF[1])
+  # TODO (Gerardo): Relax this assumption in the future. If possible
+  # by not using dose_profile_duplicates
+  it("handles predose duplication if filtering_list (ATPTREF) is used", {
+    conc_data_subj2 <- filter(conc_data, USUBJID == subjects[2], ATPTREF %in% c(1, 2))
+    # Create a predose record with a custom time and assign it to ATPTREF = 2
+    predose <- conc_data[1, ]
+    predose$AFRLT <- 4.99
+    predose$ARRLT <- -0.01
+    predose$ATPTREF <- 2
+    # Combine with the rest of the data
+    test_data <- bind_rows(conc_data, predose)
+    test_pknca <- pknca_data
+    test_pknca$conc$data <- test_data
+    # Filter for ATPTREF = 1 (should only get the predose with ATPTREF = 1)
+    p1 <- process_data_individual(test_pknca, filtering_list = list(ATPTREF = 1))
+    expect_equal(filter(p1, AFRLT == 4.99)$ATPTREF, 1)
+    # Filter for ATPTREF = 2 (should only get the predose with ATPTREF = 2)
+    p2 <- process_data_individual(test_pknca, filtering_list = list(ATPTREF = 2))
+    expect_equal(filter(p2, AFRLT == 4.99)$ATPTREF, 2)
   })
 
   it("filters non-positive AVAL if log scale selected", {
@@ -141,9 +155,18 @@ describe("process_data_mean functions correctly", {
     )
     expect_true(all(p$Mean > 0))
   })
+
+  it("time variable used is always in the first column output", {
+    p <- process_data_mean(
+      pknca_data = pknca_data,
+      filtering_list = filter_param_pcspec,
+      extra_grouping_vars = c("ATPTREF", "PARAM", "PCSPEC")
+    )
+    expect_equal(names(p)[1], "NFRLT")
+  })
 })
 
-describe("exploration_individualplot: Individual Plot Mode", {
+describe("exploration_individualplot:", {
   it("returns a ggplot object with individual labels", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
@@ -190,17 +213,6 @@ describe("exploration_individualplot: Individual Plot Mode", {
     expect_true("GeomHline" %in% layer_classes)
   })
 
-  it("applies a custom palette", {
-    p <- exploration_individualplot(
-      pknca_data = pknca_data,
-      color_by = "PARAM",
-      palette = "viridis"
-    )
-    p_build <- ggplot_build(p)
-    plot_colors <- unique(p_build$data[[1]]$colour)
-    expect_true(all(plot_colors %in% viridis::viridis(1)))
-  })
-
   it("handles empty data.frame with a plot informing of no data", {
     empty_data <- pknca_data
     empty_data$conc$data <- empty_data$conc$data[0, ]
@@ -228,7 +240,7 @@ describe("exploration_individualplot: Individual Plot Mode", {
   })
 })
 
-describe("exploration_meanplot: Mean Plot Mode", {
+describe("exploration_meanplot:", {
   it("returns a ggplot object with mean labels", {
     p <- exploration_meanplot(
       pknca_data = pknca_data,
@@ -311,6 +323,27 @@ describe("exploration_meanplot: Mean Plot Mode", {
 
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
     expect_true(all("PARAM" %in% names(vline_layer$data)))
+  })
+
+  it("uses NRRLT as x axis when use_time_since_last_dose is TRUE", {
+    p_nfrlt <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      use_time_since_last_dose = FALSE
+    )
+    pb_nfrlt <- ggplot_build(p_nfrlt)
+    nfrlt_vals <- unique(pknca_data$conc$data$NFRLT)
+    expect_true(all(nfrlt_vals %in% pb_nfrlt$data[[1]]$x))
+
+    p_nrrlt <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      use_time_since_last_dose = TRUE
+    )
+    pb_nrrlt <- ggplot_build(p_nrrlt)
+    nrrlt_vals <- unique(pknca_data$conc$data$NRRLT)
+    expect_true(all(nrrlt_vals %in% pb_nrrlt$data[[1]]$x))
+    expect_false(all(nfrlt_vals %in% pb_nrrlt$data[[1]]$x))
   })
 
   it("handles empty data.frame with a plot informing of no data", {

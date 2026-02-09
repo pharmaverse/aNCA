@@ -22,7 +22,6 @@
 #' Default is `FALSE` (time since first dose).
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
-#' @seealso [g_lineplot()], [process_data_individual()]
 #' @export
 exploration_individualplot <- function(
     pknca_data,
@@ -43,6 +42,15 @@ exploration_individualplot <- function(
     show_dose = show_dose,
     use_time_since_last_dose = use_time_since_last_dose
   )
+
+  # If no tooltip variables defined use some default ones
+  if (is.null(tooltip_vars)) {
+    tooltip_vars <- c(
+      pknca_data$conc$columns$time,
+      pknca_data$conc$columns$concentration,
+      pknca_data$conc$columns$subject
+    )
+  }
 
   g_lineplot(
     data = individual_data,
@@ -75,7 +83,6 @@ exploration_individualplot <- function(
 #' Default includes dose group vars and "Mean".
 #' @return A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
-#' @seealso [g_lineplot()], [process_data_mean()]
 #' @export
 exploration_meanplot <- function(
     pknca_data,
@@ -88,10 +95,11 @@ exploration_meanplot <- function(
     sd_min = FALSE,
     sd_max = FALSE,
     ci = FALSE,
-    tooltip_vars = c(group_vars(pknca_data$dose), "Mean"),
+    tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE) {
+
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
@@ -101,9 +109,21 @@ exploration_meanplot <- function(
     use_time_since_last_dose = use_time_since_last_dose
   )
 
+  # The time variable will always be the first one
+  x_var <- names(mean_data)[1]
+
+  # If no tooltip variable specified, use the default ones
+  if (is.null(tooltip_vars)) {
+    tooltip_vars <- c(
+      "Mean",
+      x_var,
+      group_vars(pknca_data$dose)
+    )
+  }
+
   plot <- g_lineplot(
     data = mean_data,
-    x_var = "TIME_NOMINAL",
+    x_var = x_var,
     y_var = "Mean",
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
@@ -130,7 +150,7 @@ exploration_meanplot <- function(
     sd_max = sd_max,
     ci = ci,
     color_by = color_by,
-    x_var = "TIME_NOMINAL",
+    x_var = x_var,
     y_var = "Mean"
   )
 }
@@ -160,11 +180,13 @@ process_data_individual <- function(pknca_data,
                                     conc_col = "AVAL",
                                     show_dose = FALSE,
                                     use_time_since_last_dose = FALSE) {
+  # Derive dose times if requested
   data <- if (show_dose || use_time_since_last_dose) {
     data <- derive_last_dose_time(
       pknca_data = pknca_data,
       conc_time_col = pknca_data$conc$columns$time
     )
+    # Adjust time variable with dose time if using time since last dose
     if (use_time_since_last_dose) {
       data <- dplyr::mutate(
         data,
@@ -175,8 +197,24 @@ process_data_individual <- function(pknca_data,
   } else {
     pknca_data$conc$data
   }
+
+  # Handle dose profile duplicates if filtering by ATPTREF so pre-dose samples
+  # assigned only to one profile are retained
+  if ("ATPTREF" %in% names(filtering_list)) {
+    if ("ARRLT" %in% names(data) && any(data$ARRLT < 0 & data$AFRLT > 0)) {
+      data <- dose_profile_duplicates(
+        data,
+        groups = c(group_vars(pknca_data$conc), "ATPTREF"),
+        dosno = "ATPTREF"
+      )
+    }
+  }
+
+  # Apply filtering
   processed_data <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!sym(conc_col)))
+
+  # Remove non-positive concentrations if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     processed_data <- processed_data %>% dplyr::filter(!!sym(conc_col) > 0)
   }
@@ -215,10 +253,11 @@ process_data_mean <- function(pknca_data,
   y_var <- pknca_data$conc$columns$concentration
   dose_group_cols <- setdiff(group_vars(pknca_data$dose), pknca_data$conc$columns$subject)
   grouping_cols <- unique(
-    c(extra_grouping_vars, "TIME_NOMINAL", x_var_unit, y_var_unit, dose_group_cols)
+    c(extra_grouping_vars, x_var, x_var_unit, y_var_unit, dose_group_cols)
   )
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
+  # Derive dose times if requested
   data <- if (show_dose) {
     derive_last_dose_time(
       pknca_data = pknca_data,
@@ -228,19 +267,19 @@ process_data_mean <- function(pknca_data,
     pknca_data$conc$data
   }
 
-  # Always create a TIME_NOMINAL column for the x variable
-  data <- dplyr::mutate(data, TIME_NOMINAL = !!rlang::sym(x_var))
-
+  # Apply filtering
   processed <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!rlang::sym(y_var)))
 
+  # Adjust time variable with dose time if using time since last dose
   if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
     processed <- processed %>%
-      dplyr::group_by(!!!rlang::syms(dose_group_cols), TIME_NOMINAL) %>%
+      dplyr::group_by(!!!rlang::syms(c(dose_group_cols, x_var))) %>%
       dplyr::mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
       dplyr::ungroup()
   }
 
+  # Calculate summary statistics by grouping columns
   summarised_data <- processed %>%
     dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
     dplyr::summarise(
@@ -256,7 +295,11 @@ process_data_mean <- function(pknca_data,
       SD_max = Mean + SD,
       CI_lower = Mean - 1.96 * SE,
       CI_upper = Mean + 1.96 * SE
-    )
+    ) %>%
+    # Make sure the nominal time column is always the first column
+    select(any_of(c(x_var)), everything())
+
+  # Remove non-positive means if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     summarised_data <- summarised_data %>%
       dplyr::filter(Mean > 0)
@@ -344,7 +387,8 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
     dose_data %>%
       dplyr::mutate(TIME_DOSE = !!rlang::sym(dose_time_col)) %>%
       dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE"))),
-    by = dose_group_vars
+    by = dose_group_vars,
+    relationship = "many-to-many"
   ) %>%
     dplyr::filter(TIME_DOSE <= !!rlang::sym(conc_time_col)) %>%
     dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), "TIME_DOSE"))) %>%

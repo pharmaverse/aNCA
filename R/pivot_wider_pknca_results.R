@@ -25,16 +25,19 @@
 #'
 #' @returns A data frame which provides an easy overview on the results from the NCA
 #'          in each profile/subject and how it was computed lambda (half life) and the results
-#'          of the NCA parameters (cmax, AUC, AUClast)
+#'          of the NCA parameters (cmax, AUC, AUClast), including new columns `Exclude` (a
+#'          derivation from pknca$exclude), `Missing`(indicating if flag parameters are missing
+#'          from PKNCA calculation), and `flagged` (indicating if the row
+#'          is ACCEPTED, FLAGGED or MISSING based on the flagging rules).
 #'
 #' @importFrom dplyr select left_join rename mutate distinct group_by arrange ungroup
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
-#' @importFrom purrr pmap_chr
-#' @importFrom stringr str_detect fixed
-#' @export
+#' @importFrom purrr pmap_chr map_lgl map2_chr keep
+#' @importFrom stringr str_detect fixed str_remove
+#' @importFrom rlang syms sym
 #'
-
+#' @export
 pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_keep = NULL) {
   ############################################################################################
   # Derive LAMZNPT & LAMZMTD
@@ -62,7 +65,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       group_by(!!!syms(conc_groups), DOSNOA) %>%
       # Derive LAMZMTD: was lambda.z manually customized?
       mutate(LAMZMTD = ifelse(
-        any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
+        any(exclude_half.life) | any(include_half.life), "Manual", "Best slope"
       )) %>%
       filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
       filter(!!sym(time_col) >= (LAMZLL + start) | is.na(LAMZLL)) %>%
@@ -165,10 +168,10 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   pivoted_res <- add_label_attribute(pivoted_res, myres)
 
   # Add flagging columns for each rule and a general "flagged" column
-  out <- .create_flags_for_profiles(
-    final_results = pivoted_res,
-    myres = myres,
-    flag_rules = flag_rules
+  out <- .apply_results_flags(
+    data = pivoted_res,
+    pknca_res = myres$result,
+    flag_settings = flag_rules
   )
 
   # If extra_vars_to_keep is provided, join these variables from the conc data
@@ -235,29 +238,78 @@ add_label_attribute <- function(df, myres) {
   df
 }
 
-.create_flags_for_profiles <- function(final_results, myres, flag_rules) {
+#' Apply Flagging Logic to NCA Results
+#'
+#' @description
+#' Evaluates NCA results against defined flag settings and intervals. It checks for missing
+#' parameters that were requested, and determines the final `flagged` status
+#'  (ACCEPTED, FLAGGED, or MISSING).
+#'
+#' @param data A data frame of pivoted NCA results.
+#' with additional grouping variables merged.
+#' @param pknca_res A data frame. The results object from the
+#'  PKNCA result (e.g., `res$result`).
+#' @param flag_settings A named list of flag settings. Each element must contain
+#'   `is.checked` (logical) and `threshold` (numeric or character).
+#'
+#' @returns A data frame with updated `Exclude` and `flagged` columns.
+#' @keywords internal
+#' @noRd
+.apply_results_flags <- function(data, pknca_res, flag_settings) {
 
-  # Add flaging columns in the pivoted results
-  applied_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
-  flag_params <- names(flag_rules)
-  flag_thr <- sapply(flag_rules, FUN =  \(x) x$threshold)
-  flag_rule_msgs <- paste0(flag_params, c(" < ", "<", " > ", " > ", " < "), flag_thr)
-  flag_cols <- names(final_results)[formatters::var_labels(final_results)
-                                    %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
+  # Add flagging column in the pivoted results
+  applied_flags <- purrr::keep(flag_settings, function(x) x$is.checked)
+  flag_params <- names(applied_flags)
 
-  if (length(flag_params) > 0) {
-    final_results <- final_results %>%
-      rowwise() %>%
+  flag_thr <- sapply(flag_settings, FUN =  function(x) x$threshold)
+  flag_rule_msgs <- c(paste0(names(flag_settings), c(" < ", " < ", " > ", " > ", " < "), flag_thr))
+
+  flag_cols <- names(data)[formatters::var_labels(data)
+                           %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
+
+  if (length(flag_cols) > 0) {
+
+    missing_flags <- pknca_res %>%
+      filter(PPTESTCD %in% flag_params,
+             type_interval == "main") %>%
+      mutate(is_missing = is.na(PPSTRES)) %>%
+      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
+      pivot_wider(
+        names_from = PPTESTCD,
+        values_from = is_missing,
+        names_prefix = "missing_"
+      ) %>%
+      mutate(Missing = pmap_chr(across(starts_with("missing_")), .extract_missing_values)) %>%
+      select(-starts_with("missing_"), -exclude, -start_dose, -end_dose)
+
+    data <- data %>%
+      left_join(missing_flags,
+                by = intersect(names(data), names(missing_flags))) %>%
       mutate(
         flagged = case_when(
-          is.na(Exclude) ~ "ACCEPTED",
-          any(sapply(
-            flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
-          )) ~ "FLAGGED",
+          sapply(Exclude, function(x) any(str_detect(x, fixed(flag_rule_msgs)))) ~ "FLAGGED",
+          is.na(Missing) ~ "ACCEPTED",
           TRUE ~ "MISSING"
         )
       ) %>%
       ungroup()
   }
-  final_results
+
+  data
+}
+
+# Helper function to extract missing values
+#' @noRd
+.extract_missing_values <- function(...) {
+  # Get the values for the current row
+  vals <- c(...)
+  # Get the names associated with the TRUE values
+  missing_names <- names(vals)[which(vals == TRUE)]
+
+  if (length(missing_names) == 0) return(NA_character_)
+
+  missing_names %>%
+    stringr::str_remove("missing_") %>%
+    paste0(" is NA") %>%
+    paste(collapse = "; ")
 }

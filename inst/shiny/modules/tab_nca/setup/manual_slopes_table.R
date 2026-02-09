@@ -1,3 +1,10 @@
+#' Manual Slopes Table UI for Slope Selection
+#'
+#' UI module for displaying and editing the manual slopes table (inclusion/exclusion rules).
+#' Provides buttons to add/remove rules and a reactable table for editing.
+#'
+#' @param id Shiny module id
+#' @return Shiny UI element (fluidRow)
 manual_slopes_table_ui <- function(id) {
   ns <- NS(id)
 
@@ -18,77 +25,87 @@ manual_slopes_table_ui <- function(id) {
   )
 }
 
-
+#' Manual Slopes Table Server for Slope Selection
+#'
+#' Server module for managing the manual slopes table (inclusion/exclusion rules).
+#' Handles adding/removing/editing rules, table's reactivity, and optional override logic.
+#'
+#' @param id Shiny module id
+#' @param pknca_data Reactive providing the current PKNCA data object
+#' @param manual_slopes_override Optional reactive providing a table to override manual slopes
+#' @return List with:
+#'   - manual_slopes: reactiveVal containing the current manual slopes table
+#'   - refresh_reactable: reactiveVal for triggering table re-render
 manual_slopes_table_server <- function(
-  id, mydata, profiles_per_subject, slopes_groups
+  id, pknca_data, manual_slopes_override = NULL
 ) {
   moduleServer(id, function(input, output, session) {
 
     ns <- session$ns
-
-    # Reactive for Slope selector columns
-    slope_selector_columns <- reactive({
-      req(slopes_groups())
-      c(slopes_groups(), "TYPE", "RANGE", "REASON")
+    # Get group columns for the current PKNCA data (for table structure)
+    slopes_pknca_groups <- reactive({
+      req(pknca_data())
+      pknca_data()$intervals %>%
+        select(any_of(c(group_vars(pknca_data()))))
     })
 
-    #' Object for storing exclusion and selection data for lambda slope calculation
-    manual_slopes <- reactiveVal({
-      data.frame(
-        TYPE = character(),
-        RANGE = character(),
-        REASON = character(),
-        stringsAsFactors = FALSE
+    # manual_slopes: stores the current table of user rules (inclusion/exclusion)
+    manual_slopes <- reactiveVal(NULL)
+    # When pknca_data() changes, reset the manual_slopes table to empty with correct columns
+    observeEvent(pknca_data(), {
+      req(is.null(manual_slopes()), slopes_pknca_groups())
+
+      ms_colnames <- c(colnames(slopes_pknca_groups()), c("TYPE", "RANGE", "REASON"))
+      initial_manual_slopes <- data.frame(
+        matrix(
+          character(),
+          ncol = length(ms_colnames),
+          nrow = 0,
+          dimnames = list(character(), ms_colnames)
+        )
       )
+      manual_slopes(initial_manual_slopes)
     })
 
-    observeEvent(mydata(), {
+    # create a reactive to update the reactable UI when the table changes
+    refresh_reactable <- reactiveVal(0)
 
-      current_slopes <- manual_slopes()
-      # Add missing dynamic columns with default values (e.g., NA_character_)
-      for (col in slopes_groups()) {
-        if (!col %in% colnames(current_slopes)) {
-          current_slopes[[col]] <- character()
-        }
-      }
-      # Define the desired column order
-      ordered_cols <- c(slopes_groups(), "TYPE", "RANGE", "REASON")
-      current_slopes <- current_slopes[, ordered_cols, drop = FALSE]
-
-      # Update the reactive Val
-      manual_slopes(current_slopes)
-    })
-
-    #' Adds new row to the selection/exclusion datatable
+    # Add a new row to the table when the user clicks the add button
     observeEvent(input$add_rule, {
       log_trace("{id}: adding manual slopes row")
+      first_group <- slopes_pknca_groups()[1, ]
+      time_col <- pknca_data()$conc$columns$time
+      new_row <- cbind(
+        first_group,
+        data.frame(
+          TYPE = "Exclusion",
+          RANGE = paste0(
+            inner_join(
+              first_group,
+              pknca_data()$conc$data,
+              by = intersect(
+                names(first_group),
+                names(pknca_data()$conc$data)
+              )
+            )[[time_col]][2]
+          ),
+          REASON = ""
+        )
+      )
 
-      # Create a named list for dynamic columns based on `profiles_per_subject`
-      dynamic_values <- lapply(slopes_groups(), function(col) {
-        value <- as.character(unique(profiles_per_subject()[[col]]))
-        if (length(value) > 0) value[1] else NA_character_  # Handle empty or NULL cases
-      })
-
-      names(dynamic_values) <- slopes_groups()
-
-      # Create the new row with both fixed and dynamic columns
-      new_row <- as.data.frame(c(
-        dynamic_values,
-        TYPE = "Selection",
-        RANGE = "1:3",
-        REASON = ""
-      ), stringsAsFactors = FALSE)
-
-      updated_data <- as.data.frame(rbind(manual_slopes(), new_row), stringsAsFactors = FALSE)
+      old_rows <- filter(manual_slopes(), !is.na(TYPE))
+      updated_data <- as.data.frame(
+        rbind(old_rows, new_row),
+        stringsAsFactors = FALSE
+      )
       manual_slopes(updated_data)
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
 
-    #' Removes selected row
+    # Remove selected rows from the table when the user clicks the remove button
     observeEvent(input$remove_rule, {
       log_trace("{id}: removing manual slopes row")
-
       selected <- getReactableState("manual_slopes", "selected")
       req(selected)
       edited_slopes <- manual_slopes()[-selected, ]
@@ -97,16 +114,14 @@ manual_slopes_table_server <- function(
       refresh_reactable(refresh_reactable() + 1)
     })
 
-    #' Render manual slopes table
-    refresh_reactable <- reactiveVal(1)
+    # Render the manual slopes table (reactable)
     output$manual_slopes <- renderReactable({
+      req(manual_slopes())
       log_trace("{id}: rendering slope edit data table")
-      # Isolate to prevent unnecessary re-renders on every edit
       isolate({
         data <- manual_slopes()
       })
-
-      # Fixed columns (TYPE, RANGE, REASON)
+      # Define columns: group columns (dynamic), then TYPE/RANGE/REASON (fixed)
       fixed_columns <- list(
         TYPE = colDef(
           cell = dropdown_extra(
@@ -128,64 +143,39 @@ manual_slopes_table_server <- function(
           width = 400
         )
       )
-
-      # Dynamic group column definitions
-      dynamic_columns <- lapply(slopes_groups(), function(col) {
+      dynamic_columns <- lapply(colnames(slopes_pknca_groups()), function(col) {
         colDef(
           cell = dropdown_extra(
             id = ns(paste0("edit_", col)),
-            choices = unique(profiles_per_subject()[[col]]), # Dynamically set choices
+            choices = unique(slopes_pknca_groups()[[col]]),
             class = "dropdown-extra"
           ),
           width = 150
         )
       })
-      names(dynamic_columns) <- slopes_groups()
-
-      # Combine columns in the desired order
-      all_columns <- c(
-        dynamic_columns,
-        list(
-          TYPE = fixed_columns$TYPE,
-          RANGE = fixed_columns$RANGE,
-          REASON = fixed_columns$REASON
-        )
-      )
-
-      # Render reactable
+      names(dynamic_columns) <- colnames(slopes_pknca_groups())
+      all_columns <- c(dynamic_columns, fixed_columns)
       reactable(
         data = data,
-        defaultColDef = colDef(
-          align = "center"
-        ),
+        defaultColDef = colDef(align = "center"),
         columns = all_columns,
         selection = "multiple",
         defaultExpanded = TRUE,
         borderless = TRUE,
         theme = reactableTheme(
-          rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
+          rowSelectedStyle = list(
+            backgroundColor = "#eee",
+            boxShadow = "inset 2px 0 0 0 #ffa62d"
+          )
         )
       )
     }) %>%
       shiny::bindEvent(refresh_reactable())
 
-    #' Separate event handling updating displayed reactable upon every change (adding and removing
-    #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
-    #' the table would mean losing focus on text inputs when entering values.
-    observeEvent(manual_slopes(), {
-
-      reactable::updateReactable(
-        outputId = "manual_slopes",
-        data = manual_slopes()
-      )
-    })
-
-    #' For each of the columns in slope selector data frame, attach an event that will read
-    #' edits for that column made in the reactable.
+    # Dynamically attach observers for each editable column in the table
     observe({
-      req(slope_selector_columns())
-      # Dynamically attach observers for each column
-      purrr::walk(slope_selector_columns(), function(colname) {
+      req(manual_slopes())
+      purrr::walk(colnames(manual_slopes()), function(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
           edit <- input[[paste0("edit_", colname)]]
           edited_slopes <- manual_slopes()
@@ -195,6 +185,34 @@ manual_slopes_table_server <- function(
       })
     })
 
+    # --- Manual slopes override logic (moved from slope_selector_server) ---
+    if (!is.null(manual_slopes_override)) {
+      observeEvent(manual_slopes_override(), {
+        req(manual_slopes_override(), pknca_data())
+        # TODO (Gerardo): Integrate slope rules to work with settings upload
+        if (nrow(manual_slopes_override()) == 0) return(NULL)
+        log_debug_list("Manual slopes override:", manual_slopes_override())
+        override_valid <- apply(manual_slopes_override(), 1, function(r) {
+          dplyr::filter(
+            pknca_data()$conc$data,
+            PCSPEC == r["PCSPEC"],
+            USUBJID == r["USUBJID"],
+            PARAM == r["PARAM"],
+            DOSNOA == r["DOSNOA"]
+          ) %>%
+            NROW() != 0
+        }) %>%
+          all()
+        if (!override_valid) {
+          msg <- "Manual slopes not compatible with current data, leaving as default."
+          log_warn(msg)
+          showNotification(msg, type = "warning", duration = 5)
+          return(NULL)
+        }
+        manual_slopes(manual_slopes_override())
+      })
+    }
+    # Output: manual_slopes (reactiveVal) and refresh_reactable (for UI updates)
     list(
       manual_slopes = manual_slopes,
       refresh_reactable = refresh_reactable

@@ -5,7 +5,7 @@
 #'
 .eval_range <- function(x) {
   val_range <- try({
-    if (!grepl("^[0-9,:]+$", x)) stop("Error: not a valid range notation.")
+    if (!grepl("^[0-9,.:]+$", x)) stop("Error: not a valid range notation.")
     eval(parse(text = paste0("c(", x, ")")))
   }, silent = TRUE)
   if (inherits(val_range, "try-error")) NA else val_range

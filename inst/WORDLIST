@@ -37,7 +37,6 @@ LAMZ
 LAMZLL
 LAMZNPT
 LAMZSPN
-Lineplot
 METABFL
 MRTMDO
 MRTMDP
@@ -96,6 +95,8 @@ UX
 VOLUMEU
 VSSMDO
 VSSMDP
+WTBL
+WTBLU
 XPT
 YAML
 amountu
@@ -144,6 +145,7 @@ pptest
 pre
 pred
 qmd
+rds
 reproducibility
 reupload
 roadmap
@@ -151,7 +153,6 @@ rpptx
 ruleset
 rulesets
 runnable
-SBS
 signif
 src
 tibble

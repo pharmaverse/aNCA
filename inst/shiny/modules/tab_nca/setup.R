@@ -76,6 +76,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
+        hl_adj_rules = slope_rules$manual_slopes(),
         exclusion_list = general_exclusions(),
         keep_interval_cols = extra_group_vars()
       )
@@ -145,55 +146,35 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
 
     # Automatically update the units table when settings are uploaded.
     observeEvent(imported_settings(), {
-      req(imported_settings()$units)
+      # require units in settings, and that it is a data frame with rows
+      req(imported_settings()$units, nrow(imported_settings()$units) > 0)
       session$userData$units_table(imported_settings()$units)
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
 
-    # Create version for slope plots
-    # Only parameters required for the slope plots are set in intervals
-    # NCA dynamic changes/filters based on user selections
-    slopes_pknca_data <- reactive({
-      req(
-        adnca_data(), settings(), settings()$profile,
-        settings()$analyte, settings()$pcspec
-      )
-      log_trace("Updating PKNCA::data object for slopes.")
-
-      df <- PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        method = settings()$method,
-        selected_analytes = settings()$analyte,
-        selected_profile = settings()$profile,
-        selected_pcspec = settings()$pcspec,
-        should_impute_c0 = settings()$data_imputation$impute_c0
-      )
-
-      params <- c("lambda.z.n.points", "lambda.z.time.first",
-                  "r.squared", "adj.r.squared", "tmax")
-
-      df$intervals <- df$intervals %>%
-        mutate(across(any_of(params), ~ TRUE, .names = "{.col}"),
-               impute = NA)
-
-      df
-    })
-
+    # Collect all half life manual adjustments done in the `Slope Selector` section
+    # and controls the half life plots that are displayed
     slope_rules <- slope_selector_server(
       "slope_selector",
-      slopes_pknca_data,
+      processed_pknca_data,
       imported_slopes
     )
 
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".rds")
+        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".yaml")
       },
       content = function(con) {
-        saveRDS(list(settings = final_settings(), slope_rules = slope_rules()), con)
+        # Prepare the list
+        export_list <- list(
+          settings = final_settings(),
+          slope_rules = slope_rules$manual_slopes()
+        )
+        # write yaml file
+        yaml::write_yaml(export_list, file = con)
       }
     )
 

@@ -85,3 +85,34 @@ readers <- list(
     arrow::read_parquet(path)
   }
 )
+
+#' Helper Logic to parse and structure settings YAML
+#' @param path Character string with path to the settings YAML file.
+#' @param name Character string with the name of the settings YAML file.
+#' @returns A list with parsed settings or NULL if not a valid settings file.
+#'
+#' @importFrom tools file_ext
+#' @importFrom yaml read_yaml
+#'
+#' @export
+read_settings <- function(path, name) {
+
+  obj <- yaml::read_yaml(path)
+
+  if (!is.list(obj) || !"settings" %in% names(obj)) {
+    stop("The file does not appear to be a valid settings YAML file.",
+         "Please ensure that the file is a list with element 'settings'.")
+  }
+
+  if (!is.null(obj$slope_rules) && is.list(obj$slope_rules)) {
+    obj$slope_rules <- as.data.frame(bind_rows(obj$slope_rules))
+  }
+
+  if (!is.null(obj$settings) && is.list(obj$settings)) {
+    obj$settings$partial_aucs <- bind_rows(obj$settings$partial_aucs)
+    obj$settings$units <- bind_rows(obj$settings$units)
+    obj$settings$parameters$types_df <- bind_rows(obj$settings$parameters$types_df)
+  }
+
+  obj
+}
