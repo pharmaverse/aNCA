@@ -10,12 +10,8 @@
 get_code <- function(
   setts_obj,
   output_path,
-  template_path = NULL
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
 ) {
-  # If no defined template, uses the default
-  if (is.null(template_path)) {
-    template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
-  }
 
   # Helper to get value from yaml_settings by path (e.g., 'settings$method')
   get_session_value <- function(path) {
@@ -228,10 +224,10 @@ default_mapping <- list(
 
 #' Generate a session script from settings and mapping files
 #'
-#' This function reads a settings RDS file and data path, and generates an R script
+#' This function reads a settings yaml file and data path, and generates an R script
 #' that can reproduce the session using a template.
 #'
-#' @param settings_file_path Path to the RDS file containing the settings list.
+#' @param settings_file_path Path to the yaml file containing the settings list.
 #' @param data_path Path to the data file to be referenced in the script.
 #' @param template_path Path to the R script template file. By default, uses the one
 #' installed from your aNCA package version.
@@ -239,14 +235,13 @@ default_mapping <- list(
 #' @param mapping Named list mapping variable names (default: \code{default_mapping}).
 #' @param ratio_table Data frame containing ratio definitions (default: empty data frame).
 #'
-#' @importFrom yaml read_yaml
 #' @return Invisibly returns the output_path.
 #' @export
 get_settings_code <- function(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = NULL,
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
   # TODO: mapping & ratio_table should be included in the settings file as well
   # so they keep working as expected also from the settings file
   mapping = default_mapping,
@@ -281,7 +276,11 @@ get_settings_code <- function(
 #' @return Invisibly returns the output_path.
 #' @keywords Internal
 #' @noRd
-get_session_code <- function(session, output_path, template_path = NULL) {
+get_session_code <- function(
+  session,
+  output_path,
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+) {
   get_code(
     template_path = template_path,
     setts_obj = session$userData,

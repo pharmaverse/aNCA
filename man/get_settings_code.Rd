@@ -8,13 +8,13 @@ get_settings_code(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = NULL,
+  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
   mapping = default_mapping,
   ratio_table = data.frame()
 )
 }
 \arguments{
-\item{settings_file_path}{Path to the RDS file containing the settings list.}
+\item{settings_file_path}{Path to the yaml file containing the settings list.}
 
 \item{data_path}{Path to the data file to be referenced in the script.}
 
@@ -31,6 +31,6 @@ installed from your aNCA package version.}
 Invisibly returns the output_path.
 }
 \description{
-This function reads a settings RDS file and data path, and generates an R script
+This function reads a settings yaml file and data path, and generates an R script
 that can reproduce the session using a template.
 }
