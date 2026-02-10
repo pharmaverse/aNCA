@@ -130,20 +130,26 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  test_that("concatenates exclusion reasons correctly", {
-    test_df <- data.frame(
-      USUBJID = "001", AFRLT = 1, ARRLT = 0, ROUTE = "IV",
-      EXCL_A = "Poor sample",
-      EXCL_B = "Wrong time"
-    )
+  test_that("using nca_exclude_reason_columns concatenates exclusion reasons correctly", {
+    test_df <- ADNCA
+    nrows <- nrow(ADNCA)
+    test_df$NCA1XRS <- c(rep("Contaminated sample", 2), rep(NA_character_, nrows - 2))
+    test_df$NCA2XRS <- c("Wrongly labelled", rep(NA_character_, nrows - 2), "Wrong labelled")
 
     res <- format_pkncaconc_data(
       test_df,
       group_columns = "USUBJID",
-      nca_exclude_reason_columns = c("EXCL_A", "EXCL_B")
+      nca_exclude_reason_columns = c("NCA1XRS", "NCA2XRS")
     )
 
-    expect_equal(res$nca_exclude, "Poor sample; Wrong time")
+    exp_nca_exclude <- c(
+      "Contaminated sample; Wrongly labelled",
+      "Contaminated sample",
+      rep("", nrows - 3),
+      "Wrong labelled"
+    )
+
+    expect_equal(res$nca_exclude, exp_nca_exclude)
   })
 
   it("processes multiple analytes correctly", {
