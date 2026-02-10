@@ -53,8 +53,9 @@ create_start_impute <- function(pknca_data) {
 
   # Process imputation strategy based on each interval
   pknca_data$intervals <- mydata_with_int %>%
-    group_by(INT_ROWID) %>%
-    arrange(across(any_of(c(group_columns, time_column)))) %>%
+    # Consider by interval (calculation) and concentration group (parameter, specimen)
+    group_by(INT_ROWID, !!!syms(intersect(conc_group_columns, names(.)))) %>%
+    arrange(across(any_of(c("INT_ROWID", group_columns, time_column)))) %>%
     mutate(
       is.first.dose = DOSNOA == 1,
       is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
