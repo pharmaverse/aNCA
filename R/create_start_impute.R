@@ -4,7 +4,7 @@
 #'
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
 #' @returns A PKNCAdata object with updated intervals table including start imputation strategies.
-#' If the intervals are ambigous and can refer to multiple concentration groups it will define them
+#' If the intervals are ambiguous and can refer to multiple concentration groups it will define them
 #' to choose the proper imputation for each.
 #' @import dplyr
 #' @importFrom rlang sym
@@ -49,7 +49,6 @@ create_start_impute <- function(pknca_data) {
         ))
       ) %>%
       rename(TIME_DOSE = !!sym(time_dose_column))
-      ,
   ) %>%
     merge(
       pknca_data$intervals %>%
