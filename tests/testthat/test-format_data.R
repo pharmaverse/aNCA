@@ -118,7 +118,6 @@ describe("format_pkncaconc_data", {
           AFRLT
         )
       )
- 
     df_conc <- format_pkncaconc_data(adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DOSETRT", "PARAM"),
