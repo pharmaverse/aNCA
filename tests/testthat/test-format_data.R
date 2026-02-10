@@ -107,25 +107,36 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  it("handles AEFRLT column correctly, if present", {
-
-    ADNCA <- tibble::add_column(ADNCA, AEFRLT = rep(seq(0, 9), 2))
-    df_conc <- format_pkncaconc_data(ADNCA,
+  it("handles time_end_column (AEFRLT) correctly, if present", {
+    subj1 <- unique(ADNCA$USUBJID)[1]
+    adnca <- ADNCA %>%
+      # For some cases (subj1) add a collection duration time, for the rest no
+      mutate(
+        AEFRLT = ifelse(
+          USUBJID %in% subj1,
+          AFRLT + 0.5,
+          AFRLT
+        )
+      )
+ 
+    df_conc <- format_pkncaconc_data(adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DOSETRT", "PARAM"),
                                      time_end_column = "AEFRLT",
                                      time_column = "AFRLT",
                                      rrlt_column = "ARRLT")
 
-    expect_s3_class(df_conc, "data.frame")
-    expect_true(!is.null(df_conc$AEFRLT))
+    # CONCDUR is created correctly based on the time end column
+    expect_equal(df_conc$CONCDUR, ifelse(df_conc$USUBJID %in% subj1, 0.5, 0))
 
+    # CONCDUR cna be used as a sample collection duration column with PKNCA
     expect_no_error(
       PKNCA::PKNCAconc(
         df_conc,
         formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
         exclude_half.life = "exclude_half.life",
-        time.nominal = "NFRLT"
+        time.nominal = "NFRLT",
+        duration = "CONCDUR"
       )
     )
   })
