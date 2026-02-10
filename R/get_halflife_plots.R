@@ -23,7 +23,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   timeu_col <- pknca_data$conc$columns$timeu
   concu_col <- pknca_data$conc$columns$concu
   exclude_hl_col <- pknca_data$conc$columns$exclude_half.life
-  
+
   # Define which columns use for the title to keep it short
   grp_cols_int <- group_vars(pknca_data)
   grp_cols_n_levels <- sapply(pknca_data$conc$data[grp_cols_int], function(x) length(unique(x)))
