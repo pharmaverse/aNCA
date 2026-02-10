@@ -86,4 +86,13 @@ describe("create_start_impute", {
       dplyr::pull(impute)
     expect_equal(unique(result_with_analyte_impute), "start_logslope")
   })
+
+  it("if input intervals are ambiguous, specify them and do appropiate start_impute", {
+    # Create ambiguous intervals (not separated by group)
+    mydata_ambig <- pknca_data
+    mydata_ambig$intervals <- mydata_ambig$intervals %>%
+      select(-any_of(group_vars(pknca_data))) %>%
+      unique()
+    result_ambig <- create_start_impute(mydata_ambig)
+    expect_true(nrow(setdiff(result$intervals, result_ambig$intervals)) == 0)
 })
