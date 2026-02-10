@@ -95,4 +95,5 @@ describe("create_start_impute", {
       unique()
     result_ambig <- create_start_impute(mydata_ambig)
     expect_true(nrow(setdiff(result$intervals, result_ambig$intervals)) == 0)
+  })
 })
