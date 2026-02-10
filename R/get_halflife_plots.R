@@ -23,6 +23,11 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   timeu_col <- pknca_data$conc$columns$timeu
   concu_col <- pknca_data$conc$columns$concu
   exclude_hl_col <- pknca_data$conc$columns$exclude_half.life
+  
+  # Define which columns use for the title to keep it short
+  grp_cols_int <- group_vars(pknca_data)
+  grp_cols_n_levels <- sapply(pknca_data$conc$data[grp_cols_int], function(x) length(unique(x)))
+  title_cols <- grp_cols_int[grp_cols_n_levels > 1]
 
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
@@ -73,6 +78,14 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   info_per_plot_list <- d_conc_with_res %>%
     # Indicate plot details
     dplyr::mutate(
+      title = paste0(
+        paste0(
+          paste0(title_cols, ": "),
+          .[title_cols],
+          collapse = ", "
+        ),
+        paste0("\n[", start, "-", end, "]")
+      ),
       subtitle = ifelse(
         is.na(lambda.z),
         exclude,
@@ -164,8 +177,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
       time_col = time_col,
       conc_col = conc_col,
       title = paste0(
-        paste0(group_vars(pknca_data), ": "),
-        df[1, group_vars(pknca_data), drop = FALSE],
+        paste0(title_cols, ": "),
+        df[1, title_cols, drop = FALSE],
         collapse = ", "
       ),
       xlab = df$xlab[1],
