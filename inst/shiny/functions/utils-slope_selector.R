@@ -129,30 +129,6 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   plot_outputs
 }
 
-#' Parse Plot Names to Data Frame
-#'
-#' Converts a named list of plots (with names in the format 'col1: val1, col2: val2, ...')
-#' into a data frame with one row per plot and columns for each key.
-#'
-#' @param named_list A named list or vector, where names are key-value pairs separated by commas.
-#' @return A data frame with columns for each key and a `PLOTID` column with the original names.
-parse_plot_names_to_df <- function(named_list) {
-  plot_names <- names(named_list)
-  parsed <- lapply(plot_names, function(x) {
-    pairs <- strsplit(x, "_\\s*")[[1]]
-    kv <- strsplit(pairs, "=\\s*")
-    setNames(
-      vapply(kv, function(y) y[2], character(1)),
-      vapply(kv, function(y) y[1], character(1))
-    )
-  })
-  as.data.frame(
-    do.call(rbind, parsed),
-    stringsAsFactors = FALSE
-  ) %>%
-    mutate(PLOTID = names(named_list))
-}
-
 #' Check overlap between existing and new slope rulesets
 #'
 #' Takes in tables with existing and incoming selections and exclusions, finds any overlap and
