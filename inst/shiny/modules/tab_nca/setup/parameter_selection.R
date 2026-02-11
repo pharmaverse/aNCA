@@ -27,22 +27,26 @@ parameter_selection_ui <- function(id) {
       dropdown(
         div(
           style = "min-width:340px; max-width:480px;",
-          tags$h2("Parameter Selection Help", style = "font-size:1.1em; margin-bottom:8px;"),
+          tags$h2("Parameter Selection Help", style = "font-size:1.1em; margin-bottom:25px;"),
+          p("Selections are independent for each study type and can be customized as needed. From top-to-bottom, this page shows:"),
           tags$ul(
+            style = "margin-bottom:0; padding-left:20px;",
             tags$li(
-              tags$b("Study Types"),
-              ": The app detects study types in your data and displays them above."
+              style = "margin-bottom:8px;",
+              tags$b("Study types table"),
+              ": Detected study types and the number of subjects associated with it."
             ),
             tags$li(
-              tags$b("Current Selections"),
-              ": The table shows which PK parameters are set to be calculated for each study type."
+              style = "margin-bottom:8px;",
+              tags$b("Current selections table"),
+              ": Display of PK parameters selected for each study type."
             ),
             tags$li(
-              tags$b("Input Choices"),
-              ": For each study type, use the input panel to search and select parameters by CDISC code or description."
+              style = "margin-bottom:0;",
+              tags$b("Input widgets"),
+              ": Search and select the PK parameters to calculate for each study type."
             )
-          ),
-          p("Selections are independent for each study type and can be customized as needed.")
+          )
         ),
         style = "unite",
         right = TRUE,
@@ -143,9 +147,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         })
 
       study_types_df() %>%
-        arrange(type) %>%
         # summarise each unique type and group with number of subjects
-        group_by(!!!syms(groups), type) %>%
+        group_by(type, !!!syms(groups)) %>%
         summarise(`Subjects Count` = n_distinct(USUBJID), .groups = "drop") %>%
         rename("Study Type" = type)
     })
