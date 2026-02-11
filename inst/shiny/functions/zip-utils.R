@@ -428,8 +428,10 @@ prepare_export_files <- function(target_dir,
     "session_code\\.R", "settings\\.yaml", "data\\.rds"
   )
 
-  pattern <- paste0("(", paste0(exts, collapse = "|"), ")$")
-  file.remove(all_files[!grepl(pattern, all_files, ignore.case = TRUE)])
+  fnames <- input$res_tree
+  pattern <- paste0("(/", paste0(fnames, collapse = "|"), ")(", paste0(exts, collapse = "|"), ")$")
+  files_req <- grep(pattern, all_files, value = TRUE)
+  file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
   dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
