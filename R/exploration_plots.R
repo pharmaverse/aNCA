@@ -9,6 +9,10 @@
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
+#' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
+#' Default is `NULL` (no limits).
+#' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
+#' Default is `NULL` (no limits).
 #' @param show_dose Logical; if `TRUE`, vertical lines for dose times are shown. Default is `FALSE`.
 #' @param palette Optional palette name or named character vector of colors for the plot.
 #' Default is "default" color palette.
@@ -29,6 +33,8 @@ exploration_individualplot <- function(
     facet_by = NULL,
     ylog_scale = FALSE,
     threshold_value = NULL,
+  x_limits = NULL,
+  y_limits = NULL,
     show_dose = FALSE,
     palette = "default",
     tooltip_vars = NULL,
@@ -61,6 +67,8 @@ exploration_individualplot <- function(
     color_by = color_by,
     facet_by = facet_by,
     group_by = pknca_data$conc$columns$subject,
+    x_limits = x_limits,
+    y_limits = y_limits,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     palette = palette,
@@ -81,6 +89,10 @@ exploration_individualplot <- function(
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
 #' Default includes dose group vars and "Mean".
+#' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
+#' Default is `NULL` (no limits).
+#' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
+#' Default is `NULL` (no limits).
 #' @return A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
 #' @export
@@ -98,7 +110,9 @@ exploration_meanplot <- function(
     tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
-    use_time_since_last_dose = FALSE) {
+  use_time_since_last_dose = FALSE,
+  x_limits = NULL,
+  y_limits = NULL) {
 
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
@@ -130,6 +144,8 @@ exploration_meanplot <- function(
     color_by = color_by,
     facet_by = facet_by,
     group_by = color_by,
+    x_limits = x_limits,
+    y_limits = y_limits,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     palette = palette,
