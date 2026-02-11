@@ -12,12 +12,13 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     position = "right",
     open = TRUE,
     selectInput(
-      ns("palette_theme"),
+      ns("palette"),
       "Select Color Theme:",
       choices = c(
         "Default (ggplot2)" = "default",
-        "Viridis" = "viridis",
-        "Spectral" = "spectral"
+        "Plasma" = "plasma",
+        "Cividis" = "cividis",
+        "Inferno" = "inferno"
       ),
       selected = "default"
     ),
@@ -189,22 +190,41 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       )
     })
 
+    # Create a reactive value to store the filtering list
+    # based on PARAM, PCSPEC, USUBJID, and ATPTREF selections
+    filtering_list <- reactiveVal(list())
+    observeEvent(
+      list(input$param, input$pcspec, input$usubjid, input$profiles),
+      {
+        lst <- list(
+          PARAM = input$param,
+          PCSPEC = input$pcspec
+        )
+        if ("usubjid" %in% names(input)) {
+          lst$USUBJID <- input$usubjid
+        }
+        if (!is.null(input$profiles)) {
+          lst$ATPTREF <- input$profiles
+        }
+        filtering_list(lst)
+      },
+      ignoreNULL = FALSE
+    )
+
     # Return all inputs as a list of reactives
     reactive({
       list(
-        palette_theme = input$palette_theme,
-        param = input$param,
-        pcspec = input$pcspec,
-        usubjid = input$usubjid,
+        palette = input$palette,
         color_by = input$colorby,
         facet_by = input$facetby,
         ylog_scale = input$log,
-        profiles_selected = input$profiles,
         threshold_value = input$threshold_value,
         show_dose = input$show_dose,
         sd_max = input$sd_max,
         sd_min = input$sd_min,
-        ci = input$ci
+        ci = input$ci,
+        filtering_list = filtering_list(),
+        use_time_since_last_dose = input$timescale == "By Dose Profile"
       )
     })
   })
