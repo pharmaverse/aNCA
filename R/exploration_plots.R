@@ -103,6 +103,7 @@ exploration_meanplot <- function(
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
+    facet_by = facet_by,
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
     show_dose = show_dose,
@@ -130,6 +131,7 @@ exploration_meanplot <- function(
     color_by = color_by,
     facet_by = facet_by,
     group_by = color_by,
+    facet_count_n = "USUBJID_COUNT",
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     palette = palette,
@@ -228,6 +230,7 @@ process_data_individual <- function(pknca_data,
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
 #' @param extra_grouping_vars Character vector of extra grouping variables to include in summary.
 #' Default is `NULL`.
+#' @param facet_by Character vector of columns used for facet-specific counts.
 #' @param filtering_list Named list of filters (column = allowed values).
 #' Default is `NULL` (no filtering).
 #' @param ylog_scale Logical; if `TRUE`, removes non-positive means. Default is `FALSE`.
@@ -242,6 +245,7 @@ process_data_individual <- function(pknca_data,
 #' @noRd
 process_data_mean <- function(pknca_data,
                               extra_grouping_vars = NULL,
+                              facet_by = NULL,
                               filtering_list = NULL,
                               ylog_scale = FALSE,
                               show_dose = FALSE,
@@ -298,6 +302,17 @@ process_data_mean <- function(pknca_data,
     ) %>%
     # Make sure the nominal time column is always the first column
     select(any_of(c(x_var)), everything())
+
+  if (!is.null(facet_by) && length(facet_by) > 0) {
+    subj_col <- pknca_data$conc$columns$subject
+    facet_counts <- processed %>%
+      dplyr::distinct(!!!rlang::syms(facet_by), !!rlang::sym(subj_col)) %>%
+      dplyr::group_by(!!!rlang::syms(facet_by)) %>%
+      dplyr::summarise(USUBJID_COUNT = dplyr::n_distinct(!!rlang::sym(subj_col)), .groups = "drop")
+
+    summarised_data <- summarised_data %>%
+      dplyr::left_join(facet_counts, by = facet_by)
+  }
 
   # Remove non-positive means if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
