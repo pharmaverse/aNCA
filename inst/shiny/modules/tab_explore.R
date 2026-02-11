@@ -48,28 +48,23 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       grouping_vars = extra_group_vars
     )
 
-    # TAB: General Lineplot --------------------------------------------------------
-    # Compute the individual plot object
-    individualplot <- debounce(
-      reactive({
-        req(pknca_data(), individual_inputs()$color_by)
-        log_info("Rendering individual plots")
+    individualplot <- reactive({
+      req(pknca_data(), individual_inputs()$color_by)
+      log_info("Rendering individual plots")
 
-        exploration_individualplot(
-          pknca_data = pknca_data(),
-          color_by = individual_inputs()$color_by,
-          facet_by = individual_inputs()$facet_by,
-          filtering_list = individual_inputs()$filtering_list,
-          show_dose = individual_inputs()$show_dose,
-          ylog_scale = individual_inputs()$ylog_scale,
-          threshold_value = individual_inputs()$threshold_value,
-          labels_df = metadata_nca_variables,
-          use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
-          palette = individual_inputs()$palette
-        )
-      }),
-      millis = 150
-    )
+      exploration_individualplot(
+        pknca_data = isolate(pknca_data()),
+        color_by = individual_inputs()$color_by,
+        facet_by = individual_inputs()$facet_by,
+        filtering_list = individual_inputs()$filtering_list,
+        show_dose = individual_inputs()$show_dose,
+        ylog_scale = individual_inputs()$ylog_scale,
+        threshold_value = individual_inputs()$threshold_value,
+        labels_df = metadata_nca_variables,
+        use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
+        palette = individual_inputs()$palette
+      )
+    })
 
     # Render the individual plot in plotly
     output$individualplot <- renderPlotly({
@@ -77,31 +72,26 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       ggplotly(individualplot(), tooltip = "tooltip_text")
     })
 
-    # TAB: Mean Plot -----------------------------------------------------------
-    # Compute the meanplot object
-    meanplot <- debounce(
-      reactive({
-        req(pknca_data(), mean_inputs()$color_by)
-        log_info("Computing meanplot ggplot object")
+    meanplot <- reactive({
+      req(pknca_data(), mean_inputs()$color_by)
+      log_info("Computing meanplot ggplot object")
 
-        exploration_meanplot(
-          pknca_data = pknca_data(),
-          color_by = mean_inputs()$color_by,
-          facet_by = mean_inputs()$facet_by,
-          filtering_list = mean_inputs()$filtering_list,
-          show_dose = mean_inputs()$show_dose,
-          palette = mean_inputs()$palette,
-          sd_min = mean_inputs()$sd_min,
-          sd_max = mean_inputs()$sd_max,
-          ci = mean_inputs()$ci,
-          ylog_scale = mean_inputs()$ylog_scale,
-          threshold_value = mean_inputs()$threshold_value,
-          labels_df = metadata_nca_variables,
-          use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
-        )
-      }),
-      millis = 150
-    )
+      exploration_meanplot(
+        pknca_data = isolate(pknca_data()),
+        color_by = mean_inputs()$color_by,
+        facet_by = mean_inputs()$facet_by,
+        filtering_list = mean_inputs()$filtering_list,
+        show_dose = mean_inputs()$show_dose,
+        palette = mean_inputs()$palette,
+        sd_min = mean_inputs()$sd_min,
+        sd_max = mean_inputs()$sd_max,
+        ci = mean_inputs()$ci,
+        ylog_scale = mean_inputs()$ylog_scale,
+        threshold_value = mean_inputs()$threshold_value,
+        labels_df = metadata_nca_variables,
+        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
+      )
+    })
 
     # Save the objects for the ZIP folder whenever they change
     observe({
