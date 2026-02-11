@@ -28,13 +28,21 @@ parameter_selection_ui <- function(id) {
         div(
           style = "min-width:340px; max-width:480px;",
           tags$h2("Parameter Selection Help", style = "font-size:1.1em; margin-bottom:8px;"),
-          p("Select which PK parameters to calculate for each detected study type."),
           tags$ul(
-            tags$li(tags$b("Study Types"), ": Automatically detected from your data."),
-            tags$li(tags$b("Default selections"), ": Each study type has its own recommended parameters, but you can change them."),
-            tags$li(tags$b("Override"), ": Upload a settings file to apply custom selections.")
+            tags$li(
+              tags$b("Study Types"),
+              ": The app detects study types in your data and displays them above."
+            ),
+            tags$li(
+              tags$b("Current Selections"),
+              ": The table shows which PK parameters are set to be calculated for each study type."
+            ),
+            tags$li(
+              tags$b("Input Choices"),
+              ": For each study type, use the input panel to search and select parameters by CDISC code or description."
+            )
           ),
-          p("Click parameters to select/deselect. Your choices affect the NCA calculations.")
+          p("Selections are independent for each study type and can be customized as needed.")
         ),
         style = "unite",
         right = TRUE,
@@ -135,9 +143,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         })
 
       study_types_df() %>%
-        # summarise each unique type and group with number of USUBJID
+        arrange(type) %>%
+        # summarise each unique type and group with number of subjects
         group_by(!!!syms(groups), type) %>%
-        summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
+        summarise(`Subjects Count` = n_distinct(USUBJID), .groups = "drop") %>%
+        rename("Study Type" = type)
     })
 
     # ReactiveVal for parameter selection state
