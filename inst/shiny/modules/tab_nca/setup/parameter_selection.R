@@ -20,6 +20,28 @@
 parameter_selection_ui <- function(id) {
   ns <- NS(id)
   tagList(
+    # Header row with help button
+    div(
+      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
+      tags$h2("Parameter Selection", style = "font-size:1.2em; margin-bottom:8px; margin-right:12px;"),
+      dropdown(
+        div(
+          style = "min-width:340px; max-width:480px;",
+          tags$h2("Parameter Selection Help", style = "font-size:1.1em; margin-bottom:8px;"),
+          p("Select which PK parameters to calculate for each detected study type."),
+          tags$ul(
+            tags$li(tags$b("Study Types"), ": Automatically detected from your data."),
+            tags$li(tags$b("Default selections"), ": Each study type has its own recommended parameters, but you can change them."),
+            tags$li(tags$b("Override"), ": Upload a settings file to apply custom selections.")
+          ),
+          p("Click parameters to select/deselect. Your choices affect the NCA calculations.")
+        ),
+        style = "unite",
+        right = TRUE,
+        icon = icon("question"),
+        status = "primary"
+      )
+    ),
     p("The following study types were detected in the data:"),
     card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
 
@@ -28,8 +50,7 @@ parameter_selection_ui <- function(id) {
     card(reactable_ui(ns("selected_parameters_table")), class = "border-0 shadow-none"),
 
     br(),
-    p("Select the parameters to calculate for each study type.
-      Selections can be overridden by uploading a settings file."),
+    p("Select the parameters to calculate for each study type. Selections can be overridden by uploading a settings file."),
 
     uiOutput(ns("dynamic_study_accordion"))
   )
