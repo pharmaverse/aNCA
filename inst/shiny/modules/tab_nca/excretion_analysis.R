@@ -11,6 +11,15 @@ excretion_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
+    # Header row with help button
+    div(
+      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
+      tags$h2(
+        "Excretion Analysis",
+        style = "font-size:1.2em; margin-bottom:8px; margin-right:12px;"
+      ),
+      excretion_help_ui()
+    ),
     div(
       class = "excretion-section-container",
       id = ns("excretion_section_container"),
@@ -202,4 +211,49 @@ excretion_server <- function(id, input_pknca_data) {
       session$userData$results$additional_analysis$excretion_results <- results_output()
     })
   })
+}
+
+# Excretion analysis help button dropdown
+excretion_help_ui <- function() {
+  dropdown(
+    div(
+      style = "min-width:340px; max-width:480px;",
+      tags$h2("Excretion Analysis Help", style = "font-size:1.1em; margin-bottom:18px;"),
+      p("Analyze excretion parameters for selected matrices (e.g., urine) and intervals."),
+      tags$ul(
+        style = "margin-bottom:0; padding-left:20px;",
+        tags$li(
+          style = "margin-bottom:8px;",
+          tags$b("Select Matrices"), ": Choose specimen types for excretion analysis."
+        ),
+        tags$li(
+          style = "margin-bottom:8px;",
+          tags$b("Map End Time"), ": Select the column marking the end of collection intervals."
+        ),
+        tags$li(
+          style = "margin-bottom:8px;", tags$b("Adjust for Body Weight"),
+          ": Optionally adjust dose by body weight if available."
+        ),
+        tags$li(
+          style = "margin-bottom:8px;",
+          tags$b("Select Parameters"), ": Pick excretion PK parameters to calculate."
+        ),
+        tags$li(
+          style = "margin-bottom:8px;",
+          tags$b("Interval Types"), ": Choose to analyze by samples, dose profiles or both."
+        ),
+        tags$li(
+          style = "margin-bottom:8px;",
+          tags$b("Results Table"), ": View and download calculated excretion results."
+        )
+      ),
+      p(
+        "Complete selections and click Submit. Results update below. ",
+        "If VOLUME is missing, analysis is disabled."
+      )
+    ),
+    style = "unite",
+    icon = icon("question"),
+    status = "primary"
+  )
 }
