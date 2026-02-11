@@ -23,12 +23,17 @@ parameter_selection_ui <- function(id) {
     # Header row with help button
     div(
       style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
-      tags$h2("Parameter Selection", style = "font-size:1.2em; margin-bottom:8px; margin-right:12px;"),
+      tags$h2(
+        "Parameter Selection",
+        style = "font-size:1.2em; margin-bottom:8px; margin-right:12px;"
+      ),
       dropdown(
         div(
           style = "min-width:340px; max-width:480px;",
           tags$h2("Parameter Selection Help", style = "font-size:1.1em; margin-bottom:25px;"),
-          p("Selections are independent for each study type and can be customized as needed. From top-to-bottom, this page shows:"),
+          p(
+            "Selections are independent for each study type and can be customized as needed. ",
+            "From top-to-bottom, this page shows:"),
           tags$ul(
             style = "margin-bottom:0; padding-left:20px;",
             tags$li(
@@ -62,7 +67,10 @@ parameter_selection_ui <- function(id) {
     card(reactable_ui(ns("selected_parameters_table")), class = "border-0 shadow-none"),
 
     br(),
-    p("Select the parameters to calculate for each study type. Selections can be overridden by uploading a settings file."),
+    p(
+      "Select the parameters to calculate for each study type.",
+      "Selections can be overridden by uploading a settings file."
+    ),
 
     uiOutput(ns("dynamic_study_accordion"))
   )
