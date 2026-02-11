@@ -65,6 +65,8 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-plotly_empty_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/ensure_column_unit_exists.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/error_plot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/exploration_individualplot.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/exploration_meanplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/export_cdisc.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/filter_breaks.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/flexible_violinboxplot.html</loc></url>
@@ -106,8 +108,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg03.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/process_data_individual.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/process_data_mean.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_settings.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>

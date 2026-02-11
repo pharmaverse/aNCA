@@ -150,6 +150,12 @@
 - [`ensure_column_unit_exists()`](https://pharmaverse.github.io/aNCA/reference/ensure_column_unit_exists.md)
   : Ensure Unit Columns Exist in PKNCA Object
 
+- [`exploration_individualplot()`](https://pharmaverse.github.io/aNCA/reference/exploration_individualplot.md)
+  : Create an Individual PK Line Plot
+
+- [`exploration_meanplot()`](https://pharmaverse.github.io/aNCA/reference/exploration_meanplot.md)
+  : Create a Mean PK Line Plot
+
 - [`export_cdisc()`](https://pharmaverse.github.io/aNCA/reference/export_cdisc.md)
   : Export CDISC Data
 
@@ -289,12 +295,6 @@
 
 - [`prepare_plot_data()`](https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.md)
   : Prepare Data for PK Dose QC Plotting
-
-- [`process_data_individual()`](https://pharmaverse.github.io/aNCA/reference/process_data_individual.md)
-  : Process data for individual line plot
-
-- [`process_data_mean()`](https://pharmaverse.github.io/aNCA/reference/process_data_mean.md)
-  : Create a Mean PK Line Plot
 
 - [`read_pk()`](https://pharmaverse.github.io/aNCA/reference/read_pk.md)
   : Reads PK datasets from various file formats.
