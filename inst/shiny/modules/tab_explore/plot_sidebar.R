@@ -190,19 +190,41 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       )
     })
 
-    filtering_list <- reactive({
-      lst <- list(
-        PARAM = input$param,
-        PCSPEC = input$pcspec
+    # Render the cycle selection UI
+    output$profile_selection <- renderUI({
+      req(input$param)
+      y <- pknca_data()$conc$data %>%
+        filter(PARAM %in% input$param) %>%
+        pull(ATPTREF) %>%
+        unique()
+      pickerInput(
+        ns("profiles"),
+        "Choose the profile(s):",
+        choices = sort(y),
+        multiple = TRUE, selected = y[1], options = list(`actions-box` = TRUE)
       )
-      if ("usubjid" %in% names(input)) {
-        lst$USUBJID <- input$usubjid
-      }
-      if (!is.null(input$profiles)) {
-        lst$ATPTREF <- input$profiles
-      }
-      lst
     })
+
+    # Create a reactive value to store the filtering list
+    # based on PARAM, PCSPEC, USUBJID, and ATPTREF selections
+    filtering_list <- reactiveVal(list())
+    observeEvent(
+      list(input$param, input$pcspec, input$usubjid, input$profiles),
+      {
+        lst <- list(
+          PARAM = input$param,
+          PCSPEC = input$pcspec
+        )
+        if ("usubjid" %in% names(input)) {
+          lst$USUBJID <- input$usubjid
+        }
+        if (!is.null(input$profiles)) {
+          lst$ATPTREF <- input$profiles
+        }
+        filtering_list(lst)
+      },
+      ignoreNULL = FALSE
+    )
 
     # Return all inputs as a list of reactives
     reactive({
