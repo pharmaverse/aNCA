@@ -28,19 +28,20 @@
 #' @return A `ggplot` object representing the individual PK line plot.
 #' @export
 exploration_individualplot <- function(
-    pknca_data,
-    color_by,
-    facet_by = NULL,
-    ylog_scale = FALSE,
-    threshold_value = NULL,
+  pknca_data,
+  color_by,
+  facet_by = NULL,
+  ylog_scale = FALSE,
+  threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
-    show_dose = FALSE,
-    palette = "default",
-    tooltip_vars = NULL,
-    labels_df = NULL,
-    filtering_list = NULL,
-    use_time_since_last_dose = FALSE) {
+  show_dose = FALSE,
+  palette = "default",
+  tooltip_vars = NULL,
+  labels_df = NULL,
+  filtering_list = NULL,
+  use_time_since_last_dose = FALSE
+) {
   individual_data <- process_data_individual(
     pknca_data = pknca_data,
     filtering_list = filtering_list,
@@ -97,22 +98,23 @@ exploration_individualplot <- function(
 #' with error bars and/or confidence intervals if requested.
 #' @export
 exploration_meanplot <- function(
-    pknca_data,
-    color_by,
-    facet_by = NULL,
-    ylog_scale = FALSE,
-    threshold_value = NULL,
-    show_dose = FALSE,
-    palette = "default",
-    sd_min = FALSE,
-    sd_max = FALSE,
-    ci = FALSE,
-    tooltip_vars = NULL,
-    labels_df = NULL,
-    filtering_list = NULL,
+  pknca_data,
+  color_by,
+  facet_by = NULL,
+  ylog_scale = FALSE,
+  threshold_value = NULL,
+  show_dose = FALSE,
+  palette = "default",
+  sd_min = FALSE,
+  sd_max = FALSE,
+  ci = FALSE,
+  tooltip_vars = NULL,
+  labels_df = NULL,
+  filtering_list = NULL,
   use_time_since_last_dose = FALSE,
   x_limits = NULL,
-  y_limits = NULL) {
+  y_limits = NULL
+) {
 
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
