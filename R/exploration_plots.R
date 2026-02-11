@@ -9,6 +9,8 @@
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
+#' @param dose_normalize Character value: "none", "normalized", or "both".
+#' Default is "none".
 #' @param show_dose Logical; if `TRUE`, vertical lines for dose times are shown. Default is `FALSE`.
 #' @param palette Optional palette name or named character vector of colors for the plot.
 #' Default is "default" color palette.
@@ -29,16 +31,20 @@ exploration_individualplot <- function(
     facet_by = NULL,
     ylog_scale = FALSE,
     threshold_value = NULL,
+    dose_normalize = c("none", "normalized", "both"),
     show_dose = FALSE,
     palette = "default",
     tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE) {
+  dose_normalize <- match.arg(dose_normalize)
+
   individual_data <- process_data_individual(
     pknca_data = pknca_data,
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
+    dose_normalize = dose_normalize,
     show_dose = show_dose,
     use_time_since_last_dose = use_time_since_last_dose
   )
@@ -81,6 +87,8 @@ exploration_individualplot <- function(
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
 #' Default includes dose group vars and "Mean".
+#' @param dose_normalize Character value: "none", "normalized", or "both".
+#' Default is "none".
 #' @return A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
 #' @export
@@ -98,13 +106,16 @@ exploration_meanplot <- function(
     tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
-    use_time_since_last_dose = FALSE) {
+    use_time_since_last_dose = FALSE,
+    dose_normalize = c("none", "normalized", "both")) {
+  dose_normalize <- match.arg(dose_normalize)
 
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
+    dose_normalize = dose_normalize,
     show_dose = show_dose,
     use_time_since_last_dose = use_time_since_last_dose
   )
@@ -165,6 +176,8 @@ exploration_meanplot <- function(
 #' @param ylog_scale Logical; if `TRUE`, removes non-positive concentrations.
 #' Default is `FALSE`.
 #' @param conc_col Name of the concentration column. Default is "AVAL".
+#' @param dose_normalize Character value: "none", "normalized", or "both".
+#' Default is "none".
 #' @param show_dose Logical; if `TRUE`, derives dose times and includes TIME_DOSE column.
 #' Default is `FALSE`.
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
@@ -178,8 +191,10 @@ process_data_individual <- function(pknca_data,
                                     filtering_list = NULL,
                                     ylog_scale = FALSE,
                                     conc_col = "AVAL",
+                                    dose_normalize = c("none", "normalized", "both"),
                                     show_dose = FALSE,
                                     use_time_since_last_dose = FALSE) {
+  dose_normalize <- match.arg(dose_normalize)
   # Derive dose times if requested
   data <- if (show_dose || use_time_since_last_dose) {
     data <- derive_last_dose_time(
@@ -214,6 +229,13 @@ process_data_individual <- function(pknca_data,
   processed_data <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!sym(conc_col)))
 
+  processed_data <- .apply_dose_normalize(
+    processed_data,
+    pknca_data = pknca_data,
+    conc_col = conc_col,
+    dose_normalize = dose_normalize
+  )
+
   # Remove non-positive concentrations if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     processed_data <- processed_data %>% dplyr::filter(!!sym(conc_col) > 0)
@@ -228,6 +250,8 @@ process_data_individual <- function(pknca_data,
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
 #' @param extra_grouping_vars Character vector of extra grouping variables to include in summary.
 #' Default is `NULL`.
+#' @param dose_normalize Character value: "none", "normalized", or "both".
+#' Default is "none".
 #' @param filtering_list Named list of filters (column = allowed values).
 #' Default is `NULL` (no filtering).
 #' @param ylog_scale Logical; if `TRUE`, removes non-positive means. Default is `FALSE`.
@@ -244,8 +268,10 @@ process_data_mean <- function(pknca_data,
                               extra_grouping_vars = NULL,
                               filtering_list = NULL,
                               ylog_scale = FALSE,
+                              dose_normalize = c("none", "normalized", "both"),
                               show_dose = FALSE,
                               use_time_since_last_dose = FALSE) {
+  dose_normalize <- match.arg(dose_normalize)
   # Deduce columns and data
   x_var_unit <- pknca_data$conc$columns$timeu
   y_var_unit <- pknca_data$conc$columns$concu
@@ -271,6 +297,13 @@ process_data_mean <- function(pknca_data,
   processed <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!rlang::sym(y_var)))
 
+  processed <- .apply_dose_normalize(
+    processed,
+    pknca_data = pknca_data,
+    conc_col = y_var,
+    dose_normalize = dose_normalize
+  )
+
   # Adjust time variable with dose time if using time since last dose
   if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
     processed <- processed %>%
@@ -280,6 +313,10 @@ process_data_mean <- function(pknca_data,
   }
 
   # Calculate summary statistics by grouping columns
+  if (dose_normalize == "both" && "DOSE_NORM" %in% names(processed)) {
+    grouping_cols <- unique(c(grouping_cols, "DOSE_NORM"))
+  }
+
   summarised_data <- processed %>%
     dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
     dplyr::summarise(
@@ -305,6 +342,81 @@ process_data_mean <- function(pknca_data,
       dplyr::filter(Mean > 0)
   }
   summarised_data
+}
+
+#' @noRd
+.apply_dose_normalize <- function(data, pknca_data, conc_col, dose_normalize) {
+  if (dose_normalize == "none") {
+    return(data)
+  }
+
+  dose_col <- pknca_data$dose$columns$dose
+  doseu_col <- pknca_data$dose$columns$doseu
+  concu_col <- pknca_data$conc$columns$concu
+
+  if (is.null(dose_col) || is.null(doseu_col) || is.null(concu_col)) {
+    warning("Dose normalization skipped. Dose or concentration units are missing.")
+    return(data)
+  }
+
+  data <- .attach_dose_data(data, pknca_data, dose_col, doseu_col)
+
+  missing_cols <- setdiff(c(dose_col, doseu_col, concu_col), names(data))
+  if (length(missing_cols) > 0) {
+    warning("Dose normalization skipped. Missing columns: ", paste(missing_cols, collapse = ", "))
+    return(data)
+  }
+
+  normalize_once <- function(df) {
+    df[[conc_col]] <- ifelse(
+      is.na(df[[dose_col]]) | df[[dose_col]] == 0,
+      NA_real_,
+      df[[conc_col]] / df[[dose_col]]
+    )
+    df[[concu_col]] <- paste0(df[[concu_col]], "/", df[[doseu_col]])
+    df
+  }
+
+  if (dose_normalize == "normalized") {
+    return(normalize_once(data))
+  }
+
+  data_original <- data
+  data_original$DOSE_NORM <- "Original"
+  data_norm <- normalize_once(data)
+  data_norm$DOSE_NORM <- "Normalized"
+
+  dplyr::bind_rows(data_original, data_norm)
+}
+
+#' @noRd
+.attach_dose_data <- function(data, pknca_data, dose_col, doseu_col) {
+  if (is.null(dose_col) || is.null(doseu_col)) {
+    return(data)
+  }
+
+  if (dose_col %in% names(data) && doseu_col %in% names(data)) {
+    return(data)
+  }
+
+  dose_groups <- group_vars(pknca_data$dose)
+  dose_data <- pknca_data$dose$data
+
+  first_non_na <- function(x) {
+    x <- x[!is.na(x)]
+    if (length(x) == 0) NA else x[1]
+  }
+
+  dose_lookup <- dose_data %>%
+    dplyr::select(dplyr::any_of(c(dose_groups, dose_col, doseu_col))) %>%
+    dplyr::group_by(!!!rlang::syms(dose_groups)) %>%
+    dplyr::summarise(
+      !!dose_col := first_non_na(.data[[dose_col]]),
+      !!doseu_col := first_non_na(.data[[doseu_col]]),
+      .groups = "drop"
+    )
+
+  dplyr::left_join(data, dose_lookup, by = dose_groups)
 }
 
 #' Filter a data frame by a list of column-value pairs
