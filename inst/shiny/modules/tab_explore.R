@@ -68,7 +68,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           palette = individual_inputs()$palette
         )
       }),
-      millis = 50
+      millis = 150
     )
 
     # Render the individual plot in plotly
@@ -100,7 +100,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
           use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
         )
       }),
-      millis = 50
+      millis = 150
     )
 
     # Save the objects for the ZIP folder whenever they change
