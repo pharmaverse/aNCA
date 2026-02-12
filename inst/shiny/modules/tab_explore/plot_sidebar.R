@@ -85,6 +85,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns = ns
     ),
     checkboxInput(ns("show_dose"), label = "Show Dose Times"),
+    checkboxInput(ns("show_legend"), label = "Show Legend", value = FALSE),
     # --- Conditional UI Elements ---
     if (is_mean_plot) {
       tagList(
@@ -115,7 +116,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       data <- pknca_data()$conc$data
       conc_groups <- group_vars(pknca_data()$conc)
       dose_groups <- group_vars(pknca_data()$dose)
-      dose_col <- pknca_data()$dose$columns$dose
+      dose_col <- c(pknca_data()$dose$columns$dose, pknca_data()$dose$columns$doseu)
       subject_col <- pknca_data()$conc$columns$subject
 
       # Update the param picker input
@@ -218,6 +219,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         color_by = input$colorby,
         facet_by = input$facetby,
         ylog_scale = input$log,
+        show_legend = input$show_legend,
         threshold_value = input$threshold_value,
         show_dose = input$show_dose,
         sd_max = input$sd_max,
