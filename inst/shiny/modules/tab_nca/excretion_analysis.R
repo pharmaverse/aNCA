@@ -226,7 +226,7 @@ excretion_help_ui <- function() {
           tags$b("Select Matrices"), ": Choose specimen types for excretion analysis."
         ),
         tags$li(
-          tags$b("Map End Time"), ": Select the column marking the end of sample collection (i.e, AEFRLT)."
+          tags$b("Map End Time"), ": Select the column marking the end of sample collection."
         ),
         tags$li(
           tags$b("Adjust for Body Weight"),
