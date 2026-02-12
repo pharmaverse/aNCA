@@ -38,6 +38,7 @@ describe("format_pkncaconc_data", {
     )
   })
 
+
   it("filters EVID if column is present", {
     # Create base data with EVID = 0
     ADNCA <- ADNCA %>%
@@ -104,6 +105,61 @@ describe("format_pkncaconc_data", {
       ),
       regexp = "Missing required columns: PARAM"
     )
+  })
+
+  it("handles time_end_column (AEFRLT) correctly, if present", {
+    subj1 <- unique(ADNCA$USUBJID)[1]
+    adnca <- ADNCA %>%
+      # For some cases (subj1) add a collection duration time, for the rest no
+      mutate(
+        AEFRLT = ifelse(
+          USUBJID %in% subj1,
+          AFRLT + 0.5,
+          AFRLT
+        )
+      )
+    df_conc <- format_pkncaconc_data(adnca,
+                                     group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                                       "DOSETRT", "PARAM"),
+                                     time_end_column = "AEFRLT",
+                                     time_column = "AFRLT",
+                                     rrlt_column = "ARRLT")
+
+    # CONCDUR is created correctly based on the time end column
+    expect_equal(df_conc$CONCDUR, ifelse(df_conc$USUBJID %in% subj1, 0.5, 0))
+
+    # CONCDUR cna be used as a sample collection duration column with PKNCA
+    expect_no_error(
+      PKNCA::PKNCAconc(
+        df_conc,
+        formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+        exclude_half.life = "exclude_half.life",
+        time.nominal = "NFRLT",
+        duration = "CONCDUR"
+      )
+    )
+  })
+
+  test_that("using nca_exclude_reason_columns concatenates exclusion reasons correctly", {
+    test_df <- ADNCA
+    nrows <- nrow(ADNCA)
+    test_df$NCA1XRS <- c(rep("Contaminated sample", 2), rep(NA_character_, nrows - 2))
+    test_df$NCA2XRS <- c("Wrongly labelled", rep(NA_character_, nrows - 2), "Wrong labelled")
+
+    res <- format_pkncaconc_data(
+      test_df,
+      group_columns = "USUBJID",
+      nca_exclude_reason_columns = c("NCA1XRS", "NCA2XRS")
+    )
+
+    exp_nca_exclude <- c(
+      "Contaminated sample; Wrongly labelled",
+      "Contaminated sample",
+      rep("", nrows - 3),
+      "Wrong labelled"
+    )
+
+    expect_equal(res$nca_exclude, exp_nca_exclude)
   })
 
   it("processes multiple analytes correctly", {
