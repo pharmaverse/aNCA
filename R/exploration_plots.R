@@ -224,7 +224,7 @@ process_data_individual <- function(pknca_data,
       data <- dplyr::mutate(
         data,
         !!sym(conc_col) := !!sym(conc_col) / DOSE,
-        !!sym(concu_col) := !!sym(concu_col) / DOSE
+        !!sym(concu_col) := paste0(!!sym(concu_col), "/", !!sym(doseu_col))
       )
     }
 
