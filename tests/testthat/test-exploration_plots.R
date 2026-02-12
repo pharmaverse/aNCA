@@ -238,6 +238,20 @@ describe("exploration_individualplot:", {
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
     expect_true(all("PARAM" %in% names(vline_layer$data)))
   })
+
+  it("applies dose-normalization to concentration when line_type is 'dose-normalized'", {
+    p <- exploration_individualplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      line_type = "dose-normalized"
+    )
+    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
+    expect_true("GeomVline" %in% layer_classes)
+
+    # Check that the y-axis label indicates dose normalization
+    expect_true(grepl("Dose-Normalized", p$labels$y))
+  })
 })
 
 describe("exploration_meanplot:", {

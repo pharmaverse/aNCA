@@ -20,6 +20,8 @@
 #' Default is `NULL` (no filtering).
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
 #' Default is `FALSE` (time since first dose).
+#' @param line_type Character; "non dose-normalized" (default), "dose-normalized" to specify if lines
+#' should be normalized by dose amount or "both" to include both normalized and non-normalized lines.
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
 #' @export
@@ -34,14 +36,30 @@ exploration_individualplot <- function(
     tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
-    use_time_since_last_dose = FALSE) {
+    use_time_since_last_dose = FALSE,
+    line_type = "non dose-normalized"
+    ) {
+
   individual_data <- process_data_individual(
     pknca_data = pknca_data,
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
     show_dose = show_dose,
-    use_time_since_last_dose = use_time_since_last_dose
+    use_time_since_last_dose = use_time_since_last_dose,
+    dose_normalize = line_type %in% c("dose-normalized", "both")
   )
+
+  if (line_type == "both") {
+    non_normalized_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = FALSE
+    )
+    individual_data <- bind_rows(individual_data, non_normalized_data)
+  }
 
   # If no tooltip variables defined use some default ones
   if (is.null(tooltip_vars)) {
@@ -179,9 +197,17 @@ process_data_individual <- function(pknca_data,
                                     ylog_scale = FALSE,
                                     conc_col = "AVAL",
                                     show_dose = FALSE,
-                                    use_time_since_last_dose = FALSE) {
+                                    use_time_since_last_dose = FALSE,
+                                    dose_normalize = FALSE) {
+
+  time_col <- pknca_data$conc$columns$time
+  conc_col <- pknca_data$conc$columns$concentration
+  concu_col <- pknca_data$conc$columns$concu
+  dose_col <- pknca_data$dose$columns$dose
+  doseu_col <- pknca_data$dose$columns$doseu
+
   # Derive dose times if requested
-  data <- if (show_dose || use_time_since_last_dose) {
+  data <- if (show_dose || use_time_since_last_dose || dose_normalize) {
     data <- derive_last_dose_time(
       pknca_data = pknca_data,
       conc_time_col = pknca_data$conc$columns$time
@@ -193,6 +219,15 @@ process_data_individual <- function(pknca_data,
         !!pknca_data$conc$columns$time := !!sym(pknca_data$conc$columns$time) - TIME_DOSE
       )
     }
+    # If dose normalization requested, adjust concentration by dose amount
+    if (dose_normalize) {
+      data <- dplyr::mutate(
+        data,
+        !!sym(conc_col) := !!sym(conc_col) / DOSE,
+        !!sym(concu_col) := !!sym(concu_col) / DOSE
+      )
+    }
+
     data
   } else {
     pknca_data$conc$data
@@ -381,17 +416,21 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
   dose_data <- pknca_data$dose$data
   dose_time_col <- pknca_data$dose$columns$time
   dose_group_vars <- group_vars(pknca_data$dose)
+  dose_col <- pknca_data$dose$columns$dose
 
   dplyr::left_join(
     conc_data,
     dose_data %>%
-      dplyr::mutate(TIME_DOSE = !!rlang::sym(dose_time_col)) %>%
-      dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE"))),
+      dplyr::mutate(
+        TIME_DOSE = !!rlang::sym(dose_time_col),
+        DOSE = !!rlang::sym(dose_col)
+      ) %>%
+      dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE", "DOSE"))),
     by = dose_group_vars,
     relationship = "many-to-many"
   ) %>%
     dplyr::filter(TIME_DOSE <= !!rlang::sym(conc_time_col)) %>%
-    dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), "TIME_DOSE"))) %>%
+    dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), c("TIME_DOSE", "DOSE")))) %>%
     dplyr::arrange(TIME_DOSE) %>%
     dplyr::slice_tail(n = 1) %>%
     dplyr::ungroup()
