@@ -155,10 +155,18 @@ slope_selector_server <- function( # nolint
       }
       # Update the order input widget options based on the new data
       if (changes$in_data) {
+        req(processed_pknca_data())
+        # Only use columns that have more than 1 value in the whole dataset
+        browser()
+        pknca_data <- processed_pknca_data()
+        group_conc_cols <- group_vars(pknca_data)
+        group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
+        group_cols_to_order <- group_conc_cols[group_conc_n_levels > 1]
+
         updateOrderInput(
           session = session,
           inputId = "order_groups",
-          items = group_vars(new_pknca_data)
+          items = group_cols_to_order
         )
       }
 
