@@ -78,12 +78,6 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   info_per_plot_list <- d_conc_with_res %>%
     # Indicate plot details
     dplyr::mutate(
-      title = paste0(
-        paste0(
-         title_cols, ": ", .[title_cols], collapse = ", "
-        ),
-        paste0("\n[", start, "-", end, "]")
-      ),
       subtitle = ifelse(
         is.na(lambda.z),
         exclude,
