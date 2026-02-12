@@ -34,6 +34,42 @@ tab_explore_ui <- function(id) {
 tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    # Store the count to avoid redundant updates
+    last_n_ind <- reactiveVal(-1)
+    last_n_mean <- reactiveVal(-1)
+    
+    observe({
+      pknca_obj <- req(pknca_data())
+      df_raw <- pknca_obj$conc$data 
+      
+      # 1. INDIVIDUAL PLOT LOGIC
+      ind_in <- individual_inputs()
+      req(ind_in$color_by)
+      
+      # Filter data exactly as the plot function does
+      df_ind <- filter_by_list(df_raw, ind_in$filtering_list)
+      
+      # Calculate count based on the interaction of all color_by variables
+      n_ind <- nrow(unique(df_ind[ind_in$color_by]))
+      
+      if (isolate(last_n_ind()) != n_ind) {
+        updateCheckboxInput(session, "individual_sidebar-show_legend", value = (n_ind <= 30))
+        last_n_ind(n_ind)
+      }
+      
+      # 2. MEAN PLOT LOGIC
+      mean_in <- mean_inputs()
+      req(mean_in$color_by)
+      
+      # Mean data uses the summarized processing logic
+      df_mean <- filter_by_list(df_raw, mean_in$filtering_list)
+      n_mean <- nrow(unique(df_mean[mean_in$color_by]))
+      
+      if (isolate(last_n_mean()) != n_mean) {
+        updateCheckboxInput(session, "mean_sidebar-show_legend", value = (n_mean <= 30))
+        last_n_mean(n_mean)
+      }
+    })
 
     # Initiate the sidebar server modules
     individual_inputs <- plot_sidebar_server(
@@ -59,6 +95,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         filtering_list = individual_inputs()$filtering_list,
         show_dose = individual_inputs()$show_dose,
         ylog_scale = individual_inputs()$ylog_scale,
+        show_legend = individual_inputs()$show_legend,
         threshold_value = individual_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
         use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
@@ -87,6 +124,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         sd_max = mean_inputs()$sd_max,
         ci = mean_inputs()$ci,
         ylog_scale = mean_inputs()$ylog_scale,
+        show_legend = mean_inputs()$show_legend,
         threshold_value = mean_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
         use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
