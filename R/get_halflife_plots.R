@@ -26,7 +26,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 
   # Define which columns use for the title to keep it short
   grp_cols_int <- group_vars(pknca_data)
-  grp_cols_n_levels <- sapply(pknca_data$conc$data[grp_cols_int], function(x) length(unique(x)))
+  grp_cols_n_levels <- sapply(pknca_data$conc$data[grp_cols_int], \(x) length(unique(x)))
   title_cols <- grp_cols_int[grp_cols_n_levels > 1]
 
   # Make sure to create a default exclude half life column if it does not exist
@@ -80,9 +80,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     dplyr::mutate(
       title = paste0(
         paste0(
-          paste0(title_cols, ": "),
-          .[title_cols],
-          collapse = ", "
+         title_cols, ": ", .[title_cols], collapse = ", "
         ),
         paste0("\n[", start, "-", end, "]")
       ),
