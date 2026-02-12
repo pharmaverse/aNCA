@@ -10,6 +10,8 @@ exploration_individualplot(
   facet_by = NULL,
   ylog_scale = FALSE,
   threshold_value = NULL,
+  x_limits = NULL,
+  y_limits = NULL,
   show_dose = FALSE,
   palette = "default",
   tooltip_vars = NULL,
@@ -30,6 +32,12 @@ Default is \code{NULL} (no faceting).}
 
 \item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
 Default is \code{NULL} (no threshold).}
+
+\item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
+Default is \code{NULL} (no limits).}
+
+\item{y_limits}{Numeric vector of length 2 for y-axis limits (min, max).
+Default is \code{NULL} (no limits).}
 
 \item{show_dose}{Logical; if \code{TRUE}, vertical lines for dose times are shown. Default is \code{FALSE}.}
 

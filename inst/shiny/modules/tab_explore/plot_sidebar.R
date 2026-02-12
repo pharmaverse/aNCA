@@ -88,6 +88,16 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns = ns
     ),
     checkboxInput(ns("show_dose"), label = "Show Dose Times"),
+    div(
+      style = "display:flex; gap:8px;",
+      div(style = "flex:1;", numericInput(ns("x_min"), label = "X Min", value = NULL)),
+      div(style = "flex:1;", numericInput(ns("x_max"), label = "X Max", value = NULL))
+    ),
+    div(
+      style = "display:flex; gap:8px;",
+      div(style = "flex:1;", numericInput(ns("y_min"), label = "Y Min", value = NULL)),
+      div(style = "flex:1;", numericInput(ns("y_max"), label = "Y Max", value = NULL))
+    ),
     # --- Conditional UI Elements ---
     if (is_mean_plot) {
       tagList(
@@ -220,6 +230,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         ylog_scale = input$log,
         threshold_value = input$threshold_value,
         show_dose = input$show_dose,
+        x_limits = c(input$x_min, input$x_max),
+        y_limits = c(input$y_min, input$y_max),
         sd_max = input$sd_max,
         sd_min = input$sd_min,
         ci = input$ci,
