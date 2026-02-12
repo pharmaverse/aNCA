@@ -29,25 +29,23 @@ parameter_selection_ui <- function(id) {
       ),
       dropdown(
         div(
+          class = "anca-help-dropdown",
           style = "min-width:340px; max-width:480px;",
-          tags$h2("Parameter Selection Help", style = "font-size:1.1em; margin-bottom:25px;"),
+          tags$h2("Parameter Selection Help"),
           p(
             "Selections are independent for each study type and can be customized as needed. ",
-            "From top-to-bottom, this page shows:"),
+            "From top-to-bottom, this page shows:"
+          ),
           tags$ul(
-            style = "margin-bottom:0; padding-left:20px;",
             tags$li(
-              style = "margin-bottom:8px;",
               tags$b("Study types table"),
               ": Detected study types and the number of subjects associated with it."
             ),
             tags$li(
-              style = "margin-bottom:8px;",
               tags$b("Current selections table"),
               ": Display of PK parameters selected for each study type."
             ),
             tags$li(
-              style = "margin-bottom:0;",
               tags$b("Input widgets"),
               ": Search and select the PK parameters to calculate for each study type."
             )
