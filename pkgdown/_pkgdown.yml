@@ -3,12 +3,17 @@ template:
   light-switch: true
 navbar:
   structure:
-    left: [home, reference, articles, validations, news, faqs]
+    left: [home, manual, reference, articles, validations, news, faqs]
     right: [search, github, lightswitch]
   components:
     home:
       text: "Get Started"
       href: articles/aNCA.html
+    manual:
+      text: "Manual"
+      icon: fa-book
+      href: articles/manual.html
+      aria-label: Technical Manual
     articles:
       text: Contributing
       menu:
