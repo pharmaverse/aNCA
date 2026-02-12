@@ -213,23 +213,20 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
 non_nca_ratio_help_ui <- function(title) {
   dropdown(
     div(
+      class = "anca-help-dropdown",
       style = "min-width:340px; max-width:480px;",
-      tags$h2(paste0(title, " Help"), style = "font-size:1.1em; margin-bottom:18px;"),
+      tags$h2(paste0(title, " Help")),
       p("Calculate ratios between specimen types (e.g., blood/plasma) for selected groups."),
       tags$ul(
-        style = "margin-bottom:0; padding-left:20px;",
         tags$li(
-          style = "margin-bottom:8px;",
           tags$b("Add Ratio Pair"),
           ": Adds a new numerator and denominator specimen pairs for a new ratio."
         ),
         tags$li(
-          style = "margin-bottom:8px;",
           tags$b("Summarise By"),
           ": Choose grouping variables to summarise the ratio results and compute geometric means."
         ),
         tags$li(
-          style = "margin-bottom:8px;",
           tags$b("Matrix Ratios Results"),
           ": View and download the calculated ratios displayed as a table."
         )

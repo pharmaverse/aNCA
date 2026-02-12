@@ -217,33 +217,28 @@ excretion_server <- function(id, input_pknca_data) {
 excretion_help_ui <- function() {
   dropdown(
     div(
+      class = "anca-help-dropdown",
       style = "min-width:340px; max-width:480px;",
-      tags$h2("Excretion Analysis Help", style = "font-size:1.1em; margin-bottom:18px;"),
-      p("Analyze excretion parameters for selected matrices (e.g., urine) and intervals."),
+      tags$h2("Excretion Analysis Help"),
+      p("Analyze excretion parameters for selected matrices (e.g., URINE) and intervals."),
       tags$ul(
-        style = "margin-bottom:0; padding-left:20px;",
         tags$li(
-          style = "margin-bottom:8px;",
           tags$b("Select Matrices"), ": Choose specimen types for excretion analysis."
         ),
         tags$li(
-          style = "margin-bottom:8px;",
-          tags$b("Map End Time"), ": Select the column marking the end of collection intervals."
+          tags$b("Map End Time"), ": Select the column marking the end of sample collection (i.e, AEFRLT)."
         ),
         tags$li(
-          style = "margin-bottom:8px;", tags$b("Adjust for Body Weight"),
+          tags$b("Adjust for Body Weight"),
           ": Optionally adjust dose by body weight if available."
         ),
         tags$li(
-          style = "margin-bottom:8px;",
           tags$b("Select Parameters"), ": Pick excretion PK parameters to calculate."
         ),
         tags$li(
-          style = "margin-bottom:8px;",
           tags$b("Interval Types"), ": Choose to analyze by samples, dose profiles or both."
         ),
         tags$li(
-          style = "margin-bottom:8px;",
           tags$b("Results Table"), ": View and download calculated excretion results."
         )
       ),
