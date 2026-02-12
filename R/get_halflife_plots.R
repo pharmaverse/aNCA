@@ -25,9 +25,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   exclude_hl_col <- pknca_data$conc$columns$exclude_half.life
 
   # Define which columns use for the title to keep it short
-  grp_cols_int <- group_vars(pknca_data)
-  grp_cols_n_levels <- sapply(pknca_data$conc$data[grp_cols_int], \(x) length(unique(x)))
-  title_cols <- grp_cols_int[grp_cols_n_levels > 1]
+  group_conc_cols <- group_vars(pknca_data)
+  group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
+  title_cols <- group_conc_cols[group_conc_n_levels > 1]
 
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
