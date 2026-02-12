@@ -275,10 +275,18 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
 
-    # Reactive value to store the AUC data table
+    # Reactive value to store the partial intervals data table
+    # Define the parameters that can be used for partial area calculations
+    PARTIAL_INT_PARAMS <- metadata_nca_parameters %>%
+      filter(
+        grepl("INT", PPTESTCD),
+        TYPE != "PKNCA-not-covered"
+      ) %>%
+      arrange(PPTESTCD)
+
     int_parameters <- reactiveVal(
       tibble(
-        parameter = INT_PARAMS$PPTESTCD[1],
+        parameter = PARTIAL_INT_PARAMS$PPTESTCD[1],
         start_auc = rep(NA_real_, 2),
         end_auc = rep(NA_real_, 2)
       )
@@ -294,7 +302,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             name = "Parameter",
             cell = dropdown_extra(
               id = ns("edit_parameter"),
-              choices = INT_PARAMS$PPTESTCD,
+              choices = PARTIAL_INT_PARAMS$PPTESTCD,
               class = "table-dropdown"
             ),
             align = "center"
@@ -319,7 +327,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       init_parameters() %>%
         bind_rows(
           tibble(
-            parameter = INT_PARAMS$PPTESTCD[2],
+            parameter = PARTIAL_INT_PARAMS$PPTESTCD[2],
             start_auc = NA_real_,
             end_auc = NA_real_
           )
@@ -504,10 +512,3 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   available_choices[1]
 }
 
-# Define the parameters that can be used for partial area calculations
-INT_PARAMS <- metadata_nca_parameters %>%
-  filter(
-    grepl("INT", PPTESTCD),
-    TYPE != "PKNCA-not-covered"
-  ) %>%
-  arrange(PPTESTCD)
