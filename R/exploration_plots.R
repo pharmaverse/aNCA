@@ -28,6 +28,7 @@ exploration_individualplot <- function(
     color_by,
     facet_by = NULL,
     ylog_scale = FALSE,
+    show_legend = TRUE,
     threshold_value = NULL,
     show_dose = FALSE,
     palette = "default",
@@ -51,8 +52,15 @@ exploration_individualplot <- function(
       pknca_data$conc$columns$subject
     )
   }
-
-  g_lineplot(
+  
+  # Define labels
+  color_labels <- vapply(
+    color_by, 
+    function(x) get_label(variable = x, labels_df = labels_df), 
+    FUN.VALUE = character(1)
+  )
+  
+  plt <- g_lineplot(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
     y_var = pknca_data$conc$columns$concentration,
@@ -67,7 +75,22 @@ exploration_individualplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL
+  ) + labs(
+    title = "Individual Concentration Profiles",
+    x = paste0(get_label(pknca_data$conc$columns$time, labels_df = labels_df),
+               " [", paste(unique(individual_data[[pknca_data$conc$columns$timeu]]), collapse = ","), "]"),
+    y = paste0("Concentration [",
+               paste(unique(individual_data[[pknca_data$conc$columns$concu]]), collapse = ","), "]"),
+    color = paste(color_labels, collapse = "\n")
   )
+  
+  # Apply legend
+  if (!show_legend) {
+    plt <- plt + theme(legend.position = "none")
+  }
+  
+  plt
+  
 }
 
 
@@ -89,6 +112,7 @@ exploration_meanplot <- function(
     color_by,
     facet_by = NULL,
     ylog_scale = FALSE,
+    show_legend = TRUE,
     threshold_value = NULL,
     show_dose = FALSE,
     palette = "default",
@@ -120,7 +144,17 @@ exploration_meanplot <- function(
       group_vars(pknca_data$dose)
     )
   }
-
+  
+  # Define logic for dynamic title suffix
+  title_suffix <- if (isTRUE(ci)) " (95% CI)" else ""
+  
+  # Define labels
+  color_labels <- vapply(
+    color_by, 
+    function(x) get_label(variable = x, labels_df = labels_df), 
+    FUN.VALUE = character(1)
+  )
+  
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
@@ -136,8 +170,20 @@ exploration_meanplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL
+  ) + labs(
+    title = paste0("Mean Concentration Profiles", title_suffix),
+    x = paste0(get_label(x_var, labels_df = labels_df),
+               " [", paste(unique(mean_data[, pknca_data$conc$columns$timeu]), collapse = ","), "]"),
+    y = paste0("Mean Concentration [",
+               paste(unique(mean_data[, pknca_data$conc$columns$concu]), collapse = ","), "]"),
+    color = paste(color_labels, collapse = "\n")
   )
-
+  
+  # Apply legend
+  if (!show_legend) {
+    plot <- plot + theme(legend.position = "none")
+  }
+  
   # If there is no mean data, just return the plot
   if (nrow(mean_data) == 0) {
     return(plot)
@@ -204,7 +250,7 @@ process_data_individual <- function(pknca_data,
     if ("ARRLT" %in% names(data) && any(data$ARRLT < 0 & data$AFRLT > 0)) {
       data <- dose_profile_duplicates(
         data,
-        groups = c(group_vars(pknca_data$conc), "ATPTREF"),
+        groups = c(group_vars(pknca_data$conc), "ATPTREF", "DOSEU"),
         dosno = "ATPTREF"
       )
     }
@@ -346,11 +392,6 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
   plot_build <- ggplot2::ggplot_build(plot)
 
   plot +
-    labs(
-      x = paste("Nominal", plot_build$plot$labels$x),
-      y = paste("Mean", plot_build$plot$labels$y),
-      title = paste("Mean", plot_build$plot$labels$title)
-    ) +
     list(
       .add_mean_layers(
         sd_min = sd_min,
