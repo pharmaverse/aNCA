@@ -49,6 +49,14 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       )
     },
     pickerInput(
+      inputId = ns("profiles"),
+      label = "Choose the profile(s):",
+      choices = NULL,
+      selected = NULL,
+      multiple = TRUE,
+      options = list(`actions-box` = TRUE)
+    ),
+    pickerInput(
       inputId = ns("colorby"),
       label = "Choose the variables to color by:",
       choices = NULL,
@@ -72,11 +80,6 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns("timescale"),
       "Choose the Timescale",
       choices = c("All Time", "By Dose Profile")
-    ),
-    conditionalPanel(
-      condition = "input.timescale == 'By Dose Profile'",
-      uiOutput(ns("profile_selection")),
-      ns = ns
     ),
     checkboxInput(ns("show_threshold"), label = "Show Threshold"),
     conditionalPanel(
@@ -156,6 +159,18 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         )
       }
 
+      profile_choices <- data %>%
+        mutate(ATPTREF = as.character(ATPTREF)) %>%
+        pull(ATPTREF) %>%
+        unique()
+
+      updatePickerInput(
+        session,
+        "profiles",
+        choices = profile_choices,
+        selected = profile_choices
+      )
+
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
                                      dose_col, grouping_vars(), "ATPTREF"))
 
@@ -172,21 +187,6 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         "facetby",
         choices = full_grouping_vars,
         selected = NULL
-      )
-    })
-
-    # Render the cycle selection UI
-    output$profile_selection <- renderUI({
-      req(input$param)
-      y <- pknca_data()$conc$data %>%
-        filter(PARAM %in% input$param) %>%
-        pull(ATPTREF) %>%
-        unique()
-      pickerInput(
-        ns("profiles"),
-        "Choose the profile(s):",
-        choices = sort(y),
-        multiple = TRUE, selected = y[1], options = list(`actions-box` = TRUE)
       )
     })
 
