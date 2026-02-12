@@ -46,11 +46,13 @@ exploration_individualplot <- function(
 
   # If no tooltip variables defined use some default ones
   if (is.null(tooltip_vars)) {
-    tooltip_vars <- c(
+    tooltip_vars <- unique(c(
       pknca_data$conc$columns$time,
+      pknca_data$conc$columns$timeu,
       pknca_data$conc$columns$concentration,
-      pknca_data$conc$columns$subject
-    )
+      pknca_data$conc$columns$concu,
+      color_by
+    ))
   }
   
   # Define labels
@@ -138,11 +140,13 @@ exploration_meanplot <- function(
 
   # If no tooltip variable specified, use the default ones
   if (is.null(tooltip_vars)) {
-    tooltip_vars <- c(
+    tooltip_vars <- unique(c(
       "Mean",
+      pknca_data$conc$columns$concu,
       x_var,
-      group_vars(pknca_data$dose)
-    )
+      pknca_data$conc$columns$timeu,
+      color_by
+    ))
   }
   
   # Define logic for dynamic title suffix
