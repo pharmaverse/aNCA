@@ -190,21 +190,6 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       )
     })
 
-    # Render the cycle selection UI
-    output$profile_selection <- renderUI({
-      req(input$param)
-      y <- pknca_data()$conc$data %>%
-        filter(PARAM %in% input$param) %>%
-        pull(ATPTREF) %>%
-        unique()
-      pickerInput(
-        ns("profiles"),
-        "Choose the profile(s):",
-        choices = sort(y),
-        multiple = TRUE, selected = y[1], options = list(`actions-box` = TRUE)
-      )
-    })
-
     # Create a reactive value to store the filtering list
     # based on PARAM, PCSPEC, USUBJID, and ATPTREF selections
     filtering_list <- reactiveVal(list())
