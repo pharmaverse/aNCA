@@ -336,7 +336,6 @@ blq_rule <- list(
 
 aNCA uses PKNCA's AUC calculation methods. Users can select the calculation method in settings.
 
-### Trapezoidal Methods
 
 | Method | Description | PKNCA Function | When to Use |
 |--------|-------------|----------------|-------------|
@@ -359,18 +358,24 @@ aNCA uses PKNCA's AUC calculation methods. Users can select the calculation meth
 
 ## Flag Rules
 
-aNCA automatically flags NCA results that may be unreliable. Flags are stored in the output and highlighted in the UI.
+aNCA results will be flagged based on predefined scientific rules to help users identify potential issues with the data or calculations. These flags are generated based on the calculated parameters and the underlying data quality. There are two types:
+
+- Half-life selection criteria flags (r.squared, span ratio, adjusted R²). Any half-life or half-life dependent parameter (e.g., AUCinf) may be flagged if the half-life selection does not meet the criteria. Other flags may be based on general data quality issues (e.g., BLQ values, missing data, etc.) that can affect any parameter.
+- AUC selection criteria flags (AUC percentage extrapolated observed, AUC percentage extrapolated predicted). When the extrapolated percentage exceeds a certain threshold (e.g., 20%), it may indicate that the terminal phase is not well characterized. Any AUC-extrapolated (e.g., AUCinf) or AUC-extrapolated derived parameter (e.g., clearance, volume) may be flagged if the AUC extrapolation percentage exceeds the threshold.
+
 
 **Common Flags**:
 
 - **Half-life flags**: 
-  - `r.squared < 0.9`: Poor fit of terminal slope
+  - `r.squared (R2) < 0.9`: Poor fit of terminal slope
+  - `adj.r.squared < 0.8`: Poor adjusted fit of terminal slope (R²)
   - `span.ratio < 2`: Insufficient span of half-life
-  - `adj.r.squared < 0.8`: Poor adjusted R²
+
+- **AUC flags**:
+  - `auc_extrap_pct_obs (AUCPEO) > 20%`: High extrapolation based on observed
+  - `auc_extrap_pct_pred (AUCPEP) > 20%`: High extrapolation based on predicted
 
 **Implementation**: Controlled by PKNCA's built-in rules
-
-**Reference**: [PKNCA Exclusions and Checks](https://billdenney.github.io/pknca/articles/Half-life.html)
 
 ---
 
@@ -384,7 +389,8 @@ By default, PKNCA automatically selects the terminal elimination phase using the
 2. **Optimization**: Maximizes adjusted R² of the log-linear regression
 3. **Validation**: Checks that the half-life span ratio ≥ 2
 
-**PKNCA Function**: `pk.calc.half.life()` and `pk.calc.thalf.eff()`
+For infusion administrations, points during the infusion are excluded from half-life selection. If no valid slope is found, PKNCA will not calculate half-life or any dependent parameters, providing a `Exclude` message.
+
 
 **Reference**: [PKNCA Half-Life Calculation](https://billdenney.github.io/pknca/articles/Half-life.html)
 
