@@ -324,7 +324,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Add a blank row on button click
     observeEvent(input$addRow, {
-      init_parameters() %>%
+      int_parameters() %>%
         bind_rows(
           tibble(
             parameter = PARTIAL_INT_PARAMS$PPTESTCD[2],
@@ -332,7 +332,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             end_auc = NA_real_
           )
         ) %>%
-        init_parameters()
+        int_parameters()
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
