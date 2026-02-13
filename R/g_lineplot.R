@@ -162,7 +162,7 @@ g_lineplot <- function(data,
 
 #' @noRd
 .build_facet_labels <- function(data, facet_by, facet_count_n) {
-browser()
+
   use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
 
   data %>%
