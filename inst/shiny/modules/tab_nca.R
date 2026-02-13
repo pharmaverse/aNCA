@@ -281,10 +281,14 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     return(NULL)
   }
 
-  # Warning about FREXINT, RCAMINT
-  # TODO: At some poin these parameters may only be available for urine data, so this warning may need to be rephrased or removed.
+  # Warning about FREXINT, RCAMINT (partial intervals)
+  # TODO: At some point these parameters may only be made available for urine data,
+  # so this warning may need to be rephrased or removed.
   if (grepl("Units are provided for some but not all parameters; missing for: ae", msg)) {
-    msg <- "Urine Parameters (FREXINT, RCAMINT) calculated for non-urine samples will return NA values and units in the results."
+    msg <- paste0(
+      "Urine Parameters (FREXINT, RCAMINT) calculated for non-urine samples",
+      "will return NA values and units"
+    )
   }
 
   HTML(gsub("\\\n", "<br>", msg))
