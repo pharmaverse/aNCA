@@ -160,7 +160,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         },
         warning = function(w) {
           log_warn("Warning during NCA calculation: {conditionMessage(w)}")
-          showNotification(.parse_pknca_warning(w), type = "warning", duration = NULL)
+          pknca_warn_env$warnings <- append(
+            pknca_warn_env$warnings,
+            .parse_pknca_warning(w)
+          )
         })
 
         # Display unique warnings thrown by PKNCA run.
@@ -272,16 +275,16 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 .parse_pknca_warning <- function(w) {
   msg <- conditionMessage(w)
 
-  # List all irrelevant warnings to suppres in the NCA calculation
+  # Ignore all warnings that are irrelevant for the user
   irrelevant_regex_warnings <- c(
     "No intervals for data$",
     "^Too few points for half-life"
   )
-  if (grepl(irrelevant_regex_warnings, msg)) {
+  if (grepl(paste(irrelevant_regex_warnings, collapse = "|"), msg)) {
     return(NULL)
   }
 
-  # Warning about FREXINT, RCAMINT (partial intervals)
+  # Warning about FREXINT, RCAMINT for non-urine (partial intervals)
   # TODO: At some point these parameters may only be made available for urine data,
   # so this warning may need to be rephrased or removed.
   if (grepl("Units are provided for some but not all parameters; missing for: ae", msg)) {
