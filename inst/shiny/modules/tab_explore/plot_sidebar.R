@@ -64,6 +64,11 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
+    conditionalPanel(
+      condition = "input.facetby.length > 0",
+      checkboxInput(ns("show_facet_n"), "Show number of subjects", value = FALSE),
+      ns = ns
+    ),
     checkboxInput(
       ns("log"),
       "Semi-log scale"
@@ -217,6 +222,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         palette = input$palette,
         color_by = input$colorby,
         facet_by = input$facetby,
+        show_facet_n = input$show_facet_n,
         ylog_scale = input$log,
         threshold_value = input$threshold_value,
         show_dose = input$show_dose,

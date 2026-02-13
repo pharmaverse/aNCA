@@ -108,7 +108,7 @@ g_lineplot <- function(data,
     arrange(!!sym(x_var))
 
   facet_label_var <- facet_by
-  if (!is.null(facet_by) && length(facet_by) > 0) {
+  if (!is.null(facet_count_n) && length(facet_by) > 0) {
     plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n)
     facet_label_var <- "facet_label"
   }
@@ -162,10 +162,7 @@ g_lineplot <- function(data,
 
 #' @noRd
 .build_facet_labels <- function(data, facet_by, facet_count_n) {
-  if (!facet_count_n %in% names(data)) {
-    stop("facet_count_n column not found in data: ", facet_count_n)
-  }
-
+browser()
   use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
 
   data %>%

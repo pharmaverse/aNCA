@@ -6,6 +6,7 @@
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
 #' @param facet_by Character vector of column names to facet the plot by.
 #' Default is `NULL` (no faceting).
+#' @param show_facet_n Logical; if `TRUE`, shows the number of subjects in each facet. Default is `FALSE`.
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
@@ -27,6 +28,7 @@ exploration_individualplot <- function(
     pknca_data,
     color_by,
     facet_by = NULL,
+    show_facet_n = FALSE,
     ylog_scale = FALSE,
     threshold_value = NULL,
     show_dose = FALSE,
@@ -60,6 +62,7 @@ exploration_individualplot <- function(
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
     facet_by = facet_by,
+    facet_count_n = if (isTRUE(show_facet_n)) pknca_data$conc$columns$subject else NULL,
     group_by = pknca_data$conc$columns$subject,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
@@ -88,6 +91,7 @@ exploration_meanplot <- function(
     pknca_data,
     color_by,
     facet_by = NULL,
+    show_facet_n = FALSE,
     ylog_scale = FALSE,
     threshold_value = NULL,
     show_dose = FALSE,
@@ -131,7 +135,7 @@ exploration_meanplot <- function(
     color_by = color_by,
     facet_by = facet_by,
     group_by = color_by,
-    facet_count_n = "USUBJID_COUNT",
+    facet_count_n = if (isTRUE(show_facet_n)) "USUBJID_COUNT" else NULL,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     palette = palette,
@@ -304,6 +308,7 @@ process_data_mean <- function(pknca_data,
     select(any_of(c(x_var)), everything())
 
   if (!is.null(facet_by) && length(facet_by) > 0) {
+    browser()
     subj_col <- pknca_data$conc$columns$subject
     facet_counts <- processed %>%
       dplyr::distinct(!!!rlang::syms(facet_by), !!rlang::sym(subj_col)) %>%
