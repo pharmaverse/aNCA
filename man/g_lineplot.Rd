@@ -13,6 +13,7 @@ g_lineplot(
   color_by,
   facet_by = NULL,
   group_by = NULL,
+  facet_count_n = "USUBJID",
   ylog_scale = FALSE,
   threshold_value = NULL,
   palette = "default",
@@ -41,6 +42,9 @@ Default is \code{NULL} for no faceting.}
 
 \item{group_by}{A character vector specifying the column names used to group
 the lines. Default is NULL for no grouping.}
+
+\item{facet_count_n}{A character string specifying the column name used to
+count unique subjects per facet. Default is "USUBJID".}
 
 \item{ylog_scale}{A logical value (\code{TRUE} or \code{FALSE}) indicating whether to use
 a logarithmic scale for the y-axis.}

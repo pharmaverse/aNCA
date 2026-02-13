@@ -122,6 +122,34 @@ describe("g_lineplot: structure and arguments", {
     expect_true(all(c("PARAM", "DOSEA") %in% names(vline_layer$data)))
   })
 
+  it("adds facet labels with subject counts", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      facet_by = "PARAM"
+    )
+    expect_true("facet_label" %in% names(p$data))
+    expect_true(any(grepl("PARAM: Analyte1", unique(p$data$facet_label))))
+    expect_true(any(grepl("\\(n=2\\)", unique(p$data$facet_label))))
+  })
+
+  it("uses precomputed facet count column", {
+    mean_data_with_count <- mean_data %>%
+      mutate(USUBJID_COUNT = 7)
+
+    p <- g_lineplot(
+      data = mean_data_with_count,
+      x_var = "time_var",
+      y_var = "Mean",
+      color_by = "color_var",
+      facet_by = "PARAM",
+      facet_count_n = "USUBJID_COUNT"
+    )
+    expect_true(any(grepl("\\(n=7\\)", unique(p$data$facet_label))))
+  })
+
   it("if specified, applies a custom palette color", {
     palette_options <- c("plasma", "cividis", "inferno")
     n_colors <- length(unique(ind_data$color_var))
