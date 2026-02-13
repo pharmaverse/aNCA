@@ -308,7 +308,6 @@ process_data_mean <- function(pknca_data,
     select(any_of(c(x_var)), everything())
 
   if (!is.null(facet_by) && length(facet_by) > 0) {
-    browser()
     subj_col <- pknca_data$conc$columns$subject
     facet_counts <- processed %>%
       dplyr::distinct(!!!rlang::syms(facet_by), !!rlang::sym(subj_col)) %>%
