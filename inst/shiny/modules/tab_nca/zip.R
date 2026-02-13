@@ -123,7 +123,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             progress$inc(0.1)
 
             output_tmpdir <- file.path(tempdir(), "output")
-
+            browser()
             prepare_export_files(
               target_dir = output_tmpdir,
               res_nca = res_nca(),
@@ -131,7 +131,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               grouping_vars = grouping_vars(),
               input = input,
               session = session,
-              progress = progress
+              progress = progress,
+              additional_analysis = session$userData$results$additional_analysis
             )
 
             files <- list.files(output_tmpdir, recursive = TRUE)

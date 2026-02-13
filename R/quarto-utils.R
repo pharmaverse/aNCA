@@ -101,8 +101,9 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param quarto_path Path to the Quarto (.qmd) file to create.
 #' @param title Title for the presentation.
 #' @param use_plotly Logical, whether to convert plots to plotly.
+#' @param additional_analysis Optional list of additional analysis results to include in the presentation.
 #' @returns Invisibly returns TRUE if slides were created.
-create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
+create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE, additional_analysis = NULL) {
   # Save an accessible object with all results
   rda_path <- paste0(dirname(quarto_path), "/results_slides_outputs.rda")
   save(list = as.character(quote(res_dose_slides)), file = rda_path)

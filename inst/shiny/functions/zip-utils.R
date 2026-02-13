@@ -289,12 +289,14 @@ get_tree_leaf_ids <- function(tree) {
 #'
 #' @param target_dir Path to the directory where files will be written.
 #' @param res_nca NCA results object.
+#' @param additional_analysis Optional list of additional analysis results to include in the presentation.
 #' @param settings Settings object.
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
 prepare_export_files <- function(target_dir,
                                  res_nca,
+                                 additional_analysis = NULL,
                                  settings,
                                  grouping_vars,
                                  input,
@@ -351,7 +353,7 @@ prepare_export_files <- function(target_dir,
 #' @param session Shiny session object.
 #' @keywords internal
 #' @noRd
-.export_slides <- function(target_dir, res_nca, grouping_vars, input, session) {
+.export_slides <- function(target_dir, res_nca, grouping_vars, input, session, additional_analysis = NULL) {
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
@@ -369,15 +371,18 @@ prepare_export_files <- function(target_dir,
       res_dose_slides,
       file.path(path, "results_slides.qmd"),
       paste0("NCA Results\n", session$userData$project_name()),
-      TRUE
+      TRUE,
+      additional_analysis = additional_analysis
     )
   }
   if ("pptx" %in% input$slide_formats) {
+    browser()
     create_pptx_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.pptx"),
       paste0("NCA Results\n", session$userData$project_name()),
-      "www/templates/template.pptx"
+      "www/templates/template.pptx",
+      additional_analysis = additional_analysis
     )
   }
 }
