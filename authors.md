@@ -28,12 +28,12 @@ Source:
 
 Suekuer E, Rodriguez G, Baertschi P, Spinner J, Kolomanski M, Aspridis
 L, Legras V (2025). “aNCA: A Dynamic Shiny App to perform NCA.” Version
-0.1.0.9065; License: Apache-2.0, <https://github.com/pharmaverse/aNCA>.
+0.1.0.9066; License: Apache-2.0, <https://github.com/pharmaverse/aNCA>.
 
     @Unpublished{,
       title = {aNCA: A Dynamic Shiny App to perform NCA},
       author = {Ercan Suekuer and Gerardo Jose Rodriguez and Pascal Baertschi and Jana Spinner and Mateusz Kolomanski and Lucy Aspridis and Valentin Legras},
       year = {2025},
-      note = {Version 0.1.0.9065; License: Apache-2.0},
+      note = {Version 0.1.0.9066; License: Apache-2.0},
       url = {https://github.com/pharmaverse/aNCA},
     }
