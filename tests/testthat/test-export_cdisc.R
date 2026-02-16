@@ -562,6 +562,28 @@ describe("export_cdisc", {
       "MRT Extravasc to Last Nonzero Conc"
     )))
   })
+  it("ensures PPORRES, PPSTRESN, and PPSTRESC are consistent, 
+     rounded to 12 decimals, and non-scientific", {
+       modified_test_pknca_res <- test_pknca_res
+       # Use a value that is small enough to trigger scientific notation but needs rounding
+       complex_value <- 0.000000123456789012345
+       modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
+         mutate(
+           PPSTRES = ifelse(PPTESTCD == "cmax", complex_value, PPSTRES),
+           PPORRES = PPSTRES
+         )
+       result <- export_cdisc(modified_test_pknca_res)
+       pp_test <- result$pp %>% filter(PPTESTCD == "CMAX")
+       # Check Rounding and strip labels for comparison
+       expected_numeric <- round(complex_value, 12)
+       expect_equal(as.numeric(pp_test$PPSTRESN), rep(expected_numeric, nrow(pp_test)))
+       # Check Character consistency (Non-scientific)
+       expected_char <- "0.000000123457"
+       expect_equal(as.character(pp_test$PPSTRESC), rep(expected_char, nrow(pp_test)))
+       # Check Internal Consistency (stripping labels)
+       expect_equal(as.numeric(pp_test$PPORRES), as.numeric(pp_test$PPSTRESN))
+       expect_equal(as.numeric(pp_test$PPSTRESN), as.numeric(pp_test$PPSTRESC))
+     })
 })
 
 describe(".get_subjid", {
