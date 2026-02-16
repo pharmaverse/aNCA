@@ -347,7 +347,7 @@ base::local({
   FIXTURE_PKNCA_DATA <<- withCallingHandlers(
     PKNCA::PKNCAdata(
       data.conc = PKNCA::PKNCAconc(FIXTURE_CONC_DATA, AVAL ~ AFRLT | PCSPEC + USUBJID / PARAM,
-                                   concu = "AVALU", timeu = "RRLTU",
+                                   concu = "AVALU", timeu = "RRLTU", time.nominal = "NFRLT",
                                    exclude_half.life = "exclude_half.life",
                                    include_half.life = "include_half.life"),
       data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,

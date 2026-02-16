@@ -138,40 +138,28 @@ get_dose_esc_results <- function(
     o_res_i <- merge(o_nca$result, group_i)
     o_nca_i$result <- o_res_i
 
-    linplot_data_i <- process_data_individual(
-      data = d_conc_i,
-      selected_analytes = d_conc_i[[analyte_col]],
-      selected_pcspec = d_conc_i[[pcspec_col]],
-      selected_usubjids = d_conc_i[[subj_col]],
-      profiles_selected = unique(d_conc_i[[profile_col]]),
-      ylog_scale = TRUE
-    )
-
-    linplot_i <- g_lineplot(
-      data = linplot_data_i,
-      x_var = "ARRLT",
-      y_var = "AVAL",
+    linplot_i <- exploration_individualplot(
+      pknca_data = o_nca_i$data,
       color_by = subj_col,
       facet_by = facet_vars,
+      filtering_list = list(
+        PARAM = d_conc_i[[analyte_col]],
+        PCSPEC = d_conc_i[[pcspec_col]],
+        USUBJID = d_conc_i[[subj_col]],
+        ATPTREF = unique(d_conc_i[[profile_col]])
+      ),
       ylog_scale = TRUE
     )
 
-    meanplot_data_i <- process_data_mean(
-      data = d_conc_i,
-      selected_analytes = unique(d_conc_i[[analyte_col]]),
-      selected_pcspec = unique(d_conc_i[[pcspec_col]]),
-      profiles_selected = unique(d_conc_i[[profile_col]]),
-      ylog_scale = TRUE,
-      facet_by = facet_vars,
-      color_by = group_by_vars
-    )
-
-    meanplot_i <- g_lineplot(
-      data = meanplot_data_i,
-      x_var = "NRRLT",
-      y_var = "Mean",
-      facet_by = facet_vars,
+    meanplot_i <- exploration_meanplot(
+      pknca_data = o_nca_i$data,
       color_by = group_by_vars,
+      facet_by = facet_vars,
+      filtering_list = list(
+        PARAM = unique(d_conc_i[[analyte_col]]),
+        PCSPEC = unique(d_conc_i[[pcspec_col]]),
+        ATPTREF = unique(d_conc_i[[profile_col]])
+      ),
       ylog_scale = TRUE,
       sd_max = TRUE
     )
@@ -230,20 +218,15 @@ get_dose_esc_results <- function(
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
       lapply(function(d_conc_i) {
-        d_conc_processed_i <- process_data_individual(
-          data = d_conc_i,
-          selected_analytes = d_conc_i[[analyte_col]],
-          selected_pcspec = d_conc_i[[pcspec_col]],
-          selected_usubjids = d_conc_i[[subj_col]],
-          ylog_scale = TRUE
-        )
-
-        g_lineplot(
-          data = d_conc_processed_i,
-          x_var = "AFRLT",
-          y_var = "AVAL",
+        exploration_individualplot(
+          pknca_data = o_nca_i$data,
           color_by = subj_col,
           facet_by = facet_vars,
+          filtering_list = list(
+            PARAM = d_conc_i[[analyte_col]],
+            PCSPEC = d_conc_i[[pcspec_col]],
+            USUBJID = d_conc_i[[subj_col]]
+          ),
           ylog_scale = TRUE
         )
       })
@@ -438,15 +421,16 @@ prepare_export_files <- function(target_dir,
 .clean_export_dir <- function(target_dir, input) {
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
-  exts <- c(
-    if (length(input$table_formats) > 0) paste0("\\.", input$table_formats),
-    if (length(input$plot_formats) > 0) paste0("\\.", input$plot_formats),
-    if (length(input$slide_formats) > 0) paste0("results_slides\\.", input$slide_formats),
-    "session_code\\.R", "settings\\.yaml", "data\\.rds"
-  )
-
-  pattern <- paste0("(", paste0(exts, collapse = "|"), ")$")
-  file.remove(all_files[!grepl(pattern, all_files, ignore.case = TRUE)])
+  exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
+  exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
+  fnames <- input$res_tree
+  fnames <- ifelse(fnames == "r_script", "session_code", fnames)
+  fnames <- ifelse(fnames == "settings_file", "settings", fnames)
+  fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
+  pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
+  files_req <- grep(pattern, all_files, value = TRUE)
+  files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
+  file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
   dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
