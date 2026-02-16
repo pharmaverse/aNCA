@@ -40,17 +40,20 @@ exploration_individualplot <- function(
     line_type = "non dose-normalized"
     ) {
 
-  individual_data <- process_data_individual(
-    pknca_data = pknca_data,
-    filtering_list = filtering_list,
-    ylog_scale = ylog_scale,
-    show_dose = show_dose,
-    use_time_since_last_dose = use_time_since_last_dose,
-    dose_normalize = line_type %in% c("dose-normalized", "both")
-  )
 
   if (line_type == "both") {
-    non_normalized_data <- process_data_individual(
+    # Dose-normalized data
+    dn_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = TRUE
+    )
+    dn_data$line_type_label <- "Dose-normalized"
+    # Non dose-normalized data
+    nn_data <- process_data_individual(
       pknca_data = pknca_data,
       filtering_list = filtering_list,
       ylog_scale = ylog_scale,
@@ -58,7 +61,19 @@ exploration_individualplot <- function(
       use_time_since_last_dose = use_time_since_last_dose,
       dose_normalize = FALSE
     )
-    individual_data <- bind_rows(individual_data, non_normalized_data)
+    nn_data$line_type_label <- "Non dose-normalized"
+    individual_data <- dplyr::bind_rows(dn_data, nn_data)
+    linetype_by <- "line_type_label"
+  } else {
+    individual_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = line_type == "dose-normalized"
+    )
+    linetype_by <- NULL
   }
 
   # If no tooltip variables defined use some default ones
@@ -84,7 +99,8 @@ exploration_individualplot <- function(
     palette = palette,
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
-    vline_var = if (show_dose) "TIME_DOSE" else NULL
+    vline_var = if (show_dose) "TIME_DOSE" else NULL,
+    linetype_by = linetype_by
   )
 }
 

@@ -66,7 +66,8 @@ g_lineplot <- function(data,
                        palette = "default",
                        tooltip_vars = NULL,
                        labels_df = NULL,
-                       vline_var = NULL) {
+                       vline_var = NULL,
+                       linetype_by = NULL) {
 
   if (nrow(data) == 0) {
     return(error_plot("No data available for the plot"))
@@ -104,13 +105,18 @@ g_lineplot <- function(data,
     ) %>%
     arrange(!!sym(x_var))
 
-  plt <- ggplot(plot_data, aes(
-    x = !!sym(x_var),
-    y = !!sym(y_var),
-    color = color_var,
-    group = if (!is.null(group_by)) group_var else NULL,
-    text = tooltip_text
-  )) +
+  aes_args <- list(
+    x = rlang::sym(x_var),
+    y = rlang::sym(y_var),
+    color = rlang::sym("color_var"),
+    group = if (!is.null(group_by)) rlang::sym("group_var") else NULL,
+    text = rlang::sym("tooltip_text")
+  )
+  if (!is.null(linetype_by)) {
+    aes_args$linetype <- rlang::sym(linetype_by)
+  }
+
+  plt <- ggplot(plot_data, do.call(aes, aes_args)) +
     geom_line() +
     geom_point() +
     labs(
