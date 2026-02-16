@@ -53,9 +53,11 @@
   ([\#959](https://github.com/pharmaverse/aNCA/issues/959))
 - Slope selector table for half life adjustments uses time to choose the
   point of interest. Also it is aesthetics have been polished
-  ([\#956](https://github.com/pharmaverse/aNCA/issues/956)).
+  ([\#956](https://github.com/pharmaverse/aNCA/issues/956))
 - Slope selector plots count with grouping options
-  ([\#333](https://github.com/pharmaverse/aNCA/issues/333)).
+  ([\#333](https://github.com/pharmaverse/aNCA/issues/333))
+- Add x/y axis limits for the exploration plots
+  ([\#817](https://github.com/pharmaverse/aNCA/issues/817))
 
 ### Bugs fixed
 

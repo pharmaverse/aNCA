@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9066</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9067</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,9 @@
 <span>  tooltip_vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  labels_df <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  filtering_list <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  use_time_since_last_dose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  use_time_since_last_dose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  x_limits <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y_limits <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -140,6 +142,16 @@ Default is <code>NULL</code> (no filtering).</p></dd>
 <dt id="arg-use-time-since-last-dose">use_time_since_last_dose<a class="anchor" aria-label="anchor" href="#arg-use-time-since-last-dose"></a></dt>
 <dd><p>Logical; if <code>TRUE</code>, x-axis represents time since last dose.
 Default is <code>FALSE</code> (time since first dose).</p></dd>
+
+
+<dt id="arg-x-limits">x_limits<a class="anchor" aria-label="anchor" href="#arg-x-limits"></a></dt>
+<dd><p>Numeric vector of length 2 for x-axis limits (min, max).
+Default is <code>NULL</code> (no limits).</p></dd>
+
+
+<dt id="arg-y-limits">y_limits<a class="anchor" aria-label="anchor" href="#arg-y-limits"></a></dt>
+<dd><p>Numeric vector of length 2 for y-axis limits (min, max).
+Default is <code>NULL</code> (no limits).</p></dd>
 
 </dl></div>
     <div class="section level2">

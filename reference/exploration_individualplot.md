@@ -12,6 +12,8 @@ exploration_individualplot(
   facet_by = NULL,
   ylog_scale = FALSE,
   threshold_value = NULL,
+  x_limits = NULL,
+  y_limits = NULL,
   show_dose = FALSE,
   palette = "default",
   tooltip_vars = NULL,
@@ -46,6 +48,16 @@ exploration_individualplot(
 
   Numeric; y-intercept for a horizontal threshold line. Default is
   `NULL` (no threshold).
+
+- x_limits:
+
+  Numeric vector of length 2 for x-axis limits (min, max). Default is
+  `NULL` (no limits).
+
+- y_limits:
+
+  Numeric vector of length 2 for y-axis limits (min, max). Default is
+  `NULL` (no limits).
 
 - show_dose:
 

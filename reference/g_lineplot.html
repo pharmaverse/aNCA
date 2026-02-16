@@ -11,7 +11,7 @@ and threshold lines."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9066</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9067</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,6 +72,8 @@ and threshold lines.</p>
 <span>  <span class="va">color_by</span>,</span>
 <span>  facet_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  group_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  x_limits <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y_limits <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ylog_scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  threshold_value <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  palette <span class="op">=</span> <span class="st">"default"</span>,</span>
@@ -119,6 +121,16 @@ Default is <code>NULL</code> for no faceting.</p></dd>
 <dt id="arg-group-by">group_by<a class="anchor" aria-label="anchor" href="#arg-group-by"></a></dt>
 <dd><p>A character vector specifying the column names used to group
 the lines. Default is NULL for no grouping.</p></dd>
+
+
+<dt id="arg-x-limits">x_limits<a class="anchor" aria-label="anchor" href="#arg-x-limits"></a></dt>
+<dd><p>Numeric vector of length 2 for x-axis limits (min, max).
+Default is <code>NULL</code> (no limits).</p></dd>
+
+
+<dt id="arg-y-limits">y_limits<a class="anchor" aria-label="anchor" href="#arg-y-limits"></a></dt>
+<dd><p>Numeric vector of length 2 for y-axis limits (min, max).
+Default is <code>NULL</code> (no limits).</p></dd>
 
 
 <dt id="arg-ylog-scale">ylog_scale<a class="anchor" aria-label="anchor" href="#arg-ylog-scale"></a></dt>

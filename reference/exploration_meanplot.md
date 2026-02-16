@@ -20,7 +20,9 @@ exploration_meanplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   filtering_list = NULL,
-  use_time_since_last_dose = FALSE
+  use_time_since_last_dose = FALSE,
+  x_limits = NULL,
+  y_limits = NULL
 )
 ```
 
@@ -92,6 +94,16 @@ exploration_meanplot(
 
   Logical; if `TRUE`, x-axis represents time since last dose. Default is
   `FALSE` (time since first dose).
+
+- x_limits:
+
+  Numeric vector of length 2 for x-axis limits (min, max). Default is
+  `NULL` (no limits).
+
+- y_limits:
+
+  Numeric vector of length 2 for y-axis limits (min, max). Default is
+  `NULL` (no limits).
 
 ## Value
 
