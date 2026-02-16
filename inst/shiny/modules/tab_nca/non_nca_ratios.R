@@ -10,10 +10,10 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
   tagList(
     # Header row with help button
     div(
-      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
+      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
       tags$h2(
         paste0(title, " Setup"),
-        style = "font-size:1.2em; margin-bottom:8px; margin-right:12px;"
+        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
       ),
       non_nca_ratio_help_ui(title)
     ),
@@ -214,7 +214,7 @@ non_nca_ratio_help_ui <- function(title) {
   dropdown(
     div(
       class = "anca-help-dropdown",
-      style = "min-width:340px; max-width:480px;",
+      style = "min-width:22em; max-width:30em;",
       tags$h2(paste0(title, " Help")),
       p("Calculate ratios between specimen types (e.g., blood/plasma) for selected groups."),
       tags$ul(
