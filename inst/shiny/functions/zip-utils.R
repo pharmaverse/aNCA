@@ -429,6 +429,7 @@ prepare_export_files <- function(target_dir,
   fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
+  files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
   file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
