@@ -212,6 +212,7 @@ process_data_individual <- function(pknca_data,
       pknca_data = pknca_data,
       conc_time_col = pknca_data$conc$columns$time
     )
+    browser()
     # Adjust time variable with dose time if using time since last dose
     if (use_time_since_last_dose) {
       data <- dplyr::mutate(
@@ -221,13 +222,16 @@ process_data_individual <- function(pknca_data,
     }
     # If dose normalization requested, adjust concentration by dose amount
     if (dose_normalize) {
-      data <- dplyr::mutate(
-        data,
-        !!sym(conc_col) := !!sym(conc_col) / DOSE,
-        !!sym(concu_col) := paste0(!!sym(concu_col), "/", !!sym(doseu_col))
+      data <- data %>% 
+        mutate(
+        !!sym(conc_col) := !!sym(conc_col) / !!sym(dose_col),
+        !!sym(concu_col) := if (!is.null(doseu_col)) {
+          paste0("(", .[[concu_col]], ")/(", .[[doseu_col]], ")")
+        } else {
+          NA_character_
+        }
       )
     }
-
     data
   } else {
     pknca_data$conc$data
@@ -417,20 +421,21 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
   dose_time_col <- pknca_data$dose$columns$time
   dose_group_vars <- group_vars(pknca_data$dose)
   dose_col <- pknca_data$dose$columns$dose
+  doseu_col <- pknca_data$dose$columns$doseu
 
   dplyr::left_join(
-    conc_data,
+    conc_data  %>%
+      select(-any_of(c(dose_col, doseu_col))),
     dose_data %>%
       dplyr::mutate(
-        TIME_DOSE = !!rlang::sym(dose_time_col),
-        DOSE = !!rlang::sym(dose_col)
+        TIME_DOSE = !!rlang::sym(dose_time_col)
       ) %>%
-      dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE", "DOSE"))),
+      dplyr::select(any_of(c(dose_group_vars, "TIME_DOSE", dose_col, doseu_col))),
     by = dose_group_vars,
     relationship = "many-to-many"
   ) %>%
     dplyr::filter(TIME_DOSE <= !!rlang::sym(conc_time_col)) %>%
-    dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), c("TIME_DOSE", "DOSE")))) %>%
+    dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), c("TIME_DOSE", dose_col, doseu_col)))) %>%
     dplyr::arrange(TIME_DOSE) %>%
     dplyr::slice_tail(n = 1) %>%
     dplyr::ungroup()
