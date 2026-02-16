@@ -157,17 +157,17 @@ describe("format_pkncadata_intervals", {
     )
     expect_true(all(result$start >= 0))
   })
-  
+
   it("filters out intervals where start > end time", {
-    # Force an impossible scenario: 
+    # Force an impossible scenario:
     # start = 10 (from dose time) but end = 5 (from next dose or max_end)
     invalid_dose <- pknca_dose
     invalid_dose$data <- invalid_dose$data %>%
       mutate(AFRLT = ifelse(DOSNOA == 1, 10, AFRLT))
-    
+
     # In the original data, next dose or max_end would result in an 'end' < 10
     result <- format_pkncadata_intervals(pknca_conc, invalid_dose)
-    
+
     # Check that the interval starting at 10 is filtered out
     expect_false(any(result$start > result$end))
     # Ensure other valid intervals still exist
