@@ -16,18 +16,20 @@ NON_STD_MAPPING_INFO <- data.frame(
     "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, STRAIN, DOSFRM, NOMDOSE, DOSEP",
     ""
   ),
-  is_multiple_choice = c(TRUE, TRUE)
+  is_multiple_choice = c(TRUE, TRUE),
+  mapping_order = c(18, 5)
 )
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
-  select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
+  select(Variable, Label, Values, mapping_tooltip,
+         mapping_section, mapping_alternatives, mapping_order) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
   bind_rows(NON_STD_MAPPING_INFO) %>%
-  arrange(Order)
+  arrange(mapping_order)
 
 MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
 sections_order <- c(
@@ -41,7 +43,7 @@ MAPPING_DESIRED_ORDER <- c(
   "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
   "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
   "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
-  "VOLUME", "VOLUMEU", "TRTRINT", "METABFL"
+  "VOLUME", "VOLUMEU", "WTBL", "WTBLU", "TRTRINT", "METABFL"
 )
 
 #' Column Mapping Widget
@@ -184,9 +186,14 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
 
-      # Exception: If by default VOLUME is not mapped, then neither is VOLUMEU
+      # Exceptions:
+      # If by default VOLUME is not mapped, then neither is VOLUMEU
       if (!"VOLUME" %in% column_names) {
         updateSelectizeInput(session, "select_VOLUMEU", selected = "")
+      }
+      # If by default WTBL is not mapped, then neither is WTBLU
+      if (!"WTBL" %in% column_names) {
+        updateSelectizeInput(session, "select_WTBLU", selected = "")
       }
     })
     # Populate the dynamic input Metabolites

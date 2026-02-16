@@ -18,7 +18,10 @@
 * General button at top page to save all NCA results, settings & draft slides as a ZIP file (#638)
 * Settings are now uploaded on initial opening of the app in the data tab, and applied to the next steps (#860)
 * Settings file has been converted from rds to yaml, allowing better readability and editing for users. (#901)
-
+* WTBL and WTBLU columns added to the data mapping, for optional conversion of dose to adjust to body weight for excretion calculations (#959)
+* Slope selector table for half life adjustments uses time to choose the point of interest. Also it is aesthetics have been polished (#956)
+* Slope selector plots count with grouping options (#333)
+* Add x/y axis limits for the exploration plots (#817)
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
@@ -35,6 +38,7 @@
 * Bug fix so app doesn't crash if NCA is rerun with an error (e.g. No exclusion REASON) (#913)
 * NCA results flagging logic updated to include Missing column and correctly
 identify difference between missing and not requested (#934)
+* Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
 
 # aNCA 0.1.0
 
