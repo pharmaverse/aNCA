@@ -22,15 +22,15 @@ parameter_selection_ui <- function(id) {
   tagList(
     # Header row with help button
     div(
-      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
+      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
       tags$h2(
         "Parameter Selection",
-        style = "font-size:1.2em; margin-bottom:8px; margin-right:12px;"
+        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
       ),
       dropdown(
         div(
           class = "anca-help-dropdown",
-          style = "min-width:340px; max-width:480px;",
+          style = "min-width:22em; max-width:30em;",
           tags$h2("Parameter Selection Help"),
           p(
             "Selections are independent for each study type and can be customized as needed. ",
