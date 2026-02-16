@@ -6,7 +6,8 @@
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
 #' @param facet_by Character vector of column names to facet the plot by.
 #' Default is `NULL` (no faceting).
-#' @param show_facet_n Logical; if `TRUE`, shows the number of subjects in each facet. Default is `FALSE`.
+#' @param show_facet_n Logical; if `TRUE`, shows the number of subjects in each facet.
+#' Default is `FALSE`.
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
