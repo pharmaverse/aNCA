@@ -157,7 +157,6 @@ slope_selector_server <- function( # nolint
       if (changes$in_data) {
         req(processed_pknca_data())
         # Only use columns that have more than 1 value in the whole dataset
-        browser()
         pknca_data <- processed_pknca_data()
         group_conc_cols <- group_vars(pknca_data)
         group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
