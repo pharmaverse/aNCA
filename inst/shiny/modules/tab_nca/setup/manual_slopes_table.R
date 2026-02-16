@@ -65,6 +65,26 @@ manual_slopes_table_server <- function(
         )
       )
       manual_slopes(initial_manual_slopes)
+
+      if (!is.null(manual_slopes_override())) {
+        # Integrate slope rules to work with settings upload
+        if (nrow(manual_slopes_override()) == 0) return(NULL)
+        log_debug_list("Manual slopes override:", manual_slopes_override())
+        # Identify columns to match (all except TYPE, RANGE, REASON)
+        match_cols <- setdiff(names(manual_slopes_override()), c("TYPE", "RANGE", "REASON"))
+        
+        override_valid <- manual_slopes_override() %>%
+          semi_join(pknca_data()$conc$data, by = match_cols) %>%
+          nrow() == nrow(manual_slopes_override())
+        
+        if (!override_valid) {
+          msg <- "Manual slopes not compatible with current data, leaving as default."
+          log_warn(msg)
+          showNotification(msg, type = "warning", duration = 5)
+          return(NULL)
+        }
+        manual_slopes(manual_slopes_override())
+      }
     })
 
     # create a reactive to update the reactable UI when the table changes
@@ -185,33 +205,6 @@ manual_slopes_table_server <- function(
       })
     })
 
-    # --- Manual slopes override logic (moved from slope_selector_server) ---
-    if (!is.null(manual_slopes_override)) {
-      observeEvent(manual_slopes_override(), {
-        req(manual_slopes_override(), pknca_data())
-        # TODO (Gerardo): Integrate slope rules to work with settings upload
-        if (nrow(manual_slopes_override()) == 0) return(NULL)
-        log_debug_list("Manual slopes override:", manual_slopes_override())
-        override_valid <- apply(manual_slopes_override(), 1, function(r) {
-          dplyr::filter(
-            pknca_data()$conc$data,
-            PCSPEC == r["PCSPEC"],
-            USUBJID == r["USUBJID"],
-            PARAM == r["PARAM"],
-            DOSNOA == r["DOSNOA"]
-          ) %>%
-            NROW() != 0
-        }) %>%
-          all()
-        if (!override_valid) {
-          msg <- "Manual slopes not compatible with current data, leaving as default."
-          log_warn(msg)
-          showNotification(msg, type = "warning", duration = 5)
-          return(NULL)
-        }
-        manual_slopes(manual_slopes_override())
-      })
-    }
     # Output: manual_slopes (reactiveVal) and refresh_reactable (for UI updates)
     list(
       manual_slopes = manual_slopes,
