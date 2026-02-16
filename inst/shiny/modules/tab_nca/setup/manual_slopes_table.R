@@ -72,11 +72,11 @@ manual_slopes_table_server <- function(
         log_debug_list("Manual slopes override:", manual_slopes_override())
         # Identify columns to match (all except TYPE, RANGE, REASON)
         match_cols <- setdiff(names(manual_slopes_override()), c("TYPE", "RANGE", "REASON"))
-        
+
         override_valid <- manual_slopes_override() %>%
           semi_join(pknca_data()$conc$data, by = match_cols) %>%
           nrow() == nrow(manual_slopes_override())
-        
+
         if (!override_valid) {
           msg <- "Manual slopes not compatible with current data, leaving as default."
           log_warn(msg)
