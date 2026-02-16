@@ -169,12 +169,12 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       },
       content = function(con) {
         # Prepare the list
-        export_list <- list(
+        settings_to_save <- list(
           settings = final_settings(),
           slope_rules = slope_rules$manual_slopes()
         )
         # write yaml file
-        yaml::write_yaml(export_list, file = con)
+        yaml::write_yaml(settings_to_save, file = con)
       }
     )
 
