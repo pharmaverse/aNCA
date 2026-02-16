@@ -18,7 +18,9 @@ exploration_meanplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   filtering_list = NULL,
-  use_time_since_last_dose = FALSE
+  use_time_since_last_dose = FALSE,
+  x_limits = NULL,
+  y_limits = NULL
 )
 }
 \arguments{
@@ -56,6 +58,12 @@ Default is \code{NULL} (no filtering).}
 
 \item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose.
 Default is \code{FALSE} (time since first dose).}
+
+\item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
+Default is \code{NULL} (no limits).}
+
+\item{y_limits}{Numeric vector of length 2 for y-axis limits (min, max).
+Default is \code{NULL} (no limits).}
 }
 \value{
 A \code{ggplot} object representing the mean PK line plot,
