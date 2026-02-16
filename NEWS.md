@@ -20,6 +20,7 @@
 * Settings file has been converted from rds to yaml, allowing better readability and editing for users. (#901)
 * WTBL and WTBLU columns added to the data mapping, for optional conversion of dose to adjust to body weight for excretion calculations (#959)
 * Slope selector table for half life adjustments uses time to choose the point of interest. Also it is aesthetics have been polished (#956).
+* Slope selector plots count with grouping options (#333).
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
