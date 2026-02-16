@@ -239,18 +239,59 @@ describe("exploration_individualplot:", {
     expect_true(all("PARAM" %in% names(vline_layer$data)))
   })
 
-  it("applies dose-normalization to concentration when line_type is 'dose-normalized'", {
-    p <- exploration_individualplot(
+  it("line_type applies appropiate y-value and y-label changes", {
+    dose_col <- pknca_data$dose$columns$dose
+    doseu_col <- pknca_data$dose$columns$doseu
+    doses <- unique(pknca_data$dose$data[[dose_col]])
+    doses_u <- unique(pknca_data$dose$data[[doseu_col]])
+
+    p_dn <- exploration_individualplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
       show_dose = TRUE,
       line_type = "dose-normalized"
     )
-    layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
-    expect_true("GeomVline" %in% layer_classes)
+    p_base <- exploration_individualplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      show_dose = TRUE
+    )
+    p_both <- exploration_individualplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      line_type = "both"
+    )
 
-    # Check that the y-axis label indicates dose normalization
-    expect_true(grepl("Dose-Normalized", p$labels$y))
+    dn_build <- ggplot_build(p_dn)
+    base_build <- ggplot_build(p_base)
+    dn_ys <- dn_build$data[[1]]$y
+    base_ys <- base_build$data[[1]]$y
+    both_ys <- ggplot_build(p_both)$data[[1]]$y
+
+   # Check that the y values in the dose-normalized plot are equal to the base plot divided by the dose
+    expect_true(all(
+      sapply(seq_along(dn_ys), function(i) {
+        dn_y <- dn_ys[i]
+        base_y <- base_ys[i]
+        exp_dn_y <- base_y / doses
+        dn_y %in% exp_dn_y
+      })
+    ))
+
+    # Check that the y values in the "both" plot include both the base and dose-normalized values
+    expect_true(all(unique(c(dn_ys, base_ys)) %in% unique(both_ys)))
+
+    # Check that the y-axis label indicates the unit division by dose
+    dn_ylab <- p_dn$labels$y
+    base_ylab <- p_base$labels$y
+
+    # Check that the base y-axis label does not include dose units
+    exp_dn_ylabs <- gsub("\\[", "[(", base_ylab)
+    exp_dn_ylabs <- gsub("\\]", ")", exp_dn_ylabs)
+    exp_dn_ylabs <- paste0(exp_dn_ylabs, "/(", doses_u, ")]")
+    
+    expect_true(dn_ylab %in% exp_dn_ylabs)
   })
 })
 
