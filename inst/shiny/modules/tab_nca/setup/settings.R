@@ -508,7 +508,5 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     fallback <- default_logic(available_choices)
     if (length(fallback) > 0) return(fallback)
   }
-
   available_choices[1]
 }
-
