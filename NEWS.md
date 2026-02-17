@@ -39,6 +39,7 @@
 * NCA results flagging logic updated to include Missing column and correctly
 identify difference between missing and not requested (#934)
 * Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
+* Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 
 # aNCA 0.1.0
 
