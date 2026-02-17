@@ -140,8 +140,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       selected <- choices
       not_compatible <- c()
 
-      # if settings exist, update analyte picker input and check compatibility
-      if (!is.null(settings)) {
+      # if settings (specifically analyte) exist, update analyte picker input and check compatibility
+      if (!is.null(settings) && !is.null(settings$analyte)) {
 
         if (all(settings$analyte %in% choices)) {
           selected <- settings$analyte
