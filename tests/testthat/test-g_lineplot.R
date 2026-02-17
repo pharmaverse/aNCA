@@ -250,7 +250,7 @@ describe("g_lineplot: Tooltips", {
     expect_false(any(grepl("<b>", p$data$tooltip_text)))
   })
 
-   it("applies x and y limits", {
+  it("applies x and y limits", {
     p <- g_lineplot(
       data = ind_data,
       x_var = "time_var",
@@ -261,5 +261,5 @@ describe("g_lineplot: Tooltips", {
     )
     expect_equal(p$coordinates$limits$x, c(1, 8))
     expect_equal(p$coordinates$limits$y, c(10, 100))
-   })
+  })
 })
