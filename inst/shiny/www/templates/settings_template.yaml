@@ -35,6 +35,15 @@ settings:
       threshold: 2
   parameters:
     selections:
+      Excretion Data:
+      - ae
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - fe
+      - tlast
+      - tmax
       Single Extravascular:
       - adj.r.squared
       - aucinf.obs
