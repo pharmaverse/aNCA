@@ -51,7 +51,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     individualplot <- reactive({
       req(pknca_data(), individual_inputs()$color_by)
       log_info("Rendering individual plots")
-browser()
+
       exploration_individualplot(
         pknca_data = isolate(pknca_data()),
         color_by = individual_inputs()$color_by,
