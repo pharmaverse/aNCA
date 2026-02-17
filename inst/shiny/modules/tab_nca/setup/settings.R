@@ -22,7 +22,8 @@ settings_ui <- function(id) {
         title = "General Settings",
         # Selection of analyte, dose number and specimen
         fluidRow(
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_analyte"),
               "Choose the Analyte:",
@@ -31,7 +32,8 @@ settings_ui <- function(id) {
               options = list(`actions-box` = TRUE)
             )
           ),
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_profile"),
               "Choose the NCA Profile:",
@@ -40,7 +42,8 @@ settings_ui <- function(id) {
               options = list(`actions-box` = TRUE)
             )
           ),
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_pcspec"),
               "Choose the Specimen:",
@@ -87,8 +90,8 @@ settings_ui <- function(id) {
         data_imputation_ui(ns("data_imputation"))
       ),
       accordion_panel(
-        title = "Partial AUCs",
-        reactableOutput(ns("auc_table")),
+        title = "Partial Interval Calculations",
+        reactableOutput(ns("int_parameters_table")),
         actionButton(ns("addRow"), "Add Row")
       ),
       accordion_panel(
@@ -161,16 +164,18 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         updateSelectInput(session, inputId = "method", selected = settings$method)
 
         if (!is.null(settings$bioavailability)) {
-          updateSelectInput(session, inputId = "bioavailability",
-                            selected = settings$bioavailability)
+          updateSelectInput(session,
+            inputId = "bioavailability",
+            selected = settings$bioavailability
+          )
         }
 
         # Data imputation #
         update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
 
         # Partial AUCs #
-        if(!is.null(settings$partial_aucs)) {
-          auc_data(settings$partial_aucs)
+        if(!is.null(settings$int_parameters)) {
+          int_parameters(settings$int_parameters)
           refresh_reactable(refresh_reactable() + 1)
         }
 
@@ -212,8 +217,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       }
 
       if (!is.null(settings$analyte) && length(not_compatible) > 0) {
-        msg <- paste0(paste0(not_compatible, collapse = ", "),
-                      " settings not found in data. Reverting to defaults.")
+        msg <- paste0(
+          paste0(not_compatible, collapse = ", "),
+          " settings not found in data. Reverting to defaults."
+          )
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 10)
       }
@@ -232,7 +239,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         filter(PARAM %in% input$select_analyte, !is.na(PCSPEC), !is.na(ATPTREF))
 
       profile_choices <- sort(unique(filtered_data$ATPTREF))
-      pcspec_choices  <- unique(filtered_data$PCSPEC)
+      pcspec_choices <- unique(filtered_data$PCSPEC)
 
       target_profile <- .get_target_selection(
         current_val = isolate(input$select_profile),
@@ -271,24 +278,45 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
 
-    # Reactive value to store the AUC data table
-    auc_data <- reactiveVal(
-      tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
+    # Reactive value to store the partial intervals data table
+    # Define the parameters that can be used for partial area calculations
+    PARTIAL_INT_PARAMS <- metadata_nca_parameters %>%
+      filter(
+        grepl("INT", PPTESTCD),
+        TYPE != "PKNCA-not-covered"
+      ) %>%
+      arrange(PPTESTCD)
+
+    int_parameters <- reactiveVal(
+      tibble(
+        parameter = PARTIAL_INT_PARAMS$PPTESTCD[1],
+        start_auc = rep(NA_real_, 2),
+        end_auc = rep(NA_real_, 2)
+      )
     )
 
     # Render the editable reactable table
     refresh_reactable <- reactiveVal(1)
-    output$auc_table <- renderReactable({
+    output$int_parameters_table <- renderReactable({
       reactable(
-        auc_data(),
+        int_parameters(),
         columns = list(
+          parameter = colDef(
+            name = "Parameter",
+            cell = dropdown_extra(
+              id = ns("edit_parameter"),
+              choices = PARTIAL_INT_PARAMS$PPTESTCD,
+              class = "table-dropdown"
+            ),
+            align = "center"
+          ),
           start_auc = colDef(
-            name = "Start",  # Display name
+            name = "Start", # Display name
             cell = text_extra(id = ns("edit_start_auc")),
             align = "center"
           ),
           end_auc = colDef(
-            name = "End",    # Display name
+            name = "End", # Display name
             cell = text_extra(id = ns("edit_end_auc")),
             align = "center"
           )
@@ -299,8 +327,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Add a blank row on button click
     observeEvent(input$addRow, {
-      df <- auc_data()
-      auc_data(bind_rows(df, tibble(start_auc = NA_real_, end_auc = NA_real_)))
+      int_parameters() %>%
+        bind_rows(
+          tibble(
+            parameter = PARTIAL_INT_PARAMS$PPTESTCD[2],
+            start_auc = NA_real_,
+            end_auc = NA_real_
+          )
+        ) %>%
+        int_parameters()
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
@@ -308,14 +343,16 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     #' For each of the columns in partial aucs data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
-      req(auc_data())
+      req(int_parameters())
       # Dynamically attach observers for each column
-      purrr::walk(c("start_auc", "end_auc"), function(colname) {
-        observeEvent(input[[paste0("edit_", colname)]], {
-          edit <- input[[paste0("edit_", colname)]]
-          partial_aucs <- auc_data()
-          partial_aucs[edit$row, edit$column] <- as.numeric(edit$value)
-          auc_data(partial_aucs)
+      edit_inputs <- intersect(names(input), paste0("edit_", names(int_parameters())))
+      purrr::walk(edit_inputs, function(edit_input) {
+        observeEvent(input[[edit_input]], {
+          edit <- input[[edit_input]]
+          partial_aucs <- int_parameters()
+          val <- if (edit$column != "parameter") as.numeric(edit$value) else edit$value
+          partial_aucs[edit$row, edit$column] <- val
+          int_parameters(partial_aucs)
         })
       })
     })
@@ -333,7 +370,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           impute_c0 = data_imputation$should_impute_c0(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
-        partial_aucs = auc_data(),
+        int_parameters = int_parameters(),
         flags = list(
           R2ADJ = list(
             is.checked = input$R2ADJ_rule,
@@ -443,8 +480,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   rule_id <- paste0(id, "_rule")
 
   updateCheckboxInput(session = session, inputId = rule_id, value = checked)
-  if (checked)
+  if (checked) {
     updateNumericInput(session = session, inputId = threshold_id, value = value)
+  }
 }
 
 #'Helper to get target selection
@@ -473,6 +511,5 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     fallback <- default_logic(available_choices)
     if (length(fallback) > 0) return(fallback)
   }
-
   available_choices[1]
 }

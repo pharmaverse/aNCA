@@ -7,10 +7,15 @@ settings:
       first: keep
       middle: keep
       last: keep
-  partial_aucs:
+  int_parameters:
+    parameter:
+    - AUCINT
+    - AUCINTD
     start_auc:
     - 0.0
+    - 0.0
     end_auc:
+    - 24.0
     - 24.0
   flags:
     R2ADJ:
