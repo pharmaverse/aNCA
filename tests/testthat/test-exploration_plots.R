@@ -269,7 +269,7 @@ describe("exploration_individualplot:", {
     base_ys <- base_build$data[[1]]$y
     both_ys <- ggplot_build(p_both)$data[[1]]$y
 
-   # Check that the y values in the dose-normalized plot are equal to the base plot divided by the dose
+    # Check y values in the dose-normalized plot are equal to the base plot divided by the dose
     expect_true(all(
       sapply(seq_along(dn_ys), function(i) {
         dn_y <- dn_ys[i]
@@ -290,7 +290,7 @@ describe("exploration_individualplot:", {
     exp_dn_ylabs <- gsub("\\[", "[(", base_ylab)
     exp_dn_ylabs <- gsub("\\]", ")", exp_dn_ylabs)
     exp_dn_ylabs <- paste0(exp_dn_ylabs, "/(", doses_u, ")]")
-    
+
     expect_true(dn_ylab %in% exp_dn_ylabs)
   })
   it("applies x and y limits", {

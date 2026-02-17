@@ -24,27 +24,27 @@
 #' Default is `NULL` (no filtering).
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
 #' Default is `FALSE` (time since first dose).
-#' @param line_type Character; "default" (default), "dose-normalized" to specify if lines
-#' should be normalized by dose amount or "both" to include both normalized and non-normalized lines.
+#' @param line_type Character; "default" (default), "dose-normalized" to specify lines tos
+#' be normalized by dose amount or "both" to include both normalized and non-normalized lines.
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
 #' @export
 exploration_individualplot <- function(
-    pknca_data,
-    color_by,
-    facet_by = NULL,
-    ylog_scale = FALSE,
-    threshold_value = NULL,
-    x_limits = NULL,
-    y_limits = NULL,
-    show_dose = FALSE,
-    palette = "default",
-    tooltip_vars = NULL,
-    labels_df = NULL,
-    filtering_list = NULL,
-    use_time_since_last_dose = FALSE,
-    line_type = "default"
-    ) {
+  pknca_data,
+  color_by,
+  facet_by = NULL,
+  ylog_scale = FALSE,
+  threshold_value = NULL,
+  x_limits = NULL,
+  y_limits = NULL,
+  show_dose = FALSE,
+  palette = "default",
+  tooltip_vars = NULL,
+  labels_df = NULL,
+  filtering_list = NULL,
+  use_time_since_last_dose = FALSE,
+  line_type = "default"
+) {
 
 
   if (line_type == "both") {
@@ -255,15 +255,15 @@ process_data_individual <- function(pknca_data,
     }
     # If dose normalization requested, adjust concentration by dose amount
     if (dose_normalize) {
-      data <- data %>% 
+      data <- data %>%
         mutate(
-        !!sym(conc_col) := !!sym(conc_col) / !!sym(dose_col),
-        !!sym(concu_col) := if (!is.null(doseu_col)) {
-          paste0("(", .[[concu_col]], ")/(", .[[doseu_col]], ")")
-        } else {
-          NA_character_
-        }
-      )
+          !!sym(conc_col) := !!sym(conc_col) / !!sym(dose_col),
+          !!sym(concu_col) := if (!is.null(doseu_col)) {
+            paste0("(", .[[concu_col]], ")/(", .[[doseu_col]], ")")
+          } else {
+            NA_character_
+          }
+        )
     }
     data
   } else {
@@ -468,7 +468,9 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
     relationship = "many-to-many"
   ) %>%
     dplyr::filter(TIME_DOSE <= !!rlang::sym(conc_time_col)) %>%
-    dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), c("TIME_DOSE", dose_col, doseu_col)))) %>%
+    dplyr::group_by(
+      !!!rlang::syms(setdiff(names(conc_data), c("TIME_DOSE", dose_col, doseu_col)))
+    ) %>%
     dplyr::arrange(TIME_DOSE) %>%
     dplyr::slice_tail(n = 1) %>%
     dplyr::ungroup()
