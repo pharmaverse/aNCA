@@ -47,6 +47,7 @@ the lines. Default is NULL for no grouping.}
 
 \item{facet_count_n}{A character string specifying the column name used to
 count unique subjects per facet. Default is "USUBJID".}
+
 \item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
 Default is \code{NULL} (no limits).}
 
