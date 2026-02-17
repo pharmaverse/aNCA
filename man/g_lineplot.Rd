@@ -14,6 +14,8 @@ g_lineplot(
   facet_by = NULL,
   group_by = NULL,
   facet_count_n = "USUBJID",
+  x_limits = NULL,
+  y_limits = NULL,
   ylog_scale = FALSE,
   threshold_value = NULL,
   palette = "default",
@@ -45,6 +47,11 @@ the lines. Default is NULL for no grouping.}
 
 \item{facet_count_n}{A character string specifying the column name used to
 count unique subjects per facet. Default is "USUBJID".}
+\item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
+Default is \code{NULL} (no limits).}
+
+\item{y_limits}{Numeric vector of length 2 for y-axis limits (min, max).
+Default is \code{NULL} (no limits).}
 
 \item{ylog_scale}{A logical value (\code{TRUE} or \code{FALSE}) indicating whether to use
 a logarithmic scale for the y-axis.}

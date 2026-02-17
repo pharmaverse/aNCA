@@ -238,6 +238,17 @@ describe("exploration_individualplot:", {
     vline_layer <- p$layers[[which(layer_classes == "GeomVline")]]
     expect_true(all("PARAM" %in% names(vline_layer$data)))
   })
+
+  it("applies x and y limits", {
+    p <- exploration_individualplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      x_limits = c(0, 12),
+      y_limits = c(0, 200)
+    )
+    expect_equal(p$coordinates$limits$x, c(0, 12))
+    expect_equal(p$coordinates$limits$y, c(0, 200))
+  })
 })
 
 describe("exploration_meanplot:", {
@@ -373,5 +384,16 @@ describe("exploration_meanplot:", {
     expect_equal(p$labels$title, "Error")
     gg_build <- ggplot_build(p)
     expect_true(any(grepl("No data available", gg_build[[1]][[1]]$label)))
+  })
+
+  it("applies x and y limits", {
+    p <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      x_limits = c(0, 12),
+      y_limits = c(0, 200)
+    )
+    expect_equal(p$coordinates$limits$x, c(0, 12))
+    expect_equal(p$coordinates$limits$y, c(0, 200))
   })
 })

@@ -20,6 +20,43 @@
 parameter_selection_ui <- function(id) {
   ns <- NS(id)
   tagList(
+    # Header row with help button
+    div(
+      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
+      tags$h2(
+        "Parameter Selection",
+        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
+      ),
+      dropdown(
+        div(
+          class = "anca-help-dropdown",
+          style = "min-width:22em; max-width:30em;",
+          tags$h2("Parameter Selection Help"),
+          p(
+            "Selections are independent for each study type and can be customized as needed. ",
+            "From top-to-bottom, this page shows:"
+          ),
+          tags$ul(
+            tags$li(
+              tags$b("Study types table"),
+              ": Detected study types and the number of subjects associated with it."
+            ),
+            tags$li(
+              tags$b("Current selections table"),
+              ": Display of PK parameters selected for each study type."
+            ),
+            tags$li(
+              tags$b("Input widgets"),
+              ": Search and select the PK parameters to calculate for each study type."
+            )
+          )
+        ),
+        style = "unite",
+        right = TRUE,
+        icon = icon("question"),
+        status = "primary"
+      )
+    ),
     p("The following study types were detected in the data:"),
     card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
 
@@ -28,8 +65,10 @@ parameter_selection_ui <- function(id) {
     card(reactable_ui(ns("selected_parameters_table")), class = "border-0 shadow-none"),
 
     br(),
-    p("Select the parameters to calculate for each study type.
-      Selections can be overridden by uploading a settings file."),
+    p(
+      "Select the parameters to calculate for each study type.",
+      "Selections can be overridden by uploading a settings file."
+    ),
 
     uiOutput(ns("dynamic_study_accordion"))
   )
@@ -114,9 +153,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         })
 
       study_types_df() %>%
-        # summarise each unique type and group with number of USUBJID
-        group_by(!!!syms(groups), type) %>%
-        summarise(USUBJID_Count = n_distinct(USUBJID), .groups = "drop")
+        # summarise each unique type and group with number of subjects
+        group_by(type, !!!syms(groups)) %>%
+        summarise(`Subjects Count` = n_distinct(USUBJID), .groups = "drop") %>%
+        rename("Study Type" = type)
     })
 
     # ReactiveVal for parameter selection state

@@ -150,6 +150,14 @@ describe("g_lineplot: structure and arguments", {
     expect_true(any(grepl("\\(n=7\\)", unique(p$data$facet_label))))
   })
 
+   it("applies x and y limits", {
+
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+
   it("if specified, applies a custom palette color", {
     palette_options <- c("plasma", "cividis", "inferno")
     n_colors <- length(unique(ind_data$color_var))
@@ -165,7 +173,6 @@ describe("g_lineplot: structure and arguments", {
       plot_colors <- unique(p_build$data[[1]]$colour)
       exp_colors <- ggplot2::scale_fill_viridis_d(option = pal)$palette(n_colors)
       expect_true(all(plot_colors %in% exp_colors))
-
     }
   })
 
@@ -237,4 +244,17 @@ describe("g_lineplot: Tooltips", {
     # Check NO bold tags
     expect_false(any(grepl("<b>", p$data$tooltip_text)))
   })
+
+   it("applies x and y limits", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      x_limits = c(1, 8),
+      y_limits = c(10, 100)
+    )
+    expect_equal(p$coordinates$limits$x, c(1, 8))
+    expect_equal(p$coordinates$limits$y, c(10, 100))
+   })
 })
