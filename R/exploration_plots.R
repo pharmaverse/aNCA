@@ -24,7 +24,7 @@
 #' Default is `NULL` (no filtering).
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
 #' Default is `FALSE` (time since first dose).
-#' @param line_type Character; "non dose-normalized" (default), "dose-normalized" to specify if lines
+#' @param line_type Character; "default" (default), "dose-normalized" to specify if lines
 #' should be normalized by dose amount or "both" to include both normalized and non-normalized lines.
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
@@ -43,7 +43,7 @@ exploration_individualplot <- function(
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE,
-    line_type = "non dose-normalized"
+    line_type = "default"
     ) {
 
 
@@ -58,7 +58,7 @@ exploration_individualplot <- function(
       dose_normalize = TRUE
     )
     dn_data$line_type_label <- "Dose-normalized"
-    # Non dose-normalized data
+    # default data
     nn_data <- process_data_individual(
       pknca_data = pknca_data,
       filtering_list = filtering_list,
@@ -67,7 +67,7 @@ exploration_individualplot <- function(
       use_time_since_last_dose = use_time_since_last_dose,
       dose_normalize = FALSE
     )
-    nn_data$line_type_label <- "Non dose-normalized"
+    nn_data$line_type_label <- "default"
     individual_data <- dplyr::bind_rows(dn_data, nn_data)
     linetype_by <- "line_type_label"
   } else {

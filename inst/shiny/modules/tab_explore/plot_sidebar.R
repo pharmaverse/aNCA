@@ -76,11 +76,11 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns("y_axis_values"),
       "Y axis values:",
       choices = c(
+        "Default" = "default",
         "Dose-normalized" = "dose-normalized",
-        "Both" = "both",
-        "Non dose-normalized" = "non dose-normalized"
+        "Both" = "both"
       ),
-      selected = "non dose-normalized"
+      selected = "default"
     ),
     checkboxInput(
       ns("log"),
