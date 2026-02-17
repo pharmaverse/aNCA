@@ -18,7 +18,9 @@ create_start_impute(pknca_data)
 ## Value
 
 A PKNCAdata object with updated intervals table including start
-imputation strategies.
+imputation strategies. If the intervals are ambiguous and can refer to
+multiple concentration groups it will define them to choose the proper
+imputation for each.
 
 ## Examples
 

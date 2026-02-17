@@ -54,6 +54,9 @@
 - Slope selector table for half life adjustments uses time to choose the
   point of interest. Also it is aesthetics have been polished
   ([\#956](https://github.com/pharmaverse/aNCA/issues/956))
+- Partial interval parameters section now allows other calculations than
+  `AUCINT`, such as `RCAMINT`, `AUCINTD` or `CAVGINT` among others
+  ([\#524](https://github.com/pharmaverse/aNCA/issues/524))
 - Slope selector plots count with grouping options
   ([\#333](https://github.com/pharmaverse/aNCA/issues/333))
 - Add x/y axis limits for the exploration plots

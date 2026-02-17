@@ -10,7 +10,7 @@ update_main_intervals(
   data,
   parameter_selections,
   study_types_df,
-  auc_data,
+  int_parameters,
   impute = TRUE,
   blq_imputation_rule = NULL
 )
@@ -30,7 +30,7 @@ update_main_intervals(
 
   A data frame mapping analysis profiles to their study type.
 
-- auc_data:
+- int_parameters:
 
   A data frame containing partial AUC ranges.
 
