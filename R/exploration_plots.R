@@ -32,6 +32,7 @@ exploration_individualplot <- function(
   color_by,
   facet_by = NULL,
   ylog_scale = FALSE,
+  show_legend = TRUE,
   threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
