@@ -85,7 +85,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns = ns
     ),
     checkboxInput(ns("show_dose"), label = "Show Dose Times"),
-    checkboxInput(ns("show_legend"), label = "Show Legend", value = FALSE),
+    checkboxInput(ns("show_legend"), label = "Show Legend", value = TRUE),
     # --- Conditional UI Elements ---
     if (is_mean_plot) {
       tagList(
