@@ -69,6 +69,7 @@ exploration_individualplot <- function(
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
+    color_labels = color_labels,
     facet_by = facet_by,
     group_by = pknca_data$conc$columns$subject,
     ylog_scale = ylog_scale,
@@ -77,13 +78,6 @@ exploration_individualplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL
-  ) + labs(
-    title = "Individual Concentration Profiles",
-    x = paste0(get_label(pknca_data$conc$columns$time, labels_df = labels_df),
-               " [", paste(unique(individual_data[[pknca_data$conc$columns$timeu]]), collapse = ","), "]"),
-    y = paste0("Concentration [",
-               paste(unique(individual_data[[pknca_data$conc$columns$concu]]), collapse = ","), "]"),
-    color = paste(color_labels, collapse = "\n")
   )
   
   # Apply legend
@@ -166,6 +160,7 @@ exploration_meanplot <- function(
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
+    color_labels = color_labels,
     facet_by = facet_by,
     group_by = color_by,
     ylog_scale = ylog_scale,
@@ -174,13 +169,6 @@ exploration_meanplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL
-  ) + labs(
-    title = paste0("Mean Concentration Profiles", title_suffix),
-    x = paste0(get_label(x_var, labels_df = labels_df),
-               " [", paste(unique(mean_data[, pknca_data$conc$columns$timeu]), collapse = ","), "]"),
-    y = paste0("Mean Concentration [",
-               paste(unique(mean_data[, pknca_data$conc$columns$concu]), collapse = ","), "]"),
-    color = paste(color_labels, collapse = "\n")
   )
   
   # Apply legend
@@ -396,6 +384,11 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
   plot_build <- ggplot2::ggplot_build(plot)
 
   plot +
+    labs(
+      x = paste("Nominal", plot_build$plot$labels$x),
+      y = paste("Mean", plot_build$plot$labels$y),
+      title = paste("Mean", plot_build$plot$labels$title)
+    ) +
     list(
       .add_mean_layers(
         sd_min = sd_min,
