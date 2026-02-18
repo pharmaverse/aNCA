@@ -479,6 +479,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
 
+  # If checked is NULL do nothing
+  if (is.null(checked)) return()
+
   updateCheckboxInput(session = session, inputId = rule_id, value = checked)
   if (checked) {
     updateNumericInput(session = session, inputId = threshold_id, value = value)
