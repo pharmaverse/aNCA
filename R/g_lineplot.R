@@ -127,7 +127,8 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = if(!is.null(color_labels)) paste(na.omit(color_labels), collapse = "\n") else paste(color_by, collapse = ", ")
+      color = if (!is.null(color_labels)) paste(na.omit(color_labels), collapse = "\n") else
+        paste(color_by, collapse = ", ")
     ) +
     theme_bw()
   # Apply legend
