@@ -9,6 +9,7 @@ exploration_meanplot(
   color_by,
   facet_by = NULL,
   ylog_scale = FALSE,
+  show_legend = TRUE,
   threshold_value = NULL,
   show_dose = FALSE,
   palette = "default",
@@ -48,7 +49,7 @@ Default is "default" color palette.}
 \item{ci}{Logical; if \code{TRUE}, plot 95\% confidence interval ribbon. Default is \code{FALSE}.}
 
 \item{tooltip_vars}{Character vector of column names to include in the tooltip.
-Default includes dose group vars and "Mean".}
+Default includes dose group vars and "Mean_concentration".}
 
 \item{labels_df}{Optional data.frame for variable label lookups (for tooltips).
 Default is \code{NULL}.}

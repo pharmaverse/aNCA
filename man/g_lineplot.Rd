@@ -11,6 +11,7 @@ g_lineplot(
   x_unit = NULL,
   y_unit = NULL,
   color_by,
+  color_labels = NULL,
   facet_by = NULL,
   group_by = NULL,
   x_limits = NULL,
@@ -20,7 +21,8 @@ g_lineplot(
   palette = "default",
   tooltip_vars = NULL,
   labels_df = NULL,
-  vline_var = NULL
+  vline_var = NULL,
+  show_legend = TRUE
 )
 }
 \arguments{
