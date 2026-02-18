@@ -67,7 +67,8 @@ g_lineplot <- function(data,
                        palette = "default",
                        tooltip_vars = NULL,
                        labels_df = NULL,
-                       vline_var = NULL) {
+                       vline_var = NULL,
+                       show_legend = TRUE) {
 
   if (nrow(data) == 0) {
     return(error_plot("No data available for the plot"))
@@ -121,7 +122,12 @@ g_lineplot <- function(data,
       color = paste(color_labels, collapse = "\n")
     ) +
     theme_bw()
-
+  
+  # Apply legend
+  if (!show_legend) {
+    plt <- plt + theme(legend.position = "none")
+  }
+  
   # Add optional layers
   optional_layers <- list(
     .add_colour_palette(palette),

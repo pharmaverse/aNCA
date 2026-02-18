@@ -77,13 +77,9 @@ exploration_individualplot <- function(
     palette = palette,
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
-    vline_var = if (show_dose) "TIME_DOSE" else NULL
+    vline_var = if (show_dose) "TIME_DOSE" else NULL,
+    show_legend = show_legend
   )
-  
-  # Apply legend
-  if (!show_legend) {
-    plt <- plt + theme(legend.position = "none")
-  }
   
   plt
   
