@@ -33,7 +33,7 @@ tab_nca_ui <- function(id) {
         class = "btn btn-primary",
         width = "100%"
       ),
-      setup_ui(ns("nca_setup")),
+      nca_setup_ui(ns("nca_setup")),
     ),
     #' Results
     nav_panel(
@@ -75,7 +75,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server(
+    nca_setup <- nca_setup_server(
       "nca_setup",
       adnca_data,
       pknca_data,
@@ -92,7 +92,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     # This will be saved in the results zip folder
     session$userData$settings <- settings
     session$userData$ratio_table <- ratio_table
-    session$userData$slope_rules <- slope_rules
+    session$userData$slope_rules <- slope_rules$manual_slopes
 
     reactable_server("manual_slopes",
                      reactive(slope_rules$manual_slopes()),

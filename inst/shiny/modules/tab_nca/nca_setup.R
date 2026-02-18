@@ -14,7 +14,7 @@
 #'   * settings - List with raw settings as gathered by the module.
 #'   * slope_rules - Data frame with slope inclusions / exclusions provided by slope selector.
 
-setup_ui <- function(id) {
+nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
@@ -42,7 +42,7 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
+nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive(settings_override()$settings)
