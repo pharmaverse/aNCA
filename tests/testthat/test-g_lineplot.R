@@ -2,11 +2,11 @@
 
 # 1. Sample data for INDIVIDUAL plot mode
 ind_data <- expand.grid(
-  time_var = c(0, 1, 2, 4, 8, 12),
+  NFRLT = c(0, 1, 2, 4, 8, 12),
   USUBJID = c("Subject1", "Subject2")
 ) %>%
   mutate(
-    AVAL = ifelse(USUBJID == "Subject1", 50, 80) * exp(-0.5 * time_var) + rnorm(n(), 0, 1),
+    AVAL = ifelse(USUBJID == "Subject1", 50, 80) * exp(-0.5 * NFRLT) + rnorm(n(), 0, 1),
     PARAM = "Analyte1",
     DOSEA = "Dose 1",
     color_var = interaction(USUBJID, DOSEA, sep = ", "),
@@ -15,21 +15,21 @@ ind_data <- expand.grid(
   ) %>%
   # Add non-positive value for log test
   bind_rows(data.frame(
-    time_var = 24, USUBJID = "Subject1", AVAL = 0, PARAM = "Analyte1",
+    NFRLT = 24, USUBJID = "Subject1", AVAL = 0, PARAM = "Analyte1",
     DOSEA = "Dose 1", color_var = "Subject1, Dose 1",
     RRLTU = "hours", AVALU = "ng/mL"
   )) %>%
 
   # Represent dosing time in a variable
-  mutate(TIME_DOSE = ifelse(time_var < 6, 0, 6))
+  mutate(TIME_DOSE = ifelse(NFRLT < 6, 0, 6))
 
 # 2. Sample data for MEAN plot mode
 mean_data <- expand.grid(
-  time_var = c(0, 2, 4, 8),
+  NFRLT = c(0, 2, 4, 8),
   color_var = c("GroupA", "GroupB")
 ) %>%
   mutate(
-    Mean = ifelse(color_var == "GroupA", 100, 80) * exp(-0.3 * time_var),
+    Mean = ifelse(color_var == "GroupA", 100, 80) * exp(-0.3 * NFRLT),
     SD = Mean * 0.2, # 20% CV
     N = 4,
     SE = SD / sqrt(N),
@@ -43,12 +43,12 @@ mean_data <- expand.grid(
   ) %>%
   # Add non-positive value for log test
   bind_rows(data.frame(
-    time_var = 12, color_var = "GroupA", Mean = 0, SD = 0, N = 4, SE = 0,
+    NFRLT = 12, color_var = "GroupA", Mean = 0, SD = 0, N = 4, SE = 0,
     SD_min = 0, SD_max = 0, CI_lower = 0, CI_upper = 0,
     PARAM = "Analyte1", RRLTU = "hours", AVALU = "ng/mL"
   )) %>%
   # Represent dosing time in a variable
-  mutate(TIME_DOSE = ifelse(time_var < 6, 0, 6))
+  mutate(TIME_DOSE = ifelse(NFRLT < 6, 0, 6))
 
 # --- Tests ---
 
@@ -56,23 +56,24 @@ describe("g_lineplot: structure and arguments", {
   it("returns a ggplot object with individual labels", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       x_unit = "RRLTU",
       y_unit = "AVALU",
-      color_by = "USUBJID"
+      color_by = "USUBJID",
+      labels_df = metadata_nca_variables
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "PK Concentration - Time Profile")
-    expect_equal(p$labels$y, "Concentration [ng/mL]")
-    expect_equal(p$labels$x, "Time [hours]")
+    expect_equal(p$labels$y, "Analysis Value [ng/mL]")
+    expect_equal(p$labels$x, "Nom. Rel. Time from Analyte First Dose [hours]")
     expect_equal(p$labels$colour, "USUBJID")
   })
 
   it("applies faceting", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       facet_by = "PARAM"
@@ -83,7 +84,7 @@ describe("g_lineplot: structure and arguments", {
   it("applies log scale", {
     p <- g_lineplot(
       data = ind_data %>% filter(AVAL > 0), # Remove non-positive for log test
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       ylog_scale = TRUE
@@ -96,7 +97,7 @@ describe("g_lineplot: structure and arguments", {
   it("shows threshold line", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       threshold_value = 10
@@ -108,7 +109,7 @@ describe("g_lineplot: structure and arguments", {
   it("shows dose lines and respects facets", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       facet_by = c("PARAM", "DOSEA"),
@@ -125,7 +126,7 @@ describe("g_lineplot: structure and arguments", {
   it("applies x and y limits", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       x_limits = c(1, 8),
@@ -141,7 +142,7 @@ describe("g_lineplot: structure and arguments", {
     for (pal in palette_options) {
       p <- g_lineplot(
         data = ind_data,
-        x_var = "time_var",
+        x_var = "NFRLT",
         y_var = "AVAL",
         color_by = "color_var",
         palette = pal
@@ -157,7 +158,7 @@ describe("g_lineplot: structure and arguments", {
   it("handles multiple color_by labels", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = c("USUBJID", "DOSEA")
     )
@@ -168,7 +169,7 @@ describe("g_lineplot: structure and arguments", {
     empty_ind_data <- ind_data[0, ]
     p <- g_lineplot(
       data = empty_ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID"
     )
@@ -186,7 +187,7 @@ describe("g_lineplot: Tooltips", {
   it("constructs default tooltips if no vars provided", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID"
     )
@@ -197,7 +198,7 @@ describe("g_lineplot: Tooltips", {
   it("uses generate_tooltip_text when labels_df is provided", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       tooltip_vars = c("USUBJID", "AVAL"),
@@ -211,7 +212,7 @@ describe("g_lineplot: Tooltips", {
   it("falls back to simple paste if labels_df is missing but vars provided", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       tooltip_vars = c("USUBJID", "AVAL"),
