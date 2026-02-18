@@ -385,11 +385,12 @@ aNCA results will be flagged based on predefined scientific rules to help users 
 
 By default, PKNCA automatically selects the terminal elimination phase using the following algorithm:
 
-1. **Initial Selection**: Uses at least 3 points from the terminal phase
-2. **Optimization**: Maximizes adjusted R² of the log-linear regression
-3. **Validation**: Checks that the half-life span ratio ≥ 2
-
-For infusion administrations, points during the infusion are excluded from half-life selection. If no valid slope is found, PKNCA will not calculate half-life or any dependent parameters, providing a `Exclude` message.
+1. Omit all missing and BLQ concentrations. If the administration is an infusion, also omit all points during the infusion.
+2. Estimate the half-life for each set of points from the first concentration measure after Tmax to the third measure before Tlast.
+3. Select the best half-life expecting that:
+- The adjusted r-squared must be within a tolerance factor (typically 0.0001) of the largest adjusted r-squared.
+- The λz value (slope for the half-life line) must be positive; in other words, the half-life slope must be decreasing.
+- If multiple choices of points fit the above criteria, choose the one with the most concentration measurements included.
 
 
 **Reference**: [PKNCA Half-Life Calculation](https://billdenney.github.io/pknca/articles/Half-life.html)
@@ -689,15 +690,13 @@ results <- pk.nca(pknca_data)
 
 ## CDISC Standards
 
-- **ADAMIG**: Analysis Data Model Implementation Guide
-- **ADNCA**: https://www.cdisc.org/standards/foundational/adam
 - **SDTMIG**: Study Data Tabulation Model Implementation Guide
+- **ADAMIG-ADNCA**: Analysis Data Model Implementation Guide
+- **ADNCA**: https://www.cdisc.org/standards/foundational/adam
 
 ## Further Reading
 
 - Denney, W. S., Duvvuri, S., & Buckeridge, C. (2015). Simple, Automatic Noncompartmental Analysis: The PKNCA R Package. *Journal of Pharmacokinetics and Pharmacodynamics*, 42(1), 11-17. https://doi.org/10.1007/s10928-015-9432-2
-
-- Gabrielsson, J., & Weiner, D. (2001). *Pharmacokinetic and Pharmacodynamic Data Analysis: Concepts and Applications* (3rd ed.). Swedish Pharmaceutical Press.
 
 ---
 
