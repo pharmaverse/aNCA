@@ -140,7 +140,7 @@ slope_selector_server <- function( # nolint
         # Modify plots with new half-life adjustments (inclusions/exclusions)
         plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
       } else if (changes$in_selected_intervals) {
-        # Add/remove plots based on intervals (analyte, profile, specimen selection from nca_setup.R)
+        # Add/remove plots based on intervals (selection from nca_setup.R)
         plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
       }
 
