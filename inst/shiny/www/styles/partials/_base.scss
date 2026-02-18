@@ -31,6 +31,27 @@ h5 {
   margin-bottom: 0;
 }
 
+/* shared help dropdown content styling */
+.anca-help-dropdown {
+  h2 {
+    font-size: 1.1em;
+    margin: 0 0 0.75rem;
+  }
+
+  p {
+    margin: 0 0 0.75rem;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+}
+
 .nca-numeric-container {
   display: flex;
   align-items: center;
