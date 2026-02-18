@@ -89,11 +89,6 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 
-    session$userData$settings <- list(
-      settings =  settings,
-      slope_rules = slope_rules
-    ) # This will be saved in the results zip folder
-
     # This will be saved in the results zip folder
     session$userData$settings <- settings
     session$userData$ratio_table <- ratio_table

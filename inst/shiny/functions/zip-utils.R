@@ -392,7 +392,7 @@ prepare_export_files <- function(target_dir,
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
   settings_to_save <- list(
     settings = session$userData$settings(),
-    slope_rules = session$userData$slope_rules
+    slope_rules = session$userData$slope_rules$manual_slopes()
   )
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
