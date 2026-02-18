@@ -61,12 +61,17 @@ exploration_individualplot <- function(
       color_by
     ))
   }
+  
   # Define labels
-  color_labels <- vapply(
-    color_by,
-    function(x) get_label(variable = x, labels_df = labels_df),
-    FUN.VALUE = character(1)
-  )
+  if(!is.null(labels_df))
+    color_labels <- vapply(
+      color_by,
+      function(x) get_label(variable = x, labels_df = labels_df),
+      FUN.VALUE = character(1)
+    )
+  else
+    color_labels <- color_by
+  
   plt <- g_lineplot(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
@@ -151,11 +156,15 @@ exploration_meanplot <- function(
     ))
   }
   # Define labels
-  color_labels <- vapply(
-    color_by,
-    function(x) get_label(variable = x, labels_df = labels_df),
-    FUN.VALUE = character(1)
-  )
+  if(!is.null(labels_df))
+    color_labels <- vapply(
+      color_by,
+      function(x) get_label(variable = x, labels_df = labels_df),
+      FUN.VALUE = character(1)
+    )
+  else
+    color_labels <- color_by
+  
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
@@ -238,21 +247,25 @@ process_data_individual <- function(pknca_data,
   } else {
     pknca_data$conc$data
   }
-
   # Handle dose profile duplicates if filtering by ATPTREF so pre-dose samples
   # assigned only to one profile are retained
   if ("ATPTREF" %in% names(filtering_list)) {
     if ("ARRLT" %in% names(data) && any(data$ARRLT < 0 & data$AFRLT > 0)) {
       data <- dose_profile_duplicates(
         data,
-        groups = c(group_vars(pknca_data$conc), "ATPTREF", "DOSEU"),
+        groups = c(group_vars(pknca_data$conc), "ATPTREF"),
         dosno = "ATPTREF"
       )
     }
   }
 
+  processed_data <- data
   # Apply filtering
-  processed_data <- filter_by_list(data, filtering_list) %>%
+  if (!is.null(filtering_list) && length(filtering_list) > 0) {
+    processed_data <- filter_by_list(processed_data, filtering_list)
+  }
+  
+  processed_data <- processed_data %>%
     dplyr::filter(!is.na(!!sym(conc_col)))
 
   # Remove non-positive concentrations if log scale is selected (for posterior plotting)
@@ -307,9 +320,13 @@ process_data_mean <- function(pknca_data,
   } else {
     pknca_data$conc$data
   }
-
+  processed <- data
   # Apply filtering
-  processed <- filter_by_list(data, filtering_list) %>%
+  if (!is.null(filtering_list) && length(filtering_list) > 0) {
+    processed <- filter_by_list(processed, filtering_list)
+  }
+  
+  processed <- processed %>%
     dplyr::filter(!is.na(!!rlang::sym(y_var)))
 
   # Adjust time variable with dose time if using time since last dose
@@ -390,7 +407,7 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
     labs(
       x = paste(plot_build$plot$labels$x),
       y = paste(plot_build$plot$labels$y),
-      title = paste("Mean ", plot_build$plot$labels$title)
+      title = paste0("Mean ", plot_build$plot$labels$title)
     ) +
     list(
       .add_mean_layers(
