@@ -250,7 +250,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       adnca_data$dose$columns$route, "ROUTE",
       keep_interval_cols
     ),
-    min.hl.r.squared = 0.01
+    min.hl.r.squared = 0.01,
+    allow_partial_missing_units = TRUE
   )
 
   # Add on top of the default ones, the exclusions listed

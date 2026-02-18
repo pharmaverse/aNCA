@@ -17,6 +17,10 @@
 #'   Default is `NULL` for no faceting.
 #' @param group_by A character vector specifying the column names used to group
 #'  the lines. Default is NULL for no grouping.
+#' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
+#'   Default is `NULL` (no limits).
+#' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
+#'   Default is `NULL` (no limits).
 #' @param ylog_scale A logical value (`TRUE` or `FALSE`) indicating whether to use
 #'  a logarithmic scale for the y-axis.
 #' @param threshold_value A numeric value for the y-intercept of the threshold line.
@@ -62,6 +66,8 @@ g_lineplot <- function(data,
                        color_labels,
                        facet_by = NULL,
                        group_by = NULL,
+                       x_limits = NULL,
+                       y_limits = NULL,
                        ylog_scale = FALSE,
                        threshold_value = NULL,
                        palette = "default",
@@ -131,6 +137,7 @@ g_lineplot <- function(data,
   # Add optional layers
   optional_layers <- list(
     .add_colour_palette(palette),
+    .add_axis_limits(x_limits, y_limits),
     .add_y_scale(ylog_scale),
     .add_faceting(facet_by),
     .add_thr(threshold_value),
@@ -156,6 +163,21 @@ g_lineplot <- function(data,
     return(NULL)
   }
   facet_wrap(vars(!!!syms(facet_by)), scales = "free")
+}
+
+#' @noRd
+.add_axis_limits <- function(x_limits, y_limits) {
+  has_x <- is.numeric(x_limits) && length(x_limits) == 2 && any(is.finite(x_limits))
+  has_y <- is.numeric(y_limits) && length(y_limits) == 2 && any(is.finite(y_limits))
+
+  if (!has_x && !has_y) {
+    return(NULL)
+  }
+
+  xlim_vals <- if (has_x) x_limits else NULL
+  ylim_vals <- if (has_y) y_limits else NULL
+
+  coord_cartesian(xlim = xlim_vals, ylim = ylim_vals)
 }
 
 #' @noRd

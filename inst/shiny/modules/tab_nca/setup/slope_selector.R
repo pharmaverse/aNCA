@@ -77,8 +77,8 @@ slope_selector_ui <- function(id) {
         selectInput(
           ns("plots_per_page"),
           "Plots per page:",
-          choices = c(1, 2, 3, 4, 6, 8, 9, 12, 16),
-          selected = 1
+          choices = c(1, 3, 6, 9, 18, 100),
+          selected = 9
         )
       ),
       div(
@@ -89,6 +89,14 @@ slope_selector_ui <- function(id) {
           choices = NULL,
           multiple = TRUE
         ),
+      )
+    ),
+    fluidRow(
+      orderInput(
+        ns("order_groups"),
+        label = "Order plots by:",
+        items = NULL,
+        width = "100%"
       )
     ),
     br(),
@@ -145,6 +153,22 @@ slope_selector_server <- function( # nolint
           choices = unique(new_pknca_data$intervals$USUBJID)
         )
       }
+      # Update the order input widget options based on the new data
+      if (changes$in_data) {
+        req(processed_pknca_data())
+        # Only use columns that have more than 1 value in the whole dataset
+        pknca_data <- processed_pknca_data()
+        group_conc_cols <- group_vars(pknca_data)
+        group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
+        group_cols_to_order <- group_conc_cols[group_conc_n_levels > 1]
+
+        updateOrderInput(
+          session = session,
+          inputId = "order_groups",
+          items = group_cols_to_order
+        )
+      }
+
       # Save the plots for the zip download (nca_results.R)
       session$userData$results$slope_selector <- plot_outputs()
 
@@ -169,6 +193,8 @@ slope_selector_server <- function( # nolint
         plot_outputs() %>%
           # Filter plots based on user search
           .[page_search$is_plot_searched()] %>%
+          # Arrange plots by the specified group order
+          arrange_plots_by_groups(input$order_groups) %>%
           # Display only the plots for the current page
           .[page_search$page_start():page_search$page_end()]
       })
@@ -212,8 +238,6 @@ slope_selector_server <- function( # nolint
         data = manual_slopes()
       )
 
-      # Load it to the session objects
-      session$userData$slope_rules <- manual_slopes()
     })
     #' returns half life adjustments rules to update processed_pknca_data in setup.R
     list(
