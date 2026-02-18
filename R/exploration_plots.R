@@ -139,9 +139,6 @@ exploration_meanplot <- function(
     ))
   }
   
-  # Define logic for dynamic title suffix
-  title_suffix <- if (isTRUE(ci)) " (95% CI)" else ""
-  
   # Define labels
   color_labels <- vapply(
     color_by, 
