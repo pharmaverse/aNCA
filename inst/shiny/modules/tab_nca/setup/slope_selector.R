@@ -240,8 +240,6 @@ slope_selector_server <- function( # nolint
 
     })
     #' returns half life adjustments rules to update processed_pknca_data in nca_setup.R
-    list(
-      manual_slopes = manual_slopes
-    )
+    manual_slopes
   })
 }

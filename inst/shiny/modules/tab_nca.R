@@ -92,10 +92,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     # This will be saved in the results zip folder
     session$userData$settings <- settings
     session$userData$ratio_table <- ratio_table
-    session$userData$slope_rules <- slope_rules$manual_slopes
+    session$userData$slope_rules <- slope_rules
 
     reactable_server("manual_slopes",
-                     reactive(slope_rules$manual_slopes()),
+                     reactive(slope_rules()),
                      columns = NULL)
 
     #' Triggers NCA analysis, creating res_nca reactive

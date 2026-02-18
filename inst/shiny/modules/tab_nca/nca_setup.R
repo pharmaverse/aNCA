@@ -76,7 +76,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        hl_adj_rules = slope_rules$manual_slopes(),
+        hl_adj_rules = slope_rules(),
         exclusion_list = general_exclusions(),
         keep_interval_cols = extra_group_vars()
       )
@@ -171,7 +171,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         # Prepare the list
         settings_to_save <- list(
           settings = final_settings(),
-          slope_rules = slope_rules$manual_slopes()
+          slope_rules = slope_rules()
         )
         # write yaml file
         yaml::write_yaml(settings_to_save, file = con)
