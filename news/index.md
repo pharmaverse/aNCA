@@ -105,6 +105,9 @@
 - Pagination controls in the slope selector and the interactivity of the
   plots is less buggy
   ([\#956](https://github.com/pharmaverse/aNCA/issues/956))
+- Creation of intervals reworked to prevent doses being combined if no
+  samples are taken post dose
+  ([\#963](https://github.com/pharmaverse/aNCA/issues/963))
 
 ## aNCA 0.1.0
 
