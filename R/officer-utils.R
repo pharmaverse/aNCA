@@ -85,9 +85,10 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param path File path to save the presentation
 #' @param title Title for the presentation
 #' @param template Path to PowerPoint template file
+#' @param additional_analysis Optional list of additional analysis results to include in the presentation
 #' @importFrom officer read_pptx add_slide ph_with ph_location_type ph_slidelink move_slide
 #' @return TRUE (invisible). Writes the PowerPoint file to the specified path
-create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
+create_pptx_dose_slides <- function(res_dose_slides, path, title, template, additional_analysis = NULL) {
   pptx <- create_pptx_doc(path, title, template)
 
   lst_group_slide <- 1
@@ -137,7 +138,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   )
   pptx <- add_pptx_sl_title(pptx, "Extra Figures")
   pptx <- move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
-
+browser()
   print(pptx, target = path)
   invisible(TRUE)
 }
