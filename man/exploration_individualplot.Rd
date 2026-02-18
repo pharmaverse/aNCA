@@ -17,7 +17,8 @@ exploration_individualplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   filtering_list = NULL,
-  use_time_since_last_dose = FALSE
+  use_time_since_last_dose = FALSE,
+  line_type = "default"
 )
 }
 \arguments{
@@ -55,6 +56,9 @@ Default is \code{NULL} (no filtering).}
 
 \item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose.
 Default is \code{FALSE} (time since first dose).}
+
+\item{line_type}{Character; "default" (default), "dose-normalized" to specify lines tos
+be normalized by dose amount or "both" to include both normalized and non-normalized lines.}
 }
 \value{
 A \code{ggplot} object representing the individual PK line plot.

@@ -72,6 +72,16 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
+    selectInput(
+      ns("y_axis_values"),
+      "Y axis values:",
+      choices = c(
+        "Default" = "default",
+        "Dose-normalized" = "dose-normalized",
+        "Both" = "both"
+      ),
+      selected = "default"
+    ),
     checkboxInput(
       ns("log"),
       "Semi-log scale"
@@ -236,7 +246,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         sd_min = input$sd_min,
         ci = input$ci,
         filtering_list = filtering_list(),
-        use_time_since_last_dose = input$timescale == "By Dose Profile"
+        use_time_since_last_dose = input$timescale == "By Dose Profile",
+        y_axis_values = input$y_axis_values
       )
     })
   })

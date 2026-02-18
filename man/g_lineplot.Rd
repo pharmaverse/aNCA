@@ -20,7 +20,8 @@ g_lineplot(
   palette = "default",
   tooltip_vars = NULL,
   labels_df = NULL,
-  vline_var = NULL
+  vline_var = NULL,
+  linetype_by = NULL
 )
 }
 \arguments{
