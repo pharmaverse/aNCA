@@ -80,7 +80,7 @@ g_lineplot <- function(data,
   x_lab <- if (is.null(x_lab_unit)) "Time" else paste0("Time [", x_lab_unit, "]")
   y_lab_unit <- if (is.null(y_unit)) NULL else paste0(unique(data[[y_unit]]), collapse = ", ")
   y_lab <- if (is.null(y_lab_unit)) "Concentration" else paste0("Concentration [", y_lab_unit, "]")
-  title <- paste0("PK Concentration - Time Profile", if (isTRUE(ci)) " (95% CI)" else "")
+  title <- "PK Concentration - Time Profile"
 
   # --- Tooltip Construction ---
   if (!is.null(tooltip_vars)) {
@@ -199,7 +199,8 @@ g_lineplot <- function(data,
   if (isTRUE(ci)) {
     ci_ribbon_layer <- list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
-      guides(fill = "none")
+      guides(fill = "none"),
+      labs(title = paste0("Mean PK Concentration - Time Profile", if (isTRUE(ci)) " (95% CI)" else ""))
     )
   }
   # Return a list of all layers
