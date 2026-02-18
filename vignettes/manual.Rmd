@@ -27,7 +27,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 | 6. Results & Outputs | [Results & Outputs](#6-results--outputs) |
 | 7. TLG | [TLG](#7-tlg) |
 | 8. Customization | [Customization](#8-customization) |
-| 9. Technical Architecture | [Technical Architecture](#9-technical-architecture) |
+| 9. Half-Life Selection | [Half-Life Selection & Slope Selector](#9-half-life-selection-and-slope-selector) |
 | 10. Troubleshooting & FAQ | [Troubleshooting & FAQ](#10-troubleshooting--faq) |
 | 11. References & Resources | [References & Resources](#11-references--resources) |
 | Glossary | [Glossary](#glossary) |
@@ -160,7 +160,40 @@ ADNCA$NCA1XRS <- ifelse(ADNCA$AVAL > 10000, "Concentration too high", "")
 ADNCA$NCA2XRS <- ifelse(ADNCA$ARRLT < 0, "Negative time point", "")
 ```
 
-For implementation details, see [Technical Architecture > Data Preparation](#data-preparation-functions).
+## Data Preparation Implementation
+
+Data preparation is orchestrated through aNCA's internal functions:
+
+### Column Mapping: `apply_mapping()`
+
+**Purpose**: Transforms user dataset to ADNCA format
+
+**Operations**:
+- Renames columns based on user-specified mappings
+- Creates new columns for unmapped required variables (e.g., `ADOSEDUR = 0` if not mapped)
+- If `DOSETRT` not mapped, sets `DOSETRT = PARAM`; if `ADOSEDUR` not mapped, sets all values to 0
+- Removes concentration duplicates
+- Applies CDISC variable labels
+
+### Concentration & Dose Data Formatting
+
+**`format_pkncaconc_data()`**: Creates PKNCA-compatible concentration dataset
+- Filters out dosing records
+- Creates `DOSNOA`: Sequential dose number within each group
+- Standardizes route ("intravascular" vs "extravascular")
+- Merges NCAwXRS exclusion reasons into `nca_exclude` column
+
+**`format_pkncadose_data()`**: Extracts and formats dosing information
+- Creates dose records from concentration data
+- Calculates sequential dose numbers
+- Links dose times to concentration profiles
+
+### Interval Creation & Parameter Assignment
+
+**`format_pkncadata_intervals()` & `update_main_intervals()`**: Defines NCA intervals
+- Creates intervals based on dose times (single dose: [0, Inf]; multiple dose: [dose_time, next_dose_time or start + TRTRINT])
+- Assigns PKNCA parameters based on study type (single/multiple dose, IV/EV)
+- Implements BLQ and start concentration imputation rules
 
 ---
 
@@ -304,6 +337,26 @@ The output package includes:
 - **Data tables**: CSV, XPT, or RDS
 - **Slide decks**: PPTX or QMD (renderable to HTML/PDF)
 
+## CDISC Dataset Derivation
+
+aNCA generates three CDISC-compliant output datasets:
+
+**PP (Pharmacokinetic Parameters)**:
+- Standard dataset containing calculated NCA parameters
+- Derivation: Extracts NCA results from PKNCA, translates to CDISC terms (`PPTESTCD`, `PPTEST`), reshapes to one row per subject-analyte-interval
+- Key columns: `PPTESTCD` (parameter code), `PPTEST` (parameter name), `PPSTRESN` (numeric result), `PPSTRESU` (unit), `PPSPEC` (specimen type)
+
+**ADPP (Analysis Dataset for Pharmacokinetic Parameters)**:
+- Analysis-ready version of PP with additional analysis variables
+- Derivation: Adds analysis flags (`ANLFL`, `ANL01FL`), grouping variables, treatment (`TRT01A`, `TRT01P`), and demographic variables (`AGE`, `SEX`, `RACE`)
+- Key addition: `AVAL` (analysis value, copy of `PPSTRESN`)
+
+**ADNCA (Input Dataset)**:
+- Input dataset maintained in output for traceability
+- Minimal modifications: standardized route, dose numbers assigned
+- Excluded records retained but marked
+- Purpose: Traceability and support for concentration-time plotting and re-analysis
+
 ---
 
 # 7. TLG (Tables, Listings, and Graphs)
@@ -312,11 +365,6 @@ aNCA generates regulatory-ready TLG outputs for reporting and analysis.
 For TLG customization details, see [Customization](#8-customization) section.
 
 ---
-
-# 8. Customization
-
-aNCA allows customization of labels, titles, grouping variables, and statistical summaries throughout outputs.
-
 ## Changing Labels and Titles
 
 - **Study Identifiers**: Customize study labels on plots and reports
@@ -338,118 +386,6 @@ aNCA allows customization of labels, titles, grouping variables, and statistical
 - **Subgroup Analysis**: Stratify results by demographics or study cohort
 
 ---
-
-# 9. Technical Architecture
-
-This section provides technical details on how aNCA processes data internally. Understanding these functions helps trace data transformation from input to output.
-
-## Data Preparation Functions {#data-preparation-functions}
-
-### Column Mapping: `apply_mapping()`
-
-**File**: `R/apply_mapping.R`
-
-**Purpose**: Transforms user dataset to ADNCA format
-
-**Operations**:
-
-- Renames columns based on user-specified mappings
-- Creates new columns for unmapped required variables (e.g., `ADOSEDUR = 0` if not mapped)
-- Handles special cases:
-  - If `DOSETRT` not mapped, sets `DOSETRT = PARAM`
-  - If `ADOSEDUR` not mapped, sets all values to 0
-- Removes concentration duplicates based on key identifiers
-- Applies CDISC variable labels
-
-**Example**:
-
-```r
-# User maps their column "CONCENTRATION" to AVAL
-new_dataset <- apply_mapping(
-  dataset = user_data,
-  mapping = list(AVAL = "CONCENTRATION", ...),
-  desired_order = c("STUDYID", "USUBJID", ...)
-)
-```
-
-### Concentration Data Formatting: `format_pkncaconc_data()`
-
-**File**: `R/format_data.R`
-
-**Purpose**: Creates PKNCA-compatible concentration dataset
-
-**Operations**:
-
-- Filters out dosing records (EVID = 0, PARAMCD not containing "DOSE")
-- Creates `DOSNOA`: Sequential dose number within each group
-- Standardizes route to PKNCA format:
-  - "intravascular" (IV)
-  - "extravascular" (EV, oral, etc.)
-- Creates `CONCDUR`: Sampling duration (if end time provided)
-- Merges NCAwXRS exclusion reasons into `nca_exclude` column
-- Initializes half-life selection flags
-
-**Example**:
-
-```r
-conc_data <- format_pkncaconc_data(
-  ADNCA = adnca_data,
-  group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
-  time_column = "AFRLT",
-  rrlt_column = "ARRLT",
-  route_column = "ROUTE",
-  nca_exclude_reason_columns = c("NCA1XRS", "NCA2XRS")
-)
-```
-
-### 3. Dose Data Formatting: `format_pkncadose_data()`
-
-**File**: `R/format_data.R`
-
-**Purpose**: Extracts and formats dosing information
-
-**Operations**:
-
-- Creates dose records from concentration data
-- Calculates `DOSNOA`: Sequential dose numbers based on time
-- Extracts route, duration, and dose amount
-- Links dose times to concentration profiles
-
-### Interval Creation: `format_pkncadata_intervals()`
-
-**File**: `R/intervals.R`
-
-**Purpose**: Defines time intervals for NCA calculations
-
-**Operations**:
-
-- Creates intervals based on dose times
-- Determines start and end times for each interval:
-  - **Single dose**: End time = Inf (or last measurable time)
-  - **Multiple dose**: End time = next dose time or `start + TRTRINT`
-- Assigns PKNCA parameters to intervals
-- Supports partial AUC calculations
-
-**Interval Logic**:
-
-```
-Dose 1: [0, next_dose_time or Inf]
-Dose 2: [dose_time_2, next_dose_time or Inf]
-...
-```
-
-### Parameter Assignment: `update_main_intervals()`
-
-**File**: `R/intervals.R`
-
-**Purpose**: Updates intervals with user-selected parameters
-
-**Operations**:
-
-- Assigns parameters based on study type (single/multiple dose, IV/EV)
-- Adds partial AUC intervals
-- Implements BLQ imputation rules
-- Creates start concentration imputation strategies
 
 ## Data Imputation Rules {#data-imputation-rules}
 
@@ -535,30 +471,9 @@ aNCA uses PKNCA's AUC calculation methods. Users can select the calculation meth
 
 **Reference**: [PKNCA Parameter Functions](https://billdenney.github.io/pknca/reference/index.html#pk-parameters)
 
-## Flag Rules
-
-aNCA results will be flagged based on predefined scientific rules to help users identify potential issues with the data or calculations. These flags are generated based on the calculated parameters and the underlying data quality. There are two types:
-
-- Half-life selection criteria flags (r.squared, span ratio, adjusted R²). Any half-life or half-life dependent parameter (e.g., AUCinf) may be flagged if the half-life selection does not meet the criteria. Other flags may be based on general data quality issues (e.g., BLQ values, missing data, etc.) that can affect any parameter.
-- AUC selection criteria flags (AUC percentage extrapolated observed, AUC percentage extrapolated predicted). When the extrapolated percentage exceeds a certain threshold (e.g., 20%), it may indicate that the terminal phase is not well characterized. Any AUC-extrapolated (e.g., AUCinf) or AUC-extrapolated derived parameter (e.g., clearance, volume) may be flagged if the AUC extrapolation percentage exceeds the threshold.
-
-
-**Common Flags**:
-
-- **Half-life flags**: 
-  - `r.squared (R2) < 0.9`: Poor fit of terminal slope
-  - `adj.r.squared < 0.8`: Poor adjusted fit of terminal slope (R²)
-  - `span.ratio < 2`: Insufficient span of half-life
-
-- **AUC flags**:
-  - `auc_extrap_pct_obs (AUCPEO) > 20%`: High extrapolation based on observed
-  - `auc_extrap_pct_pred (AUCPEP) > 20%`: High extrapolation based on predicted
-
-**Implementation**: Controlled by PKNCA's built-in rules
-
 ---
 
-# Half-Life Selection and Slope Selector
+# 9. Half-Life Selection and Slope Selector
 
 ## Automated Half-Life Calculation
 
@@ -630,159 +545,9 @@ Results are shown in:
 
 ---
 
-# General Exclusions
-
-General exclusions remove entire records from NCA calculations (not just half-life).
-
-### Pre-mapped Exclusions (NCAwXRS)
-
-- Defined in input data via NCAwXRS columns
-- Applied during data import
-- Cannot be modified in the app
-
-### In-App Exclusions
-
-
-- Added via slope selector "Exclusion" option
-- Applied to entire concentration records
-- Reasons documented in results
-
-**Implementation**: Both types use PKNCA's `exclude` column in PKNCAconc object
-
-**Effect**:
-
-- Excluded records are skipped in all NCA calculations
-- Parameters are not calculated for excluded data
-- Exclusions are documented in output datasets
-
-## Dataset Derivation
-
-## PP (Pharmacokinetic Parameters)
-
-**Definition**: Standard CDISC dataset containing calculated NCA parameters
-
-**Derivation Steps** (in `export_cdisc()`):
-
-1. Extract NCA results from PKNCA
-2. Translate PKNCA parameter names to CDISC terms (`PPTESTCD`, `PPTEST`)
-3. Reshape from long to wide format (one row per subject-analyte-interval)
-4. Add metadata from concentration and dose data (see the metadata information [here](../data-raw/metadata_nca_parameters.csv))
-5. Apply CDISC variable labels and attributes
-
-**Key Columns**:
-
-- `STUDYID`, `USUBJID`: Identifiers
-- `PPTESTCD`: Parameter code (e.g., "AUCLST", "CMAX", "TMAX")
-- `PPTEST`: Parameter name (e.g., "AUC to Last Nonzero Conc")
-- `PPSTRESN`: Numeric result
-- `PPSTRESU`: Unit of result
-- `PPSPEC`: Specimen type
-
-**Reference**: CDISC SDTMIG PP Domain
-
-## ADPP (Analysis Dataset for Pharmacokinetic Parameters)
-
-**Definition**: Analysis-ready version of PP with additional analysis variables
-
-**Derivation Steps**:
-
-1. Start with PP dataset
-2. Add analysis flags (e.g., `ANLFL`, `ANL01FL`)
-3. Add grouping variables from ADNCA
-4. Add treatment and demographic variables
-5. Add derived variables (e.g., `AVAL = PPSTRESN`)
-6. Apply CDISC ADaM standards
-
-**Key Additional Columns**:
-
-- `PARAM`: Parameter description
-- `PARAMCD`: Parameter code
-- `AVAL`: Analysis value (copy of PPSTRESN)
-- `AVALU`: Analysis unit
-- Treatment variables: `TRT01A`, `TRT01P`
-- Demographic variables: `AGE`, `SEX`, `RACE`
-
-**Reference**: CDISC ADaMIG ADPP
-
-## ADNCA (Maintained in Output)
-
-**Definition**: The input dataset, potentially with additional derived columns
-
-**Derivation**:
-
-- ADNCA is the primary input to aNCA
-- Minimal modifications are made (standardized route, dose numbers)
-- Excluded records are retained but marked
-
-**Purpose**:
-
-- Traceability between input and output
-- Provides concentration-time data for plotting
-- Supports re-analysis and validation
-
-**Function**: Handled by `PKNCA_create_data_object()` and data formatting functions
-
 ---
 
-# TLG (Tables, Listings, and Graphs) Creation
-
-## TLG Framework
-
-aNCA generates regulatory-ready TLGs using the following packages:
-
-- **Tables**: `{tern}`, `{rtables}`, `{formatters}`
-- **Listings**: `{rlistings}`
-- **Graphs**: `{ggplot2}`, `{plotly}`
-
-## Available TLGs
-
-### Tables
-
-1. **Summary Statistics Tables** (`t_pksummary01`)
-   - Descriptive statistics by treatment group
-   - Mean, SD, CV%, median, min, max, geometric mean
-   - Customizable statistics and grouping variables
-
-2. **Concentration-Time Listings** (`l_pkcl01`)
-   - Individual subject concentration data
-   - Time points and measured values
-   - Flags for BLQ and exclusions
-
-3. **Parameter Summary Tables**
-   - NCA parameters by treatment
-   - Statistical comparisons
-   - Dose-normalized parameters
-
-### Listings
-
-1. **Individual Parameters** (`l_pkpl01`)
-   - One row per subject per parameter
-   - All calculated NCA parameters
-   - Flags and exclusion reasons
-
-2. **Concentration Data**
-   - Time-concentration profiles
-   - Sample collection details
-   - Quality flags
-
-### Graphs
-
-1. **Individual Plots** (`g_lineplot`)
-   - Subject-level concentration-time profiles
-   - Linear and semi-log scales
-   - Dose markers
-
-2. **Mean Plots** (`g_pkcg`)
-   - Mean ± SD or SE
-   - By treatment group
-   - Confidence intervals
-
-3. **Half-Life Plots** (`get_halflife_plots`)
-   - Terminal slope visualization
-   - Selected points highlighted
-   - R² and half-life values
-
-## TLG Customization
+# TLG (Tables, Listings, and Graphs) Framework
 
 Users can customize TLGs using widgets in the TLG tab:
 
@@ -898,6 +663,21 @@ results <- pk.nca(pknca_data)
 - Use observed Clast method instead of predicted
 - Review whether extrapolation assumption is valid
 - Consider flagging parameters if extrapolation exceeds acceptable thresholds
+
+## Understanding Result Flags
+
+aNCA automatically flags results based on predefined scientific rules to help identify potential data or calculation issues.
+
+**Half-Life Selection Flags** (indicates terminal slope quality):
+- `r.squared (R2) < 0.9`: Poor fit of terminal slope
+- `adj.r.squared < 0.8`: Poor adjusted fit of terminal slope
+- `span.ratio < 2`: Insufficient span of points for reliable estimation
+
+**AUC Extrapolation Flags** (indicates extrapolation beyond measured data):
+- `auc_extrap_pct_obs > 20%`: High extrapolation based on observed Clast
+- `auc_extrap_pct_pred > 20%`: High extrapolation based on predicted Clast
+
+Flagged parameters should be reviewed to determine if they're reliable for decision-making. Parameters dependent on flagged half-lives (e.g., AUCinf, clearance) will inherit those flags.
 
 ## Where to Get Help
 
