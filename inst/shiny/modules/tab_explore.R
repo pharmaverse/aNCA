@@ -34,42 +34,6 @@ tab_explore_ui <- function(id) {
 tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    # Store the count to avoid redundant updates
-    last_n_col <- reactiveVal(-1)
-    last_n_mean <- reactiveVal(-1)
-    
-    observe({
-      pknca_obj <- req(pknca_data())
-      df_raw <- pknca_obj$conc$data 
-      
-      # 1. INDIVIDUAL PLOT LOGIC
-      ind_in <- individual_inputs()
-      req(ind_in$color_by)
-      
-      # Filter data exactly as the plot function does
-      df_ind <- filter_by_list(df_raw, ind_in$filtering_list)
-      
-      # Calculate count based on the interaction of all color_by variables
-      n_col <- nrow(unique(df_ind[ind_in$color_by]))
-      
-      if (isolate(last_n_ind()) != n_col) {
-        updateCheckboxInput(session, "individual_sidebar-show_legend", value = (n_col <= 30))
-        last_n_ind(n_ind)
-      }
-      
-      # 2. MEAN PLOT LOGIC
-      mean_in <- mean_inputs()
-      req(mean_in$color_by)
-      
-      # Mean data uses the summarized processing logic
-      df_mean <- filter_by_list(df_raw, mean_in$filtering_list)
-      n_mean <- nrow(unique(df_mean[mean_in$color_by]))
-      
-      if (isolate(last_n_mean()) != n_mean) {
-        updateCheckboxInput(session, "mean_sidebar-show_legend", value = (n_mean <= 30))
-        last_n_mean(n_mean)
-      }
-    })
 
     # Initiate the sidebar server modules
     individual_inputs <- plot_sidebar_server(

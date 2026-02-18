@@ -77,10 +77,10 @@ g_lineplot <- function(data,
   # Concatenate unique units, sep by ","
   #TODO: potential to facet if > 1 unit (#848)
   x_lab_unit <- if (is.null(x_unit)) NULL else paste0(unique(data[[x_unit]]), collapse = ", ")
-  x_lab <- if (is.null(x_lab_unit)) get_label(x_var, labels_df = labels_df) else 
-    paste0(get_label(x_var, labels_df = labels_df)," [", x_lab_unit, "]")
+  x_lab <- if (is.null(x_lab_unit)) get_label(x_var, labels_df = labels_df) else
+    paste0(get_label(x_var, labels_df = labels_df), " [", x_lab_unit, "]")
   y_lab_unit <- if (is.null(y_unit)) NULL else paste0(unique(data[[y_unit]]), collapse = ", ")
-  y_lab <- if (is.null(y_lab_unit)) get_label(y_var, labels_df = labels_df) else 
+  y_lab <- if (is.null(y_lab_unit)) get_label(y_var, labels_df = labels_df) else
     paste0(get_label(y_var, labels_df = labels_df), " [", y_lab_unit, "]")
   title <- "PK Concentration - Time Profile"
 
@@ -124,12 +124,10 @@ g_lineplot <- function(data,
       color = paste(color_labels, collapse = "\n")
     ) +
     theme_bw()
-  
   # Apply legend
   if (!show_legend) {
     plt <- plt + theme(legend.position = "none")
   }
-  
   # Add optional layers
   optional_layers <- list(
     .add_colour_palette(palette),
@@ -202,7 +200,8 @@ g_lineplot <- function(data,
     ci_ribbon_layer <- list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
       guides(fill = "none"),
-      labs(title = paste0("Mean PK Concentration - Time Profile", if (isTRUE(ci)) " (95% CI)" else ""))
+      labs(title = paste0("Mean PK Concentration - Time Profile",
+                          if (isTRUE(ci)) " (95% CI)" else ""))
     )
   }
   # Return a list of all layers
