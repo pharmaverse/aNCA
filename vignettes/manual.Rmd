@@ -4,7 +4,7 @@ description: >
   User guide and technical reference for aNCA: data, workflow, settings, and outputs.
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{aNCA Manual: Technical Reference}
+  %\VignetteIndexEntry{aNCA Manual}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -309,25 +309,6 @@ The output package includes:
 # 7. TLG (Tables, Listings, and Graphs)
 
 aNCA generates regulatory-ready TLG outputs for reporting and analysis.
-
-## Available Tables
-
-- **Summary Statistics Tables**: Descriptive stats by treatment (mean, SD, CV%, median, min, max, geometric mean)
-- **NCA Parameter Tables**: All calculated parameters with dosing and demographic info
-- **Excretion Tables**: Urine/feces-specific parameters
-- **Ratio Tables**: Metabolite/parent ratios and cross-matrix comparisons
-- **Flagged Results Tables**: Parameters flagged for data quality or scientific concerns
-
-## Listings
-
-- **Individual Parameters**: One row per subject per analyte with all NCA parameters
-
-
-## Graphs
-- **Individual Concentration-Time Plots**: Subject profiles (linear and semi-log scales)
-- **Mean/Median Plots**: Mean ± SD or SE by treatment with confidence intervals
-- **Half-Life Plots**: Terminal slope visualization with selected points highlighted
-
 For TLG customization details, see [Customization](#8-customization) section.
 
 ---
