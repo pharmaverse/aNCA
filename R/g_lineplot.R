@@ -63,7 +63,7 @@ g_lineplot <- function(data,
                        x_unit = NULL,
                        y_unit = NULL,
                        color_by,
-                       color_labels,
+                       color_labels = NULL,
                        facet_by = NULL,
                        group_by = NULL,
                        x_limits = NULL,
@@ -127,7 +127,7 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = paste(na.omit(color_labels), collapse = "\n")
+      color = if(!is.null(color_labels)) paste(na.omit(color_labels), collapse = "\n") else paste(color_by, collapse = ", ")
     ) +
     theme_bw()
   # Apply legend
