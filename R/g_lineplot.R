@@ -59,6 +59,7 @@ g_lineplot <- function(data,
                        x_unit = NULL,
                        y_unit = NULL,
                        color_by,
+                       color_labels,
                        facet_by = NULL,
                        group_by = NULL,
                        ylog_scale = FALSE,
@@ -117,7 +118,7 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = paste(color_by, collapse = ", ")
+      color = paste(color_labels, collapse = "\n")
     ) +
     theme_bw()
 
@@ -192,8 +193,7 @@ g_lineplot <- function(data,
   if (isTRUE(ci)) {
     ci_ribbon_layer <- list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
-      guides(fill = "none"),
-      labs(color = paste0(paste(color_by, collapse = ", "), " (95% CI)"))
+      guides(fill = "none")
     )
   }
   # Return a list of all layers
