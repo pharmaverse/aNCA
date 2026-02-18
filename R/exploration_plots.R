@@ -95,7 +95,7 @@ exploration_individualplot <- function(
 #' @param sd_max Logical; if `TRUE`, plot upper SD error bars. Default is `FALSE`.
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
-#' Default includes dose group vars and "Mean".
+#' Default includes dose group vars and Mean_concentration.
 #' @return A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
 #' @export
@@ -131,7 +131,7 @@ exploration_meanplot <- function(
   # If no tooltip variable specified, use the default ones
   if (is.null(tooltip_vars)) {
     tooltip_vars <- unique(c(
-      "Mean",
+      "Mean_concentration",
       pknca_data$conc$columns$concu,
       x_var,
       pknca_data$conc$columns$timeu,
@@ -149,7 +149,7 @@ exploration_meanplot <- function(
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
-    y_var = "Mean",
+    y_var = "Mean_concentration",
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
@@ -182,7 +182,7 @@ exploration_meanplot <- function(
     ci = ci,
     color_by = color_by,
     x_var = x_var,
-    y_var = "Mean"
+    y_var = "Mean_concentration"
   )
 }
 
@@ -314,7 +314,7 @@ process_data_mean <- function(pknca_data,
   summarised_data <- processed %>%
     dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
     dplyr::summarise(
-      Mean = round(mean(!!rlang::sym(y_var), na.rm = TRUE), 3),
+      Mean_concentration = round(mean(!!rlang::sym(y_var), na.rm = TRUE), 3),
       SD = sd(!!rlang::sym(y_var), na.rm = TRUE),
       N = dplyr::n(),
       SE = SD / sqrt(N),
@@ -322,10 +322,10 @@ process_data_mean <- function(pknca_data,
     ) %>%
     dplyr::filter(N >= 3) %>%
     dplyr::mutate(
-      SD_min = Mean - SD,
-      SD_max = Mean + SD,
-      CI_lower = Mean - 1.96 * SE,
-      CI_upper = Mean + 1.96 * SE
+      SD_min = Mean_concentration - SD,
+      SD_max = Mean_concentration + SD,
+      CI_lower = Mean_concentration - 1.96 * SE,
+      CI_upper = Mean_concentration + 1.96 * SE
     ) %>%
     # Make sure the nominal time column is always the first column
     select(any_of(c(x_var)), everything())
@@ -333,7 +333,7 @@ process_data_mean <- function(pknca_data,
   # Remove non-positive means if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     summarised_data <- summarised_data %>%
-      dplyr::filter(Mean > 0)
+      dplyr::filter(Mean_concentration > 0)
   }
   summarised_data
 }
@@ -378,9 +378,9 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
 
   plot +
     labs(
-      x = paste("Nominal", plot_build$plot$labels$x),
-      y = paste("Mean", plot_build$plot$labels$y),
-      title = paste("Mean", plot_build$plot$labels$title)
+      x = paste(plot_build$plot$labels$x),
+      y = paste(plot_build$plot$labels$y),
+      title = paste("Mean ", plot_build$plot$labels$title)
     ) +
     list(
       .add_mean_layers(
