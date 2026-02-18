@@ -205,17 +205,15 @@ describe("exploration_individualplot:", {
     plot_build <- ggplot_build(p)
     expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
   })
-  
   it("hides legend when show_legend is FALSE", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      show_legend = F,
+      show_legend = FALSE,
       labels_df = metadata_nca_variables
     )
     expect_equal(p$theme$legend.position, "none")
   })
-  
   it("shows threshold line", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,

@@ -61,9 +61,8 @@ exploration_individualplot <- function(
       color_by
     ))
   }
-  
   # Define labels
-  if(!is.null(labels_df))
+  if (!is.null(labels_df))
     color_labels <- vapply(
       color_by,
       function(x) get_label(variable = x, labels_df = labels_df),
@@ -71,7 +70,6 @@ exploration_individualplot <- function(
     )
   else
     color_labels <- color_by
-  
   plt <- g_lineplot(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
@@ -156,7 +154,7 @@ exploration_meanplot <- function(
     ))
   }
   # Define labels
-  if(!is.null(labels_df))
+  if (!is.null(labels_df))
     color_labels <- vapply(
       color_by,
       function(x) get_label(variable = x, labels_df = labels_df),
@@ -164,7 +162,6 @@ exploration_meanplot <- function(
     )
   else
     color_labels <- color_by
-  
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
@@ -264,10 +261,8 @@ process_data_individual <- function(pknca_data,
   if (!is.null(filtering_list) && length(filtering_list) > 0) {
     processed_data <- filter_by_list(processed_data, filtering_list)
   }
-  
   processed_data <- processed_data %>%
     dplyr::filter(!is.na(!!sym(conc_col)))
-
   # Remove non-positive concentrations if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     processed_data <- processed_data %>% dplyr::filter(!!sym(conc_col) > 0)
@@ -325,7 +320,6 @@ process_data_mean <- function(pknca_data,
   if (!is.null(filtering_list) && length(filtering_list) > 0) {
     processed <- filter_by_list(processed, filtering_list)
   }
-  
   processed <- processed %>%
     dplyr::filter(!is.na(!!rlang::sym(y_var)))
 
