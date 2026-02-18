@@ -199,8 +199,8 @@ NCA settings control how PKNCA processes your data during calculations. These ar
 Imputation rules specify how to handle missing or implied start concentrations (C₀). Selection depends on:
 - Dose route (IV vs extravascular)
 - Dose duration (bolus vs infusion)
-- Anylyte type (parent drug vs metabolite)
-- Data availability (e.g., concentration at dose avaialble, pre-dose concentrations...)
+- Analyte type (parent drug vs metabolite)
+- Data availability (e.g., concentration at dose available, pre-dose concentrations close to dose...)
 
 **Common Rules**:
 - **First dose, non-IV bolus**: C₀ = 0
@@ -919,7 +919,7 @@ results <- pk.nca(pknca_data)
 ## CDISC Standards
 
 - **SDTMIG**: Study Data Tabulation Model Implementation Guide
-- **ADAMIG-ADNCA**: Analysis Data Model Implementation Guide
+- **ADaMIG-ADNCA**: Analysis Data Model Implementation Guide
 - **ADNCA**: https://www.cdisc.org/standards/foundational/adam
 
 ## Further Reading
