@@ -35,7 +35,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Store the count to avoid redundant updates
-    last_n_ind <- reactiveVal(-1)
+    last_n_col <- reactiveVal(-1)
     last_n_mean <- reactiveVal(-1)
     
     observe({
@@ -50,10 +50,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       df_ind <- filter_by_list(df_raw, ind_in$filtering_list)
       
       # Calculate count based on the interaction of all color_by variables
-      n_ind <- nrow(unique(df_ind[ind_in$color_by]))
+      n_col <- nrow(unique(df_ind[ind_in$color_by]))
       
-      if (isolate(last_n_ind()) != n_ind) {
-        updateCheckboxInput(session, "individual_sidebar-show_legend", value = (n_ind <= 30))
+      if (isolate(last_n_ind()) != n_col) {
+        updateCheckboxInput(session, "individual_sidebar-show_legend", value = (n_col <= 30))
         last_n_ind(n_ind)
       }
       
