@@ -406,24 +406,24 @@ prepare_export_files <- function(target_dir,
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
 
-#' Helper to export pre-specification xlsx files for CDISC datasets
+#' Helper to export pre-specification xlsx files for CDISC datasets.
+#' Each spec file is placed inside the corresponding dataset subfolder
+#' (e.g. CDISC/adnca/Pre_Specs_ADNCA.xlsx). Only selected datasets get a spec.
 #' @param target_dir Target directory to save the pre-specs
 #' @param selected Character vector of selected dataset keys (lowercase: pp, adpp, adnca)
 #' @param cdisc_data Named list of CDISC data frames (pp, adpp, adnca)
 #' @keywords internal
 #' @noRd
 .export_pre_specs <- function(target_dir, selected, cdisc_data = NULL) {
-  # Map lowercase folder/key names to uppercase dataset names
   ds_name_map <- c(pp = "PP", adpp = "ADPP", adnca = "ADNCA")
   datasets <- unname(ds_name_map[selected])
 
   pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
 
-  for (ds_name in names(pre_specs)) {
-    folder <- names(ds_name_map)[ds_name_map == ds_name]
-    path <- file.path(target_dir, "CDISC", folder)
-    # Only write into the folder if it already exists (created by save_output)
-    if (dir.exists(path)) {
+  for (folder in selected) {
+    ds_name <- ds_name_map[[folder]]
+    if (ds_name %in% names(pre_specs)) {
+      path <- file.path(target_dir, "CDISC", folder)
       file_path <- file.path(path, paste0("Pre_Specs_", ds_name, ".xlsx"))
       openxlsx2::write_xlsx(pre_specs[[ds_name]], file_path)
     }
@@ -463,7 +463,13 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
-  files_req <- c(files_req, grep("Pre_Specs_.*\\.xlsx$", all_files, value = TRUE))
+  # Preserve pre-spec files only inside selected CDISC dataset subfolders
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), fnames)
+  if (length(selected_cdisc) > 0) {
+    cdisc_patt <- paste0("CDISC/(", paste(selected_cdisc, collapse = "|"),
+                         ")/Pre_Specs_.*\\.xlsx$")
+    files_req <- c(files_req, grep(cdisc_patt, all_files, value = TRUE))
+  }
   file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
