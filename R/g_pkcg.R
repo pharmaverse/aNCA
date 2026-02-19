@@ -52,7 +52,7 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom plotly ggplotly layout
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- adnca_example
 #' adnca <- subset(adnca, adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)])
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis val"
@@ -390,7 +390,7 @@ g_pkcg02_log <- function(data, ...) {
 
 #' @examples
 #' # Make an example small dataset
-#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- adnca_example
 #' adnca <- adnca[adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)],]
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis value"
