@@ -356,7 +356,7 @@ The workflow is orchestrated internally by:
 
 # 6. Results & Outputs
 
-All output files can be downloaded after running NCA. The export button is located in the top-right of the Outputs tab.
+All output files can be downloaded after running NCA. The export button is located in the top-right as `Save`.
 
 ## Output Structure
 
