@@ -332,7 +332,7 @@ prepare_export_files <- function(target_dir,
   if (any(c("pp", "adpp", "adnca") %in% input$res_tree)) {
     progress$set(message = "Creating exports...",
                  detail = "Saving CDISC pre-specifications...")
-    .export_pre_specs(target_dir)
+    .export_pre_specs(target_dir, cdisc_data = session$userData$results$CDISC)
   }
 
   data_tmpdir <- file.path(target_dir, "data")
@@ -406,14 +406,18 @@ prepare_export_files <- function(target_dir,
 
 #' Helper to export pre-specification xlsx files for CDISC datasets
 #' @param target_dir Target directory to save the pre-specs
+#' @param cdisc_data Named list of CDISC data frames (pp, adpp, adnca)
 #' @keywords internal
 #' @noRd
-.export_pre_specs <- function(target_dir) {
-  path <- file.path(target_dir, "CDISC")
-  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+.export_pre_specs <- function(target_dir, cdisc_data = NULL) {
+  pre_specs <- generate_pre_specs(c("ADNCA", "ADPP", "PP"), cdisc_data = cdisc_data)
 
-  pre_specs <- generate_pre_specs(c("ADNCA", "ADPP", "PP"))
+  # Map uppercase dataset names to lowercase folder names
+  ds_folder_map <- c(PP = "pp", ADPP = "adpp", ADNCA = "adnca")
   for (ds_name in names(pre_specs)) {
+    folder <- ds_folder_map[[ds_name]]
+    path <- file.path(target_dir, "CDISC", folder)
+    dir.create(path, recursive = TRUE, showWarnings = FALSE)
     file_path <- file.path(path, paste0("Pre_Specs_", ds_name, ".xlsx"))
     openxlsx2::write_xlsx(pre_specs[[ds_name]], file_path)
   }

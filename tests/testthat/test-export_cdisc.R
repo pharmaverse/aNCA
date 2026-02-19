@@ -619,4 +619,22 @@ describe("generate_pre_specs", {
       expect_gt(nrow(result[[ds]]), 0)
     }
   })
+
+  it("narrows specs to columns present in cdisc_data when provided", {
+    mock_data <- list(
+      pp = data.frame(STUDYID = "S1", USUBJID = "U1", PPSEQ = 1),
+      adpp = data.frame(STUDYID = "S1", AVAL = 1.0),
+      adnca = data.frame(STUDYID = "S1", PARAM = "A", AVAL = 1.0)
+    )
+    result <- generate_pre_specs(cdisc_data = mock_data)
+    for (ds in names(result)) {
+      key <- c(PP = "pp", ADPP = "adpp", ADNCA = "adnca")[[ds]]
+      expect_true(all(result[[ds]]$Variable %in% names(mock_data[[key]])))
+    }
+  })
+
+  it("returns all specs when cdisc_data is NULL", {
+    full <- generate_pre_specs("PP", cdisc_data = NULL)
+    expect_gt(nrow(full$PP), 3)
+  })
 })
