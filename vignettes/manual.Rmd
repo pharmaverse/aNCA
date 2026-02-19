@@ -22,8 +22,8 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 | 1. Overview | [Overview](#1-overview) |
 | 2. Data Requirements | [Data Requirements](#2-data-requirements) |
 | 3. Data Preparation | [Data Preparation](#3-data-preparation) |
-| 4. Running NCA | [Running NCA](#4-running-nca) |
-| 5. NCA Settings | [NCA Settings](#5-nca-settings) |
+| 4. NCA Settings | [NCA Settings](#4-nca-settings) |
+| 5. Running NCA | [Running NCA](#5-running-nca) |
 | 6. Results & Outputs | [Results & Outputs](#6-results--outputs) |
 | 7. Half-Life Selection | [Half-Life Selection & Slope Selector](#7-half-life-selection-and-slope-selector) |
 | 8. TLG | [TLG](#8-tlg-tables-listings-and-graphs-framework) |
@@ -197,13 +197,13 @@ Data preparation is orchestrated through aNCA's internal functions:
 
 ---
 
-# 5. NCA Settings
+# 4. NCA Settings
 
 NCA settings control how PKNCA processes your data during calculations. These are configured in the NCA Setup tab.
 
 
 
-## Data Imputation Rules {#data-imputation-rules}
+## 4.1 Data Imputation Rules {#data-imputation-rules}
 
 The imputation actions are specified exclusively for parameters that are not exclusively calculated based on observed concentrations (e.g., Cmax, Tmax, AUClast, etc.) but also for parameters that require extrapolation to infinity (e.g., AUCinf) or parameters that are calculated based on the terminal slope (e.g., half-life, clearance, volume). The imputation rules are applied during the interval creation step in `update_main_intervals()`, where the appropriate imputation method is selected based on the characteristics of each record (e.g., dose route, dose duration, metabolite status, etc.) and the availability of data (e.g., presence of pre-dose concentrations, presence of multiple post-dose concentrations for log-linear regression).
 They are specified in the `PKNCAdata` object via the `impute` column. The order of imputation is as follows:
@@ -211,7 +211,7 @@ They are specified in the `PKNCAdata` object via the `impute` column. The order 
 **Order of Application**: `start_concentration` > `BLQ imputation`
 
 
-### Start Concentration Imputation: `create_start_impute()`
+### 4.1.1 Start Concentration Imputation: `create_start_impute()`
 
 **File**: `R/create_start_impute.R`
 
@@ -236,7 +236,7 @@ Imputation rules specify how to handle missing or implied start concentrations (
 
 **PKNCA Method**: `pk.calc.c0()` from PKNCA package
 
-### BLQ (Below Limit of Quantification) Imputation
+### 4.1.2 BLQ (Below Limit of Quantification) Imputation
 
 **Implementation**: Via `blq_imputation_rule` parameter in `update_main_intervals()`
 
@@ -266,7 +266,8 @@ blq_rule <- list(
   last = "keep"       # Keep last BLQ as 0
 )
 ```
-## BLQ (Below Limit of Quantification) Handling
+
+## 4.2 BLQ (Below Limit of Quantification) Handling
 
 BLQ values are handled using position-based or Tmax-based strategies.
 
@@ -280,11 +281,11 @@ BLQ values are handled using position-based or Tmax-based strategies.
 - `"drop"`: Exclude from calculations
 - `"keep"`: Treat as 0
 
-## AUC Calculation Methods
+## 4.3 AUC Calculation Methods
 
 aNCA supports multiple AUC calculation methods via PKNCA. These methods control how the area under the concentration-time curve is calculated.
 
-### Integration Methods (Between Concentrations)
+### 4.3.1 Integration Methods (Between Concentrations)
 
 aNCA supports three methods for interpolating AUC between two concentration measurements:
 
@@ -298,8 +299,8 @@ aNCA supports three methods for interpolating AUC between two concentration meas
 - **Linear-up/log-down**: Most commonly used in PK. Applies linear interpolation when concentrations increase or when either concentration is zero; uses log interpolation for declining concentrations.
 - **Linear**: Simplest method; uses linear trapezoidal rule throughout. Good for situations where first-order kinetics may not apply.
 - **Lin-log**: Uses linear interpolation before Tmax, logarithmic interpolation after Tmax.
-2
-## Extrapolation Methods (After Last Measurement)
+
+### 4.3.2 Extrapolation Methods (After Last Measurement)
 
 After the last measurable concentration (Tlast), AUC can be extrapolated using different approaches:
 
@@ -314,7 +315,7 @@ After the last measurable concentration (Tlast), AUC can be extrapolated using d
 - `aucinf.pred` uses **predicted** Clast (extrapolated via regression)
 - High extrapolation percentage (>20%) may indicate poor terminal phase characterization
 
-### AUC Types Available
+### 4.3.3 AUC Types Available
 
 | Parameter | Description | Extrapolation | Formula |
 |-----------|-------------|---------------|---------|
@@ -328,7 +329,7 @@ After the last measurable concentration (Tlast), AUC can be extrapolated using d
 
 
 
-# 4. Running NCA
+# 5. Running NCA
 
 The NCA workflow consists of five main steps executed through the aNCA interface.
 
