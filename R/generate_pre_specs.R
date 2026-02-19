@@ -14,6 +14,7 @@
 #' @returns A named list of data frames, one per dataset, each containing
 #'   columns: Dataset, Order, Variable, Label, Type, Role, Core, Length.
 #'
+#' @importFrom openxlsx2 write_xlsx
 #' @export
 generate_pre_specs <- function(datasets = c("ADNCA", "ADPP", "PP"),
                                cdisc_data = NULL) {
