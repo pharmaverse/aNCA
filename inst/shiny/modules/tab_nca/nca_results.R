@@ -95,7 +95,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       req(final_results())
 
       # Save the latest version of the object
-      session$userData$results$nca_results$pivoted_results <- final_results()
+      session$userData$results$nca_results$nca_results <- final_results()
 
       # Represent the available parameters in the input
       param_pptest_cols <- intersect(

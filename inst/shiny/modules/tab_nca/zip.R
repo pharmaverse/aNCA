@@ -112,6 +112,16 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     output$download_zip <- downloadHandler(
       filename = function() {
         project <- session$userData$project_name()
+        if (project == "") {
+          study_ids <- unique(res_nca()$data$conc$data[["STUDYID"]])
+          study_ids <- study_ids[!is.na(study_ids)]
+          if (length(study_ids) > 3) study_ids <- study_ids[1:3]
+          project <- if (length(study_ids) > 0) {
+            paste0("NCA_", paste(study_ids, collapse = "_"))
+          } else {
+            "NCA"
+          }
+        }
         datetime <- attr(res_nca(), "provenance")$datetime
         paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
       },
@@ -168,7 +178,8 @@ TREE_LIST <- list(
     meanplot = ""
   ),
   nca_results = list(
-    pivoted_results = ""
+    nca_results = "",
+    nca_statistics = ""
   ),
   CDISC = list(
     pp = "",

@@ -140,7 +140,7 @@ server <- function(input, output, session) {
 
   # Store globally the name of the project
   session$userData$project_name <- reactive({
-    if (input$project_name != "") input$project_name else "Unnamed_Project"
+    if (input$project_name != "") input$project_name else ""
   })
 
   # Initially disable all tabs except the 'Data' tab
