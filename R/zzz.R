@@ -43,6 +43,7 @@
     "Label",
     "Max",
     "Mean",
+    "Mean_concentration",
     "Median",
     "Min",
     "ModeConv_factor",

@@ -34,6 +34,8 @@ Default is \code{NULL} (no faceting).}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
 
+\item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
+
 \item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
 Default is \code{NULL} (no threshold).}
 

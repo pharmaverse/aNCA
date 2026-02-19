@@ -40,6 +40,9 @@ pre-processed by either \code{process_data_individual} or \code{process_data_mea
 \item{color_by}{A character vector specifying the column(s) from the original
 dataset that are used to determine the color of the lines and points.}
 
+\item{color_labels}{Optional character vector of labels for the color legend.
+Default is \code{NULL} (uses \code{color_by} values).}
+
 \item{facet_by}{A character vector of column names to facet the plot by.
 Default is \code{NULL} for no faceting.}
 
@@ -67,6 +70,8 @@ Only used if \code{show_threshold} is \code{TRUE}.}
 
 \item{vline_var}{Optional character string specifying the column name for vertical
 lines.}
+
+\item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 }
 \value{
 A \code{ggplot} object representing the line plot.

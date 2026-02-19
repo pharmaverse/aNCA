@@ -7,6 +7,7 @@
 #' @param facet_by Character vector of column names to facet the plot by.
 #' Default is `NULL` (no faceting).
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
+#' @param show_legend Logical; whether to display the plot legend. Default is `TRUE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
 #' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).

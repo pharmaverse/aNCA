@@ -13,6 +13,8 @@
 #' @param y_unit Optional character string specifying the column name for the y-axis unit.
 #' @param color_by A character vector specifying the column(s) from the original
 #'   dataset that are used to determine the color of the lines and points.
+#' @param color_labels Optional character vector of labels for the color legend.
+#'   Default is `NULL` (uses `color_by` values).
 #' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
 #' @param group_by A character vector specifying the column names used to group
@@ -31,6 +33,7 @@
 #' @param labels_df A data.frame for variable label lookups.
 #' @param vline_var Optional character string specifying the column name for vertical
 #' lines.
+#' @param show_legend Logical; whether to display the plot legend. Default is `TRUE`.
 #' @returns A `ggplot` object representing the line plot.
 #'
 #' @import ggplot2
