@@ -515,7 +515,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #'
 #' @export
 generate_pre_specs <- function(datasets = c("ADNCA", "ADPP", "PP")) {
-  spec_cols <- c("Dataset", "Order", "Variable", "Label", "Type", "Role", "Core")
+  spec_cols <- c("Dataset", "Order", "Variable", "Label", "Type", "Role", "Core", "Length")
 
   metadata_nca_variables %>%
     filter(Dataset %in% datasets) %>%
