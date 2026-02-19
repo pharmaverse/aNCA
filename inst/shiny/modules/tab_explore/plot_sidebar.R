@@ -191,7 +191,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       default_color <- if (is_individual) {
         subject_col
       } else {
-        color_priority <- c("DOSEA", "TRT01A", "GROUP", "ACTARM", "COHORT")
+        color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", "DOSEA")
         available_color <- intersect(color_priority, full_grouping_vars)
         if (length(available_color) > 0) available_color[1] else dose_col
       }
