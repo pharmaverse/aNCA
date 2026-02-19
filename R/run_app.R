@@ -15,13 +15,9 @@
 #'
 #' @examples
 #' \donttest{
-#'   # Show the packaged example path (safe non-interactive snippet)
-#'   adnca_path <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
-#'   adnca_path
-#'
 #'   # To actually launch the app, run interactively:
 #'   if (interactive()) {
-#'     run_app(datapath = adnca_path)
+#'     run_app()
 #'   }
 #' }
 #' @export

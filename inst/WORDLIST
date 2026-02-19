@@ -1,6 +1,7 @@
 ADNCA
 ADOSEDUR
 ADPP
+ADaMIG
 AEFRLT
 AFRLT
 ARRLT
@@ -25,6 +26,7 @@ DOSETRT
 DOSEU
 DOSNOA
 Denney
+DrugA
 Duvvuri
 EMA
 ERTLST
@@ -99,6 +101,7 @@ WTBL
 WTBLU
 XPT
 YAML
+adnca
 amountu
 analysing
 analyte
@@ -150,8 +153,6 @@ reproducibility
 reupload
 roadmap
 rpptx
-ruleset
-rulesets
 runnable
 signif
 src
@@ -164,7 +165,6 @@ tooltip
 tooltips
 ug
 unmapped
-userData
 utilise
 visualizable
 yaml
