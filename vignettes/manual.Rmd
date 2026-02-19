@@ -25,10 +25,10 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 | 4. Running NCA | [Running NCA](#4-running-nca) |
 | 5. NCA Settings | [NCA Settings](#5-nca-settings) |
 | 6. Results & Outputs | [Results & Outputs](#6-results--outputs) |
-| 7. Half-Life Selection | [Half-Life Selection & Slope Selector](#9-half-life-selection-and-slope-selector) |
-| 8. TLG | [TLG](#7-tlg) |
-| 9. Troubleshooting & FAQ | [Troubleshooting & FAQ](#10-troubleshooting--faq) |
-| 10. References & Resources | [References & Resources](#11-references--resources) |
+| 7. Half-Life Selection | [Half-Life Selection & Slope Selector](#7-half-life-selection-and-slope-selector) |
+| 8. TLG | [TLG](#8-tlg-tables-listings-and-graphs-framework) |
+| 9. Troubleshooting & FAQ | [Troubleshooting & FAQ](#9-troubleshooting--faq) |
+| 10. References & Resources | [References & Resources](#10-references--resources) |
 | Glossary | [Glossary](#glossary) |
 
 # 1. Overview
@@ -186,6 +186,7 @@ Data preparation is orchestrated through aNCA's internal functions:
 - Creates dose records from concentration data
 - Calculates sequential dose numbers
 - Links dose times to concentration profiles
+- Dose times are calculated based on `AFRLT - ARRLT` rounding to the 6th decimal to prevent floating point issues in interval creation.
 
 ### Interval Creation & Parameter Assignment
 
@@ -217,7 +218,7 @@ The workflow is orchestrated internally by:
 - **NCA Execution**: PKNCA's `PKNCAdata()` and `pk.nca()`
 - **Output Generation**: `export_cdisc()` for CDISC datasets, TLG generation functions
 
-For detailed technical information, see [Technical Architecture](#9-technical-architecture).
+For detailed technical information, see [Key PKNCA Functions and Methods](#key-pknca-functions-and-methods).
 
 ---
 
@@ -238,7 +239,7 @@ They are specified in the `PKNCAdata` object via the `impute` column. The order 
 **Order of Application**: `start_concentration` > `BLQ imputation`
 
 
-### Start Concentration Imputation: `create_start_impute()`
+### 5.1.1 Start Concentration Imputation: `create_start_impute()`
 
 **File**: `R/create_start_impute.R`
 
@@ -263,7 +264,7 @@ Imputation rules specify how to handle missing or implied start concentrations (
 
 **PKNCA Method**: `pk.calc.c0()` from PKNCA package
 
-### BLQ (Below Limit of Quantification) Imputation
+### 5.1.2 BLQ (Below Limit of Quantification) Imputation
 
 **Implementation**: Via `blq_imputation_rule` parameter in `update_main_intervals()`
 
@@ -325,8 +326,8 @@ aNCA supports three methods for interpolating AUC between two concentration meas
 - **Linear-up/log-down**: Most commonly used in PK. Applies linear interpolation when concentrations increase or when either concentration is zero; uses log interpolation for declining concentrations.
 - **Linear**: Simplest method; uses linear trapezoidal rule throughout. Good for situations where first-order kinetics may not apply.
 - **Lin-log**: Uses linear interpolation before Tmax, logarithmic interpolation after Tmax.
-
-### Extrapolation Methods (After Last Measurement)
+2
+## Extrapolation Methods (After Last Measurement)
 
 After the last measurable concentration (Tlast), AUC can be extrapolated using different approaches:
 
@@ -556,7 +557,7 @@ results <- pk.nca(pknca_data)
 
 ---
 
-# 10. Troubleshooting & FAQ
+# 9. Troubleshooting & FAQ
 
 ## Common Issues
 
@@ -623,7 +624,7 @@ Flagged parameters should be reviewed to determine if they're reliable for decis
 
 ---
 
-# 11. References & Resources
+# 10. References & Resources
 
 ## PKNCA Documentation
 
