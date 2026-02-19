@@ -406,9 +406,9 @@ prepare_export_files <- function(target_dir,
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
 
-#' Helper to export pre-specification xlsx files for CDISC datasets.
-#' Each spec file is placed inside the corresponding dataset subfolder
-#' (e.g. CDISC/adnca/Pre_Specs_ADNCA.xlsx). Only selected datasets get a spec.
+#' Helper to export a single pre-specification xlsx file for CDISC datasets.
+#' The file is placed in the CDISC folder (e.g. CDISC/Pre_Specs.xlsx) with
+#' one sheet per selected dataset. No file is created when no specs are available.
 #' @param target_dir Target directory to save the pre-specs
 #' @param selected Character vector of selected dataset keys (lowercase: pp, adpp, adnca)
 #' @param cdisc_data Named list of CDISC data frames (pp, adpp, adnca)
@@ -420,14 +420,13 @@ prepare_export_files <- function(target_dir,
 
   pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
 
-  for (folder in selected) {
-    ds_name <- ds_name_map[[folder]]
-    if (ds_name %in% names(pre_specs) && nrow(pre_specs[[ds_name]]) > 0) {
-      path <- file.path(target_dir, "CDISC", folder)
-      dir.create(path, recursive = TRUE, showWarnings = FALSE)
-      file_path <- file.path(path, paste0("Pre_Specs_", ds_name, ".xlsx"))
-      writexl::write_xlsx(pre_specs[[ds_name]], file_path)
-    }
+  # Keep only non-empty specs
+  pre_specs <- Filter(function(df) nrow(df) > 0, pre_specs)
+
+  if (length(pre_specs) > 0) {
+    cdisc_dir <- file.path(target_dir, "CDISC")
+    dir.create(cdisc_dir, recursive = TRUE, showWarnings = FALSE)
+    writexl::write_xlsx(pre_specs, file.path(cdisc_dir, "Pre_Specs.xlsx"))
   }
 }
 
@@ -464,13 +463,9 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
-  # Preserve pre-spec files only inside selected CDISC dataset subfolders
-  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), fnames)
-  if (length(selected_cdisc) > 0) {
-    cdisc_patt <- paste0("CDISC/(", paste(selected_cdisc, collapse = "|"),
-                         ")/Pre_Specs_.*\\.xlsx$")
-    files_req <- c(files_req, grep(cdisc_patt, all_files, value = TRUE))
-  }
+  # Preserve the single pre-specs file in the CDISC folder
+  files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                 value = TRUE))
   file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
