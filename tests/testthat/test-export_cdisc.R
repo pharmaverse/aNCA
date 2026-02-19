@@ -591,9 +591,9 @@ describe("generate_pre_specs", {
     expect_named(result, c("ADNCA", "ADPP", "PP"))
   })
 
-  it("each entry contains exactly the 7 specification columns", {
+  it("each entry contains exactly the specification columns", {
     result <- generate_pre_specs()
-    expected_cols <- c("Dataset", "Order", "Variable", "Label", "Type", "Role", "Core")
+    expected_cols <- c("Dataset", "Order", "Variable", "Label", "Type", "Role", "Core", "Length")
     for (ds in names(result)) {
       expect_named(result[[ds]], expected_cols)
     }

@@ -516,7 +516,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #'   in the corresponding data frame.
 #'
 #' @returns A named list of data frames, one per dataset, each containing
-#'   columns: Dataset, Order, Variable, Label, Type, Role, Core.
+#'   columns: Dataset, Order, Variable, Label, Type, Role, Core, Length.
 #'
 #' @export
 generate_pre_specs <- function(datasets = c("ADNCA", "ADPP", "PP"),
