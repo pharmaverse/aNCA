@@ -174,7 +174,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
 
         # Partial AUCs #
-        if(!is.null(settings$int_parameters)) {
+        if (!is.null(settings$int_parameters)) {
           int_parameters(settings$int_parameters)
           refresh_reactable(refresh_reactable() + 1)
         }
@@ -220,7 +220,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         msg <- paste0(
           paste0(not_compatible, collapse = ", "),
           " settings not found in data. Reverting to defaults."
-          )
+        )
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 10)
       }
