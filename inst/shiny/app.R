@@ -157,21 +157,16 @@ server <- function(input, output, session) {
   # DATA ----
   tab_data_outputs <- tab_data_server("data")
 
-  # Auto-populate project name with STUDYID when data is loaded
-  observeEvent(tab_data_outputs$pknca_data(), {
-    pknca <- tab_data_outputs$pknca_data()
-    req(pknca)
-    # Only populate if user hasn't entered a name
-    current <- input$project_name
-    if (!is.null(current) && nzchar(current)) return()
-    tryCatch({
-      study_ids <- unique(pknca$data$conc$data[["STUDYID"]])
-      study_ids <- study_ids[!is.na(study_ids)]
-      if (length(study_ids) > 0) {
-        updateTextInput(session, "project_name",
-                        value = paste(study_ids, collapse = "_"))
-      }
-    }, error = function(e) NULL)
+  # Auto-populate project name with STUDYID when data is uploaded
+  observeEvent(tab_data_outputs$adnca_raw(), {
+    raw <- tab_data_outputs$adnca_raw()
+    req(raw, "STUDYID" %in% names(raw))
+    study_ids <- unique(raw[["STUDYID"]])
+    study_ids <- study_ids[!is.na(study_ids)]
+    if (length(study_ids) > 0) {
+      updateTextInput(session, "project_name",
+                      value = paste(study_ids, collapse = "_"))
+    }
   })
 
   # EXPLORATION ----
