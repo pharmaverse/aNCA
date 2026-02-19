@@ -159,7 +159,7 @@ server <- function(input, output, session) {
 
   # Auto-populate project name with STUDYID when data is loaded
   observeEvent(tab_data_outputs$pknca_data(), {
-    req(input$project_name == "")
+    if (!is.null(input$project_name) && nchar(input$project_name) > 0) return()
     study_ids <- unique(tab_data_outputs$pknca_data()$data$conc$data[["STUDYID"]])
     study_ids <- study_ids[!is.na(study_ids)]
     if (length(study_ids) > 0) {
