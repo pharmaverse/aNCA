@@ -146,7 +146,8 @@ exploration_meanplot <- function(
   filtering_list = NULL,
   use_time_since_last_dose = FALSE,
   x_limits = NULL,
-  y_limits = NULL
+  y_limits = NULL,
+  linetype = "default"
 ) {
 
   mean_data <- process_data_mean(
@@ -155,8 +156,28 @@ exploration_meanplot <- function(
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
     show_dose = show_dose,
-    use_time_since_last_dose = use_time_since_last_dose
+    use_time_since_last_dose = use_time_since_last_dose,
+    dose_normalize = FALSE
   )
+
+  if (linetype %in% c("dose-normalized", "both")) {
+    mean_data_dn <- process_data_mean(
+      pknca_data = pknca_data,
+      extra_grouping_vars = c(color_by, facet_by),
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = TRUE
+    )
+    mean_data_dn$line_type_label <- "Dose-normalized"
+    mean_data$line_type_label <- "default"
+    mean_data <- dplyr::bind_rows(mean_data, mean_data_dn)
+    color_by <- c(color_by, "line_type_label")
+    if (linetype == "dose-normalized") {
+      mean_data <- mean_data %>% filter(line_type_label == "Dose-normalized")
+    }
+  }
 
   # The time variable will always be the first one
   x_var <- names(mean_data)[1]
@@ -317,7 +338,8 @@ process_data_mean <- function(pknca_data,
                               filtering_list = NULL,
                               ylog_scale = FALSE,
                               show_dose = FALSE,
-                              use_time_since_last_dose = FALSE) {
+                              use_time_since_last_dose = FALSE,
+                              dose_normalize = FALSE) {
   # Deduce columns and data
   x_var_unit <- pknca_data$conc$columns$timeu
   y_var_unit <- pknca_data$conc$columns$concu
@@ -330,11 +352,23 @@ process_data_mean <- function(pknca_data,
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
   # Derive dose times if requested
-  data <- if (show_dose) {
-    derive_last_dose_time(
+  data <- if (show_dose || dose_normalize) {
+    data <- derive_last_dose_time(
       pknca_data = pknca_data,
       conc_time_col = x_var
     )
+    if (dose_normalize) {
+      data <- data %>%
+        mutate(
+          !!sym(y_var) := !!sym(y_var) / !!sym(dose_col),
+          !!sym(y_var_unit) := if (!is.null(doseu_col)) {
+            paste0("(", .[[y_var_unit]], ")/(", .[[doseu_col]], ")")
+          } else {
+            NA_character_
+          }
+        )
+    }
+    data
   } else {
     pknca_data$conc$data
   }
