@@ -197,37 +197,9 @@ Data preparation is orchestrated through aNCA's internal functions:
 
 ---
 
-# 4. Running NCA
-
-The NCA workflow consists of five main steps executed through the aNCA interface.
-
-## Step-by-Step Workflow
-
-1. **Upload & Map Data**: Load your dataset and map columns to ADNCA format using the Data tab
-2. **Configure Settings**: Choose imputation methods, BLQ handling, and AUC calculation in the NCA Setup tab
-3. **Review Intervals**: Verify dose times and intervals are correctly identified
-4. **Run Analysis**: Click "Run NCA" to execute PKNCA calculations
-5. **Generate Outputs**: Create TLG outputs and download results in the Outputs tab
-
-## Main Functions Used
-
-The workflow is orchestrated internally by:
-
-- **Data Preparation**: `apply_mapping()`, `format_pkncaconc_data()`, `format_pkncadose_data()`
-- **Interval Creation**: `format_pkncadata_intervals()`, `update_main_intervals()`
-- **NCA Execution**: PKNCA's `PKNCAdata()` and `pk.nca()`
-- **Output Generation**: `export_cdisc()` for CDISC datasets, TLG generation functions
-
-For detailed technical information, see [Key PKNCA Functions and Methods](#key-pknca-functions-and-methods).
-
----
-
 # 5. NCA Settings
 
 NCA settings control how PKNCA processes your data during calculations. These are configured in the NCA Setup tab.
-
-
-
 
 
 
@@ -239,7 +211,7 @@ They are specified in the `PKNCAdata` object via the `impute` column. The order 
 **Order of Application**: `start_concentration` > `BLQ imputation`
 
 
-### 5.1.1 Start Concentration Imputation: `create_start_impute()`
+### Start Concentration Imputation: `create_start_impute()`
 
 **File**: `R/create_start_impute.R`
 
@@ -264,7 +236,7 @@ Imputation rules specify how to handle missing or implied start concentrations (
 
 **PKNCA Method**: `pk.calc.c0()` from PKNCA package
 
-### 5.1.2 BLQ (Below Limit of Quantification) Imputation
+### BLQ (Below Limit of Quantification) Imputation
 
 **Implementation**: Via `blq_imputation_rule` parameter in `update_main_intervals()`
 
@@ -353,6 +325,33 @@ After the last measurable concentration (Tlast), AUC can be extrapolated using d
 | `aucint` | Partial AUC over specified interval | User-defined | AUC(time1, time2) |
 
 ---
+
+
+
+# 4. Running NCA
+
+The NCA workflow consists of five main steps executed through the aNCA interface.
+
+## Step-by-Step Workflow
+
+1. **Upload & Map Data**: Load your dataset and map columns to ADNCA format using the Data tab
+2. **Configure Settings**: Choose imputation methods, BLQ handling, and AUC calculation in the NCA Setup tab
+3. **Review Intervals**: Verify dose times and intervals are correctly identified
+4. **Run Analysis**: Click "Run NCA" to execute PKNCA calculations
+5. **Generate Outputs**: See all results in the `NCA results` tab and export them to a ZIP using the top-right button.
+
+## Main Functions Used
+
+The workflow is orchestrated internally by:
+
+- **Data Preparation**: `apply_mapping()`, `format_pkncaconc_data()`, `format_pkncadose_data()`
+- **Interval Creation**: `format_pkncadata_intervals()`, `update_main_intervals()`
+- **NCA Execution**: PKNCA's `PKNCAdata()` and `pk.nca()`
+- **Output Generation**: `export_cdisc()` for CDISC datasets, TLG generation functions
+
+---
+
+
 
 # 6. Results & Outputs
 
