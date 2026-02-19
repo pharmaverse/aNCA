@@ -143,6 +143,12 @@ server <- function(input, output, session) {
     if (input$project_name != "") input$project_name else ""
   })
 
+  # Helper: prepend project name with separator, or empty string if no name
+  session$userData$project_prefix <- function(sep = "-") {
+    pn <- session$userData$project_name()
+    if (pn == "") "" else paste0(pn, sep)
+  }
+
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
   shinyjs::disable(selector = "#page li a[data-value=exploration]")
@@ -150,6 +156,17 @@ server <- function(input, output, session) {
 
   # DATA ----
   tab_data_outputs <- tab_data_server("data")
+
+  # Auto-populate project name with STUDYID when data is loaded
+  observeEvent(tab_data_outputs$pknca_data(), {
+    req(input$project_name == "")
+    study_ids <- unique(tab_data_outputs$pknca_data()$data$conc$data[["STUDYID"]])
+    study_ids <- study_ids[!is.na(study_ids)]
+    if (length(study_ids) > 0) {
+      updateTextInput(session, "project_name",
+                      value = paste(study_ids, collapse = "_"))
+    }
+  })
 
   # EXPLORATION ----
   tab_explore_server(

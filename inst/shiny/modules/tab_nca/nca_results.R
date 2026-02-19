@@ -95,7 +95,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       req(final_results())
 
       # Save the latest version of the object
-      session$userData$results$nca_results$nca_results <- final_results()
+      session$userData$results$nca_results$nca_pkparam <- final_results()
 
       # Represent the available parameters in the input
       param_pptest_cols <- intersect(
@@ -153,7 +153,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_name(), "-pivoted_NCA_results.csv")
+        paste0(session$userData$project_prefix("-"), "pivoted_NCA_results.csv")
       },
       content = function(file) {
         write.csv(output_results(), file, row.names = FALSE)

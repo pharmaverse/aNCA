@@ -165,7 +165,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
     # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".yaml")
+        paste0(session$userData$project_prefix("_"), "settings_", Sys.Date(), ".yaml")
       },
       content = function(con) {
         # Prepare the list

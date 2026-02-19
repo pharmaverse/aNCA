@@ -122,6 +122,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             "NCA"
           }
         }
+        project <- gsub("[^A-Za-z0-9_-]", "_", project)
         paste0(project, ".zip")
       },
       content = function(fname) {
@@ -177,7 +178,7 @@ TREE_LIST <- list(
     meanplot = ""
   ),
   nca_results = list(
-    nca_results = "",
+    nca_pkparam = "",
     nca_statistics = ""
   ),
   CDISC = list(
