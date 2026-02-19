@@ -51,4 +51,31 @@ describe("generate_pre_specs", {
     full <- generate_pre_specs("PP", cdisc_data = NULL)
     expect_gt(nrow(full$PP), 3)
   })
+
+  it("contains expected metadata values for known PP variables", {
+    result <- generate_pre_specs("PP")
+    studyid_row <- result$PP[result$PP$Variable == "STUDYID", ]
+    expect_equal(nrow(studyid_row), 1)
+    expect_equal(studyid_row$Dataset, "PP")
+    expect_equal(studyid_row$Order, 1)
+    expect_equal(studyid_row$Label, "Study Identifier")
+    expect_equal(studyid_row$Type, "Char")
+    expect_equal(studyid_row$Role, "Identifier")
+    expect_equal(studyid_row$Core, "Req")
+    expect_equal(studyid_row$Length, 8)
+
+    domain_row <- result$PP[result$PP$Variable == "DOMAIN", ]
+    expect_equal(nrow(domain_row), 1)
+    expect_equal(domain_row$Label, "Domain Abbreviation")
+    expect_equal(domain_row$Length, 2)
+  })
+
+  it("contains expected metadata values for known ADNCA variables", {
+    result <- generate_pre_specs("ADNCA")
+    studyid_row <- result$ADNCA[result$ADNCA$Variable == "STUDYID", ]
+    expect_equal(nrow(studyid_row), 1)
+    expect_equal(studyid_row$Order, 1)
+    expect_equal(studyid_row$Label, "Study Identifier")
+    expect_equal(studyid_row$Core, "Req")
+  })
 })
