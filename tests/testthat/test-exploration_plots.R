@@ -434,4 +434,109 @@ describe("exploration_meanplot:", {
     expect_equal(p$coordinates$limits$x, c(0, 12))
     expect_equal(p$coordinates$limits$y, c(0, 200))
   })
+
+  it("line_type applies appropriate y-value and y-label changes", {
+    dose_col <- pknca_data$dose$columns$dose
+    doseu_col <- pknca_data$dose$columns$doseu
+    doses <- unique(pknca_data$dose$data[[dose_col]])
+    doses_u <- unique(pknca_data$dose$data[[doseu_col]])
+
+for (dose in doses) {
+  pknca_data_dose <- pknca_data
+  group_vars <- intersect(group_vars(pknca_data$conc), group_vars(pknca_data$dose))
+print(paste0("dose: ", dose))
+  dose_groups <- pknca_data_dose$dose$data %>%
+    filter(!!sym(dose_col) == dose) %>%
+    select(any_of(group_vars)) %>%
+    distinct()
+
+  pknca_data_dose$conc$data <- pknca_data_dose$conc$data %>%
+    inner_join(dose_groups, by = group_vars)
+
+    p_dn <- exploration_meanplot(
+      pknca_data = pknca_data_dose,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      line_type = "dose-normalized"
+    )
+    p_base <- exploration_meanplot(
+      pknca_data = pknca_data_dose,
+      color_by = "PARAM",
+      show_dose = TRUE
+    )
+    p_both <- exploration_meanplot(
+      pknca_data = pknca_data_dose,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      line_type = "both"
+    )
+
+    dn_build <- ggplot_build(p_dn)
+    base_build <- ggplot_build(p_base)
+    dn_ys <- dn_build$data[[1]]$y
+    base_ys <- base_build$data[[1]]$y
+    both_ys <- ggplot_build(p_both)$data[[1]]$y
+
+    # Check y values in the dose-normalized plot are equal to the base plot divided by the dose
+    expect_true(all(
+      sapply(seq_along(dn_ys), function(i) {
+        print(i)
+        dn_y <- dn_ys[i]
+        base_y <- base_ys[i]
+        print(dn_y)
+        print(base_y / dose)
+        exp_dn_y <- base_y / dose
+        dn_y %in% exp_dn_y
+      })
+    ))
+}
+
+    p_dn <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      line_type = "dose-normalized"
+    )
+    p_base <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      show_dose = TRUE
+    )
+    p_both <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      show_dose = TRUE,
+      line_type = "both"
+    )
+
+    dn_build <- ggplot_build(p_dn)
+    base_build <- ggplot_build(p_base)
+    dn_ys <- dn_build$data[[1]]$y
+    base_ys <- base_build$data[[1]]$y
+    both_ys <- ggplot_build(p_both)$data[[1]]$y
+
+    # Check y values in the dose-normalized plot are equal to the base plot divided by the dose
+    expect_true(all(
+      sapply(seq_along(dn_ys), function(i) {
+        dn_y <- dn_ys[i]
+        base_y <- base_ys[i]
+        exp_dn_y <- base_y / doses
+        dn_y %in% exp_dn_y
+      })
+    ))
+
+    # Check that the y values in the "both" plot include both the base and dose-normalized values
+    expect_true(all(unique(c(dn_ys, base_ys)) %in% unique(both_ys)))
+
+    # Check that the y-axis label indicates the unit division by dose
+    dn_ylab <- p_dn$labels$y
+    base_ylab <- p_base$labels$y
+
+    # Check that the base y-axis label does not include dose units
+    exp_dn_ylabs <- gsub("\\[", "[(", base_ylab)
+    exp_dn_ylabs <- gsub("\\]", ")", exp_dn_ylabs)
+    exp_dn_ylabs <- paste0(exp_dn_ylabs, "/(", doses_u, ")]")
+
+    expect_true(dn_ylab %in% exp_dn_ylabs)
+  })
 })
