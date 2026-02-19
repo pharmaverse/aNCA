@@ -13,6 +13,7 @@ pk_dose_qc_plot_ui <- function(id) {
   ns <- NS(id)
   # The nav_panel function creates the tab
   layout_sidebar(
+    fillable = TRUE,
     sidebar = sidebar(
       position = "right",
       open = TRUE,
