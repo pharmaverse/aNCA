@@ -25,11 +25,10 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 | 4. Running NCA | [Running NCA](#4-running-nca) |
 | 5. NCA Settings | [NCA Settings](#5-nca-settings) |
 | 6. Results & Outputs | [Results & Outputs](#6-results--outputs) |
-| 7. TLG | [TLG](#7-tlg) |
-| 8. Customization | [Customization](#8-customization) |
-| 9. Half-Life Selection | [Half-Life Selection & Slope Selector](#9-half-life-selection-and-slope-selector) |
-| 10. Troubleshooting & FAQ | [Troubleshooting & FAQ](#10-troubleshooting--faq) |
-| 11. References & Resources | [References & Resources](#11-references--resources) |
+| 7. Half-Life Selection | [Half-Life Selection & Slope Selector](#9-half-life-selection-and-slope-selector) |
+| 8. TLG | [TLG](#7-tlg) |
+| 9. Troubleshooting & FAQ | [Troubleshooting & FAQ](#10-troubleshooting--faq) |
+| 10. References & Resources | [References & Resources](#11-references--resources) |
 | Glossary | [Glossary](#glossary) |
 
 # 1. Overview
@@ -227,7 +226,23 @@ For detailed technical information, see [Technical Architecture](#9-technical-ar
 NCA settings control how PKNCA processes your data during calculations. These are configured in the NCA Setup tab.
 
 
-## Start concentration Imputation Rules
+
+
+
+
+## Data Imputation Rules {#data-imputation-rules}
+
+The imputation actions are specified exclusively for parameters that are not exclusively calculated based on observed concentrations (e.g., Cmax, Tmax, AUClast, etc.) but also for parameters that require extrapolation to infinity (e.g., AUCinf) or parameters that are calculated based on the terminal slope (e.g., half-life, clearance, volume). The imputation rules are applied during the interval creation step in `update_main_intervals()`, where the appropriate imputation method is selected based on the characteristics of each record (e.g., dose route, dose duration, metabolite status, etc.) and the availability of data (e.g., presence of pre-dose concentrations, presence of multiple post-dose concentrations for log-linear regression).
+They are specified in the `PKNCAdata` object via the `impute` column. The order of imputation is as follows:
+
+**Order of Application**: `start_concentration` > `BLQ imputation`
+
+
+### Start Concentration Imputation: `create_start_impute()`
+
+**File**: `R/create_start_impute.R`
+
+**Purpose**: Defines how to handle missing or implied start concentrations (C₀)
 
 Imputation rules specify how to handle missing or implied start concentrations (C₀). Selection depends on:
 - Dose route (IV vs extravascular)
@@ -235,14 +250,49 @@ Imputation rules specify how to handle missing or implied start concentrations (
 - Analyte type (parent drug vs metabolite)
 - Data availability (e.g., concentration at dose available, pre-dose concentrations close to dose...)
 
-**Common Rules**:
-- **First dose, non-IV bolus**: C₀ = 0
-- **First dose, metabolite**: C₀ = 0 (regardless of route)
-- **Later dose, non-IV**: C₀ = pre-dose concentration
-- **IV bolus, parent drug**: C₀ = back-extrapolated via log-linear regression (if possible)
 
-For detailed imputation logic, see [Technical Architecture > Data Imputation Rules](#data-imputation-rules).
+| Condition | Imputation Method | Description |
+|-----------|------------------|-------------|
+| C₀ measured | `NA` | No imputation needed |
+| 1st dose, not IV bolus | `start_conc0` | C₀ = 0 |
+| 1st dose, metabolite | `start_conc0` | C₀ = 0 |
+| Later dose, not IV bolus | `start_predose` | C₀ = pre-dose concentration |
+| Later dose, metabolite | `start_predose` | C₀ = pre-dose concentration |
+| IV bolus, parent drug, logslope possible | `start_logslope` | Back-extrapolate using log-linear regression |
+| IV bolus, parent drug, logslope not possible | `start_c1` | Use first measured concentration |
 
+**PKNCA Method**: `pk.calc.c0()` from PKNCA package
+
+### BLQ (Below Limit of Quantification) Imputation
+
+**Implementation**: Via `blq_imputation_rule` parameter in `update_main_intervals()`
+
+**Supported Strategies**:
+
+1. **Position-based** (PKNCA default):
+   - `first`: How to handle BLQ at start of profile
+   - `middle`: How to handle BLQ in middle of profile
+   - `last`: How to handle BLQ at end of profile
+
+2. **Tmax-based**:
+   - `before.tmax`: BLQ before maximum concentration
+   - `after.tmax`: BLQ after maximum concentration
+
+**Options for each position**:
+
+- **Numeric value** (e.g., `0`, `LOQ/2`): Substitute BLQ with this value
+- `"drop"`: Exclude the BLQ value from calculations
+- `"keep"`: Use BLQ as 0
+
+**Example**:
+
+```r
+blq_rule <- list(
+  first = "0",        # Set first BLQ to 0
+  middle = "drop",    # Drop middle BLQ values
+  last = "keep"       # Keep last BLQ as 0
+)
+```
 ## BLQ (Below Limit of Quantification) Handling
 
 BLQ values are handled using position-based or Tmax-based strategies.
@@ -357,123 +407,7 @@ aNCA generates three CDISC-compliant output datasets:
 - Excluded records retained but marked
 - Purpose: Traceability and support for concentration-time plotting and re-analysis
 
----
-
-# 7. TLG (Tables, Listings, and Graphs)
-
-aNCA generates regulatory-ready TLG outputs for reporting and analysis.
-For TLG customization details, see [Customization](#8-customization) section.
-
----
-## Changing Labels and Titles
-
-- **Study Identifiers**: Customize study labels on plots and reports
-- **Parameter Labels**: Rename analytes for clarity (e.g., "Parent Drug" vs "Drug A")
-- **Treatment Labels**: Display alternative treatment names in outputs
-- **Plot Titles & Footnotes**: Add custom titles, footnotes, and annotations
-- **Axis Labels**: Use template syntax:
-  - `!COLUMN`: Inserts column label
-  - `$COLUMN`: Inserts column value (e.g., STUDYID)
-
-## Grouping and Statistics
-
-- **Grouping Variables**: Select columns to group by in summary tables (treatment, dose level, etc.)
-- **Statistical Options**: Choose statistics to calculate and display:
-  - Descriptive stats: mean, SD, CV%, median, min, max, geometric mean
-  - Sample sizes and missing counts
-  - Dose-normalized parameters
-- **Analysis Flags**: Include/exclude parameters based on quality flags
-- **Subgroup Analysis**: Stratify results by demographics or study cohort
-
----
-
-## Data Imputation Rules {#data-imputation-rules}
-
-The imputation actions are specified exclusively for parameters that are not exclusively calculated based on observed concentrations (e.g., Cmax, Tmax, AUClast, etc.) but also for parameters that require extrapolation to infinity (e.g., AUCinf) or parameters that are calculated based on the terminal slope (e.g., half-life, clearance, volume). The imputation rules are applied during the interval creation step in `update_main_intervals()`, where the appropriate imputation method is selected based on the characteristics of each record (e.g., dose route, dose duration, metabolite status, etc.) and the availability of data (e.g., presence of pre-dose concentrations, presence of multiple post-dose concentrations for log-linear regression).
-They are specified in the `PKNCAdata` object via the `impute` column. The order of imputation is as follows:
-
-**Order of Application**: `start_concentration` > `BLQ imputation`
-
-
-### Start Concentration Imputation: `create_start_impute()`
-
-**File**: `R/create_start_impute.R`
-
-**Purpose**: Defines how to handle missing or implied start concentrations (C₀)
-
-**Rules**:
-
-| Condition | Imputation Method | Description |
-|-----------|------------------|-------------|
-| C₀ measured | `NA` | No imputation needed |
-| 1st dose, not IV bolus | `start_conc0` | C₀ = 0 |
-| 1st dose, metabolite | `start_conc0` | C₀ = 0 |
-| Later dose, not IV bolus | `start_predose` | C₀ = pre-dose concentration |
-| Later dose, metabolite | `start_predose` | C₀ = pre-dose concentration |
-| IV bolus, parent drug, logslope possible | `start_logslope` | Back-extrapolate using log-linear regression |
-| IV bolus, parent drug, logslope not possible | `start_c1` | Use first measured concentration |
-
-**PKNCA Method**: `pk.calc.c0()` from PKNCA package
-
-### BLQ (Below Limit of Quantification) Imputation
-
-**Implementation**: Via `blq_imputation_rule` parameter in `update_main_intervals()`
-
-**Supported Strategies**:
-
-1. **Position-based** (PKNCA default):
-   - `first`: How to handle BLQ at start of profile
-   - `middle`: How to handle BLQ in middle of profile
-   - `last`: How to handle BLQ at end of profile
-
-2. **Tmax-based**:
-   - `before.tmax`: BLQ before maximum concentration
-   - `after.tmax`: BLQ after maximum concentration
-
-**Options for each position**:
-
-- **Numeric value** (e.g., `0`, `LOQ/2`): Substitute BLQ with this value
-- `"drop"`: Exclude the BLQ value from calculations
-- `"keep"`: Use BLQ as 0
-
-**Example**:
-
-```r
-blq_rule <- list(
-  first = "0",        # Set first BLQ to 0
-  middle = "drop",    # Drop middle BLQ values
-  last = "keep"       # Keep last BLQ as 0
-)
-```
-
-
-## AUC Calculation Methods
-
-aNCA uses PKNCA's AUC calculation methods. Users can select the calculation method in settings.
-
-
-| Method | Description | PKNCA Function | When to Use |
-|--------|-------------|----------------|-------------|
-| Linear | Linear trapezoidal rule | `pk.calc.auc.last(..., method="linear")` | Standard method for most data |
-| Linear-up/log-down | Linear on rising, log on falling | `pk.calc.auc.last(..., method="lin up/log down")` | Common in PK analysis |
-| Log | Logarithmic trapezoidal | `pk.calc.auc.last(..., method="log")` | For log-linear elimination |
-
-**Reference**: [PKNCA AUC Methods](https://billdenney.github.io/pknca/reference/pk.calc.auc.html)
-
-### AUC Types
-
-| Parameter | Description | PKNCA Function | Formula |
-|-----------|-------------|----------------|---------|
-| `auclast` | AUC to last measurable concentration | `pk.calc.auclast()` | Sum of trapezoids |
-| `aucinf.obs` | AUC to infinity (observed Clast) | `pk.calc.aucinf.obs()` | AUClast + Clast/λz |
-| `aucinf.pred` | AUC to infinity (predicted Clast) | `pk.calc.aucinf.pred()` | AUClast + Ĉlast/λz |
-| `aucint` | Partial AUC over interval | `pk.calc.aucint()` | AUC(start, end) |
-
-**Reference**: [PKNCA Parameter Functions](https://billdenney.github.io/pknca/reference/index.html#pk-parameters)
-
----
-
-# 9. Half-Life Selection and Slope Selector
+# 7. Half-Life Selection and Slope Selector
 
 ## Automated Half-Life Calculation
 
@@ -547,7 +481,7 @@ Results are shown in:
 
 ---
 
-# TLG (Tables, Listings, and Graphs) Framework
+# 8. TLG (Tables, Listings, and Graphs) Framework
 
 Users can customize TLGs using widgets in the TLG tab:
 
@@ -579,6 +513,8 @@ Title: Study $STUDYID - !PARAM Analysis
 - TLG templates defined in `inst/shiny/tlg_definitions/`
 - Generation functions in `R/` (e.g., `g_pkcg.R`, `l_pkcl01.R`)
 - Export handled by `{officer}` and `{flextable}`
+
+
 
 ---
 
