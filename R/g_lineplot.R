@@ -173,27 +173,27 @@ g_lineplot <- function(data,
   use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
 
   data %>%
-    dplyr::mutate(
+    mutate(
       .facet_label_values = purrr::pmap_chr(
-        dplyr::across(dplyr::all_of(facet_by)),
+        across(all_of(facet_by)),
         function(...) {
           vals <- list(...)
           paste(paste(names(vals), vals, sep = ": "), collapse = " | ")
         }
       )
     ) %>%
-    dplyr::group_by(!!!syms(facet_by)) %>%
-    dplyr::mutate(.facet_n = {
+    group_by(!!!syms(facet_by)) %>%
+    mutate(.facet_n = {
       values <- .data[[facet_count_n]]
-      if (use_precomputed_count && is.numeric(values) && dplyr::n_distinct(values) == 1) {
+      if (use_precomputed_count && is.numeric(values) && n_distinct(values) == 1) {
         values[1]
       } else {
-        dplyr::n_distinct(values)
+        n_distinct(values)
       }
     }) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(facet_label = paste0(.facet_label_values, " (n=", .facet_n, ")")) %>%
-    dplyr::select(-.facet_label_values, -.facet_n)
+    ungroup() %>%
+    mutate(facet_label = paste0(.facet_label_values, " (n=", .facet_n, ")")) %>%
+    select(-.facet_label_values, -.facet_n)
 }
 
 #' @noRd
