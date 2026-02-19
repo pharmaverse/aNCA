@@ -112,4 +112,3 @@
 #'
 #' @source Example data created for package demonstration and testing purposes.
 "adnca_example"
-
