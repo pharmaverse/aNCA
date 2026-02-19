@@ -60,7 +60,9 @@
 - Slope selector plots count with grouping options
   ([\#333](https://github.com/pharmaverse/aNCA/issues/333))
 - Add x/y axis limits for the exploration plots
-  ([\#817](https://github.com/pharmaverse/aNCA/issues/817))
+  ([\#817](https://github.com/pharmaverse/aNCA/issues/817)) and facet
+  titles including subject count
+  ([\#894](https://github.com/pharmaverse/aNCA/issues/894))
 
 ### Bugs fixed
 

@@ -10,6 +10,7 @@ exploration_individualplot(
   pknca_data,
   color_by,
   facet_by = NULL,
+  show_facet_n = FALSE,
   ylog_scale = FALSE,
   threshold_value = NULL,
   x_limits = NULL,
@@ -38,6 +39,11 @@ exploration_individualplot(
 
   Character vector of column names to facet the plot by. Default is
   `NULL` (no faceting).
+
+- show_facet_n:
+
+  Logical; if `TRUE`, shows the number of subjects in each facet.
+  Default is `FALSE`.
 
 - ylog_scale:
 

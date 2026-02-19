@@ -16,6 +16,7 @@ g_lineplot(
   color_by,
   facet_by = NULL,
   group_by = NULL,
+  facet_count_n = "USUBJID",
   x_limits = NULL,
   y_limits = NULL,
   ylog_scale = FALSE,
@@ -67,6 +68,11 @@ g_lineplot(
 
   A character vector specifying the column names used to group the
   lines. Default is NULL for no grouping.
+
+- facet_count_n:
+
+  A character string specifying the column name used to count unique
+  subjects per facet. Default is "USUBJID".
 
 - x_limits:
 
