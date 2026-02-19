@@ -122,8 +122,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             "NCA"
           }
         }
-        datetime <- attr(res_nca(), "provenance")$datetime
-        paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
+        paste0(project, ".zip")
       },
       content = function(fname) {
         tryCatch(
