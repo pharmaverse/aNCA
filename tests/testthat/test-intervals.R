@@ -157,6 +157,22 @@ describe("format_pkncadata_intervals", {
     )
     expect_true(all(result$start >= 0))
   })
+
+  it("filters out intervals where start > end time", {
+    # Force an impossible scenario:
+    # start = 10 (from dose time) but end = 5 (from next dose or max_end)
+    invalid_dose <- pknca_dose
+    invalid_dose$data <- invalid_dose$data %>%
+      mutate(AFRLT = ifelse(DOSNOA == 1, 10, AFRLT))
+
+    # In the original data, next dose or max_end would result in an 'end' < 10
+    result <- format_pkncadata_intervals(pknca_conc, invalid_dose)
+
+    # Check that the interval starting at 10 is filtered out
+    expect_false(any(result$start > result$end))
+    # Ensure other valid intervals still exist
+    expect_gt(nrow(result), 0)
+  })
 })
 
 describe("update_main_intervals", {
@@ -196,11 +212,15 @@ describe("update_main_intervals", {
     `Single IV Dose`               = c("tmax", "auclast", "half.life")
   )
 
-  auc_data <- tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
+  int_parameters <- tibble(
+    parameter = "AUCINT",
+    start_auc = rep(NA_real_, 2),
+    end_auc = rep(NA_real_, 2)
+  )
 
   it("correctly updates parameter flags based on study type", {
     result <- update_main_intervals(data, parameters, study_types_df,
-      auc_data,
+      int_parameters,
       impute = FALSE
     )
 
@@ -221,12 +241,19 @@ describe("update_main_intervals", {
     expect_true(all(profile_3[expected_false_3] == FALSE))
   })
 
-  it("handles partial AUCs (auc_data) creating proper intervals for each", {
-    auc_data <- data.frame(
+  it("handles partial AUCs (int_parameters) creating proper intervals for each", {
+    int_parameters <- data.frame(
+      parameter = "AUCINT",
       start_auc = c(0, 1, 2),
       end_auc = c(1, 2, 3)
     )
-    result <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = FALSE)
+    result <- update_main_intervals(
+      data,
+      parameters,
+      study_types_df,
+      int_parameters,
+      impute = FALSE
+    )
 
     manual_intervals <- result$intervals %>% filter(type_interval == "manual")
     expect_true(all(manual_intervals$aucint.last == TRUE))
@@ -239,13 +266,19 @@ describe("update_main_intervals", {
   })
 
   it("does not impute C0 when not requested", {
-    result <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = FALSE)
+    result <- update_main_intervals(
+      data,
+      parameters,
+      study_types_df,
+      int_parameters,
+      impute = FALSE
+    )
     expect_true("impute" %in% names(result))
     expect_true(all(is.na(result$intervals$impute)))
   })
 
   it("imputes c0 when requested", {
-    result <- update_main_intervals(data, parameters, study_types_df, auc_data, impute = TRUE)
+    result <- update_main_intervals(data, parameters, study_types_df, int_parameters, impute = TRUE)
     expect_true("impute" %in% names(result))
     expect_false(all(is.na(result$intervals$impute)))
   })
@@ -253,29 +286,30 @@ describe("update_main_intervals", {
   it("handles empty parameter selections and empty AUC data", {
     # Test with empty parameter list
     result_no_params <- update_main_intervals(data, list(), study_types_df,
-      auc_data,
+      int_parameters,
       impute = FALSE
     )
     param_flags <- result_no_params$intervals %>% select(all_of(all_pknca_params))
     expect_true(all(param_flags == FALSE))
 
-    # Test with empty auc_data
+    # Test with empty int_parameters
     result_no_auc <- update_main_intervals(data, parameters, study_types_df,
-      auc_data,
+      int_parameters,
       impute = FALSE
     )
     expect_equal(nrow(result_no_auc$intervals), nrow(data$intervals))
   })
 
   it("filters out invalid AUC ranges before creating intervals", {
-    invalid_auc_data <- data.frame(
+    invalid_int_parameters <- data.frame(
+      parameter = "AUCINT",
       start_auc = c(0, 5, -1, 2, NA), # valid, start > end, negative, start > end, NA
       end_auc   = c(4, 2, 1, 2, 4)
     ) # Only first row is valid
 
     original_rows <- nrow(data$intervals)
     result <- update_main_intervals(data, parameters, study_types_df,
-      invalid_auc_data,
+      invalid_int_parameters,
       impute = FALSE
     )
 
@@ -289,7 +323,7 @@ describe("update_main_intervals", {
 
     expect_error(
       update_main_intervals(data, parameters, study_types_df,
-        auc_data,
+        int_parameters,
         impute = FALSE
       ),
       "Missing required columns: PCSPEC"
@@ -310,7 +344,7 @@ describe("update_main_intervals", {
 
     # For clarity, define subject and parameters
     param_list <- list(`Single Extravascular Dose` = c("tmax", "auclast"))
-    auc_empty <- tibble(start_auc = NA_real_, end_auc = NA_real_)
+    auc_empty <- tibble(parameter = "AUCINT", start_auc = NA_real_, end_auc = NA_real_)
 
     # --- Helper: Extract results for subject 1 ---
     get_results <- function(data_obj, blq_rule) {
