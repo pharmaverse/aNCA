@@ -54,9 +54,9 @@ This is an example dataset for demonstrating pharmacokinetic analysis workflows.
 It follows the ADaMIG-ADNCA v1.0 structure.
 }
 \details{
-This dataset contains pharmacokinetic data from a single subject (S1-01) receiving
-5 mg of DrugA administered via intravenous infusion over 8 doses at 24-hour intervals.
+This dataset contains pharmacokinetic data from multiple subjects receiving
+multiple dose regimens with different levels and routes of administration at 24-hour intervals.
 Concentration measurements are collected at multiple time points post-dose for both serum
-(parent drug) and urine (metabolite/excretion) samples.
+and urine samples. Analytes include parent drug and a metabolite.
 }
 \keyword{datasets}
