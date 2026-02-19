@@ -42,7 +42,7 @@ describe("generate_pre_specs", {
     )
     result <- generate_pre_specs(cdisc_data = mock_data)
     for (ds in names(result)) {
-      key <- c(PP = "pp", ADPP = "adpp", ADNCA = "adnca")[[ds]]
+      key <- CDISC_DS_KEY_MAP[[ds]]
       expect_true(all(result[[ds]]$Variable %in% names(mock_data[[key]])))
     }
   })

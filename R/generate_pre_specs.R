@@ -1,3 +1,6 @@
+# Mapping between uppercase CDISC dataset names and lowercase keys
+CDISC_DS_KEY_MAP <- c(PP = "pp", ADPP = "adpp", ADNCA = "adnca")
+
 #' Generate Pre-Specifications for CDISC Datasets
 #'
 #' Extracts variable-level metadata from `metadata_nca_variables` for the
@@ -14,7 +17,6 @@
 #' @returns A named list of data frames, one per dataset, each containing
 #'   columns: Dataset, Order, Variable, Label, Type, Role, Core, Length.
 #'
-#' @importFrom writexl write_xlsx
 #' @export
 generate_pre_specs <- function(datasets = c("ADNCA", "ADPP", "PP"),
                                cdisc_data = NULL) {
@@ -27,10 +29,8 @@ generate_pre_specs <- function(datasets = c("ADNCA", "ADPP", "PP"),
     split(.[["Dataset"]])
 
   if (!is.null(cdisc_data)) {
-    # Map uppercase dataset names to lowercase keys in cdisc_data
-    ds_key_map <- c(PP = "pp", ADPP = "adpp", ADNCA = "adnca")
     for (ds_name in names(all_specs)) {
-      key <- ds_key_map[[ds_name]]
+      key <- CDISC_DS_KEY_MAP[[ds_name]]
       if (!is.null(key) && key %in% names(cdisc_data)) {
         present_vars <- names(cdisc_data[[key]])
         all_specs[[ds_name]] <- all_specs[[ds_name]] %>%

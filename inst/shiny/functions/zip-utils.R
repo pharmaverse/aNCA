@@ -415,8 +415,9 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_pre_specs <- function(target_dir, selected, cdisc_data = NULL) {
-  ds_name_map <- c(pp = "PP", adpp = "ADPP", adnca = "ADNCA")
-  datasets <- unname(ds_name_map[selected])
+  # Reverse lookup: lowercase keys -> uppercase dataset names
+  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
+  datasets <- unname(rev_map[selected])
 
   pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
 
@@ -463,9 +464,11 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
-  # Preserve the single pre-specs file in the CDISC folder
-  files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
-                                 value = TRUE))
+  # Preserve pre-specs only when at least one CDISC dataset is selected
+  if (any(c("pp", "adpp", "adnca") %in% fnames)) {
+    files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                   value = TRUE))
+  }
   file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup

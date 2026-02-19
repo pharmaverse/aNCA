@@ -583,4 +583,3 @@ describe(".get_subjid", {
     expect_true(all(is.na(result)))
   })
 })
-
