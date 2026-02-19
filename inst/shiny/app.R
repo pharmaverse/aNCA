@@ -163,6 +163,7 @@ server <- function(input, output, session) {
     req(raw, "STUDYID" %in% names(raw))
     study_ids <- unique(raw[["STUDYID"]])
     study_ids <- study_ids[!is.na(study_ids)]
+    if (length(study_ids) > 3) study_ids <- study_ids[1:3]
     if (length(study_ids) > 0) {
       updateTextInput(session, "project_name",
                       value = paste(study_ids, collapse = "_"))
