@@ -181,14 +181,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         selected = profile_choices
       )
 
-      # Extra columns to include in color/facet choices if present in the data
-      extra_plot_vars <- c("DOSETRT", "PCSPEC", "DOSEA", "DOSEU", "TRT01A",
-                           "GROUP", "ACTARM", "COHORT", "PERIOD", "PART")
-      available_extras <- intersect(extra_plot_vars, names(data))
-
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
-                                     dose_col, grouping_vars(),
-                                     available_extras, "ATPTREF"))
+                                     dose_col, grouping_vars(), "ATPTREF"))
 
       is_individual <- "usubjid" %in% names(input)
 
