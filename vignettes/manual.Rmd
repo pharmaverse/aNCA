@@ -1,0 +1,666 @@
+---
+title: "aNCA Manual"
+description: >
+  User guide and technical reference for aNCA: data, workflow, settings, and outputs.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{aNCA Manual}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+
+
+# Table of Contents
+
+| Section | Link |
+|---|---|
+| 1. Overview | [Overview](#1-overview) |
+| 2. Data Requirements | [Data Requirements](#2-data-requirements) |
+| 3. Data Preparation | [Data Preparation](#3-data-preparation) |
+| 4. NCA Settings | [NCA Settings](#4-nca-settings) |
+| 5. Running NCA | [Running NCA](#5-running-nca) |
+| 6. Results & Outputs | [Results & Outputs](#6-results--outputs) |
+| 7. Half-Life Selection | [Half-Life Selection & Slope Selector](#7-half-life-selection-and-slope-selector) |
+| 8. TLG | [TLG](#8-tlg-tables-listings-and-graphs-framework) |
+| 9. Troubleshooting & FAQ | [Troubleshooting & FAQ](#9-troubleshooting--faq) |
+| 10. References & Resources | [References & Resources](#10-references--resources) |
+| Glossary | [Glossary](#glossary) |
+
+# 1. Overview
+
+This manual is a user guide and technical reference on how aNCA operates internally. It covers data requirements, workflow, settings and output definitions.
+
+For a quick start and installation instructions, see [Get Started](aNCA.html). For NCA concepts, see [What is NCA?](background.html).
+
+---
+
+# 2. Data Requirements
+
+## Required Columns
+
+| Variable | Label | Description | CDISC Reference |
+|----------|-------|-------------|-----------------|
+| `STUDYID` \* | Study Identifier | Character column to identify the study | CDISC Standard |
+| `USUBJID` \* | Unique Subject Identifier | Character/numeric column to identify a subject across studies | CDISC Standard |
+| `ATPTREF` \* | Analysis Timepoint Reference | Can be any column, used to filter data for NCA calculations (e.g., visit, dose number) | CDISC ADNCA |
+
+
+
+The sample identifiers help define what records are used for NCA calculations. At minimum, you need a parameter (PARAM), specimen type (PCSPEC), and concentration value (AVAL).
+- The specimen type (PCSPEC) is used to differentiate between different sample matrices (e.g., plasma vs urine) and allows for separate NCA excretion calculations for urine if needed.
+- The parameter (PARAM) is used to identify the analyte being measured and allows for multi-analyte assays to be processed in the same dataset.
+- Both generally together also help specifying the correct unit (AVALU) for the concentration values (AVAL).
+
+| Variable | Label | Description | CDISC Reference |
+|----------|-------|-------------|-----------------|
+| `PARAM` \* | Parameter | Name of the measured analyte | CDISC Standard |
+| `PCSPEC` \* | Specimen Material Type | Sample matrix (PLASMA, SERUM, URINE, etc.) | C78734 |
+| `AVAL` \* | Analysis Value | Numeric analyte concentration (BLQ values assumed to be 0 if not imputed) | CDISC Standard |
+
+### Additional Optional Variables
+
+- `AEFRLT` and `AFRLT` are useful for the PK excretion parameters that need to consider the duration of sample collection to calculate rates or total amounts.
+- `ADOSEDUR` is used to determine the appropriate start imputation for missing C₀ values in intravascular doses (IV). The automatic half-life determined by PKNCA may also change based on the duration of the infusion for superior accuracy. If not provided, aNCA assumes all doses are bolus (`ADOSEDUR = 0`) and applies the corresponding imputation rules.
+- `VOLUME` is used for excretion studies to calculate the total amount excreted in urine or feces. It can also be used to calculate the excretion rate if the sample collection duration is provided (via `AEFRLT`).
+- `WTBL` is used for excretion studies to calculate dose-normalized parameters based on body weight.
+- `TRTRINT` is commonly known as Tau (τ) and is used for the last dose of a subject/treatment (e.g., `start + TRTRINT`). If not provided, aNCA will guess the dosing interval based on the exact actual dose times, applying uneven intervals if necessary.
+- `METABFL` is used to flag records that represent metabolites. This allows users to easily identify and analyze metabolite data separately from parent drug data to compute metabolite-ratio operations. Additionally, it will also be considered for the start imputation rules, where metabolites will be imputed to `C0 = 0` for first doses regardless of the route of administration or the availability of dose duration information.
+
+| Variable | Label | Description | Use Case |
+|----------|-------|-------------|----------|
+| `AEFRLT` | Actual Relative End Time from First Dose | End time of sample collection | Urine/feces samples |
+| `ADOSEDUR` | Actual Duration of Treatment Dose | Dose infusion duration | IV infusions |
+| `VOLUME` | Volume Value | Collected sample volume | Excretion studies |
+| `VOLUMEU` | Volume Value Unit | Unit of VOLUME | Excretion studies |
+| `WTBL` | Weight at Baseline | Subject's weight | Excretion studies |
+| `WTBLU` | Weight at Baseline Unit | Unit of WTBL | Excretion studies |
+| `TRTRINT` | Planned Treatment Interval | Time between doses (τ) in multiple dose studies | Multiple dosing |
+| `METABFL` | Metabolite Flag | "Y" if PARAM is a metabolite | Multi-analyte assays |
+
+
+## Data Format Example
+
+The dose variables describe the treatment administration information necessary for NCA calculations.
+
+- `DOSETRT` helps us identify different treatments even if they happen within the same subject.
+- `ROUTE` is used to derive the PKNCA route variable (intravascular, extravascular). This, together with the dose duration (`ADOSEDUR`), helps determine the appropriate start imputations for missing C₀ values.
+- `DOSEA` is used for dose normalization of parameters like Cmax and AUC if the user selects that option or the `...DN` parameters, apart from other parameters that are always dose-normalized (e.g., clearance).
+
+| Variable | Label | Description | CDISC Reference |
+|----------|-------|-------------|-----------------|
+| `DOSETRT` \* | Name of Treatment | Protocol-specified study treatment | CDISC Standard |
+| `ROUTE` \* | Route of Administration | Either "intravascular" or "extravascular" (or specific routes) | C66729 |
+| `DOSEA` \* | Actual Treatment Dose | Actual dose amount given | CDISC Standard |
+
+
+---
+
+# 3. Data Preparation
+
+Data preparation involves mapping your raw dataset to the ADNCA format, handling column naming and units, and setting up exclusion rules before NCA analysis.
+
+## Column Mapping
+
+Column mapping translates your raw dataset into ADNCA format. This is done via the UI mapping interface or the `apply_mapping()` function.
+
+**Key Operations**:
+- Rename columns to match ADNCA standards (e.g., "CONCENTRATION" → `AVAL`)
+- Create default values for unmapped required variables (e.g., `ADOSEDUR = 0` if not provided)
+- Apply CDISC variable labels and formatting
+- Remove duplicate concentration records
+- Handle special cases:
+  - If `DOSETRT` not mapped, sets `DOSETRT = PARAM`
+  - If `ADOSEDUR` not mapped, sets all values to 0
+
+
+## Time Variables
+
+Time variables relate dose administrations to sample collection times. These are essential for proper interval calculations in NCA.
+
+| Variable | Label | Description |
+|----------|-------|-------------|
+| `AFRLT` \* | Actual Relative Time from Analyte First Dose | Actual time since first dose |
+| `ARRLT` \* | Actual Relative Time from Reference Dose | Actual time since last dose |
+| `NFRLT` \* | Nominal Relative Time from Analyte First Dose | Planned time since first dose |
+| `NRRLT` \* | Nominal Relative Time from Reference Dose | Planned time since last dose |
+
+## Units
+
+Units are essential for parameter calculations and reporting. All unit columns must be present and consistent.
+
+| Variable | Label | Description |
+|----------|-------|-------------|
+| `AVALU` \* | Analysis Value Unit | Unit of AVAL (e.g., "ng/mL", "µg/mL") |
+| `RRLTU` \* | Relative Time Unit | Unit of time variables (e.g., "hr", "day") |
+| `DOSEU` \* | Dose Units | Unit of DOSEA (e.g., "mg", "mg/kg") |
+
+## Record Exclusions (NCAwXRS)
+
+The `NCAwXRS` columns are used to **exclude specific records from NCA calculations** at the data preparation stage.
+
+**Column Name Pattern**: `NCA1XRS`, `NCA2XRS`, ..., `NCA30XRS`
+
+**Purpose**: Character columns that explain why a record should not be included in PK NCA calculations.
+
+**Effects on NCA Computation**:
+- Records with **any non-empty value** in NCAwXRS columns are automatically excluded from all PK calculations
+- Exclusion reasons are concatenated and stored in the internal `nca_exclude` column
+- Excluded records are retained in outputs but marked as excluded
+- Multiple exclusion columns allow different reasons to be tracked separately
+
+**Example**:
+```r
+ADNCA$NCA1XRS <- ifelse(ADNCA$AVAL > 10000, "Concentration too high", "")
+ADNCA$NCA2XRS <- ifelse(ADNCA$ARRLT < 0, "Negative time point", "")
+```
+
+## Data Preparation Implementation
+
+Data preparation is orchestrated through aNCA's internal functions:
+
+### Column Mapping: `apply_mapping()`
+
+**Purpose**: Transforms user dataset to ADNCA format
+
+**Operations**:
+- Renames columns based on user-specified mappings
+- Creates new columns for unmapped required variables (e.g., `ADOSEDUR = 0` if not mapped)
+- If `DOSETRT` not mapped, sets `DOSETRT = PARAM`; if `ADOSEDUR` not mapped, sets all values to 0
+- Removes concentration duplicates
+- Applies CDISC variable labels
+
+### Concentration & Dose Data Formatting
+
+**`format_pkncaconc_data()`**: Creates PKNCA-compatible concentration dataset
+- Filters out dosing records
+- Creates `DOSNOA`: Sequential dose number within each group
+- Standardizes route ("intravascular" vs "extravascular")
+- Merges NCAwXRS exclusion reasons into `nca_exclude` column
+
+**`format_pkncadose_data()`**: Extracts and formats dosing information
+- Creates dose records from concentration data
+- Calculates sequential dose numbers
+- Links dose times to concentration profiles
+- Dose times are calculated based on `AFRLT - ARRLT` rounding to the 6th decimal to prevent floating point issues in interval creation.
+
+### Interval Creation & Parameter Assignment
+
+**`format_pkncadata_intervals()` & `update_main_intervals()`**: Defines NCA intervals
+- Creates intervals based on dose times (single dose: [0, Inf]; multiple dose: [dose_time, next_dose_time or start + TRTRINT])
+- Assigns PKNCA parameters based on study type (single/multiple dose, IV/EV)
+- Implements BLQ and start concentration imputation rules
+
+---
+
+# 4. NCA Settings
+
+NCA settings control how PKNCA processes your data during calculations. These are configured in the NCA Setup tab.
+
+
+
+## 4.1 Data Imputation Rules {#data-imputation-rules}
+
+The imputation actions are specified exclusively for parameters that are not exclusively calculated based on observed concentrations (e.g., Cmax, Tmax, AUClast, etc.) but also for parameters that require extrapolation to infinity (e.g., AUCinf) or parameters that are calculated based on the terminal slope (e.g., half-life, clearance, volume). The imputation rules are applied during the interval creation step in `update_main_intervals()`, where the appropriate imputation method is selected based on the characteristics of each record (e.g., dose route, dose duration, metabolite status, etc.) and the availability of data (e.g., presence of pre-dose concentrations, presence of multiple post-dose concentrations for log-linear regression).
+They are specified in the `PKNCAdata` object via the `impute` column. The order of imputation is as follows:
+
+**Order of Application**: `start_concentration` > `BLQ imputation`
+
+
+### 4.1.1 Start Concentration Imputation: `create_start_impute()`
+
+**File**: `R/create_start_impute.R`
+
+**Purpose**: Defines how to handle missing or implied start concentrations (C₀)
+
+Imputation rules specify how to handle missing or implied start concentrations (C₀). Selection depends on:
+- Dose route (IV vs extravascular)
+- Dose duration (bolus vs infusion)
+- Analyte type (parent drug vs metabolite)
+- Data availability (e.g., concentration at dose available, pre-dose concentrations close to dose...)
+
+
+| Condition | Imputation Method | Description |
+|-----------|------------------|-------------|
+| C₀ measured | `NA` | No imputation needed |
+| 1st dose, not IV bolus | `start_conc0` | C₀ = 0 |
+| 1st dose, metabolite | `start_conc0` | C₀ = 0 |
+| Later dose, not IV bolus | `start_predose` | C₀ = pre-dose concentration |
+| Later dose, metabolite | `start_predose` | C₀ = pre-dose concentration |
+| IV bolus, parent drug, logslope possible | `start_logslope` | Back-extrapolate using log-linear regression |
+| IV bolus, parent drug, logslope not possible | `start_c1` | Use first measured concentration |
+
+**PKNCA Method**: `pk.calc.c0()` from PKNCA package
+
+### 4.1.2 BLQ (Below Limit of Quantification) Imputation
+
+**Implementation**: Via `blq_imputation_rule` parameter in `update_main_intervals()`
+
+**Supported Strategies**:
+
+1. **Position-based** (PKNCA default):
+   - `first`: How to handle BLQ at start of profile
+   - `middle`: How to handle BLQ in middle of profile
+   - `last`: How to handle BLQ at end of profile
+
+2. **Tmax-based**:
+   - `before.tmax`: BLQ before maximum concentration
+   - `after.tmax`: BLQ after maximum concentration
+
+**Options for each position**:
+
+- **Numeric value** (e.g., `0`, `LOQ/2`): Substitute BLQ with this value
+- `"drop"`: Exclude the BLQ value from calculations
+- `"keep"`: Use BLQ as 0
+
+**Example**:
+
+```r
+blq_rule <- list(
+  first = "0",        # Set first BLQ to 0
+  middle = "drop",    # Drop middle BLQ values
+  last = "keep"       # Keep last BLQ as 0
+)
+```
+
+## 4.2 BLQ (Below Limit of Quantification) Handling
+
+BLQ values are handled using position-based or Tmax-based strategies.
+
+**Position-based Options**:
+- `first`: Strategy for BLQ at profile start
+- `middle`: Strategy for BLQ in profile middle
+- `last`: Strategy for BLQ at profile end
+
+**For each position, you can choose**:
+- **Numeric value** (e.g., `0`, `LOQ/2`): Substitute BLQ with this value
+- `"drop"`: Exclude from calculations
+- `"keep"`: Treat as 0
+
+## 4.3 AUC Calculation Methods
+
+aNCA supports multiple AUC calculation methods via PKNCA. These methods control how the area under the concentration-time curve is calculated.
+
+### 4.3.1 Integration Methods (Between Concentrations)
+
+aNCA supports three methods for interpolating AUC between two concentration measurements:
+
+| Method | Interpolation Rules | Best For |
+|--------|-------------------|----------|
+| **Linear-up/log-down** (default) | Linear for rising, logarithmic for declining concentrations | Standard/exogenous substances with first-order elimination |
+| **Linear** | Linear trapezoidal rule for all segments | Endogenous substances or non-first-order elimination |
+| **Lin-log** | Linear before Tmax, logarithmic after Tmax | Infrequently used; specific modeling scenarios |
+
+**Details**:
+- **Linear-up/log-down**: Most commonly used in PK. Applies linear interpolation when concentrations increase or when either concentration is zero; uses log interpolation for declining concentrations.
+- **Linear**: Simplest method; uses linear trapezoidal rule throughout. Good for situations where first-order kinetics may not apply.
+- **Lin-log**: Uses linear interpolation before Tmax, logarithmic interpolation after Tmax.
+
+### 4.3.2 Extrapolation Methods (After Last Measurement)
+
+After the last measurable concentration (Tlast), AUC can be extrapolated using different approaches:
+
+| Method | Description | Use Case |
+|--------|-------------|----------|
+| **AUClast** | No extrapolation; extrapolated AUC = 0 | When full profile to negligible concentrations is available |
+| **AUCall** | Linear triangle from Tlast to zero | When Tlast is not the final measurement; interpolates missing data |
+| **AUCinf** | Extrapolates to infinity using: Clast/λz | When terminal elimination is well-characterized; common for regulatory submissions |
+
+**Important Note**: 
+- `aucinf.obs` uses **observed** Clast (last measured concentration)
+- `aucinf.pred` uses **predicted** Clast (extrapolated via regression)
+- High extrapolation percentage (>20%) may indicate poor terminal phase characterization
+
+### 4.3.3 AUC Types Available
+
+| Parameter | Description | Extrapolation | Formula |
+|-----------|-------------|---------------|---------|
+| `auclast` | AUC to last measurable concentration | None | Sum of trapezoids to Tlast |
+| `aucall` | AUC to infinity with linear extrapolation | Linear triangle | AUClast + triangle(Tlast→0) |
+| `aucinf.obs` | AUC to infinity (observed Clast) | Using Clast directly | AUClast + Clast/λz |
+| `aucinf.pred` | AUC to infinity (predicted Clast) | Using regression fit | AUClast + Ĉlast/λz |
+| `aucint` | Partial AUC over specified interval | User-defined | AUC(time1, time2) |
+
+---
+
+
+
+# 5. Running NCA
+
+The NCA workflow consists of five main steps executed through the aNCA interface.
+
+## Step-by-Step Workflow
+
+1. **Upload & Map Data**: Load your dataset and map columns to ADNCA format using the Data tab
+2. **Configure Settings**: Choose imputation methods, BLQ handling, and AUC calculation in the NCA Setup tab
+3. **Review Intervals**: Verify dose times and intervals are correctly identified
+4. **Run Analysis**: Click "Run NCA" to execute PKNCA calculations
+5. **Generate Outputs**: See all results in the `NCA results` tab and export them to a ZIP using the top-right button.
+
+## Main Functions Used
+
+The workflow is orchestrated internally by:
+
+- **Data Preparation**: `apply_mapping()`, `format_pkncaconc_data()`, `format_pkncadose_data()`
+- **Interval Creation**: `format_pkncadata_intervals()`, `update_main_intervals()`
+- **NCA Execution**: PKNCA's `PKNCAdata()` and `pk.nca()`
+- **Output Generation**: `export_cdisc()` for CDISC datasets, TLG generation functions
+
+---
+
+
+
+# 6. Results & Outputs
+
+All output files can be downloaded after running NCA. The export button is located in the top-right as `Save`.
+
+## Output Structure
+
+The output package includes:
+
+### Exploration Outputs
+- **Individual plots**: Subject-level concentration-time profiles
+- **Mean plots**: Mean ± SD/SE by treatment group
+
+### NCA Results
+- **nca_results**: Pivoted PKNCA results for all calculated parameters with units
+
+### CDISC Datasets
+- **PP**: Pharmacokinetic Parameters (standard CDISC/SDTMIG format)
+- **ADPP**: Analysis Dataset for PK Parameters (ADaM format)
+- **ADNCA**: Input data (adapted to user selections with standardizations)
+
+### Additional Analysis
+- **Matrix/specimen ratios**: Metabolite/parent ratios or cross-matrix comparisons
+- **Excretion results**: Urine/feces data if applicable
+
+### Extras
+- **R script**: Reproduces entire analysis starting from raw data
+- **Settings file**: Defines analysis specifications (can be re-uploaded to re-run)
+- **Results slides**: Presentation deck with Exploration outputs and parameter summaries
+
+## Output Formats
+- **Graphics and plots**: PNG or HTML
+- **Data tables**: CSV, XPT, or RDS
+- **Slide decks**: PPTX or QMD (renderable to HTML/PDF)
+
+## CDISC Dataset Derivation
+
+aNCA generates three CDISC-compliant output datasets:
+
+**PP (Pharmacokinetic Parameters)**:
+- Standard dataset containing calculated NCA parameters
+- Derivation: Extracts NCA results from PKNCA, translates to CDISC terms (`PPTESTCD`, `PPTEST`), reshapes to one row per subject-analyte-interval
+- Key columns: `PPTESTCD` (parameter code), `PPTEST` (parameter name), `PPSTRESN` (numeric result), `PPSTRESU` (unit), `PPSPEC` (specimen type)
+
+**ADPP (Analysis Dataset for Pharmacokinetic Parameters)**:
+- Analysis-ready version of PP with additional analysis variables
+- Derivation: Adds analysis flags (`ANLFL`, `ANL01FL`), grouping variables, treatment (`TRT01A`, `TRT01P`), and demographic variables (`AGE`, `SEX`, `RACE`)
+- Key addition: `AVAL` (analysis value, copy of `PPSTRESN`)
+
+**ADNCA (Input Dataset)**:
+- Input dataset maintained in output for traceability
+- Minimal modifications: standardized route, dose numbers assigned
+- Excluded records retained but marked
+- Purpose: Traceability and support for concentration-time plotting and re-analysis
+
+# 7. Half-Life Selection and Slope Selector
+
+## Automated Half-Life Calculation
+
+By default, PKNCA automatically selects the terminal elimination phase using the following algorithm:
+
+1. Omit all missing and BLQ concentrations. If the administration is an infusion, also omit all points during the infusion.
+2. Estimate the half-life for each set of points from the first concentration measure after Tmax to the third measure before Tlast.
+3. Select the best half-life expecting that:
+- The adjusted r-squared must be within a tolerance factor (typically 0.0001) of the largest adjusted r-squared.
+- The λz value (slope for the half-life line) must be positive; in other words, the half-life slope must be decreasing.
+- If multiple choices of points fit the above criteria, choose the one with the most concentration measurements included.
+
+
+**Reference**: [PKNCA Half-Life Calculation](https://billdenney.github.io/pknca/articles/Half-life.html)
+
+## Manual Slope Selection
+
+Users can override automatic selection using the **Slope Selector** tab in the NCA Setup.
+
+### Inclusion (Manual Slope Selection)
+
+**Purpose**: Specify exactly which points to use for half-life calculation
+
+**Method**:
+
+- **Via UI**: Click first and last points to include
+- **Via Table**: Enter subject, analyte, and RANGE (point indices)
+
+**Effect**:
+
+- Overrides PKNCA's automatic selection
+- Uses only the specified points for half-life regression
+- Requires at least 3 points
+
+**Implementation**:
+
+- Sets `is.included.hl = TRUE` for selected points
+- Uses PKNCA's `include_half.life` column
+- Function: PKNCA uses `PKNCAconc(..., include_half.life="include_half.life")`
+
+### Exclusion (Point Removal)
+
+**Purpose**: Remove outlier points from half-life calculation
+
+**Method**:
+
+- **Via UI**: Double-click points to exclude
+- **Via Table**: Enter subject, analyte, and RANGE
+
+**Effect**:
+
+- Removes specified points from half-life calculation
+- PKNCA recalculates using remaining points
+- Can exclude multiple points
+
+**Implementation**:
+
+- Sets `is.excluded.hl = TRUE` for excluded points
+- Uses PKNCA's `exclude_half.life` column
+- Function: PKNCA uses `PKNCAconc(..., exclude_half.life="exclude_half.life")`
+
+### Viewing Selections
+
+Results are shown in:
+
+- **Slopes Information** tab: Shows automatic and manual slope selections
+- **Manual Adjustments** tab: Lists user-made changes
+- **Slope plots**: Visual display of selected points
+
+---
+
+# 8. TLG (Tables, Listings, and Graphs) Framework
+
+Users can customize TLGs using widgets in the TLG tab:
+
+- **Titles and Footnotes**: Free text input
+- **Axis Labels**: Customizable with special syntax:
+  - `!COLUMN` references column label
+  - `$COLUMN` references column value
+- **Grouping Variables**: Select from available columns
+- **Statistical Options**: Choose statistics to display
+
+**Example**:
+
+```
+X-axis label: Time (!RRLTU)
+# Expands to: Time (hr) if RRLTU = "hr"
+Title: Study $STUDYID - !PARAM Analysis
+# Expands to: Study STUDY001 - Drug X Analysis
+```
+
+## TLG Generation Process
+
+1. **Order Details**: User selects desired TLGs
+2. **Parameter Selection**: For each TLG, specify options
+3. **Generation**: TLGs created using appropriate functions
+4. **Export**: Download as PDF, Word, or PowerPoint
+
+**Implementation**:
+
+- TLG templates defined in `inst/shiny/tlg_definitions/`
+- Generation functions in `R/` (e.g., `g_pkcg.R`, `l_pkcl01.R`)
+- Export handled by `{officer}` and `{flextable}`
+
+
+
+---
+
+# Key PKNCA Functions and Methods
+
+aNCA builds on PKNCA for core NCA calculations. Understanding PKNCA methods helps interpret results.
+
+## Data Object Creation
+
+| Function | Purpose | aNCA Wrapper |
+|----------|---------|--------------|
+| `PKNCA::PKNCAconc()` | Creates concentration object | `PKNCA_create_data_object()` |
+| `PKNCA::PKNCAdose()` | Creates dose object | `PKNCA_create_data_object()` |
+| `PKNCA::PKNCAdata()` | Combines conc + dose + intervals | `PKNCA_create_data_object()` |
+
+## NCA Calculations
+
+| Function | Parameter | aNCA Usage |
+|----------|-----------|------------|
+| `pk.calc.cmax()` | Maximum concentration | Automatic |
+| `pk.calc.tmax()` | Time of maximum | Automatic |
+| `pk.calc.auclast()` | AUC to last | Automatic |
+| `pk.calc.aucinf.obs()` | AUC to infinity | Automatic |
+| `pk.calc.half.life()` | Terminal half-life | Automatic + manual |
+| `pk.calc.cl.obs()` | Clearance | Automatic |
+| `pk.calc.vz.obs()` | Volume of distribution | Automatic |
+
+**Reference**: [PKNCA Function Reference](https://billdenney.github.io/pknca/reference/index.html)
+
+## NCA Execution
+
+```r
+# Simplified workflow
+pknca_data <- PKNCAdata(conc, dose, intervals)
+results <- pk.nca(pknca_data)
+```
+
+**aNCA Wrapper**: The NCA workflow is encapsulated in the app's "Run NCA" button, which internally calls `pk.nca()` with configured settings.
+
+---
+
+# 9. Troubleshooting & FAQ
+
+## Common Issues
+
+### Issue: "No intervals for data" error
+
+**Cause**: No valid NCA intervals were created from the dose and concentration data.
+
+**Solutions**:
+- Verify dose times are present in the data
+- Check that time variables (`AFRLT`, `ARRLT`) are properly mapped and numeric
+- Ensure at least some concentrations fall within expected intervals
+- Review dose-timepoint relationships for logical errors
+
+### Issue: "Too few points for half-life"
+
+**Cause**: Insufficient concentration measurements to calculate terminal slope.
+
+**Solutions**:
+- Increase number of concentration samples post-Tmax
+- Ensure adequate sampling in terminal phase (final 25% of profile)
+- Check BLQ handling - missing early concentrations may affect calculations
+- Consider manual slope selection if automatic selection fails
+
+### Issue: Half-life dependent parameters flagged
+
+**Cause**: Terminal slope calculation doesn't meet quality criteria (r² < 0.9, span ratio < 2, etc.).
+
+**Solutions**:
+- Use manual slope selection to override automatic selection
+- Review raw data for outliers or data quality issues
+- Consider alternative AUC methods that don't depend on half-life extrapolation
+- Check if BLQ handling is appropriate
+
+### Issue: High AUC extrapolation percentage
+
+**Cause**: Large portion of AUC from extrapolation beyond measured data.
+
+**Solutions**:
+- Extend follow-up sampling period if possible
+- Use observed Clast method instead of predicted
+- Review whether extrapolation assumption is valid
+- Consider flagging parameters if extrapolation exceeds acceptable thresholds
+
+## Understanding Result Flags
+
+aNCA automatically flags results based on predefined scientific rules to help identify potential data or calculation issues.
+
+**Half-Life Selection Flags** (indicates terminal slope quality):
+- `r.squared (R2) < 0.9`: Poor fit of terminal slope
+- `adj.r.squared < 0.8`: Poor adjusted fit of terminal slope
+- `span.ratio < 2`: Insufficient span of points for reliable estimation
+
+**AUC Extrapolation Flags** (indicates extrapolation beyond measured data):
+- `auc_extrap_pct_obs > 20%`: High extrapolation based on observed Clast
+- `auc_extrap_pct_pred > 20%`: High extrapolation based on predicted Clast
+
+Flagged parameters should be reviewed to determine if they're reliable for decision-making. Parameters dependent on flagged half-lives (e.g., AUCinf, clearance) will inherit those flags.
+
+## Where to Get Help
+
+- **GitHub Issues**: Report bugs or request features at https://github.com/pharmaverse/aNCA/issues
+- **Documentation**: See the [Get Started guide](aNCA.html) and [Background](background.html) vignette
+- **Community**: Join the Pharmaverse community for discussions
+
+---
+
+# 10. References & Resources
+
+## PKNCA Documentation
+
+- **Main Site**: https://billdenney.github.io/pknca/
+- **Half-Life Selection**: https://billdenney.github.io/pknca/articles/Half-life.html
+- **AUC Calculations**: https://billdenney.github.io/pknca/reference/pk.calc.auc.html
+- **Parameter Reference**: https://billdenney.github.io/pknca/reference/index.html#pk-parameters
+
+## CDISC Standards
+
+- **SDTMIG**: Study Data Tabulation Model Implementation Guide
+- **ADaMIG-ADNCA**: Analysis Data Model Implementation Guide
+- **ADNCA**: https://www.cdisc.org/standards/foundational/adam
+
+## Further Reading
+
+- Denney, W. S., Duvvuri, S., & Buckeridge, C. (2015). Simple, Automatic Noncompartmental Analysis: The PKNCA R Package. *Journal of Pharmacokinetics and Pharmacodynamics*, 42(1), 11-17. https://doi.org/10.1007/s10928-015-9432-2
+
+---
+
+# Glossary
+
+| Term | Definition |
+|------|------------|
+| **ADNCA** | Analysis Dataset for Non-Compartmental Analysis (CDISC format) |
+| **ADPP** | Analysis Dataset for Pharmacokinetic Parameters |
+| **AUC** | Area Under the Curve - measure of drug exposure |
+| **BLQ** | Below Limit of Quantification |
+| **CDISC** | Clinical Data Interchange Standards Consortium |
+| **Cmax** | Maximum observed concentration |
+| **Half-life (t½)** | Time for concentration to decrease by 50% |
+| **NCA** | Non-Compartmental Analysis |
+| **PKNCA** | R package for pharmacokinetic non-compartmental analysis |
+| **PP** | Pharmacokinetic Parameters domain |
+| **TLG** | Tables, Listings, and Graphs |
+| **Tmax** | Time of maximum concentration |
+| **λz** | Terminal elimination rate constant |
+
+---
+
+*For questions or issues, please visit the [GitHub repository](https://github.com/pharmaverse/aNCA/issues) or consult the [FAQ page](FAQs.html).*
