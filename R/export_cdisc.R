@@ -501,4 +501,3 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   data %>%
     select(-!!sym(nca_excl_colname))
 }
-
