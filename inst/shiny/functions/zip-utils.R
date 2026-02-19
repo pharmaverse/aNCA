@@ -422,8 +422,9 @@ prepare_export_files <- function(target_dir,
 
   for (folder in selected) {
     ds_name <- ds_name_map[[folder]]
-    if (ds_name %in% names(pre_specs)) {
+    if (ds_name %in% names(pre_specs) && nrow(pre_specs[[ds_name]]) > 0) {
       path <- file.path(target_dir, "CDISC", folder)
+      dir.create(path, recursive = TRUE, showWarnings = FALSE)
       file_path <- file.path(path, paste0("Pre_Specs_", ds_name, ".xlsx"))
       openxlsx2::write_xlsx(pre_specs[[ds_name]], file_path)
     }
