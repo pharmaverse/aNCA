@@ -146,6 +146,12 @@ Once you've made your choices you can download, save and inspect the visualizati
 
 <img src="images/get_started/exploration_options.gif" alt="Mapping"/ /width="100%">
 
+### Saving Plots to the Report
+
+Each exploration plot (Individual, Mean, and PK/Dose QC) has an **Add to Report** button in its sidebar. Clicking this button saves a snapshot of the current plot to the ZIP export. Saved plots are numbered incrementally (e.g., `individualplot1.png`, `individualplot2.png`) alongside the default plot (`individualplot.png`). The default plot always reflects the most recent view, while the numbered snapshots preserve the state at the time they were saved.
+
+When exporting the ZIP file, if both PNG and HTML formats are selected, each saved plot will be available in both formats.
+
 # Step 3: Run NCA
 
 Click on the *NCA* tab in the menu bar to switch to the next section.

@@ -67,7 +67,9 @@ save_output <- function(
       dir.create(file_name, recursive = TRUE)
     }
     x <- output[[name]]
-    is_obj_to_export <- is.null(obj_names) || name %in% obj_names
+    # Match exact name or numbered variants (e.g. "individualplot1" matches "individualplot")
+    is_obj_to_export <- is.null(obj_names) || name %in% obj_names ||
+      any(vapply(obj_names, function(n) grepl(paste0("^", n, "[0-9]+$"), name), logical(1)))
 
     if (inherits(x, "list")) {
       save_output(
@@ -426,7 +428,8 @@ prepare_export_files <- function(target_dir,
   fnames <- input$res_tree
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
-  fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
+  # Match exact names and numbered variants (e.g. individualplot1, meanplot2)
+  fnames_patt <- paste0("((", paste0(fnames, collapse = "[0-9]*)|(" ), "[0-9]*))")
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))

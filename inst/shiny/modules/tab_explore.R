@@ -35,18 +35,26 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Counters for incremented plot names in the ZIP export
+    indiv_counter <- reactiveVal(0L)
+    mean_counter <- reactiveVal(0L)
+    qc_counter <- reactiveVal(0L)
+
     # Initiate the sidebar server modules
-    individual_inputs <- plot_sidebar_server(
+    individual_sidebar <- plot_sidebar_server(
       "individual_sidebar",
       pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
 
-    mean_inputs <- plot_sidebar_server(
+    mean_sidebar <- plot_sidebar_server(
       "mean_sidebar",
       pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
+
+    individual_inputs <- individual_sidebar$inputs
+    mean_inputs <- mean_sidebar$inputs
 
     individualplot <- reactive({
       req(pknca_data(), individual_inputs()$color_by)
@@ -97,7 +105,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       )
     })
 
-    # Save the objects for the ZIP folder whenever they change
+    # Save the default objects for the ZIP folder whenever they change
     observe({
       req(individualplot(), meanplot())
       session$userData$results$exploration$individualplot <- individualplot()
@@ -110,6 +118,58 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       ggplotly(meanplot(), tooltip = "tooltip_text")
     })
 
-    pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data, extra_group_vars)
+    qc_plot_outputs <- pk_dose_qc_plot_server(
+      "pk_dose_qc_plot", pknca_data, extra_group_vars
+    )
+
+    # Save the default QC plot for the ZIP folder
+    observe({
+      req(qc_plot_outputs$current_plot())
+      session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
+    })
+
+    # --- Add to Report handlers ---
+
+    # Individual plot: save with incremented name
+    observeEvent(individual_sidebar$add_to_report(), {
+      req(individualplot())
+      n <- indiv_counter() + 1L
+      indiv_counter(n)
+      plot_name <- paste0("individualplot", n)
+      session$userData$results$exploration[[plot_name]] <- individualplot()
+      showNotification(
+        paste0("Individual plot saved as ", plot_name),
+        type = "message", duration = 3
+      )
+      log_info("Saved exploration plot: {plot_name}")
+    })
+
+    # Mean plot: save with incremented name
+    observeEvent(mean_sidebar$add_to_report(), {
+      req(meanplot())
+      n <- mean_counter() + 1L
+      mean_counter(n)
+      plot_name <- paste0("meanplot", n)
+      session$userData$results$exploration[[plot_name]] <- meanplot()
+      showNotification(
+        paste0("Mean plot saved as ", plot_name),
+        type = "message", duration = 3
+      )
+      log_info("Saved exploration plot: {plot_name}")
+    })
+
+    # QC plot: save with incremented name
+    observeEvent(qc_plot_outputs$add_to_report(), {
+      req(qc_plot_outputs$current_plot())
+      n <- qc_counter() + 1L
+      qc_counter(n)
+      plot_name <- paste0("qcplot", n)
+      session$userData$results$exploration[[plot_name]] <- qc_plot_outputs$current_plot()
+      showNotification(
+        paste0("QC plot saved as ", plot_name),
+        type = "message", duration = 3
+      )
+      log_info("Saved exploration plot: {plot_name}")
+    })
   })
 }
