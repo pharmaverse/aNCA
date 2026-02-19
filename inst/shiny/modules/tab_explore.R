@@ -7,7 +7,7 @@ tab_explore_ui <- function(id) {
 
   navset_card_pill(
     id = "visuals",
-    height = "75vh",
+    height = "90vh",
     full_screen = TRUE,
     nav_panel(
       "Individual Plots",
