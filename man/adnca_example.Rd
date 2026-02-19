@@ -51,7 +51,7 @@ adnca_example
 A pharmacokinetic concentration-time dataset containing multiple dose administration data
 with specimen types (SERUM and URINE), dosing information, and subject demographics.
 This is an example dataset for demonstrating pharmacokinetic analysis workflows.
-It follows the ADAMIG-ADNCA v1.0 structure.
+It follows the ADaMIG-ADNCA v1.0 structure.
 }
 \details{
 This dataset contains pharmacokinetic data from a single subject (S1-01) receiving

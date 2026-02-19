@@ -67,7 +67,7 @@
 #' A pharmacokinetic concentration-time dataset containing multiple dose administration data
 #' with specimen types (SERUM and URINE), dosing information, and subject demographics.
 #' This is an example dataset for demonstrating pharmacokinetic analysis workflows.
-#' It follows the ADAMIG-ADNCA v1.0 structure.
+#' It follows the ADaMIG-ADNCA v1.0 structure.
 #'
 #' @format A data frame with 76 rows and 32 variables:
 #' \describe{
