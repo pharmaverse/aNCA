@@ -64,11 +64,11 @@ The sample identifiers help define what records are used for NCA calculations. A
 
 ### Additional Optional Variables
 
-- |AEFRLT-AFRLT| is useful for the PK excretion parameters that need to consider the duration of sample collection to calculate rates or total amounts.
-- |ADOSEDUR| is used to determine the appropriate start imputation for missing C₀ values in intravascular doses (IV). The automatic half-life determined by PKNCA may also change based on the duration of the infusion for superior accuracy. If not provided, aNCA assumes all doses are bolus (`ADOSEDUR = 0`) and applies the corresponding imputation rules.
+- `AEFRLT` and `AFRLT` are useful for the PK excretion parameters that need to consider the duration of sample collection to calculate rates or total amounts.
+- `ADOSEDUR` is used to determine the appropriate start imputation for missing C₀ values in intravascular doses (IV). The automatic half-life determined by PKNCA may also change based on the duration of the infusion for superior accuracy. If not provided, aNCA assumes all doses are bolus (`ADOSEDUR = 0`) and applies the corresponding imputation rules.
 - `VOLUME` is used for excretion studies to calculate the total amount excreted in urine or feces. It can also be used to calculate the excretion rate if the sample collection duration is provided (via `AEFRLT`).
 - `WTBL` is used for excretion studies to calculate dose-normalized parameters based on body weight.
-- `TRTRINT` is the common known as Tau (τ) used for the last dose of a subject/treatment (e.g., `start + TRTRINT`). If not provided, aNCA will guess the dosing interval based on the exact actual dose times, applying uneven intervals if necessary.
+- `TRTRINT` is commonly known as Tau (τ) and is used for the last dose of a subject/treatment (e.g., `start + TRTRINT`). If not provided, aNCA will guess the dosing interval based on the exact actual dose times, applying uneven intervals if necessary.
 - `METABFL` is used to flag records that represent metabolites. This allows users to easily identify and analyze metabolite data separately from parent drug data to compute metabolite-ratio operations. Additionally, it will also be considered for the start imputation rules, where metabolites will be imputed to `C0 = 0` for first doses regardless of the route of administration or the availability of dose duration information.
 
 | Variable | Label | Description | Use Case |
@@ -87,7 +87,7 @@ The sample identifiers help define what records are used for NCA calculations. A
 
 The dose variables describe the treatment administration information necessary for NCA calculations.
 
-- `DOSETRT` help us identify different treatments even if they happen within the same subject.
+- `DOSETRT` helps us identify different treatments even if they happen within the same subject.
 - `ROUTE` is used to derive the PKNCA route variable (intravascular, extravascular). This, together with the dose duration (`ADOSEDUR`), helps determine the appropriate start imputations for missing C₀ values.
 - `DOSEA` is used for dose normalization of parameters like Cmax and AUC if the user selects that option or the `...DN` parameters, apart from other parameters that are always dose-normalized (e.g., clearance).
 
@@ -480,8 +480,6 @@ Results are shown in:
 
 ---
 
----
-
 # 8. TLG (Tables, Listings, and Graphs) Framework
 
 Users can customize TLGs using widgets in the TLG tab:
@@ -642,9 +640,6 @@ Flagged parameters should be reviewed to determine if they're reliable for decis
 ## Further Reading
 
 - Denney, W. S., Duvvuri, S., & Buckeridge, C. (2015). Simple, Automatic Noncompartmental Analysis: The PKNCA R Package. *Journal of Pharmacokinetics and Pharmacodynamics*, 42(1), 11-17. https://doi.org/10.1007/s10928-015-9432-2
-
----
-
 
 ---
 
