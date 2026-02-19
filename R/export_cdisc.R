@@ -501,3 +501,25 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   data %>%
     select(-!!sym(nca_excl_colname))
 }
+
+#' Generate Pre-Specifications for CDISC Datasets
+#'
+#' Extracts variable-level metadata from `metadata_nca_variables` for the
+#' requested CDISC datasets (ADNCA, ADPP, PP).
+#'
+#' @param datasets Character vector of dataset names to generate specs for.
+#'   Defaults to `c("ADNCA", "ADPP", "PP")`.
+#'
+#' @returns A named list of data frames, one per dataset, each containing
+#'   columns: Dataset, Order, Variable, Label, Type, Role, Core.
+#'
+#' @export
+generate_pre_specs <- function(datasets = c("ADNCA", "ADPP", "PP")) {
+  spec_cols <- c("Dataset", "Order", "Variable", "Label", "Type", "Role", "Core")
+
+  metadata_nca_variables %>%
+    filter(Dataset %in% datasets) %>%
+    select(all_of(spec_cols)) %>%
+    arrange(Dataset, Order) %>%
+    split(.[["Dataset"]])
+}

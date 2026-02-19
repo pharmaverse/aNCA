@@ -583,3 +583,40 @@ describe(".get_subjid", {
     expect_true(all(is.na(result)))
   })
 })
+
+describe("generate_pre_specs", {
+  it("returns a named list with one entry per requested dataset", {
+    result <- generate_pre_specs(c("ADNCA", "ADPP", "PP"))
+    expect_type(result, "list")
+    expect_named(result, c("ADNCA", "ADPP", "PP"))
+  })
+
+  it("each entry contains exactly the 7 specification columns", {
+    result <- generate_pre_specs()
+    expected_cols <- c("Dataset", "Order", "Variable", "Label", "Type", "Role", "Core")
+    for (ds in names(result)) {
+      expect_named(result[[ds]], expected_cols)
+    }
+  })
+
+  it("rows are sorted by Order within each dataset", {
+    result <- generate_pre_specs()
+    for (ds in names(result)) {
+      orders <- result[[ds]]$Order
+      expect_equal(orders, sort(orders))
+    }
+  })
+
+  it("filters to only the requested datasets", {
+    result <- generate_pre_specs("ADPP")
+    expect_named(result, "ADPP")
+    expect_true(all(result$ADPP$Dataset == "ADPP"))
+  })
+
+  it("returns non-empty data frames for each dataset", {
+    result <- generate_pre_specs()
+    for (ds in names(result)) {
+      expect_gt(nrow(result[[ds]]), 0)
+    }
+  })
+})

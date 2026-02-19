@@ -328,6 +328,13 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.6)
 
+  # Export pre-specification files for CDISC datasets
+  if (any(c("pp", "adpp", "adnca") %in% input$res_tree)) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving CDISC pre-specifications...")
+    .export_pre_specs(target_dir)
+  }
+
   data_tmpdir <- file.path(target_dir, "data")
   dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
   saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
@@ -397,6 +404,21 @@ prepare_export_files <- function(target_dir,
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
 
+#' Helper to export pre-specification xlsx files for CDISC datasets
+#' @param target_dir Target directory to save the pre-specs
+#' @keywords internal
+#' @noRd
+.export_pre_specs <- function(target_dir) {
+  path <- file.path(target_dir, "CDISC")
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+
+  pre_specs <- generate_pre_specs(c("ADNCA", "ADPP", "PP"))
+  for (ds_name in names(pre_specs)) {
+    file_path <- file.path(path, paste0("Pre_Specs_", ds_name, ".xlsx"))
+    openxlsx2::write_xlsx(pre_specs[[ds_name]], file_path)
+  }
+}
+
 #' Helper to export R script
 #' @param target_dir Target directory to save the R script
 #' @param session Shiny session object
@@ -430,6 +452,7 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
+  files_req <- c(files_req, grep("Pre_Specs_.*\\.xlsx$", all_files, value = TRUE))
   file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
