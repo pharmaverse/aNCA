@@ -147,7 +147,7 @@ exploration_meanplot <- function(
   use_time_since_last_dose = FALSE,
   x_limits = NULL,
   y_limits = NULL,
-  linetype = "default"
+  line_type = "default"
 ) {
 
   mean_data <- process_data_mean(
@@ -160,7 +160,7 @@ exploration_meanplot <- function(
     dose_normalize = FALSE
   )
 
-  if (linetype %in% c("dose-normalized", "both")) {
+  if (line_type != "default") {
     mean_data_dn <- process_data_mean(
       pknca_data = pknca_data,
       extra_grouping_vars = c(color_by, facet_by),
@@ -173,8 +173,8 @@ exploration_meanplot <- function(
     mean_data_dn$line_type_label <- "Dose-normalized"
     mean_data$line_type_label <- "default"
     mean_data <- dplyr::bind_rows(mean_data, mean_data_dn)
-    color_by <- c(color_by, "line_type_label")
-    if (linetype == "dose-normalized") {
+
+    if (line_type == "dose-normalized") {
       mean_data <- mean_data %>% filter(line_type_label == "Dose-normalized")
     }
   }
@@ -207,7 +207,8 @@ exploration_meanplot <- function(
     palette = palette,
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
-    vline_var = if (show_dose) "TIME_DOSE" else NULL
+    vline_var = if (show_dose) "TIME_DOSE" else NULL,
+    linetype_by = if (line_type != "default") "line_type_label" else NULL
   )
 
   # If there is no mean data, just return the plot

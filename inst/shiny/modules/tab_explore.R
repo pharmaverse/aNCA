@@ -94,8 +94,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         y_limits = mean_inputs()$y_limits,
         threshold_value = mean_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
-        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
-        #line_type = mean_inputs()$y_axis_values
+        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
+        line_type = mean_inputs()$y_axis_values
       )
     })
 
