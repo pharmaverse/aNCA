@@ -7,7 +7,6 @@ AEFRLT
 AFRLT
 ARRLT
 ATPTREF
-AUCLST
 AUCPEO
 AUCPEP
 AUCall
@@ -24,7 +23,6 @@ CDISC
 CMAX
 Clast
 Cmax
-Conc
 Cond
 Customizable
 DOSEA
@@ -67,7 +65,6 @@ PKNCAresult
 PKNCAresults
 PPORRES
 PPSTRES
-PPSTRESN
 PPSTRESU
 PPTEST
 PPTESTCD
@@ -115,6 +112,7 @@ WTBL
 WTBLU
 XPT
 YAML
+aNCA's
 amountu
 analysing
 analyte
@@ -174,6 +172,7 @@ runnable
 signif
 src
 standardizations
+th
 tibble
 tidyverse
 timeframe
