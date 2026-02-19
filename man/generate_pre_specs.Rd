@@ -17,7 +17,7 @@ in the corresponding data frame.}
 }
 \value{
 A named list of data frames, one per dataset, each containing
-  columns: Dataset, Order, Variable, Label, Type, Role, Core, Length.
+columns: Dataset, Order, Variable, Label, Type, Role, Core, Length.
 }
 \description{
 Extracts variable-level metadata from \code{metadata_nca_variables} for the
