@@ -128,10 +128,9 @@ settings:
       - Multiple IV Infusion
       - Multiple IV Infusion
 slope_rules:
-  manual_slopes:
-    USUBJID: []
-    ATPTREF: []
-    DOSNOA: []
-    TYPE: []
-    RANGE: []
-    REASON: []
+  USUBJID: []
+  ATPTREF: []
+  DOSNOA: []
+  TYPE: []
+  RANGE: []
+  REASON: []
