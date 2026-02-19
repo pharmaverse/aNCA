@@ -304,10 +304,6 @@ div[data-value="Settings"] > div.row a {
   --_sidebar-width: 170px !important;
 }
 
-.exploration-plots .bslib-sidebar-layout {
-  --_sidebar-width: 375px !important;
-}
-
 .sidebar .sidebar-content {
   padding-left: 0 !important;
   padding-right: 0 !important;

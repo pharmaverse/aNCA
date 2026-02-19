@@ -5,7 +5,6 @@
 tab_explore_ui <- function(id) {
   ns <- NS(id)
 
-  div(class = "exploration-plots",
   navset_card_pill(
     id = "visuals",
     height = "90vh",
@@ -30,7 +29,6 @@ tab_explore_ui <- function(id) {
       "PK/Dose QC Plot",
       pk_dose_qc_plot_ui(ns("pk_dose_qc_plot"))
     )
-  )
   )
 }
 
