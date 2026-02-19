@@ -192,15 +192,15 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
 
       is_individual <- "usubjid" %in% names(input)
 
-      # Default color_by: USUBJID for individual plots, first available
-      # grouping variable from the priority list for mean plots
+      # Default color_by: USUBJID for individual plots, all available
+      # variables from the priority list for mean plots
       default_color <- if (is_individual) {
         subject_col
       } else {
         color_priority <- c("DOSETRT", "PCSPEC", "DOSEA", "DOSEU", "TRT01A",
                             "GROUP", "ACTARM", "COHORT", "PERIOD", "PART")
         available_color <- intersect(color_priority, full_grouping_vars)
-        if (length(available_color) > 0) available_color[1] else dose_col
+        if (length(available_color) > 0) available_color else dose_col
       }
 
       updatePickerInput(
