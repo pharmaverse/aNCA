@@ -17,6 +17,7 @@ pk_dose_qc_plot_ui <- function(id) {
     sidebar = sidebar(
       position = "right",
       open = TRUE,
+      width = 375,
       pickerInput(
         inputId = ns("group_var"),
         label = "Choose the variables to group by:",

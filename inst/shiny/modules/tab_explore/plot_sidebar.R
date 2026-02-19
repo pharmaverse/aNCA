@@ -11,6 +11,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   sidebar(
     position = "right",
     open = TRUE,
+    width = 375,
     selectInput(
       ns("palette"),
       "Select Color Theme:",
