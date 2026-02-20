@@ -40,6 +40,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     mean_counter <- reactiveVal(0L)
     qc_counter <- reactiveVal(0L)
 
+    # Track custom plot names for export matching
+    session$userData$exploration_custom_names <- character(0)
+
     # Initiate the sidebar server modules
     individual_sidebar <- plot_sidebar_server(
       "individual_sidebar",
@@ -159,50 +162,49 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       ))
     }
 
-    # Individual plot button
+    # Individual plot button — show modal without incrementing counter
     observeEvent(individual_sidebar$add_to_report(), {
       req(individualplot())
-      n <- indiv_counter() + 1L
-      indiv_counter(n)
       pending_plot_type("individual")
-      .show_report_modal(paste0("individualplot", n))
+      .show_report_modal(paste0("individualplot", indiv_counter() + 1L))
     })
 
     # Mean plot button
     observeEvent(mean_sidebar$add_to_report(), {
       req(meanplot())
-      n <- mean_counter() + 1L
-      mean_counter(n)
       pending_plot_type("mean")
-      .show_report_modal(paste0("meanplot", n))
+      .show_report_modal(paste0("meanplot", mean_counter() + 1L))
     })
 
     # QC plot button
     observeEvent(qc_plot_outputs$add_to_report(), {
       req(qc_plot_outputs$current_plot())
-      n <- qc_counter() + 1L
-      qc_counter(n)
       pending_plot_type("qc")
-      .show_report_modal(paste0("qcplot", n))
+      .show_report_modal(paste0("qcplot", qc_counter() + 1L))
     })
 
-    # Confirm save from modal
+    # Confirm save from modal — increment counter only on actual save
     observeEvent(input$confirm_add_to_report, {
       plot_name <- gsub("[^A-Za-z0-9_-]", "_", input$report_plot_name)
       req(nzchar(plot_name))
 
-      plot_obj <- switch(pending_plot_type(),
+      type <- pending_plot_type()
+      plot_obj <- switch(type,
         individual = individualplot(),
         mean = meanplot(),
         qc = qc_plot_outputs$current_plot()
       )
       req(plot_obj)
 
+      # Increment counter only after confirmed save
+      if (type == "individual") indiv_counter(indiv_counter() + 1L)
+      else if (type == "mean") mean_counter(mean_counter() + 1L)
+      else if (type == "qc") qc_counter(qc_counter() + 1L)
+
       session$userData$results$exploration[[plot_name]] <- plot_obj
-      # Track custom names for export matching
-      custom <- session$userData$exploration_custom_names
-      if (is.null(custom)) custom <- character(0)
-      session$userData$exploration_custom_names <- unique(c(custom, plot_name))
+      session$userData$exploration_custom_names <- unique(
+        c(session$userData$exploration_custom_names, plot_name)
+      )
       removeModal()
       showNotification(
         paste0("Plot saved as '", plot_name, "'"),
