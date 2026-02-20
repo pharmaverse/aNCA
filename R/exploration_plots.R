@@ -149,18 +149,11 @@ exploration_meanplot <- function(
       color_by
     ))
   }
-  # Build the y-axis label from the original concentration variable
-  conc_col <- pknca_data$conc$columns$concentration
-  conc_unit_col <- pknca_data$conc$columns$concu
-  conc_label <- get_label(conc_col, labels_df = labels_df)
-  conc_unit <- if (!is.null(conc_unit_col) && conc_unit_col %in% names(mean_data)) {
-    paste0(unique(mean_data[[conc_unit_col]]), collapse = ", ")
-  }
 
   plot <- g_lineplot(
-    data = mean_data,
+    data = mean_data %>% dplyr::rename(AVAL = Mean),
     x_var = x_var,
-    y_var = "Mean",
+    y_var = "AVAL",
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
@@ -178,13 +171,6 @@ exploration_meanplot <- function(
     show_legend = show_legend
   )
 
-  # Override y label: "Mean Analysis Value [unit]" instead of "Mean [unit]"
-  y_lab <- if (!is.null(conc_unit)) {
-    paste0("Mean ", conc_label, " [", conc_unit, "]")
-  } else {
-    paste0("Mean ", conc_label)
-  }
-  plot <- plot + ggplot2::labs(y = y_lab)
   # If there is no mean data, just return the plot
   if (nrow(mean_data) == 0) {
     return(plot)
@@ -198,7 +184,7 @@ exploration_meanplot <- function(
     ci = ci,
     color_by = color_by,
     x_var = x_var,
-    y_var = "Mean"
+    y_var = "AVAL"
   )
 }
 
@@ -415,7 +401,7 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
   plot +
     labs(
       x = paste(plot_build$plot$labels$x),
-      y = paste(plot_build$plot$labels$y),
+      y = paste0("Mean ", plot_build$plot$labels$y),
       title = paste0("Mean ", plot_build$plot$labels$title)
     ) +
     list(
