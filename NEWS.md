@@ -2,8 +2,10 @@
 
 ## Features added
 
-* Mean exploration plots auto-select default color and facet variables from a priority list (TRT01A, GROUP, ACTARM, COHORT, dose column) (#654)
-* COHORT, PART, PERIOD added as auto-mapped grouping variable alternatives (#654)
+* Mean exploration plots auto-select default color and facet variables from a priority list (TRT01A, GROUP, ACTARM, COHORT, dose column) (#1001)
+* COHORT, PART, PERIOD added as auto-mapped grouping variable alternatives (#1001)
+* Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
+* Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 * R script exported in ZIP folder to re-run and replicate App outputs (#789)
@@ -24,7 +26,7 @@
 * Slope selector table for half life adjustments uses time to choose the point of interest. Also it is aesthetics have been polished (#956)
 * Partial interval parameters section now allows other calculations than `AUCINT`, such as `RCAMINT`, `AUCINTD` or `CAVGINT` among others (#524)
 * Slope selector plots count with grouping options (#333)
-* Add x/y axis limits for the exploration plots (#817)
+* Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
