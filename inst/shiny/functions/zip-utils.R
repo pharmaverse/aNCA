@@ -334,21 +334,27 @@ prepare_export_files <- function(target_dir,
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
-  # Include custom exploration plot names only if their base type is selected
-  custom_names <- session$userData$exploration_custom_names
-  selected_bases <- intersect(
-    c("individualplot", "meanplot", "qcplot"), input$res_tree
-  )
-  custom_names <- custom_names[vapply(custom_names, function(nm) {
+  # Filter custom exploration plots: only keep those whose base type is selected
+  all_custom <- session$userData$exploration_custom_names
+  exploration_bases <- c("individualplot", "meanplot", "qcplot")
+  selected_bases <- intersect(exploration_bases, input$res_tree)
+  custom_names <- all_custom[vapply(all_custom, function(nm) {
     any(vapply(selected_bases, function(b) {
       nm == b || grepl(paste0("^", b, "[0-9]+$"), nm)
     }, logical(1)))
   }, logical(1))]
   obj_names <- unique(c(input$res_tree, custom_names))
 
-  # Drop default exploration plots when custom variants exist
+  # Remove deselected exploration plots (default + custom) from the results
   results <- session$userData$results
   if (!is.null(results$exploration)) {
+    deselected_bases <- setdiff(exploration_bases, input$res_tree)
+    for (nm in names(results$exploration)) {
+      is_deselected <- any(vapply(deselected_bases, function(b) {
+        nm == b || grepl(paste0("^", b, "[0-9]+$"), nm)
+      }, logical(1)))
+      if (is_deselected) results$exploration[[nm]] <- NULL
+    }
     results$exploration <- .drop_defaults_with_custom(
       results$exploration, custom_names
     )
