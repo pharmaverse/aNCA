@@ -446,7 +446,11 @@ prepare_export_files <- function(target_dir,
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
   # Match exact names and numbered variants (e.g. individualplot1, meanplot2)
-  fnames_patt <- paste0("((", paste0(fnames, collapse = "[0-9]*)|("), "[0-9]*))")
+  fnames_patt <- paste0(
+    "((",
+    paste0(fnames, collapse = "([0-9]+)?)|("),
+    "([0-9]+)?))"
+  )
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))

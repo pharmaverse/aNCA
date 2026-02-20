@@ -181,11 +181,13 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       subj_col <- pknca_data()$conc$columns$subject
 
       # Adjust height based on number of subjects and groups
-      height_adjust <- 200 + 20 * filtered_data()$dose %>%
+      n_max <- filtered_data()$dose %>%
         group_by(across(all_of(input$group_var))) %>%
         summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop") %>%
         pull(n) %>%
-        max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
+        max(na.rm = TRUE)
+      n_groups <- length(unique(filtered_data()$dose[, input$group_var]))
+      height_adjust <- 200 + 20 * n_max * n_groups
 
       p <- qc_ggplot()
       ggplotly(p, tooltip = "text", height = max(c(1000, height_adjust))) %>%
