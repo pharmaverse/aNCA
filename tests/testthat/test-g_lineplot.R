@@ -126,7 +126,7 @@ describe("g_lineplot: structure and arguments", {
   it("adds facet labels with subject counts", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       facet_by = "PARAM"
@@ -142,7 +142,7 @@ describe("g_lineplot: structure and arguments", {
 
     p <- g_lineplot(
       data = mean_data_with_count,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "Mean",
       color_by = "color_var",
       facet_by = "PARAM",
@@ -254,7 +254,7 @@ describe("g_lineplot: Tooltips", {
   it("applies x and y limits", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       x_limits = c(1, 8),
