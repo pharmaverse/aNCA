@@ -351,7 +351,8 @@ base::local({
                                    exclude_half.life = "exclude_half.life",
                                    include_half.life = "include_half.life"),
       data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
-                                   route = "ROUTE", duration = "ADOSEDUR"),
+                                   route = "ROUTE", duration = "ADOSEDUR",
+                                   doseu = "DOSEU"),
       units = units_table
     ),
     warning = function(w) {

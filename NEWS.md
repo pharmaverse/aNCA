@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Exploration plots: toggle legend visibility, auto-hide legend when >30 colors, improved tooltips with color-by variable, and correct axis/legend labels (#762)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 * R script exported in ZIP folder to re-run and replicate App outputs (#789)

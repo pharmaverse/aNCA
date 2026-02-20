@@ -56,6 +56,10 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADNCA
 #'
 #' @export
 get_label <- function(variable, type = "ADNCA", labels_df = metadata_nca_variables) {
+  if (is.null(labels_df) || nrow(labels_df) == 0) {
+    return(variable)
+  }
+
   translate_terms(
     variable,
     "Variable",
