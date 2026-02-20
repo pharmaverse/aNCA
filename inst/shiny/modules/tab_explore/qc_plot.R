@@ -17,8 +17,8 @@ pk_dose_qc_plot_ui <- function(id) {
       position = "right",
       open = TRUE,
       actionButton(
-        ns("add_to_report"),
-        label = "Add to Report",
+        ns("add_to_exports"),
+        label = "Add to Exports",
         icon = icon("plus"),
         class = "btn btn-primary btn-sm",
         width = "100%"
@@ -197,9 +197,9 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         )
     })
 
-    # Return the add_to_report button click and the current plot
+    # Return the add_to_exports button click and the current plot
     list(
-      add_to_report = reactive(input$add_to_report),
+      add_to_exports = reactive(input$add_to_exports),
       current_plot = qc_ggplot
     )
   })

@@ -2,7 +2,7 @@
 
 ## Features added
 
-* Exploration plots: "Add to Report" button saves named plot snapshots to the ZIP export. QC plot also included in the export tree (#952)
+* Exploration plots: "Add to Exports" button saves named plot snapshots to the ZIP export. QC plot also included in the export tree (#952)
 * ZIP export: files are now saved directly in their category folder (e.g. `exploration/individualplot.png`) instead of a redundant subfolder (`exploration/individualplot/individualplot.png`) (#952)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)

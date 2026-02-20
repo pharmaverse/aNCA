@@ -142,19 +142,19 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
     })
 
-    # --- Add to Report handlers ---
+    # --- Add to Exports handlers ---
 
     # Track which plot type triggered the modal
     pending_plot_type <- reactiveVal(NULL)
 
     # Show modal with filename input
-    .show_report_modal <- function(default_name) {
+    .show_export_modal <- function(default_name) {
       showModal(modalDialog(
-        title = "Add to Report",
-        textInput(ns("report_plot_name"), "Plot name:", value = default_name),
+        title = "Add to Exports",
+        textInput(ns("export_plot_name"), "Plot name:", value = default_name),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton(ns("confirm_add_to_report"), "Save",
+          actionButton(ns("confirm_add_to_exports"), "Save",
                        class = "btn btn-primary")
         ),
         size = "s",
@@ -162,30 +162,30 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       ))
     }
 
-    # Individual plot button — show modal without incrementing counter
-    observeEvent(individual_sidebar$add_to_report(), {
+    # Individual plot button
+    observeEvent(individual_sidebar$add_to_exports(), {
       req(individualplot())
       pending_plot_type("individual")
-      .show_report_modal(paste0("individualplot", indiv_counter() + 1L))
+      .show_export_modal(paste0("individualplot", indiv_counter() + 1L))
     })
 
     # Mean plot button
-    observeEvent(mean_sidebar$add_to_report(), {
+    observeEvent(mean_sidebar$add_to_exports(), {
       req(meanplot())
       pending_plot_type("mean")
-      .show_report_modal(paste0("meanplot", mean_counter() + 1L))
+      .show_export_modal(paste0("meanplot", mean_counter() + 1L))
     })
 
     # QC plot button
-    observeEvent(qc_plot_outputs$add_to_report(), {
+    observeEvent(qc_plot_outputs$add_to_exports(), {
       req(qc_plot_outputs$current_plot())
       pending_plot_type("qc")
-      .show_report_modal(paste0("qcplot", qc_counter() + 1L))
+      .show_export_modal(paste0("qcplot", qc_counter() + 1L))
     })
 
     # Confirm save from modal — increment counter only on actual save
-    observeEvent(input$confirm_add_to_report, {
-      plot_name <- gsub("[^A-Za-z0-9_-]", "_", input$report_plot_name)
+    observeEvent(input$confirm_add_to_exports, {
+      plot_name <- gsub("[^A-Za-z0-9_-]", "_", input$export_plot_name)
       req(nzchar(plot_name))
 
       type <- pending_plot_type()

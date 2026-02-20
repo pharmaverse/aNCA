@@ -12,8 +12,8 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     position = "right",
     open = TRUE,
     actionButton(
-      ns("add_to_report"),
-      label = "Add to Report",
+      ns("add_to_exports"),
+      label = "Add to Exports",
       icon = icon("plus"),
       class = "btn btn-primary btn-sm",
       width = "100%"
@@ -253,7 +253,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
           use_time_since_last_dose = input$timescale == "By Dose Profile"
         )
       }),
-      add_to_report = reactive(input$add_to_report)
+      add_to_exports = reactive(input$add_to_exports)
     )
   })
 }
