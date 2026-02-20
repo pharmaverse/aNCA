@@ -129,7 +129,8 @@ describe("g_lineplot: structure and arguments", {
       x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
-      facet_by = "PARAM"
+      facet_by = "PARAM",
+      facet_count_n = "USUBJID"
     )
     expect_true("facet_label" %in% names(p$data))
     expect_true(any(grepl("PARAM: Analyte1", unique(p$data$facet_label))))

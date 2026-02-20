@@ -102,7 +102,7 @@ describe("process_data_mean functions correctly", {
       filtering_list = filter_param_pcspec,
       extra_grouping_vars = "ATPTREF"
     )
-    expect_true("Mean_concentration" %in% names(p))
+    expect_true("Mean" %in% names(p))
     expect_true("ATPTREF" %in% names(p))
   })
 
@@ -153,7 +153,7 @@ describe("process_data_mean functions correctly", {
       pknca_data = pknca_zero_data,
       ylog_scale = TRUE
     )
-    expect_true(all(p$Mean_concentration > 0))
+    expect_true(all(p$Mean > 0))
   })
 
   it("time variable used is always in the first column output", {
@@ -275,7 +275,7 @@ describe("exploration_meanplot:", {
     )
     expect_s3_class(p, "ggplot")
     expect_match(p$labels$title, "^Mean ")
-    expect_true(grepl("Mean_concentration", p$labels$y))
+    expect_true(grepl("Mean Analysis Value", p$labels$y))
     expect_true(grepl("Nom. Rel. Time", p$labels$x))
     expect_equal(p$labels$colour, "Parameter")
   })
@@ -299,7 +299,7 @@ describe("exploration_meanplot:", {
     )
     expect_s3_class(p, "ggplot")
     expect_true(grepl("Mean ", p$labels$title))
-    expect_true(grepl("Mean_concentration", p$labels$y))
+    expect_true(grepl("Mean Analysis Value", p$labels$y))
     expect_true(grepl("Nom. Rel. Time", p$labels$x))
     expect_equal(p$labels$colour, "Parameter")
   })
