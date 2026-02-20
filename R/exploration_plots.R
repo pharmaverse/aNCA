@@ -62,15 +62,6 @@ exploration_individualplot <- function(
       color_by
     ))
   }
-  # Define labels
-  if (!is.null(labels_df))
-    color_labels <- vapply(
-      color_by,
-      function(x) get_label(variable = x, labels_df = labels_df),
-      FUN.VALUE = character(1)
-    )
-  else
-    color_labels <- color_by
   plt <- g_lineplot(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
@@ -78,7 +69,6 @@ exploration_individualplot <- function(
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
-    color_labels = color_labels,
     facet_by = facet_by,
     group_by = pknca_data$conc$columns$subject,
     x_limits = x_limits,
@@ -154,15 +144,6 @@ exploration_meanplot <- function(
       color_by
     ))
   }
-  # Define labels
-  if (!is.null(labels_df))
-    color_labels <- vapply(
-      color_by,
-      function(x) get_label(variable = x, labels_df = labels_df),
-      FUN.VALUE = character(1)
-    )
-  else
-    color_labels <- color_by
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
@@ -170,7 +151,6 @@ exploration_meanplot <- function(
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
-    color_labels = color_labels,
     facet_by = facet_by,
     group_by = color_by,
     x_limits = x_limits,
@@ -180,12 +160,9 @@ exploration_meanplot <- function(
     palette = palette,
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
-    vline_var = if (show_dose) "TIME_DOSE" else NULL
+    vline_var = if (show_dose) "TIME_DOSE" else NULL,
+    show_legend = show_legend
   )
-  # Apply legend
-  if (!show_legend) {
-    plot <- plot + theme(legend.position = "none")
-  }
   # If there is no mean data, just return the plot
   if (nrow(mean_data) == 0) {
     return(plot)

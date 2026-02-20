@@ -83,6 +83,15 @@ g_lineplot <- function(data,
     return(error_plot("No data available for the plot"))
   }
 
+  # Derive color labels from labels_df if not explicitly provided
+  if (is.null(color_labels) && !is.null(labels_df)) {
+    color_labels <- vapply(
+      color_by,
+      function(x) get_label(variable = x, labels_df = labels_df),
+      FUN.VALUE = character(1)
+    )
+  }
+
   # Concatenate unique units, sep by ","
   #TODO: potential to facet if > 1 unit (#848)
   x_lab_unit <- if (is.null(x_unit)) NULL else paste0(unique(data[[x_unit]]), collapse = ", ")
