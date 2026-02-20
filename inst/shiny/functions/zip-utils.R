@@ -334,8 +334,16 @@ prepare_export_files <- function(target_dir,
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
-  # Include custom exploration plot names in the export list
+  # Include custom exploration plot names only if their base type is selected
   custom_names <- session$userData$exploration_custom_names
+  selected_bases <- intersect(
+    c("individualplot", "meanplot", "qcplot"), input$res_tree
+  )
+  custom_names <- custom_names[vapply(custom_names, function(nm) {
+    any(vapply(selected_bases, function(b) {
+      nm == b || grepl(paste0("^", b, "[0-9]+$"), nm)
+    }, logical(1)))
+  }, logical(1))]
   obj_names <- unique(c(input$res_tree, custom_names))
 
   # Drop default exploration plots when custom variants exist
