@@ -153,7 +153,7 @@ exploration_meanplot <- function(
     pknca_data$conc$columns$concentration, labels_df = labels_df
   )
   if (!is.null(labels_df)) {
-    labels_df <- rbind(labels_df, data.frame(
+    labels_df <- dplyr::bind_rows(labels_df, data.frame(
       Dataset = "ADNCA", Variable = "AVAL",
       Label = paste("Mean", conc_label),
       stringsAsFactors = FALSE
