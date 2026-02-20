@@ -309,12 +309,15 @@ prepare_export_files <- function(target_dir,
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
+  # Include custom exploration plot names in the export list
+  custom_names <- session$userData$exploration_custom_names
+  obj_names <- unique(c(input$res_tree, custom_names))
   save_output(
     output = session$userData$results,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,
-    obj_names = input$res_tree
+    obj_names = obj_names
   )
 
   progress$inc(0.2)
@@ -344,7 +347,7 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.8)
 
-  .clean_export_dir(target_dir, input)
+  .clean_export_dir(target_dir, input, custom_names)
 }
 
 # Helpers to export different output types
@@ -423,12 +426,12 @@ prepare_export_files <- function(target_dir,
 #' @param input Shiny input object
 #' @keywords internal
 #' @noRd
-.clean_export_dir <- function(target_dir, input) {
+.clean_export_dir <- function(target_dir, input, custom_names = NULL) {
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
-  fnames <- input$res_tree
+  fnames <- unique(c(input$res_tree, custom_names))
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
   # Match exact names and numbered variants (e.g. individualplot1, meanplot2)

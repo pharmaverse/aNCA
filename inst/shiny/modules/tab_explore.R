@@ -110,6 +110,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Clear saved exploration plots when new data is loaded
     observeEvent(pknca_data(), {
       session$userData$results$exploration <- list()
+      session$userData$exploration_custom_names <- character(0)
       indiv_counter(0L)
       mean_counter(0L)
       qc_counter(0L)
@@ -198,6 +199,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(plot_obj)
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
+      # Track custom names for export matching
+      custom <- session$userData$exploration_custom_names
+      if (is.null(custom)) custom <- character(0)
+      session$userData$exploration_custom_names <- unique(c(custom, plot_name))
       removeModal()
       showNotification(
         paste0("Plot saved as '", plot_name, "'"),
