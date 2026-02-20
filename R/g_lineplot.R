@@ -13,6 +13,8 @@
 #' @param y_unit Optional character string specifying the column name for the y-axis unit.
 #' @param color_by A character vector specifying the column(s) from the original
 #'   dataset that are used to determine the color of the lines and points.
+#' @param color_labels Optional character vector of labels for the color legend.
+#'   Default is `NULL` (uses `color_by` values).
 #' @param facet_by A character vector of column names to facet the plot by.
 #'   Default is `NULL` for no faceting.
 #' @param group_by A character vector specifying the column names used to group
@@ -33,6 +35,7 @@
 #' @param labels_df A data.frame for variable label lookups.
 #' @param vline_var Optional character string specifying the column name for vertical
 #' lines.
+#' @param show_legend Logical; whether to display the plot legend. Default is `TRUE`.
 #' @returns A `ggplot` object representing the line plot.
 #'
 #' @import ggplot2
@@ -65,9 +68,10 @@ g_lineplot <- function(data,
                        x_unit = NULL,
                        y_unit = NULL,
                        color_by,
+                       color_labels = NULL,
                        facet_by = NULL,
                        group_by = NULL,
-                       facet_count_n = "USUBJID",
+                       facet_count_n = NULL,
                        x_limits = NULL,
                        y_limits = NULL,
                        ylog_scale = FALSE,
@@ -75,36 +79,27 @@ g_lineplot <- function(data,
                        palette = "default",
                        tooltip_vars = NULL,
                        labels_df = NULL,
-                       vline_var = NULL) {
+                       vline_var = NULL,
+                       show_legend = TRUE) {
 
   if (nrow(data) == 0) {
     return(error_plot("No data available for the plot"))
   }
 
-  # Concatenate unique units, sep by ","
-  #TODO: potential to facet if > 1 unit (#848)
-  x_lab_unit <- if (is.null(x_unit)) NULL else paste0(unique(data[[x_unit]]), collapse = ", ")
-  x_lab <- if (is.null(x_lab_unit)) "Time" else paste0("Time [", x_lab_unit, "]")
-  y_lab_unit <- if (is.null(y_unit)) NULL else paste0(unique(data[[y_unit]]), collapse = ", ")
-  y_lab <- if (is.null(y_lab_unit)) "Concentration" else paste0("Concentration [", y_lab_unit, "]")
+  # Derive color labels from labels_df if not explicitly provided
+  if (is.null(color_labels) && !is.null(labels_df)) {
+    color_labels <- vapply(
+      color_by,
+      function(x) get_label(variable = x, labels_df = labels_df),
+      FUN.VALUE = character(1)
+    )
+  }
+
+  x_lab <- .build_axis_label(x_var, x_unit, data, labels_df)
+  y_lab <- .build_axis_label(y_var, y_unit, data, labels_df)
   title <- "PK Concentration - Time Profile"
 
-  # --- Tooltip Construction ---
-  if (!is.null(tooltip_vars)) {
-    if (!is.null(labels_df)) {
-      # Generate tooltip if labels_df available
-      data$tooltip_text <- generate_tooltip_text(data, labels_df, tooltip_vars, "ADNCA")
-    } else {
-      # Fallback to simple paste if labels_df is missing
-      valid_vars <- intersect(tooltip_vars, names(data))
-      if (length(valid_vars) > 0) {
-        parts <- lapply(valid_vars, \(v) paste0(v, ": ", data[[v]]))
-        data$tooltip_text <- paste(parts, collapse = "<br>")
-      }
-    }
-  } else {
-    data$tooltip_text <- rep(NA_character_, nrow(data))
-  }
+  data <- .build_tooltip(data, tooltip_vars, labels_df, x_lab)
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
@@ -132,10 +127,14 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = paste(color_by, collapse = ", ")
+      color = if (!is.null(color_labels)) paste(na.omit(color_labels), collapse = "\n") else
+        paste(color_by, collapse = ", ")
     ) +
     theme_bw()
-
+  # Apply legend
+  if (!show_legend) {
+    plt <- plt + theme(legend.position = "none")
+  }
   # Add optional layers
   optional_layers <- list(
     .add_colour_palette(palette),
@@ -149,7 +148,38 @@ g_lineplot <- function(data,
 }
 
 # --- Helper Functions (Internal) ---
-# These functions contain the optional layers logic
+
+#' Build axis label with optional unit suffix
+#' @noRd
+.build_axis_label <- function(var, unit_col, data, labels_df) {
+  unit_str <- if (is.null(unit_col)) NULL else paste0(unique(data[[unit_col]]), collapse = ", ")
+  label <- get_label(var, labels_df = labels_df)
+  if (is.null(unit_str)) label else paste0(label, " [", unit_str, "]")
+}
+
+#' Build tooltip text column on data
+#' @noRd
+.build_tooltip <- function(data, tooltip_vars, labels_df, x_lab) {
+  if (is.null(tooltip_vars)) {
+    data$tooltip_text <- rep(NA_character_, nrow(data))
+    return(data)
+  }
+  if (!is.null(labels_df)) {
+    data$tooltip_text <- generate_tooltip_text(data, labels_df, tooltip_vars, "ADNCA")
+  } else {
+    valid_vars <- intersect(tooltip_vars, names(data))
+    if (length(valid_vars) > 0) {
+      parts <- lapply(valid_vars, \(v) paste0(v, ": ", data[[v]]))
+      data$tooltip_text <- paste(parts, collapse = "<br>")
+    }
+  }
+
+  if (grepl("Nom.", x_lab, ignore.case = TRUE)) {
+    data$tooltip_text <- paste0("<b>Mean</b> ", data$tooltip_text)
+  }
+
+  data
+}
 
 #' @noRd
 .add_y_scale <- function(ylog_scale) {
@@ -253,7 +283,8 @@ g_lineplot <- function(data,
     ci_ribbon_layer <- list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
       guides(fill = "none"),
-      labs(color = paste0(paste(color_by, collapse = ", "), " (95% CI)"))
+      labs(title = paste0("Mean PK Concentration - Time Profile",
+                          if (isTRUE(ci)) " (95% CI)" else ""))
     )
   }
   # Return a list of all layers

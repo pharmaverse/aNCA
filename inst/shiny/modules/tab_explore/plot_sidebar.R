@@ -93,6 +93,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns = ns
     ),
     checkboxInput(ns("show_dose"), label = "Show Dose Times"),
+    checkboxInput(ns("show_legend"), label = "Show Legend", value = TRUE),
     div(
       style = "display:flex; gap:8px;",
       div(style = "flex:1;", numericInput(ns("x_min"), label = "X Min", value = NULL)),
@@ -133,7 +134,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       data <- pknca_data()$conc$data
       conc_groups <- group_vars(pknca_data()$conc)
       dose_groups <- group_vars(pknca_data()$dose)
-      dose_col <- pknca_data()$dose$columns$dose
+      dose_col <- c(pknca_data()$dose$columns$dose, pknca_data()$dose$columns$doseu)
       subject_col <- pknca_data()$conc$columns$subject
 
       # Update the param picker input
@@ -234,6 +235,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         facet_by = input$facetby,
         show_facet_n = input$show_facet_n,
         ylog_scale = input$log,
+        show_legend = input$show_legend,
         threshold_value = input$threshold_value,
         show_dose = input$show_dose,
         x_limits = c(input$x_min, input$x_max),
