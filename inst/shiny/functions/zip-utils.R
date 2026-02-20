@@ -364,11 +364,14 @@ prepare_export_files <- function(target_dir,
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
 
+  pn <- session$userData$project_name()
+  slide_title <- if (pn == "") "NCA Results" else paste0("NCA Results\n", pn)
+
   if ("qmd" %in% input$slide_formats) {
     create_qmd_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.qmd"),
-      paste0("NCA Results\n", session$userData$project_name()),
+      slide_title,
       TRUE
     )
   }
@@ -376,7 +379,7 @@ prepare_export_files <- function(target_dir,
     create_pptx_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.pptx"),
-      paste0("NCA Results\n", session$userData$project_name()),
+      slide_title,
       "www/templates/template.pptx"
     )
   }
