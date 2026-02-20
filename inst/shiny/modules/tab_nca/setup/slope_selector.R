@@ -22,7 +22,7 @@
 #' @details
 #' - The module's main output is the manual_slopes table, which is updated by user
 #'   edits in the table UI (slopes_table) or by plot clicking (handle_plotly_click).
-#' - The parent module (setup.R) uses manual_slopes to update processed_pknca_data,
+#' - The parent module (nca_setup.R) uses manual_slopes to update processed_pknca_data,
 #'   which is then fed back in this module to update plots.
 
 slope_selector_ui <- function(id) {
@@ -140,7 +140,7 @@ slope_selector_server <- function( # nolint
         # Modify plots with new half-life adjustments (inclusions/exclusions)
         plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
       } else if (changes$in_selected_intervals) {
-        # Add/remove plots based on intervals (analyte, profile, specimen selection from setup.R)
+        # Add/remove plots based on intervals (selection from nca_setup.R)
         plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
       }
 
@@ -239,9 +239,7 @@ slope_selector_server <- function( # nolint
       )
 
     })
-    #' returns half life adjustments rules to update processed_pknca_data in setup.R
-    list(
-      manual_slopes = manual_slopes
-    )
+    #' returns half life adjustments rules to update processed_pknca_data in nca_setup.R
+    manual_slopes
   })
 }

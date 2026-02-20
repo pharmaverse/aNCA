@@ -45,7 +45,7 @@ units_table <- settings_list$final_units
 parameters_selected_per_study <- settings_list$settings$parameters$selections
 study_types_df <- settings_list$settings$parameters$types_df
 extra_vars_to_keep <-  settings_list$extra_vars_to_keep
-slope_rules <- settings_list$slope_rules$manual_slopes
+slope_rules <- settings_list$slope_rules
 
 pknca_obj <- preprocessed_adnca %>%
 

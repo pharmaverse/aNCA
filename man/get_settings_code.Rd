@@ -8,7 +8,7 @@ get_settings_code(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+  template_path = system.file("www/templates/script_template.R", package = "aNCA"),
   mapping = default_mapping,
   ratio_table = data.frame()
 )

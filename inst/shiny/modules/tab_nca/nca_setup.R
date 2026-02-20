@@ -14,7 +14,7 @@
 #'   * settings - List with raw settings as gathered by the module.
 #'   * slope_rules - Data frame with slope inclusions / exclusions provided by slope selector.
 
-setup_ui <- function(id) {
+nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
@@ -42,7 +42,7 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
+nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive(settings_override()$settings)
@@ -76,7 +76,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
         should_impute_c0 = settings()$data_imputation$impute_c0,
-        hl_adj_rules = slope_rules$manual_slopes(),
+        hl_adj_rules = slope_rules(),
         exclusion_list = general_exclusions(),
         keep_interval_cols = extra_group_vars()
       )
@@ -171,7 +171,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
         # Prepare the list
         settings_to_save <- list(
           settings = final_settings(),
-          slope_rules = slope_rules$manual_slopes()
+          slope_rules = slope_rules()
         )
         # write yaml file
         yaml::write_yaml(settings_to_save, file = con)
