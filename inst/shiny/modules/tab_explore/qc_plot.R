@@ -16,6 +16,13 @@ pk_dose_qc_plot_ui <- function(id) {
     sidebar = sidebar(
       position = "right",
       open = TRUE,
+      actionButton(
+        ns("add_to_report"),
+        label = "Add to Report",
+        icon = icon("plus"),
+        class = "btn btn-primary btn-sm",
+        width = "100%"
+      ),
       pickerInput(
         inputId = ns("group_var"),
         label = "Choose the variables to group by:",
@@ -54,14 +61,6 @@ pk_dose_qc_plot_ui <- function(id) {
         selected = NULL,
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
-      ),
-      hr(),
-      actionButton(
-        ns("add_to_report"),
-        label = "Add to Report",
-        icon = icon("plus"),
-        class = "btn btn-primary btn-sm",
-        width = "100%"
       )
     ),
     plotlyOutput(ns("pk_dose_qc_plot"), height = "100%")
