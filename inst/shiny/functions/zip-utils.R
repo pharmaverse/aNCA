@@ -54,6 +54,20 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   }
 }
 
+# Remove default exploration plots when custom variants exist.
+# e.g. if custom_names contains "meanplot1", remove "meanplot" from the list.
+.drop_defaults_with_custom <- function(exploration_list, custom_names) {
+  if (length(custom_names) == 0) return(exploration_list)
+  defaults <- c("individualplot", "meanplot", "qcplot")
+  for (d in defaults) {
+    has_custom <- any(grepl(paste0("^", d, "[0-9]+$"), custom_names))
+    if (has_custom) {
+      exploration_list[[d]] <- NULL
+    }
+  }
+  exploration_list
+}
+
 # Check whether a name matches the export list (exact or numbered variant)
 .is_exportable <- function(name, obj_names) {
   if (is.null(obj_names)) {
@@ -323,8 +337,17 @@ prepare_export_files <- function(target_dir,
   # Include custom exploration plot names in the export list
   custom_names <- session$userData$exploration_custom_names
   obj_names <- unique(c(input$res_tree, custom_names))
+
+  # Drop default exploration plots when custom variants exist
+  results <- session$userData$results
+  if (!is.null(results$exploration)) {
+    results$exploration <- .drop_defaults_with_custom(
+      results$exploration, custom_names
+    )
+  }
+
   save_output(
-    output = session$userData$results,
+    output = results,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,
