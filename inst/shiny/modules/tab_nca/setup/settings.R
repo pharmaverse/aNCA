@@ -163,7 +163,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         # Additional settings (PCSPEC and ATPTREF handled later)
         updateSelectInput(session, inputId = "method", selected = settings$method)
 
-        if (!is.null(settings$bioavailability)) {
+        if (!is.null(settings$bioavailability) &&
+            adnca_data()$dose$data$std_route %>% unique() %>% length() == 2) {
           updateSelectInput(session,
             inputId = "bioavailability",
             selected = settings$bioavailability
