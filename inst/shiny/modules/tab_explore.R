@@ -107,6 +107,14 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       )
     })
 
+    # Clear saved exploration plots when new data is loaded
+    observeEvent(pknca_data(), {
+      session$userData$results$exploration <- list()
+      indiv_counter(0L)
+      mean_counter(0L)
+      qc_counter(0L)
+    })
+
     # Save the default objects for the ZIP folder whenever they change
     observe({
       req(individualplot(), meanplot())
