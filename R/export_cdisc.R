@@ -19,7 +19,6 @@
 #'
 #'
 #' @import dplyr
-#' @importFrom writexl write_xlsx
 #' @export
 export_cdisc <- function(res_nca) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object

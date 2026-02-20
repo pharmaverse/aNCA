@@ -17,6 +17,7 @@ CDISC_DS_KEY_MAP <- c(PP = "pp", ADPP = "adpp", ADNCA = "adnca")
 #' @returns A named list of data frames, one per dataset, each containing
 #'   columns: Dataset, Order, Variable, Label, Type, Role, Core, Length.
 #'
+#' @importFrom writexl write_xlsx
 #' @export
 generate_pre_specs <- function(datasets = c("ADNCA", "ADPP", "PP"),
                                cdisc_data = NULL) {
