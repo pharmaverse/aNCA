@@ -97,7 +97,7 @@ exploration_individualplot <- function(
 #' @param sd_max Logical; if `TRUE`, plot upper SD error bars. Default is `FALSE`.
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
-#' Default includes dose group vars and "Mean".
+#' Default includes dose group vars and "AVAL" (renamed from Mean).
 #' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
 #' Default is `NULL` (no limits).
 #' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
@@ -142,11 +142,22 @@ exploration_meanplot <- function(
   # If no tooltip variable specified, use the default ones
   if (is.null(tooltip_vars)) {
     tooltip_vars <- unique(c(
-      "Mean",
+      "AVAL",
       pknca_data$conc$columns$concu,
       x_var,
       pknca_data$conc$columns$timeu,
       color_by
+    ))
+  }
+  # Override AVAL label so tooltip and y-axis show "Mean Analysis Value"
+  conc_label <- get_label(
+    pknca_data$conc$columns$concentration, labels_df = labels_df
+  )
+  if (!is.null(labels_df)) {
+    labels_df <- rbind(labels_df, data.frame(
+      Dataset = "ADNCA", Variable = "AVAL",
+      Label = paste("Mean", conc_label),
+      stringsAsFactors = FALSE
     ))
   }
 
