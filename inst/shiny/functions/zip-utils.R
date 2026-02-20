@@ -67,7 +67,10 @@ save_output <- function(
     is_obj_to_export <- is.null(obj_names) || name %in% obj_names ||
       any(vapply(obj_names, function(n) grepl(paste0("^", n, "[0-9]+$"), name), logical(1)))
 
-    if (inherits(x, "list")) {
+    is_leaf <- inherits(x, "ggplot") || inherits(x, "data.frame") ||
+      inherits(x, "plotly")
+
+    if (!is_leaf && inherits(x, "list")) {
       file_name <- paste0(output_path, "/", name)
       if (!dir.exists(file_name)) {
         dir.create(file_name, recursive = TRUE)
