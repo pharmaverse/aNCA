@@ -62,16 +62,16 @@ save_output <- function(
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
-    file_name <- paste0(output_path, "/", name)
-    if (!dir.exists(file_name)) {
-      dir.create(file_name, recursive = TRUE)
-    }
     x <- output[[name]]
     # Match exact name or numbered variants (e.g. "individualplot1" matches "individualplot")
     is_obj_to_export <- is.null(obj_names) || name %in% obj_names ||
       any(vapply(obj_names, function(n) grepl(paste0("^", n, "[0-9]+$"), name), logical(1)))
 
     if (inherits(x, "list")) {
+      file_name <- paste0(output_path, "/", name)
+      if (!dir.exists(file_name)) {
+        dir.create(file_name, recursive = TRUE)
+      }
       save_output(
         output = x,
         output_path = file_name,
@@ -82,7 +82,7 @@ save_output <- function(
     } else if (is_obj_to_export) {
       save_dispatch(
         x = x,
-        file_name = paste0(file_name, "/", name),
+        file_name = paste0(output_path, "/", name),
         ggplot_formats = ggplot_formats,
         table_formats = table_formats
       )
