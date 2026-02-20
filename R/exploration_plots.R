@@ -253,6 +253,7 @@ process_data_individual <- function(pknca_data,
   }
 
   processed_data <- data
+
   # Apply filtering
   if (!is.null(filtering_list) && length(filtering_list) > 0) {
     processed_data <- filter_by_list(processed_data, filtering_list)

@@ -14,7 +14,7 @@ g_lineplot(
   color_labels = NULL,
   facet_by = NULL,
   group_by = NULL,
-  facet_count_n = "USUBJID",
+  facet_count_n = NULL,
   x_limits = NULL,
   y_limits = NULL,
   ylog_scale = FALSE,
