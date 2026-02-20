@@ -1,0 +1,271 @@
+settings:
+  method: linear
+  bioavailability: f_aucinf.obs
+  data_imputation:
+    impute_c0: yes
+    blq_imputation_rule:
+      first: keep
+      middle: keep
+      last: keep
+  int_parameters:
+    parameter:
+    - AUCINT
+    - AUCINTD
+    start_auc:
+    - 0.0
+    - 0.0
+    end_auc:
+    - 24.0
+    - 24.0
+  flags:
+    R2ADJ:
+      is.checked: yes
+      threshold: 0.7
+    R2:
+      is.checked: no
+      threshold: 0.7
+    AUCPEO:
+      is.checked: yes
+      threshold: 20
+    AUCPEP:
+      is.checked: yes
+      threshold: 20
+    LAMZSPN:
+      is.checked: yes
+      threshold: 2
+  parameters:
+    selections:
+      Excretion Data:
+      - ae
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - fe
+      - tlast
+      - tmax
+      Single Extravascular:
+      - adj.r.squared
+      - aucinf.obs
+      - aucinf.obs.dn
+      - auclast
+      - auclast.dn
+      - aucpext.obs
+      - aucpext.pred
+      - cl.obs
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - mrt.last
+      - mrt.obs
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vz.obs
+      Single Extravascular (Metabolite):
+      - adj.r.squared
+      - aucinf.obs
+      - auclast
+      - aucpext.obs
+      - aucpext.pred
+      - cl.obs
+      - clast.obs
+      - cmax
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - mrt.last
+      - mrt.obs
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vz.obs
+      Single IV Bolus:
+      - adj.r.squared
+      - aucinf.obs
+      - aucinf.obs.dn
+      - auclast
+      - auclast.dn
+      - aucpext.obs
+      - aucpext.pred
+      - cl.obs
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - mrt.last
+      - mrt.obs
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vz.obs
+      Single IV Bolus (Metabolite):
+      - adj.r.squared
+      - aucinf.obs
+      - auclast
+      - aucpext.obs
+      - aucpext.pred
+      - cl.obs
+      - clast.obs
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - mrt.last
+      - mrt.obs
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vz.obs
+      Single IV Infusion:
+      - adj.r.squared
+      - aucinf.obs
+      - aucinf.obs.dn
+      - auclast
+      - auclast.dn
+      - aucpext.obs
+      - aucpext.pred
+      - cl.obs
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - mrt.last
+      - mrt.obs
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vz.obs
+      Single IV Infusion (Metabolite):
+      - adj.r.squared
+      - aucinf.obs
+      - auclast
+      - aucpext.obs
+      - aucpext.pred
+      - cl.obs
+      - clast.obs
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - mrt.last
+      - mrt.obs
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vz.obs
+      Multiple Extravascular:
+      - adj.r.squared
+      - auclast
+      - auclast.dn
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vss.obs
+      Multiple Extravascular (Metabolite):
+      - adj.r.squared
+      - auclast
+      - clast.obs
+      - cmax
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      Multiple IV Bolus:
+      - adj.r.squared
+      - auclast
+      - auclast.dn
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vss.obs
+      Multiple IV Bolus (Metabolite):
+      - adj.r.squared
+      - auclast
+      - clast.obs
+      - cmax
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      Multiple IV Infusion:
+      - adj.r.squared
+      - auclast
+      - auclast.dn
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vss.obs
+      Multiple IV Infusion (Metabolite):
+      - adj.r.squared
+      - auclast
+      - clast.obs
+      - cmax
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      
