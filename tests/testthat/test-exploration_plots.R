@@ -358,6 +358,40 @@ describe("exploration_meanplot:", {
     expect_true(all("PARAM" %in% names(vline_layer$data)))
   })
 
+  it("show_facet_n TRUE provides facet labels with subject counts (n=...)", {
+
+    get_facet_title <- function(p) {
+      pb <- ggplot_build(p)
+      pb$layout$facet$format_strip_labels(pb$layout$layout,
+                                          pb$layout$facet$params)
+    }
+
+    p <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      facet_by = "PARAM",
+      show_facet_n = FALSE
+    )
+    pb <- ggplot_build(p)
+
+    p_facet_n <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      facet_by = "PARAM",
+      show_facet_n = TRUE
+    )
+    pb_facet_n <- ggplot_build(p_facet_n)
+
+    exp_facet_label <- pknca_data$conc$data %>%
+      distinct(PARAM, USUBJID) %>%
+      count(PARAM, name = "n") %>%
+      mutate(label = paste0("PARAM: ", PARAM, " (n=", n, ")")) %>%
+      pull(label)
+
+    expect_null(pb$layout$layout$facet_label)
+    expect_equal(pb_facet_n$layout$layout$facet_label, exp_facet_label)
+  })
+
   it("uses NRRLT as x axis when use_time_since_last_dose is TRUE", {
     p_nfrlt <- exploration_meanplot(
       pknca_data = pknca_data,
