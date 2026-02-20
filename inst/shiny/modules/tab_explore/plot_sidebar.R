@@ -11,6 +11,13 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   sidebar(
     position = "right",
     open = TRUE,
+    actionButton(
+      ns("add_to_report"),
+      label = "Add to Report",
+      icon = icon("plus"),
+      class = "btn btn-primary btn-sm",
+      width = "100%"
+    ),
     selectInput(
       ns("palette"),
       "Select Color Theme:",
@@ -111,15 +118,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
         checkboxInput(ns("ci"), label = "Show 95% CI", value = FALSE),
         helpText("Mean values are not displayed if n < 3 for a time point.")
       )
-    },
-    hr(),
-    actionButton(
-      ns("add_to_report"),
-      label = "Add to Report",
-      icon = icon("plus"),
-      class = "btn btn-primary btn-sm",
-      width = "100%"
-    )
+    }
   )
 }
 
