@@ -155,6 +155,7 @@ rulesets
 runnable
 signif
 src
+subfolder
 tibble
 tidyverse
 timeframe
