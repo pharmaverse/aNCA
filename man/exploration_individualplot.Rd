@@ -8,6 +8,7 @@ exploration_individualplot(
   pknca_data,
   color_by,
   facet_by = NULL,
+  show_facet_n = FALSE,
   ylog_scale = FALSE,
   threshold_value = NULL,
   x_limits = NULL,
@@ -27,6 +28,9 @@ exploration_individualplot(
 
 \item{facet_by}{Character vector of column names to facet the plot by.
 Default is \code{NULL} (no faceting).}
+
+\item{show_facet_n}{Logical; if \code{TRUE}, shows the number of subjects in each facet.
+Default is \code{FALSE}.}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
 
