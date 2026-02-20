@@ -113,14 +113,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       filename = function() {
         project <- session$userData$project_name()
         if (project == "") {
-          study_ids <- unique(res_nca()$data$conc$data[["STUDYID"]])
-          study_ids <- study_ids[!is.na(study_ids)]
-          if (length(study_ids) > 3) study_ids <- study_ids[1:3]
-          project <- if (length(study_ids) > 0) {
-            paste0("NCA_", paste(study_ids, collapse = "_"))
-          } else {
-            "NCA"
-          }
+          label <- session$userData$study_ids_label()
+          project <- if (label != "") paste0("NCA_", label) else "NCA"
         }
         project <- gsub("[^A-Za-z0-9_-]", "_", project)
         paste0(project, ".zip")

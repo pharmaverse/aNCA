@@ -143,7 +143,7 @@ server <- function(input, output, session) {
     if (input$project_name != "") input$project_name else ""
   })
 
-  # Helper: prepend project name with separator, or empty string if no name
+  # Helper (plain function, not reactive): prepend project name with separator
   session$userData$project_prefix <- function(sep = "-") {
     pn <- session$userData$project_name()
     if (pn == "") "" else paste0(pn, sep)
@@ -157,16 +157,21 @@ server <- function(input, output, session) {
   # DATA ----
   tab_data_outputs <- tab_data_server("data")
 
-  # Auto-populate project name with STUDYID when data is uploaded
-  observeEvent(tab_data_outputs$adnca_raw(), {
+  # Extract up to 3 unique STUDYIDs from uploaded data (shared by auto-populate and zip fallback)
+  session$userData$study_ids_label <- reactive({
     raw <- tab_data_outputs$adnca_raw()
     req(raw, "STUDYID" %in% names(raw))
     study_ids <- unique(raw[["STUDYID"]])
     study_ids <- study_ids[!is.na(study_ids)]
     if (length(study_ids) > 3) study_ids <- study_ids[1:3]
-    if (length(study_ids) > 0) {
-      updateTextInput(session, "project_name",
-                      value = paste(study_ids, collapse = "_"))
+    if (length(study_ids) > 0) paste(study_ids, collapse = "_") else ""
+  })
+
+  # Auto-populate project name with STUDYID when data is uploaded
+  observeEvent(session$userData$study_ids_label(), {
+    label <- session$userData$study_ids_label()
+    if (label != "") {
+      updateTextInput(session, "project_name", value = label)
     }
   })
 
