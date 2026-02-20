@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Mean exploration plots auto-select default color and facet variables from a priority list (TRT01A, GROUP, ACTARM, COHORT, dose column) (#654)
+* COHORT, PART, PERIOD added as auto-mapped grouping variable alternatives (#654)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 * R script exported in ZIP folder to re-run and replicate App outputs (#789)
