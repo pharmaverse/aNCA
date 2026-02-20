@@ -95,32 +95,11 @@ g_lineplot <- function(data,
     )
   }
 
-  # Concatenate unique units, sep by ","
-  #TODO: potential to facet if > 1 unit (#848)
-  x_lab_unit <- if (is.null(x_unit)) NULL else paste0(unique(data[[x_unit]]), collapse = ", ")
-  x_lab <- if (is.null(x_lab_unit)) get_label(x_var, labels_df = labels_df) else
-    paste0(get_label(x_var, labels_df = labels_df), " [", x_lab_unit, "]")
-  y_lab_unit <- if (is.null(y_unit)) NULL else paste0(unique(data[[y_unit]]), collapse = ", ")
-  y_lab <- if (is.null(y_lab_unit)) get_label(y_var, labels_df = labels_df) else
-    paste0(get_label(y_var, labels_df = labels_df), " [", y_lab_unit, "]")
+  x_lab <- .build_axis_label(x_var, x_unit, data, labels_df)
+  y_lab <- .build_axis_label(y_var, y_unit, data, labels_df)
   title <- "PK Concentration - Time Profile"
 
-  # --- Tooltip Construction ---
-  if (!is.null(tooltip_vars)) {
-    if (!is.null(labels_df)) {
-      # Generate tooltip if labels_df available
-      data$tooltip_text <- generate_tooltip_text(data, labels_df, tooltip_vars, "ADNCA")
-    } else {
-      # Fallback to simple paste if labels_df is missing
-      valid_vars <- intersect(tooltip_vars, names(data))
-      if (length(valid_vars) > 0) {
-        parts <- lapply(valid_vars, \(v) paste0(v, ": ", data[[v]]))
-        data$tooltip_text <- paste(parts, collapse = "<br>")
-      }
-    }
-  } else {
-    data$tooltip_text <- rep(NA_character_, nrow(data))
-  }
+  data <- .build_tooltip(data, tooltip_vars, labels_df)
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
@@ -169,7 +148,33 @@ g_lineplot <- function(data,
 }
 
 # --- Helper Functions (Internal) ---
-# These functions contain the optional layers logic
+
+#' Build axis label with optional unit suffix
+#' @noRd
+.build_axis_label <- function(var, unit_col, data, labels_df) {
+  unit_str <- if (is.null(unit_col)) NULL else paste0(unique(data[[unit_col]]), collapse = ", ")
+  label <- get_label(var, labels_df = labels_df)
+  if (is.null(unit_str)) label else paste0(label, " [", unit_str, "]")
+}
+
+#' Build tooltip text column on data
+#' @noRd
+.build_tooltip <- function(data, tooltip_vars, labels_df) {
+  if (is.null(tooltip_vars)) {
+    data$tooltip_text <- rep(NA_character_, nrow(data))
+    return(data)
+  }
+  if (!is.null(labels_df)) {
+    data$tooltip_text <- generate_tooltip_text(data, labels_df, tooltip_vars, "ADNCA")
+  } else {
+    valid_vars <- intersect(tooltip_vars, names(data))
+    if (length(valid_vars) > 0) {
+      parts <- lapply(valid_vars, \(v) paste0(v, ": ", data[[v]]))
+      data$tooltip_text <- paste(parts, collapse = "<br>")
+    }
+  }
+  data
+}
 
 #' @noRd
 .add_y_scale <- function(ylog_scale) {

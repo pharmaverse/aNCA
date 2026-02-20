@@ -67,7 +67,7 @@ describe("g_lineplot: structure and arguments", {
     expect_equal(p$labels$title, "PK Concentration - Time Profile")
     expect_equal(p$labels$y, "Analysis Value [ng/mL]")
     expect_equal(p$labels$x, "Nom. Rel. Time from Analyte First Dose [hours]")
-    expect_equal(p$labels$colour, "USUBJID")
+    expect_equal(p$labels$colour, "Unique Subject Identifier")
   })
 
   it("applies faceting", {

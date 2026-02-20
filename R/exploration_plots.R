@@ -292,30 +292,10 @@ process_data_mean <- function(pknca_data,
   )
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
-  # Derive dose times if requested
-  data <- if (show_dose) {
-    derive_last_dose_time(
-      pknca_data = pknca_data,
-      conc_time_col = x_var
-    )
-  } else {
-    pknca_data$conc$data
-  }
-  processed <- data
-  # Apply filtering
-  if (!is.null(filtering_list) && length(filtering_list) > 0) {
-    processed <- filter_by_list(processed, filtering_list)
-  }
-  processed <- processed %>%
-    dplyr::filter(!is.na(!!rlang::sym(y_var)))
-
-  # Adjust time variable with dose time if using time since last dose
-  if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
-    processed <- processed %>%
-      dplyr::group_by(!!!rlang::syms(c(dose_group_cols, x_var))) %>%
-      dplyr::mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
-      dplyr::ungroup()
-  }
+  processed <- .prepare_mean_data(
+    pknca_data, x_var, y_var, dose_group_cols,
+    filtering_list, show_dose
+  )
 
   # Calculate summary statistics by grouping columns
   summarised_data <- processed %>%
@@ -354,6 +334,28 @@ process_data_mean <- function(pknca_data,
       dplyr::filter(Mean_concentration > 0)
   }
   summarised_data
+}
+
+#' Prepare data for mean plot: derive dose times, filter, and adjust
+#' @noRd
+.prepare_mean_data <- function(pknca_data, x_var, y_var, dose_group_cols,
+                               filtering_list, show_dose) {
+  data <- if (show_dose) {
+    derive_last_dose_time(pknca_data = pknca_data, conc_time_col = x_var)
+  } else {
+    pknca_data$conc$data
+  }
+  if (!is.null(filtering_list) && length(filtering_list) > 0) {
+    data <- filter_by_list(data, filtering_list)
+  }
+  data <- data %>% dplyr::filter(!is.na(!!rlang::sym(y_var)))
+  if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
+    data <- data %>%
+      dplyr::group_by(!!!rlang::syms(c(dose_group_cols, x_var))) %>%
+      dplyr::mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
+      dplyr::ungroup()
+  }
+  data
 }
 
 #' Filter a data frame by a list of column-value pairs
