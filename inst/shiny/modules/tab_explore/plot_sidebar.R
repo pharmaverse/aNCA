@@ -11,6 +11,13 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   sidebar(
     position = "right",
     open = TRUE,
+    actionButton(
+      ns("add_to_exports"),
+      label = "Add to Exports",
+      icon = icon("plus"),
+      class = "btn btn-primary btn-sm",
+      width = "100%"
+    ),
     selectInput(
       ns("palette"),
       "Select Color Theme:",
@@ -227,23 +234,26 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
     )
 
     # Return all inputs as a list of reactives
-    reactive({
-      list(
-        palette = input$palette,
-        color_by = input$colorby,
-        facet_by = input$facetby,
-        show_facet_n = input$show_facet_n,
-        ylog_scale = input$log,
-        threshold_value = input$threshold_value,
-        show_dose = input$show_dose,
-        x_limits = c(input$x_min, input$x_max),
-        y_limits = c(input$y_min, input$y_max),
-        sd_max = input$sd_max,
-        sd_min = input$sd_min,
-        ci = input$ci,
-        filtering_list = filtering_list(),
-        use_time_since_last_dose = input$timescale == "By Dose Profile"
-      )
-    })
+    list(
+      inputs = reactive({
+        list(
+          palette = input$palette,
+          color_by = input$colorby,
+          facet_by = input$facetby,
+          show_facet_n = input$show_facet_n,
+          ylog_scale = input$log,
+          threshold_value = input$threshold_value,
+          show_dose = input$show_dose,
+          x_limits = c(input$x_min, input$x_max),
+          y_limits = c(input$y_min, input$y_max),
+          sd_max = input$sd_max,
+          sd_min = input$sd_min,
+          ci = input$ci,
+          filtering_list = filtering_list(),
+          use_time_since_last_dose = input$timescale == "By Dose Profile"
+        )
+      }),
+      add_to_exports = reactive(input$add_to_exports)
+    )
   })
 }

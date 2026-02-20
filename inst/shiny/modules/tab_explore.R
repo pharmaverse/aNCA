@@ -35,18 +35,29 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Counters for incremented plot names in the ZIP export
+    indiv_counter <- reactiveVal(0L)
+    mean_counter <- reactiveVal(0L)
+    qc_counter <- reactiveVal(0L)
+
+    # Track custom plot names for export matching
+    session$userData$exploration_custom_names <- character(0)
+
     # Initiate the sidebar server modules
-    individual_inputs <- plot_sidebar_server(
+    individual_sidebar <- plot_sidebar_server(
       "individual_sidebar",
       pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
 
-    mean_inputs <- plot_sidebar_server(
+    mean_sidebar <- plot_sidebar_server(
       "mean_sidebar",
       pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
+
+    individual_inputs <- individual_sidebar$inputs
+    mean_inputs <- mean_sidebar$inputs
 
     individualplot <- reactive({
       req(pknca_data(), individual_inputs()$color_by)
@@ -99,7 +110,16 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       )
     })
 
-    # Save the objects for the ZIP folder whenever they change
+    # Clear saved exploration plots when new data is loaded
+    observeEvent(pknca_data(), {
+      session$userData$results$exploration <- list()
+      session$userData$exploration_custom_names <- character(0)
+      indiv_counter(0L)
+      mean_counter(0L)
+      qc_counter(0L)
+    })
+
+    # Save the default objects for the ZIP folder whenever they change
     observe({
       req(individualplot(), meanplot())
       session$userData$results$exploration$individualplot <- individualplot()
@@ -112,6 +132,92 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       ggplotly(meanplot(), tooltip = "tooltip_text")
     })
 
-    pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data, extra_group_vars)
+    qc_plot_outputs <- pk_dose_qc_plot_server(
+      "pk_dose_qc_plot", pknca_data, extra_group_vars
+    )
+
+    # Save the default QC plot for the ZIP folder
+    observe({
+      req(qc_plot_outputs$current_plot())
+      session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
+    })
+
+    # --- Add to Exports handlers ---
+
+    # Track which plot type triggered the modal
+    pending_plot_type <- reactiveVal(NULL)
+
+    # Show modal with filename input
+    .show_export_modal <- function(default_name) {
+      showModal(modalDialog(
+        title = "Add to Exports",
+        textInput(ns("export_plot_name"), "Plot name:", value = default_name),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton(ns("confirm_add_to_exports"), "Save",
+                       class = "btn btn-primary")
+        ),
+        size = "s",
+        easyClose = TRUE
+      ))
+    }
+
+    # Individual plot button
+    observeEvent(individual_sidebar$add_to_exports(), {
+      req(individualplot())
+      pending_plot_type("individual")
+      .show_export_modal(paste0("individualplot", indiv_counter() + 1L))
+    })
+
+    # Mean plot button
+    observeEvent(mean_sidebar$add_to_exports(), {
+      req(meanplot())
+      pending_plot_type("mean")
+      .show_export_modal(paste0("meanplot", mean_counter() + 1L))
+    })
+
+    # QC plot button
+    observeEvent(qc_plot_outputs$add_to_exports(), {
+      req(qc_plot_outputs$current_plot())
+      pending_plot_type("qc")
+      .show_export_modal(paste0("qcplot", qc_counter() + 1L))
+    })
+
+    # Confirm save from modal — increment counter only on actual save
+    observeEvent(input$confirm_add_to_exports, {
+      plot_name <- gsub("[^A-Za-z0-9_-]", "_", input$export_plot_name)
+      req(nzchar(plot_name))
+
+      type <- pending_plot_type()
+      plot_obj <- switch(type,
+        individual = individualplot(),
+        mean = meanplot(),
+        qc = qc_plot_outputs$current_plot()
+      )
+      req(plot_obj)
+
+      is_overwrite <- plot_name %in% names(session$userData$results$exploration)
+
+      # Increment counter only after confirmed save (skip on overwrite)
+      if (!is_overwrite) {
+        if (type == "individual") indiv_counter(indiv_counter() + 1L)
+        else if (type == "mean") mean_counter(mean_counter() + 1L)
+        else if (type == "qc") qc_counter(qc_counter() + 1L)
+      }
+
+      session$userData$results$exploration[[plot_name]] <- plot_obj
+      session$userData$exploration_custom_names <- unique(
+        c(session$userData$exploration_custom_names, plot_name)
+      )
+      removeModal()
+
+      msg <- if (is_overwrite) {
+        paste0("Plot '", plot_name, "' updated")
+      } else {
+        paste0("Plot saved as '", plot_name, "'")
+      }
+      showNotification(msg, type = "message", duration = 3)
+      log_info("Saved exploration plot: {plot_name} (overwrite={is_overwrite})")
+    }, ignoreInit = TRUE)
   })
 }

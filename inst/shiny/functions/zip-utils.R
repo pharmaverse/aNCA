@@ -54,6 +54,35 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   }
 }
 
+# Remove default exploration plots when custom variants exist.
+# e.g. if custom_names contains "meanplot1", remove "meanplot" from the list.
+.drop_defaults_with_custom <- function(exploration_list, custom_names) {
+  if (length(custom_names) == 0) return(exploration_list)
+  defaults <- c("individualplot", "meanplot", "qcplot")
+  for (d in defaults) {
+    has_custom <- any(grepl(paste0("^", d, "[0-9]+$"), custom_names))
+    if (has_custom) {
+      exploration_list[[d]] <- NULL
+    }
+  }
+  exploration_list
+}
+
+# Check whether a name matches the export list (exact or numbered variant)
+.is_exportable <- function(name, obj_names) {
+  if (is.null(obj_names)) {
+    TRUE
+  } else if (name %in% obj_names) {
+    TRUE
+  } else {
+    any(vapply(
+      obj_names,
+      function(n) grepl(paste0("^", n, "[0-9]+$"), name),
+      logical(1)
+    ))
+  }
+}
+
 save_output <- function(
   output, output_path,
   ggplot_formats = c("png", "html"),
@@ -62,14 +91,15 @@ save_output <- function(
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
-    file_name <- paste0(output_path, "/", name)
-    if (!dir.exists(file_name)) {
-      dir.create(file_name, recursive = TRUE)
-    }
     x <- output[[name]]
-    is_obj_to_export <- is.null(obj_names) || name %in% obj_names
+    is_leaf <- inherits(x, "ggplot") || inherits(x, "data.frame") ||
+      inherits(x, "plotly")
 
-    if (inherits(x, "list")) {
+    if (!is_leaf && inherits(x, "list")) {
+      file_name <- paste0(output_path, "/", name)
+      if (!dir.exists(file_name)) {
+        dir.create(file_name, recursive = TRUE)
+      }
       save_output(
         output = x,
         output_path = file_name,
@@ -77,10 +107,10 @@ save_output <- function(
         table_formats = table_formats,
         obj_names = obj_names
       )
-    } else if (is_obj_to_export) {
+    } else if (.is_exportable(name, obj_names)) {
       save_dispatch(
         x = x,
-        file_name = paste0(file_name, "/", name),
+        file_name = paste0(output_path, "/", name),
         ggplot_formats = ggplot_formats,
         table_formats = table_formats
       )
@@ -304,12 +334,38 @@ prepare_export_files <- function(target_dir,
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
+  # Filter custom exploration plots: only keep those whose base type is selected
+  all_custom <- session$userData$exploration_custom_names
+  exploration_bases <- c("individualplot", "meanplot", "qcplot")
+  selected_bases <- intersect(exploration_bases, input$res_tree)
+  custom_names <- all_custom[vapply(all_custom, function(nm) {
+    any(vapply(selected_bases, function(b) {
+      nm == b || grepl(paste0("^", b, "[0-9]+$"), nm)
+    }, logical(1)))
+  }, logical(1))]
+  obj_names <- unique(c(input$res_tree, custom_names))
+
+  # Remove deselected exploration plots (default + custom) from the results
+  results <- session$userData$results
+  if (!is.null(results$exploration)) {
+    deselected_bases <- setdiff(exploration_bases, input$res_tree)
+    for (nm in names(results$exploration)) {
+      is_deselected <- any(vapply(deselected_bases, function(b) {
+        nm == b || grepl(paste0("^", b, "[0-9]+$"), nm)
+      }, logical(1)))
+      if (is_deselected) results$exploration[[nm]] <- NULL
+    }
+    results$exploration <- .drop_defaults_with_custom(
+      results$exploration, custom_names
+    )
+  }
+
   save_output(
-    output = session$userData$results,
+    output = results,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,
-    obj_names = input$res_tree
+    obj_names = obj_names
   )
 
   progress$inc(0.2)
@@ -339,7 +395,7 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.8)
 
-  .clean_export_dir(target_dir, input)
+  .clean_export_dir(target_dir, input, custom_names)
 }
 
 # Helpers to export different output types
@@ -421,15 +477,20 @@ prepare_export_files <- function(target_dir,
 #' @param input Shiny input object
 #' @keywords internal
 #' @noRd
-.clean_export_dir <- function(target_dir, input) {
+.clean_export_dir <- function(target_dir, input, custom_names = NULL) {
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
-  fnames <- input$res_tree
+  fnames <- unique(c(input$res_tree, custom_names))
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
-  fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
+  # Match exact names and numbered variants (e.g. individualplot1, meanplot2)
+  fnames_patt <- paste0(
+    "((",
+    paste0(fnames, collapse = "([0-9]+)?)|("),
+    "([0-9]+)?))"
+  )
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))

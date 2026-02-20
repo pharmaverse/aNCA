@@ -16,6 +16,13 @@ pk_dose_qc_plot_ui <- function(id) {
     sidebar = sidebar(
       position = "right",
       open = TRUE,
+      actionButton(
+        ns("add_to_exports"),
+        label = "Add to Exports",
+        icon = icon("plus"),
+        class = "btn btn-primary btn-sm",
+        width = "100%"
+      ),
       pickerInput(
         inputId = ns("group_var"),
         label = "Choose the variables to group by:",
@@ -136,12 +143,11 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       list(conc = filtered_conc, dose = filtered_dose)
     })
 
-    # Render the PK Dose QC plot
-    output$pk_dose_qc_plot <- renderPlotly({
+    # Build the QC plot as a reactive ggplot (reused for rendering and saving)
+    qc_ggplot <- reactive({
       req(filtered_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)
 
-      subj_col <- pknca_data()$conc$columns$subject
       dose_col <- pknca_data()$dose$columns$dose
       doseu_col <- pknca_data()$dose$columns$doseu
 
@@ -149,13 +155,6 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       show_doses <- "Doses" %in% input$show_samples_doses
 
       colour_var_units <- if (input$colour_var == dose_col) doseu_col else NULL
-
-      # Adjust height based on number of subjects and groups
-      height_adjust <- 200 + 20 * filtered_data()$dose %>%
-        group_by(across(all_of(input$group_var))) %>%
-        summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop") %>%
-        pull(n) %>%
-        max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
 
       pk_dose_qc_plot(
         data_conc = filtered_data()$conc,
@@ -171,9 +170,37 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         title = "Dose and Sample Events",
         show_pk_samples = show_pk_samples,
         show_doses = show_doses,
-        as_plotly = TRUE,
-        height = max(c(1000, height_adjust))
+        as_plotly = FALSE
       )
     })
+
+    # Render the PK Dose QC plot as interactive plotly
+    output$pk_dose_qc_plot <- renderPlotly({
+      req(qc_ggplot())
+
+      subj_col <- pknca_data()$conc$columns$subject
+
+      # Adjust height based on number of subjects and groups
+      n_max <- filtered_data()$dose %>%
+        group_by(across(all_of(input$group_var))) %>%
+        summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop") %>%
+        pull(n) %>%
+        max(na.rm = TRUE)
+      n_groups <- length(unique(filtered_data()$dose[, input$group_var]))
+      height_adjust <- 200 + 20 * n_max * n_groups
+
+      p <- qc_ggplot()
+      ggplotly(p, tooltip = "text", height = max(c(1000, height_adjust))) %>%
+        layout(
+          title = list(text = p$labels$title),
+          legend = list(traceorder = "normal")
+        )
+    })
+
+    # Return the add_to_exports button click and the current plot
+    list(
+      add_to_exports = reactive(input$add_to_exports),
+      current_plot = qc_ggplot
+    )
   })
 }

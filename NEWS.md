@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Exploration plots: "Add to Exports" button saves named plot snapshots to the ZIP export. When custom snapshots exist for a plot type, only the snapshots are exported (the default plot is omitted). QC plot also included in the export tree (#1002)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
