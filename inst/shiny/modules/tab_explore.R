@@ -130,43 +130,67 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # --- Add to Report handlers ---
 
-    # Individual plot: save with incremented name
+    # Track which plot type triggered the modal
+    pending_plot_type <- reactiveVal(NULL)
+
+    # Show modal with filename input
+    .show_report_modal <- function(default_name) {
+      showModal(modalDialog(
+        title = "Add to Report",
+        textInput(ns("report_plot_name"), "Plot name:", value = default_name),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton(ns("confirm_add_to_report"), "Save",
+                       class = "btn btn-primary")
+        ),
+        size = "s",
+        easyClose = TRUE
+      ))
+    }
+
+    # Individual plot button
     observeEvent(individual_sidebar$add_to_report(), {
       req(individualplot())
       n <- indiv_counter() + 1L
       indiv_counter(n)
-      plot_name <- paste0("individualplot", n)
-      session$userData$results$exploration[[plot_name]] <- individualplot()
-      showNotification(
-        paste0("Individual plot saved as ", plot_name),
-        type = "message", duration = 3
-      )
-      log_info("Saved exploration plot: {plot_name}")
+      pending_plot_type("individual")
+      .show_report_modal(paste0("individualplot", n))
     })
 
-    # Mean plot: save with incremented name
+    # Mean plot button
     observeEvent(mean_sidebar$add_to_report(), {
       req(meanplot())
       n <- mean_counter() + 1L
       mean_counter(n)
-      plot_name <- paste0("meanplot", n)
-      session$userData$results$exploration[[plot_name]] <- meanplot()
-      showNotification(
-        paste0("Mean plot saved as ", plot_name),
-        type = "message", duration = 3
-      )
-      log_info("Saved exploration plot: {plot_name}")
+      pending_plot_type("mean")
+      .show_report_modal(paste0("meanplot", n))
     })
 
-    # QC plot: save with incremented name
+    # QC plot button
     observeEvent(qc_plot_outputs$add_to_report(), {
       req(qc_plot_outputs$current_plot())
       n <- qc_counter() + 1L
       qc_counter(n)
-      plot_name <- paste0("qcplot", n)
-      session$userData$results$exploration[[plot_name]] <- qc_plot_outputs$current_plot()
+      pending_plot_type("qc")
+      .show_report_modal(paste0("qcplot", n))
+    })
+
+    # Confirm save from modal
+    observeEvent(input$confirm_add_to_report, {
+      plot_name <- gsub("[^A-Za-z0-9_-]", "_", input$report_plot_name)
+      req(nzchar(plot_name))
+
+      plot_obj <- switch(pending_plot_type(),
+        individual = individualplot(),
+        mean = meanplot(),
+        qc = qc_plot_outputs$current_plot()
+      )
+      req(plot_obj)
+
+      session$userData$results$exploration[[plot_name]] <- plot_obj
+      removeModal()
       showNotification(
-        paste0("QC plot saved as ", plot_name),
+        paste0("Plot saved as '", plot_name, "'"),
         type = "message", duration = 3
       )
       log_info("Saved exploration plot: {plot_name}")
