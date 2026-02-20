@@ -45,6 +45,7 @@ Imports:
     tidyr,
     units,
     utils,
+    writexl,
     yaml
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

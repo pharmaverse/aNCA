@@ -328,6 +328,15 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.6)
 
+  # Export pre-specification files for selected CDISC datasets
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
+  if (length(selected_cdisc) > 0) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving CDISC pre-specifications...")
+    .export_pre_specs(target_dir, selected_cdisc,
+                      cdisc_data = session$userData$results$CDISC)
+  }
+
   data_tmpdir <- file.path(target_dir, "data")
   dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
   saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
@@ -397,6 +406,31 @@ prepare_export_files <- function(target_dir,
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
 
+#' Helper to export a single pre-specification xlsx file for CDISC datasets.
+#' The file is placed in the CDISC folder (e.g. CDISC/Pre_Specs.xlsx) with
+#' one sheet per selected dataset. No file is created when no specs are available.
+#' @param target_dir Target directory to save the pre-specs
+#' @param selected Character vector of selected dataset keys (lowercase: pp, adpp, adnca)
+#' @param cdisc_data Named list of CDISC data frames (pp, adpp, adnca)
+#' @keywords internal
+#' @noRd
+.export_pre_specs <- function(target_dir, selected, cdisc_data = NULL) {
+  # Reverse lookup: lowercase keys -> uppercase dataset names
+  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
+  datasets <- unname(rev_map[selected])
+
+  pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
+
+  # Keep only non-empty specs
+  pre_specs <- Filter(function(df) nrow(df) > 0, pre_specs)
+
+  if (length(pre_specs) > 0) {
+    cdisc_dir <- file.path(target_dir, "CDISC")
+    dir.create(cdisc_dir, recursive = TRUE, showWarnings = FALSE)
+    writexl::write_xlsx(pre_specs, file.path(cdisc_dir, "Pre_Specs.xlsx"))
+  }
+}
+
 #' Helper to export R script
 #' @param target_dir Target directory to save the R script
 #' @param session Shiny session object
@@ -430,6 +464,11 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
+  # Preserve pre-specs only when at least one CDISC dataset is selected
+  if (any(c("pp", "adpp", "adnca") %in% fnames)) {
+    files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                   value = TRUE))
+  }
   file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
