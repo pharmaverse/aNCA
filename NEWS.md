@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Mean exploration plots auto-select default color and facet variables from a priority list (TRT01A, GROUP, ACTARM, COHORT, dose column) (#1001)
+* COHORT, PART, PERIOD added as auto-mapped grouping variable alternatives (#1001)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)

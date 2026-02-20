@@ -13,6 +13,7 @@ pk_dose_qc_plot_ui <- function(id) {
   ns <- NS(id)
   # The nav_panel function creates the tab
   layout_sidebar(
+    fillable = TRUE,
     sidebar = sidebar(
       position = "right",
       open = TRUE,
@@ -56,7 +57,8 @@ pk_dose_qc_plot_ui <- function(id) {
         options = list(`actions-box` = TRUE)
       )
     ),
-    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%")
+    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
+    br()
   )
 }
 
