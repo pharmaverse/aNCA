@@ -191,7 +191,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       default_color <- if (is_individual) {
         subject_col
       } else {
-        color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", "DOSEA")
+        color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", dose_col)
         available_color <- intersect(color_priority, full_grouping_vars)
         if (length(available_color) > 0) available_color[1] else dose_col
       }
@@ -206,9 +206,9 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       # Default facet_by: for mean plots, first available from priority list;
       # for individual plots, no default facet
       default_facet <- if (!is_individual) {
-        facet_priority <- c("TRT01A", "DOSEA", "GROUP", "ACTARM", "COHORT")
-        match <- intersect(facet_priority, full_grouping_vars)
-        if (length(match) > 0) match[1] else NULL
+        facet_priority <- c("TRT01A", dose_col, "GROUP", "ACTARM", "COHORT")
+        available_facet <- intersect(facet_priority, full_grouping_vars)
+        if (length(available_facet) > 0) available_facet[1] else NULL
       }
 
       updatePickerInput(
