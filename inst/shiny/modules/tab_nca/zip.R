@@ -123,6 +123,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             progress$inc(0.1)
 
             output_tmpdir <- file.path(tempdir(), "output")
+            unlink(output_tmpdir, recursive = TRUE)
 
             prepare_export_files(
               target_dir = output_tmpdir,
