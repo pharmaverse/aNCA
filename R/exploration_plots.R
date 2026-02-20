@@ -57,10 +57,10 @@ exploration_individualplot <- function(
   # If no tooltip variables defined use some default ones
   if (is.null(tooltip_vars)) {
     tooltip_vars <- unique(c(
-      pknca_data$conc$columns$time,
-      pknca_data$conc$columns$timeu,
       pknca_data$conc$columns$concentration,
       pknca_data$conc$columns$concu,
+      pknca_data$conc$columns$time,
+      pknca_data$conc$columns$timeu,
       color_by
     ))
   }
@@ -147,17 +147,6 @@ exploration_meanplot <- function(
       x_var,
       pknca_data$conc$columns$timeu,
       color_by
-    ))
-  }
-  # Override AVAL label so tooltip and y-axis show "Mean Analysis Value"
-  conc_label <- get_label(
-    pknca_data$conc$columns$concentration, labels_df = labels_df
-  )
-  if (!is.null(labels_df)) {
-    labels_df <- rbind(labels_df, data.frame(
-      Dataset = "ADNCA", Variable = "AVAL",
-      Label = paste("Mean", conc_label),
-      stringsAsFactors = FALSE
     ))
   }
 
@@ -413,7 +402,8 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
     labs(
       x = paste(plot_build$plot$labels$x),
       y = paste0("Mean ", plot_build$plot$labels$y),
-      title = paste0("Mean ", plot_build$plot$labels$title)
+      title = paste0("Mean ", plot_build$plot$labels$title),
+      text = paste0("Mean ", plot_build$plot$labels$text)
     ) +
     list(
       .add_mean_layers(

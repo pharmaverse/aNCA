@@ -99,7 +99,7 @@ g_lineplot <- function(data,
   y_lab <- .build_axis_label(y_var, y_unit, data, labels_df)
   title <- "PK Concentration - Time Profile"
 
-  data <- .build_tooltip(data, tooltip_vars, labels_df)
+  data <- .build_tooltip(data, tooltip_vars, labels_df, x_lab)
   # Create color var for aesthetic mapping
   plot_data <- data %>%
     mutate(
@@ -159,7 +159,7 @@ g_lineplot <- function(data,
 
 #' Build tooltip text column on data
 #' @noRd
-.build_tooltip <- function(data, tooltip_vars, labels_df) {
+.build_tooltip <- function(data, tooltip_vars, labels_df, x_lab) {
   if (is.null(tooltip_vars)) {
     data$tooltip_text <- rep(NA_character_, nrow(data))
     return(data)
@@ -172,6 +172,10 @@ g_lineplot <- function(data,
       parts <- lapply(valid_vars, \(v) paste0(v, ": ", data[[v]]))
       data$tooltip_text <- paste(parts, collapse = "<br>")
     }
+  }
+  print(x_lab)
+  if (grepl("Nom.", x_lab, ignore.case = TRUE)) {
+    data$tooltip_text <- paste0("<b>Mean</b> ", data$tooltip_text)
   }
   data
 }
