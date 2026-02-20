@@ -57,7 +57,8 @@ pk_dose_qc_plot_ui <- function(id) {
         options = list(`actions-box` = TRUE)
       )
     ),
-    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%")
+    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
+    br()
   )
 }
 
