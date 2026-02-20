@@ -54,6 +54,21 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   }
 }
 
+# Check whether a name matches the export list (exact or numbered variant)
+.is_exportable <- function(name, obj_names) {
+  if (is.null(obj_names)) {
+    TRUE
+  } else if (name %in% obj_names) {
+    TRUE
+  } else {
+    any(vapply(
+      obj_names,
+      function(n) grepl(paste0("^", n, "[0-9]+$"), name),
+      logical(1)
+    ))
+  }
+}
+
 save_output <- function(
   output, output_path,
   ggplot_formats = c("png", "html"),
@@ -63,10 +78,6 @@ save_output <- function(
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
     x <- output[[name]]
-    # Match exact name or numbered variants (e.g. "individualplot1" matches "individualplot")
-    is_obj_to_export <- is.null(obj_names) || name %in% obj_names ||
-      any(vapply(obj_names, function(n) grepl(paste0("^", n, "[0-9]+$"), name), logical(1)))
-
     is_leaf <- inherits(x, "ggplot") || inherits(x, "data.frame") ||
       inherits(x, "plotly")
 
@@ -82,7 +93,7 @@ save_output <- function(
         table_formats = table_formats,
         obj_names = obj_names
       )
-    } else if (is_obj_to_export) {
+    } else if (.is_exportable(name, obj_names)) {
       save_dispatch(
         x = x,
         file_name = paste0(output_path, "/", name),
@@ -435,7 +446,7 @@ prepare_export_files <- function(target_dir,
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
   # Match exact names and numbered variants (e.g. individualplot1, meanplot2)
-  fnames_patt <- paste0("((", paste0(fnames, collapse = "[0-9]*)|(" ), "[0-9]*))")
+  fnames_patt <- paste0("((", paste0(fnames, collapse = "[0-9]*)|("), "[0-9]*))")
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
