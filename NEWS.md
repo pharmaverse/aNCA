@@ -42,10 +42,6 @@ identify difference between missing and not requested (#934)
 * Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
 * Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 
-## Internal
-
-* Reorganized file structure: moved templates to `inst/www/templates`, renamed `setup.R` to `nca_setup.R`, cleaned up `globalVariables`, simplified `slope_rules` return value (#965)
-
 # aNCA 0.1.0
 
 -   Initial CRAN submission.
