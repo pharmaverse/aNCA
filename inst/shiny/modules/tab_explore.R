@@ -211,6 +211,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         type = "message", duration = 3
       )
       log_info("Saved exploration plot: {plot_name}")
-    })
+    }, ignoreInit = TRUE)
   })
 }
