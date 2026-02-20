@@ -173,10 +173,11 @@ g_lineplot <- function(data,
       data$tooltip_text <- paste(parts, collapse = "<br>")
     }
   }
-  print(x_lab)
+
   if (grepl("Nom.", x_lab, ignore.case = TRUE)) {
     data$tooltip_text <- paste0("<b>Mean</b> ", data$tooltip_text)
   }
+
   data
 }
 

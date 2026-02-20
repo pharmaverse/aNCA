@@ -64,7 +64,7 @@ exploration_individualplot <- function(
       color_by
     ))
   }
-  plt <- g_lineplot(
+  g_lineplot(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
     y_var = pknca_data$conc$columns$concentration,
@@ -84,7 +84,6 @@ exploration_individualplot <- function(
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
     show_legend = show_legend
   )
-  plt
 }
 
 
@@ -147,6 +146,17 @@ exploration_meanplot <- function(
       x_var,
       pknca_data$conc$columns$timeu,
       color_by
+    ))
+  }
+  # Override AVAL label so tooltip and y-axis show "Mean Analysis Value"
+  conc_label <- get_label(
+    pknca_data$conc$columns$concentration, labels_df = labels_df
+  )
+  if (!is.null(labels_df)) {
+    labels_df <- rbind(labels_df, data.frame(
+      Dataset = "ADNCA", Variable = "AVAL",
+      Label = paste("Mean", conc_label),
+      stringsAsFactors = FALSE
     ))
   }
 
@@ -402,8 +412,7 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
     labs(
       x = paste(plot_build$plot$labels$x),
       y = paste0("Mean ", plot_build$plot$labels$y),
-      title = paste0("Mean ", plot_build$plot$labels$title),
-      text = paste0("Mean ", plot_build$plot$labels$text)
+      title = paste0("Mean ", plot_build$plot$labels$title)
     ) +
     list(
       .add_mean_layers(
