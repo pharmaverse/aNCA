@@ -3,7 +3,7 @@
 ## Features added
 
 * ZIP export filename uses STUDYID as fallback when no project name is set, date suffix removed (#537)
-* Project name auto-populated from STUDYID on data upload (#537)
+* Project name auto-populated from STUDYID on data upload (#1000)
 * Descriptive statistics now selectable in the ZIP export tree (#537)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
