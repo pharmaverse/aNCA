@@ -196,21 +196,28 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       )
       req(plot_obj)
 
-      # Increment counter only after confirmed save
-      if (type == "individual") indiv_counter(indiv_counter() + 1L)
-      else if (type == "mean") mean_counter(mean_counter() + 1L)
-      else if (type == "qc") qc_counter(qc_counter() + 1L)
+      is_overwrite <- plot_name %in% names(session$userData$results$exploration)
+
+      # Increment counter only after confirmed save (skip on overwrite)
+      if (!is_overwrite) {
+        if (type == "individual") indiv_counter(indiv_counter() + 1L)
+        else if (type == "mean") mean_counter(mean_counter() + 1L)
+        else if (type == "qc") qc_counter(qc_counter() + 1L)
+      }
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
       session$userData$exploration_custom_names <- unique(
         c(session$userData$exploration_custom_names, plot_name)
       )
       removeModal()
-      showNotification(
-        paste0("Plot saved as '", plot_name, "'"),
-        type = "message", duration = 3
-      )
-      log_info("Saved exploration plot: {plot_name}")
+
+      msg <- if (is_overwrite) {
+        paste0("Plot '", plot_name, "' updated")
+      } else {
+        paste0("Plot saved as '", plot_name, "'")
+      }
+      showNotification(msg, type = "message", duration = 3)
+      log_info("Saved exploration plot: {plot_name} (overwrite={is_overwrite})")
     }, ignoreInit = TRUE)
   })
 }

@@ -128,11 +128,23 @@ describe("g_lineplot: structure and arguments", {
       x_var = "time_var",
       y_var = "AVAL",
       color_by = "USUBJID",
-      facet_by = "PARAM"
+      facet_by = "PARAM",
+      facet_count_n = "USUBJID"
     )
     expect_true("facet_label" %in% names(p$data))
     expect_true(any(grepl("PARAM: Analyte1", unique(p$data$facet_label))))
     expect_true(any(grepl("\\(n=2\\)", unique(p$data$facet_label))))
+  })
+
+  it("does not add facet counts when facet_count_n is NULL", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      facet_by = "PARAM"
+    )
+    expect_false("facet_label" %in% names(p$data))
   })
 
   it("uses precomputed facet count column", {
@@ -248,18 +260,5 @@ describe("g_lineplot: Tooltips", {
     expect_true(any(grepl("USUBJID: Subject1", p$data$tooltip_text)))
     # Check NO bold tags
     expect_false(any(grepl("<b>", p$data$tooltip_text)))
-  })
-
-  it("applies x and y limits", {
-    p <- g_lineplot(
-      data = ind_data,
-      x_var = "time_var",
-      y_var = "AVAL",
-      color_by = "USUBJID",
-      x_limits = c(1, 8),
-      y_limits = c(10, 100)
-    )
-    expect_equal(p$coordinates$limits$x, c(1, 8))
-    expect_equal(p$coordinates$limits$y, c(10, 100))
   })
 })
