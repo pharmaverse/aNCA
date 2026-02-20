@@ -15,10 +15,9 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns("add_to_report"),
       label = "Add to Report",
       icon = icon("plus"),
-      class = "btn btn-primary",
+      class = "btn btn-primary btn-sm",
       width = "100%"
     ),
-    hr(),
     selectInput(
       ns("palette"),
       "Select Color Theme:",

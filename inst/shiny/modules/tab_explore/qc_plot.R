@@ -20,10 +20,9 @@ pk_dose_qc_plot_ui <- function(id) {
         ns("add_to_report"),
         label = "Add to Report",
         icon = icon("plus"),
-        class = "btn btn-primary",
+        class = "btn btn-primary btn-sm",
         width = "100%"
       ),
-      hr(),
       pickerInput(
         inputId = ns("group_var"),
         label = "Choose the variables to group by:",
