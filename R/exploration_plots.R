@@ -97,7 +97,7 @@ exploration_individualplot <- function(
 #' @param sd_max Logical; if `TRUE`, plot upper SD error bars. Default is `FALSE`.
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
-#' Default includes dose group vars and "Mean_concentration".
+#' Default includes dose group vars and "Mean".
 #' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
 #' Default is `NULL` (no limits).
 #' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
@@ -142,17 +142,25 @@ exploration_meanplot <- function(
   # If no tooltip variable specified, use the default ones
   if (is.null(tooltip_vars)) {
     tooltip_vars <- unique(c(
-      "Mean_concentration",
+      "Mean",
       pknca_data$conc$columns$concu,
       x_var,
       pknca_data$conc$columns$timeu,
       color_by
     ))
   }
+  # Build the y-axis label from the original concentration variable
+  conc_col <- pknca_data$conc$columns$concentration
+  conc_unit_col <- pknca_data$conc$columns$concu
+  conc_label <- get_label(conc_col, labels_df = labels_df)
+  conc_unit <- if (!is.null(conc_unit_col) && conc_unit_col %in% names(mean_data)) {
+    paste0(unique(mean_data[[conc_unit_col]]), collapse = ", ")
+  }
+
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
-    y_var = "Mean_concentration",
+    y_var = "Mean",
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
@@ -169,6 +177,14 @@ exploration_meanplot <- function(
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
     show_legend = show_legend
   )
+
+  # Override y label: "Mean Analysis Value [unit]" instead of "Mean [unit]"
+  y_lab <- if (!is.null(conc_unit)) {
+    paste0("Mean ", conc_label, " [", conc_unit, "]")
+  } else {
+    paste0("Mean ", conc_label)
+  }
+  plot <- plot + ggplot2::labs(y = y_lab)
   # If there is no mean data, just return the plot
   if (nrow(mean_data) == 0) {
     return(plot)
@@ -182,7 +198,7 @@ exploration_meanplot <- function(
     ci = ci,
     color_by = color_by,
     x_var = x_var,
-    y_var = "Mean_concentration"
+    y_var = "Mean"
   )
 }
 
@@ -301,7 +317,7 @@ process_data_mean <- function(pknca_data,
   summarised_data <- processed %>%
     dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
     dplyr::summarise(
-      Mean_concentration = round(mean(!!rlang::sym(y_var), na.rm = TRUE), 3),
+      Mean = round(mean(!!rlang::sym(y_var), na.rm = TRUE), 3),
       SD = sd(!!rlang::sym(y_var), na.rm = TRUE),
       N = dplyr::n(),
       SE = SD / sqrt(N),
@@ -309,10 +325,10 @@ process_data_mean <- function(pknca_data,
     ) %>%
     dplyr::filter(N >= 3) %>%
     dplyr::mutate(
-      SD_min = Mean_concentration - SD,
-      SD_max = Mean_concentration + SD,
-      CI_lower = Mean_concentration - 1.96 * SE,
-      CI_upper = Mean_concentration + 1.96 * SE
+      SD_min = Mean - SD,
+      SD_max = Mean + SD,
+      CI_lower = Mean - 1.96 * SE,
+      CI_upper = Mean + 1.96 * SE
     ) %>%
     # Make sure the nominal time column is always the first column
     select(any_of(c(x_var)), everything())
@@ -331,7 +347,7 @@ process_data_mean <- function(pknca_data,
   # Remove non-positive means if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     summarised_data <- summarised_data %>%
-      dplyr::filter(Mean_concentration > 0)
+      dplyr::filter(Mean > 0)
   }
   summarised_data
 }
