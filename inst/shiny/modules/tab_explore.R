@@ -144,36 +144,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Track which plot type triggered the modal
     pending_plot_type <- reactiveVal(NULL)
 
-    # Build list of saved plots for the modal
-    .saved_plots_ui <- function() {
-      custom <- session$userData$exploration_custom_names
-      if (is.null(custom) || length(custom) == 0) return(NULL)
-      tags$div(
-        tags$strong("Saved plots:"),
-        tags$ul(
-          style = "list-style: none; padding-left: 0; margin-top: 5px;",
-          lapply(custom, function(pname) {
-            tags$li(
-              style = "display: flex; align-items: center; justify-content: space-between; padding: 2px 0;",
-              tags$span(pname),
-              actionLink(
-                ns(paste0("remove_plot_", pname)),
-                label = NULL,
-                icon = icon("xmark"),
-                style = "color: #dc3545; padding: 0 5px;"
-              )
-            )
-          })
-        ),
-        hr()
-      )
-    }
-
-    # Show modal with filename input and saved plots list
+    # Show modal with filename input
     .show_report_modal <- function(default_name) {
       showModal(modalDialog(
         title = "Add to Report",
-        .saved_plots_ui(),
         textInput(ns("report_plot_name"), "Plot name:", value = default_name),
         footer = tagList(
           modalButton("Cancel"),
@@ -210,27 +184,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       qc_counter(n)
       pending_plot_type("qc")
       .show_report_modal(paste0("qcplot", n))
-    })
-
-    # Handle remove plot clicks
-    observe({
-      custom <- session$userData$exploration_custom_names
-      req(custom)
-      lapply(custom, function(pname) {
-        input_id <- paste0("remove_plot_", pname)
-        observeEvent(input[[input_id]], {
-          session$userData$results$exploration[[pname]] <- NULL
-          session$userData$exploration_custom_names <- setdiff(
-            session$userData$exploration_custom_names, pname
-          )
-          # Refresh the modal
-          .show_report_modal(input$report_plot_name %||% "")
-          showNotification(
-            paste0("Removed '", pname, "' from report"),
-            type = "warning", duration = 3
-          )
-        }, ignoreInit = TRUE, once = TRUE)
-      })
     })
 
     # Confirm save from modal
