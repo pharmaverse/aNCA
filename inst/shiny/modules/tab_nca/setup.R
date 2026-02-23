@@ -106,7 +106,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
           parameters_output$selections(), parameters_output$types_df())
 
       log_trace("Updating PKNCA::data object.")
-      
+
       base_pknca_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = settings()$method,
@@ -118,7 +118,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
         exclusion_list = general_exclusions(),
         keep_interval_cols = extra_group_vars()
       )
-      
+
       # Show bioavailability widget if it is possible to calculate
       if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")
