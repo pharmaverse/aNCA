@@ -51,18 +51,41 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
     general_excl_override <- reactive(imported_settings()$general_exclusions)
 
     # Gather all settings from the appropriate module
-    settings <- settings_server(
+    settings_output <- settings_server(
       "nca_settings",
       data,
       adnca_data,
       imported_settings
     )
+    settings <- settings_output$all
 
     general_exclusions <- general_exclusions_server(
       "general_exclusions",
       processed_pknca_data,
       general_excl_override
     )
+
+    # Lightweight PKNCA data for parameter selection — only depends on
+    # analyte/profile/pcspec, not on method, slopes, flags, or exclusions.
+    param_selection_data <- reactive({
+      req(
+        adnca_data(),
+        settings_output$analyte(),
+        settings_output$profile(),
+        settings_output$pcspec()
+      )
+      log_trace("Updating parameter selection data.")
+
+      PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        method = "linear",
+        selected_analytes = settings_output$analyte(),
+        selected_profile = settings_output$profile(),
+        selected_pcspec = settings_output$pcspec(),
+        should_impute_c0 = TRUE,
+        keep_interval_cols = extra_group_vars()
+      )
+    })
 
     # Create processed data object with applied settings.
     base_pknca_data <- reactive({
@@ -93,7 +116,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
 
     parameters_output <- parameter_selection_server(
       "nca_setup_parameter",
-      base_pknca_data,
+      param_selection_data,
       imported_params
     )
 
