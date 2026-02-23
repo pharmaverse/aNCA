@@ -20,8 +20,6 @@ This manual is a user guide and technical reference on how aNCA operates interna
 
 For a quick start and installation instructions, see [Get Started](aNCA.html). For NCA concepts, see [What is NCA?](background.html).
 
-## Step-by-Step Workflow
-
 The NCA workflow consists of five main steps executed through the aNCA interface.
 
 1. **Upload & Map Data**: Load your dataset and map columns to ADNCA format using the Data tab
@@ -30,14 +28,14 @@ The NCA workflow consists of five main steps executed through the aNCA interface
 4. **Run Analysis**: Click "Run NCA" to execute PKNCA calculations
 5. **Generate Outputs**: See all results in the `NCA results` tab and export them to a ZIP using the top-right button.
 
-## Main Functions Used
-
+## Main Functions
 The workflow is orchestrated internally by:
 
 - **Data Preparation**: `apply_mapping()`, `format_pkncaconc_data()`, `format_pkncadose_data()`
 - **Interval Creation**: `format_pkncadata_intervals()`, `update_main_intervals()`
 - **NCA Execution**: PKNCA's `PKNCAdata()` and `pk.nca()`
 - **Output Generation**: `export_cdisc()` for CDISC datasets, TLG generation functions
+
 ---
 
 # Table of Contents
