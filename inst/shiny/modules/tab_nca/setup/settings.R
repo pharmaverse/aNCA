@@ -414,7 +414,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     list(
       all = settings_debounced,
       analyte = reactive(input$select_analyte),
-      profile = reactive(input$select_profile),
       pcspec = reactive(input$select_pcspec)
     )
   })

@@ -65,24 +65,20 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       general_excl_override
     )
 
-    # Lightweight PKNCA data for parameter selection — only depends on
-    # analyte/profile/pcspec, not on method, slopes, flags, or exclusions.
+    # Lightweight filtered data for parameter selection — only depends on
+    # analyte/pcspec, not on method, slopes, flags, or exclusions.
+    # Filters conc$data directly instead of building a full PKNCA data object.
     param_selection_data <- reactive({
-      req(
-        adnca_data(),
-        settings_output$analyte(),
-        settings_output$profile(),
-        settings_output$pcspec()
-      )
+      req(adnca_data(), settings_output$analyte(), settings_output$pcspec())
       log_trace("Updating parameter selection data.")
 
-      PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        method = "",
-        selected_analytes = settings_output$analyte(),
-        selected_profile = settings_output$profile(),
-        selected_pcspec = settings_output$pcspec()
-      )
+      pknca_data <- adnca_data()
+      pknca_data$conc$data <- pknca_data$conc$data %>%
+        dplyr::filter(
+          PARAM %in% settings_output$analyte(),
+          PCSPEC %in% settings_output$pcspec()
+        )
+      pknca_data
     })
 
     parameters_output <- parameter_selection_server(

@@ -107,6 +107,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       mutate(sort_order = row_number())
 
     # Retrieve study types
+    # Data is pre-filtered by analyte/pcspec in setup.R, so no interval
+    # semi_join is needed here.
     study_types_df <- reactive({
       req(processed_pknca_data())
 
@@ -120,16 +122,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
-      subj_column <- processed_pknca_data()$conc$columns$subject
-
-      filtered_intervals <- processed_pknca_data()$intervals %>%
-        select(all_of(c(groups, subj_column)))
-      # keep subj col to prevent issues if only one subject selected (#858)
-
-      df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
-
       detect_study_types(
-        df,
+        processed_pknca_data()$conc$data,
         groups,
         metabfl_column = "METABFL",
         route_column = processed_pknca_data()$dose$columns$route,
