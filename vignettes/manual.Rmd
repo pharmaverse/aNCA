@@ -20,6 +20,24 @@ This manual is a user guide and technical reference on how aNCA operates interna
 
 For a quick start and installation instructions, see [Get Started](aNCA.html). For NCA concepts, see [What is NCA?](background.html).
 
+## Step-by-Step Workflow
+
+The NCA workflow consists of five main steps executed through the aNCA interface.
+
+1. **Upload & Map Data**: Load your dataset and map columns to ADNCA format using the Data tab
+2. **Configure Settings**: Choose imputation methods, BLQ handling, and AUC calculation in the NCA Setup tab
+3. **Review Intervals**: Verify dose times and intervals are correctly identified
+4. **Run Analysis**: Click "Run NCA" to execute PKNCA calculations
+5. **Generate Outputs**: See all results in the `NCA results` tab and export them to a ZIP using the top-right button.
+
+## Main Functions Used
+
+The workflow is orchestrated internally by:
+
+- **Data Preparation**: `apply_mapping()`, `format_pkncaconc_data()`, `format_pkncadose_data()`
+- **Interval Creation**: `format_pkncadata_intervals()`, `update_main_intervals()`
+- **NCA Execution**: PKNCA's `PKNCAdata()` and `pk.nca()`
+- **Output Generation**: `export_cdisc()` for CDISC datasets, TLG generation functions
 ---
 
 # Table of Contents
@@ -207,7 +225,7 @@ NCA settings control how PKNCA processes your data during calculations. These ar
 The imputation actions are specified exclusively for parameters that are not exclusively calculated based on observed concentrations (e.g., Cmax, Tmax, AUClast, etc.) but also for parameters that require extrapolation to infinity (e.g., AUCinf) or parameters that are calculated based on the terminal slope (e.g., half-life, clearance, volume). The imputation rules are applied during the interval creation step in `update_main_intervals()`, where the appropriate imputation method is selected based on the characteristics of each record (e.g., dose route, dose duration, metabolite status, etc.) and the availability of data (e.g., presence of pre-dose concentrations, presence of multiple post-dose concentrations for log-linear regression).
 They are specified in the `PKNCAdata` object via the `impute` column. The order of imputation is as follows:
 
-**Order of Application**: `start_concentration` > `BLQ imputation`
+**Order of Application**: `start_concentration` -> `BLQ imputation`
 
 
 ### 3.1.1 Start Concentration Imputation: `create_start_impute()`
@@ -329,25 +347,6 @@ After the last measurable concentration (Tlast), AUC can be extrapolated using d
 
 
 # 4. Running NCA
-
-The NCA workflow consists of five main steps executed through the aNCA interface.
-
-## Step-by-Step Workflow
-
-1. **Upload & Map Data**: Load your dataset and map columns to ADNCA format using the Data tab
-2. **Configure Settings**: Choose imputation methods, BLQ handling, and AUC calculation in the NCA Setup tab
-3. **Review Intervals**: Verify dose times and intervals are correctly identified
-4. **Run Analysis**: Click "Run NCA" to execute PKNCA calculations
-5. **Generate Outputs**: See all results in the `NCA results` tab and export them to a ZIP using the top-right button.
-
-## Main Functions Used
-
-The workflow is orchestrated internally by:
-
-- **Data Preparation**: `apply_mapping()`, `format_pkncaconc_data()`, `format_pkncadose_data()`
-- **Interval Creation**: `format_pkncadata_intervals()`, `update_main_intervals()`
-- **NCA Execution**: PKNCA's `PKNCAdata()` and `pk.nca()`
-- **Output Generation**: `export_cdisc()` for CDISC datasets, TLG generation functions
 
 ---
 
