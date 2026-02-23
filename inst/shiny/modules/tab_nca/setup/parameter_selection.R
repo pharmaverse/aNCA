@@ -107,8 +107,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       mutate(sort_order = row_number())
 
     # Retrieve study types
-    # Data is pre-filtered by analyte/pcspec in setup.R, so no interval
-    # semi_join is needed here.
     study_types_df <- reactive({
       req(processed_pknca_data())
 
