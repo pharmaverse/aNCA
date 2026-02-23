@@ -33,7 +33,7 @@ units_table_server <- function(id, mydata) {
         dplyr::rows_update(
           default_units,
           dplyr::mutate(session$userData$units_table(), default = FALSE),
-          by = c("PPTESTCD", "PPORRESU"),
+          by = c("PCSPEC", "PPTESTCD", "PPORRESU"),
           unmatched = "ignore"
         ) %>%
           modal_units_table()
@@ -190,6 +190,7 @@ units_table_server <- function(id, mydata) {
 
       log_trace("Applying custom units specification.")
       modal_units_table() %>%
+        dplyr::filter(!default) %>%
         session$userData$units_table()
 
       # Close the modal message window for the user
@@ -198,7 +199,15 @@ units_table_server <- function(id, mydata) {
 
     #' Update local `modal_units_table()` if the global value changes.
     observeEvent(session$userData$units_table(), {
-      session$userData$units_table() %>%
+      default_units <- mydata()$units %>%
+        dplyr::mutate(default = TRUE)
+
+      dplyr::rows_update(
+        default_units,
+        dplyr::mutate(session$userData$units_table(), default = FALSE),
+        by = c("PCSPEC", "PPTESTCD", "PPORRESU"),
+        unmatched = "ignore"
+      ) %>%
         modal_units_table()
     })
   })
