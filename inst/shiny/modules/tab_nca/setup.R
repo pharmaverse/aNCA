@@ -78,12 +78,10 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
 
       PKNCA_update_data_object(
         adnca_data = adnca_data(),
-        method = "linear",
+        method = "",
         selected_analytes = settings_output$analyte(),
         selected_profile = settings_output$profile(),
-        selected_pcspec = settings_output$pcspec(),
-        should_impute_c0 = TRUE,
-        keep_interval_cols = extra_group_vars()
+        selected_pcspec = settings_output$pcspec()
       )
     })
 
