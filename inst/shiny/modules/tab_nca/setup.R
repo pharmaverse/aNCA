@@ -85,33 +85,6 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       )
     })
 
-    # Create processed data object with applied settings.
-    base_pknca_data <- reactive({
-      req(adnca_data(), settings())
-      log_trace("Updating PKNCA::data object.")
-
-      base_pknca_data <- PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        method = settings()$method,
-        selected_analytes = settings()$analyte,
-        selected_profile = settings()$profile,
-        selected_pcspec = settings()$pcspec,
-        should_impute_c0 = settings()$data_imputation$impute_c0,
-        hl_adj_rules = slope_rules$manual_slopes(),
-        exclusion_list = general_exclusions(),
-        keep_interval_cols = extra_group_vars()
-      )
-
-      # Show bioavailability widget if it is possible to calculate
-      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
-        shinyjs::show(selector = ".bioavailability-picker")
-      } else {
-        shinyjs::hide(selector = ".bioavailability-picker")
-      }
-
-      base_pknca_data
-    })
-
     parameters_output <- parameter_selection_server(
       "nca_setup_parameter",
       param_selection_data,
@@ -131,15 +104,35 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       current_settings
     })
 
-    # Update intervals using summary output
+    # Update pknca data object and intervals using summary output
     processed_pknca_data <- reactive({
-      req(base_pknca_data(), parameters_output$selections(), parameters_output$types_df())
+      req(adnca_data(), settings(),
+          parameters_output$selections(), parameters_output$types_df())
 
-      final_data <- base_pknca_data()
+      log_trace("Updating PKNCA::data object.")
+      
+      base_pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        method = settings()$method,
+        selected_analytes = settings()$analyte,
+        selected_profile = settings()$profile,
+        selected_pcspec = settings()$pcspec,
+        should_impute_c0 = settings()$data_imputation$impute_c0,
+        hl_adj_rules = slope_rules$manual_slopes(),
+        exclusion_list = general_exclusions(),
+        keep_interval_cols = extra_group_vars()
+      )
+      
+      # Show bioavailability widget if it is possible to calculate
+      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+        shinyjs::show(selector = ".bioavailability-picker")
+      } else {
+        shinyjs::hide(selector = ".bioavailability-picker")
+      }
 
       # Call the updated function with the direct inputs
       final_data <- update_main_intervals(
-        data = base_pknca_data(),
+        data = base_pknca_data,
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
         int_parameters = settings()$int_parameters,
