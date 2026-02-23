@@ -348,8 +348,40 @@ After the last measurable concentration (Tlast), AUC can be extrapolated using d
 
 # 4. Running NCA
 
----
+aNCA builds on PKNCA for core NCA calculations. Understanding PKNCA methods helps interpret results.
 
+## Data Object Creation
+
+| Function | Purpose | aNCA Wrapper |
+|----------|---------|--------------|
+| `PKNCA::PKNCAconc()` | Creates concentration object | `PKNCA_create_data_object()` |
+| `PKNCA::PKNCAdose()` | Creates dose object | `PKNCA_create_data_object()` |
+| `PKNCA::PKNCAdata()` | Combines conc + dose + intervals | `PKNCA_create_data_object()` |
+
+## NCA Calculations
+
+| Function | Parameter | aNCA Usage |
+|----------|-----------|------------|
+| `pk.calc.cmax()` | Maximum concentration | Automatic |
+| `pk.calc.tmax()` | Time of maximum | Automatic |
+| `pk.calc.auclast()` | AUC to last | Automatic |
+| `pk.calc.aucinf.obs()` | AUC to infinity | Automatic |
+| `pk.calc.half.life()` | Terminal half-life | Automatic + manual |
+| `pk.calc.cl.obs()` | Clearance | Automatic |
+| `pk.calc.vz.obs()` | Volume of distribution | Automatic |
+
+**Reference**: [PKNCA Function Reference](https://billdenney.github.io/pknca/reference/index.html)
+
+## NCA Execution
+
+```r
+# Simplified workflow
+pknca_data <- PKNCAdata(conc, dose, intervals)
+results <- pk.nca(pknca_data)
+```
+
+**aNCA Wrapper**: The NCA workflow is encapsulated in the app's "Run NCA" button, which internally calls `pk.nca()` with configured settings.
+---
 
 
 # 5. Results & Outputs
@@ -510,46 +542,6 @@ Title: Study $STUDYID - !PARAM Analysis
 - TLG templates defined in `inst/shiny/tlg_definitions/`
 - Generation functions in `R/` (e.g., `g_pkcg.R`, `l_pkcl01.R`)
 - Export handled by `{officer}` and `{flextable}`
-
-
-
----
-
-# Key PKNCA Functions and Methods
-
-aNCA builds on PKNCA for core NCA calculations. Understanding PKNCA methods helps interpret results.
-
-## Data Object Creation
-
-| Function | Purpose | aNCA Wrapper |
-|----------|---------|--------------|
-| `PKNCA::PKNCAconc()` | Creates concentration object | `PKNCA_create_data_object()` |
-| `PKNCA::PKNCAdose()` | Creates dose object | `PKNCA_create_data_object()` |
-| `PKNCA::PKNCAdata()` | Combines conc + dose + intervals | `PKNCA_create_data_object()` |
-
-## NCA Calculations
-
-| Function | Parameter | aNCA Usage |
-|----------|-----------|------------|
-| `pk.calc.cmax()` | Maximum concentration | Automatic |
-| `pk.calc.tmax()` | Time of maximum | Automatic |
-| `pk.calc.auclast()` | AUC to last | Automatic |
-| `pk.calc.aucinf.obs()` | AUC to infinity | Automatic |
-| `pk.calc.half.life()` | Terminal half-life | Automatic + manual |
-| `pk.calc.cl.obs()` | Clearance | Automatic |
-| `pk.calc.vz.obs()` | Volume of distribution | Automatic |
-
-**Reference**: [PKNCA Function Reference](https://billdenney.github.io/pknca/reference/index.html)
-
-## NCA Execution
-
-```r
-# Simplified workflow
-pknca_data <- PKNCAdata(conc, dose, intervals)
-results <- pk.nca(pknca_data)
-```
-
-**aNCA Wrapper**: The NCA workflow is encapsulated in the app's "Run NCA" button, which internally calls `pk.nca()` with configured settings.
 
 ---
 
