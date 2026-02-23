@@ -95,6 +95,8 @@ UX
 VOLUMEU
 VSSMDO
 VSSMDP
+WTBL
+WTBLU
 XPT
 YAML
 amountu
@@ -151,6 +153,7 @@ rpptx
 ruleset
 rulesets
 runnable
+selectable
 signif
 src
 tibble

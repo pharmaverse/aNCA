@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
+* Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 * R script exported in ZIP folder to re-run and replicate App outputs (#789)
@@ -18,7 +20,11 @@
 * General button at top page to save all NCA results, settings & draft slides as a ZIP file (#638)
 * Settings are now uploaded on initial opening of the app in the data tab, and applied to the next steps (#860)
 * Settings file has been converted from rds to yaml, allowing better readability and editing for users. (#901)
-
+* WTBL and WTBLU columns added to the data mapping, for optional conversion of dose to adjust to body weight for excretion calculations (#959)
+* Slope selector table for half life adjustments uses time to choose the point of interest. Also it is aesthetics have been polished (#956)
+* Partial interval parameters section now allows other calculations than `AUCINT`, such as `RCAMINT`, `AUCINTD` or `CAVGINT` among others (#524)
+* Slope selector plots count with grouping options (#333)
+* Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
@@ -35,6 +41,8 @@
 * Bug fix so app doesn't crash if NCA is rerun with an error (e.g. No exclusion REASON) (#913)
 * NCA results flagging logic updated to include Missing column and correctly
 identify difference between missing and not requested (#934)
+* Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
+* Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 
 # aNCA 0.1.0
 

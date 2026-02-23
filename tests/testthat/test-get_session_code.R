@@ -181,3 +181,84 @@ describe("clean_deparse()", {
     expect_equal(out, exp_out)
   })
 })
+
+describe("get_settings_code: ", {
+  setts_file <- testthat::test_path("data/test-settings.yaml")
+  data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
+  output_file <- tempfile(fileext = ".R")
+  placeholder <- "settings_list"
+
+  get_settings_code(
+    settings_file_path = setts_file,
+    data_path = data_file,
+    output_path = output_file
+  )
+
+  it("writes a script R file output and substitutes placeholders", {
+    expect_true(file.exists(output_file))
+  })
+
+  it("substitutes placeholders in the output file", {
+    file_content <- readLines(output_file)
+    expect_false(any(grepl(placeholder, file_content)))
+  })
+})
+
+describe("get_session_code: ", {
+  setts_file <- testthat::test_path("data/test-settings.yaml")
+  data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
+  output_file <- tempfile(fileext = ".R")
+  placeholder <- "settings_list"
+
+  default_mapping <- list(
+    select_STUDYID = "STUDYID",
+    select_USUBJID = "USUBJID",
+    select_DOSEA = "DOSEA",
+    select_DOSEU = "DOSEU",
+    select_DOSETRT = "DOSETRT",
+    select_PARAM = "PARAM",
+    select_Metabolites = "Metab-DrugA",
+    select_ARRLT = "ARRLT",
+    select_NRRLT = "NRRLT",
+    select_AFRLT = "AFRLT",
+    select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
+    select_NFRLT = "NFRLT",
+    select_PCSPEC = "PCSPEC",
+    select_ROUTE = "ROUTE",
+    select_TRTRINT = "TRTRINT",
+    select_ADOSEDUR = "ADOSEDUR",
+    select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
+    select_RRLTU = "RRLTU",
+    select_VOLUME = "VOLUME",
+    select_VOLUMEU = "VOLUMEU",
+    select_AVAL = "AVAL",
+    select_AVALU = "AVALU",
+    select_ATPTREF = "ATPTREF"
+  )
+
+  # Create a mock session object
+  setts <- read_settings(setts_file)
+  session <- list(
+    userData = list(
+      settings_list = setts,
+      data_path = data_file,
+      mapping = default_mapping,
+      ratio_table = data.frame()
+    )
+  )
+
+  # Call the function and generate the output file
+  get_session_code(
+    session = session$userData,
+    output_path = output_file
+  )
+
+  it("writes a script R file output", {
+    expect_true(file.exists(output_file))
+  })
+
+  it("substitutes placeholders in the output file", {
+    file_content <- readLines(output_file)
+    expect_false(any(grepl(placeholder, file_content)))
+  })
+})

@@ -127,4 +127,15 @@ describe("get_halflife_plot", {
     )
     expect_equal(plots_details, exp_plots_details, ignore_attr = TRUE)
   })
+
+  it("does not crash when all available points are excluded", {
+    pknca_all_sel_excl <- base_pknca
+    pknca_all_sel_excl$intervals <- pknca_all_sel_excl$intervals[2, ]
+    pknca_all_sel_excl$conc$data <- pknca_all_sel_excl$conc$data %>%
+      mutate(
+        exclude_half.life = TRUE
+      )
+    plots <- get_halflife_plots(pknca_all_sel_excl)[["plots"]]
+    expect_no_error(plots)
+  })
 })

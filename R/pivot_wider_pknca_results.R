@@ -65,7 +65,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       group_by(!!!syms(conc_groups), DOSNOA) %>%
       # Derive LAMZMTD: was lambda.z manually customized?
       mutate(LAMZMTD = ifelse(
-        any(is.excluded.hl) | any(is.included.hl), "Manual", "Best slope"
+        any(exclude_half.life) | any(include_half.life), "Manual", "Best slope"
       )) %>%
       filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
       filter(!!sym(time_col) >= (LAMZLL + start) | is.na(LAMZLL)) %>%
@@ -106,7 +106,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
     # TODO(mateusz): could use some refactoring in time, actions are repated, redundant
     #                columns are created
     manual_aucs_vals <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
+      filter(type_interval == "manual") %>%
       mutate(
         interval_name = paste0(
           signif(start_dose), "-", signif(end_dose),
@@ -120,7 +120,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
                   values_from = PPSTRES)
 
     manual_aucs_exclude <- myres$result %>%
-      filter(type_interval == "manual", startsWith(PPTESTCD, "AUCINT")) %>%
+      filter(type_interval == "manual") %>%
       mutate(
         interval_name = paste0(
           signif(start_dose), "-", signif(end_dose),

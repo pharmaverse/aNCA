@@ -24,6 +24,11 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   concu_col <- pknca_data$conc$columns$concu
   exclude_hl_col <- pknca_data$conc$columns$exclude_half.life
 
+  # Define which columns use for the title to keep it short
+  group_conc_cols <- group_vars(pknca_data)
+  group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
+  title_cols <- group_conc_cols[group_conc_n_levels > 1]
+
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
     pknca_data$conc$data[["exclude_half.life"]] <- FALSE
@@ -134,7 +139,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     df <- info_per_plot_list[[i]]
 
     # Create line data
-    if (any(!is.na(df$is_halflife_used))) {
+    if (any(df$is_halflife_used, na.rm = TRUE)) {
       df_fit <- df[df$is_halflife_used, ]
       fit <- stats::lm(as.formula(paste0("log10(", conc_col, ") ~ ", time_col)), df_fit)
       fit_line_data <- data.frame(x = c(df$lambda.z.time.first[1], df$tlast[1]))
@@ -164,8 +169,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
       time_col = time_col,
       conc_col = conc_col,
       title = paste0(
-        paste0(group_vars(pknca_data), ": "),
-        df[1, group_vars(pknca_data), drop = FALSE],
+        paste0(title_cols, ": "),
+        df[1, title_cols, drop = FALSE],
         collapse = ", "
       ),
       xlab = df$xlab[1],
@@ -218,8 +223,7 @@ get_halflife_plots_single <- function(
 ) {
   if (is.null(text)) {
     text <- paste0(
-      "Data Point: ", seq_len(nrow(plot_data)), "\n(",
-      plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
+      "(", plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
     )
   }
   plotly::plot_ly() %>%

@@ -124,7 +124,7 @@ describe("PKNCA_update_data_object", {
   analytes <- unique(simple_data$PARAM)
   dosnos <- unique(simple_data$ATPTREF)
   pcspecs <- unique(simple_data$PCSPEC)
-  auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
+  int_parameters <- data.frame(start_auc = numeric(), end_auc = numeric())
 
   ma_data <- PKNCA_create_data_object(multiple_data)
 
@@ -417,13 +417,6 @@ describe("check_valid_pknca_data", {
   # Make checks for half-life exclusions ----
   pknca_data_with_excl <- pknca_data
   excl_hl_col <- pknca_data_with_excl$conc$columns$exclude_half.life
-
-  #####################################################################################
-  # TODO (Until new slope management is merged, we need to use the old is.excluded.hl)
-  # Check with #641
-  pknca_data$conc$data[["is.excluded.hl"]] <- pknca_data$conc$data[[excl_hl_col]]
-  excl_hl_col <- "is.excluded.hl"
-  ####################################################################################
 
   pknca_data_with_excl$conc$data[1, excl_hl_col] <- TRUE
 
