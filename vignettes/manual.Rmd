@@ -14,24 +14,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
 
-
-# Table of Contents
-
-| Section | Link |
-|---|---|
-| 1. Overview | [Overview](#1-overview) |
-| 2. Data Requirements | [Data Requirements](#2-data-requirements) |
-| 3. Data Preparation | [Data Preparation](#3-data-preparation) |
-| 4. NCA Settings | [NCA Settings](#4-nca-settings) |
-| 5. Running NCA | [Running NCA](#5-running-nca) |
-| 6. Results & Outputs | [Results & Outputs](#6-results--outputs) |
-| 7. Half-Life Selection | [Half-Life Selection & Slope Selector](#7-half-life-selection-and-slope-selector) |
-| 8. TLG | [TLG](#8-tlg-tables-listings-and-graphs-framework) |
-| 9. Troubleshooting & FAQ | [Troubleshooting & FAQ](#9-troubleshooting--faq) |
-| 10. References & Resources | [References & Resources](#10-references--resources) |
-| Glossary | [Glossary](#glossary) |
-
-# 1. Overview
+# Overview
 
 This manual is a user guide and technical reference on how aNCA operates internally. It covers data requirements, workflow, settings and output definitions.
 
@@ -39,7 +22,23 @@ For a quick start and installation instructions, see [Get Started](aNCA.html). F
 
 ---
 
-# 2. Data Requirements
+# Table of Contents
+
+| Section | Link |
+|---|---|
+| 1. Data Requirements | [Data Requirements](#2-data-requirements) |
+| 2. Data Preparation | [Data Preparation](#3-data-preparation) |
+| 3. NCA Settings | [NCA Settings](#4-nca-settings) |
+| 4. Running NCA | [Running NCA](#5-running-nca) |
+| 5. Results & Outputs | [Results & Outputs](#6-results--outputs) |
+| 6. Half-Life Selection | [Half-Life Selection & Slope Selector](#7-half-life-selection-and-slope-selector) |
+| 7. TLG | [TLG](#8-tlg-tables-listings-and-graphs-framework) |
+| 8. Troubleshooting & FAQ | [Troubleshooting & FAQ](#9-troubleshooting--faq) |
+| 9. References & Resources | [References & Resources](#10-references--resources) |
+| 10. Glossary | [Glossary](#glossary) |
+
+
+# 1. Data Requirements
 
 ## Required Columns
 
@@ -100,7 +99,7 @@ The dose variables describe the treatment administration information necessary f
 
 ---
 
-# 3. Data Preparation
+# 2. Data Preparation
 
 Data preparation involves mapping your raw dataset to the ADNCA format, handling column naming and units, and setting up exclusion rules before NCA analysis.
 
@@ -197,13 +196,13 @@ Data preparation is orchestrated through aNCA's internal functions:
 
 ---
 
-# 4. NCA Settings
+# 3. NCA Settings
 
 NCA settings control how PKNCA processes your data during calculations. These are configured in the NCA Setup tab.
 
 
 
-## 4.1 Data Imputation Rules {#data-imputation-rules}
+## 3.1 Data Imputation Rules {#data-imputation-rules}
 
 The imputation actions are specified exclusively for parameters that are not exclusively calculated based on observed concentrations (e.g., Cmax, Tmax, AUClast, etc.) but also for parameters that require extrapolation to infinity (e.g., AUCinf) or parameters that are calculated based on the terminal slope (e.g., half-life, clearance, volume). The imputation rules are applied during the interval creation step in `update_main_intervals()`, where the appropriate imputation method is selected based on the characteristics of each record (e.g., dose route, dose duration, metabolite status, etc.) and the availability of data (e.g., presence of pre-dose concentrations, presence of multiple post-dose concentrations for log-linear regression).
 They are specified in the `PKNCAdata` object via the `impute` column. The order of imputation is as follows:
@@ -211,7 +210,7 @@ They are specified in the `PKNCAdata` object via the `impute` column. The order 
 **Order of Application**: `start_concentration` > `BLQ imputation`
 
 
-### 4.1.1 Start Concentration Imputation: `create_start_impute()`
+### 3.1.1 Start Concentration Imputation: `create_start_impute()`
 
 **File**: `R/create_start_impute.R`
 
@@ -236,7 +235,7 @@ Imputation rules specify how to handle missing or implied start concentrations (
 
 **PKNCA Method**: `pk.calc.c0()` from PKNCA package
 
-### 4.1.2 BLQ (Below Limit of Quantification) Imputation
+### 3.1.2 BLQ (Below Limit of Quantification) Imputation
 
 **Implementation**: Via `blq_imputation_rule` parameter in `update_main_intervals()`
 
@@ -267,7 +266,7 @@ blq_rule <- list(
 )
 ```
 
-## 4.2 BLQ (Below Limit of Quantification) Handling
+## 3.2 BLQ (Below Limit of Quantification) Handling
 
 BLQ values are handled using position-based or Tmax-based strategies.
 
@@ -281,11 +280,11 @@ BLQ values are handled using position-based or Tmax-based strategies.
 - `"drop"`: Exclude from calculations
 - `"keep"`: Treat as 0
 
-## 4.3 AUC Calculation Methods
+## 3.3 AUC Calculation Methods
 
 aNCA supports multiple AUC calculation methods via PKNCA. These methods control how the area under the concentration-time curve is calculated.
 
-### 4.3.1 Integration Methods (Between Concentrations)
+### 3.3.1 Integration Methods (Between Concentrations)
 
 aNCA supports three methods for interpolating AUC between two concentration measurements:
 
@@ -300,7 +299,7 @@ aNCA supports three methods for interpolating AUC between two concentration meas
 - **Linear**: Simplest method; uses linear trapezoidal rule throughout. Good for situations where first-order kinetics may not apply.
 - **Lin-log**: Uses linear interpolation before Tmax, logarithmic interpolation after Tmax.
 
-### 4.3.2 Extrapolation Methods (After Last Measurement)
+### 3.3.2 Extrapolation Methods (After Last Measurement)
 
 After the last measurable concentration (Tlast), AUC can be extrapolated using different approaches:
 
@@ -315,7 +314,7 @@ After the last measurable concentration (Tlast), AUC can be extrapolated using d
 - `aucinf.pred` uses **predicted** Clast (extrapolated via regression)
 - High extrapolation percentage (>20%) may indicate poor terminal phase characterization
 
-### 4.3.3 AUC Types Available
+### 3.3.3 AUC Types Available
 
 | Parameter | Description | Extrapolation | Formula |
 |-----------|-------------|---------------|---------|
@@ -329,7 +328,7 @@ After the last measurable concentration (Tlast), AUC can be extrapolated using d
 
 
 
-# 5. Running NCA
+# 4. Running NCA
 
 The NCA workflow consists of five main steps executed through the aNCA interface.
 
@@ -354,7 +353,7 @@ The workflow is orchestrated internally by:
 
 
 
-# 6. Results & Outputs
+# 5. Results & Outputs
 
 All output files can be downloaded after running NCA. The export button is located in the top-right as `Save`.
 
@@ -408,7 +407,7 @@ aNCA generates three CDISC-compliant output datasets:
 - Excluded records retained but marked
 - Purpose: Traceability and support for concentration-time plotting and re-analysis
 
-# 7. Half-Life Selection and Slope Selector
+# 6. Half-Life Selection and Slope Selector
 
 ## Automated Half-Life Calculation
 
@@ -480,7 +479,7 @@ Results are shown in:
 
 ---
 
-# 8. TLG (Tables, Listings, and Graphs) Framework
+# 7. TLG (Tables, Listings, and Graphs) Framework
 
 Users can customize TLGs using widgets in the TLG tab:
 
@@ -555,7 +554,7 @@ results <- pk.nca(pknca_data)
 
 ---
 
-# 9. Troubleshooting & FAQ
+# 8. Troubleshooting & FAQ
 
 ## Common Issues
 
@@ -622,7 +621,7 @@ Flagged parameters should be reviewed to determine if they're reliable for decis
 
 ---
 
-# 10. References & Resources
+# 9. References & Resources
 
 ## PKNCA Documentation
 
@@ -643,7 +642,7 @@ Flagged parameters should be reviewed to determine if they're reliable for decis
 
 ---
 
-# Glossary
+# 10. Glossary
 
 | Term | Definition |
 |------|------------|
