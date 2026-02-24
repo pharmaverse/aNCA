@@ -77,6 +77,11 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   allowed
 }
 
+# Check if an object is a saveable leaf (ggplot, data.frame, or plotly)
+.is_leaf <- function(x) {
+  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly")
+}
+
 save_output <- function(
   output, output_path,
   ggplot_formats = c("png", "html"),
@@ -86,28 +91,14 @@ save_output <- function(
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
     x <- output[[name]]
-    is_leaf <- inherits(x, "ggplot") || inherits(x, "data.frame") ||
-      inherits(x, "plotly")
 
-    if (!is_leaf && inherits(x, "list")) {
-      file_name <- paste0(output_path, "/", name)
-      if (!dir.exists(file_name)) {
-        dir.create(file_name, recursive = TRUE)
-      }
-      save_output(
-        output = x,
-        output_path = file_name,
-        ggplot_formats = ggplot_formats,
-        table_formats = table_formats,
-        obj_names = obj_names
-      )
+    if (!.is_leaf(x) && inherits(x, "list")) {
+      sub_path <- paste0(output_path, "/", name)
+      dir.create(sub_path, recursive = TRUE, showWarnings = FALSE)
+      save_output(x, sub_path, ggplot_formats, table_formats, obj_names)
     } else if (is.null(obj_names) || name %in% obj_names) {
-      save_dispatch(
-        x = x,
-        file_name = paste0(output_path, "/", name),
-        ggplot_formats = ggplot_formats,
-        table_formats = table_formats
-      )
+      save_dispatch(x, paste0(output_path, "/", name),
+                    ggplot_formats, table_formats)
     }
   }
 }

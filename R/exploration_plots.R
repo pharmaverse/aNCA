@@ -30,20 +30,20 @@
 #' @return A `ggplot` object representing the individual PK line plot.
 #' @export
 exploration_individualplot <- function(
-    pknca_data,
-    color_by,
-    facet_by = NULL,
-    show_facet_n = FALSE,
-    ylog_scale = FALSE,
-    threshold_value = NULL,
-    x_limits = NULL,
-    y_limits = NULL,
-    show_dose = FALSE,
-    palette = "default",
-    tooltip_vars = NULL,
-    labels_df = NULL,
-    filtering_list = NULL,
-    use_time_since_last_dose = FALSE
+  pknca_data,
+  color_by,
+  facet_by = NULL,
+  show_facet_n = FALSE,
+  ylog_scale = FALSE,
+  threshold_value = NULL,
+  x_limits = NULL,
+  y_limits = NULL,
+  show_dose = FALSE,
+  palette = "default",
+  tooltip_vars = NULL,
+  labels_df = NULL,
+  filtering_list = NULL,
+  use_time_since_last_dose = FALSE
 ) {
   individual_data <- process_data_individual(
     pknca_data = pknca_data,
