@@ -17,6 +17,8 @@
 #'   Default is `NULL` for no faceting.
 #' @param group_by A character vector specifying the column names used to group
 #'  the lines. Default is NULL for no grouping.
+#' @param facet_count_n A character string specifying the column name used to
+#'   count unique subjects per facet. Default is "USUBJID".
 #' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
 #'   Default is `NULL` (no limits).
 #' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
@@ -65,6 +67,7 @@ g_lineplot <- function(data,
                        color_by,
                        facet_by = NULL,
                        group_by = NULL,
+                       facet_count_n = "USUBJID",
                        x_limits = NULL,
                        y_limits = NULL,
                        ylog_scale = FALSE,
@@ -110,6 +113,12 @@ g_lineplot <- function(data,
     ) %>%
     arrange(!!sym(x_var))
 
+  facet_label_var <- facet_by
+  if (!is.null(facet_count_n) && length(facet_by) > 0) {
+    plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n)
+    facet_label_var <- "facet_label"
+  }
+
   plt <- ggplot(plot_data, aes(
     x = !!sym(x_var),
     y = !!sym(y_var),
@@ -132,7 +141,7 @@ g_lineplot <- function(data,
     .add_colour_palette(palette),
     .add_axis_limits(x_limits, y_limits),
     .add_y_scale(ylog_scale),
-    .add_faceting(facet_by),
+    .add_faceting(facet_label_var),
     .add_thr(threshold_value),
     .add_vline(data, vline_var)
   )
@@ -156,6 +165,35 @@ g_lineplot <- function(data,
     return(NULL)
   }
   facet_wrap(vars(!!!syms(facet_by)), scales = "free")
+}
+
+#' @noRd
+.build_facet_labels <- function(data, facet_by, facet_count_n) {
+
+  use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
+
+  data %>%
+    mutate(
+      .facet_label_values = purrr::pmap_chr(
+        across(all_of(facet_by)),
+        function(...) {
+          vals <- list(...)
+          paste(paste(names(vals), vals, sep = ": "), collapse = " | ")
+        }
+      )
+    ) %>%
+    group_by(!!!syms(facet_by)) %>%
+    mutate(.facet_n = {
+      values <- .data[[facet_count_n]]
+      if (use_precomputed_count && is.numeric(values) && n_distinct(values) == 1) {
+        values[1]
+      } else {
+        n_distinct(values)
+      }
+    }) %>%
+    ungroup() %>%
+    mutate(facet_label = paste0(.facet_label_values, " (n=", .facet_n, ")")) %>%
+    select(-.facet_label_values, -.facet_n)
 }
 
 #' @noRd
