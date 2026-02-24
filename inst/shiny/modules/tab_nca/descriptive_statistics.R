@@ -120,7 +120,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
     # Save the updates of the object for the ZIP file
     observeEvent(summary_stats(), {
-      session$userData$results$nca_results$descriptive_statistics <- summary_stats()
+      session$userData$results$nca_results$nca_statistics <- summary_stats()
     })
 
     # Render the reactive summary table in a data table
@@ -135,7 +135,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     output$download_summary <- downloadHandler(
       filename = function() {
         paste0(
-          session$userData$project_name(), "-",
+          session$userData$project_prefix("-"),
           "NCA_summary_",
           format(Sys.time(), "%Y-%m-%d"), ".csv"
         )

@@ -8,6 +8,7 @@ exploration_meanplot(
   pknca_data,
   color_by,
   facet_by = NULL,
+  show_facet_n = FALSE,
   ylog_scale = FALSE,
   threshold_value = NULL,
   show_dose = FALSE,
@@ -18,7 +19,9 @@ exploration_meanplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   filtering_list = NULL,
-  use_time_since_last_dose = FALSE
+  use_time_since_last_dose = FALSE,
+  x_limits = NULL,
+  y_limits = NULL
 )
 }
 \arguments{
@@ -28,6 +31,9 @@ exploration_meanplot(
 
 \item{facet_by}{Character vector of column names to facet the plot by.
 Default is \code{NULL} (no faceting).}
+
+\item{show_facet_n}{Logical; if \code{TRUE}, shows the number of subjects in each facet.
+Default is \code{FALSE}.}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
 
@@ -56,6 +62,12 @@ Default is \code{NULL} (no filtering).}
 
 \item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose.
 Default is \code{FALSE} (time since first dose).}
+
+\item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
+Default is \code{NULL} (no limits).}
+
+\item{y_limits}{Numeric vector of length 2 for y-axis limits (min, max).
+Default is \code{NULL} (no limits).}
 }
 \value{
 A \code{ggplot} object representing the mean PK line plot,

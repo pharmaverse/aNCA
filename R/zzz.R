@@ -1,6 +1,8 @@
 .onLoad <- function(libname, pkgname) {
   utils::globalVariables(c(
     ".",
+    ".facet_label_values",
+    ".facet_n",
     ":=",
     "ADOSEDUR",
     "AFRLT",
@@ -29,6 +31,7 @@
     "FEDSTATE",
     "Geocv",
     "Geomean",
+    "INT_ROWID",
     "group_var",
     "interaction_col",
     "IX",
@@ -179,6 +182,7 @@
     "nom_interval_prev",
     "param_to_impute_is_not_na",
     "param_to_impute_is_not_false",
+    "parameter",
     "pknca_units_tbl",
     "ppanmeth_ref_groups",
     "ppanmeth_test_groups",

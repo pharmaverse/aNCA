@@ -4,6 +4,8 @@
 #'
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
 #' @returns A PKNCAdata object with updated intervals table including start imputation strategies.
+#' If the intervals are ambiguous and can refer to multiple concentration groups it will define them
+#' to choose the proper imputation for each.
 #' @import dplyr
 #' @importFrom rlang sym
 #' @importFrom PKNCA pk.calc.c0
@@ -27,6 +29,7 @@ create_start_impute <- function(pknca_data) {
   analyte_column <- pknca_data$conc$columns$groups$group_analyte
   route_column <- pknca_data$dose$columns$route
   duration_column <- pknca_data$dose$columns$duration
+  time_dose_column <- pknca_data$dose$columns$time
   metabfl_column <- "METABFL"
   conc_group_columns <- unname(unlist(pknca_data$conc$columns$groups))
   dose_group_columns <- unname(unlist(pknca_data$dose$columns$groups))
@@ -39,17 +42,35 @@ create_start_impute <- function(pknca_data) {
       select(any_of(c(conc_group_columns, conc_column,
                       time_column, metabfl_column))),
     y = pknca_data$dose$data %>%
-      select(any_of(c(dose_group_columns, route_column,
-                      duration_column, "DOSNOA")))
+      select(
+        any_of(c(
+          dose_group_columns, route_column,
+          duration_column, "DOSNOA", time_dose_column
+        ))
+      ) %>%
+      rename(TIME_DOSE = !!sym(time_dose_column))
   ) %>%
-    merge(pknca_data$intervals) %>%
-    filter(!!sym(time_column) >= start, !!sym(time_column) <= end) %>%
+    merge(
+      pknca_data$intervals %>%
+        # Each interval operation has to be treated later independently
+        # to prevent issues in is.possible.c0.logslope
+        mutate(INT_ROWID = row_number())
+    ) %>%
+    filter(
+      !!sym(time_column) >= start,
+      !!sym(time_column) <= end,
+      TIME_DOSE <= start
+    ) %>%
     unique()
 
   # Process imputation strategy based on each interval
   pknca_data$intervals <- mydata_with_int %>%
-    group_by(across(any_of(c(group_columns, "DOSNOA", "start", "end", "type_interval")))) %>%
-    arrange(across(any_of(c(group_columns, time_column)))) %>%
+    # Consider by interval (calculation) and concentration group (parameter, specimen)
+    group_by(INT_ROWID, "TIME_DOSE", !!!syms(intersect(conc_group_columns, names(.)))) %>%
+    arrange(across(any_of(c("INT_ROWID", group_columns, time_column, "TIME_DOSE")))) %>%
+    # In case the intervals were defined ambiguously to generate multiple results
+    # force them to now be specific so start_impute is also interval specific
+    slice_max(TIME_DOSE) %>%
     mutate(
       is.first.dose = DOSNOA == 1,
       is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
@@ -86,7 +107,7 @@ create_start_impute <- function(pknca_data) {
     ) %>%
     ungroup() %>%
     # Select only the columns of interest
-    select(any_of(c(names(pknca_data$intervals), "impute")))
+    select(any_of(c("start", "end", group_vars(pknca_data), "impute", names(pknca_data$intervals))))
 
   pknca_data
 

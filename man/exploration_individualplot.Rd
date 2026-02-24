@@ -8,8 +8,11 @@ exploration_individualplot(
   pknca_data,
   color_by,
   facet_by = NULL,
+  show_facet_n = FALSE,
   ylog_scale = FALSE,
   threshold_value = NULL,
+  x_limits = NULL,
+  y_limits = NULL,
   show_dose = FALSE,
   palette = "default",
   tooltip_vars = NULL,
@@ -26,10 +29,19 @@ exploration_individualplot(
 \item{facet_by}{Character vector of column names to facet the plot by.
 Default is \code{NULL} (no faceting).}
 
+\item{show_facet_n}{Logical; if \code{TRUE}, shows the number of subjects in each facet.
+Default is \code{FALSE}.}
+
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
 
 \item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
 Default is \code{NULL} (no threshold).}
+
+\item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
+Default is \code{NULL} (no limits).}
+
+\item{y_limits}{Numeric vector of length 2 for y-axis limits (min, max).
+Default is \code{NULL} (no limits).}
 
 \item{show_dose}{Logical; if \code{TRUE}, vertical lines for dose times are shown. Default is \code{FALSE}.}
 

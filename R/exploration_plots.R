@@ -6,9 +6,15 @@
 #' @param color_by Character vector specifying the column(s) used to color the lines and points.
 #' @param facet_by Character vector of column names to facet the plot by.
 #' Default is `NULL` (no faceting).
+#' @param show_facet_n Logical; if `TRUE`, shows the number of subjects in each facet.
+#' Default is `FALSE`.
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
+#' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
+#' Default is `NULL` (no limits).
+#' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
+#' Default is `NULL` (no limits).
 #' @param show_dose Logical; if `TRUE`, vertical lines for dose times are shown. Default is `FALSE`.
 #' @param palette Optional palette name or named character vector of colors for the plot.
 #' Default is "default" color palette.
@@ -27,8 +33,11 @@ exploration_individualplot <- function(
     pknca_data,
     color_by,
     facet_by = NULL,
+    show_facet_n = FALSE,
     ylog_scale = FALSE,
     threshold_value = NULL,
+    x_limits = NULL,
+    y_limits = NULL,
     show_dose = FALSE,
     palette = "default",
     tooltip_vars = NULL,
@@ -60,7 +69,10 @@ exploration_individualplot <- function(
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
     facet_by = facet_by,
+    facet_count_n = if (isTRUE(show_facet_n)) pknca_data$conc$columns$subject else NULL,
     group_by = pknca_data$conc$columns$subject,
+    x_limits = x_limits,
+    y_limits = y_limits,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     palette = palette,
@@ -81,28 +93,37 @@ exploration_individualplot <- function(
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
 #' Default includes dose group vars and "Mean".
+#' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
+#' Default is `NULL` (no limits).
+#' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
+#' Default is `NULL` (no limits).
 #' @return A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
 #' @export
 exploration_meanplot <- function(
-    pknca_data,
-    color_by,
-    facet_by = NULL,
-    ylog_scale = FALSE,
-    threshold_value = NULL,
-    show_dose = FALSE,
-    palette = "default",
-    sd_min = FALSE,
-    sd_max = FALSE,
-    ci = FALSE,
-    tooltip_vars = NULL,
-    labels_df = NULL,
-    filtering_list = NULL,
-    use_time_since_last_dose = FALSE) {
+  pknca_data,
+  color_by,
+  facet_by = NULL,
+  show_facet_n = FALSE,
+  ylog_scale = FALSE,
+  threshold_value = NULL,
+  show_dose = FALSE,
+  palette = "default",
+  sd_min = FALSE,
+  sd_max = FALSE,
+  ci = FALSE,
+  tooltip_vars = NULL,
+  labels_df = NULL,
+  filtering_list = NULL,
+  use_time_since_last_dose = FALSE,
+  x_limits = NULL,
+  y_limits = NULL
+) {
 
   mean_data <- process_data_mean(
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
+    facet_by = facet_by,
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
     show_dose = show_dose,
@@ -130,6 +151,9 @@ exploration_meanplot <- function(
     color_by = color_by,
     facet_by = facet_by,
     group_by = color_by,
+    facet_count_n = if (isTRUE(show_facet_n)) "USUBJID_COUNT" else NULL,
+    x_limits = x_limits,
+    y_limits = y_limits,
     ylog_scale = ylog_scale,
     threshold_value = threshold_value,
     palette = palette,
@@ -228,6 +252,7 @@ process_data_individual <- function(pknca_data,
 #' @param pknca_data A PKNCAdata object containing concentration and dose data.
 #' @param extra_grouping_vars Character vector of extra grouping variables to include in summary.
 #' Default is `NULL`.
+#' @param facet_by Character vector of columns used for facet-specific counts.
 #' @param filtering_list Named list of filters (column = allowed values).
 #' Default is `NULL` (no filtering).
 #' @param ylog_scale Logical; if `TRUE`, removes non-positive means. Default is `FALSE`.
@@ -242,6 +267,7 @@ process_data_individual <- function(pknca_data,
 #' @noRd
 process_data_mean <- function(pknca_data,
                               extra_grouping_vars = NULL,
+                              facet_by = NULL,
                               filtering_list = NULL,
                               ylog_scale = FALSE,
                               show_dose = FALSE,
@@ -298,6 +324,17 @@ process_data_mean <- function(pknca_data,
     ) %>%
     # Make sure the nominal time column is always the first column
     select(any_of(c(x_var)), everything())
+
+  if (!is.null(facet_by) && length(facet_by) > 0) {
+    subj_col <- pknca_data$conc$columns$subject
+    facet_counts <- processed %>%
+      dplyr::distinct(!!!rlang::syms(facet_by), !!rlang::sym(subj_col)) %>%
+      dplyr::group_by(!!!rlang::syms(facet_by)) %>%
+      dplyr::summarise(USUBJID_COUNT = dplyr::n_distinct(!!rlang::sym(subj_col)), .groups = "drop")
+
+    summarised_data <- summarised_data %>%
+      dplyr::left_join(facet_counts, by = facet_by)
+  }
 
   # Remove non-positive means if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {

@@ -364,11 +364,14 @@ prepare_export_files <- function(target_dir,
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
 
+  pn <- session$userData$project_name()
+  slide_title <- if (pn == "") "NCA Results" else paste0("NCA Results\n", pn)
+
   if ("qmd" %in% input$slide_formats) {
     create_qmd_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.qmd"),
-      paste0("NCA Results\n", session$userData$project_name()),
+      slide_title,
       TRUE
     )
   }
@@ -376,7 +379,7 @@ prepare_export_files <- function(target_dir,
     create_pptx_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.pptx"),
-      paste0("NCA Results\n", session$userData$project_name()),
+      slide_title,
       "www/templates/template.pptx"
     )
   }
@@ -392,7 +395,7 @@ prepare_export_files <- function(target_dir,
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
   settings_to_save <- list(
     settings = session$userData$settings(),
-    slope_rules = session$userData$slope_rules
+    slope_rules = session$userData$slope_rules$manual_slopes()
   )
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
@@ -421,15 +424,16 @@ prepare_export_files <- function(target_dir,
 .clean_export_dir <- function(target_dir, input) {
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
-  exts <- c(
-    if (length(input$table_formats) > 0) paste0("\\.", input$table_formats),
-    if (length(input$plot_formats) > 0) paste0("\\.", input$plot_formats),
-    if (length(input$slide_formats) > 0) paste0("results_slides\\.", input$slide_formats),
-    "session_code\\.R", "settings\\.yaml", "data\\.rds"
-  )
-
-  pattern <- paste0("(", paste0(exts, collapse = "|"), ")$")
-  file.remove(all_files[!grepl(pattern, all_files, ignore.case = TRUE)])
+  exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
+  exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
+  fnames <- input$res_tree
+  fnames <- ifelse(fnames == "r_script", "session_code", fnames)
+  fnames <- ifelse(fnames == "settings_file", "settings", fnames)
+  fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
+  pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
+  files_req <- grep(pattern, all_files, value = TRUE)
+  files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
+  file.remove(all_files[!all_files %in% files_req])
 
   # Recursive directory cleanup
   dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)

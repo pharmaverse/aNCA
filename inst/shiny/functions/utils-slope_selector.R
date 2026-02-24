@@ -129,30 +129,6 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
   plot_outputs
 }
 
-#' Parse Plot Names to Data Frame
-#'
-#' Converts a named list of plots (with names in the format 'col1: val1, col2: val2, ...')
-#' into a data frame with one row per plot and columns for each key.
-#'
-#' @param named_list A named list or vector, where names are key-value pairs separated by commas.
-#' @return A data frame with columns for each key and a `PLOTID` column with the original names.
-parse_plot_names_to_df <- function(named_list) {
-  plot_names <- names(named_list)
-  parsed <- lapply(plot_names, function(x) {
-    pairs <- strsplit(x, "_\\s*")[[1]]
-    kv <- strsplit(pairs, "=\\s*")
-    setNames(
-      vapply(kv, function(y) y[2], character(1)),
-      vapply(kv, function(y) y[1], character(1))
-    )
-  })
-  as.data.frame(
-    do.call(rbind, parsed),
-    stringsAsFactors = FALSE
-  ) %>%
-    mutate(PLOTID = names(named_list))
-}
-
 #' Check overlap between existing and new slope rulesets
 #'
 #' Takes in tables with existing and incoming selections and exclusions, finds any overlap and
@@ -224,4 +200,44 @@ update_plots_with_pknca <- function(pknca_data, plot_outputs, intervals_to_updat
   updated_plots <- suppressWarnings(get_halflife_plots(pknca_data)[["plots"]])
   plot_outputs[names(updated_plots)] <- updated_plots
   plot_outputs
+}
+
+#' Parse Plot Names to Data Frame
+#'
+#' Converts a named list of plots (with names in the format 'col1: val1, col2: val2, ...')
+#' into a data frame with one row per plot and columns for each key.
+#'
+#' @param named_list A named list or vector, where names are key-value pairs separated by commas.
+#' @return A data frame with columns for each key and a `PLOTID` column with the original names.
+parse_plot_names_to_df <- function(named_list) {
+  plot_names <- names(named_list)
+  parsed <- lapply(plot_names, function(x) {
+    pairs <- strsplit(x, "_\\s*")[[1]]
+    kv <- strsplit(pairs, "=\\s*")
+    setNames(
+      vapply(kv, function(y) y[2], character(1)),
+      vapply(kv, function(y) y[1], character(1))
+    )
+  })
+  as.data.frame(
+    do.call(rbind, parsed),
+    stringsAsFactors = FALSE
+  ) %>%
+    mutate(PLOTID = names(named_list))
+}
+
+#' Arrange Plots by Group Columns
+#'
+#' Orders a named list of plots according to specified grouping columns.
+#' Assumes a specific naming format (i.e, 'col1: val1, col2: val2, ...').
+#'
+#' @param named_list A named list of plots, with names in the format 'col1: val1, col2: val2, ...'.
+#' @param group_cols Character vector of column names to sort by.
+#' @importFrom dplyr arrange across all_of
+#' @return A named list of plots, ordered by the specified group columns.
+arrange_plots_by_groups <- function(named_list, group_cols) {
+  plot_df <- parse_plot_names_to_df(named_list)
+  arranged_df <- plot_df %>%
+    arrange(across(all_of(group_cols)))
+  named_list[arranged_df$PLOTID]
 }

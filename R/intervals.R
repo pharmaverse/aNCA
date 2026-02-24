@@ -90,7 +90,6 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
     mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
-    filter(ARRLT >= 0) %>% # filter out negative ARRLT values
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
     ungroup() %>%
@@ -118,6 +117,8 @@ format_pkncadata_intervals <- function(pknca_conc,
       )
     }) %>%
     ungroup() %>%
+    # Remove scientifically invalid intervals where start > end
+    filter(start <= end) %>%
     select(any_of(c("start", "end", conc_groups,
                     "ATPTREF", "DOSNOA", "VOLUME", keep_interval_cols))) %>%
 
@@ -132,7 +133,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param data A PKNCAdata object containing intervals and dosing data.
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
 #' @param study_types_df A data frame mapping analysis profiles to their study type.
-#' @param auc_data A data frame containing partial AUC ranges.
+#' @param int_parameters A data frame containing partial AUC ranges.
 #' @param impute Logical indicating whether to impute start values for parameters.
 #' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
 #' imputation rule using PKNCA format. The list should either contain three elements named:
@@ -148,7 +149,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 update_main_intervals <- function(
   data,
   parameter_selections,
-  study_types_df, auc_data,
+  study_types_df, int_parameters,
   impute = TRUE,
   blq_imputation_rule = NULL
 ) {
@@ -186,17 +187,18 @@ update_main_intervals <- function(
     select(-type)
 
   # Add partial AUCs if any
-  auc_ranges <- auc_data %>%
-    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
+  auc_ranges <- int_parameters %>%
+    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc) %>%
+    mutate(parameter = translate_terms(parameter, "PPTESTCD", "PKNCA"))
 
   # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
+  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc, parameter) {
     data$intervals %>%
       mutate(
         start = start + start_auc,
         end = start + (end_auc - start_auc),
         across(where(is.logical), ~FALSE),
-        aucint.last = TRUE,
+        !!sym(parameter) := TRUE,
         type_interval = "manual"
       )
   })
