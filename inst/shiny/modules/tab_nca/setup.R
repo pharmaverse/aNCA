@@ -170,6 +170,7 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       content = function(con) {
         # Prepare the list
         settings_to_save <- list(
+          filters = session$userData$applied_filters,
           settings = final_settings(),
           slope_rules = slope_rules$manual_slopes()
         )
