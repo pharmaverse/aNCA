@@ -252,13 +252,8 @@ process_data_individual <- function(pknca_data,
     }
   }
 
-  processed_data <- data
-
   # Apply filtering
-  if (!is.null(filtering_list) && length(filtering_list) > 0) {
-    processed_data <- filter_by_list(processed_data, filtering_list)
-  }
-  processed_data <- processed_data %>%
+  processed_data <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!sym(conc_col)))
   # Remove non-positive concentrations if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
@@ -358,10 +353,8 @@ process_data_mean <- function(pknca_data,
   } else {
     pknca_data$conc$data
   }
-  if (!is.null(filtering_list) && length(filtering_list) > 0) {
-    data <- filter_by_list(data, filtering_list)
-  }
-  data <- data %>% dplyr::filter(!is.na(!!rlang::sym(y_var)))
+  data <- filter_by_list(data, filtering_list) %>%
+    dplyr::filter(!is.na(!!rlang::sym(y_var)))
   if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
     data <- data %>%
       dplyr::group_by(!!!rlang::syms(c(dose_group_cols, x_var))) %>%
@@ -409,11 +402,14 @@ filter_by_list <- function(data, filtering_list) {
 finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) {
   plot_build <- ggplot2::ggplot_build(plot)
 
+  mean_title <- paste0("Mean ", plot_build$plot$labels$title)
+  if (isTRUE(ci)) mean_title <- paste0(mean_title, " (95% CI)")
+
   plot +
     labs(
       x = paste(plot_build$plot$labels$x),
       y = paste0("Mean ", plot_build$plot$labels$y),
-      title = paste0("Mean ", plot_build$plot$labels$title)
+      title = mean_title
     ) +
     list(
       .add_mean_layers(

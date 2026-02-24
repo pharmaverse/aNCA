@@ -265,3 +265,109 @@ describe("g_lineplot: Tooltips", {
     expect_equal(p$coordinates$limits$y, c(10, 100))
   })
 })
+
+describe("g_lineplot: show_legend", {
+  it("hides legend when show_legend is FALSE", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      show_legend = FALSE
+    )
+    expect_equal(p$theme$legend.position, "none")
+  })
+
+  it("shows legend by default", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID"
+    )
+    expect_true(is.null(p$theme$legend.position) ||
+                  p$theme$legend.position != "none")
+  })
+})
+
+describe("g_lineplot: .build_axis_label", {
+  it("returns label with unit suffix when unit column is provided", {
+    result <- .build_axis_label("AVAL", "AVALU", ind_data, metadata_nca_variables)
+    expect_true(grepl("\\[ng/mL\\]$", result))
+    expect_true(grepl("^Analysis Value", result))
+  })
+
+  it("returns label without unit when unit column is NULL", {
+    result <- .build_axis_label("AVAL", NULL, ind_data, metadata_nca_variables)
+    expect_equal(result, "Analysis Value")
+  })
+
+  it("falls back to variable name when labels_df is NULL", {
+    result <- .build_axis_label("AVAL", NULL, ind_data, NULL)
+    expect_equal(result, "AVAL")
+  })
+})
+
+describe("g_lineplot: .build_tooltip", {
+  it("sets tooltip_text to NA when tooltip_vars is NULL", {
+    result <- .build_tooltip(ind_data, NULL, NULL, "Time")
+    expect_true(all(is.na(result$tooltip_text)))
+  })
+
+  it("uses generate_tooltip_text when labels_df is provided", {
+    result <- .build_tooltip(
+      ind_data, c("USUBJID", "AVAL"), metadata_nca_variables, "Time"
+    )
+    expect_true(any(grepl("<b>Unique Subject Identifier</b>", result$tooltip_text)))
+  })
+
+  it("uses simple paste when labels_df is NULL", {
+    result <- .build_tooltip(ind_data, c("USUBJID", "AVAL"), NULL, "Time")
+    expect_true(any(grepl("USUBJID: Subject1", result$tooltip_text)))
+    expect_false(any(grepl("<b>", result$tooltip_text)))
+  })
+})
+
+describe("g_lineplot: color_labels", {
+  it("uses color_labels for legend title when provided", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      color_labels = "Subject ID"
+    )
+    expect_equal(p$labels$colour, "Subject ID")
+  })
+
+  it("derives color_labels from labels_df when not provided", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      labels_df = metadata_nca_variables
+    )
+    expect_equal(p$labels$colour, "Unique Subject Identifier")
+  })
+
+  it("falls back to variable name when label lookup returns NA", {
+    sparse_labels <- data.frame(
+      Dataset = "ADNCA",
+      Variable = "USUBJID",
+      Label = "Subject ID",
+      stringsAsFactors = FALSE
+    )
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = c("USUBJID", "DOSEA"),
+      labels_df = sparse_labels
+    )
+    # DOSEA has no label in sparse_labels, so get_label returns "DOSEA"
+    expect_true(grepl("Subject ID", p$labels$colour))
+    expect_true(grepl("DOSEA", p$labels$colour))
+  })
+})
+

@@ -127,8 +127,11 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = if (!is.null(color_labels)) paste(na.omit(color_labels), collapse = "\n") else
+      color = if (!is.null(color_labels)) {
+        paste(ifelse(is.na(color_labels), color_by, color_labels), collapse = "\n")
+      } else {
         paste(color_by, collapse = ", ")
+      }
     ) +
     theme_bw()
   # Apply legend
@@ -282,9 +285,7 @@ g_lineplot <- function(data,
   if (isTRUE(ci)) {
     ci_ribbon_layer <- list(
       geom_ribbon(aes(ymin = CI_lower, ymax = CI_upper, fill = color_var), alpha = 0.3),
-      guides(fill = "none"),
-      labs(title = paste0("Mean PK Concentration - Time Profile",
-                          if (isTRUE(ci)) " (95% CI)" else ""))
+      guides(fill = "none")
     )
   }
   # Return a list of all layers
