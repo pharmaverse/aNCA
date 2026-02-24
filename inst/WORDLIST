@@ -135,6 +135,7 @@ multidose
 nca
 oligo
 pak
+pcspec
 pharmacodynamics
 pharmacokinetic
 pharmacokinetics
@@ -150,10 +151,7 @@ reproducibility
 reupload
 roadmap
 rpptx
-ruleset
-rulesets
 runnable
-selectable
 signif
 src
 tibble
@@ -165,7 +163,6 @@ tooltip
 tooltips
 ug
 unmapped
-userData
 utilise
 visualizable
 yaml
