@@ -54,24 +54,6 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   }
 }
 
-# Remove default exploration plots when custom variants exist.
-# custom_names is a named character vector: names = plot names, values = types
-# Types map to defaults: individual -> individualplot, mean -> meanplot, qc -> qcplot
-.drop_defaults_with_custom <- function(exploration_list, custom_names) {
-  if (length(custom_names) == 0) return(exploration_list)
-  type_to_default <- c(
-    individual = "individualplot", mean = "meanplot", qc = "qcplot"
-  )
-  types_with_custom <- unique(unname(custom_names))
-  for (type in types_with_custom) {
-    default_name <- type_to_default[type]
-    if (!is.na(default_name)) {
-      exploration_list[[default_name]] <- NULL
-    }
-  }
-  exploration_list
-}
-
 # Check whether a name matches the export list (exact or numbered variant)
 .is_exportable <- function(name, obj_names) {
   if (is.null(obj_names)) {
@@ -85,6 +67,29 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
       logical(1)
     ))
   }
+}
+
+# Build the list of allowed exploration plot names for export.
+# For each selected type, includes custom snapshots if any exist,
+# otherwise includes the default plot.
+# @param selected_types Character vector of selected types (e.g., "mean", "qc")
+# @param custom_names Named character vector: names = plot names, values = types
+# @return Character vector of allowed exploration plot names
+.build_exploration_allowlist <- function(selected_types, custom_names) {
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  allowed <- character(0)
+  for (type in selected_types) {
+    default_name <- type_to_default[[type]]
+    type_customs <- names(custom_names[custom_names == type])
+    if (length(type_customs) > 0) {
+      allowed <- c(allowed, type_customs)
+    } else {
+      allowed <- c(allowed, default_name)
+    }
+  }
+  allowed
 }
 
 save_output <- function(
@@ -349,21 +354,10 @@ prepare_export_files <- function(target_dir,
   custom_names <- all_custom[all_custom %in% selected_types]
   obj_names <- unique(c(input$res_tree, names(custom_names)))
 
-  # Build the exploration list from scratch: only include what's selected
+  # Filter exploration list to only include allowed plots
   results <- session$userData$results
   if (!is.null(results$exploration)) {
-    allowed <- character(0)
-    for (type in selected_types) {
-      default_name <- type_to_default[[type]]
-      type_customs <- names(custom_names[custom_names == type])
-      if (length(type_customs) > 0) {
-        # Custom snapshots exist: include only the customs, skip default
-        allowed <- c(allowed, type_customs)
-      } else {
-        # No customs: include the default
-        allowed <- c(allowed, default_name)
-      }
-    }
+    allowed <- .build_exploration_allowlist(selected_types, custom_names)
     results$exploration <- results$exploration[
       intersect(names(results$exploration), allowed)
     ]

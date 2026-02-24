@@ -43,7 +43,8 @@ exploration_individualplot <- function(
     tooltip_vars = NULL,
     labels_df = NULL,
     filtering_list = NULL,
-    use_time_since_last_dose = FALSE) {
+    use_time_since_last_dose = FALSE
+) {
   individual_data <- process_data_individual(
     pknca_data = pknca_data,
     filtering_list = filtering_list,
@@ -333,7 +334,8 @@ process_data_mean <- function(pknca_data,
       dplyr::summarise(USUBJID_COUNT = dplyr::n_distinct(!!rlang::sym(subj_col)), .groups = "drop")
 
     summarised_data <- summarised_data %>%
-      dplyr::left_join(facet_counts, by = facet_by)
+      dplyr::left_join(facet_counts, by = facet_by) %>%
+      dplyr::mutate(USUBJID_COUNT = ifelse(is.na(USUBJID_COUNT), 0L, USUBJID_COUNT))
   }
 
   # Remove non-positive means if log scale is selected (for posterior plotting)
