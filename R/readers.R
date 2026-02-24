@@ -116,5 +116,13 @@ read_settings <- function(path, name) {
     obj$settings$int_parameters <- bind_rows(obj$settings$int_parameters)
   }
 
+  # Convert filter values from YAML lists to vectors
+  if (!is.null(obj$filters) && is.list(obj$filters)) {
+    obj$filters <- lapply(obj$filters, function(filt) {
+      filt$value <- unlist(filt$value)
+      filt
+    })
+  }
+
   obj
 }

@@ -59,13 +59,23 @@ input_filter_ui <- function(id, cols) {
   )
 }
 
-input_filter_server <- function(id, filters_metadata) {
+input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
   moduleServer(id, function(input, output, session) {
     is_active <- reactiveVal(TRUE)
+    is_initialized <- reactiveVal(FALSE)
     is_numeric <- reactive({
       req(input$column)
       filters_metadata()[[input$column]]$type == "numeric"
     })
+
+    # Pre-populate column if initial values provided
+    if (!is.null(initial_values)) {
+      observe({
+        req(filters_metadata())
+        updateSelectizeInput(session, "column", selected = initial_values$column)
+        is_initialized(TRUE)
+      }) %>% bindEvent(filters_metadata(), once = TRUE)
+    }
 
     observeEvent(input$column, {
       if (!is_numeric()) {
@@ -81,6 +91,21 @@ input_filter_server <- function(id, filters_metadata) {
       shinyjs::toggleElement("value_text", condition = is_numeric())
       shinyjs::toggleElement("value_select", condition = !is_numeric())
       shinyjs::toggleState("condition", is_numeric())
+
+      # Apply initial condition and value after column observer fires
+      if (!is.null(initial_values) && is_initialized()) {
+        updateSelectInput(session, "condition", selected = initial_values$condition)
+        if (is_numeric()) {
+          updateTextInput(session, "value_text", value = initial_values$value)
+        } else {
+          updatePickerInput(
+            session,
+            "value_select",
+            selected = initial_values$value
+          )
+        }
+        is_initialized(FALSE)
+      }
     })
 
     output$title <- renderText(paste("Filter: ", input$column))
