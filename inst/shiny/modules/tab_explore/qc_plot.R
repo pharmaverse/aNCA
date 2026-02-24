@@ -93,42 +93,19 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         choices = param_choices_colour,
         selected = param_choices_colour[1]
       )
-      
-      param_choices_group <- grouping_vars()
-      formatted_choices <- reactive({
-        req(metadata_nca_variables)
-        
-        # Taking the variables and labels from the metadata
-        choices_df <- metadata_nca_variables %>%
-          select(Variable, Label) %>%
-          distinct(Variable, .keep_all = TRUE) %>%
-          filter(!is.na(Variable), Variable != "") %>%
-          filter(Variable %in% param_choices_group)
-        
-        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
-          list(
-            label = as.character(var),
-            value = as.character(var),
-            description = as.character(lab)
-          )
-        }))
-      })
-      
-      # Rendering the colorby selector
-      output$groupvar_ui_wrapper <- renderUI({
-        req(formatted_choices(), pknca_data())
-        group_vars <- formatted_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("group_var"),
-          label = "Choose the variables to group by:",
-          choices = group_vars,
-          multiple = TRUE,
-          selected = group_vars[[1]]$value,
-          search = TRUE,
-          hasOptionDescription = TRUE
-        )
-      })
+
+      variable_choices_group <- grouping_vars()
+
+      # Rendering the group by selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = variable_choices_group,
+                     initial_selection = variable_choices_group[1],
+                     selector_ui_wrapper = "groupvar_ui_wrapper",
+                     id = "group_var",
+                     label = "Choose the variables to group by:",
+                     metadata_type = "variable")
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
       updatePickerInput(

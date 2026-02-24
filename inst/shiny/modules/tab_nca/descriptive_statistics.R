@@ -39,7 +39,7 @@ descriptive_statistics_ui <- function(id) {
 descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     # Update the input for the group by picker
     observeEvent(res_nca(), {
       req(res_nca())
@@ -52,44 +52,20 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
-      
+
       grouping_vars <- c(group_cols, classification_cols, subj_col)
       initial_selection <-  c(group_cols, classification_cols)
-      
-      formatted_choices <- reactive({
-        req(metadata_nca_variables)
-        
-        # Taking the variables and labels from the metadata
-        choices_df <- metadata_nca_variables %>%
-          select(Variable, Label) %>%
-          distinct(Variable, .keep_all = TRUE) %>%
-          filter(!is.na(Variable), Variable != "") %>%
-          filter(Variable %in% grouping_vars)
-        
-        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
-          list(
-            label = as.character(var),
-            value = as.character(var),
-            description = as.character(lab)
-          )
-        }))
-      })
-      
-      # Rendering the colorby selector
-      output$groupby_ui_wrapper <- renderUI({
-        req(formatted_choices())
-        grouping_vars <- formatted_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("summary_groupby"),
-          label = "Group by variables:",
-          choices = grouping_vars,
-          multiple = TRUE,
-          selected = initial_selection,
-          search = TRUE,
-          hasOptionDescription = TRUE
-        )
-      })
+
+      # Rendering the group by selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = grouping_vars,
+                     initial_selection = initial_selection,
+                     selector_ui_wrapper = "groupby_ui_wrapper",
+                     id = "summary_groupby",
+                     label = "Group by variables:",
+                     metadata_type = "variable")
     })
 
     # Reactive expression for summary table based on selected group and parameters
@@ -127,48 +103,21 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
     observeEvent(res_nca(), {
       req(summary_stats())
-      
+
       # Get the statistics variables needed
       params_needed <- setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
       clean_params_needed <- gsub("\\[.*", "", params_needed)
-      
-      
-      # Generate dataset for parameters and labels in the dropdowns
-      formatted_choices <- reactive({
-        req(metadata_nca_parameters)
-        
-        # Taking the parameters and labels from the metadata
-        choices_df <- metadata_nca_parameters %>%
-          select(PPTESTCD, PPTEST) %>%
-          distinct(PPTESTCD, .keep_all = TRUE) %>%
-          filter(!is.na(PPTESTCD), PPTESTCD != "") %>%
-          filter(PPTESTCD %in% clean_params_needed)
-        print(choices_df)
-        
-        unname(purrr::pmap(list(params_needed, choices_df$PPTEST), function(var, lab) {
-          list(
-            label = as.character(var),
-            value = as.character(var),
-            description = as.character(lab)
-          )
-        }))
-      })
-      
-      # Rendering the parameters to display selector
-      output$param_to_display_ui_wrapper <- renderUI({
-        req(summary_stats())
-        params_to_display <- formatted_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("select_display_parameters"),
-          label = "Parameter to display:",
-          choices = params_to_display,
-          multiple = TRUE,
-          selected = params_needed,
-          search = TRUE,
-          hasOptionDescription = TRUE
-        )
-      })
+
+      # Rendering the parameter to display variable
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = clean_params_needed,
+                     initial_selection = clean_params_needed,
+                     selector_ui_wrapper = "param_to_display_ui_wrapper",
+                     id = "select_display_parameters",
+                     label = "Parameter to display:",
+                     metadata_type = "parameter")
 
       # Update the select display statistics picker input
       updatePickerInput(
@@ -213,4 +162,3 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
   })
 }
-

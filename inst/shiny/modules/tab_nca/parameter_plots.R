@@ -52,103 +52,42 @@ parameter_plots_server <- function(id, res_nca) {
         names(res_nca()$data$conc$data),
         names(res_nca()$data$dose$data)
       ))
-      
-      # Generate dataset for parameters and labels in the dropdowns
-      parameters_choices <- reactive({
-        req(metadata_nca_parameters)
-        
-        # Taking the parameters and labels from the metadata
-        choices_df <- metadata_nca_parameters %>%
-          select(PPTESTCD, PPTEST) %>%
-          distinct(PPTESTCD, .keep_all = TRUE) %>%
-          filter(!is.na(PPTESTCD), PPTESTCD != "") %>%
-          filter(PPTESTCD %in% param_choices)
-        
-        unname(purrr::pmap(list(choices_df$PPTESTCD, choices_df$PPTEST), function(var, lab) {
-          list(
-            label = as.character(var),
-            value = as.character(var),
-            description = as.character(lab)
-          )
-        }))
-      })
-      
-      # Rendering the parameters to display selector
-      output$params_to_display_ui_wrapper <- renderUI({
-        req(parameters_choices, res_nca())
-        parameters_boxplot <- parameters_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("selected_param_boxplot"),
-          label = "Choose the parameter to display:",
-          choices = parameters_boxplot,
-          multiple = TRUE,
-          selected = default_selection,
-          search = TRUE,
-          hasOptionDescription = TRUE,
-          dropboxDirection = "bottom"
-        )
-      })
-      
-      # Generating dataset for the x grouping variables and their labels
-      variables_choices <- reactive({
-        req(metadata_nca_variables)
-        
-        # Taking the variables and labels from the metadata
-        choices_df <- metadata_nca_variables %>%
-          select(Variable, Label) %>%
-          distinct(Variable, .keep_all = TRUE) %>%
-          filter(!is.na(Variable), Variable != "") %>%
-          filter(Variable %in% conc_dose_cols)
-        
-        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
-          list(
-            label = as.character(var),
-            value = as.character(var),
-            description = as.character(lab)
-          )
-        }))
-      })
-      
-      
-      # Rendering the grouping x vars selector
-      output$group_xvars_ui_wrapper <- renderUI({
-        req(variables_choices())
-        x_grouping_vars <- variables_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("selected_xvars_boxplot"),
-          label = "Select X grouping variables",
-          choices = x_grouping_vars,
-          multiple = TRUE,
-          selected = c(res_nca()$data$dose$columns$dose,
-                       res_nca()$data$conc$columns$groups$group_analyte),
-          search = TRUE,
-          hasOptionDescription = TRUE,
-          position = "bottom",
-          dropboxWrapper = "body" #Making sure the selector doesn't automatically open upwards
-        )
-      })
-      
-      # Rendering select color vars dropdown
-      output$select_colorvars_ui_wrapper <- renderUI({
-        req(variables_choices())
-        x_colouring_vars <- variables_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("selected_colorvars_boxplot"),
-          label = "Select coloring variables to differentiate boxplots",
-          choices = x_colouring_vars,
-          multiple = TRUE,
-          selected = c(res_nca()$data$dose$columns$dose,
-                       res_nca()$data$conc$columns$groups$group_analyte),
-          search = TRUE,
-          hasOptionDescription = TRUE,
-          dropboxDirection = "bottom",
-          position = "bottom",
-          autoSelectFirstOption = TRUE
-        )
-      })
+
+      # Rendering parameters to display selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = param_choices,
+                     initial_selection = default_selection,
+                     selector_ui_wrapper = "params_to_display_ui_wrapper",
+                     id = "selected_param_boxplot",
+                     label = "Choose the parameter to display:",
+                     metadata_type = "parameter")
+
+      # Rendering parameters to display selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = conc_dose_cols,
+                     initial_selection = c(res_nca()$data$dose$columns$dose,
+                                           res_nca()$data$conc$columns$groups$group_analyte),
+                     selector_ui_wrapper = "group_xvars_ui_wrapper",
+                     id = "selected_xvars_boxplot",
+                     label = "Select X grouping variables:",
+                     pknca_data = NULL,
+                     metadata_type = "variable")
+
+      # Rendering select color vars selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = conc_dose_cols,
+                     initial_selection = c(res_nca()$data$dose$columns$dose,
+                                           res_nca()$data$conc$columns$groups$group_analyte),
+                     selector_ui_wrapper = "select_colorvars_ui_wrapper",
+                     id = "selected_colorvars_boxplot",
+                     label = "Select coloring variables to differentiate boxplots:",
+                     metadata_type = "variable")
     })
 
     observeEvent(list(input$selected_xvars_boxplot, input$selected_colorvars_boxplot), {
@@ -158,13 +97,13 @@ parameter_plots_server <- function(id, res_nca) {
           res_nca$data$dose$data[[id_var]]
         ))
       }
-      
+
       xvar_options_list <- lapply(
         c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot),
         function(id_var) paste(id_var, .get_conc_dose_vals(res_nca(), id_var), sep = ": ")
       ) %>%
         setNames(c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot))
-      
+
       updatePickerInput(
         session,
         inputId = "selected_filters_boxplot",

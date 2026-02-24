@@ -70,87 +70,37 @@ excretion_server <- function(id, input_pknca_data) {
           character(0)
         }
       }
-      
+
       updateSelectInput(session, "matrix_select", choices = pcspecs,
                         selected = if ("Urine" %in% pcspecs) "Urine" else NULL)
-      
-      variables_choices <- reactive({
-        req(metadata_nca_variables)
-        
-        # Taking the variables and labels from the metadata
-        choices_df <- metadata_nca_variables %>%
-          select(Variable, Label) %>%
-          distinct(Variable, .keep_all = TRUE) %>%
-          filter(!is.na(Variable), Variable != "") %>%
-          filter(Variable %in% available_cols)
-        
-        unname(purrr::pmap(list(choices_df$Variable, choices_df$Label), function(var, lab) {
-          list(
-            label = as.character(var),
-            value = as.character(var),
-            description = as.character(lab)
-          )
-        }))
-      })
-      
+
       # Rendering the map end time column selector
-      output$map_end_col_ui_wrapper <- renderUI({
-        req(variables_choices())
-        end_time_col_vars <- variables_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("end_time_col"),
-          label = "Map End Time Column:",
-          choices = end_time_col_vars,
-          multiple = TRUE,
-          selected =  if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL,
-          search = TRUE,
-          hasOptionDescription = TRUE,
-          position = "bottom",
-          dropboxWrapper = "body"
-        )
-      })
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = available_cols,
+                     initial_selection = NULL,
+                     selector_ui_wrapper = "map_end_col_ui_wrapper",
+                     id = "end_time_col",
+                     label = "Map End Time Column:",
+                     metadata_type = "variable",
+                     pknca_data = NULL)
 
       urine_params_to_select <- metadata_nca_parameters %>%
         filter(TYPE == "Urine")
-      
+
       parameters_to_select <- urine_params_to_select$PPTESTCD
-      
-      parameters_choices <- reactive({
-        req(metadata_nca_parameters)
-        
-        # Taking the parameters and labels from the metadata
-        choices_df <- metadata_nca_parameters %>%
-          select(PPTESTCD, PPTEST) %>%
-          distinct(PPTESTCD, .keep_all = TRUE) %>%
-          filter(!is.na(PPTESTCD), PPTESTCD != "") %>%
-          filter(PPTESTCD %in% parameters_to_select)
-        
-        unname(purrr::pmap(list(choices_df$PPTESTCD, choices_df$PPTEST), function(var, lab) {
-          list(
-            label = as.character(var),
-            value = as.character(var),
-            description = as.character(lab)
-          )
-        }))
-      })
-      
+
       # Rendering the parameters to select selector
-      output$param_select_ui_wrapper <- renderUI({
-        req(parameters_choices())
-        parameters_select <- parameters_choices()
-        
-        shinyWidgets::virtualSelectInput(
-          inputId = ns("param_select"),
-          label = "Select Parameters:",
-          choices = parameters_select,
-          multiple = TRUE,
-          selected = c("RCAMINT", "FREXINT"),
-          search = TRUE,
-          hasOptionDescription = TRUE,
-          dropboxDirection = "bottom"
-        )
-      })
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = parameters_to_select,
+                     initial_selection = c("RCAMINT", "FREXINT"),
+                     selector_ui_wrapper = "param_select_ui_wrapper",
+                     id = "param_select",
+                     label = "Select Parameters:",
+                     metadata_type = "parameter")
     })
 
     # Perform calculations
