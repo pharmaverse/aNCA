@@ -38,7 +38,7 @@ testthat::test_that(".drop_defaults_with_custom drops default when custom exists
     meanplot = "c", meanplot1 = "d", meanplot2 = "e",
     qcplot = "f"
   )
-  custom <- c("individualplot1", "meanplot1", "meanplot2")
+  custom <- c(individualplot1 = "individual", meanplot1 = "mean", meanplot2 = "mean")
   result <- .drop_defaults_with_custom(exploration, custom)
   testthat::expect_equal(
     names(result),
@@ -51,9 +51,23 @@ testthat::test_that(".drop_defaults_with_custom keeps unrelated items", {
     individualplot = "a", meanplot = "b", qcplot = "c",
     custom_thing = "d"
   )
-  result <- .drop_defaults_with_custom(exploration, c("meanplot1"))
+  custom <- c(my_spaghetti = "mean")
+  result <- .drop_defaults_with_custom(exploration, custom)
   testthat::expect_true("individualplot" %in% names(result))
   testthat::expect_false("meanplot" %in% names(result))
   testthat::expect_true("qcplot" %in% names(result))
   testthat::expect_true("custom_thing" %in% names(result))
+})
+
+testthat::test_that(".drop_defaults_with_custom works with arbitrary custom names", {
+  exploration <- list(
+    individualplot = "a", meanplot = "b",
+    linear_spaghetti = "c", my_mean = "d"
+  )
+  custom <- c(linear_spaghetti = "individual", my_mean = "mean")
+  result <- .drop_defaults_with_custom(exploration, custom)
+  testthat::expect_false("individualplot" %in% names(result))
+  testthat::expect_false("meanplot" %in% names(result))
+  testthat::expect_true("linear_spaghetti" %in% names(result))
+  testthat::expect_true("my_mean" %in% names(result))
 })

@@ -40,7 +40,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     mean_counter <- reactiveVal(0L)
     qc_counter <- reactiveVal(0L)
 
-    # Track custom plot names for export matching
+    # Track custom plot names mapped to their base type for export filtering
+    # Named character vector: name = base_type (e.g., c(my_plot = "individual"))
     session$userData$exploration_custom_names <- character(0)
 
     # Initiate the sidebar server modules
@@ -206,9 +207,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       }
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
-      session$userData$exploration_custom_names <- unique(
-        c(session$userData$exploration_custom_names, plot_name)
-      )
+      existing <- session$userData$exploration_custom_names
+      existing[plot_name] <- type
+      session$userData$exploration_custom_names <- existing
       removeModal()
 
       msg <- if (is_overwrite) {

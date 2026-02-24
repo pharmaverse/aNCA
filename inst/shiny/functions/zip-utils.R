@@ -55,14 +55,18 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
 }
 
 # Remove default exploration plots when custom variants exist.
-# e.g. if custom_names contains "meanplot1", remove "meanplot" from the list.
+# custom_names is a named character vector: names = plot names, values = types
+# Types map to defaults: individual -> individualplot, mean -> meanplot, qc -> qcplot
 .drop_defaults_with_custom <- function(exploration_list, custom_names) {
   if (length(custom_names) == 0) return(exploration_list)
-  defaults <- c("individualplot", "meanplot", "qcplot")
-  for (d in defaults) {
-    has_custom <- any(grepl(paste0("^", d, "[0-9]+$"), custom_names))
-    if (has_custom) {
-      exploration_list[[d]] <- NULL
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  types_with_custom <- unique(unname(custom_names))
+  for (type in types_with_custom) {
+    default_name <- type_to_default[type]
+    if (!is.na(default_name)) {
+      exploration_list[[default_name]] <- NULL
     }
   }
   exploration_list
@@ -335,25 +339,25 @@ prepare_export_files <- function(target_dir,
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
   # Filter custom exploration plots: only keep those whose base type is selected
+  # all_custom is a named vector: names = plot names, values = types
   all_custom <- session$userData$exploration_custom_names
-  exploration_bases <- c("individualplot", "meanplot", "qcplot")
-  selected_bases <- intersect(exploration_bases, input$res_tree)
-  custom_names <- all_custom[vapply(all_custom, function(nm) {
-    any(vapply(selected_bases, function(b) {
-      nm == b || grepl(paste0("^", b, "[0-9]+$"), nm)
-    }, logical(1)))
-  }, logical(1))]
-  obj_names <- unique(c(input$res_tree, custom_names))
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  # Keep custom names whose type maps to a selected tree item
+  selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
+  custom_names <- all_custom[all_custom %in% selected_types]
+  obj_names <- unique(c(input$res_tree, names(custom_names)))
 
   # Remove deselected exploration plots (default + custom) from the results
   results <- session$userData$results
   if (!is.null(results$exploration)) {
-    deselected_bases <- setdiff(exploration_bases, input$res_tree)
-    for (nm in names(results$exploration)) {
-      is_deselected <- any(vapply(deselected_bases, function(b) {
-        nm == b || grepl(paste0("^", b, "[0-9]+$"), nm)
-      }, logical(1)))
-      if (is_deselected) results$exploration[[nm]] <- NULL
+    deselected_defaults <- setdiff(
+      unname(type_to_default), input$res_tree
+    )
+    deselected_custom <- names(all_custom[!all_custom %in% selected_types])
+    for (nm in c(deselected_defaults, deselected_custom)) {
+      results$exploration[[nm]] <- NULL
     }
     results$exploration <- .drop_defaults_with_custom(
       results$exploration, custom_names
@@ -482,7 +486,7 @@ prepare_export_files <- function(target_dir,
 
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
-  fnames <- unique(c(input$res_tree, custom_names))
+  fnames <- unique(c(input$res_tree, names(custom_names)))
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
   # Match exact names and numbered variants (e.g. individualplot1, meanplot2)
