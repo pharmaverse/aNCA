@@ -349,19 +349,24 @@ prepare_export_files <- function(target_dir,
   custom_names <- all_custom[all_custom %in% selected_types]
   obj_names <- unique(c(input$res_tree, names(custom_names)))
 
-  # Remove deselected exploration plots (default + custom) from the results
+  # Build the exploration list from scratch: only include what's selected
   results <- session$userData$results
   if (!is.null(results$exploration)) {
-    deselected_defaults <- setdiff(
-      unname(type_to_default), input$res_tree
-    )
-    deselected_custom <- names(all_custom[!all_custom %in% selected_types])
-    for (nm in c(deselected_defaults, deselected_custom)) {
-      results$exploration[[nm]] <- NULL
+    allowed <- character(0)
+    for (type in selected_types) {
+      default_name <- type_to_default[[type]]
+      type_customs <- names(custom_names[custom_names == type])
+      if (length(type_customs) > 0) {
+        # Custom snapshots exist: include only the customs, skip default
+        allowed <- c(allowed, type_customs)
+      } else {
+        # No customs: include the default
+        allowed <- c(allowed, default_name)
+      }
     }
-    results$exploration <- .drop_defaults_with_custom(
-      results$exploration, custom_names
-    )
+    results$exploration <- results$exploration[
+      intersect(names(results$exploration), allowed)
+    ]
   }
 
   save_output(
