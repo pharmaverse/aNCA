@@ -58,7 +58,7 @@ The sample identifiers help define what records are used for NCA calculations. A
 | Variable | Label | Description | CDISC Reference |
 |----------|-------|-------------|-----------------|
 | `PARAM` \* | Parameter | Name of the measured analyte | CDISC Standard |
-| `PCSPEC` \* | Specimen Material Type | Sample matrix (PLASMA, SERUM, URINE, etc.) | C78734 |
+| `PCSPEC` \* | Specimen Material Type | Sample matrix (PLASMA, SERUM, URINE, etc.) | CDISC Standard |
 | `AVAL` \* | Analysis Value | Numeric analyte concentration (BLQ values assumed to be 0 if not imputed) | CDISC Standard |
 
 ### 1.1.1 Additional Optional Variables
