@@ -54,21 +54,6 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   }
 }
 
-# Check whether a name matches the export list (exact or numbered variant)
-.is_exportable <- function(name, obj_names) {
-  if (is.null(obj_names)) {
-    TRUE
-  } else if (name %in% obj_names) {
-    TRUE
-  } else {
-    any(vapply(
-      obj_names,
-      function(n) grepl(paste0("^", n, "[0-9]+$"), name),
-      logical(1)
-    ))
-  }
-}
-
 # Build the list of allowed exploration plot names for export.
 # For each selected type, includes custom snapshots if any exist,
 # otherwise includes the default plot.
@@ -116,7 +101,7 @@ save_output <- function(
         table_formats = table_formats,
         obj_names = obj_names
       )
-    } else if (.is_exportable(name, obj_names)) {
+    } else if (is.null(obj_names) || name %in% obj_names) {
       save_dispatch(
         x = x,
         file_name = paste0(output_path, "/", name),
@@ -345,7 +330,7 @@ prepare_export_files <- function(target_dir,
                detail = "Saving tables and images...")
   # Filter custom exploration plots: only keep those whose base type is selected
   # all_custom is a named vector: names = plot names, values = types
-  all_custom <- session$userData$exploration_custom_names
+  all_custom <- session$userData$exploration_custom_names()
   type_to_default <- c(
     individual = "individualplot", mean = "meanplot", qc = "qcplot"
   )
@@ -488,11 +473,10 @@ prepare_export_files <- function(target_dir,
   fnames <- unique(c(input$res_tree, names(custom_names)))
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
-  # Match exact names and numbered variants (e.g. individualplot1, meanplot2)
   fnames_patt <- paste0(
     "((",
-    paste0(fnames, collapse = "([0-9]+)?)|("),
-    "([0-9]+)?))"
+    paste0(fnames, collapse = ")|("),
+    "))"
   )
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
