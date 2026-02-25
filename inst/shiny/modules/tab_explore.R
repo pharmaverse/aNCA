@@ -42,7 +42,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # Track custom plot names mapped to their base type for export filtering
     # Named character vector: name = base_type (e.g., c(my_plot = "individual"))
-    session$userData$exploration_custom_names <- character(0)
+    session$userData$exploration_custom_names <- reactiveVal(character(0))
 
     # Initiate the sidebar server modules
     individual_sidebar <- plot_sidebar_server(
@@ -114,7 +114,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Clear saved exploration plots when new data is loaded
     observeEvent(pknca_data(), {
       session$userData$results$exploration <- list()
-      session$userData$exploration_custom_names <- character(0)
+      session$userData$exploration_custom_names(character(0))
       indiv_counter(0L)
       mean_counter(0L)
       qc_counter(0L)
@@ -186,8 +186,17 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # Confirm save from modal — increment counter only on actual save
     observeEvent(input$confirm_add_to_exports, {
-      plot_name <- gsub("[^A-Za-z0-9_-]", "_", input$export_plot_name)
+      raw_name <- input$export_plot_name
+      plot_name <- gsub("[^A-Za-z0-9_-]", "_", raw_name)
       req(nzchar(plot_name))
+
+      # Warn user if sanitization changed the name
+      if (plot_name != raw_name) {
+        showNotification(
+          paste0("Name sanitized to '", plot_name, "'"),
+          type = "warning", duration = 4
+        )
+      }
 
       type <- pending_plot_type()
       plot_obj <- switch(type,
@@ -207,9 +216,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       }
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
-      existing <- session$userData$exploration_custom_names
+      existing <- session$userData$exploration_custom_names()
       existing[plot_name] <- type
-      session$userData$exploration_custom_names <- existing
+      session$userData$exploration_custom_names(existing)
       removeModal()
 
       msg <- if (is_overwrite) {
