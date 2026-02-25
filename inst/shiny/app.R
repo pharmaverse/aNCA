@@ -71,6 +71,22 @@ ui <- function() {
       });
     "),
 
+    tags$script("
+      Shiny.addCustomMessageHandler('copy_to_clipboard', function(text) {
+        navigator.clipboard.writeText(text).then(function() {
+          Shiny.setInputValue('clipboard_done', Math.random());
+        }).catch(function() {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          Shiny.setInputValue('clipboard_done', Math.random());
+        });
+      });
+    "),
+
     includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
 
@@ -104,6 +120,12 @@ ui <- function() {
         "TLG",
         value = "tlg",
         icon = icon("table-list")
+      ),
+      # ABOUT ----
+      nav_panel(
+        "About",
+        value = "about",
+        icon = icon("circle-info")
       )
     ),
     div(
@@ -127,6 +149,11 @@ ui <- function() {
         class = "page-container",
         condition = "input.page == 'tlg'",
         tab_tlg_ui("tlg")
+      ),
+      conditionalPanel(
+        class = "page-container",
+        condition = "input.page == 'about'",
+        tab_about_ui("about")
       )
     ),
 
@@ -192,6 +219,9 @@ server <- function(input, output, session) {
 
   # TLG
   tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
+
+  # ABOUT ----
+  tab_about_server("about")
 
   # ZIP export
   zip_server(
