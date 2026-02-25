@@ -98,8 +98,10 @@ tab_about_ui <- function(id) {
           "Copy session info to clipboard",
           icon = icon("clipboard")
         ),
-        tags$br(), tags$br(),
-        verbatimTextOutput(ns("session_info"))
+        div(
+          style = "margin-top: 1em;",
+          verbatimTextOutput(ns("session_info"))
+        )
       )
     )
   )
@@ -128,7 +130,7 @@ tab_about_server <- function(id) {
     # Citation
     output$citation_text <- renderUI({
       cit <- utils::citation("aNCA")
-      cit_text <- format(cit, style = "text")
+      cit_text <- paste(format(cit, style = "text"), collapse = "\n\n")
       tags$blockquote(
         style = "border-left: 3px solid #ccc; padding-left: 1em; color: #555;",
         tags$p(cit_text)
@@ -138,7 +140,10 @@ tab_about_server <- function(id) {
     # Authors from DESCRIPTION
     output$authors_list <- renderUI({
       desc <- utils::packageDescription("aNCA")
-      authors <- eval(parse(text = desc$`Authors@R`))
+      authors <- tryCatch(
+        eval(parse(text = desc$`Authors@R`)),
+        error = function(e) list()
+      )
       author_items <- lapply(authors, function(a) {
         if (!"aut" %in% a$role) return(NULL)
         name <- paste(a$given, a$family)
@@ -150,7 +155,7 @@ tab_about_server <- function(id) {
               href = paste0("https://orcid.org/", orcid),
               target = "_blank",
               tags$img(
-                src = "https://orcid.org/sites/default/files/images/orcid_16x16.png",
+                src = "https://info.orcid.org/wp-content/uploads/2020/12/ORCIDiD_icon16x16.png",
                 alt = "ORCID",
                 style = "vertical-align: middle;"
               )
@@ -163,18 +168,18 @@ tab_about_server <- function(id) {
       tags$ul(Filter(Negate(is.null), author_items))
     })
 
-    # Session info display
-    session_info_text <- reactive({
-      paste(utils::capture.output(utils::sessionInfo()), collapse = "\n")
-    })
+    # Session info — computed once per session (doesn't change at runtime)
+    session_info_text <- paste(
+      utils::capture.output(utils::sessionInfo()), collapse = "\n"
+    )
 
     output$session_info <- renderText({
-      session_info_text()
+      session_info_text
     })
 
     # Copy to clipboard via JS
     observeEvent(input$copy_session_info, {
-      session$sendCustomMessage("copy_to_clipboard", session_info_text())
+      session$sendCustomMessage("copy_to_clipboard", session_info_text)
       showNotification("Session info copied to clipboard", type = "message")
     })
   })

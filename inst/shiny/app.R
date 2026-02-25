@@ -73,16 +73,13 @@ ui <- function() {
 
     tags$script("
       Shiny.addCustomMessageHandler('copy_to_clipboard', function(text) {
-        navigator.clipboard.writeText(text).then(function() {
-          Shiny.setInputValue('clipboard_done', Math.random());
-        }).catch(function() {
+        navigator.clipboard.writeText(text).catch(function() {
           var ta = document.createElement('textarea');
           ta.value = text;
           document.body.appendChild(ta);
           ta.select();
           document.execCommand('copy');
           document.body.removeChild(ta);
-          Shiny.setInputValue('clipboard_done', Math.random());
         });
       });
     "),
