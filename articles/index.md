@@ -43,6 +43,11 @@
   detailing roles, responsibilities, and decision-making processes to
   ensure effective management and collaboration within the project.
 
+- [aNCA Manual](https://pharmaverse.github.io/aNCA/articles/manual.md):
+
+  User guide and technical reference for aNCA: data, workflow, settings,
+  and outputs.
+
 - [Roadmap
   Goals](https://pharmaverse.github.io/aNCA/articles/roadmap.md):
 
