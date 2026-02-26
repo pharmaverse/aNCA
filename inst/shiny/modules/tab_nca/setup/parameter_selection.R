@@ -408,30 +408,30 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           style = list(fontSize = "0.75em"),
           columns = list(
             PPTESTCD = colDef(
-              name = "PPTESTCD", minWidth = 90
+              name = "PPTESTCD", maxWidth = 100
             ),
             PPTEST = colDef(
-              name = "Parameter Name", minWidth = 170
+              name = "Parameter Name", maxWidth = 180
             ),
             Description = colDef(
               name = "Description",
-              minWidth = 250,
+              minWidth = 400,
               style = list(whiteSpace = "normal")
             ),
             Category = colDef(
-              name = "Category", minWidth = 110
+              name = "Category", maxWidth = 120
             ),
             Type = colDef(
-              name = "Type", minWidth = 110
+              name = "Type", maxWidth = 120
             ),
             App_Location = colDef(
               name = "App Location",
-              minWidth = 200,
+              maxWidth = 200,
               style = list(whiteSpace = "normal")
             ),
             PKNCA_Function = colDef(
               name = "PKNCA Function",
-              minWidth = 130,
+              maxWidth = 140,
               cell = function(value) {
                 if (value == "\u2014") {
                   "\u2014"
