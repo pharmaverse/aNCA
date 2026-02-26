@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1013)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
