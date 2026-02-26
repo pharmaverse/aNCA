@@ -53,12 +53,12 @@ readers <- list(
   csv = function(path) read.csv(path, na = c("", "NA")),
   rds = function(path) readRDS(path),
   xlsx = function(path) {
-    if (!requireNamespace("openxlsx2", silently = TRUE))
+    if (!requireNamespace("readxl", quietly = TRUE))
       stop(
-        "Handling .xlsx files requires `openxlsx2` package, please install it with ",
-        "`install.packages('openxlsx2')`"
+        "Handling .xlsx files requires `readxl` package, please install it with ",
+        "`install.packages('readxl')`"
       )
-    openxlsx2::read_xlsx(path)
+    as.data.frame(readxl::read_excel(path))
   },
   sas7bdat = function(path) {
     if (!requireNamespace("haven", silently = TRUE))

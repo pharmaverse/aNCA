@@ -19,7 +19,8 @@ describe("read_pk", {
   })
 
   it("reads excel data correctly", {
-    skip_if_not_installed("openxlsx2")
+    skip_if_not_installed("readxl")
+    skip_if_not_installed("openxlsx2") # used to write the test file
     skip_on_cran()
 
     tmp_xlsx <- withr::local_tempfile(fileext = ".xlsx")
