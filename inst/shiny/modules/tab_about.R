@@ -93,14 +93,25 @@ tab_about_ui <- function(id) {
     card(
       card_header("Session Info"),
       card_body(
-        actionButton(
-          ns("copy_session_info"),
-          "Copy session info to clipboard",
-          icon = icon("clipboard")
-        ),
         div(
-          style = "margin-top: 1em;",
-          verbatimTextOutput(ns("session_info"))
+          style = "display: flex; gap: 8px;",
+          actionButton(
+            ns("copy_session_info"),
+            "Copy to clipboard",
+            icon = icon("clipboard")
+          ),
+          actionButton(
+            ns("toggle_session_info"),
+            "Show details",
+            icon = icon("chevron-down")
+          )
+        ),
+        shinyjs::hidden(
+          div(
+            id = ns("session_info_panel"),
+            style = "margin-top: 1em;",
+            verbatimTextOutput(ns("session_info"))
+          )
         )
       )
     )
@@ -181,6 +192,20 @@ tab_about_server <- function(id) {
     observeEvent(input$copy_session_info, {
       session$sendCustomMessage("copy_to_clipboard", session_info_text)
       showNotification("Session info copied to clipboard", type = "message")
+    })
+
+    # Toggle session info visibility
+    session_info_visible <- reactiveVal(FALSE)
+    observeEvent(input$toggle_session_info, {
+      session_info_visible(!session_info_visible())
+      shinyjs::toggle("session_info_panel")
+      if (session_info_visible()) {
+        updateActionButton(session, "toggle_session_info",
+                           label = "Hide details", icon = icon("chevron-up"))
+      } else {
+        updateActionButton(session, "toggle_session_info",
+                           label = "Show details", icon = icon("chevron-down"))
+      }
     })
   })
 }
