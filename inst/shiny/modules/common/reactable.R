@@ -111,7 +111,7 @@ reactable_server <- function(
 
     output$download_xlsx <- downloadHandler(
       filename = .reactable_file_name(file_name, "xlsx", id),
-      content = function(con) openxlsx2::write_xlsx(labeled_data, con)
+      content = function(con) writexl::write_xlsx(labeled_data, con)
     )
 
     reactive(
