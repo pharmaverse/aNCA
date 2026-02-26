@@ -36,14 +36,14 @@ tab_about_ui <- function(id) {
         tags$ul(
           class = "list-unstyled",
           .about_link("Package website", "https://pharmaverse.github.io/aNCA/"),
-          .about_link("CRAN", "https://cran.r-project.org/package=aNCA"),
-          .about_link("GitHub", "https://github.com/pharmaverse/aNCA"),
-          .about_link("Bug reports", "https://github.com/pharmaverse/aNCA/issues"),
-          .about_link("Changelog", "https://pharmaverse.github.io/aNCA/news/"),
           .about_link(
             "Getting started",
             "https://pharmaverse.github.io/aNCA/articles/aNCA.html"
           ),
+          .about_link("CRAN", "https://cran.r-project.org/package=aNCA"),
+          .about_link("GitHub", "https://github.com/pharmaverse/aNCA"),
+          .about_link("Bug reports", "https://github.com/pharmaverse/aNCA/issues"),
+          .about_link("Changelog", "https://pharmaverse.github.io/aNCA/news/"),
           .about_link("PKNCA", "https://cran.r-project.org/package=PKNCA"),
           .about_link("pharmaverse", "https://pharmaverse.org/")
         )
