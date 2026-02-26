@@ -52,7 +52,6 @@
     "N",
     "n_blq",
     "n_blq_ratio",
-    "ATPTREF",
     "NFRLT",
     "NRRLT",
     "n_samples",
