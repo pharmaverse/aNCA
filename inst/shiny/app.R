@@ -119,7 +119,6 @@ ui <- function() {
         icon = icon("table-list")
       ),
       # ABOUT ----
-      nav_spacer(),
       nav_panel(
         "About",
         value = "about",
