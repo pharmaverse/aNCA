@@ -44,6 +44,7 @@ data_filtering_ui <- function(id) {
 
 data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
   moduleServer(id, function(input, output, session) {
+
     # Handle user-provided filters
     filters <- reactiveValues()
     filter_counter <- reactiveVal(0)
@@ -90,8 +91,7 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
 
     # Restore filters from uploaded settings
     if (!is.null(imported_filters)) {
-      observeEvent(imported_filters(), {
-        req(imported_filters(), filters_metadata())
+      observeEvent(list(imported_filters(),filters_metadata()), {
         uploaded_filters <- imported_filters()
 
         # Remove existing filter panels
@@ -115,7 +115,7 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
         }
 
         # Auto-submit after a delay to let inputs initialize
-        shinyjs::delay(500, shinyjs::click(ns("submit_filters")))
+        shinyjs::delay(500, shinyjs::click("submit_filters"))
       })
     }
 
