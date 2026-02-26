@@ -388,76 +388,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     })
 
     # PK parameter reference modal
-    observeEvent(input$show_param_ref, {
-      ref_data <- .build_param_ref_data()
-      showModal(modalDialog(
-        title = "PK Parameter Details",
-        size = "xl",
-        easyClose = TRUE,
-        reactable(
-          ref_data,
-          searchable = TRUE,
-          sortable = TRUE,
-          filterable = TRUE,
-          highlight = TRUE,
-          striped = TRUE,
-          compact = TRUE,
-          defaultPageSize = 10,
-          showPageSizeOptions = TRUE,
-          pageSizeOptions = c(10, 25, 50, nrow(ref_data)),
-          style = list(fontSize = "0.75em"),
-          columns = list(
-            PPTESTCD = colDef(
-              name = "PPTESTCD", maxWidth = 100
-            ),
-            PPTEST = colDef(
-              name = "Parameter Name", maxWidth = 180
-            ),
-            Description = colDef(
-              name = "Description",
-              minWidth = 400,
-              style = list(whiteSpace = "normal")
-            ),
-            Category = colDef(
-              name = "Category", maxWidth = 120
-            ),
-            Type = colDef(
-              name = "Type", maxWidth = 120
-            ),
-            App_Location = colDef(
-              name = "App Location",
-              minWidth = 220,
-              style = list(whiteSpace = "normal")
-            ),
-            PKNCA_Function = colDef(
-              name = "PKNCA Function",
-              maxWidth = 160,
-              html = TRUE,
-              cell = function(value) {
-                if (value == "\u2014") {
-                  "\u2014"
-                } else {
-                  url <- paste0(
-                    "https://cran.r-project.org/web/",
-                    "packages/PKNCA/PKNCA.pdf"
-                  )
-                  as.character(htmltools::tags$a(
-                    href = url,
-                    target = "_blank",
-                    style = paste0(
-                      "color: #0d6efd;",
-                      "text-decoration: underline;"
-                    ),
-                    value
-                  ))
-                }
-              }
-            )
-          )
-        ),
-        footer = modalButton("Close")
-      ))
-    })
+    observeEvent(input$show_param_ref, .show_param_ref_modal())
 
     # Return list
     list(
@@ -509,6 +440,79 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # Reorder columns
     select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(study_types_list))
 
+}
+
+#' Show the PK parameter reference modal with a searchable reactable.
+#' @noRd
+.show_param_ref_modal <- function() {
+  ref_data <- .build_param_ref_data()
+  pknca_url <- paste0(
+    "https://cran.r-project.org/web/",
+    "packages/PKNCA/PKNCA.pdf"
+  )
+  showModal(modalDialog(
+    title = "PK Parameter Details",
+    size = "xl",
+    easyClose = TRUE,
+    reactable(
+      ref_data,
+      searchable = TRUE,
+      sortable = TRUE,
+      filterable = TRUE,
+      highlight = TRUE,
+      striped = TRUE,
+      compact = TRUE,
+      defaultPageSize = 10,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = c(10, 25, 50, nrow(ref_data)),
+      style = list(fontSize = "0.75em"),
+      columns = list(
+        PPTESTCD = colDef(
+          name = "PPTESTCD", maxWidth = 100
+        ),
+        PPTEST = colDef(
+          name = "Parameter Name", maxWidth = 180
+        ),
+        Description = colDef(
+          name = "Description",
+          minWidth = 400,
+          style = list(whiteSpace = "normal")
+        ),
+        Category = colDef(
+          name = "Category", maxWidth = 120
+        ),
+        Type = colDef(
+          name = "Type", maxWidth = 120
+        ),
+        App_Location = colDef(
+          name = "App Location",
+          minWidth = 220,
+          style = list(whiteSpace = "normal")
+        ),
+        PKNCA_Function = colDef(
+          name = "PKNCA Function",
+          maxWidth = 160,
+          html = TRUE,
+          cell = function(value) {
+            if (value == "\u2014") {
+              "\u2014"
+            } else {
+              as.character(htmltools::tags$a(
+                href = pknca_url,
+                target = "_blank",
+                style = paste0(
+                  "color: #0d6efd;",
+                  "text-decoration: underline;"
+                ),
+                value
+              ))
+            }
+          }
+        )
+      )
+    ),
+    footer = modalButton("Close")
+  ))
 }
 
 #' Build the parameter reference data frame for the modal.
