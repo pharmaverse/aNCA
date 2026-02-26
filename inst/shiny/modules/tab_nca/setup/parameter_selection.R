@@ -426,17 +426,30 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             ),
             App_Location = colDef(
               name = "App Location",
-              maxWidth = 200,
+              minWidth = 220,
               style = list(whiteSpace = "normal")
             ),
             PKNCA_Function = colDef(
               name = "PKNCA Function",
-              maxWidth = 140,
+              maxWidth = 160,
+              html = TRUE,
               cell = function(value) {
                 if (value == "\u2014") {
                   "\u2014"
                 } else {
-                  tags$code(value)
+                  url <- paste0(
+                    "https://cran.r-project.org/web/",
+                    "packages/PKNCA/PKNCA.pdf"
+                  )
+                  as.character(htmltools::tags$a(
+                    href = url,
+                    target = "_blank",
+                    style = paste0(
+                      "color: #0d6efd;",
+                      "text-decoration: underline;"
+                    ),
+                    value
+                  ))
                 }
               }
             )
@@ -512,25 +525,35 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       can_exc <- params$can_excretion[i]
       locs <- character(0)
       if (type %in% c("Standard", "IV")) {
-        locs <- c(locs, "Parameter Selection")
+        locs <- c(locs, "NCA > Setup > Parameter Selection")
       }
       if (type == "Urine" || identical(can_exc, "T")) {
-        locs <- c(locs, "Excretion Analysis")
+        locs <- c(
+          locs,
+          "NCA > Additional Analysis > Excretion"
+        )
       }
       if (type == "PKNCA-not-covered" && cat == "Ratio") {
-        locs <- c(locs, "Non-NCA Ratios")
+        locs <- c(
+          locs,
+          "NCA > Additional Analysis > Ratios"
+        )
       }
       if (type == "Sparse") {
-        locs <- c(locs, "Parameter Selection (sparse)")
+        locs <- c(
+          locs,
+          "NCA > Setup > Parameter Selection (sparse)"
+        )
       }
-      if (length(locs) == 0) "Parameter Selection"
+      if (length(locs) == 0) "NCA > Setup > Parameter Selection"
       else paste(locs, collapse = "; ")
     },
     character(1)
   )
 
   pknca_fun <- ifelse(
-    is.na(params$FUN) | params$FUN == "",
+    is.na(params$FUN) | params$FUN == "" |
+      params$TYPE == "PKNCA-not-covered",
     "\u2014",
     params$FUN
   )
