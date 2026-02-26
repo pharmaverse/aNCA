@@ -67,14 +67,16 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()
 
+  conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
+                        timeu_col, concu_col, exclude_hl_col, "ROWID")
+  # Drop ATPTREF from wide_output before merge to avoid .x/.y suffixes
+  wide_output_clean <- wide_output %>%
+    select(-any_of("ATPTREF"))
+
   d_conc_with_res <- merge(
     pknca_data$conc$data %>%
-      select(
-        !!!syms(c(group_vars(pknca_data), time_col, conc_col,
-                  timeu_col, concu_col, exclude_hl_col, "ROWID")),
-        any_of("ATPTREF")
-      ),
-    wide_output,
+      select(!!!syms(conc_select_cols), any_of("ATPTREF")),
+    wide_output_clean,
     all.x = TRUE,
     by = c(group_vars(pknca_data))
   ) %>%
@@ -169,14 +171,15 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     )
 
     # Create the plot
+    available_title_cols <- intersect(title_cols, names(df))
     plot_list[[plotid]] <- get_halflife_plots_single(
       fit_line_data = fit_line_data,
       plot_data = df,
       time_col = time_col,
       conc_col = conc_col,
       title = paste0(
-        paste0(title_cols, ": "),
-        df[1, title_cols, drop = FALSE],
+        paste0(available_title_cols, ": "),
+        df[1, available_title_cols, drop = FALSE],
         collapse = ", "
       ),
       xlab = df$xlab[1],
