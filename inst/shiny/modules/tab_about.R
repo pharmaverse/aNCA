@@ -60,17 +60,7 @@ tab_about_ui <- function(id) {
           style = "margin-top: 0.5em;",
           "aNCA builds on PKNCA. Please also cite:"
         ),
-        tags$blockquote(
-          style = "border-left: 3px solid #ccc; padding-left: 1em; color: #555;",
-          tags$p(
-            "Denney, Duvvuri, and Buckeridge (2015). ",
-            tags$a(
-              href = "https://doi.org/10.1007/s10928-015-9432-2",
-              target = "_blank",
-              "doi:10.1007/s10928-015-9432-2"
-            )
-          )
-        )
+        uiOutput(ns("pknca_citation_text"))
       )
     ),
 
@@ -146,6 +136,15 @@ tab_about_server <- function(id) {
     # Citation
     output$citation_text <- renderUI({
       cit <- utils::citation("aNCA")
+      cit_text <- paste(format(cit, style = "text"), collapse = "\n\n")
+      tags$blockquote(
+        style = "border-left: 3px solid #ccc; padding-left: 1em; color: #555;",
+        tags$p(cit_text)
+      )
+    })
+
+    output$pknca_citation_text <- renderUI({
+      cit <- utils::citation("PKNCA")
       cit_text <- paste(format(cit, style = "text"), collapse = "\n\n")
       tags$blockquote(
         style = "border-left: 3px solid #ccc; padding-left: 1em; color: #555;",
