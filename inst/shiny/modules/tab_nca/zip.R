@@ -43,8 +43,6 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
-      updateCheckboxInput(session, "zip_final", value = FALSE)
-      updateCheckboxInput(session, "zip_qced", value = FALSE)
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
       showModal(
         modalDialog(
