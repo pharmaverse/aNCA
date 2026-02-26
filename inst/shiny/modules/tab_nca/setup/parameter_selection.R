@@ -391,6 +391,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     observeEvent(input$show_param_ref, {
       ref_data <- .build_param_ref_data()
       showModal(modalDialog(
+        tags$style("
+          #shiny-modal .modal-dialog {
+            margin-top: 1rem;
+          }
+          #shiny-modal .modal.fade .modal-dialog {
+            transform: translate(0, 0);
+          }
+        "),
         title = "PK Parameter Details",
         size = "xl",
         easyClose = TRUE,
@@ -402,9 +410,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           highlight = TRUE,
           striped = TRUE,
           compact = TRUE,
-          defaultPageSize = 25,
+          defaultPageSize = 5,
           showPageSizeOptions = TRUE,
-          pageSizeOptions = c(25, 50, 100, nrow(ref_data)),
+          pageSizeOptions = c(5, 10, 25, 50, nrow(ref_data)),
           style = list(fontSize = "0.75em"),
           columns = list(
             PPTESTCD = colDef(
