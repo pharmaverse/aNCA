@@ -55,6 +55,12 @@ parameter_selection_ui <- function(id) {
         right = TRUE,
         icon = icon("question"),
         status = "primary"
+      ),
+      actionButton(
+        ns("show_param_ref"),
+        label = "PK parameter details",
+        icon = icon("book"),
+        class = "btn-sm btn-outline-primary"
       )
     ),
     p("The following study types were detected in the data:"),
@@ -381,6 +387,65 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       ))
     })
 
+    # PK parameter reference modal
+    observeEvent(input$show_param_ref, {
+      ref_data <- .build_param_ref_data()
+      showModal(modalDialog(
+        title = "PK Parameter Details",
+        size = "xl",
+        easyClose = TRUE,
+        reactable(
+          ref_data,
+          searchable = TRUE,
+          sortable = TRUE,
+          filterable = TRUE,
+          highlight = TRUE,
+          striped = TRUE,
+          compact = TRUE,
+          defaultPageSize = 25,
+          showPageSizeOptions = TRUE,
+          pageSizeOptions = c(25, 50, 100, nrow(ref_data)),
+          style = list(fontSize = "0.75em"),
+          columns = list(
+            PPTESTCD = colDef(
+              name = "PPTESTCD", minWidth = 90
+            ),
+            PPTEST = colDef(
+              name = "Parameter Name", minWidth = 170
+            ),
+            Description = colDef(
+              name = "Description",
+              minWidth = 250,
+              style = list(whiteSpace = "normal")
+            ),
+            Category = colDef(
+              name = "Category", minWidth = 110
+            ),
+            Type = colDef(
+              name = "Type", minWidth = 110
+            ),
+            App_Location = colDef(
+              name = "App Location",
+              minWidth = 200,
+              style = list(whiteSpace = "normal")
+            ),
+            PKNCA_Function = colDef(
+              name = "PKNCA Function",
+              minWidth = 130,
+              cell = function(value) {
+                if (value == "\u2014") {
+                  "\u2014"
+                } else {
+                  tags$code(value)
+                }
+              }
+            )
+          )
+        ),
+        footer = modalButton("Close")
+      ))
+    })
+
     # Return list
     list(
       selections = parameter_lists_by_type,
@@ -431,6 +496,55 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # Reorder columns
     select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(study_types_list))
 
+}
+
+#' Build the parameter reference data frame for the modal.
+#' Derives App Location from TYPE, CAT, and can_excretion.
+#' @return A data frame with 7 columns for display.
+.build_param_ref_data <- function() {
+  params <- metadata_nca_parameters
+
+  app_location <- vapply(
+    seq_len(nrow(params)),
+    function(i) {
+      type <- params$TYPE[i]
+      cat <- params$CAT[i]
+      can_exc <- params$can_excretion[i]
+      locs <- character(0)
+      if (type %in% c("Standard", "IV")) {
+        locs <- c(locs, "Parameter Selection")
+      }
+      if (type == "Urine" || identical(can_exc, "T")) {
+        locs <- c(locs, "Excretion Analysis")
+      }
+      if (type == "PKNCA-not-covered" && cat == "Ratio") {
+        locs <- c(locs, "Non-NCA Ratios")
+      }
+      if (type == "Sparse") {
+        locs <- c(locs, "Parameter Selection (sparse)")
+      }
+      if (length(locs) == 0) "Parameter Selection"
+      else paste(locs, collapse = "; ")
+    },
+    character(1)
+  )
+
+  pknca_fun <- ifelse(
+    is.na(params$FUN) | params$FUN == "",
+    "\u2014",
+    params$FUN
+  )
+
+  data.frame(
+    PPTESTCD = params$PPTESTCD,
+    PPTEST = params$PPTEST,
+    Description = params$description,
+    Category = params$CAT,
+    Type = params$TYPE,
+    App_Location = app_location,
+    PKNCA_Function = pknca_fun,
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Helper to Apply Default or Override Parameter Selections

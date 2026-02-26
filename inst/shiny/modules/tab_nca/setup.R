@@ -37,7 +37,6 @@ setup_ui <- function(id) {
       )
     ),
     nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
-    nav_panel("Parameter Reference", parameter_reference_ui(ns("param_ref"))),
     nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
     nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
   )
@@ -97,8 +96,6 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       base_pknca_data,
       imported_params
     )
-
-    parameter_reference_server("param_ref")
 
     final_settings <- reactive({
 
