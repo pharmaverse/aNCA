@@ -108,10 +108,20 @@ read_settings <- function(path, name) {
     obj$slope_rules <- as.data.frame(bind_rows(obj$slope_rules))
   }
 
-  if (!is.null(obj$settings) && is.list(obj$settings)) {
-    obj$settings$int_parameters <- bind_rows(obj$settings$int_parameters)
+  if (!is.null(obj$settings$units) && is.list(obj$settings$units)) {
     obj$settings$units <- bind_rows(obj$settings$units)
-    obj$settings$parameters$types_df <- bind_rows(obj$settings$parameters$types_df)
+  }
+
+  if (!is.null(obj$settings$int_parameters) && is.list(obj$settings$int_parameters)) {
+    obj$settings$int_parameters <- bind_rows(obj$settings$int_parameters)
+  }
+
+  # Convert filter values from YAML lists to vectors
+  if (!is.null(obj$filters) && is.list(obj$filters)) {
+    obj$filters <- lapply(obj$filters, function(filt) {
+      filt$value <- unlist(filt$value)
+      filt
+    })
   }
 
   obj

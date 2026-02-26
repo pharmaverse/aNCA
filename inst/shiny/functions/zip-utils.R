@@ -394,6 +394,7 @@ prepare_export_files <- function(target_dir,
   path <- file.path(target_dir, "settings")
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
   settings_to_save <- list(
+    filters = session$userData$applied_filters,
     settings = session$userData$settings(),
     slope_rules = session$userData$slope_rules$manual_slopes()
   )

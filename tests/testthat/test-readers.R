@@ -120,20 +120,33 @@ describe("read_settings", {
     expect_s3_class(res$slope_rules, "data.frame")
   })
 
-  it("converts settings elements into data frames", {
-    # Partial AUC definitions
+  it("converts int_parameters to a data frame when present", {
     res <- read_settings(path)
     expect_s3_class(res$settings$int_parameters, "data.frame")
+    expect_equal(nrow(res$settings$int_parameters), 2)
+    expect_named(res$settings$int_parameters, c("parameter", "start_auc", "end_auc"))
+    expect_equal(res$settings$int_parameters$parameter, c("AUCINT", "AUCINTD"))
+    expect_equal(res$settings$int_parameters$start_auc, c(0, 0))
+    expect_equal(res$settings$int_parameters$end_auc, c(24, 24))
+  })
 
-    # Parameter selections by study type
-    expect_s3_class(res$settings$parameters$types_df, "data.frame")
+  it("returns NULL int_parameters when not in settings file", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
+    res <- read_settings(tmp_yaml)
+    expect_null(res$settings$int_parameters)
+  })
+
+  it("keeps types_df as-is (only needed for R script generation)", {
+    res <- read_settings(path)
+    expect_type(res$settings$parameters$types_df, "list")
   })
 
   it("handles empty or null units/general_exclusions gracefully", {
     res <- read_settings(path)
 
-    expect_s3_class(res$settings$units, "data.frame")
-    expect_equal(nrow(res$settings$units), 0)
+    # units is ~ (null) in the test fixture, so it stays NULL
+    expect_null(res$settings$units)
   })
 
   it("throws error on invalid YAML structure", {
