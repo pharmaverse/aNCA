@@ -61,7 +61,7 @@ readers <- list(
     as.data.frame(readxl::read_excel(path))
   },
   sas7bdat = function(path) {
-    if (!requireNamespace("haven", silently = TRUE))
+    if (!requireNamespace("haven", quietly = TRUE))
       stop(
         "Handling .sas7bdat files requires `haven` package, please install it with ",
         "`install.packages('haven')`"
@@ -69,7 +69,7 @@ readers <- list(
     haven::read_sas(path)
   },
   xpt = function(path) {
-    if (!requireNamespace("haven", silently = TRUE))
+    if (!requireNamespace("haven", quietly = TRUE))
       stop(
         "Handling .xpt files requires `haven` package, please install it with ",
         "`install.packages('haven')`"
@@ -77,7 +77,7 @@ readers <- list(
     haven::read_xpt(path)
   },
   parquet = function(path) {
-    if (!requireNamespace("arrow", silently = TRUE))
+    if (!requireNamespace("arrow", quietly = TRUE))
       stop(
         "Handling .parquet files requires `arrow` package, please install it with ",
         "`install.packages('arrow')`"
