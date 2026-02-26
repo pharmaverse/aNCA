@@ -163,25 +163,37 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       ))
     }
 
-    # Individual plot button
-    observeEvent(individual_sidebar$add_to_exports(), {
-      req(individualplot())
-      pending_plot_type("individual")
-      .show_export_modal(paste0("individualplot", indiv_counter() + 1L))
-    })
+    # Wire each plot type's "Add to Exports" button to the modal
+    export_buttons <- list(
+      list(
+        trigger = individual_sidebar$add_to_exports,
+        plot = individualplot,
+        type = "individual",
+        counter = indiv_counter,
+        prefix = "individualplot"
+      ),
+      list(
+        trigger = mean_sidebar$add_to_exports,
+        plot = meanplot,
+        type = "mean",
+        counter = mean_counter,
+        prefix = "meanplot"
+      ),
+      list(
+        trigger = qc_plot_outputs$add_to_exports,
+        plot = qc_plot_outputs$current_plot,
+        type = "qc",
+        counter = qc_counter,
+        prefix = "qcplot"
+      )
+    )
 
-    # Mean plot button
-    observeEvent(mean_sidebar$add_to_exports(), {
-      req(meanplot())
-      pending_plot_type("mean")
-      .show_export_modal(paste0("meanplot", mean_counter() + 1L))
-    })
-
-    # QC plot button
-    observeEvent(qc_plot_outputs$add_to_exports(), {
-      req(qc_plot_outputs$current_plot())
-      pending_plot_type("qc")
-      .show_export_modal(paste0("qcplot", qc_counter() + 1L))
+    lapply(export_buttons, function(btn) {
+      observeEvent(btn$trigger(), {
+        req(btn$plot())
+        pending_plot_type(btn$type)
+        .show_export_modal(paste0(btn$prefix, btn$counter() + 1L))
+      })
     })
 
     # Confirm save from modal — increment counter only on actual save
