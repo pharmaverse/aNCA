@@ -18,6 +18,8 @@ describe("get_halflife_plot", {
 
   it("includes ATPTREF in title even with a single profile", {
     pknca_single <- base_pknca
+    # Confirm ATPTREF is not a PKNCA grouping variable in the fixture
+    expect_false("ATPTREF" %in% dplyr::group_vars(pknca_single))
     # Keep only ATPTREF == 1 so it has a single level
     pknca_single$conc$data <- pknca_single$conc$data %>%
       filter(ATPTREF == unique(ATPTREF)[1])

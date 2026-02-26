@@ -71,7 +71,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     pknca_data$conc$data %>%
       select(
         !!!syms(c(group_vars(pknca_data), time_col, conc_col,
-                  timeu_col, concu_col, exclude_hl_col, "ROWID"))
+                  timeu_col, concu_col, exclude_hl_col, "ROWID")),
+        any_of("ATPTREF")
       ),
     wide_output,
     all.x = TRUE,
