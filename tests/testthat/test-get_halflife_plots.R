@@ -16,6 +16,29 @@ describe("get_halflife_plot", {
     expect_true("layout" %in% names(plots[[1]]$x))
   })
 
+  it("includes ATPTREF in title even with a single profile", {
+    pknca_single <- base_pknca
+    # Keep only ATPTREF == 1 so it has a single level
+    pknca_single$conc$data <- pknca_single$conc$data %>%
+      filter(ATPTREF == unique(ATPTREF)[1])
+    pknca_single$dose$data <- pknca_single$dose$data %>%
+      filter(ATPTREF == unique(ATPTREF)[1])
+    pknca_single$intervals <- pknca_single$intervals %>%
+      filter(ATPTREF == unique(ATPTREF)[1])
+
+    plots <- withCallingHandlers(
+      get_halflife_plots(pknca_single)[["plots"]],
+      warning = function(w) {
+        if (grepl("Ignoring", conditionMessage(w))) invokeRestart("muffleWarning")
+      }
+    )
+    expect_true(length(plots) >= 1)
+    # Verify ATPTREF appears in the plot title
+    title <- plots[[1]]$x$layout$title
+    title_text <- if (is.list(title)) title$text else title
+    expect_true(grepl("ATPTREF", title_text))
+  })
+
   it("warns and returns empty list when no groups present", {
     pknca_no_groups <- base_pknca
     pknca_no_groups$conc$data <- pknca_no_groups$conc$data[0, ]

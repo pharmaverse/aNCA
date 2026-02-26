@@ -29,6 +29,11 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
   title_cols <- group_conc_cols[group_conc_n_levels > 1]
 
+  # Always include ATPTREF in the title when present (identifies the dosing profile)
+  if ("ATPTREF" %in% names(pknca_data$conc$data) && !"ATPTREF" %in% title_cols) {
+    title_cols <- c("ATPTREF", title_cols)
+  }
+
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
     pknca_data$conc$data[["exclude_half.life"]] <- FALSE
