@@ -2,7 +2,6 @@
 
 ## Features added
 
-* Replace `openxlsx2` with `readxl` for reading xlsx files in `read_pk()` (#1005)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
