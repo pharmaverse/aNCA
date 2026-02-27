@@ -45,44 +45,10 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
   pknca_data$intervals <- pknca_data$intervals %>%
     filter(type_interval == "main", half.life) %>%
     unique()
-  o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
 
-  if (!"PPSTRES" %in% names(o_nca$result)) {
-    o_nca$result$PPSTRES <- o_nca$result$PPORRES
-    if ("PPORRESU" %in% names(o_nca$result)) {
-      o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
-    }
-  }
-
-  # Prepare an object with all plot information
-  wide_output <- o_nca
-  wide_output$result <- wide_output$result %>%
-    filter(
-      PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last",
-                      "lambda.z", "adj.r.squared", "span.ratio", "tlast")
-    ) %>%
-    select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
-    mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
-
-  wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
-    unique()
-
-  conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
-                        timeu_col, concu_col, exclude_hl_col, "ROWID")
-  merge_by <- c(group_vars(pknca_data))
-  if ("ATPTREF" %in% names(pknca_data$conc$data)) {
-    conc_select_cols <- c(conc_select_cols, "ATPTREF")
-    merge_by <- c(merge_by, "ATPTREF")
-  }
-
-  d_conc_with_res <- merge(
-    pknca_data$conc$data %>%
-      select(!!!syms(conc_select_cols)),
-    wide_output,
-    all.x = TRUE,
-    by = merge_by
-  ) %>%
-    dplyr::filter(.[[time_col]] >= start & .[[time_col]] <= end)
+  d_conc_with_res <- .merge_conc_with_nca_results(pknca_data, time_col,
+                                                   conc_col, timeu_col,
+                                                   concu_col, exclude_hl_col)
 
   # Mark points used in half-life calculation
   info_per_plot_list <- d_conc_with_res %>%
@@ -195,6 +161,58 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     data_list[[plotid]] <- df
   }
   list(plots = plot_list, data = data_list)
+}
+
+#' Merge concentration data with NCA half-life results
+#'
+#' Runs pk.nca, pivots results to wide format, and merges back onto the
+#' concentration data.  When ATPTREF is present in the concentration data it is
+#' included in the merge key so that each dosing profile is matched correctly.
+#' Row order is preserved via the ROWID column.
+#'
+#' @keywords internal
+#' @noRd
+.merge_conc_with_nca_results <- function(pknca_data, time_col, conc_col,
+                                         timeu_col, concu_col,
+                                         exclude_hl_col) {
+  o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
+
+  if (!"PPSTRES" %in% names(o_nca$result)) {
+    o_nca$result$PPSTRES <- o_nca$result$PPORRES
+    if ("PPORRESU" %in% names(o_nca$result)) {
+      o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
+    }
+  }
+
+  wide_output <- o_nca
+  wide_output$result <- wide_output$result %>%
+    filter(
+      PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last",
+                      "lambda.z", "adj.r.squared", "span.ratio", "tlast")
+    ) %>%
+    select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
+    mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
+
+  wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
+    unique()
+
+  conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
+                        timeu_col, concu_col, exclude_hl_col, "ROWID")
+  merge_by <- c(group_vars(pknca_data))
+  if ("ATPTREF" %in% names(pknca_data$conc$data)) {
+    conc_select_cols <- c(conc_select_cols, "ATPTREF")
+    merge_by <- c(merge_by, "ATPTREF")
+  }
+
+  merge(
+    pknca_data$conc$data %>%
+      select(!!!syms(conc_select_cols)),
+    wide_output,
+    all.x = TRUE,
+    by = merge_by
+  ) %>%
+    dplyr::arrange(ROWID) %>%
+    dplyr::filter(.[[time_col]] >= start & .[[time_col]] <= end)
 }
 
 #' Internal helper for plotting a single half-life plot

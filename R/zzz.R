@@ -89,6 +89,7 @@
     "PPTESTCD_unit",
     "RANGE",
     "REASON",
+    "ROWID",
     "Ratio",
     "Ratio_Type",
     "route_names",
