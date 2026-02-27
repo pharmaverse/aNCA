@@ -146,17 +146,17 @@ describe("format_pkncaconc_data", {
     test_df$NCA1XRS <- c(rep("Contaminated sample", 2), rep(NA_character_, nrows - 2))
     test_df$NCA2XRS <- c("Wrongly labelled", rep(NA_character_, nrows - 2), "Wrong labelled")
 
-    res <- format_pkncaconc_data(
-      test_df,
-      group_columns = "USUBJID",
-      nca_exclude_reason_columns = c("NCA1XRS", "NCA2XRS")
-    )
-
     exp_nca_exclude <- c(
       "Contaminated sample; Wrongly labelled",
       "Contaminated sample",
       rep("", nrows - 3),
       "Wrong labelled"
+    )
+
+    res <- format_pkncaconc_data(
+      test_df,
+      group_columns = "USUBJID",
+      nca_exclude_reason_columns = c("NCA1XRS", "NCA2XRS")
     )
 
     expect_equal(res$nca_exclude, exp_nca_exclude)
