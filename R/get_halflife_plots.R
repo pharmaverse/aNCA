@@ -69,16 +69,18 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 
   conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
                         timeu_col, concu_col, exclude_hl_col, "ROWID")
-  # Drop ATPTREF from wide_output before merge to avoid .x/.y suffixes
-  wide_output_clean <- wide_output %>%
-    select(-any_of("ATPTREF"))
+  merge_by <- c(group_vars(pknca_data))
+  if ("ATPTREF" %in% names(pknca_data$conc$data)) {
+    conc_select_cols <- c(conc_select_cols, "ATPTREF")
+    merge_by <- c(merge_by, "ATPTREF")
+  }
 
   d_conc_with_res <- merge(
     pknca_data$conc$data %>%
-      select(!!!syms(conc_select_cols), any_of("ATPTREF")),
-    wide_output_clean,
+      select(!!!syms(conc_select_cols)),
+    wide_output,
     all.x = TRUE,
-    by = c(group_vars(pknca_data))
+    by = merge_by
   ) %>%
     dplyr::filter(.[[time_col]] >= start & .[[time_col]] <= end)
 
