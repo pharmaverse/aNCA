@@ -160,20 +160,6 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         selected = pcspec_choices[1]
       )
 
-      # Update the usubjid picker input (if it exists)
-      if ("usubjid" %in% names(input)) {
-        usubjid_choices <- data %>%
-          pull(USUBJID) %>%
-          unique()
-
-        updatePickerInput(
-          session,
-          "usubjid",
-          choices = usubjid_choices,
-          selected = usubjid_choices
-        )
-      }
-
       profile_choices <- data %>%
         mutate(ATPTREF = as.character(ATPTREF)) %>%
         pull(ATPTREF) %>%
@@ -189,16 +175,39 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
                                      dose_col, grouping_vars(), "ATPTREF"))
 
-      is_individual <- "usubjid" %in% names(input)
+      # Individual plots: update USUBJID picker, default color_by = USUBJID,
+      # no default facet.
+      # Mean plots: default color_by and facet_by from priority lists.
+      if ("usubjid" %in% names(input)) {
+        usubjid_choices <- data %>%
+          pull(USUBJID) %>%
+          unique()
 
-      # Default color_by: USUBJID for individual plots, first available
-      # variable from the priority list for mean plots
-      default_color <- if (is_individual) {
-        subject_col
+        updatePickerInput(
+          session,
+          "usubjid",
+          choices = usubjid_choices,
+          selected = usubjid_choices
+        )
+
+        default_color <- subject_col
+        default_facet <- NULL
       } else {
         color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", dose_col)
         available_color <- intersect(color_priority, full_grouping_vars)
-        if (length(available_color) > 0) available_color[1] else dose_col
+        default_color <- if (length(available_color) > 0) {
+          available_color[1]
+        } else {
+          dose_col
+        }
+
+        facet_priority <- c("TRT01A", dose_col, "GROUP", "ACTARM", "COHORT")
+        available_facet <- intersect(facet_priority, full_grouping_vars)
+        default_facet <- if (length(available_facet) > 0) {
+          available_facet[1]
+        } else {
+          NULL
+        }
       }
 
       updatePickerInput(
@@ -207,14 +216,6 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         choices = full_grouping_vars,
         selected = default_color
       )
-
-      # Default facet_by: for mean plots, first available from priority list;
-      # for individual plots, no default facet
-      default_facet <- if (!is_individual) {
-        facet_priority <- c("TRT01A", dose_col, "GROUP", "ACTARM", "COHORT")
-        available_facet <- intersect(facet_priority, full_grouping_vars)
-        if (length(available_facet) > 0) available_facet[1] else NULL
-      }
 
       updatePickerInput(
         session,
