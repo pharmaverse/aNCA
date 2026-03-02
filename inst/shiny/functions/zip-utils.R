@@ -375,7 +375,7 @@ prepare_export_files <- function(target_dir,
                       cdisc_data = session$userData$results$CDISC)
   }
 
-  saveRDS(session$userData$raw_data, file.path(target_dir, "data.rds"))
+  saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
 
   if ("r_script" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
