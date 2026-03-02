@@ -16,11 +16,31 @@ describe("get_halflife_plot", {
     expect_true("layout" %in% names(plots[[1]]$x))
   })
 
-  it("includes ATPTREF in title even with a single profile", {
+  it("always includes ATPTREF in title when passed via title_vars", {
     pknca_single <- base_pknca
-    # Confirm ATPTREF is not a PKNCA grouping variable in the fixture
-    expect_false("ATPTREF" %in% dplyr::group_vars(pknca_single))
     # Keep only ATPTREF == 1 so it has a single level
+    pknca_single$conc$data <- pknca_single$conc$data %>%
+      filter(ATPTREF == unique(ATPTREF)[1])
+    pknca_single$dose$data <- pknca_single$dose$data %>%
+      filter(ATPTREF == unique(ATPTREF)[1])
+    pknca_single$intervals <- pknca_single$intervals %>%
+      filter(ATPTREF == unique(ATPTREF)[1])
+
+    plots <- withCallingHandlers(
+      get_halflife_plots(pknca_single, title_vars = "ATPTREF")[["plots"]],
+      warning = function(w) {
+        if (grepl("Ignoring", conditionMessage(w))) invokeRestart("muffleWarning")
+      }
+    )
+    expect_true(length(plots) >= 1)
+    # Verify ATPTREF appears in the plot title
+    title <- plots[[1]]$x$layout$title
+    title_text <- if (is.list(title)) title$text else title
+    expect_true(grepl("ATPTREF", title_text))
+  })
+
+  it("does not include ATPTREF in title when title_vars is not set", {
+    pknca_single <- base_pknca
     pknca_single$conc$data <- pknca_single$conc$data %>%
       filter(ATPTREF == unique(ATPTREF)[1])
     pknca_single$dose$data <- pknca_single$dose$data %>%
@@ -35,10 +55,9 @@ describe("get_halflife_plot", {
       }
     )
     expect_true(length(plots) >= 1)
-    # Verify ATPTREF appears in the plot title
     title <- plots[[1]]$x$layout$title
     title_text <- if (is.list(title)) title$text else title
-    expect_true(grepl("ATPTREF", title_text))
+    expect_false(grepl("ATPTREF", title_text))
   })
 
   it("warns and returns empty list when no groups present", {

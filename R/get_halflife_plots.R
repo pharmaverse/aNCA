@@ -4,13 +4,17 @@
 #'
 #' @param pknca_data PKNCA data object
 #' @param add_annotations Logical, whether to add the subtitle annotation
+#' @param title_vars Character vector of additional column names to always
+#'   include in the plot title, even when they have only one unique level.
+#'   Columns that do not exist in the data are silently ignored.
 #' @returns A list with plotly objects and data
 #' @importFrom dplyr filter select mutate group_by ungroup group_split %>% any_of
 #' @importFrom stats lm predict as.formula
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
 #' @importFrom PKNCA pk.nca
 #' @export
-get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
+get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
+                               title_vars = NULL) {
 
   # If the input has empty concentration or intervals, just return an empty list
   if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
@@ -26,13 +30,14 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 
   # Define which columns use for the title to keep it short
   group_conc_cols <- group_vars(pknca_data)
-  group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
+  group_conc_n_levels <- sapply(
+    pknca_data$conc$data[group_conc_cols], \(x) length(unique(x))
+  )
   title_cols <- group_conc_cols[group_conc_n_levels > 1]
 
-  # Always include ATPTREF in the title when present (identifies the dosing profile)
-  if ("ATPTREF" %in% names(pknca_data$conc$data) && !"ATPTREF" %in% title_cols) {
-    title_cols <- c("ATPTREF", title_cols)
-  }
+  # Append caller-specified title variables that exist in the data
+  extra <- intersect(title_vars, names(pknca_data$conc$data))
+  title_cols <- unique(c(extra, title_cols))
 
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
@@ -139,15 +144,14 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
     )
 
     # Create the plot
-    available_title_cols <- intersect(title_cols, names(df))
     plot_list[[plotid]] <- get_halflife_plots_single(
       fit_line_data = fit_line_data,
       plot_data = df,
       time_col = time_col,
       conc_col = conc_col,
       title = paste0(
-        paste0(available_title_cols, ": "),
-        df[1, available_title_cols, drop = FALSE],
+        paste0(title_cols, ": "),
+        df[1, title_cols, drop = FALSE],
         collapse = ", "
       ),
       xlab = df$xlab[1],
@@ -166,8 +170,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE) {
 #' Merge concentration data with NCA half-life results
 #'
 #' Runs pk.nca, pivots results to wide format, and merges back onto the
-#' concentration data.  When ATPTREF is present in the concentration data it is
-#' included in the merge key so that each dosing profile is matched correctly.
+#' concentration data.  When ATPTREF is present it is included in the merge
+#' key so that each dosing profile is matched correctly.
 #' Row order is preserved via the ROWID column.
 #'
 #' @keywords internal
