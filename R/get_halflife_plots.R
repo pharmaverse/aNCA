@@ -215,8 +215,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     all.x = TRUE,
     by = merge_by
   ) %>%
-    dplyr::arrange(ROWID) %>%
-    dplyr::filter(.[[time_col]] >= start & .[[time_col]] <= end)
+    arrange(ROWID) %>%
+    filter(.[[time_col]] >= start & .[[time_col]] <= end)
 }
 
 #' Internal helper for plotting a single half-life plot
