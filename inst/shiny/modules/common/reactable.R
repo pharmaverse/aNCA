@@ -69,14 +69,18 @@ reactable_server <- function(
     }) %>%
       debounce(edit_debounce)
 
-    output$table <- renderReactable({
+    labeled_data <- reactive({
       req(data())
-      labeled_data <- apply_labels(data())
+      apply_labels(data())
+    })
+
+    output$table <- renderReactable({
+      req(labeled_data())
       opts <- lapply(reactable_opts, function(x) {
         if (is.reactive(x))  {
           x()
         } else if (is.function(x)) {
-          x(labeled_data)
+          x(labeled_data())
         } else {
           x
         }
@@ -100,18 +104,18 @@ reactable_server <- function(
         }
       }
 
-      do.call(reactable, c(list(data = labeled_data), opts)) %>%
+      do.call(reactable, c(list(data = labeled_data()), opts)) %>%
         htmlwidgets::onRender(on_render)
     })
 
     output$download_csv <- downloadHandler(
       filename = .reactable_file_name(file_name, "csv", id),
-      content = function(con) write.csv(labeled_data, con, row.names = FALSE)
+      content = function(con) write.csv(labeled_data(), con, row.names = FALSE)
     )
 
     output$download_xlsx <- downloadHandler(
       filename = .reactable_file_name(file_name, "xlsx", id),
-      content = function(con) openxlsx2::write_xlsx(labeled_data, con)
+      content = function(con) writexl::write_xlsx(labeled_data(), con)
     )
 
     reactive(
