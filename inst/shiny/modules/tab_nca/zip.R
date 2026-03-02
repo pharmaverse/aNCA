@@ -98,8 +98,29 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               )
             ),
             div(
-              downloadButton(ns("download_zip"), "Export ZIP with Results"),
-              style = "text-align: center; margin-top: 0.5em;"
+              style = paste(
+                "display: flex;",
+                "align-items: center;",
+                "justify-content: center;",
+                "gap: 1.5em;",
+                "margin-top: 0.5em;"
+              ),
+              checkboxInput(
+                ns("zip_final"),
+                label = "Final",
+                value = FALSE,
+                width = "auto"
+              ),
+              checkboxInput(
+                ns("zip_qced"),
+                label = "QCed",
+                value = FALSE,
+                width = "auto"
+              ),
+              downloadButton(
+                ns("download_zip"),
+                "Export ZIP with Results"
+              )
             )
           ),
           easyClose = TRUE,
@@ -114,10 +135,17 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
         project <- session$userData$project_name()
         if (project == "") {
           label <- session$userData$study_ids_label()
-          project <- if (label != "") paste0("NCA_", label) else "NCA"
+          project <- if (label != "") {
+            paste0("NCA_", label)
+          } else {
+            "NCA"
+          }
         }
         project <- gsub("[^A-Za-z0-9_-]", "_", project)
-        paste0(project, ".zip")
+        prefix <- ""
+        if (isTRUE(input$zip_final)) prefix <- paste0(prefix, "FINAL_")
+        if (isTRUE(input$zip_qced)) prefix <- paste0(prefix, "QCed_")
+        paste0(prefix, project, ".zip")
       },
       content = function(fname) {
         tryCatch(
