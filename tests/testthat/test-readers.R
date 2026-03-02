@@ -145,7 +145,6 @@ describe("read_settings", {
   it("handles empty or null units/general_exclusions gracefully", {
     res <- read_settings(path)
 
-    # units is ~ (null) in the test fixture, so it stays NULL
     expect_null(res$settings$units)
   })
 
