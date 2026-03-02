@@ -1,4 +1,4 @@
-#' Reads PK datasets from various file formats.
+#' Reads datasets from various file formats.
 #'
 #' @details
 #' Currently supported file formats include:
@@ -8,7 +8,8 @@
 #' @returns A data.frame object with loaded data.
 #'
 #' @examples
-#' df <- adnca_example
+#' path <- system.file("tests/testthat/data/test-duplicate-ADNCA.csv", package = "aNCA")
+#' df <- read_pk(path)
 #'
 #' @importFrom tools file_ext
 #' @importFrom utils read.csv
