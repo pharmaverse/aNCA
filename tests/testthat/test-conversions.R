@@ -285,17 +285,13 @@ describe("simplify_unit", {
 })
 
 describe("apply_unit_defaults", {
-  # Helper to build a data-derived units table
-  make_data_units <- function(...) {
-    data.frame(
-      PPTESTCD = c("CMAX", "AUCLST", "TMAX", "LAMZHL"),
-      PPORRESU = c("ng/mL", "h*ng/mL", "h", "h"),
-      PPSTRESU = c("ng/mL", "h*ng/mL", "h", "h"),
-      conversion_factor = c(1, 1, 1, 1),
-      stringsAsFactors = FALSE,
-      ...
-    )
-  }
+  data_units <- data.frame(
+    PPTESTCD = c("CMAX", "AUCLST", "TMAX", "LAMZHL"),
+    PPORRESU = c("ng/mL", "h*ng/mL", "h", "h"),
+    PPSTRESU = c("ng/mL", "h*ng/mL", "h", "h"),
+    conversion_factor = c(1, 1, 1, 1),
+    stringsAsFactors = FALSE
+  )
 
   it("applies default target units and calculates conversion factors", {
     defaults <- data.frame(
@@ -303,7 +299,7 @@ describe("apply_unit_defaults", {
       PPSTRESU = c("ug/mL", "h*ug/mL"),
       stringsAsFactors = FALSE
     )
-    result <- apply_unit_defaults(defaults, make_data_units())
+    result <- apply_unit_defaults(defaults, data_units)
 
     expect_equal(nrow(result$units), 4)
     expect_equal(nrow(result$failed), 0)
@@ -324,7 +320,7 @@ describe("apply_unit_defaults", {
       PPSTRESU = "ug/mL",
       stringsAsFactors = FALSE
     )
-    result <- apply_unit_defaults(defaults, make_data_units())
+    result <- apply_unit_defaults(defaults, data_units)
 
     tmax_row <- result$units[result$units$PPTESTCD == "TMAX", ]
     expect_equal(tmax_row$PPSTRESU, "h")
@@ -337,7 +333,7 @@ describe("apply_unit_defaults", {
       PPSTRESU = c("ug/mL", "kg"),
       stringsAsFactors = FALSE
     )
-    result <- apply_unit_defaults(defaults, make_data_units())
+    result <- apply_unit_defaults(defaults, data_units)
 
     # Data has 4 rows, no extra row added for NONEXISTENT
     expect_equal(nrow(result$units), 4)
@@ -349,7 +345,7 @@ describe("apply_unit_defaults", {
       PPSTRESU = c("ug/mL", "kg"),
       stringsAsFactors = FALSE
     )
-    result <- apply_unit_defaults(defaults, make_data_units())
+    result <- apply_unit_defaults(defaults, data_units)
 
     # TMAX: h -> kg is not convertible
     expect_equal(nrow(result$failed), 1)
@@ -400,7 +396,7 @@ describe("apply_unit_defaults", {
       PPSTRESU = "ng/mL",
       stringsAsFactors = FALSE
     )
-    result <- apply_unit_defaults(defaults, make_data_units())
+    result <- apply_unit_defaults(defaults, data_units)
 
     cmax_row <- result$units[result$units$PPTESTCD == "CMAX", ]
     expect_equal(cmax_row$conversion_factor, 1)
