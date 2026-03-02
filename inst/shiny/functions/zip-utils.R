@@ -364,11 +364,14 @@ prepare_export_files <- function(target_dir,
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
 
+  pn <- session$userData$project_name()
+  slide_title <- if (pn == "") "NCA Results" else paste0("NCA Results\n", pn)
+
   if ("qmd" %in% input$slide_formats) {
     create_qmd_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.qmd"),
-      paste0("NCA Results\n", session$userData$project_name()),
+      slide_title,
       TRUE
     )
   }
@@ -376,7 +379,7 @@ prepare_export_files <- function(target_dir,
     create_pptx_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.pptx"),
-      paste0("NCA Results\n", session$userData$project_name()),
+      slide_title,
       "www/templates/template.pptx"
     )
   }
@@ -390,8 +393,16 @@ prepare_export_files <- function(target_dir,
 .export_settings <- function(target_dir, session) {
   path <- file.path(target_dir, "settings")
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  settings_list <- session$userData$settings()
+
+  if (!is.null(settings_list$units)) {
+    settings_list$units <- settings_list$units %>%
+      dplyr::filter(!default) %>%
+      dplyr::select(-default)
+  }
+
   settings_to_save <- list(
-    settings = session$userData$settings(),
+    settings = settings_list,
     slope_rules = session$userData$slope_rules$manual_slopes()
   )
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))

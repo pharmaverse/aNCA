@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
+* Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
 * R script exported in ZIP folder to re-run and replicate App outputs (#789)
