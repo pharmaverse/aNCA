@@ -5,16 +5,38 @@
 .sidebar .sidebar-content {
   padding-left: 0 !important;
   padding-right: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
 }
 
 .sidebar .sidebar-content .row > :nth-child(2) {
   display: none;
 }
 
+.sidebar .sidebar-content .row {
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 .sidebar .sidebar-content .row > :first-child {
   width: 100%;
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
   padding-left: 0;
   padding-right: 0;
+}
+
+.sidebar .sidebar-content .row > :first-child > ul {
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.sidebar .sidebar-content .row > :first-child > ul > li:last-child {
+  margin-top: auto;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a {
