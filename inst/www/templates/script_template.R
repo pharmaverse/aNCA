@@ -41,7 +41,7 @@ preprocessed_adnca <- adnca_data %>%
 
 ## Setup NCA settings in the PKNCA object ########################
 int_parameters <- settings_list$settings$int_parameters
-units_table <- settings_list$final_units
+units_table <- settings_list$units_table
 parameters_selected_per_study <- settings_list$settings$parameters$selections
 study_types_df <- settings_list$settings$parameters$types_df
 extra_vars_to_keep <-  settings_list$extra_vars_to_keep
@@ -77,7 +77,12 @@ pknca_obj <- preprocessed_adnca %>%
   {
     pknca_obj <- .
     if (!is.null(units_table)) {
-      pknca_obj[["units"]] <- units_table
+      pknca_obj[["units"]] <- dplyr::rows_update(
+        pknca_obj[["units"]],
+        units_table,
+        by = c("PPTESTCD", "PPORRESU"),
+        unmatched = "ignore"
+      )
     }
     pknca_obj
   }
