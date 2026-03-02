@@ -395,6 +395,7 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
   p <- plot +
     labs(
       x = plot_build$plot$labels$x,
+      y = sub("Mean", "Mean Analysis Value", plot_build$plot$labels$y),
       title = mean_title
     ) +
     list(
