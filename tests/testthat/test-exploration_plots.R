@@ -280,6 +280,16 @@ describe("exploration_meanplot:", {
     expect_equal(p$labels$colour, "Parameter")
   })
 
+  it("does not duplicate the Mean prefix in the y-axis label", {
+    p <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      labels_df = metadata_nca_variables
+    )
+    expect_false(grepl("Mean Mean", p$labels$y))
+    expect_true(grepl("^Mean ", p$labels$y))
+  })
+
   it("applies log10 scale to y-axis when ylog_scale is TRUE", {
     p <- exploration_meanplot(
       pknca_data = pknca_data,
@@ -289,19 +299,6 @@ describe("exploration_meanplot:", {
     )
     plot_build <- ggplot_build(p)
     expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
-  })
-
-  it("returns a ggplot object with mean labels", {
-    p <- exploration_meanplot(
-      pknca_data = pknca_data,
-      color_by = "PARAM",
-      labels_df = metadata_nca_variables
-    )
-    expect_s3_class(p, "ggplot")
-    expect_true(grepl("Mean ", p$labels$title))
-    expect_true(grepl("Mean Analysis Value", p$labels$y))
-    expect_true(grepl("Nom. Rel. Time", p$labels$x))
-    expect_equal(p$labels$colour, "Parameter")
   })
 
   it("shows SD error bars (min, max, and both)", {
@@ -439,5 +436,25 @@ describe("exploration_meanplot:", {
     )
     expect_equal(p$coordinates$limits$x, c(0, 12))
     expect_equal(p$coordinates$limits$y, c(0, 200))
+  })
+})
+
+describe("filter_by_list:", {
+  it("returns data unchanged when filtering_list is an empty list", {
+    result <- filter_by_list(conc_data, list())
+    expect_equal(nrow(result), nrow(conc_data))
+    expect_equal(result, conc_data)
+  })
+
+  it("returns data unchanged when filtering_list is NULL", {
+    result <- filter_by_list(conc_data, NULL)
+    expect_equal(result, conc_data)
+  })
+
+  it("filters correctly with a single column filter", {
+    first_param <- unique(conc_data$PARAM)[1]
+    result <- filter_by_list(conc_data, list(PARAM = first_param))
+    expect_true(all(result$PARAM == first_param))
+    expect_true(nrow(result) < nrow(conc_data))
   })
 })

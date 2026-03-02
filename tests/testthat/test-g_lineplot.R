@@ -326,6 +326,22 @@ describe("g_lineplot: .build_tooltip", {
     expect_true(any(grepl("USUBJID: Subject1", result$tooltip_text)))
     expect_false(any(grepl("<b>", result$tooltip_text)))
   })
+
+  it("prepends Mean prefix when x_lab contains Nom.", {
+    result <- .build_tooltip(
+      ind_data, c("USUBJID", "AVAL"), metadata_nca_variables,
+      "Nom. Rel. Time from Analyte First Dose [hours]"
+    )
+    expect_true(all(grepl("^<b>Mean</b> ", result$tooltip_text)))
+  })
+
+  it("does not prepend Mean prefix when x_lab does not contain Nom.", {
+    result <- .build_tooltip(
+      ind_data, c("USUBJID", "AVAL"), metadata_nca_variables,
+      "Act. Rel. Time from First Dose [hours]"
+    )
+    expect_false(any(grepl("<b>Mean</b>", result$tooltip_text)))
+  })
 })
 
 describe("g_lineplot: color_labels", {
