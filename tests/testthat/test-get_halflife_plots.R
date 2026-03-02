@@ -18,7 +18,7 @@ describe("get_halflife_plot", {
 
   it("always includes ATPTREF in title when passed via title_vars", {
     pknca_single <- base_pknca
-    # Keep only ATPTREF == 1 so it has a single level
+    # Subset to a single dose profile to reduce runtime
     pknca_single$conc$data <- pknca_single$conc$data %>%
       filter(ATPTREF == unique(ATPTREF)[1])
     pknca_single$dose$data <- pknca_single$dose$data %>%
