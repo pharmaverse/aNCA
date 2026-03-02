@@ -333,9 +333,7 @@ prepare_export_files <- function(target_dir,
                       cdisc_data = session$userData$results$CDISC)
   }
 
-  data_tmpdir <- file.path(target_dir, "data")
-  dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
-  saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
+  saveRDS(session$userData$raw_data, file.path(target_dir, "data.rds"))
 
   if ("r_script" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
@@ -396,8 +394,6 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_settings <- function(target_dir, session) {
-  path <- file.path(target_dir, "settings")
-  dir.create(path, recursive = TRUE, showWarnings = FALSE)
   settings_list <- session$userData$settings()
 
   if (!is.null(settings_list$units)) {
@@ -410,7 +406,9 @@ prepare_export_files <- function(target_dir,
     settings = settings_list,
     slope_rules = session$userData$slope_rules()
   )
-  yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
+  yaml::write_yaml(
+    settings_to_save, file.path(target_dir, "settings.yaml")
+  )
 }
 
 #' Helper to export a single pre-specification xlsx file for CDISC datasets.
@@ -444,13 +442,11 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_script <- function(target_dir, session) {
-  path <- file.path(target_dir, "code")
   template_path <- "www/templates/script_template.R"
-  dir.create(path, recursive = TRUE, showWarnings = FALSE)
   get_session_code(
     template_path = system.file(template_path, package = "aNCA"),
     session,
-    file.path(path, "session_code.R")
+    file.path(target_dir, "session_code.R")
   )
 }
 
@@ -470,7 +466,7 @@ prepare_export_files <- function(target_dir,
   fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
-  files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
+  files_req <- c(files_req, grep("data\\.rds$", all_files, value = TRUE))
   # Preserve pre-specs only when at least one CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
