@@ -450,64 +450,54 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     "https://cran.r-project.org/web/",
     "packages/PKNCA/PKNCA.pdf"
   )
-  tbl <- reactable(
-    ref_data,
-    searchable = TRUE,
-    sortable = TRUE,
-    filterable = TRUE,
-    highlight = TRUE,
-    striped = TRUE,
-    compact = TRUE,
-    defaultPageSize = 10,
-    showPageSizeOptions = TRUE,
-    pageSizeOptions = c(10, 25, 50, nrow(ref_data)),
-    style = list(fontSize = "0.75em"),
-    columns = list(
-      PPTESTCD = colDef(
-        name = "Short Name", minWidth = 80
-      ),
-      PPTEST = colDef(
-        name = "Parameter Name", minWidth = 140
-      ),
-      Description = colDef(
-        name = "Description",
-        minWidth = 250,
-        style = list(whiteSpace = "normal")
-      ),
-      App_Location = colDef(
-        name = "App Location",
-        minWidth = 180,
-        style = list(whiteSpace = "normal")
-      ),
-      PKNCA_Function = colDef(
-        name = "PKNCA Function",
-        minWidth = 120,
-        html = TRUE,
-        cell = function(value) {
-          if (value == "\u2014") {
-            "\u2014"
-          } else {
-            as.character(htmltools::tags$a(
-              href = pknca_url,
-              target = "_blank",
-              style = paste0(
-                "color: #0d6efd;",
-                "text-decoration: underline;"
-              ),
-              value
-            ))
-          }
-        }
-      )
-    )
-  )
   showModal(modalDialog(
     title = "PK Parameter Details",
-    size = "xl",
+    size = "l",
     easyClose = TRUE,
-    tags$div(
-      style = "overflow-x: auto;",
-      tbl
+    reactable(
+      ref_data,
+      searchable = TRUE,
+      sortable = TRUE,
+      filterable = TRUE,
+      highlight = TRUE,
+      striped = TRUE,
+      compact = TRUE,
+      defaultPageSize = 10,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = c(10, 25, 50, nrow(ref_data)),
+      width = "100%",
+      style = list(fontSize = "0.75em"),
+      columns = list(
+        PPTESTCD = colDef(name = "Short Name"),
+        PPTEST = colDef(name = "Parameter Name"),
+        Description = colDef(
+          name = "Description",
+          style = list(whiteSpace = "normal")
+        ),
+        App_Location = colDef(
+          name = "App Location",
+          style = list(whiteSpace = "normal")
+        ),
+        PKNCA_Function = colDef(
+          name = "PKNCA Function",
+          html = TRUE,
+          cell = function(value) {
+            if (value == "\u2014") {
+              "\u2014"
+            } else {
+              as.character(htmltools::tags$a(
+                href = pknca_url,
+                target = "_blank",
+                style = paste0(
+                  "color: #0d6efd;",
+                  "text-decoration: underline;"
+                ),
+                value
+              ))
+            }
+          }
+        )
+      )
     ),
     footer = modalButton("Close")
   ))
