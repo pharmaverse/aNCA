@@ -145,10 +145,36 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     )
 
     # Automatically update the units table when settings are uploaded.
+    # When imported_settings changes, spawn a one-shot observer that waits for
+    # processed_pknca_data to be ready (needed for defaults-only units resolution).
     observeEvent(imported_settings(), {
-      # require units in settings, and that it is a data frame with rows
       req(imported_settings()$units, nrow(imported_settings()$units) > 0)
-      session$userData$units_table(imported_settings()$units)
+
+      imported_units <- imported_settings()$units
+      has_full_units <- all(c("PPORRESU", "conversion_factor") %in% names(imported_units))
+
+      if (has_full_units) {
+        session$userData$units_table(imported_units)
+      } else {
+        # Defaults-only format: wait for data-derived units, then resolve.
+        observe({
+          req(processed_pknca_data())
+          data_units <- processed_pknca_data()$units
+          merged <- apply_unit_defaults(imported_units, data_units)
+
+          if (nrow(merged$failed) > 0) {
+            msg <- paste0(
+              "Could not convert units for: ",
+              paste(merged$failed$PPTESTCD, collapse = ", "),
+              ". Data defaults will be used for these parameters."
+            )
+            log_warn(msg)
+            showNotification(msg, type = "warning", duration = 10)
+          }
+
+          session$userData$units_table(merged$units)
+        }) |> bindEvent(processed_pknca_data(), once = TRUE)
+      }
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
