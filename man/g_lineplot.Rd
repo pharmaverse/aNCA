@@ -13,7 +13,7 @@ g_lineplot(
   color_by,
   facet_by = NULL,
   group_by = NULL,
-  facet_count_n = "USUBJID",
+  facet_count_n = NULL,
   x_limits = NULL,
   y_limits = NULL,
   ylog_scale = FALSE,
@@ -46,7 +46,7 @@ Default is \code{NULL} for no faceting.}
 the lines. Default is NULL for no grouping.}
 
 \item{facet_count_n}{A character string specifying the column name used to
-count unique subjects per facet. Default is "USUBJID".}
+count unique subjects per facet. Default is \code{NULL} (no counts shown).}
 
 \item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
 Default is \code{NULL} (no limits).}

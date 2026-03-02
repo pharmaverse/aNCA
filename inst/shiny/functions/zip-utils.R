@@ -54,6 +54,34 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   }
 }
 
+# Build the list of allowed exploration plot names for export.
+# For each selected type, includes custom snapshots if any exist,
+# otherwise includes the default plot.
+# @param selected_types Character vector of selected types (e.g., "mean", "qc")
+# @param custom_names Named character vector: names = plot names, values = types
+# @return Character vector of allowed exploration plot names
+.build_exploration_allowlist <- function(selected_types, custom_names) {
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  allowed <- character(0)
+  for (type in selected_types) {
+    default_name <- type_to_default[[type]]
+    type_customs <- names(custom_names[custom_names == type])
+    if (length(type_customs) > 0) {
+      allowed <- c(allowed, type_customs)
+    } else {
+      allowed <- c(allowed, default_name)
+    }
+  }
+  allowed
+}
+
+# Check if an object is a saveable leaf (ggplot, data.frame, or plotly)
+.is_leaf <- function(x) {
+  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly")
+}
+
 save_output <- function(
   output, output_path,
   ggplot_formats = c("png", "html"),
@@ -62,28 +90,15 @@ save_output <- function(
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
-    file_name <- paste0(output_path, "/", name)
-    if (!dir.exists(file_name)) {
-      dir.create(file_name, recursive = TRUE)
-    }
     x <- output[[name]]
-    is_obj_to_export <- is.null(obj_names) || name %in% obj_names
 
-    if (inherits(x, "list")) {
-      save_output(
-        output = x,
-        output_path = file_name,
-        ggplot_formats = ggplot_formats,
-        table_formats = table_formats,
-        obj_names = obj_names
-      )
-    } else if (is_obj_to_export) {
-      save_dispatch(
-        x = x,
-        file_name = paste0(file_name, "/", name),
-        ggplot_formats = ggplot_formats,
-        table_formats = table_formats
-      )
+    if (!.is_leaf(x) && inherits(x, "list")) {
+      sub_path <- paste0(output_path, "/", name)
+      dir.create(sub_path, recursive = TRUE, showWarnings = FALSE)
+      save_output(x, sub_path, ggplot_formats, table_formats, obj_names)
+    } else if (is.null(obj_names) || name %in% obj_names) {
+      save_dispatch(x, paste0(output_path, "/", name),
+                    ggplot_formats, table_formats)
     }
   }
 }
@@ -304,12 +319,32 @@ prepare_export_files <- function(target_dir,
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
+  # Filter custom exploration plots: only keep those whose base type is selected
+  # all_custom is a named vector: names = plot names, values = types
+  all_custom <- session$userData$exploration_custom_names()
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  # Keep custom names whose type maps to a selected tree item
+  selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
+  custom_names <- all_custom[all_custom %in% selected_types]
+  obj_names <- unique(c(input$res_tree, names(custom_names)))
+
+  # Filter exploration list to only include allowed plots
+  results <- session$userData$results
+  if (!is.null(results$exploration)) {
+    allowed <- .build_exploration_allowlist(selected_types, custom_names)
+    results$exploration <- results$exploration[
+      intersect(names(results$exploration), allowed)
+    ]
+  }
+
   save_output(
-    output = session$userData$results,
+    output = results,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,
-    obj_names = input$res_tree
+    obj_names = obj_names
   )
 
   progress$inc(0.2)
@@ -348,7 +383,7 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.8)
 
-  .clean_export_dir(target_dir, input)
+  .clean_export_dir(target_dir, input, custom_names)
 }
 
 # Helpers to export different output types
@@ -463,15 +498,19 @@ prepare_export_files <- function(target_dir,
 #' @param input Shiny input object
 #' @keywords internal
 #' @noRd
-.clean_export_dir <- function(target_dir, input) {
+.clean_export_dir <- function(target_dir, input, custom_names = NULL) {
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
-  fnames <- input$res_tree
+  fnames <- unique(c(input$res_tree, names(custom_names)))
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
-  fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
+  fnames_patt <- paste0(
+    "((",
+    paste0(fnames, collapse = ")|("),
+    "))"
+  )
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
