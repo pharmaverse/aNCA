@@ -452,9 +452,9 @@ describe("filter_by_list:", {
   })
 
   it("filters correctly with a single column filter", {
-    first_param <- unique(conc_data$PARAM)[1]
-    result <- filter_by_list(conc_data, list(PARAM = first_param))
-    expect_true(all(result$PARAM == first_param))
+    first_subj <- unique(conc_data$USUBJID)[1]
+    result <- filter_by_list(conc_data, list(USUBJID = first_subj))
+    expect_true(all(result$USUBJID == first_subj))
     expect_true(nrow(result) < nrow(conc_data))
   })
 })

@@ -394,8 +394,7 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
   if (isTRUE(ci)) mean_title <- paste0(mean_title, " (95% CI)")
   p <- plot +
     labs(
-      x = paste(plot_build$plot$labels$x),
-      y = str_replace(plot_build$plot$labels$y, "Mean", "Mean Analysis Value"),
+      x = plot_build$plot$labels$x,
       title = mean_title
     ) +
     list(
@@ -409,8 +408,9 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
         group_var = "color_var"
       )
     )
-  p$data$tooltip_text <- str_replace(p$data$tooltip_text,
-                                     "<b>Mean</b>", "<b>Mean Analysis Value</b>")
+  p$data$tooltip_text <- sub(
+    "<b>Mean</b>", "<b>Mean Analysis Value</b>", p$data$tooltip_text
+  )
   p
 }
 
