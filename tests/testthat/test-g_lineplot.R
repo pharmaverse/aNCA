@@ -140,7 +140,7 @@ describe("g_lineplot: structure and arguments", {
   it("does not add facet counts when facet_count_n is NULL", {
     p <- g_lineplot(
       data = ind_data,
-      x_var = "time_var",
+      x_var = "NFRLT",
       y_var = "AVAL",
       color_by = "USUBJID",
       facet_by = "PARAM"
