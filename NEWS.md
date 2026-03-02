@@ -30,7 +30,6 @@
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 
 ## Bugs fixed
-* ZIP export no longer creates redundant per-file subdirectories; files are placed directly in their category folder (#1034)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
