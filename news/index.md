@@ -68,6 +68,9 @@
   ([\#817](https://github.com/pharmaverse/aNCA/issues/817)) and facet
   titles including subject count
   ([\#894](https://github.com/pharmaverse/aNCA/issues/894))
+- Settings upload and processing is flexible, so non-data specific
+  template settings can be uploaded
+  ([\#993](https://github.com/pharmaverse/aNCA/issues/993))
 
 ### Bugs fixed
 
