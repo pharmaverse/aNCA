@@ -90,8 +90,8 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
     })
 
     # Restore filters from uploaded settings
-    if (!is.null(imported_filters)) {
-      observeEvent(list(imported_filters(),filters_metadata()), {
+    observeEvent(list(imported_filters(),filters_metadata()), {
+      if (!is.null(imported_filters)) {
         uploaded_filters <- imported_filters()
 
         # Remove existing filter panels
@@ -116,8 +116,8 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
 
         # Auto-submit after a delay to let inputs initialize
         shinyjs::delay(500, shinyjs::click("submit_filters"))
-      })
-    }
+      }
+    })
 
     #' When filters change, show notification reminding the user about submitting
     filter_reminder_notification <- reactiveVal(NULL)
