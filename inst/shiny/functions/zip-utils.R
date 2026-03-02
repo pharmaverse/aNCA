@@ -62,17 +62,13 @@ save_output <- function(
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
-    file_name <- paste0(output_path, "/", name)
-    if (!dir.exists(file_name)) {
-      dir.create(file_name, recursive = TRUE)
-    }
     x <- output[[name]]
     is_obj_to_export <- is.null(obj_names) || name %in% obj_names
 
     if (inherits(x, "list")) {
       save_output(
         output = x,
-        output_path = file_name,
+        output_path = paste0(output_path, "/", name),
         ggplot_formats = ggplot_formats,
         table_formats = table_formats,
         obj_names = obj_names
@@ -80,7 +76,7 @@ save_output <- function(
     } else if (is_obj_to_export) {
       save_dispatch(
         x = x,
-        file_name = paste0(file_name, "/", name),
+        file_name = paste0(output_path, "/", name),
         ggplot_formats = ggplot_formats,
         table_formats = table_formats
       )
