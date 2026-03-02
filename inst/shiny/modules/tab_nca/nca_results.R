@@ -70,7 +70,11 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
             by = intersect(names(.), names(session$userData$units_table()))
           ) %>%
-          mutate(PPSTRES = PPORRES * conversion_factor) %>%
+          mutate(PPSTRES = ifelse(
+            !is.null(conversion_factor),
+            PPORRES * conversion_factor,
+            PPORRES
+          )) %>%
           select(-conversion_factor)
       }
 
