@@ -310,37 +310,21 @@ describe("g_lineplot: .build_axis_label", {
 
 describe("g_lineplot: .build_tooltip", {
   it("sets tooltip_text to NA when tooltip_vars is NULL", {
-    result <- .build_tooltip(ind_data, NULL, NULL, "Time")
+    result <- .build_tooltip(ind_data, NULL, NULL)
     expect_true(all(is.na(result$tooltip_text)))
   })
 
   it("uses generate_tooltip_text when labels_df is provided", {
     result <- .build_tooltip(
-      ind_data, c("USUBJID", "AVAL"), metadata_nca_variables, "Time"
+      ind_data, c("USUBJID", "AVAL"), metadata_nca_variables
     )
     expect_true(any(grepl("<b>Unique Subject Identifier</b>", result$tooltip_text)))
   })
 
   it("uses simple paste when labels_df is NULL", {
-    result <- .build_tooltip(ind_data, c("USUBJID", "AVAL"), NULL, "Time")
+    result <- .build_tooltip(ind_data, c("USUBJID", "AVAL"), NULL)
     expect_true(any(grepl("USUBJID: Subject1", result$tooltip_text)))
     expect_false(any(grepl("<b>", result$tooltip_text)))
-  })
-
-  it("prepends Mean prefix when x_lab contains Nom.", {
-    result <- .build_tooltip(
-      ind_data, c("USUBJID", "AVAL"), metadata_nca_variables,
-      "Nom. Rel. Time from Analyte First Dose [hours]"
-    )
-    expect_true(all(grepl("^<b>Mean</b> ", result$tooltip_text)))
-  })
-
-  it("does not prepend Mean prefix when x_lab does not contain Nom.", {
-    result <- .build_tooltip(
-      ind_data, c("USUBJID", "AVAL"), metadata_nca_variables,
-      "Act. Rel. Time from First Dose [hours]"
-    )
-    expect_false(any(grepl("<b>Mean</b>", result$tooltip_text)))
   })
 })
 
