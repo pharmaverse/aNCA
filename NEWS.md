@@ -2,7 +2,6 @@
 
 ## Features added
 
-* `get_halflife_plots()` gains a `title_vars` argument to include additional variables in plot titles and merge keys; the app passes ATPTREF by default (#1022)
 * New "About" tab in the app sidebar with links, citation, authors, license, version info, and a "Copy session info" button (#1015)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
