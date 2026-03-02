@@ -370,4 +370,3 @@ describe("g_lineplot: color_labels", {
     expect_true(grepl("DOSEA", p$labels$colour))
   })
 })
-
