@@ -7,16 +7,24 @@ tab_explore_ui <- function(id) {
 
   navset_card_pill(
     id = "visuals",
-    nav_panel("Individual Plots",
+    height = "90vh",
+    full_screen = TRUE,
+    nav_panel(
+      "Individual Plots",
       layout_sidebar(
         sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
-        plotlyOutput(ns("individualplot"), height = "100%")
+        fillable = TRUE,
+        plotlyOutput(ns("individualplot"), height = "100%"),
+        br()
       )
     ),
-    nav_panel("Mean Plots",
+    nav_panel(
+      "Mean Plots",
       layout_sidebar(
         sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
-        plotlyOutput(ns("mean_plot"), height = "100%")
+        fillable = TRUE,
+        plotlyOutput(ns("mean_plot"), height = "100%"),
+        br()
       )
     ),
     nav_panel(
@@ -56,6 +64,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         pknca_data = isolate(pknca_data()),
         color_by = individual_inputs()$color_by,
         facet_by = individual_inputs()$facet_by,
+        show_facet_n = individual_inputs()$show_facet_n,
         filtering_list = individual_inputs()$filtering_list,
         show_dose = individual_inputs()$show_dose,
         ylog_scale = individual_inputs()$ylog_scale,
@@ -82,6 +91,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         pknca_data = isolate(pknca_data()),
         color_by = mean_inputs()$color_by,
         facet_by = mean_inputs()$facet_by,
+        show_facet_n = mean_inputs()$show_facet_n,
         filtering_list = mean_inputs()$filtering_list,
         show_dose = mean_inputs()$show_dose,
         palette = mean_inputs()$palette,

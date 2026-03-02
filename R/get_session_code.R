@@ -10,7 +10,7 @@
 get_code <- function(
   setts_obj,
   output_path,
-  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+  template_path = system.file("www/templates/script_template.R", package = "aNCA")
 ) {
 
   # Helper to get value from settings_list by path (e.g., 'settings$method')
@@ -241,7 +241,7 @@ get_settings_code <- function(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA"),
+  template_path = system.file("www/templates/script_template.R", package = "aNCA"),
   # TODO: mapping & ratio_table should be included in the settings file as well
   # so they keep working as expected also from the settings file
   mapping = default_mapping,
@@ -279,7 +279,7 @@ get_settings_code <- function(
 get_session_code <- function(
   session,
   output_path,
-  template_path = system.file("shiny/www/templates/script_template.R", package = "aNCA")
+  template_path = system.file("www/templates/script_template.R", package = "aNCA")
 ) {
   get_code(
     template_path = template_path,
