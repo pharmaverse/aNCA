@@ -91,8 +91,65 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Partial Interval Calculations",
-        reactableOutput(ns("int_parameters_table")),
-        actionButton(ns("addRow"), "Add Row")
+        fluidRow(
+          div(
+            class = "plot-widget-group",
+            actionButton(ns("addRow"), "Add Row"),
+            dropdown(
+              div(
+                tags$h4("Partial Interval Calculations Help"),
+                p(
+                  "Define custom time intervals for calculating partial area",
+                  "and related parameters. Add a row for each interval you need."
+                ),
+                p("For each row, specify:"),
+                tags$ul(
+                  tags$li(
+                    tags$b("Parameter"),
+                    ": The interval calculation to perform (e.g., AUCINT, AUCINTA, CAVGINT)."
+                  ),
+                  tags$li(
+                    tags$b("Start"),
+                    ": Start time of the interval."
+                  ),
+                  tags$li(
+                    tags$b("End"),
+                    ": End time of the interval."
+                  )
+                ),
+                tags$h5("Available parameters"),
+                tags$table(
+                  class = "imputation-help-table",
+                  tags$thead(
+                    tags$tr(
+                      tags$th("Code"),
+                      tags$th("Description")
+                    )
+                  ),
+                  tags$tbody(
+                    tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
+                    tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
+                    tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
+                    tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
+                    tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
+                    tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
+                    tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
+                    tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
+                    tr("CAVGINT", "Average Concentration from T1 to T2"),
+                    tr("RCAMINT", "Amount Recovered from T1 to T2"),
+                    tr("FREXINT", "Fraction Excreted from T1 to T2")
+                  )
+                )
+              ),
+              style = "unite",
+              right = TRUE,
+              icon = icon("question"),
+              status = "primary",
+              width = "500px"
+            )
+          )
+        ),
+        reactableOutput(ns("int_parameters_table"))
       ),
       accordion_panel(
         title = "Flag Rule Sets",
