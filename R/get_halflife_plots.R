@@ -5,11 +5,9 @@
 #' @param pknca_data PKNCA data object
 #' @param add_annotations Logical, whether to add the subtitle annotation
 #' @param title_vars Character vector of additional column names to always
-#'   include in the plot title, even when they have only one unique level.
-#'   Columns that do not exist in the data are silently ignored.
-#' @param merge_extra_vars Character vector of additional column names to
-#'   include as merge keys when joining concentration data with NCA results.
-#'   Columns that do not exist in the data are silently ignored.
+#'   include in the plot title and use as merge keys when joining
+#'   concentration data with NCA results, even when they have only one
+#'   unique level.  Columns not present in the data are silently ignored.
 #' @returns A list with plotly objects and data
 #' @importFrom dplyr filter select mutate group_by ungroup group_split %>% any_of
 #' @importFrom stats lm predict as.formula
@@ -17,8 +15,7 @@
 #' @importFrom PKNCA pk.nca
 #' @export
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
-                               title_vars = NULL,
-                               merge_extra_vars = NULL) {
+                               title_vars = NULL) {
 
   # If the input has empty concentration or intervals, just return an empty list
   if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
@@ -57,7 +54,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,
-    concu_col, exclude_hl_col, merge_extra_vars
+    concu_col, exclude_hl_col, title_vars
   )
 
   # Mark points used in half-life calculation
@@ -175,8 +172,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 #' Merge concentration data with NCA half-life results
 #'
 #' Runs pk.nca, pivots results to wide format, and merges back onto the
-#' concentration data.  Any columns listed in `merge_extra_vars` that
-#' exist in the data are added to the merge key and selected columns.
+#' concentration data.  Any columns listed in `extra_vars` that exist in
+#' the data are added to the merge key and selected columns.
 #' Row order is preserved via the ROWID column.
 #'
 #' @keywords internal
@@ -184,7 +181,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 .merge_conc_with_nca_results <- function(pknca_data, time_col, conc_col,
                                          timeu_col, concu_col,
                                          exclude_hl_col,
-                                         merge_extra_vars = NULL) {
+                                         extra_vars = NULL) {
   o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
 
   if (!"PPSTRES" %in% names(o_nca$result)) {
@@ -209,9 +206,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
                         timeu_col, concu_col, exclude_hl_col, "ROWID")
   merge_by <- c(group_vars(pknca_data))
-  extra <- intersect(merge_extra_vars, names(pknca_data$conc$data))
-  conc_select_cols <- c(conc_select_cols, extra)
-  merge_by <- c(merge_by, extra)
+  ev <- intersect(extra_vars, names(pknca_data$conc$data))
+  conc_select_cols <- c(conc_select_cols, ev)
+  merge_by <- c(merge_by, ev)
 
   merge(
     pknca_data$conc$data %>%

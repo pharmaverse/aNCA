@@ -136,9 +136,7 @@ slope_selector_server <- function( # nolint
       if (changes$in_data) {
         # New data or major changes: regenerate all plots
         plot_outputs(get_halflife_plots(
-          new_pknca_data,
-          title_vars = "ATPTREF",
-          merge_extra_vars = "ATPTREF"
+          new_pknca_data, title_vars = "ATPTREF"
         )[["plots"]])
       } else if (changes$in_hl_adj) {
         # Modify plots with new half-life adjustments (inclusions/exclusions)

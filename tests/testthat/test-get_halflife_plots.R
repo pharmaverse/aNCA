@@ -19,9 +19,7 @@ describe("get_halflife_plot", {
   it("always includes ATPTREF in title when passed via title_vars", {
     plots <- withCallingHandlers(
       get_halflife_plots(
-        base_pknca,
-        title_vars = "ATPTREF",
-        merge_extra_vars = "ATPTREF"
+        base_pknca, title_vars = "ATPTREF"
       )[["plots"]],
       warning = function(w) {
         if (grepl("Ignoring", conditionMessage(w)))
@@ -40,9 +38,7 @@ describe("get_halflife_plot", {
   it("shows correct ATPTREF per plot with multiple profiles", {
     plots <- withCallingHandlers(
       get_halflife_plots(
-        base_pknca,
-        title_vars = "ATPTREF",
-        merge_extra_vars = "ATPTREF"
+        base_pknca, title_vars = "ATPTREF"
       )[["plots"]],
       warning = function(w) {
         if (grepl("Ignoring", conditionMessage(w)))
