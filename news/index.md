@@ -4,6 +4,9 @@
 
 ### Features added
 
+- New “About” tab in the app sidebar with links, citation, authors,
+  license, version info, and a “Copy session info” button
+  ([\#1015](https://github.com/pharmaverse/aNCA/issues/1015))
 - Export filenames use STUDYID as fallback when no project name is set,
   date suffix removed
   ([\#1000](https://github.com/pharmaverse/aNCA/issues/1000))
