@@ -84,7 +84,6 @@ Suggests:
     quarto,
     vdiffr,
     withr,
-    writexl,
     zip
 Config/testthat/edition: 3
 Language: en-US
