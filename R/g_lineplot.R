@@ -18,7 +18,7 @@
 #' @param group_by A character vector specifying the column names used to group
 #'  the lines. Default is NULL for no grouping.
 #' @param facet_count_n A character string specifying the column name used to
-#'   count unique subjects per facet. Default is "USUBJID".
+#'   count unique subjects per facet. Default is `NULL` (no counts shown).
 #' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
 #'   Default is `NULL` (no limits).
 #' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
@@ -67,7 +67,7 @@ g_lineplot <- function(data,
                        color_by,
                        facet_by = NULL,
                        group_by = NULL,
-                       facet_count_n = "USUBJID",
+                       facet_count_n = NULL,
                        x_limits = NULL,
                        y_limits = NULL,
                        ylog_scale = FALSE,

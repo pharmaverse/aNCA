@@ -170,7 +170,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 TREE_LIST <- list(
   exploration = list(
     individualplot = "",
-    meanplot = ""
+    meanplot = "",
+    qcplot = ""
   ),
   nca_results = list(
     nca_pkparam = "",
