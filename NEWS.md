@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
 * Exploration plots: "Add to Exports" button saves named plot snapshots to the ZIP export. When custom snapshots exist for a plot type, only the snapshots are exported (the default plot is omitted). QC plot also included in the export tree (#1002)
 * CDISC ZIP export now includes a `Pre_Specs.xlsx` file with variable-level metadata for each selected dataset (#998)
 * New "About" tab in the app sidebar with links, citation, authors, license, version info, and a "Copy session info" button (#1015)
