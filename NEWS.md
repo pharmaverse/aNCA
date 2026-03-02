@@ -2,7 +2,8 @@
 
 ## Features added
 
-* Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). `PPORRESU` and `conversion_factor` are derived from the data, with warnings for unconvertible units (#1027)
+* Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). `PPORRESU` and `conversion_factor` are derived from the data (#1027)
+* New "About" tab in the app sidebar with links, citation, authors, license, version info, and a "Copy session info" button (#1015)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
