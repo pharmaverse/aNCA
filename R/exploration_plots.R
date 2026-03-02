@@ -24,7 +24,7 @@
 #' Default is `NULL` (no filtering).
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
 #' Default is `FALSE` (time since first dose).
-#' @param line_type Character; "default" (default), "dose-normalized" to specify lines tos
+#' @param line_type Character; "default" (default), "dose-normalized" to specify lines to
 #' be normalized by dose amount or "both" to include both normalized and non-normalized lines.
 #'
 #' @return A `ggplot` object representing the individual PK line plot.

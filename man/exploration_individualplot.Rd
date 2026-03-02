@@ -57,7 +57,7 @@ Default is \code{NULL} (no filtering).}
 \item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose.
 Default is \code{FALSE} (time since first dose).}
 
-\item{line_type}{Character; "default" (default), "dose-normalized" to specify lines tos
+\item{line_type}{Character; "default" (default), "dose-normalized" to specify lines to
 be normalized by dose amount or "both" to include both normalized and non-normalized lines.}
 }
 \value{

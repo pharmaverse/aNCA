@@ -20,7 +20,8 @@ exploration_meanplot(
   filtering_list = NULL,
   use_time_since_last_dose = FALSE,
   x_limits = NULL,
-  y_limits = NULL
+  y_limits = NULL,
+  line_type = "default"
 )
 }
 \arguments{
@@ -64,6 +65,9 @@ Default is \code{NULL} (no limits).}
 
 \item{y_limits}{Numeric vector of length 2 for y-axis limits (min, max).
 Default is \code{NULL} (no limits).}
+
+\item{line_type}{Character; "default" (default), "dose-normalized" to specify lines to
+be normalized by dose amount or "both" to include both normalized and non-normalized lines.}
 }
 \value{
 A \code{ggplot} object representing the mean PK line plot,
