@@ -126,7 +126,7 @@ tab_about_server <- function(id) {
           style = "margin: 0;",
           paste0("aNCA ", anca_ver),
           tags$br(),
-          r_ver,
+          paste0("Requires at least: ", r_ver),
           tags$br(),
           paste0("PKNCA ", pknca_ver)
         )
