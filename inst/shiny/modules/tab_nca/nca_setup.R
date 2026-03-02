@@ -171,7 +171,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           }
 
           session$userData$units_table(merged$units)
-        }) |> bindEvent(processed_pknca_data(), once = TRUE)
+        }) %>%
+          bindEvent(processed_pknca_data(), once = TRUE)
       }
     })
 

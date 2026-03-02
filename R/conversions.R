@@ -55,7 +55,8 @@ apply_unit_defaults <- function(default_units, data_units) {
 
   merged <- left_join(
     data_units,
-    default_units %>% select(any_of(c(join_cols, "PPSTRESU"))) %>%
+    default_units %>%
+      select(any_of(c(join_cols, "PPSTRESU"))) %>%
       rename(imported_PPSTRESU = PPSTRESU),
     by = join_cols
   )

@@ -402,4 +402,3 @@ describe("apply_unit_defaults", {
     expect_equal(nrow(result$failed), 0)
   })
 })
-
