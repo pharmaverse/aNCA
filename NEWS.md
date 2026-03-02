@@ -2,7 +2,6 @@
 
 ## Features added
 
-* Remove `openxlsx2` dependency: replaced with `readxl` for reading and `writexl` for writing xlsx files (#1024)
 * New "About" tab in the app sidebar with links, citation, authors, license, version info, and a "Copy session info" button (#1015)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
