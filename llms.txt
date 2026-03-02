@@ -335,6 +335,9 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
   Wrapper around aNCA::pkcg03() function. Calls the function with `LOG`
   scale argument.
 
+- [`generate_pre_specs()`](https://pharmaverse.github.io/aNCA/reference/generate_pre_specs.md)
+  : Generate Pre-Specifications for CDISC Datasets
+
 - [`generate_tooltip_text()`](https://pharmaverse.github.io/aNCA/reference/generate_tooltip_text.md)
   : Generate HTML Tooltip Text
 

@@ -4,6 +4,9 @@
 
 ### Features added
 
+- CDISC ZIP export now includes a `Pre_Specs.xlsx` file with
+  variable-level metadata for each selected dataset
+  ([\#998](https://github.com/pharmaverse/aNCA/issues/998))
 - New “About” tab in the app sidebar with links, citation, authors,
   license, version info, and a “Copy session info” button
   ([\#1015](https://github.com/pharmaverse/aNCA/issues/1015))
