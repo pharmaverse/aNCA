@@ -472,6 +472,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         PPTEST = colDef(name = "Parameter Name"),
         Description = colDef(
           name = "Description",
+          minWidth = 200,
           style = list(whiteSpace = "normal")
         ),
         App_Location = colDef(
