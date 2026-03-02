@@ -145,8 +145,6 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     )
 
     # Automatically update the units table when settings are uploaded.
-    # When imported_settings changes, spawn a one-shot observer that waits for
-    # processed_pknca_data to be ready (needed for defaults-only units resolution).
     observeEvent(imported_settings(), {
       req(imported_settings()$units, nrow(imported_settings()$units) > 0)
 
