@@ -141,29 +141,18 @@ exploration_meanplot <- function(
   # If no tooltip variable specified, use the default ones
   if (is.null(tooltip_vars)) {
     tooltip_vars <- unique(c(
-      "AVAL",
+      "Mean",
       pknca_data$conc$columns$concu,
       x_var,
       pknca_data$conc$columns$timeu,
       color_by
     ))
   }
-  # Override AVAL label so tooltip and y-axis show "Mean Analysis Value"
-  conc_label <- get_label(
-    pknca_data$conc$columns$concentration, labels_df = labels_df
-  )
-  if (!is.null(labels_df)) {
-    labels_df <- dplyr::bind_rows(labels_df, data.frame(
-      Dataset = "ADNCA", Variable = "AVAL",
-      Label = paste("Mean", conc_label),
-      stringsAsFactors = FALSE
-    ))
-  }
 
   plot <- g_lineplot(
-    data = mean_data %>% dplyr::rename(AVAL = Mean),
+    data = mean_data,
     x_var = x_var,
-    y_var = "AVAL",
+    y_var = "Mean",
     x_unit = pknca_data$conc$columns$timeu,
     y_unit = pknca_data$conc$columns$concu,
     color_by = color_by,
@@ -180,7 +169,6 @@ exploration_meanplot <- function(
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
     show_legend = show_legend
   )
-
   # If there is no mean data, just return the plot
   if (nrow(mean_data) == 0) {
     return(plot)
@@ -194,7 +182,7 @@ exploration_meanplot <- function(
     ci = ci,
     color_by = color_by,
     x_var = x_var,
-    y_var = "AVAL"
+    y_var = "Mean"
   )
 }
 
@@ -404,11 +392,10 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
 
   mean_title <- paste0("Mean ", plot_build$plot$labels$title)
   if (isTRUE(ci)) mean_title <- paste0(mean_title, " (95% CI)")
-
-  plot +
+  p <- plot +
     labs(
       x = paste(plot_build$plot$labels$x),
-      y = paste0("Mean ", plot_build$plot$labels$y),
+      y = str_replace(plot_build$plot$labels$y, "Mean", "Mean Analysis Value"),
       title = mean_title
     ) +
     list(
@@ -422,6 +409,9 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
         group_var = "color_var"
       )
     )
+  p$data$tooltip_text <- str_replace(p$data$tooltip_text,
+                                     "<b>Mean</b>", "<b>Mean Analysis Value</b>")
+  p
 }
 
 #' Derive last dose time for each sample in the concentration data of a PKNCAdata object
