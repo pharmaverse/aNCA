@@ -114,7 +114,6 @@
     "Value",
     "Variable",
     "adj.r.squared",
-    "adnca_example",
     "aucs",
     "aucs_extravascular",
     "aucs_intravascular",
