@@ -283,3 +283,128 @@ describe("simplify_unit", {
     expect_equal(simplify_unit("unitless", as_character = TRUE), "unitless")
   })
 })
+
+describe("apply_unit_defaults", {
+  # Helper to build a data-derived units table
+  make_data_units <- function(...) {
+    data.frame(
+      PPTESTCD = c("CMAX", "AUCLST", "TMAX", "LAMZHL"),
+      PPORRESU = c("ng/mL", "h*ng/mL", "h", "h"),
+      PPSTRESU = c("ng/mL", "h*ng/mL", "h", "h"),
+      conversion_factor = c(1, 1, 1, 1),
+      stringsAsFactors = FALSE,
+      ...
+    )
+  }
+
+  it("applies default target units and calculates conversion factors", {
+    defaults <- data.frame(
+      PPTESTCD = c("CMAX", "AUCLST"),
+      PPSTRESU = c("ug/mL", "h*ug/mL"),
+      stringsAsFactors = FALSE
+    )
+    result <- apply_unit_defaults(defaults, make_data_units())
+
+    expect_equal(nrow(result$units), 4)
+    expect_equal(nrow(result$failed), 0)
+
+    cmax_row <- result$units[result$units$PPTESTCD == "CMAX", ]
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$PPORRESU, "ng/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+
+    auclst_row <- result$units[result$units$PPTESTCD == "AUCLST", ]
+    expect_equal(auclst_row$PPSTRESU, "h*ug/mL")
+    expect_equal(auclst_row$conversion_factor, 0.001)
+  })
+
+  it("keeps data defaults for parameters not in the defaults table", {
+    defaults <- data.frame(
+      PPTESTCD = "CMAX",
+      PPSTRESU = "ug/mL",
+      stringsAsFactors = FALSE
+    )
+    result <- apply_unit_defaults(defaults, make_data_units())
+
+    tmax_row <- result$units[result$units$PPTESTCD == "TMAX", ]
+    expect_equal(tmax_row$PPSTRESU, "h")
+    expect_equal(tmax_row$conversion_factor, 1)
+  })
+
+  it("ignores default entries for parameters not in data", {
+    defaults <- data.frame(
+      PPTESTCD = c("CMAX", "NONEXISTENT"),
+      PPSTRESU = c("ug/mL", "kg"),
+      stringsAsFactors = FALSE
+    )
+    result <- apply_unit_defaults(defaults, make_data_units())
+
+    # Data has 4 rows, no extra row added for NONEXISTENT
+    expect_equal(nrow(result$units), 4)
+  })
+
+  it("reverts to data defaults and reports failed conversions", {
+    defaults <- data.frame(
+      PPTESTCD = c("CMAX", "TMAX"),
+      PPSTRESU = c("ug/mL", "kg"),
+      stringsAsFactors = FALSE
+    )
+    result <- apply_unit_defaults(defaults, make_data_units())
+
+    # TMAX: h -> kg is not convertible
+    expect_equal(nrow(result$failed), 1)
+    expect_equal(result$failed$PPTESTCD, "TMAX")
+
+    # Reverted to data default
+    tmax_row <- result$units[result$units$PPTESTCD == "TMAX", ]
+    expect_equal(tmax_row$PPSTRESU, "h")
+    expect_equal(tmax_row$conversion_factor, 1)
+
+    # CMAX still applied
+    cmax_row <- result$units[result$units$PPTESTCD == "CMAX", ]
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+  })
+
+  it("handles group columns in data units", {
+    data_units <- data.frame(
+      PCSPEC = c("PLASMA", "PLASMA", "URINE", "URINE"),
+      PPTESTCD = c("CMAX", "AUCLST", "CMAX", "AUCLST"),
+      PPORRESU = c("ng/mL", "h*ng/mL", "ng/mL", "h*ng/mL"),
+      PPSTRESU = c("ng/mL", "h*ng/mL", "ng/mL", "h*ng/mL"),
+      conversion_factor = c(1, 1, 1, 1),
+      stringsAsFactors = FALSE
+    )
+    defaults <- data.frame(
+      PPTESTCD = "CMAX",
+      PPSTRESU = "ug/mL",
+      stringsAsFactors = FALSE
+    )
+    result <- apply_unit_defaults(defaults, data_units)
+
+    # Both PLASMA and URINE CMAX rows should be updated
+    cmax_rows <- result$units[result$units$PPTESTCD == "CMAX", ]
+    expect_equal(nrow(cmax_rows), 2)
+    expect_true(all(cmax_rows$PPSTRESU == "ug/mL"))
+    expect_true(all(cmax_rows$conversion_factor == 0.001))
+
+    # AUCLST rows unchanged
+    auclst_rows <- result$units[result$units$PPTESTCD == "AUCLST", ]
+    expect_true(all(auclst_rows$PPSTRESU == "h*ng/mL"))
+    expect_true(all(auclst_rows$conversion_factor == 1))
+  })
+
+  it("returns factor 1 when default unit matches original unit", {
+    defaults <- data.frame(
+      PPTESTCD = "CMAX",
+      PPSTRESU = "ng/mL",
+      stringsAsFactors = FALSE
+    )
+    result <- apply_unit_defaults(defaults, make_data_units())
+
+    cmax_row <- result$units[result$units$PPTESTCD == "CMAX", ]
+    expect_equal(cmax_row$conversion_factor, 1)
+    expect_equal(nrow(result$failed), 0)
+  })
+})
+
