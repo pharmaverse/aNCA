@@ -441,55 +441,55 @@ describe("exploration_meanplot:", {
     doses <- unique(pknca_data$dose$data[[dose_col]])
     doses_u <- unique(pknca_data$dose$data[[doseu_col]])
 
-for (dose in doses) {
-  pknca_data_dose <- pknca_data
-  group_vars <- intersect(group_vars(pknca_data$conc), group_vars(pknca_data$dose))
-print(paste0("dose: ", dose))
-  dose_groups <- pknca_data_dose$dose$data %>%
-    filter(!!sym(dose_col) == dose) %>%
-    select(any_of(group_vars)) %>%
-    distinct()
+    for (dose in doses) {
+      pknca_data_dose <- pknca_data
+      group_vars <- intersect(group_vars(pknca_data$conc), group_vars(pknca_data$dose))
+      print(paste0("dose: ", dose))
+      dose_groups <- pknca_data_dose$dose$data %>%
+        filter(!!sym(dose_col) == dose) %>%
+        select(any_of(group_vars)) %>%
+        distinct()
 
-  pknca_data_dose$conc$data <- pknca_data_dose$conc$data %>%
-    inner_join(dose_groups, by = group_vars)
+      pknca_data_dose$conc$data <- pknca_data_dose$conc$data %>%
+        inner_join(dose_groups, by = group_vars)
 
-    p_dn <- exploration_meanplot(
-      pknca_data = pknca_data_dose,
-      color_by = "PARAM",
-      show_dose = TRUE,
-      line_type = "dose-normalized"
-    )
-    p_base <- exploration_meanplot(
-      pknca_data = pknca_data_dose,
-      color_by = "PARAM",
-      show_dose = TRUE
-    )
-    p_both <- exploration_meanplot(
-      pknca_data = pknca_data_dose,
-      color_by = "PARAM",
-      show_dose = TRUE,
-      line_type = "both"
-    )
+      p_dn <- exploration_meanplot(
+        pknca_data = pknca_data_dose,
+        color_by = "PARAM",
+        show_dose = TRUE,
+        line_type = "dose-normalized"
+      )
+      p_base <- exploration_meanplot(
+        pknca_data = pknca_data_dose,
+        color_by = "PARAM",
+        show_dose = TRUE
+      )
+      p_both <- exploration_meanplot(
+        pknca_data = pknca_data_dose,
+        color_by = "PARAM",
+        show_dose = TRUE,
+        line_type = "both"
+      )
 
-    dn_build <- ggplot_build(p_dn)
-    base_build <- ggplot_build(p_base)
-    dn_ys <- dn_build$data[[1]]$y
-    base_ys <- base_build$data[[1]]$y
-    both_ys <- ggplot_build(p_both)$data[[1]]$y
+      dn_build <- ggplot_build(p_dn)
+      base_build <- ggplot_build(p_base)
+      dn_ys <- dn_build$data[[1]]$y
+      base_ys <- base_build$data[[1]]$y
+      both_ys <- ggplot_build(p_both)$data[[1]]$y
 
-    # Check y values in the dose-normalized plot are equal to the base plot divided by the dose
-    expect_true(all(
-      sapply(seq_along(dn_ys), function(i) {
-        print(i)
-        dn_y <- dn_ys[i]
-        base_y <- base_ys[i]
-        print(dn_y)
-        print(base_y / dose)
-        exp_dn_y <- base_y / dose
-        dn_y %in% exp_dn_y
-      })
-    ))
-}
+      # Check y values in the dose-normalized plot are equal to the base plot divided by the dose
+      expect_true(all(
+        sapply(seq_along(dn_ys), function(i) {
+          print(i)
+          dn_y <- dn_ys[i]
+          base_y <- base_ys[i]
+          print(dn_y)
+          print(base_y / dose)
+          exp_dn_y <- base_y / dose
+          dn_y %in% exp_dn_y
+        })
+      ))
+    }
 
     p_dn <- exploration_meanplot(
       pknca_data = pknca_data,
