@@ -137,6 +137,17 @@ describe("g_lineplot: structure and arguments", {
     expect_true(any(grepl("\\(n=2\\)", unique(p$data$facet_label))))
   })
 
+  it("does not add facet counts when facet_count_n is NULL", {
+    p <- g_lineplot(
+      data = ind_data,
+      x_var = "time_var",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      facet_by = "PARAM"
+    )
+    expect_false("facet_label" %in% names(p$data))
+  })
+
   it("uses precomputed facet count column", {
     mean_data_with_count <- mean_data %>%
       mutate(USUBJID_COUNT = 7)
