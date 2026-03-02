@@ -4,7 +4,12 @@
 \alias{get_halflife_plots}
 \title{Create a Plotly Half-life Plot}
 \usage{
-get_halflife_plots(pknca_data, add_annotations = TRUE, title_vars = NULL)
+get_halflife_plots(
+  pknca_data,
+  add_annotations = TRUE,
+  title_vars = NULL,
+  merge_extra_vars = NULL
+)
 }
 \arguments{
 \item{pknca_data}{PKNCA data object}
@@ -13,6 +18,10 @@ get_halflife_plots(pknca_data, add_annotations = TRUE, title_vars = NULL)
 
 \item{title_vars}{Character vector of additional column names to always
 include in the plot title, even when they have only one unique level.
+Columns that do not exist in the data are silently ignored.}
+
+\item{merge_extra_vars}{Character vector of additional column names to
+include as merge keys when joining concentration data with NCA results.
 Columns that do not exist in the data are silently ignored.}
 }
 \value{
