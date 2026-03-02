@@ -105,7 +105,8 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
   # Save an accessible object with all results
   rda_path <- paste0(dirname(quarto_path), "/results_slides_outputs.rda")
-  save(list = as.character(quote(res_dose_slides)), file = rda_path)
+  additional_analysis <- attr(res_dose_slides, "additional_analysis")
+  save(list = c("res_dose_slides", "additional_analysis"), file = rda_path)
 
   # Generate the main quarto document
   create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
@@ -140,6 +141,33 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
         use_plotly = use_plotly
       )
     }
+  }
+
+  additional_tables <- list(
+    "matrix_ratios" = additional_analysis$matrix_ratios,
+    "excretion_summary" = additional_analysis$excretion_summary
+  )
+  additional_tables <- additional_tables[
+    vapply(additional_tables, function(x) is.data.frame(x) && nrow(x) > 0, logical(1))
+  ]
+  if (length(additional_tables) > 0) {
+    write(c("\n---", "", "# Additional Analysis Figures", ""), file = quarto_path, append = TRUE)
+    purrr::walk(
+      names(additional_tables),
+      function(name) {
+        write(
+          c(
+            "\n---",
+            "",
+            paste0("## ", gsub("_", " ", tools::toTitleCase(name))),
+            add_qmd_table(paste0("additional_analysis[['", name, "']]")),
+            ""
+          ),
+          file = quarto_path,
+          append = TRUE
+        )
+      }
+    )
   }
 }
 
