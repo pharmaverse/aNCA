@@ -4,6 +4,11 @@
 
 ### Features added
 
+- Exploration plots: “Add to Exports” button saves named plot snapshots
+  to the ZIP export. When custom snapshots exist for a plot type, only
+  the snapshots are exported (the default plot is omitted). QC plot also
+  included in the export tree
+  ([\#1002](https://github.com/pharmaverse/aNCA/issues/1002))
 - CDISC ZIP export now includes a `Pre_Specs.xlsx` file with
   variable-level metadata for each selected dataset
   ([\#998](https://github.com/pharmaverse/aNCA/issues/998))

@@ -109,6 +109,19 @@ visualizations in the top right corner of the plot.
 
 ![Mapping](images/get_started/exploration_options.gif)
 
+#### Saving Plots to the Export
+
+Each exploration plot (Individual, Mean, and PK/Dose QC) has an **Add to
+Exports** button in its sidebar. Clicking this button saves a snapshot
+of the current plot to the ZIP export. Saved plots are numbered
+incrementally (e.g., `individualplot1.png`, `individualplot2.png`). When
+custom snapshots exist for a plot type, only the snapshots are exported
+and the default plot is omitted. If no snapshots are saved, the default
+plot (reflecting the most recent view) is exported instead.
+
+When exporting the ZIP file, if both PNG and HTML formats are selected,
+each saved plot will be available in both formats.
+
 ## Step 3: Run NCA
 
 Click on the *NCA* tab in the menu bar to switch to the next section.
