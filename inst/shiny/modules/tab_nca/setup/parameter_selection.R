@@ -468,7 +468,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       style = list(fontSize = "0.75em"),
       columns = list(
         PPTESTCD = colDef(
-          name = "PPTESTCD", maxWidth = 100
+          name = "Short Name", maxWidth = 100
         ),
         PPTEST = colDef(
           name = "Parameter Name", maxWidth = 180
