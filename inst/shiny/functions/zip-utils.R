@@ -415,7 +415,7 @@ prepare_export_files <- function(target_dir,
       res_dose_slides,
       file.path(path, "results_slides.pptx"),
       slide_title,
-      "www/templates/template.pptx"
+      system.file("www/templates/template.pptx", package = "aNCA")
     )
   }
 }
@@ -428,9 +428,17 @@ prepare_export_files <- function(target_dir,
 .export_settings <- function(target_dir, session) {
   path <- file.path(target_dir, "settings")
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  settings_list <- session$userData$settings()
+
+  if (!is.null(settings_list$units)) {
+    settings_list$units <- settings_list$units %>%
+      dplyr::filter(!default) %>%
+      dplyr::select(-default)
+  }
+
   settings_to_save <- list(
-    settings = session$userData$settings(),
-    slope_rules = session$userData$slope_rules$manual_slopes()
+    settings = settings_list,
+    slope_rules = session$userData$slope_rules()
   )
   yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
 }
@@ -442,7 +450,7 @@ prepare_export_files <- function(target_dir,
 #' @noRd
 .export_script <- function(target_dir, session) {
   path <- file.path(target_dir, "code")
-  template_path <- "shiny/www/templates/script_template.R"
+  template_path <- "www/templates/script_template.R"
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
   get_session_code(
     template_path = system.file(template_path, package = "aNCA"),
