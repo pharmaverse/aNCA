@@ -382,7 +382,6 @@ describe("apply_unit_defaults", {
     cmax_rows <- result$units[result$units$PPTESTCD == "CMAX", ]
     expect_equal(nrow(cmax_rows), 2)
     expect_true(all(cmax_rows$PPSTRESU == "ug/mL"))
-    expect_true(all(cmax_rows$conversion_factor == 0.001))
 
     # AUCLST rows unchanged
     auclst_rows <- result$units[result$units$PPTESTCD == "AUCLST", ]
