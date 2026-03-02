@@ -8,7 +8,7 @@
 #' @returns A data.frame object with loaded data.
 #'
 #' @examples
-#' path <- system.file("tests/testthat/data/test-duplicate-ADNCA.csv", package = "aNCA")
+#' path <- system.file("shiny/tests/testthat/dummy_simplified.csv", package = "aNCA")
 #' df <- read_pk(path)
 #'
 #' @importFrom tools file_ext
