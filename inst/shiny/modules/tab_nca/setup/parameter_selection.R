@@ -478,12 +478,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           minWidth = 400,
           style = list(whiteSpace = "normal")
         ),
-        Category = colDef(
-          name = "Category", maxWidth = 120
-        ),
-        Type = colDef(
-          name = "Type", maxWidth = 120
-        ),
         App_Location = colDef(
           name = "App Location",
           minWidth = 220,
@@ -517,7 +511,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
 #' Build the parameter reference data frame for the modal.
 #' Derives App Location from TYPE, CAT, and can_excretion.
-#' @return A data frame with 7 columns for display.
+#' @return A data frame with 5 columns for display.
 .build_param_ref_data <- function() {
   params <- metadata_nca_parameters
 
@@ -529,27 +523,24 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       can_exc <- params$can_excretion[i]
       locs <- character(0)
       if (type %in% c("Standard", "IV")) {
-        locs <- c(locs, "NCA > Setup > Parameter Selection")
+        locs <- c(locs, "Setup > Parameter Selection")
       }
       if (type == "Urine" || identical(can_exc, "T")) {
         locs <- c(
-          locs,
-          "NCA > Additional Analysis > Excretion"
+          locs, "Additional Analysis > Excretion"
         )
       }
       if (type == "PKNCA-not-covered" && cat == "Ratio") {
         locs <- c(
-          locs,
-          "NCA > Additional Analysis > Ratios"
+          locs, "Additional Analysis > Ratios"
         )
       }
       if (type == "Sparse") {
         locs <- c(
-          locs,
-          "NCA > Setup > Parameter Selection (sparse)"
+          locs, "Setup > Parameter Selection (sparse)"
         )
       }
-      if (length(locs) == 0) "NCA > Setup > Parameter Selection"
+      if (length(locs) == 0) "Setup > Parameter Selection"
       else paste(locs, collapse = "; ")
     },
     character(1)
@@ -566,8 +557,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     PPTESTCD = params$PPTESTCD,
     PPTEST = params$PPTEST,
     Description = params$description,
-    Category = params$CAT,
-    Type = params$TYPE,
     App_Location = app_location,
     PKNCA_Function = pknca_fun,
     stringsAsFactors = FALSE
