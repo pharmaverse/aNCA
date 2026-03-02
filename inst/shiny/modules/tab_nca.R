@@ -124,7 +124,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         # Update units table
         processed_pknca_data <- processed_pknca_data()
         if (!is.null(session$userData$units_table())) {
-          processed_pknca_data$units <- session$userData$units_table()
+          processed_pknca_data$units <- dplyr::rows_update(
+            processed_pknca_data$units,
+            dplyr::select(session$userData$units_table(), -default),
+            by = c("PCSPEC", "PPTESTCD", "PPORRESU"),
+            unmatched = "ignore"
+          )
         }
 
         #' Calculate results
