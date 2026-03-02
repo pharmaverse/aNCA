@@ -92,7 +92,29 @@ settings_ui <- function(id) {
       accordion_panel(
         title = "Partial Interval Calculations",
         reactableOutput(ns("int_parameters_table")),
-        actionButton(ns("addRow"), "Add Row")
+        fluidRow(
+          column(
+            width = 10,
+            actionButton(ns("addRow"), "Add Row")
+          ),
+          column(
+            width = 2,
+            dropdown(
+              div(
+                tags$h4("Partial Interval Calculations Help"),
+                p(
+                  "Use this section to define custom start and end times for additional",
+                  "partial interval calculations."
+                )
+              ),
+              style = "unite",
+              right = TRUE,
+              icon = icon("question"),
+              status = "primary",
+              width = "400px"
+            )
+          )
+        )
       ),
       accordion_panel(
         title = "Flag Rule Sets",
