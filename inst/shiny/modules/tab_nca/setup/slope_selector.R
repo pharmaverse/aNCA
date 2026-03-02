@@ -57,13 +57,16 @@ slope_selector_ui <- function(id) {
           div(
             class = "gif-container",
             tags$h1("Select"),
-            tags$h6("Click the first point and then the last point you want to include in the slope."),
+            tags$h6("Click the first and then the last point you want to include in the slope."),
             img(src = "images/slope_plot_select.gif", alt = "Select")
           ),
           div(
             class = "gif-container",
-            tags$h1("Exclude/Include"),
-            tags$h6("Double click a point to exclude it. Double click it again to include it back."),
+            tags$h1("Exclude"),
+            tags$h6(
+              tags$div("Double click a point to exclude it."),
+              tags$div("Double click it again to include it back.")
+            ),
             img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
           )
         )
