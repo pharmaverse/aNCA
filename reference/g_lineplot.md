@@ -14,6 +14,7 @@ g_lineplot(
   x_unit = NULL,
   y_unit = NULL,
   color_by,
+  color_labels = NULL,
   facet_by = NULL,
   group_by = NULL,
   facet_count_n = NULL,
@@ -24,7 +25,8 @@ g_lineplot(
   palette = "default",
   tooltip_vars = NULL,
   labels_df = NULL,
-  vline_var = NULL
+  vline_var = NULL,
+  show_legend = TRUE
 )
 ```
 
@@ -58,6 +60,11 @@ g_lineplot(
 
   A character vector specifying the column(s) from the original dataset
   that are used to determine the color of the lines and points.
+
+- color_labels:
+
+  Optional character vector of labels for the color legend. Default is
+  `NULL` (uses `color_by` values).
 
 - facet_by:
 
@@ -111,6 +118,10 @@ g_lineplot(
 
   Optional character string specifying the column name for vertical
   lines.
+
+- show_legend:
+
+  Logical; whether to display the plot legend. Default is `TRUE`.
 
 ## Value
 

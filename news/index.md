@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Exploration plots: toggle legend visibility, improved tooltips with
+  color-by variable, and correct axis/legend labels
+  ([\#988](https://github.com/pharmaverse/aNCA/issues/988))
 - Exploration plots: “Add to Exports” button saves named plot snapshots
   to the ZIP export. When custom snapshots exist for a plot type, only
   the snapshots are exported (the default plot is omitted). QC plot also

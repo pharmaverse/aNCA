@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9082</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9083</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,6 +64,7 @@
 <span>  facet_by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  show_facet_n <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ylog_scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  threshold_value <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  show_dose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  palette <span class="op">=</span> <span class="st">"default"</span>,</span>
@@ -105,6 +106,10 @@ Default is <code>FALSE</code>.</p></dd>
 <dd><p>Logical; whether to use a logarithmic scale for the y-axis. Default is <code>FALSE</code>.</p></dd>
 
 
+<dt id="arg-show-legend">show_legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
+<dd><p>Logical; whether to display the plot legend. Default is <code>TRUE</code>.</p></dd>
+
+
 <dt id="arg-threshold-value">threshold_value<a class="anchor" aria-label="anchor" href="#arg-threshold-value"></a></dt>
 <dd><p>Numeric; y-intercept for a horizontal threshold line.
 Default is <code>NULL</code> (no threshold).</p></dd>
@@ -133,7 +138,7 @@ Default is "default" color palette.</p></dd>
 
 <dt id="arg-tooltip-vars">tooltip_vars<a class="anchor" aria-label="anchor" href="#arg-tooltip-vars"></a></dt>
 <dd><p>Character vector of column names to include in the tooltip.
-Default includes dose group vars and "Mean".</p></dd>
+Default includes dose group vars and "AVAL" (renamed from Mean).</p></dd>
 
 
 <dt id="arg-labels-df">labels_df<a class="anchor" aria-label="anchor" href="#arg-labels-df"></a></dt>

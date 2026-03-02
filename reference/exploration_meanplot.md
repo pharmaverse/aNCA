@@ -12,6 +12,7 @@ exploration_meanplot(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  show_legend = TRUE,
   threshold_value = NULL,
   show_dose = FALSE,
   palette = "default",
@@ -53,6 +54,10 @@ exploration_meanplot(
   Logical; whether to use a logarithmic scale for the y-axis. Default is
   `FALSE`.
 
+- show_legend:
+
+  Logical; whether to display the plot legend. Default is `TRUE`.
+
 - threshold_value:
 
   Numeric; y-intercept for a horizontal threshold line. Default is
@@ -84,7 +89,7 @@ exploration_meanplot(
 - tooltip_vars:
 
   Character vector of column names to include in the tooltip. Default
-  includes dose group vars and "Mean".
+  includes dose group vars and "AVAL" (renamed from Mean).
 
 - labels_df:
 
