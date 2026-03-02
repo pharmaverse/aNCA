@@ -154,6 +154,9 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       has_full_units <- all(c("PPORRESU", "conversion_factor") %in% names(imported_units))
 
       if (has_full_units) {
+        if (!"default" %in% names(imported_units)) {
+          imported_units$default <- FALSE
+        }
         session$userData$units_table(imported_units)
       } else {
         # Defaults-only format: wait for data-derived units, then resolve.
@@ -172,6 +175,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
             showNotification(msg, type = "warning", duration = 10)
           }
 
+          merged$units$default <- FALSE
           session$userData$units_table(merged$units)
         }) |> bindEvent(processed_pknca_data(), once = TRUE)
       }
