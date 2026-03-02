@@ -1,3 +1,3 @@
-# Load NCA parameters dataset
+# Build adnca_example dataset from CSV
 adnca_example <- read.csv("data-raw/adnca_example.csv", na.strings = c("", "NA"))
 usethis::use_data(adnca_example, overwrite = TRUE)
