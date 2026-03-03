@@ -10,6 +10,7 @@ exploration_individualplot(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  show_legend = TRUE,
   threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
@@ -33,6 +34,8 @@ Default is \code{NULL} (no faceting).}
 Default is \code{FALSE}.}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
+
+\item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 
 \item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
 Default is \code{NULL} (no threshold).}

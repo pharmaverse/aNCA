@@ -175,6 +175,7 @@ runnable
 selectable
 signif
 src
+subfolder
 standardizations
 th
 tibble
@@ -189,6 +190,9 @@ ug
 unmapped
 utilise
 visualizable
+readxl
+writexl
+xlsx
 yaml
 µg
 Ĉlast
