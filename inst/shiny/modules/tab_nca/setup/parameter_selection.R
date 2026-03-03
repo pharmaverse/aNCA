@@ -446,10 +446,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 #' @noRd
 .show_param_ref_modal <- function() {
   ref_data <- .build_param_ref_data()
-  pknca_url <- paste0(
-    "https://cran.r-project.org/web/",
-    "packages/PKNCA/PKNCA.pdf"
-  )
+  pknca_ref_base <- "https://humanpred.github.io/pknca/reference/"
   showModal(modalDialog(
     title = "PK Parameter Details",
     size = "l",
@@ -485,9 +482,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           cell = function(value) {
             if (value == "\u2014") {
               "\u2014"
-            } else {
+            } else if (startsWith(value, "pk.calc.")) {
+              func_url <- paste0(pknca_ref_base, value, ".html")
               as.character(htmltools::tags$a(
-                href = pknca_url,
+                href = func_url,
                 target = "_blank",
                 style = paste0(
                   "color: #0d6efd;",
@@ -495,6 +493,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
                 ),
                 value
               ))
+            } else {
+              value
             }
           }
         )
