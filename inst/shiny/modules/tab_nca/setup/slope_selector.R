@@ -51,7 +51,9 @@ slope_selector_ui <- function(id) {
           div(
             class = "gif-container",
             tags$h1("Zoom"),
-            tags$h6("Click and drag to select and zoom in a specific area. Double click to zoom out."),
+            tags$h6("Click and drag to select and zoom in a specific area.",
+              " Double click to zoom out."
+            ),
             img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
           ),
           div(
