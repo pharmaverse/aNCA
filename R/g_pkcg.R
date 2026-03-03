@@ -693,7 +693,7 @@ g_pkcg03_log <- function(data, ...) {
 
 #' @examples
 #' \dontrun{
-#'   adnca <- read.csv("inst/shiny/data/example-ADNCA.csv")
+#'   adnca <- adnca_example
 #'   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #'   attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'
