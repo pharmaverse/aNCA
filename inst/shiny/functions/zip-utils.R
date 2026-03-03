@@ -521,9 +521,11 @@ prepare_export_files <- function(target_dir,
   }
   file.remove(all_files[!all_files %in% files_req])
 
-  # Recursive directory cleanup
+  # Recursive directory cleanup — remove dirs that contain no files at any depth
   dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
   for (d in dirs[rev(order(nchar(dirs)))]) {
-    if (length(list.files(d, all.files = TRUE)) == 0 && d != target_dir) unlink(d, recursive = TRUE)
+    if (length(list.files(d, recursive = TRUE)) == 0 && d != target_dir) {
+      unlink(d, recursive = TRUE)
+    }
   }
 }
