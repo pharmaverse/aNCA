@@ -1,6 +1,8 @@
-# Testing Guidelines
+---
+applyTo: "tests/**"
+---
 
-See also the root `AGENTS.md` for full project conventions.
+# Testing
 
 ## File structure
 
@@ -46,8 +48,8 @@ describe("g_lineplot: structure and arguments", {
 
 All PRs must pass:
 
-- [ ] Code passes lintr checks
-- [ ] Code passes all unit tests
-- [ ] New logic covered by unit tests
+- Code passes lintr checks
+- Code passes all unit tests
+- New logic covered by unit tests
 
 Run tests with: `devtools::test()`

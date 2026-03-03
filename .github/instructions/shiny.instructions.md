@@ -1,6 +1,8 @@
-# Shiny App Code Guidelines
+---
+applyTo: "inst/shiny/**"
+---
 
-See also the root `AGENTS.md` for full project conventions.
+# Shiny App Code
 
 ## Module communication
 

@@ -1,6 +1,8 @@
-# R Package Code Guidelines
+---
+applyTo: "R/**/*.R"
+---
 
-See also the root `AGENTS.md` for full project conventions.
+# R Package Code
 
 ## File naming
 
@@ -16,6 +18,8 @@ See also the root `AGENTS.md` for full project conventions.
 - No `library()` or `require()` in package code
 
 ## Documentation (roxygen2)
+
+All exported functions must have `@param`, `@returns`, and `@export`:
 
 ```r
 #' Calculate mean of positive values
@@ -34,8 +38,7 @@ positive_mean <- function(x, na.rm = TRUE) {
 }
 ```
 
-- All exported functions must have `@param`, `@returns`, and `@export`
-- Run `devtools::document()` after modifying roxygen comments
+Run `devtools::document()` after modifying roxygen comments.
 
 ## Global variables (`R/zzz.R`)
 
