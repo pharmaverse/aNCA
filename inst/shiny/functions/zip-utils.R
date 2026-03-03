@@ -54,6 +54,34 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   }
 }
 
+# Build the list of allowed exploration plot names for export.
+# For each selected type, includes custom snapshots if any exist,
+# otherwise includes the default plot.
+# @param selected_types Character vector of selected types (e.g., "mean", "qc")
+# @param custom_names Named character vector: names = plot names, values = types
+# @return Character vector of allowed exploration plot names
+.build_exploration_allowlist <- function(selected_types, custom_names) {
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  allowed <- character(0)
+  for (type in selected_types) {
+    default_name <- type_to_default[[type]]
+    type_customs <- names(custom_names[custom_names == type])
+    if (length(type_customs) > 0) {
+      allowed <- c(allowed, type_customs)
+    } else {
+      allowed <- c(allowed, default_name)
+    }
+  }
+  allowed
+}
+
+# Check if an object is a saveable leaf (ggplot, data.frame, or plotly)
+.is_leaf <- function(x) {
+  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly")
+}
+
 save_output <- function(
   output, output_path,
   ggplot_formats = c("png", "html"),
@@ -62,27 +90,17 @@ save_output <- function(
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
-    file_name <- paste0(output_path, "/", name)
-    if (!dir.exists(file_name)) {
-      dir.create(file_name, recursive = TRUE)
-    }
     x <- output[[name]]
-    is_obj_to_export <- is.null(obj_names) || name %in% obj_names
 
-    if (inherits(x, "list")) {
+    if (!.is_leaf(x) && inherits(x, "list")) {
       save_output(
-        output = x,
-        output_path = file_name,
-        ggplot_formats = ggplot_formats,
-        table_formats = table_formats,
-        obj_names = obj_names
+        x, paste0(output_path, "/", name),
+        ggplot_formats, table_formats, obj_names
       )
-    } else if (is_obj_to_export) {
+    } else if (is.null(obj_names) || name %in% obj_names) {
       save_dispatch(
-        x = x,
-        file_name = paste0(file_name, "/", name),
-        ggplot_formats = ggplot_formats,
-        table_formats = table_formats
+        x, paste0(output_path, "/", name),
+        ggplot_formats, table_formats
       )
     }
   }
@@ -304,12 +322,32 @@ prepare_export_files <- function(target_dir,
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
+  # Filter custom exploration plots: only keep those whose base type is selected
+  # all_custom is a named vector: names = plot names, values = types
+  all_custom <- session$userData$exploration_custom_names()
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  # Keep custom names whose type maps to a selected tree item
+  selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
+  custom_names <- all_custom[all_custom %in% selected_types]
+  obj_names <- unique(c(input$res_tree, names(custom_names)))
+
+  # Filter exploration list to only include allowed plots
+  results <- session$userData$results
+  if (!is.null(results$exploration)) {
+    allowed <- .build_exploration_allowlist(selected_types, custom_names)
+    results$exploration <- results$exploration[
+      intersect(names(results$exploration), allowed)
+    ]
+  }
+
   save_output(
-    output = session$userData$results,
+    output = results,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,
-    obj_names = input$res_tree
+    obj_names = obj_names
   )
 
   progress$inc(0.2)
@@ -328,9 +366,16 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.6)
 
-  data_tmpdir <- file.path(target_dir, "data")
-  dir.create(data_tmpdir, recursive = TRUE, showWarnings = FALSE)
-  saveRDS(session$userData$raw_data, file.path(data_tmpdir, "data.rds"))
+  # Export pre-specification files for selected CDISC datasets
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
+  if (length(selected_cdisc) > 0) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving CDISC pre-specifications...")
+    .export_pre_specs(target_dir, selected_cdisc,
+                      cdisc_data = session$userData$results$CDISC)
+  }
+
+  saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
 
   if ("r_script" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
@@ -339,7 +384,7 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.8)
 
-  .clean_export_dir(target_dir, input)
+  .clean_export_dir(target_dir, input, custom_names)
 }
 
 # Helpers to export different output types
@@ -364,11 +409,14 @@ prepare_export_files <- function(target_dir,
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
 
+  pn <- session$userData$project_name()
+  slide_title <- if (pn == "") "NCA Results" else paste0("NCA Results\n", pn)
+
   if ("qmd" %in% input$slide_formats) {
     create_qmd_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.qmd"),
-      paste0("NCA Results\n", session$userData$project_name()),
+      slide_title,
       TRUE
     )
   }
@@ -376,8 +424,8 @@ prepare_export_files <- function(target_dir,
     create_pptx_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.pptx"),
-      paste0("NCA Results\n", session$userData$project_name()),
-      "www/templates/template.pptx"
+      slide_title,
+      system.file("www/templates/template.pptx", package = "aNCA")
     )
   }
 }
@@ -388,13 +436,46 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_settings <- function(target_dir, session) {
-  path <- file.path(target_dir, "settings")
-  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  settings_list <- session$userData$settings()
+
+  if (!is.null(settings_list$units)) {
+    settings_list$units <- settings_list$units %>%
+      dplyr::filter(!default) %>%
+      dplyr::select(-default)
+  }
+
   settings_to_save <- list(
-    settings = session$userData$settings(),
-    slope_rules = session$userData$slope_rules
+    settings = settings_list,
+    slope_rules = session$userData$slope_rules()
   )
-  yaml::write_yaml(settings_to_save, paste0(path, "/settings.yaml"))
+  yaml::write_yaml(
+    settings_to_save, file.path(target_dir, "settings.yaml")
+  )
+}
+
+#' Helper to export a single pre-specification xlsx file for CDISC datasets.
+#' The file is placed in the CDISC folder (e.g. CDISC/Pre_Specs.xlsx) with
+#' one sheet per selected dataset. No file is created when no specs are available.
+#' @param target_dir Target directory to save the pre-specs
+#' @param selected Character vector of selected dataset keys (lowercase: pp, adpp, adnca)
+#' @param cdisc_data Named list of CDISC data frames (pp, adpp, adnca)
+#' @keywords internal
+#' @noRd
+.export_pre_specs <- function(target_dir, selected, cdisc_data = NULL) {
+  # Reverse lookup: lowercase keys -> uppercase dataset names
+  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
+  datasets <- unname(rev_map[selected])
+
+  pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
+
+  # Keep only non-empty specs
+  pre_specs <- Filter(function(df) nrow(df) > 0, pre_specs)
+
+  if (length(pre_specs) > 0) {
+    cdisc_dir <- file.path(target_dir, "CDISC")
+    dir.create(cdisc_dir, recursive = TRUE, showWarnings = FALSE)
+    writexl::write_xlsx(pre_specs, file.path(cdisc_dir, "Pre_Specs.xlsx"))
+  }
 }
 
 #' Helper to export R script
@@ -403,13 +484,11 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_script <- function(target_dir, session) {
-  path <- file.path(target_dir, "code")
-  template_path <- "shiny/www/templates/script_template.R"
-  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  template_path <- "www/templates/script_template.R"
   get_session_code(
     template_path = system.file(template_path, package = "aNCA"),
     session,
-    file.path(path, "session_code.R")
+    file.path(target_dir, "session_code.R")
   )
 }
 
@@ -418,23 +497,34 @@ prepare_export_files <- function(target_dir,
 #' @param input Shiny input object
 #' @keywords internal
 #' @noRd
-.clean_export_dir <- function(target_dir, input) {
+.clean_export_dir <- function(target_dir, input, custom_names = NULL) {
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
-  fnames <- input$res_tree
+  fnames <- unique(c(input$res_tree, names(custom_names)))
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
-  fnames_patt <- paste0("((", paste0(fnames, collapse = ")|("), "))")
+  fnames_patt <- paste0(
+    "((",
+    paste0(fnames, collapse = ")|("),
+    "))"
+  )
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
-  files_req <- c(files_req, grep("data/data.rds", all_files, value = TRUE))
+  files_req <- c(files_req, grep("data\\.rds$", all_files, value = TRUE))
+  # Preserve pre-specs only when at least one CDISC dataset is selected
+  if (any(c("pp", "adpp", "adnca") %in% fnames)) {
+    files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                   value = TRUE))
+  }
   file.remove(all_files[!all_files %in% files_req])
 
-  # Recursive directory cleanup
+  # Recursive directory cleanup — remove dirs that contain no files at any depth
   dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
   for (d in dirs[rev(order(nchar(dirs)))]) {
-    if (length(list.files(d, all.files = TRUE)) == 0 && d != target_dir) unlink(d, recursive = TRUE)
+    if (length(list.files(d, recursive = TRUE)) == 0 && d != target_dir) {
+      unlink(d, recursive = TRUE)
+    }
   }
 }

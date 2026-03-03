@@ -33,7 +33,7 @@ tab_nca_ui <- function(id) {
         class = "btn btn-primary",
         width = "100%"
       ),
-      setup_ui(ns("nca_setup")),
+      nca_setup_ui(ns("nca_setup")),
     ),
     #' Results
     nav_panel(
@@ -75,7 +75,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server(
+    nca_setup <- nca_setup_server(
       "nca_setup",
       adnca_data,
       pknca_data,
@@ -89,25 +89,14 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
 
-    session$userData$settings <- list(
-      settings =  settings,
-      slope_rules = slope_rules
-    ) # This will be saved in the results zip folder
-
     # This will be saved in the results zip folder
     session$userData$settings <- settings
     session$userData$ratio_table <- ratio_table
     session$userData$slope_rules <- slope_rules
 
     reactable_server("manual_slopes",
-                     reactive(slope_rules$manual_slopes()),
+                     reactive(slope_rules()),
                      columns = NULL)
-
-    # List all irrelevant warnings to suppres in the NCA calculation
-    irrelevant_regex_warnings <- c(
-      "No intervals for data$",
-      "^Too few points for half-life"
-    )
 
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
@@ -135,7 +124,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         # Update units table
         processed_pknca_data <- processed_pknca_data()
         if (!is.null(session$userData$units_table())) {
-          processed_pknca_data$units <- session$userData$units_table()
+          processed_pknca_data$units <- dplyr::rows_update(
+            processed_pknca_data$units,
+            dplyr::select(session$userData$units_table(), -default),
+            by = c("PCSPEC", "PPTESTCD", "PPORRESU"),
+            unmatched = "ignore"
+          )
         }
 
         #' Calculate results
@@ -165,11 +159,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
             remove_pp_not_requested()
         },
         warning = function(w) {
-          if (!grepl(paste(irrelevant_regex_warnings, collapse = "|"),
-                     conditionMessage(w))) {
-            pknca_warn_env$warnings <- append(pknca_warn_env$warnings, conditionMessage(w))
-          }
-          invokeRestart("muffleWarning")
+          log_warn("Warning during NCA calculation: {conditionMessage(w)}")
+          pknca_warn_env$warnings <- append(
+            pknca_warn_env$warnings,
+            .parse_pknca_warning(w)
+          )
         })
 
         # Display unique warnings thrown by PKNCA run.
@@ -272,6 +266,31 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     msg <- paste0(
       "Unknown error detected when calculating NCA results,",
       " please inspect the logs and report a bug."
+    )
+  }
+
+  HTML(gsub("\\\n", "<br>", msg))
+}
+
+.parse_pknca_warning <- function(w) {
+  msg <- conditionMessage(w)
+
+  # Ignore all warnings that are irrelevant for the user
+  irrelevant_regex_warnings <- c(
+    "No intervals for data$",
+    "^Too few points for half-life"
+  )
+  if (grepl(paste(irrelevant_regex_warnings, collapse = "|"), msg)) {
+    return(NULL)
+  }
+
+  # Warning about FREXINT, RCAMINT for non-urine (partial intervals)
+  # TODO: At some point these parameters may only be made available for urine data,
+  # so this warning may need to be rephrased or removed.
+  if (grepl("Units are provided for some but not all parameters; missing for: ae", msg)) {
+    msg <- paste0(
+      "Urine Parameters (FREXINT, RCAMINT) calculated for non-urine samples",
+      "will return NA values and units"
     )
   }
 

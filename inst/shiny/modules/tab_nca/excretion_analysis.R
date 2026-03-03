@@ -11,6 +11,15 @@ excretion_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
+    # Header row with help button
+    div(
+      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
+      tags$h2(
+        "Excretion Analysis",
+        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
+      ),
+      excretion_help_ui()
+    ),
     div(
       class = "excretion-section-container",
       id = ns("excretion_section_container"),
@@ -202,4 +211,44 @@ excretion_server <- function(id, input_pknca_data) {
       session$userData$results$additional_analysis$excretion_results <- results_output()
     })
   })
+}
+
+# Excretion analysis help button dropdown
+excretion_help_ui <- function() {
+  dropdown(
+    div(
+      class = "anca-help-dropdown",
+      style = "min-width:22em; max-width:30em;",
+      tags$h2("Excretion Analysis Help"),
+      p("Analyze excretion parameters for selected matrices (e.g., URINE) and intervals."),
+      tags$ul(
+        tags$li(
+          tags$b("Select Matrices"), ": Choose specimen types for excretion analysis."
+        ),
+        tags$li(
+          tags$b("Map End Time"), ": Select the column marking the end of sample collection."
+        ),
+        tags$li(
+          tags$b("Adjust for Body Weight"),
+          ": Optionally adjust dose by body weight if available."
+        ),
+        tags$li(
+          tags$b("Select Parameters"), ": Pick excretion PK parameters to calculate."
+        ),
+        tags$li(
+          tags$b("Interval Types"), ": Choose to analyze by samples, dose profiles or both."
+        ),
+        tags$li(
+          tags$b("Results Table"), ": View and download calculated excretion results."
+        )
+      ),
+      p(
+        "Complete selections and click Submit. Results update below. ",
+        "If VOLUME is missing, analysis is disabled."
+      )
+    ),
+    style = "unite",
+    icon = icon("question"),
+    status = "primary"
+  )
 }

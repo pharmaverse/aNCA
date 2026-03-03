@@ -9,9 +9,11 @@
 #' The module also allows the user to review the data after performing filtering and mapping -
 #' the processed data will go further into the analysis pipeline.
 #'
-#' @returns list containing two reactives:
-#'            - data -> processed data for further analysis
-#'            - grouping_variables -> grouping variables specified by the user.
+#' @returns list containing:
+#'   - pknca_data: reactive PKNCAdata object for analysis
+#'   - adnca_raw: reactive raw uploaded ADNCA data (or dummy data)
+#'   - extra_group_vars: reactive grouping variables from column mapping
+#'   - settings_override: reactive uploaded settings (or NULL)
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
@@ -220,6 +222,7 @@ tab_data_server <- function(id) {
 
     list(
       pknca_data = pknca_data,
+      adnca_raw = uploaded_data$adnca_raw,
       extra_group_vars = extra_group_vars,
       settings_override = uploaded_data$settings_override
     )

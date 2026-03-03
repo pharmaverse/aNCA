@@ -8,7 +8,7 @@ library(aNCA)
 library(dplyr)
 
 # Load raw data #
-data_path <- "../data/data.rds"
+data_path <- "../input_data.rds"
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data ########################################
@@ -40,8 +40,8 @@ preprocessed_adnca <- adnca_data %>%
   adjust_class_and_length(metadata_nca_variables)
 
 ## Setup NCA settings in the PKNCA object ########################
-auc_data <- settings_list$settings$partial_aucs
-units_table <- settings_list$final_units
+int_parameters <- settings_list$settings$int_parameters
+units_table <- settings_list$units_table
 parameters_selected_per_study <- settings_list$settings$parameters$selections
 study_types_df <- settings_list$settings$parameters$types_df
 extra_vars_to_keep <-  settings_list$extra_vars_to_keep
@@ -67,7 +67,7 @@ pknca_obj <- preprocessed_adnca %>%
   ) %>%
 
   update_main_intervals(
-    auc_data = auc_data,
+    int_parameters = int_parameters,
     parameter_selections = parameters_selected_per_study,
     study_types_df =  study_types_df,
     impute = settings_list$settings$data_imputation$impute_c0
@@ -77,7 +77,12 @@ pknca_obj <- preprocessed_adnca %>%
   {
     pknca_obj <- .
     if (!is.null(units_table)) {
-      pknca_obj[["units"]] <- units_table
+      pknca_obj[["units"]] <- dplyr::rows_update(
+        pknca_obj[["units"]],
+        units_table,
+        by = c("PPTESTCD", "PPORRESU"),
+        unmatched = "ignore"
+      )
     }
     pknca_obj
   }
