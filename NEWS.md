@@ -2,6 +2,10 @@
 
 ## Features added
 
+* Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
+* Exploration plots: "Add to Exports" button saves named plot snapshots to the ZIP export. When custom snapshots exist for a plot type, only the snapshots are exported (the default plot is omitted). QC plot also included in the export tree (#1002)
+* CDISC ZIP export now includes a `Pre_Specs.xlsx` file with variable-level metadata for each selected dataset (#998)
+* New "About" tab in the app sidebar with links, citation, authors, license, version info, and a "Copy session info" button (#1015)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
@@ -25,6 +29,7 @@
 * Partial interval parameters section now allows other calculations than `AUCINT`, such as `RCAMINT`, `AUCINTD` or `CAVGINT` among others (#524)
 * Slope selector plots count with grouping options (#333)
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
+* Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
