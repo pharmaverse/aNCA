@@ -62,7 +62,7 @@ the route column (ROUTE, CDISC: C66729).
 }
 }
 \examples{
-adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+adnca <- adnca_example
 conc_data <- format_pkncaconc_data(
   ADNCA = adnca,
   group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
