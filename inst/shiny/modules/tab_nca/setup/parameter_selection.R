@@ -530,11 +530,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           locs, "Additional Analysis > Ratios"
         )
       }
-      if (type == "Sparse") {
-        locs <- c(
-          locs, "Setup > Parameter Selection (sparse)"
-        )
-      }
+      # if (type == "Sparse") {
+      #   locs <- c(
+      #     locs, "Setup > Parameter Selection (sparse)"
+      #   )
+      # }
       if (length(locs) == 0) "Setup > Parameter Selection"
       else paste(locs, collapse = "; ")
     },
