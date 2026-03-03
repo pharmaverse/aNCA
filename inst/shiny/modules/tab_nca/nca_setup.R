@@ -76,7 +76,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       pknca_data$conc$data <- pknca_data$conc$data %>%
         dplyr::filter(
           PARAM %in% settings_output$analyte(),
-          PCSPEC %in% settings_output$pcspec()
+          PCSPEC %in% settings_output$pcspec(),
+          ATPTREF %in% settings_output$profile()
         )
       pknca_data
     })
