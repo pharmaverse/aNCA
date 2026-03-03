@@ -53,15 +53,15 @@ readers <- list(
   csv = function(path) read.csv(path, na = c("", "NA")),
   rds = function(path) readRDS(path),
   xlsx = function(path) {
-    if (!requireNamespace("openxlsx2", silently = TRUE))
+    if (!requireNamespace("readxl", quietly = TRUE))
       stop(
-        "Handling .xlsx files requires `openxlsx2` package, please install it with ",
-        "`install.packages('openxlsx2')`"
+        "Handling .xlsx files requires `readxl` package, please install it with ",
+        "`install.packages('readxl')`"
       )
-    openxlsx2::read_xlsx(path)
+    as.data.frame(readxl::read_excel(path))
   },
   sas7bdat = function(path) {
-    if (!requireNamespace("haven", silently = TRUE))
+    if (!requireNamespace("haven", quietly = TRUE))
       stop(
         "Handling .sas7bdat files requires `haven` package, please install it with ",
         "`install.packages('haven')`"
@@ -69,7 +69,7 @@ readers <- list(
     haven::read_sas(path)
   },
   xpt = function(path) {
-    if (!requireNamespace("haven", silently = TRUE))
+    if (!requireNamespace("haven", quietly = TRUE))
       stop(
         "Handling .xpt files requires `haven` package, please install it with ",
         "`install.packages('haven')`"
@@ -77,7 +77,7 @@ readers <- list(
     haven::read_xpt(path)
   },
   parquet = function(path) {
-    if (!requireNamespace("arrow", silently = TRUE))
+    if (!requireNamespace("arrow", quietly = TRUE))
       stop(
         "Handling .parquet files requires `arrow` package, please install it with ",
         "`install.packages('arrow')`"
@@ -108,10 +108,12 @@ read_settings <- function(path, name) {
     obj$slope_rules <- as.data.frame(bind_rows(obj$slope_rules))
   }
 
-  if (!is.null(obj$settings) && is.list(obj$settings)) {
-    obj$settings$int_parameters <- bind_rows(obj$settings$int_parameters)
+  if (!is.null(obj$settings$units) && is.list(obj$settings$units)) {
     obj$settings$units <- bind_rows(obj$settings$units)
-    obj$settings$parameters$types_df <- bind_rows(obj$settings$parameters$types_df)
+  }
+
+  if (!is.null(obj$settings$int_parameters) && is.list(obj$settings$int_parameters)) {
+    obj$settings$int_parameters <- bind_rows(obj$settings$int_parameters)
   }
 
   obj
