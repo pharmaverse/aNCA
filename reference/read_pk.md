@@ -1,6 +1,6 @@
-# Reads PK datasets from various file formats.
+# Reads datasets from various file formats.
 
-Reads PK datasets from various file formats.
+Reads datasets from various file formats.
 
 ## Usage
 
@@ -35,5 +35,6 @@ Currently supported file formats include:
 ## Examples
 
 ``` r
-df <- read_pk(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+path <- system.file("shiny/tests/testthat/dummy_simplified.csv", package = "aNCA")
+df <- read_pk(path)
 ```

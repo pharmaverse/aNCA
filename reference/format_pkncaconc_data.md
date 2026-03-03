@@ -91,7 +91,7 @@ The function performs the following steps:
 ## Examples
 
 ``` r
-adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+adnca <- adnca_example
 conc_data <- format_pkncaconc_data(
   ADNCA = adnca,
   group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),

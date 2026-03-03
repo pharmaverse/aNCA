@@ -67,6 +67,9 @@
   : Helper: adjust class and length (optional) for a data.frame based on
   metadata_nca_variables
 
+- [`adnca_example`](https://pharmaverse.github.io/aNCA/reference/adnca_example.md)
+  : adnca_example
+
 - [`apply_filters()`](https://pharmaverse.github.io/aNCA/reference/apply_filters.md)
   : Apply Filters to a Dataset
 
@@ -300,7 +303,7 @@
   : Prepare Data for PK Dose QC Plotting
 
 - [`read_pk()`](https://pharmaverse.github.io/aNCA/reference/read_pk.md)
-  : Reads PK datasets from various file formats.
+  : Reads datasets from various file formats.
 
 - [`read_settings()`](https://pharmaverse.github.io/aNCA/reference/read_settings.md)
   : Helper Logic to parse and structure settings YAML

@@ -25,7 +25,7 @@ imputation for each.
 ## Examples
 
 ``` r
-adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+adnca <- adnca_example
 pknca_data <- PKNCA_create_data_object(adnca)
 pknca_data <- create_start_impute(pknca_data)
 ```
