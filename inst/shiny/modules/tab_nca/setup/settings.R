@@ -120,6 +120,10 @@ settings_ui <- function(id) {
                     ": End time of the interval."
                   )
                 ),
+                p(
+                  tags$b("Note:"),
+                  " Rows with missing Start or End values will be ignored."
+                ),
                 tags$table(
                   class = "imputation-help-table",
                   tags$thead(
