@@ -117,12 +117,11 @@ settings_ui <- function(id) {
                     ": End time of the interval."
                   )
                 ),
-                tags$h5("Available parameters"),
                 tags$table(
                   class = "imputation-help-table",
                   tags$thead(
                     tags$tr(
-                      tags$th("Code"),
+                      tags$th("Parameter"),
                       tags$th("Description")
                     )
                   ),
