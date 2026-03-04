@@ -30,10 +30,13 @@ units_table_server <- function(id, mydata) {
         dplyr::mutate(default = TRUE)
 
       if (!is.null(session$userData$units_table())) {
+        custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
+        by_cols <- intersect(names(default_units), names(custom_units))
+        by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
         dplyr::rows_update(
           default_units,
-          dplyr::mutate(session$userData$units_table(), default = FALSE),
-          by = c("PCSPEC", "PPTESTCD", "PPORRESU"),
+          custom_units,
+          by = by_cols,
           unmatched = "ignore"
         ) %>%
           modal_units_table()
@@ -202,10 +205,13 @@ units_table_server <- function(id, mydata) {
       default_units <- mydata()$units %>%
         dplyr::mutate(default = TRUE)
 
+      custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
+      by_cols <- intersect(names(default_units), names(custom_units))
+      by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
       dplyr::rows_update(
         default_units,
-        dplyr::mutate(session$userData$units_table(), default = FALSE),
-        by = c("PCSPEC", "PPTESTCD", "PPORRESU"),
+        custom_units,
+        by = by_cols,
         unmatched = "ignore"
       ) %>%
         modal_units_table()

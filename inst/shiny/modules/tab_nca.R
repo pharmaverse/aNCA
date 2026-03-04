@@ -124,10 +124,15 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         # Update units table
         processed_pknca_data <- processed_pknca_data()
         if (!is.null(session$userData$units_table())) {
-          processed_pknca_data$units <- dplyr::rows_update(
+          custom_units <- select(
+            session$userData$units_table(), -any_of("default")
+          )
+          by_cols <- intersect(names(processed_pknca_data$units), names(custom_units))
+          by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
+          processed_pknca_data$units <- rows_update(
             processed_pknca_data$units,
-            dplyr::select(session$userData$units_table(), -default),
-            by = c("PCSPEC", "PPTESTCD", "PPORRESU"),
+            custom_units,
+            by = by_cols,
             unmatched = "ignore"
           )
         }

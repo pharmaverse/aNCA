@@ -33,6 +33,15 @@ settings:
     LAMZSPN:
       is.checked: yes
       threshold: 2
+  units:
+    PPTESTCD:
+    - cmax
+    - tmax
+    - auclast
+    PPSTRESU:
+    - ng/mL
+    - days
+    - days*ng/mL
   parameters:
     selections:
       Excretion Data:
