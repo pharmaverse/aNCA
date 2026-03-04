@@ -214,15 +214,23 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     })
 
     # Parameter exclusions: users can exclude individual PK parameter rows
-    # from TLG summary tables. Excluded rows get ANL01FL = NA in ADPP.
+    # from summary tables and mean plots. Excluded rows get ANL01FL = "" in ADPP.
     param_excl_rows <- parameter_exclusions_server(
       "parameter_exclusions", res_nca
     )
 
-    # Store excluded row indices for use in CDISC export
-    session$userData$param_exclusion_rows <- param_excl_rows
+    # Tag res_nca results with .__excl__ marker for CDISC export.
+    # The marker column survives arrange() reordering in export_cdisc().
+    res_nca_tagged <- reactive({
+      req(res_nca())
+      res <- res_nca()
+      excl <- param_excl_rows()
+      res$result$.__excl__ <- seq_len(nrow(res$result)) %in% excl
+      res
+    })
 
-    # Filtered results with excluded rows removed (for descriptive stats / TLG)
+    # Filtered results with excluded rows removed
+    # (for descriptive stats and parameter plots)
     res_nca_filtered <- reactive({
       req(res_nca())
       res <- res_nca()
@@ -267,10 +275,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca)
+    parameter_datasets_server("parameter_datasets", res_nca_tagged)
 
-    #' Parameter plots module
-    parameter_plots_server("parameter_plots", res_nca)
+    #' Parameter plots module (uses filtered results)
+    parameter_plots_server("parameter_plots", res_nca_filtered)
 
     # return results for use in other modules
     list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)

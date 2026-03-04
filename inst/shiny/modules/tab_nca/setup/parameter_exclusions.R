@@ -2,7 +2,7 @@
 #'
 #' UI and server logic for excluding PK parameter rows from TLG summary tables.
 #' Users select rows from the NCA results table and mark them for exclusion.
-#' Excluded rows are flagged via ANL01FL = NA in ADPP.
+#' Excluded rows are flagged via ANL01FL = "" in ADPP.
 #'
 #' - Red: Manually excluded parameter rows
 
@@ -32,7 +32,7 @@ parameter_exclusions_ui <- function(id) {
           p("Exclude PK parameter results from TLG summary tables and mean plots."),
           tags$ul(
             tags$li("Select rows in the table below and provide a reason."),
-            tags$li(tags$b("Red"), ": Excluded from TLGs (ANL01FL = NA in ADPP)"),
+            tags$li(tags$b("Red"), ": Excluded from TLGs (ANL01FL = \"\" in ADPP)"),
             tags$li("Excluded rows remain in the dataset but are filtered from summaries.")
           ),
           p("Remove exclusions anytime by clicking the X button.")
@@ -69,9 +69,17 @@ parameter_exclusions_server <- function(id, res_nca) {
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
 
-    # Build a wide-format results table for display
+    # Clear exclusions when NCA results change (stale row indices)
+    observeEvent(res_nca(), {
+      exclusion_list(list())
+      xbtn_counter(0)
+    })
+
+    # Build a wide-format results table for display.
+    # Depends on exclusion_list() so the table re-renders with updated row colors.
     param_data <- reactive({
       req(res_nca())
+      exclusion_list()
       res <- res_nca()
       result_df <- res$result
 

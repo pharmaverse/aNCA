@@ -8,10 +8,9 @@
 #'  * pknca_result_raw Output from function call `pk.nca()` (needs to be merged with upper later
 #'                      on but now we avoid merge conflict)
 #'
-#' @param res_nca Object with results of the NCA analysis.
-#' @param param_exclusion_rows Integer vector of row indices in `res_nca$result`
-#'   to exclude from TLGs. These rows get `ANL01FL = NA` in ADPP; all other
-#'   rows get `ANL01FL = "Y"`. Default `NULL` (no exclusions).
+#' @param res_nca Object with results of the NCA analysis. If
+#'   `res_nca$result` contains a `.__excl__` column (logical), excluded rows
+#'   (`TRUE`) get `ANL01FL = ""` in ADPP; included rows get `ANL01FL = "Y"`.
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -23,7 +22,7 @@
 #'
 #' @import dplyr
 #' @export
-export_cdisc <- function(res_nca, param_exclusion_rows = NULL) {
+export_cdisc <- function(res_nca) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
     filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
@@ -160,8 +159,8 @@ export_cdisc <- function(res_nca, param_exclusion_rows = NULL) {
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select only columns needed for PP, ADPP, ADNCA
-    select(any_of(metadata_nca_variables[["Variable"]])) %>%
+    # Select only columns needed for PP, ADPP, ADNCA (keep .__excl__ marker)
+    select(any_of(c(metadata_nca_variables[["Variable"]], ".__excl__"))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
@@ -210,7 +209,7 @@ export_cdisc <- function(res_nca, param_exclusion_rows = NULL) {
     )
 
   adpp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable))) %>%
+    select(any_of(c(CDISC_COLS$ADPP$Variable, ".__excl__"))) %>%
     # Deselect permitted columns with only NAs
     select(
       -which(
@@ -220,12 +219,13 @@ export_cdisc <- function(res_nca, param_exclusion_rows = NULL) {
       )
     ) %>%
     mutate(
-      ANL01FL = ifelse(
-        seq_len(nrow(.)) %in% param_exclusion_rows,
-        NA_character_,
+      ANL01FL = if (".__excl__" %in% names(.)) {
+        ifelse(.__excl__, "", "Y")
+      } else {
         "Y"
-      )
-    )
+      }
+    ) %>%
+    select(-any_of(".__excl__"))
 
   adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
