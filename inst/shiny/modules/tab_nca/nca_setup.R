@@ -51,12 +51,13 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     general_excl_override <- reactive(imported_settings()$general_exclusions)
 
     # Gather all settings from the appropriate module
-    settings <- settings_server(
+    settings_output <- settings_server(
       "nca_settings",
       data,
       adnca_data,
       imported_settings
     )
+    settings <- settings_output$all
 
     general_exclusions <- general_exclusions_server(
       "general_exclusions",
@@ -64,9 +65,47 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       general_excl_override
     )
 
-    # Create processed data object with applied settings.
-    base_pknca_data <- reactive({
-      req(adnca_data(), settings())
+    # Lightweight filtered data for parameter selection — only depends on
+    # analyte/pcspec, not on method, slopes, flags, or exclusions.
+    # Filters conc$data directly instead of building a full PKNCA data object.
+    param_selection_data <- reactive({
+      req(adnca_data(), settings_output$analyte(), settings_output$pcspec())
+      log_trace("Updating parameter selection data.")
+
+      pknca_data <- adnca_data()
+      pknca_data$conc$data <- pknca_data$conc$data %>%
+        dplyr::filter(
+          PARAM %in% settings_output$analyte(),
+          PCSPEC %in% settings_output$pcspec(),
+          ATPTREF %in% settings_output$profile()
+        )
+      pknca_data
+    })
+
+    parameters_output <- parameter_selection_server(
+      "nca_setup_parameter",
+      param_selection_data,
+      imported_params
+    )
+
+    final_settings <- reactive({
+
+      req(settings(), parameters_output$selections(), general_exclusions())
+
+      current_settings <- settings()
+      current_settings$general_exclusions <- general_exclusions()
+      current_settings$parameters <- list(
+        selections = parameters_output$selections(),
+        types_df = parameters_output$types_df()
+      )
+      current_settings
+    })
+
+    # Update pknca data object and intervals using summary output
+    processed_pknca_data <- reactive({
+      req(adnca_data(), settings(),
+          parameters_output$selections(), parameters_output$types_df())
+
       log_trace("Updating PKNCA::data object.")
 
       base_pknca_data <- PKNCA_update_data_object(
@@ -88,37 +127,9 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         shinyjs::hide(selector = ".bioavailability-picker")
       }
 
-      base_pknca_data
-    })
-
-    parameters_output <- parameter_selection_server(
-      "nca_setup_parameter",
-      base_pknca_data,
-      imported_params
-    )
-
-    final_settings <- reactive({
-
-      req(settings(), parameters_output$selections(), general_exclusions())
-
-      current_settings <- settings()
-      current_settings$general_exclusions <- general_exclusions()
-      current_settings$parameters <- list(
-        selections = parameters_output$selections(),
-        types_df = parameters_output$types_df()
-      )
-      current_settings
-    })
-
-    # Update intervals using summary output
-    processed_pknca_data <- reactive({
-      req(base_pknca_data(), parameters_output$selections(), parameters_output$types_df())
-
-      final_data <- base_pknca_data()
-
       # Call the updated function with the direct inputs
       final_data <- update_main_intervals(
-        data = base_pknca_data(),
+        data = base_pknca_data,
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
         int_parameters = settings()$int_parameters,
@@ -146,9 +157,34 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
 
     # Automatically update the units table when settings are uploaded.
     observeEvent(imported_settings(), {
-      # require units in settings, and that it is a data frame with rows
       req(imported_settings()$units, nrow(imported_settings()$units) > 0)
-      session$userData$units_table(imported_settings()$units)
+
+      imported_units <- imported_settings()$units
+      has_full_units <- all(c("PPORRESU", "conversion_factor") %in% names(imported_units))
+
+      if (has_full_units) {
+        session$userData$units_table(imported_units)
+      } else {
+        # Defaults-only format: wait for data-derived units, then resolve.
+        observe({
+          req(processed_pknca_data())
+          data_units <- processed_pknca_data()$units
+          merged <- apply_unit_defaults(imported_units, data_units)
+
+          if (nrow(merged$failed) > 0) {
+            msg <- paste0(
+              "Could not convert units for: ",
+              paste(merged$failed$PPTESTCD, collapse = ", "),
+              ". Data defaults will be used for these parameters."
+            )
+            log_warn(msg)
+            showNotification(msg, type = "warning", duration = 10)
+          }
+
+          session$userData$units_table(merged$units)
+        }) %>%
+          bindEvent(processed_pknca_data(), once = TRUE)
+      }
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit

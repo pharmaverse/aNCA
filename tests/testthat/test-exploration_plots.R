@@ -175,20 +175,22 @@ describe("exploration_individualplot:", {
         PARAM = analytes[1],
         PCSPEC = pcspecs[1],
         USUBJID = subjects[1]
-      )
+      ),
+      labels_df = metadata_nca_variables
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "PK Concentration - Time Profile")
-    expect_true(grepl("Concentration", p$labels$y))
-    expect_true(grepl("Time", p$labels$x))
-    expect_equal(p$labels$colour, "PARAM")
+    expect_true(grepl("Analysis Value", p$labels$y))
+    expect_true(grepl("Act. Rel. Time", p$labels$x))
+    expect_equal(p$labels$colour, "Parameter")
   })
 
   it("applies faceting", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      facet_by = "PARAM"
+      facet_by = "PARAM",
+      labels_df = metadata_nca_variables
     )
     expect_s3_class(p$facet, "FacetWrap")
   })
@@ -197,17 +199,27 @@ describe("exploration_individualplot:", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      ylog_scale = TRUE
+      ylog_scale = TRUE,
+      labels_df = metadata_nca_variables
     )
     plot_build <- ggplot_build(p)
     expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
   })
-
+  it("hides legend when show_legend is FALSE", {
+    p <- exploration_individualplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      show_legend = FALSE,
+      labels_df = metadata_nca_variables
+    )
+    expect_equal(p$theme$legend.position, "none")
+  })
   it("shows threshold line", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      threshold_value = 0.1
+      threshold_value = 0.1,
+      labels_df = metadata_nca_variables
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomHline" %in% layer_classes)
@@ -218,7 +230,8 @@ describe("exploration_individualplot:", {
     empty_data$conc$data <- empty_data$conc$data[0, ]
     p <- exploration_individualplot(
       pknca_data = empty_data,
-      color_by = "PARAM"
+      color_by = "PARAM",
+      labels_df = metadata_nca_variables
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "Error")
@@ -230,7 +243,8 @@ describe("exploration_individualplot:", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      show_dose = TRUE
+      show_dose = TRUE,
+      labels_df = metadata_nca_variables
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
@@ -298,7 +312,8 @@ describe("exploration_individualplot:", {
       pknca_data = pknca_data,
       color_by = "PARAM",
       x_limits = c(0, 12),
-      y_limits = c(0, 200)
+      y_limits = c(0, 200),
+      labels_df = metadata_nca_variables
     )
     expect_equal(p$coordinates$limits$x, c(0, 12))
     expect_equal(p$coordinates$limits$y, c(0, 200))
@@ -309,35 +324,35 @@ describe("exploration_meanplot:", {
   it("returns a ggplot object with mean labels", {
     p <- exploration_meanplot(
       pknca_data = pknca_data,
-      color_by = "PARAM"
+      color_by = "PARAM",
+      labels_df = metadata_nca_variables
     )
     expect_s3_class(p, "ggplot")
-    expect_true(grepl("Mean", p$labels$title))
-    expect_true(grepl("Mean", p$labels$y))
-    expect_true(grepl("Nominal", p$labels$x))
-    expect_equal(p$labels$colour, "PARAM")
+    expect_match(p$labels$title, "^Mean ")
+    expect_true(grepl("Mean Analysis Value", p$labels$y))
+    expect_true(grepl("Nom. Rel. Time", p$labels$x))
+    expect_equal(p$labels$colour, "Parameter")
+  })
+
+  it("does not duplicate the Mean prefix in the y-axis label", {
+    p <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      labels_df = metadata_nca_variables
+    )
+    expect_false(grepl("Mean Mean", p$labels$y))
+    expect_true(grepl("^Mean ", p$labels$y))
   })
 
   it("applies log10 scale to y-axis when ylog_scale is TRUE", {
     p <- exploration_meanplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      ylog_scale = TRUE
+      ylog_scale = TRUE,
+      labels_df = metadata_nca_variables
     )
     plot_build <- ggplot_build(p)
     expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
-  })
-
-  it("returns a ggplot object with mean labels", {
-    p <- exploration_meanplot(
-      pknca_data = pknca_data,
-      color_by = "PARAM"
-    )
-    expect_s3_class(p, "ggplot")
-    expect_true(grepl("Mean", p$labels$title))
-    expect_true(grepl("Mean", p$labels$y))
-    expect_true(grepl("Nominal", p$labels$x))
-    expect_equal(p$labels$colour, "PARAM")
   })
 
   it("shows SD error bars (min, max, and both)", {
@@ -345,7 +360,8 @@ describe("exploration_meanplot:", {
       pknca_data = pknca_data,
       color_by = "PARAM",
       sd_min = TRUE,
-      sd_max = TRUE
+      sd_max = TRUE,
+      labels_df = metadata_nca_variables
     )
     p_both_build <- ggplot_build(p_both)
     layer_classes <- sapply(p_both$layers, function(x) class(x$geom)[1])
@@ -356,11 +372,12 @@ describe("exploration_meanplot:", {
     p <- exploration_meanplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      ci = TRUE
+      ci = TRUE,
+      labels_df = metadata_nca_variables
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomRibbon" %in% layer_classes)
-    expect_true(grepl("(95% CI)", p$labels$colour))
+    expect_true(grepl("(95% CI)", p$labels$title))
   })
 
   it("can show both SD bars and CI ribbon", {
@@ -369,7 +386,8 @@ describe("exploration_meanplot:", {
       color_by = "PARAM",
       sd_min = TRUE,
       sd_max = TRUE,
-      ci = TRUE
+      ci = TRUE,
+      labels_df = metadata_nca_variables
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomErrorbar" %in% layer_classes)
@@ -381,7 +399,8 @@ describe("exploration_meanplot:", {
       pknca_data = pknca_data,
       color_by = "PARAM",
       show_dose = TRUE,
-      facet_by = "PARAM"
+      facet_by = "PARAM",
+      labels_df = metadata_nca_variables
     )
     layer_classes <- sapply(p$layers, function(x) class(x$geom)[1])
     expect_true("GeomVline" %in% layer_classes)
@@ -428,7 +447,8 @@ describe("exploration_meanplot:", {
     p_nfrlt <- exploration_meanplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      use_time_since_last_dose = FALSE
+      use_time_since_last_dose = FALSE,
+      labels_df = metadata_nca_variables
     )
     pb_nfrlt <- ggplot_build(p_nfrlt)
     nfrlt_vals <- unique(pknca_data$conc$data$NFRLT)
@@ -437,7 +457,8 @@ describe("exploration_meanplot:", {
     p_nrrlt <- exploration_meanplot(
       pknca_data = pknca_data,
       color_by = "PARAM",
-      use_time_since_last_dose = TRUE
+      use_time_since_last_dose = TRUE,
+      labels_df = metadata_nca_variables
     )
     pb_nrrlt <- ggplot_build(p_nrrlt)
     nrrlt_vals <- unique(pknca_data$conc$data$NRRLT)
@@ -450,7 +471,8 @@ describe("exploration_meanplot:", {
     empty_data$conc$data <- empty_data$conc$data[0, ]
     p <- exploration_meanplot(
       pknca_data = empty_data,
-      color_by = "PARAM"
+      color_by = "PARAM",
+      labels_df = metadata_nca_variables
     )
     expect_s3_class(p, "ggplot")
     expect_equal(p$labels$title, "Error")
@@ -463,7 +485,8 @@ describe("exploration_meanplot:", {
       pknca_data = pknca_data,
       color_by = "PARAM",
       x_limits = c(0, 12),
-      y_limits = c(0, 200)
+      y_limits = c(0, 200),
+      labels_df = metadata_nca_variables
     )
     expect_equal(p$coordinates$limits$x, c(0, 12))
     expect_equal(p$coordinates$limits$y, c(0, 200))
@@ -572,5 +595,25 @@ describe("exploration_meanplot:", {
     exp_dn_ylabs <- paste0(exp_dn_ylabs, "/(", doses_u, ")]")
 
     expect_true(dn_ylab %in% exp_dn_ylabs)
+  })
+})
+
+describe("filter_by_list:", {
+  it("returns data unchanged when filtering_list is an empty list", {
+    result <- filter_by_list(conc_data, list())
+    expect_equal(nrow(result), nrow(conc_data))
+    expect_equal(result, conc_data)
+  })
+
+  it("returns data unchanged when filtering_list is NULL", {
+    result <- filter_by_list(conc_data, NULL)
+    expect_equal(result, conc_data)
+  })
+
+  it("filters correctly with a single column filter", {
+    first_subj <- unique(conc_data$USUBJID)[1]
+    result <- filter_by_list(conc_data, list(USUBJID = first_subj))
+    expect_true(all(result$USUBJID == first_subj))
+    expect_true(nrow(result) < nrow(conc_data))
   })
 })

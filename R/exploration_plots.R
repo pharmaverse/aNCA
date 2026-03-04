@@ -9,6 +9,7 @@
 #' @param show_facet_n Logical; if `TRUE`, shows the number of subjects in each facet.
 #' Default is `FALSE`.
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
+#' @param show_legend Logical; whether to display the plot legend. Default is `TRUE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
 #' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
@@ -46,6 +47,7 @@ exploration_individualplot <- function(
     labels_df = NULL,
     filtering_list = NULL,
     use_time_since_last_dose = FALSE,
+    show_legend = TRUE,
     line_type = "default") {
   
     if (line_type == "both") {
@@ -85,13 +87,14 @@ exploration_individualplot <- function(
 
   # If no tooltip variables defined use some default ones
   if (is.null(tooltip_vars)) {
-    tooltip_vars <- c(
-      pknca_data$conc$columns$time,
+    tooltip_vars <- unique(c(
       pknca_data$conc$columns$concentration,
-      pknca_data$conc$columns$subject
-    )
+      pknca_data$conc$columns$concu,
+      pknca_data$conc$columns$time,
+      pknca_data$conc$columns$timeu,
+      color_by
+    ))
   }
-
   g_lineplot(
     data = individual_data,
     x_var = pknca_data$conc$columns$time,
@@ -110,7 +113,8 @@ exploration_individualplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
-    linetype_by = linetype_by
+    linetype_by = linetype_by,
+    show_legend = show_legend
   )
 }
 
@@ -124,7 +128,7 @@ exploration_individualplot <- function(
 #' @param sd_max Logical; if `TRUE`, plot upper SD error bars. Default is `FALSE`.
 #' @param ci Logical; if `TRUE`, plot 95% confidence interval ribbon. Default is `FALSE`.
 #' @param tooltip_vars Character vector of column names to include in the tooltip.
-#' Default includes dose group vars and "Mean".
+#' Default includes dose group vars and "AVAL" (renamed from Mean).
 #' @param x_limits Numeric vector of length 2 for x-axis limits (min, max).
 #' Default is `NULL` (no limits).
 #' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
@@ -138,6 +142,7 @@ exploration_meanplot <- function(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  show_legend = TRUE,
   threshold_value = NULL,
   show_dose = FALSE,
   palette = "default",
@@ -188,11 +193,13 @@ exploration_meanplot <- function(
 
   # If no tooltip variable specified, use the default ones
   if (is.null(tooltip_vars)) {
-    tooltip_vars <- c(
+    tooltip_vars <- unique(c(
       "Mean",
+      pknca_data$conc$columns$concu,
       x_var,
-      group_vars(pknca_data$dose)
-    )
+      pknca_data$conc$columns$timeu,
+      color_by
+    ))
   }
 
   plot <- g_lineplot(
@@ -213,9 +220,9 @@ exploration_meanplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
-    linetype_by = if (line_type != "default") "line_type_label" else NULL
+    linetype_by = if (line_type != "default") "line_type_label" else NULL,
+    show_legend = show_legend
   )
-
   # If there is no mean data, just return the plot
   if (nrow(mean_data) == 0) {
     return(plot)
@@ -296,7 +303,6 @@ process_data_individual <- function(pknca_data,
   } else {
     pknca_data$conc$data
   }
-
   # Handle dose profile duplicates if filtering by ATPTREF so pre-dose samples
   # assigned only to one profile are retained
   if ("ATPTREF" %in% names(filtering_list)) {
@@ -312,7 +318,6 @@ process_data_individual <- function(pknca_data,
   # Apply filtering
   processed_data <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!sym(conc_col)))
-
   # Remove non-positive concentrations if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     processed_data <- processed_data %>% dplyr::filter(!!sym(conc_col) > 0)
@@ -359,6 +364,55 @@ process_data_mean <- function(pknca_data,
   )
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
 
+  processed <- .prepare_mean_data(
+    pknca_data, x_var, y_var, dose_group_cols,
+    filtering_list, show_dose, dose_normalize
+  )
+
+  # Calculate summary statistics by grouping columns
+  summarised_data <- processed %>%
+    dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
+    dplyr::summarise(
+      Mean = round(mean(!!rlang::sym(y_var), na.rm = TRUE), 3),
+      SD = sd(!!rlang::sym(y_var), na.rm = TRUE),
+      N = dplyr::n(),
+      SE = SD / sqrt(N),
+      .groups = "drop"
+    ) %>%
+    dplyr::filter(N >= 3) %>%
+    dplyr::mutate(
+      SD_min = Mean - SD,
+      SD_max = Mean + SD,
+      CI_lower = Mean - 1.96 * SE,
+      CI_upper = Mean + 1.96 * SE
+    ) %>%
+    # Make sure the nominal time column is always the first column
+    select(any_of(c(x_var)), everything())
+
+  if (!is.null(facet_by) && length(facet_by) > 0) {
+    subj_col <- pknca_data$conc$columns$subject
+    facet_counts <- processed %>%
+      dplyr::distinct(!!!rlang::syms(facet_by), !!rlang::sym(subj_col)) %>%
+      dplyr::group_by(!!!rlang::syms(facet_by)) %>%
+      dplyr::summarise(USUBJID_COUNT = dplyr::n_distinct(!!rlang::sym(subj_col)), .groups = "drop")
+
+    summarised_data <- summarised_data %>%
+      dplyr::left_join(facet_counts, by = facet_by) %>%
+      dplyr::mutate(USUBJID_COUNT = ifelse(is.na(USUBJID_COUNT), 0L, USUBJID_COUNT))
+  }
+
+  # Remove non-positive means if log scale is selected (for posterior plotting)
+  if (isTRUE(ylog_scale)) {
+    summarised_data <- summarised_data %>%
+      dplyr::filter(Mean > 0)
+  }
+  summarised_data
+}
+
+#' Prepare data for mean plot: derive dose times, filter, and adjust
+#' @noRd
+.prepare_mean_data <- function(pknca_data, x_var, y_var, dose_group_cols,
+                               filtering_list, show_dose, dose_normalize) {
   # Derive dose times if requested
   data <- if (show_dose || dose_normalize) {
     data <- derive_last_dose_time(
@@ -392,44 +446,7 @@ process_data_mean <- function(pknca_data,
       dplyr::mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
       dplyr::ungroup()
   }
-
-  # Calculate summary statistics by grouping columns
-  summarised_data <- processed %>%
-    dplyr::group_by(!!!rlang::syms(grouping_cols)) %>%
-    dplyr::summarise(
-      Mean = round(mean(!!rlang::sym(y_var), na.rm = TRUE), 3),
-      SD = sd(!!rlang::sym(y_var), na.rm = TRUE),
-      N = dplyr::n(),
-      SE = SD / sqrt(N),
-      .groups = "drop"
-    ) %>%
-    dplyr::filter(N >= 3) %>%
-    dplyr::mutate(
-      SD_min = Mean - SD,
-      SD_max = Mean + SD,
-      CI_lower = Mean - 1.96 * SE,
-      CI_upper = Mean + 1.96 * SE
-    ) %>%
-    # Make sure the nominal time column is always the first column
-    select(any_of(c(x_var)), everything())
-
-  if (!is.null(facet_by) && length(facet_by) > 0) {
-    subj_col <- pknca_data$conc$columns$subject
-    facet_counts <- processed %>%
-      dplyr::distinct(!!!rlang::syms(facet_by), !!rlang::sym(subj_col)) %>%
-      dplyr::group_by(!!!rlang::syms(facet_by)) %>%
-      dplyr::summarise(USUBJID_COUNT = dplyr::n_distinct(!!rlang::sym(subj_col)), .groups = "drop")
-
-    summarised_data <- summarised_data %>%
-      dplyr::left_join(facet_counts, by = facet_by)
-  }
-
-  # Remove non-positive means if log scale is selected (for posterior plotting)
-  if (isTRUE(ylog_scale)) {
-    summarised_data <- summarised_data %>%
-      dplyr::filter(Mean > 0)
-  }
-  summarised_data
+  processed
 }
 
 #' Filter a data frame by a list of column-value pairs
@@ -470,11 +487,13 @@ filter_by_list <- function(data, filtering_list) {
 finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) {
   plot_build <- ggplot2::ggplot_build(plot)
 
-  plot +
+  mean_title <- paste0("Mean ", plot_build$plot$labels$title)
+  if (isTRUE(ci)) mean_title <- paste0(mean_title, " (95% CI)")
+  p <- plot +
     labs(
-      x = paste("Nominal", plot_build$plot$labels$x),
-      y = paste("Mean", plot_build$plot$labels$y),
-      title = paste("Mean", plot_build$plot$labels$title)
+      x = plot_build$plot$labels$x,
+      y = sub("Mean", "Mean Analysis Value", plot_build$plot$labels$y),
+      title = mean_title
     ) +
     list(
       .add_mean_layers(
@@ -487,6 +506,10 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
         group_var = "color_var"
       )
     )
+  p$data$tooltip_text <- sub(
+    "<b>Mean</b>", "<b>Mean Analysis Value</b>", p$data$tooltip_text
+  )
+  p
 }
 
 #' Derive last dose time for each sample in the concentration data of a PKNCAdata object

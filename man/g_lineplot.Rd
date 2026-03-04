@@ -11,9 +11,10 @@ g_lineplot(
   x_unit = NULL,
   y_unit = NULL,
   color_by,
+  color_labels = NULL,
   facet_by = NULL,
   group_by = NULL,
-  facet_count_n = "USUBJID",
+  facet_count_n = NULL,
   x_limits = NULL,
   y_limits = NULL,
   ylog_scale = FALSE,
@@ -22,7 +23,8 @@ g_lineplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   vline_var = NULL,
-  linetype_by = NULL
+  linetype_by = NULL,
+  show_legend = TRUE
 )
 }
 \arguments{
@@ -40,6 +42,9 @@ pre-processed by either \code{process_data_individual} or \code{process_data_mea
 \item{color_by}{A character vector specifying the column(s) from the original
 dataset that are used to determine the color of the lines and points.}
 
+\item{color_labels}{Optional character vector of labels for the color legend.
+Default is \code{NULL} (uses \code{color_by} values).}
+
 \item{facet_by}{A character vector of column names to facet the plot by.
 Default is \code{NULL} for no faceting.}
 
@@ -47,7 +52,7 @@ Default is \code{NULL} for no faceting.}
 the lines. Default is NULL for no grouping.}
 
 \item{facet_count_n}{A character string specifying the column name used to
-count unique subjects per facet. Default is "USUBJID".}
+count unique subjects per facet. Default is \code{NULL} (no counts shown).}
 
 \item{x_limits}{Numeric vector of length 2 for x-axis limits (min, max).
 Default is \code{NULL} (no limits).}
@@ -70,6 +75,8 @@ Only used if \code{show_threshold} is \code{TRUE}.}
 
 \item{vline_var}{Optional character string specifying the column name for vertical
 lines.}
+
+\item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 }
 \value{
 A \code{ggplot} object representing the line plot.

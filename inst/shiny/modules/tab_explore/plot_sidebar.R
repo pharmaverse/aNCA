@@ -11,6 +11,13 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   sidebar(
     position = "right",
     open = TRUE,
+    actionButton(
+      ns("add_to_exports"),
+      label = "Add to Exports",
+      icon = icon("plus"),
+      class = "btn btn-primary btn-sm",
+      width = "100%"
+    ),
     selectInput(
       ns("palette"),
       "Select Color Theme:",
@@ -103,6 +110,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns = ns
     ),
     checkboxInput(ns("show_dose"), label = "Show Dose Times"),
+    checkboxInput(ns("show_legend"), label = "Show Legend", value = TRUE),
     div(
       style = "display:flex; gap:8px;",
       div(style = "flex:1;", numericInput(ns("x_min"), label = "X Min", value = NULL)),
@@ -143,7 +151,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       data <- pknca_data()$conc$data
       conc_groups <- group_vars(pknca_data()$conc)
       dose_groups <- group_vars(pknca_data()$dose)
-      dose_col <- pknca_data()$dose$columns$dose
+      dose_col <- c(pknca_data()$dose$columns$dose, pknca_data()$dose$columns$doseu)
       subject_col <- pknca_data()$conc$columns$subject
 
       # Update the param picker input
@@ -257,24 +265,28 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
     )
 
     # Return all inputs as a list of reactives
-    reactive({
-      list(
-        palette = input$palette,
-        color_by = input$colorby,
-        facet_by = input$facetby,
-        show_facet_n = input$show_facet_n,
-        ylog_scale = input$log,
-        threshold_value = input$threshold_value,
-        show_dose = input$show_dose,
-        x_limits = c(input$x_min, input$x_max),
-        y_limits = c(input$y_min, input$y_max),
-        sd_max = input$sd_max,
-        sd_min = input$sd_min,
-        ci = input$ci,
-        filtering_list = filtering_list(),
-        use_time_since_last_dose = input$timescale == "By Dose Profile",
-        y_axis_values = input$y_axis_values
-      )
-    })
+    list(
+      inputs = reactive({
+        list(
+          palette = input$palette,
+          color_by = input$colorby,
+          facet_by = input$facetby,
+          show_facet_n = input$show_facet_n,
+          ylog_scale = input$log,
+          show_legend = input$show_legend,
+          threshold_value = input$threshold_value,
+          show_dose = input$show_dose,
+          x_limits = c(input$x_min, input$x_max),
+          y_limits = c(input$y_min, input$y_max),
+          sd_max = input$sd_max,
+          sd_min = input$sd_min,
+          ci = input$ci,
+          filtering_list = filtering_list(),
+          use_time_since_last_dose = input$timescale == "By Dose Profile",
+          y_axis_values = input$y_axis_values
+        )
+      }),
+      add_to_exports = reactive(input$add_to_exports)
+    )
   })
 }
