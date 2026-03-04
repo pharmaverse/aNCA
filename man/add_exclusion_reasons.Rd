@@ -13,10 +13,13 @@ add_exclusion_reasons(pknca_data, exclusion_list)
 \itemize{
 \item reason: character string with the exclusion reason (e.g., "Vomiting")
 \item rows: integer vector of row indices to apply the reason to
+\item exclude_from_tlg: logical, if TRUE the rows are also flagged
+with ANL01FL = NA so TLGs can filter them out
 }}
 }
 \value{
-The modified PKNCAdata object with updated exclusion reasons in the concentration object.
+The modified PKNCAdata object with updated exclusion
+reasons and ANL01FL in the concentration object.
 }
 \description{
 This function adds exclusion reasons to the \code{exclude} column of the concentration object

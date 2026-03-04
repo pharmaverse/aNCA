@@ -816,8 +816,11 @@ remove_pp_not_requested <- function(pknca_res) {
 #' @param exclusion_list A list of lists, each with elements:
 #'   - reason: character string with the exclusion reason (e.g., "Vomiting")
 #'   - rows: integer vector of row indices to apply the reason to
+#'   - exclude_from_tlg: logical, if TRUE the rows are also flagged
+#'     with ANL01FL = NA so TLGs can filter them out
 #'
-#' @return The modified PKNCAdata object with updated exclusion reasons in the concentration object.
+#' @return The modified PKNCAdata object with updated exclusion
+#'   reasons and ANL01FL in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   exclude_col <- pknca_data$conc$columns[["exclude"]]
@@ -826,6 +829,12 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     pknca_data$conc$columns[["exclude"]] <- "exclude"
     exclude_col <- "exclude"
   }
+
+  # Initialise ANL01FL if not present
+  if (!"ANL01FL" %in% names(pknca_data$conc$data)) {
+    pknca_data$conc$data$ANL01FL <- "Y"
+  }
+
   for (excl in exclusion_list) {
     reason <- excl$reason
     rows <- excl$rows
@@ -838,8 +847,14 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
       pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
         pknca_data$conc$data[[exclude_col]][rows] == "",
         reason,
-        paste0(pknca_data$conc$data[[exclude_col]][rows], "; ", reason)
+        paste0(
+          pknca_data$conc$data[[exclude_col]][rows],
+          "; ", reason
+        )
       )
+    }
+    if (isTRUE(excl$exclude_from_tlg)) {
+      pknca_data$conc$data$ANL01FL[rows] <- NA_character_
     }
   }
   pknca_data

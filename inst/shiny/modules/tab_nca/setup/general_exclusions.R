@@ -132,7 +132,11 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
         current <- exclusion_list()
         xbtn_id <- paste0("remove_exclusion_reason_", xbtn_counter() + 1)
         xbtn_counter(xbtn_counter() + 1)
-        list_new_reason <- list(list(reason = reason, rows = rows_sel, xbtn_id = xbtn_id))
+        list_new_reason <- list(list(
+          reason = reason, rows = rows_sel,
+          xbtn_id = xbtn_id,
+          exclude_from_tlg = FALSE
+        ))
         exclusion_list(append(current, list_new_reason))
         # Clear selected rows and reason input
         updateTextInput(session, "exclusion_reason", value = "")
@@ -173,14 +177,29 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
           tags$tr(
             tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
             tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
+            tags$th(
+              "Excl. TLG",
+              style = "font-weight:600; padding:4px 8px; text-align:center;"
+            ),
             tags$th("", style = "width:36px;")
           )
         ),
         tags$tbody(
           lapply(lst, function(item) {
+            cb_id <- paste0(item$xbtn_id, "_tlg")
             tags$tr(
-              tags$td(paste(item$rows, collapse = ", "), style = "padding:4px 8px;"),
+              tags$td(
+                paste(item$rows, collapse = ", "),
+                style = "padding:4px 8px;"
+              ),
               tags$td(item$reason, style = "padding:4px 8px;"),
+              tags$td(
+                style = "text-align:center; padding:4px 8px;",
+                checkboxInput(
+                  ns(cb_id), label = NULL,
+                  value = isTRUE(item$exclude_from_tlg)
+                )
+              ),
               tags$td(
                 actionButton(
                   ns(item$xbtn_id),
@@ -194,6 +213,25 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
           })
         )
       )
+    })
+
+    # Sync "Exclude from TLGs" checkboxes back to exclusion_list
+    observe({
+      lst <- exclusion_list()
+      for (item in lst) {
+        cb_id <- paste0(item$xbtn_id, "_tlg")
+        cb_val <- input[[cb_id]]
+        if (!is.null(cb_val) && !identical(cb_val, item$exclude_from_tlg)) {
+          updated <- lapply(exclusion_list(), function(x) {
+            if (identical(x$xbtn_id, item$xbtn_id)) {
+              x$exclude_from_tlg <- cb_val
+            }
+            x
+          })
+          exclusion_list(updated)
+          break
+        }
+      }
     })
 
     # Prepare exclusion list for return (without xbtn_id, for downstream use)
