@@ -48,15 +48,25 @@ tab_nca_ui <- function(id) {
             nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
           )
         ),
-        nav_panel(
-          "Parameter Exclusions",
-          parameter_exclusions_ui(ns("parameter_exclusions"))
-        ),
-        nav_panel(
-          "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
-        ),
-        nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-        nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+        nav_menu(
+          "Parameter",
+          nav_panel(
+            "Descriptive Statistics",
+            descriptive_statistics_ui(ns("descriptive_stats"))
+          ),
+          nav_panel(
+            "Plots",
+            parameter_plots_ui(ns("parameter_plots"))
+          ),
+          nav_panel(
+            "Dataset",
+            parameter_datasets_ui(ns("parameter_datasets"))
+          ),
+          nav_panel(
+            "Exclusions",
+            parameter_exclusions_ui(ns("parameter_exclusions"))
+          )
+        )
       )
     ),
     #' Additional analysis

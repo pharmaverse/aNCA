@@ -54,7 +54,8 @@ parameter_exclusions_ui <- function(id) {
           "width:14px; height:14px; background:", PARAM_EXCL_COLOR,
           "; border:1px solid #ddd;"
         )),
-        span("Excluded from TLGs", style = "font-size:0.9em;")
+        span("Excluded from TLGs (summary tables and mean plots)",
+             style = "font-size:0.9em;")
       )
     ),
     card(reactable_ui(ns("param_table")), class = "border-0 shadow-none")
