@@ -99,7 +99,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             ),
             div(
               downloadButton(ns("download_zip"), "Export ZIP with Results"),
-              style = "text-align: center; margin-top: 0.5em;"
+              style = "width: 100%; text-align: center; margin-top: 0.5em;"
             )
           ),
           easyClose = TRUE,
