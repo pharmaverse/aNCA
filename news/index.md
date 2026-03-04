@@ -135,6 +135,10 @@
 - Creation of intervals reworked to prevent doses being combined if no
   samples are taken post dose
   ([\#963](https://github.com/pharmaverse/aNCA/issues/963))
+- Parameter selection no longer resets after changes to NCA setup and
+  slope selector- apart from changes to analyte and pcspec that change
+  the study types detected
+  ([\#1008](https://github.com/pharmaverse/aNCA/issues/1008))
 
 ## aNCA 0.1.0
 
