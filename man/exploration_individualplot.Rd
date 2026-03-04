@@ -10,7 +10,6 @@ exploration_individualplot(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
-  show_legend = TRUE,
   threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
@@ -20,6 +19,7 @@ exploration_individualplot(
   labels_df = NULL,
   filtering_list = NULL,
   use_time_since_last_dose = FALSE,
+  show_legend = TRUE,
   line_type = "default"
 )
 }
@@ -35,8 +35,6 @@ Default is \code{NULL} (no faceting).}
 Default is \code{FALSE}.}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
-
-\item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 
 \item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
 Default is \code{NULL} (no threshold).}
@@ -63,6 +61,8 @@ Default is \code{NULL} (no filtering).}
 
 \item{use_time_since_last_dose}{Logical; if \code{TRUE}, x-axis represents time since last dose.
 Default is \code{FALSE} (time since first dose).}
+
+\item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 
 \item{line_type}{Character; "default" (default), "dose-normalized" to specify lines to
 be normalized by dose amount or "both" to include both normalized and non-normalized lines.}

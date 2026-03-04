@@ -49,41 +49,41 @@ exploration_individualplot <- function(
     use_time_since_last_dose = FALSE,
     show_legend = TRUE,
     line_type = "default") {
-  
-    if (line_type == "both") {
-      # Dose-normalized data
-      dn_data <- process_data_individual(
-        pknca_data = pknca_data,
-        filtering_list = filtering_list,
-        ylog_scale = ylog_scale,
-        show_dose = show_dose,
-        use_time_since_last_dose = use_time_since_last_dose,
-        dose_normalize = TRUE
-      )
-      dn_data$line_type_label <- "Dose-normalized"
-      # default data
-      nn_data <- process_data_individual(
-        pknca_data = pknca_data,
-        filtering_list = filtering_list,
-        ylog_scale = ylog_scale,
-        show_dose = show_dose,
-        use_time_since_last_dose = use_time_since_last_dose,
-        dose_normalize = FALSE
-      )
-      nn_data$line_type_label <- "default"
-      individual_data <- dplyr::bind_rows(dn_data, nn_data)
-      linetype_by <- "line_type_label"
-    } else {
-      individual_data <- process_data_individual(
-        pknca_data = pknca_data,
-        filtering_list = filtering_list,
-        ylog_scale = ylog_scale,
-        show_dose = show_dose,
-        use_time_since_last_dose = use_time_since_last_dose,
-        dose_normalize = line_type == "dose-normalized"
-      )
-      linetype_by <- NULL
-    }
+
+  if (line_type == "both") {
+    # Dose-normalized data
+    dn_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = TRUE
+    )
+    dn_data$line_type_label <- "Dose-normalized"
+    # default data
+    nn_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = FALSE
+    )
+    nn_data$line_type_label <- "default"
+    individual_data <- dplyr::bind_rows(dn_data, nn_data)
+    linetype_by <- "line_type_label"
+  } else {
+    individual_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = line_type == "dose-normalized"
+    )
+    linetype_by <- NULL
+  }
 
   # If no tooltip variables defined use some default ones
   if (is.null(tooltip_vars)) {
