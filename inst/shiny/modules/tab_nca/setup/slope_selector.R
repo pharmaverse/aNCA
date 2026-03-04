@@ -37,29 +37,38 @@ slope_selector_ui <- function(id) {
       div(
         tags$h1("Slope selector guide"),
         p("
-            Upon initial NCA run, the plots will display the optimal slope selection.
-            However, you have the flexibility to change it. Remember to apply your
-            changes once you are done!
+            Upon the initial NCA run, the plots will showcase the optimal slope selection. 
+            However, you have the option to modify it according to your preferences. 
+            Please remember to apply your changes once you are done by clicking Run NCA again!
           "),
         div(class = "gif-grid",
           div(
             class = "gif-container",
             tags$h1("Check"),
+            tags$h6("Hover the mouse over points to inspect individual samples."),
             img(src = "images/slope_plot_check.gif", alt = "Check")
           ),
           div(
             class = "gif-container",
             tags$h1("Zoom"),
+            tags$h6("Click and drag to select and zoom in a specific area.",
+              " Double click to zoom out."
+            ),
             img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
           ),
           div(
             class = "gif-container",
             tags$h1("Select"),
+            tags$h6("Click the first and then the last point you want to include in the slope."),
             img(src = "images/slope_plot_select.gif", alt = "Select")
           ),
           div(
             class = "gif-container",
             tags$h1("Exclude"),
+            tags$h6(
+              tags$div("Double click a point to exclude it."),
+              tags$div("Double click it again to include it back.")
+            ),
             img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
           )
         )
