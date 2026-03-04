@@ -190,11 +190,14 @@ export_cdisc <- function(res_nca) {
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
-  # Add labels to the columns
+  # Add labels to the columns (skip internal columns like .__excl__ not in metadata)
   labels_map <- metadata_nca_variables %>%
     filter(!duplicated(Variable)) %>%
     pull(Label, Variable)
-  var_labels(cdisc_info) <- labels_map[names(cdisc_info)]
+  cdisc_labels <- labels_map[intersect(names(cdisc_info), names(labels_map))]
+  for (col_name in names(cdisc_labels)) {
+    attr(cdisc_info[[col_name]], "label") <- unname(cdisc_labels[col_name])
+  }
 
   # select pp columns
   pp <- cdisc_info %>%
