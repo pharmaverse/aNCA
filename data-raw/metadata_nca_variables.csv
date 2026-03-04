@@ -67,6 +67,7 @@ ADNCA,29,ALKPHBL,Alkaline Phosphatase at Baseline,float,Topic,Perm,TRUE,FALSE,12
 ADNCA,117,ALKPHBLU,Alkaline Phosphatase at Baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA
 ADNCA,209,ALLOQ,Analysis Lower Limit of Quantitation,float,Result Qualifier,Cond,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA
 ADNCA,193,ANL01FL,Analysis Flag 01,text,Record Qualifier,Cond,TRUE,FALSE,1,,FALSE,,FALSE,,,,NA
+ADPP,193,ANL01FL,Analysis Flag 01,text,Record Qualifier,Cond,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA
 ADNCA,194,ANL02FL,Analysis Flag 02,text,Record Qualifier,Cond,TRUE,FALSE,1,,FALSE,,FALSE,,,,NA
 ADNCA,210,ANL03FL,Analysis Flag 03,text,Record Qualifier,Cond,TRUE,FALSE,1,,FALSE,,FALSE,,,,NA
 ADNCA,211,ANL04FL,Analysis Flag 04,text,Record Qualifier,Cond,TRUE,FALSE,1,,FALSE,,FALSE,,,,NA

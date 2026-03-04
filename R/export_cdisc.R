@@ -8,7 +8,9 @@
 #'  * pknca_result_raw Output from function call `pk.nca()` (needs to be merged with upper later
 #'                      on but now we avoid merge conflict)
 #'
-#' @param res_nca Object with results of the NCA analysis.
+#' @param res_nca Object with results of the NCA analysis. If
+#'   `res_nca$result` contains a `.__excl__` column (logical), excluded rows
+#'   (`TRUE`) get `ANL01FL = ""` in ADPP; included rows get `ANL01FL = "Y"`.
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -157,8 +159,8 @@ export_cdisc <- function(res_nca) {
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select only columns needed for PP, ADPP, ADNCA
-    select(any_of(metadata_nca_variables[["Variable"]])) %>%
+    # Select only columns needed for PP, ADPP, ADNCA (keep .__excl__ marker)
+    select(any_of(c(metadata_nca_variables[["Variable"]], ".__excl__"))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
@@ -188,11 +190,14 @@ export_cdisc <- function(res_nca) {
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
-  # Add labels to the columns
+  # Add labels to the columns (skip internal columns like .__excl__ not in metadata)
   labels_map <- metadata_nca_variables %>%
     filter(!duplicated(Variable)) %>%
     pull(Label, Variable)
-  var_labels(cdisc_info) <- labels_map[names(cdisc_info)]
+  cdisc_labels <- labels_map[intersect(names(cdisc_info), names(labels_map))]
+  for (col_name in names(cdisc_labels)) {
+    attr(cdisc_info[[col_name]], "label") <- unname(cdisc_labels[col_name])
+  }
 
   # select pp columns
   pp <- cdisc_info %>%
@@ -207,7 +212,7 @@ export_cdisc <- function(res_nca) {
     )
 
   adpp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable))) %>%
+    select(any_of(c(CDISC_COLS$ADPP$Variable, ".__excl__"))) %>%
     # Deselect permitted columns with only NAs
     select(
       -which(
@@ -215,7 +220,15 @@ export_cdisc <- function(res_nca) {
           sapply(., function(x) all(is.na(x))) &
           !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
       )
-    )
+    ) %>%
+    mutate(
+      ANL01FL = if (".__excl__" %in% names(.)) {
+        ifelse(.__excl__, "", "Y")
+      } else {
+        "Y"
+      }
+    ) %>%
+    select(-any_of(".__excl__"))
 
   adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
