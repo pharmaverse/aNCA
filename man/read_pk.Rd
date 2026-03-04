@@ -2,7 +2,7 @@
 % Please edit documentation in R/readers.R
 \name{read_pk}
 \alias{read_pk}
-\title{Reads PK datasets from various file formats.}
+\title{Reads datasets from various file formats.}
 \usage{
 read_pk(path)
 }
@@ -13,7 +13,7 @@ read_pk(path)
 A data.frame object with loaded data.
 }
 \description{
-Reads PK datasets from various file formats.
+Reads datasets from various file formats.
 }
 \details{
 Currently supported file formats include:
@@ -25,6 +25,7 @@ Currently supported file formats include:
 \item \code{parquet}}
 }
 \examples{
-df <- read_pk(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+path <- system.file("shiny/tests/testthat/dummy_simplified.csv", package = "aNCA")
+df <- read_pk(path)
 
 }
