@@ -92,9 +92,12 @@ settings_ui <- function(id) {
       accordion_panel(
         title = "Partial Interval Calculations",
         fluidRow(
-          div(
-            class = "plot-widget-group",
-            actionButton(ns("addRow"), "Add Row"),
+          column(
+            width = 10,
+            actionButton(ns("addRow"), "Add Row")
+          ),
+          column(
+            width = 2,
             dropdown(
               div(
                 tags$h4("Partial Interval Calculations Help"),
