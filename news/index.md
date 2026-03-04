@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Searchable PK parameter reference table added to NCA \> Setup, showing
+  metadata, app location, and PKNCA function for each parameter
+  ([\#1023](https://github.com/pharmaverse/aNCA/issues/1023))
 - Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU`
   (default target units).
   ([\#1027](https://github.com/pharmaverse/aNCA/issues/1027))
