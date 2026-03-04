@@ -79,6 +79,9 @@
 - [`apply_mapping()`](https://pharmaverse.github.io/aNCA/reference/apply_mapping.md)
   : Apply UI-Based Column Mapping to a Dataset
 
+- [`apply_unit_defaults()`](https://pharmaverse.github.io/aNCA/reference/apply_unit_defaults.md)
+  : Apply default target units onto a data-derived units table
+
 - [`calculate_f()`](https://pharmaverse.github.io/aNCA/reference/calculate_f.md)
   : Calculate bioavailability with pivoted output
 

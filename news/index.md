@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU`
+  (default target units).
+  ([\#1027](https://github.com/pharmaverse/aNCA/issues/1027))
 - Exploration plots: toggle legend visibility, improved tooltips with
   color-by variable, and correct axis/legend labels
   ([\#988](https://github.com/pharmaverse/aNCA/issues/988))
