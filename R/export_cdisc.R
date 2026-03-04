@@ -9,6 +9,9 @@
 #'                      on but now we avoid merge conflict)
 #'
 #' @param res_nca Object with results of the NCA analysis.
+#' @param param_exclusion_rows Integer vector of row indices in `res_nca$result`
+#'   to exclude from TLGs. These rows get `ANL01FL = NA` in ADPP; all other
+#'   rows get `ANL01FL = "Y"`. Default `NULL` (no exclusions).
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -20,7 +23,7 @@
 #'
 #' @import dplyr
 #' @export
-export_cdisc <- function(res_nca) {
+export_cdisc <- function(res_nca, param_exclusion_rows = NULL) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
     filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
@@ -214,6 +217,13 @@ export_cdisc <- function(res_nca) {
         names(.) %in% CDISC_COLS$ADPP$Variable[CDISC_COLS$ADPP$Core == "Perm"] &
           sapply(., function(x) all(is.na(x))) &
           !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
+      )
+    ) %>%
+    mutate(
+      ANL01FL = ifelse(
+        seq_len(nrow(.)) %in% param_exclusion_rows,
+        NA_character_,
+        "Y"
       )
     )
 

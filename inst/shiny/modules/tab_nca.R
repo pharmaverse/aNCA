@@ -49,6 +49,10 @@ tab_nca_ui <- function(id) {
           )
         ),
         nav_panel(
+          "Parameter Exclusions",
+          parameter_exclusions_ui(ns("parameter_exclusions"))
+        ),
+        nav_panel(
           "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
         ),
         nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
@@ -199,6 +203,26 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       session$userData$final_units <- res_nca()$data$units
     })
 
+    # Parameter exclusions: users can exclude individual PK parameter rows
+    # from TLG summary tables. Excluded rows get ANL01FL = NA in ADPP.
+    param_excl_rows <- parameter_exclusions_server(
+      "parameter_exclusions", res_nca
+    )
+
+    # Store excluded row indices for use in CDISC export
+    session$userData$param_exclusion_rows <- param_excl_rows
+
+    # Filtered results with excluded rows removed (for descriptive stats / TLG)
+    res_nca_filtered <- reactive({
+      req(res_nca())
+      res <- res_nca()
+      excl <- param_excl_rows()
+      if (length(excl) > 0) {
+        res$result <- res$result[-excl, , drop = FALSE]
+      }
+      res
+    })
+
     #' Show slopes results
     pivoted_slopes <- reactive({
       req(res_nca())
@@ -226,8 +250,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
     )
 
-    #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, extra_group_vars)
+    #' Descriptive statistics module (uses filtered results)
+    descriptive_statistics_server("descriptive_stats", res_nca_filtered, extra_group_vars)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)

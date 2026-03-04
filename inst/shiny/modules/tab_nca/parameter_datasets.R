@@ -11,7 +11,9 @@ parameter_datasets_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
     CDISC <- reactive({
       req(res_nca())
-      export_cdisc(res_nca())
+      param_excl <- session$userData$param_exclusion_rows
+      excl_rows <- if (!is.null(param_excl)) param_excl() else NULL
+      export_cdisc(res_nca(), param_exclusion_rows = excl_rows)
     })
 
     reactable_server(
