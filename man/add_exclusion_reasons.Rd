@@ -11,10 +11,12 @@ add_exclusion_reasons(pknca_data, exclusion_list)
 
 \item{exclusion_list}{A list of lists, each with elements:
 \itemize{
-\item reason: character string with the exclusion reason (e.g., "Vomiting")
+\item reason: character string with the exclusion reason
 \item rows: integer vector of row indices to apply the reason to
-\item exclude_from_tlg: logical, if TRUE the rows are also flagged
-with ANL01FL = NA so TLGs can filter them out
+\item exclude_nca: logical, if TRUE the rows are excluded from NCA
+calculations (added to the exclude column)
+\item exclude_tlg: logical, if TRUE the rows are flagged with
+ANL01FL = NA so TLGs can filter them out
 }}
 }
 \value{

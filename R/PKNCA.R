@@ -814,10 +814,12 @@ remove_pp_not_requested <- function(pknca_res) {
 #'
 #' @param pknca_data A PKNCAdata object.
 #' @param exclusion_list A list of lists, each with elements:
-#'   - reason: character string with the exclusion reason (e.g., "Vomiting")
+#'   - reason: character string with the exclusion reason
 #'   - rows: integer vector of row indices to apply the reason to
-#'   - exclude_from_tlg: logical, if TRUE the rows are also flagged
-#'     with ANL01FL = NA so TLGs can filter them out
+#'   - exclude_nca: logical, if TRUE the rows are excluded from NCA
+#'     calculations (added to the exclude column)
+#'   - exclude_tlg: logical, if TRUE the rows are flagged with
+#'     ANL01FL = NA so TLGs can filter them out
 #'
 #' @return The modified PKNCAdata object with updated exclusion
 #'   reasons and ANL01FL in the concentration object.
@@ -843,7 +845,10 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
         "Row indices in exclusion_list are out of bounds",
         " for the exclusion: ", reason
       )
-    } else {
+    }
+    # NCA exclusion: add reason to exclude column
+    # Default TRUE for backward compatibility with older settings
+    if (isTRUE(excl$exclude_nca %||% TRUE)) {
       pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
         pknca_data$conc$data[[exclude_col]][rows] == "",
         reason,
@@ -853,7 +858,8 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
         )
       )
     }
-    if (isTRUE(excl$exclude_from_tlg)) {
+    # TLG exclusion: flag rows with ANL01FL = NA
+    if (isTRUE(excl$exclude_tlg)) {
       pknca_data$conc$data$ANL01FL[rows] <- NA_character_
     }
   }
