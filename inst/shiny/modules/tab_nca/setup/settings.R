@@ -208,7 +208,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       # if settings exist, update analyte picker input and check compatibility
       if (!is.null(settings)) {
-        if (all(settings$analyte %in% choices)) {
+
+        if (!is.null(settings$analyte) && all(settings$analyte %in% choices)) {
           selected <- settings$analyte
         } else {
           not_compatible <- c(not_compatible, "Analyte")
@@ -225,7 +226,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         # Additional settings (PCSPEC and ATPTREF handled later)
         updateSelectInput(session, inputId = "method", selected = settings$method)
 
-        if (!is.null(settings$bioavailability)) {
+        if (!is.null(settings$bioavailability) &&
+              adnca_data()$dose$data$std_route %>%
+                unique() %>%
+                length() > 1) {
           updateSelectInput(session,
             inputId = "bioavailability",
             selected = settings$bioavailability
@@ -236,8 +240,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
 
         # Partial AUCs #
-        int_parameters(settings$int_parameters)
-        refresh_reactable(refresh_reactable() + 1)
+        if (!is.null(settings$int_parameters)) {
+          int_parameters(settings$int_parameters)
+          refresh_reactable(refresh_reactable() + 1)
+        }
 
         # Flags #
         .update_rule_input(
@@ -276,7 +282,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         )
       }
 
-      if (length(not_compatible) > 0) {
+      if (!is.null(settings$analyte) && length(not_compatible) > 0) {
         msg <- paste0(
           paste0(not_compatible, collapse = ", "),
           " settings not found in data. Reverting to defaults."
@@ -474,7 +480,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       ))
     })
 
-    settings_debounced
+    list(
+      all = settings_debounced,
+      analyte = reactive(input$select_analyte),
+      pcspec = reactive(input$select_pcspec),
+      profile = reactive(input$select_profile)
+    )
   })
 }
 
@@ -538,6 +549,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 .update_rule_input <- function(session, id, checked, value) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
+
+  # If checked is NULL do nothing
+  if (is.null(checked)) return()
 
   updateCheckboxInput(session = session, inputId = rule_id, value = checked)
   if (checked) {

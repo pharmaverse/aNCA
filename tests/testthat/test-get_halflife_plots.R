@@ -16,6 +16,64 @@ describe("get_halflife_plot", {
     expect_true("layout" %in% names(plots[[1]]$x))
   })
 
+  it("always includes ATPTREF in title when passed via title_vars", {
+    plots <- withCallingHandlers(
+      get_halflife_plots(
+        base_pknca, title_vars = "ATPTREF"
+      )[["plots"]],
+      warning = function(w) {
+        if (grepl("Ignoring", conditionMessage(w)))
+          invokeRestart("muffleWarning")
+      }
+    )
+    expect_true(length(plots) >= 1)
+    # Every plot title must mention ATPTREF
+    for (p in plots) {
+      title <- p$x$layout$title
+      title_text <- if (is.list(title)) title$text else title
+      expect_true(grepl("ATPTREF", title_text))
+    }
+  })
+
+  it("shows correct ATPTREF per plot with multiple profiles", {
+    plots <- withCallingHandlers(
+      get_halflife_plots(
+        base_pknca, title_vars = "ATPTREF"
+      )[["plots"]],
+      warning = function(w) {
+        if (grepl("Ignoring", conditionMessage(w)))
+          invokeRestart("muffleWarning")
+      }
+    )
+    # Fixture has ATPTREF 1 and 2; verify both values appear
+    # across the set of plot titles
+    all_titles <- vapply(plots, function(p) {
+      t <- p$x$layout$title
+      if (is.list(t)) t$text else t
+    }, character(1))
+    atptref_values <- unique(
+      unlist(regmatches(all_titles, gregexpr("ATPTREF: \\d+", all_titles)))
+    )
+    expect_true("ATPTREF: 1" %in% atptref_values)
+    expect_true("ATPTREF: 2" %in% atptref_values)
+  })
+
+  it("does not include ATPTREF in title when title_vars is not set", {
+    plots <- withCallingHandlers(
+      get_halflife_plots(base_pknca)[["plots"]],
+      warning = function(w) {
+        if (grepl("Ignoring", conditionMessage(w)))
+          invokeRestart("muffleWarning")
+      }
+    )
+    expect_true(length(plots) >= 1)
+    for (p in plots) {
+      title <- p$x$layout$title
+      title_text <- if (is.list(title)) title$text else title
+      expect_false(grepl("ATPTREF", title_text))
+    }
+  })
+
   it("warns and returns empty list when no groups present", {
     pknca_no_groups <- base_pknca
     pknca_no_groups$conc$data <- pknca_no_groups$conc$data[0, ]

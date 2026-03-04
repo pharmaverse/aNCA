@@ -11,6 +11,13 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   sidebar(
     position = "right",
     open = TRUE,
+    actionButton(
+      ns("add_to_exports"),
+      label = "Add to Exports",
+      icon = icon("plus"),
+      class = "btn btn-primary btn-sm",
+      width = "100%"
+    ),
     selectInput(
       ns("palette"),
       "Select Color Theme:",
@@ -72,6 +79,11 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
+    conditionalPanel(
+      condition = "input.facetby.length > 0",
+      checkboxInput(ns("show_facet_n"), "Show number of subjects", value = FALSE),
+      ns = ns
+    ),
     checkboxInput(
       ns("log"),
       "Semi-log scale"
@@ -88,6 +100,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns = ns
     ),
     checkboxInput(ns("show_dose"), label = "Show Dose Times"),
+    checkboxInput(ns("show_legend"), label = "Show Legend", value = TRUE),
     div(
       style = "display:flex; gap:8px;",
       div(style = "flex:1;", numericInput(ns("x_min"), label = "X Min", value = NULL)),
@@ -128,7 +141,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       data <- pknca_data()$conc$data
       conc_groups <- group_vars(pknca_data()$conc)
       dose_groups <- group_vars(pknca_data()$dose)
-      dose_col <- pknca_data()$dose$columns$dose
+      dose_col <- c(pknca_data()$dose$columns$dose, pknca_data()$dose$columns$doseu)
       subject_col <- pknca_data()$conc$columns$subject
 
       # Update the param picker input
@@ -155,20 +168,6 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         selected = pcspec_choices[1]
       )
 
-      # Update the usubjid picker input (if it exists)
-      if ("usubjid" %in% names(input)) {
-        usubjid_choices <- data %>%
-          pull(USUBJID) %>%
-          unique()
-
-        updatePickerInput(
-          session,
-          "usubjid",
-          choices = usubjid_choices,
-          selected = usubjid_choices
-        )
-      }
-
       profile_choices <- data %>%
         mutate(ATPTREF = as.character(ATPTREF)) %>%
         pull(ATPTREF) %>%
@@ -184,19 +183,53 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
                                      dose_col, grouping_vars(), "ATPTREF"))
 
+      # Individual plots: update USUBJID picker, default color_by = USUBJID,
+      # no default facet.
+      # Mean plots: default color_by and facet_by from priority lists.
+      if ("usubjid" %in% names(input)) {
+        usubjid_choices <- data %>%
+          pull(USUBJID) %>%
+          unique()
+
+        updatePickerInput(
+          session,
+          "usubjid",
+          choices = usubjid_choices,
+          selected = usubjid_choices
+        )
+
+        default_color <- subject_col
+        default_facet <- NULL
+      } else {
+        color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", dose_col)
+        available_color <- intersect(color_priority, full_grouping_vars)
+        default_color <- if (length(available_color) > 0) {
+          available_color[1]
+        } else {
+          dose_col
+        }
+
+        facet_priority <- c("TRT01A", dose_col, "GROUP", "ACTARM", "COHORT")
+        available_facet <- intersect(facet_priority, full_grouping_vars)
+        default_facet <- if (length(available_facet) > 0) {
+          available_facet[1]
+        } else {
+          NULL
+        }
+      }
+
       updatePickerInput(
         session,
         "colorby",
         choices = full_grouping_vars,
-        # Always select USUBJID if individual, if mean plot, select nothing
-        selected = if ("usubjid" %in% names(input)) subject_col else dose_col
+        selected = default_color
       )
 
       updatePickerInput(
         session,
         "facetby",
         choices = full_grouping_vars,
-        selected = NULL
+        selected = default_facet
       )
     })
 
@@ -222,22 +255,27 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
     )
 
     # Return all inputs as a list of reactives
-    reactive({
-      list(
-        palette = input$palette,
-        color_by = input$colorby,
-        facet_by = input$facetby,
-        ylog_scale = input$log,
-        threshold_value = input$threshold_value,
-        show_dose = input$show_dose,
-        x_limits = c(input$x_min, input$x_max),
-        y_limits = c(input$y_min, input$y_max),
-        sd_max = input$sd_max,
-        sd_min = input$sd_min,
-        ci = input$ci,
-        filtering_list = filtering_list(),
-        use_time_since_last_dose = input$timescale == "By Dose Profile"
-      )
-    })
+    list(
+      inputs = reactive({
+        list(
+          palette = input$palette,
+          color_by = input$colorby,
+          facet_by = input$facetby,
+          show_facet_n = input$show_facet_n,
+          ylog_scale = input$log,
+          show_legend = input$show_legend,
+          threshold_value = input$threshold_value,
+          show_dose = input$show_dose,
+          x_limits = c(input$x_min, input$x_max),
+          y_limits = c(input$y_min, input$y_max),
+          sd_max = input$sd_max,
+          sd_min = input$sd_min,
+          ci = input$ci,
+          filtering_list = filtering_list(),
+          use_time_since_last_dose = input$timescale == "By Dose Profile"
+        )
+      }),
+      add_to_exports = reactive(input$add_to_exports)
+    )
   })
 }

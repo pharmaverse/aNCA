@@ -71,6 +71,19 @@ ui <- function() {
       });
     "),
 
+    tags$script("
+      Shiny.addCustomMessageHandler('copy_to_clipboard', function(text) {
+        navigator.clipboard.writeText(text).catch(function() {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        });
+      });
+    "),
+
     includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
 
@@ -104,6 +117,12 @@ ui <- function() {
         "TLG",
         value = "tlg",
         icon = icon("table-list")
+      ),
+      # ABOUT ----
+      nav_panel(
+        "About",
+        value = "about",
+        icon = icon("circle-info")
       )
     ),
     div(
@@ -127,6 +146,11 @@ ui <- function() {
         class = "page-container",
         condition = "input.page == 'tlg'",
         tab_tlg_ui("tlg")
+      ),
+      conditionalPanel(
+        class = "page-container",
+        condition = "input.page == 'about'",
+        tab_about_ui("about")
       )
     ),
 
@@ -140,8 +164,14 @@ server <- function(input, output, session) {
 
   # Store globally the name of the project
   session$userData$project_name <- reactive({
-    if (input$project_name != "") input$project_name else "Unnamed_Project"
+    if (input$project_name != "") input$project_name else ""
   })
+
+  # Helper (plain function, not reactive): prepend project name with separator
+  session$userData$project_prefix <- function(sep = "-") {
+    pn <- session$userData$project_name()
+    if (pn == "") "" else paste0(pn, sep)
+  }
 
   # Initially disable all tabs except the 'Data' tab
   shinyjs::disable(selector = "#page li a[data-value=nca]")
@@ -150,6 +180,24 @@ server <- function(input, output, session) {
 
   # DATA ----
   tab_data_outputs <- tab_data_server("data")
+
+  # Extract up to 3 unique STUDYIDs from uploaded data (shared by auto-populate and zip fallback)
+  session$userData$study_ids_label <- reactive({
+    raw <- tab_data_outputs$adnca_raw()
+    req(raw, "STUDYID" %in% names(raw))
+    study_ids <- unique(raw[["STUDYID"]])
+    study_ids <- study_ids[!is.na(study_ids)]
+    if (length(study_ids) > 3) study_ids <- study_ids[1:3]
+    if (length(study_ids) > 0) paste(study_ids, collapse = "_") else ""
+  })
+
+  # Auto-populate project name with STUDYID when data is uploaded
+  observeEvent(session$userData$study_ids_label(), {
+    label <- session$userData$study_ids_label()
+    if (label != "") {
+      updateTextInput(session, "project_name", value = label)
+    }
+  })
 
   # EXPLORATION ----
   tab_explore_server(
@@ -168,6 +216,9 @@ server <- function(input, output, session) {
 
   # TLG
   tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
+
+  # ABOUT ----
+  tab_about_server("about")
 
   # ZIP export
   zip_server(

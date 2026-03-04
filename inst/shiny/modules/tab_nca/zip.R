@@ -112,8 +112,12 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     output$download_zip <- downloadHandler(
       filename = function() {
         project <- session$userData$project_name()
-        datetime <- attr(res_nca(), "provenance")$datetime
-        paste0(project, "_", format(datetime, "%d-%m-%Y"), ".zip")
+        if (project == "") {
+          label <- session$userData$study_ids_label()
+          project <- if (label != "") paste0("NCA_", label) else "NCA"
+        }
+        project <- gsub("[^A-Za-z0-9_-]", "_", project)
+        paste0(project, ".zip")
       },
       content = function(fname) {
         tryCatch(
@@ -123,6 +127,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             progress$inc(0.1)
 
             output_tmpdir <- file.path(tempdir(), "output")
+            unlink(output_tmpdir, recursive = TRUE)
 
             prepare_export_files(
               target_dir = output_tmpdir,
@@ -165,10 +170,12 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 TREE_LIST <- list(
   exploration = list(
     individualplot = "",
-    meanplot = ""
+    meanplot = "",
+    qcplot = ""
   ),
   nca_results = list(
-    pivoted_results = ""
+    nca_pkparam = "",
+    nca_statistics = ""
   ),
   CDISC = list(
     pp = "",

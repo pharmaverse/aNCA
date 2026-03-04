@@ -1,0 +1,44 @@
+# Source the Shiny helper to test pure utility functions
+source(
+  file.path(system.file("shiny", package = "aNCA"), "functions", "zip-utils.R"),
+  local = TRUE
+)
+
+describe(".build_exploration_allowlist", {
+  it("returns defaults when no custom names exist", {
+    result <- .build_exploration_allowlist(
+      selected_types = c("individual", "mean", "qc"),
+      custom_names = character(0)
+    )
+    expect_equal(result, c("individualplot", "meanplot", "qcplot"))
+  })
+
+  it("replaces default with custom names for a type", {
+    custom <- c(my_plot = "individual", spaghetti = "individual")
+    result <- .build_exploration_allowlist(
+      selected_types = c("individual", "mean", "qc"),
+      custom_names = custom
+    )
+    expect_equal(result, c("my_plot", "spaghetti", "meanplot", "qcplot"))
+  })
+
+  it("excludes custom names for deselected types", {
+    custom <- c(indiv1 = "individual", mean1 = "mean")
+    result <- .build_exploration_allowlist(
+      selected_types = c("mean", "qc"),
+      custom_names = custom
+    )
+    expect_equal(result, c("mean1", "qcplot"))
+    expect_false("indiv1" %in% result)
+    expect_false("individualplot" %in% result)
+  })
+
+  it("returns empty vector when no types are selected", {
+    custom <- c(my_plot = "individual")
+    result <- .build_exploration_allowlist(
+      selected_types = character(0),
+      custom_names = custom
+    )
+    expect_equal(result, character(0))
+  })
+})

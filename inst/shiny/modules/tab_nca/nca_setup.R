@@ -14,7 +14,7 @@
 #'   * settings - List with raw settings as gathered by the module.
 #'   * slope_rules - Data frame with slope inclusions / exclusions provided by slope selector.
 
-setup_ui <- function(id) {
+nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
@@ -42,21 +42,22 @@ setup_ui <- function(id) {
   )
 }
 
-setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
+nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
 
     imported_settings <- reactive(settings_override()$settings)
     imported_slopes <- reactive(settings_override()$slope_rules)
-    imported_params <- reactive(imported_settings()$parameter_selections)
+    imported_params <- reactive(imported_settings()$parameters$selections)
     general_excl_override <- reactive(imported_settings()$general_exclusions)
 
     # Gather all settings from the appropriate module
-    settings <- settings_server(
+    settings_output <- settings_server(
       "nca_settings",
       data,
       adnca_data,
       imported_settings
     )
+    settings <- settings_output$all
 
     general_exclusions <- general_exclusions_server(
       "general_exclusions",
@@ -64,36 +65,26 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       general_excl_override
     )
 
-    # Create processed data object with applied settings.
-    base_pknca_data <- reactive({
-      req(adnca_data(), settings())
-      log_trace("Updating PKNCA::data object.")
+    # Lightweight filtered data for parameter selection — only depends on
+    # analyte/pcspec, not on method, slopes, flags, or exclusions.
+    # Filters conc$data directly instead of building a full PKNCA data object.
+    param_selection_data <- reactive({
+      req(adnca_data(), settings_output$analyte(), settings_output$pcspec())
+      log_trace("Updating parameter selection data.")
 
-      base_pknca_data <- PKNCA_update_data_object(
-        adnca_data = adnca_data(),
-        method = settings()$method,
-        selected_analytes = settings()$analyte,
-        selected_profile = settings()$profile,
-        selected_pcspec = settings()$pcspec,
-        should_impute_c0 = settings()$data_imputation$impute_c0,
-        hl_adj_rules = slope_rules$manual_slopes(),
-        exclusion_list = general_exclusions(),
-        keep_interval_cols = extra_group_vars()
-      )
-
-      # Show bioavailability widget if it is possible to calculate
-      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
-        shinyjs::show(selector = ".bioavailability-picker")
-      } else {
-        shinyjs::hide(selector = ".bioavailability-picker")
-      }
-
-      base_pknca_data
+      pknca_data <- adnca_data()
+      pknca_data$conc$data <- pknca_data$conc$data %>%
+        dplyr::filter(
+          PARAM %in% settings_output$analyte(),
+          PCSPEC %in% settings_output$pcspec(),
+          ATPTREF %in% settings_output$profile()
+        )
+      pknca_data
     })
 
     parameters_output <- parameter_selection_server(
       "nca_setup_parameter",
-      base_pknca_data,
+      param_selection_data,
       imported_params
     )
 
@@ -110,15 +101,35 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       current_settings
     })
 
-    # Update intervals using summary output
+    # Update pknca data object and intervals using summary output
     processed_pknca_data <- reactive({
-      req(base_pknca_data(), parameters_output$selections(), parameters_output$types_df())
+      req(adnca_data(), settings(),
+          parameters_output$selections(), parameters_output$types_df())
 
-      final_data <- base_pknca_data()
+      log_trace("Updating PKNCA::data object.")
+
+      base_pknca_data <- PKNCA_update_data_object(
+        adnca_data = adnca_data(),
+        method = settings()$method,
+        selected_analytes = settings()$analyte,
+        selected_profile = settings()$profile,
+        selected_pcspec = settings()$pcspec,
+        should_impute_c0 = settings()$data_imputation$impute_c0,
+        hl_adj_rules = slope_rules(),
+        exclusion_list = general_exclusions(),
+        keep_interval_cols = extra_group_vars()
+      )
+
+      # Show bioavailability widget if it is possible to calculate
+      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+        shinyjs::show(selector = ".bioavailability-picker")
+      } else {
+        shinyjs::hide(selector = ".bioavailability-picker")
+      }
 
       # Call the updated function with the direct inputs
       final_data <- update_main_intervals(
-        data = base_pknca_data(),
+        data = base_pknca_data,
         parameter_selections = parameters_output$selections(),
         study_types_df = parameters_output$types_df(),
         int_parameters = settings()$int_parameters,
@@ -146,9 +157,34 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
 
     # Automatically update the units table when settings are uploaded.
     observeEvent(imported_settings(), {
-      # require units in settings, and that it is a data frame with rows
       req(imported_settings()$units, nrow(imported_settings()$units) > 0)
-      session$userData$units_table(imported_settings()$units)
+
+      imported_units <- imported_settings()$units
+      has_full_units <- all(c("PPORRESU", "conversion_factor") %in% names(imported_units))
+
+      if (has_full_units) {
+        session$userData$units_table(imported_units)
+      } else {
+        # Defaults-only format: wait for data-derived units, then resolve.
+        observe({
+          req(processed_pknca_data())
+          data_units <- processed_pknca_data()$units
+          merged <- apply_unit_defaults(imported_units, data_units)
+
+          if (nrow(merged$failed) > 0) {
+            msg <- paste0(
+              "Could not convert units for: ",
+              paste(merged$failed$PPTESTCD, collapse = ", "),
+              ". Data defaults will be used for these parameters."
+            )
+            log_warn(msg)
+            showNotification(msg, type = "warning", duration = 10)
+          }
+
+          session$userData$units_table(merged$units)
+        }) %>%
+          bindEvent(processed_pknca_data(), once = TRUE)
+      }
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
@@ -162,16 +198,20 @@ setup_server <- function(id, data, adnca_data, extra_group_vars, settings_overri
       imported_slopes
     )
 
-    # Handle downloading and uploading settings
     output$settings_download <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_name(), "_settings_", Sys.Date(), ".yaml")
+        paste0(session$userData$project_prefix("_"), "settings_", Sys.Date(), ".yaml")
       },
       content = function(con) {
-        # Prepare the list
+        export_settings <- final_settings()
+        if (!is.null(export_settings$units)) {
+          export_settings$units <- export_settings$units %>%
+            dplyr::filter(!default) %>%
+            dplyr::select(-default)
+        }
         settings_to_save <- list(
-          settings = final_settings(),
-          slope_rules = slope_rules$manual_slopes()
+          settings = export_settings,
+          slope_rules = slope_rules()
         )
         # write yaml file
         yaml::write_yaml(settings_to_save, file = con)

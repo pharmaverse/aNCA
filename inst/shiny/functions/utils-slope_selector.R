@@ -197,7 +197,9 @@ update_plots_with_pknca <- function(pknca_data, plot_outputs, intervals_to_updat
     pknca_data$intervals,
     by = intersect(names(intervals_to_update), names(pknca_data$intervals))
   )
-  updated_plots <- suppressWarnings(get_halflife_plots(pknca_data)[["plots"]])
+  updated_plots <- suppressWarnings(
+    get_halflife_plots(pknca_data, title_vars = "ATPTREF")[["plots"]]
+  )
   plot_outputs[names(updated_plots)] <- updated_plots
   plot_outputs
 }
