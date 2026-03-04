@@ -229,11 +229,16 @@ export_cdisc <- function(res_nca) {
       } else {
         NA_character_
       },
-      ANL01FL = if ("is.excluded.hl" %in% names(.)) {
-        vals <- .[["is.excluded.hl"]]
-        ifelse(is.excluded.hl, NA_character_, "Y")
-      } else {
-        NULL
+      ANL01FL = {
+        flag <- if ("ANL01FL" %in% names(.)) {
+          ANL01FL
+        } else {
+          rep("Y", nrow(.))
+        }
+        if ("is.excluded.hl" %in% names(.)) {
+          flag <- ifelse(is.excluded.hl, NA_character_, flag)
+        }
+        flag
       },
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {

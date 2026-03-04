@@ -166,7 +166,13 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
-        do.call(render_list, purrr::list_modify(list(data = data()$conc$data), !!!list_options))
+        tlg_data <- data()$conc$data
+        if ("ANL01FL" %in% names(tlg_data)) {
+          tlg_data <- tlg_data[
+            !is.na(tlg_data$ANL01FL) & tlg_data$ANL01FL == "Y",
+          ]
+        }
+        do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")

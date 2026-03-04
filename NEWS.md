@@ -2,6 +2,7 @@
 
 ## Features added
 
+* General Exclusions: "Excl. TLG" checkbox per exclusion entry sets ANL01FL to NA, filtering those rows from TLGs (#1018)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
 * Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). (#1027)
 * Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
