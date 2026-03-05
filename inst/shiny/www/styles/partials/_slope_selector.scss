@@ -1,7 +1,6 @@
 .slope-selector-module {
   padding: 1em;
-  height: calc(100vh - 150px);
-  max-height: calc(100vh - 150px);
+  min-height: calc(100vh - 150px);
 
   .sw-dropdown {
     float: right;
@@ -79,7 +78,7 @@
 
   .slope-plots-container {
     margin-top: 2em;
-    height: calc(100vh - 220px);
+    min-height: calc(100vh - 220px);
     margin-bottom: 2em;
   }
 
@@ -88,7 +87,7 @@
     margin-bottom: 2em;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(33em, 1fr));
-    height: calc(100vh - 220px);
+    min-height: calc(100vh - 220px);
     gap: 1rem;
   }
 }
