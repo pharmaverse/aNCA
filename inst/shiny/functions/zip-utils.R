@@ -359,7 +359,7 @@ prepare_export_files <- function(target_dir,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
     facet_vars = "DOSEA",
     statistics = "Mean",
-    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"),
     info_vars = grouping_vars
   )
 
