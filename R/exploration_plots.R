@@ -413,6 +413,10 @@ process_data_mean <- function(pknca_data,
 #' @noRd
 .prepare_mean_data <- function(pknca_data, x_var, y_var, dose_group_cols,
                                filtering_list, show_dose, dose_normalize) {
+  dose_col <- pknca_data$dose$columns$dose
+  doseu_col <- pknca_data$dose$columns$doseu
+  y_var_unit <- pknca_data$conc$columns$concu
+
   # Derive dose times if requested
   data <- if (show_dose || dose_normalize) {
     data <- derive_last_dose_time(
