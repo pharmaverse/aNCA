@@ -32,6 +32,7 @@
 * Slope selector plots count with grouping options (#333)
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
+* Mapping will allow custom numeric input values instead of columns  for `ADOSEDUR` and `TRTRINT` (#1051)
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
