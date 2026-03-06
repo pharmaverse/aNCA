@@ -23,6 +23,7 @@ g_lineplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   vline_var = NULL,
+  linetype_by = NULL,
   show_legend = TRUE
 )
 }
