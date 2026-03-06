@@ -138,6 +138,23 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   pptx <- add_pptx_sl_title(pptx, "Extra Figures")
   pptx <- move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
 
+  additional_analysis <- attr(res_dose_slides, "additional_analysis")
+  additional_tables <- list(
+    "Matrix Ratios" = additional_analysis$matrix_ratios,
+    "Excretion Summary" = additional_analysis$excretion_summary
+  )
+  additional_tables <- additional_tables[
+    vapply(additional_tables, function(x) is.data.frame(x) && nrow(x) > 0, logical(1))
+  ]
+  if (length(additional_tables) > 0) {
+    pptx <- add_pptx_sl_title(pptx, "Additional Analysis Figures")
+    pptx <- purrr::reduce(
+      names(additional_tables),
+      function(pptx, title) add_pptx_sl_table(pptx, additional_tables[[title]], title = title, footer = ""),
+      .init = pptx
+    )
+  }
+
   print(pptx, target = path)
   invisible(TRUE)
 }
