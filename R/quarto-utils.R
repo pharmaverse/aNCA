@@ -12,18 +12,21 @@
 #' @param extra_setup (Optional) Character vector of extra setup lines to include after YAML.
 #' @returns Invisibly returns TRUE if the file was created.
 create_qmd_doc <- function(
-  quarto_path,
-  title = "NCA Report",
-  libraries = c("plotly", "flextable", "dplyr"),
-  rda_path = NULL,
-  template = NULL,
-  extra_setup = NULL
+    quarto_path,
+    title = "NCA Report",
+    libraries = c("plotly", "flextable", "dplyr"),
+    rda_path = NULL,
+    template = NULL,
+    extra_setup = NULL
 ) {
   yaml_header <- c(
     "---",
     paste0("title: \"", title, "\""),
-    "format: revealjs",
-    if (!is.null(template)) paste0("reference-doc: ", template) else NULL,
+    "format:",
+    "  revealjs:",
+    "    toc: true",
+    "    toc-depth: 1",
+    if (!is.null(template)) paste0("    reference-doc: ", template) else NULL,
     "execute:",
     "  echo: false",
     "  warning: false",
@@ -106,10 +109,16 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
   # Save an accessible object with all results
   rda_path <- paste0(dirname(quarto_path), "/results_slides_outputs.rda")
   save(list = as.character(quote(res_dose_slides)), file = rda_path)
-
+  
   # Generate the main quarto document
   create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
   for (i in seq_along(res_dose_slides)) {
+    # Section header — picked up automatically by revealjs TOC
+    group_label <- paste(res_dose_slides[[i]]$group, collapse = ", ")
+    write(
+      paste0("\n# Group ", i, " | ", group_label, "\n"),
+      file = quarto_path, append = TRUE
+    )
     add_qmd_sl_plottabletable(
       quarto_path = quarto_path,
       df1 = paste0("res_dose_slides[[", i, "]]$info"),
@@ -128,8 +137,9 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
       use_plotly = use_plotly
     )
   }
-
+  
   # Add the individual information slides
+  write("\n# Extra Figures (Individual Results)\n", file = quarto_path, append = TRUE)
   for (i in seq_along(res_dose_slides)) {
     for (subj in names(res_dose_slides[[i]]$ind_params)) {
       add_qmd_sl_plottabletable(
@@ -156,7 +166,7 @@ create_html_dose_slides <- function(res_dose_slides, path, title) {
   quarto_path <- gsub(paste0("\\.", output_format), ".qmd", path)
   use_plotly <- if (output_format == "html") TRUE else FALSE
   output_format <- if (output_format == "html") "all" else output_format
-
+  
   create_qmd_dose_slides(
     res_dose_slides,
     quarto_path = quarto_path,
