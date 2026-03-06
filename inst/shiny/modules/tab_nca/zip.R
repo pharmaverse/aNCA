@@ -46,8 +46,13 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
       showModal(
         modalDialog(
-          title = NULL,
+          title = "Export Results",
           tagList(
+            p(
+              class = "modal-intro",
+              "Choose what to include in your export and the file formats to generate.",
+              "Slide decks can be further customised in the next step."
+            ),
             fluidRow(
               column(
                 width = 6,
@@ -125,7 +130,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
           title = NULL,
           p("Ready to export. No slide customisation needed."),
           footer = tagList(
-            downloadButton(ns("download_zip"), "Export ZIP"),
+            downloadButton(ns("download_zip"), "Export ZIP", class = "btn btn-primary"),
             modalButton("Cancel")
           ),
           easyClose = TRUE,
@@ -208,9 +213,9 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       showModal(modalDialog(
         title = "Customise Slide Contents",
         p(
-          style = "color: #555; font-size: 0.92em; margin-bottom: 1em;",
-          "Select which slide sections to include and which PK parameters to show in the individual and summary slides. ",
-          "All selections below apply only to the exported slide deck."
+          class = "modal-intro",
+          "Select which slide sections to include and which PK parameters to show.",
+          "Changes apply only to the exported slide deck."
         ),
         fluidRow(
           column(
@@ -271,7 +276,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
             div(
               modalButton("Cancel"),
-              downloadButton(ns("download_zip_configured"), "Export")
+              downloadButton(ns("download_zip_configured"), "Export", class = "btn btn-primary")
             )
           )
         ),
@@ -285,8 +290,13 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       removeModal()
       showModal(
         modalDialog(
-          title = NULL,
+          title = "Export Results",
           tagList(
+            p(
+              class = "modal-intro",
+              "Choose what to include in your export and the file formats to generate.",
+              "Slide decks can be further customised in the next step."
+            ),
             fluidRow(
               column(
                 width = 6,
