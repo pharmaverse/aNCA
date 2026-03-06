@@ -114,9 +114,9 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
   create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
   for (i in seq_along(res_dose_slides)) {
     # Section header — picked up automatically by revealjs TOC
-    group_label <- paste(res_dose_slides[[i]]$group, collapse = ", ")
+    group_label <- gsub("\n", " | ", res_dose_slides[[i]]$group)
     write(
-      paste0("\n# Group ", i, " | ", group_label, "\n"),
+      paste0("\n# Group ", i, ": ", group_label, "\n"),
       file = quarto_path, append = TRUE
     )
     add_qmd_sl_plottabletable(

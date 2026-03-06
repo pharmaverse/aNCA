@@ -212,7 +212,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   toc <- new_toc()
   for (i in seq_len(n_groups)) {
     toc$add(
-      title = paste0("Group ", i, " | ", paste(res_dose_slides[[i]]$group, collapse = " | ")),
+      title = paste0("Group ", i, ": ", gsub("\n", " | ", res_dose_slides[[i]]$group)),
       slide_index = 2 + (i - 1) * slides_per_group
     )
   }
