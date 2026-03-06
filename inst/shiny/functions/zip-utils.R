@@ -317,7 +317,8 @@ prepare_export_files <- function(target_dir,
                                  grouping_vars,
                                  input,
                                  session,
-                                 progress) {
+                                 progress,
+                                 slide_sections = NULL) {
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
@@ -355,7 +356,8 @@ prepare_export_files <- function(target_dir,
   if ("results_slides" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
                  detail = "Saving slideshow...")
-    .export_slides(target_dir, res_nca, grouping_vars, input, session)
+    .export_slides(target_dir, res_nca, grouping_vars, input, session,
+                   slide_sections = slide_sections)
   }
   progress$inc(0.4)
 
@@ -396,7 +398,8 @@ prepare_export_files <- function(target_dir,
 #' @param session Shiny session object.
 #' @keywords internal
 #' @noRd
-.export_slides <- function(target_dir, res_nca, grouping_vars, input, session) {
+.export_slides <- function(target_dir, res_nca, grouping_vars, input, session,
+                           slide_sections = NULL) {
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
@@ -405,6 +408,17 @@ prepare_export_files <- function(target_dir,
     stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
     info_vars = grouping_vars
   )
+
+  # Attach additional_analysis from session results
+  additional_analysis <- session$userData$results$additional_analysis
+  if (is.null(additional_analysis)) additional_analysis <- list()
+  attr(res_dose_slides, "additional_analysis") <- list(
+    matrix_ratios = additional_analysis$matrix_ratios,
+    excretion_summary = additional_analysis$excretion_results
+  )
+
+  # Attach slide section selection (NULL means all sections)
+  attr(res_dose_slides, "slide_sections") <- slide_sections
 
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)

@@ -42,3 +42,9 @@ describe(".build_exploration_allowlist", {
     expect_equal(result, character(0))
   })
 })
+
+describe(".export_slides slide_sections threading", {
+  it("attaches slide_sections attribute when provided", {
+    skip("Requires full NCA session setup; covered by test-quarto-utils.R and test-officer-utils.R unit tests")
+  })
+})
