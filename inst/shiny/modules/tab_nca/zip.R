@@ -27,6 +27,9 @@ zip_ui <- function(id) {
       ),
       title = "Export all selected results as a ZIP archive",
       disabled = TRUE
+    ),
+    shinyjs::hidden(
+      downloadButton(ns("download_zip"), label = "")
     )
   )
 }
@@ -98,7 +101,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               )
             ),
             div(
-              downloadButton(ns("download_zip"), "Export ZIP with Results"),
+              actionButton(ns("confirm_export"), "Export ZIP with Results",
+                           class = "btn btn-primary"),
               style = "text-align: center; margin-top: 0.5em;"
             )
           ),
@@ -109,57 +113,118 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       )
     })
 
-    output$download_zip <- downloadHandler(
-      filename = function() {
-        project <- session$userData$project_name()
-        if (project == "") {
-          label <- session$userData$study_ids_label()
-          project <- if (label != "") paste0("NCA_", label) else "NCA"
+    observeEvent(input$confirm_export, {
+      slides_selected <- "results_slides" %in% input$res_tree &&
+        length(input$slide_formats) > 0
+
+      if (!slides_selected) {
+        removeModal()
+        shinyjs::click(ns("download_zip"))
+        return()
+      }
+
+      # Compute available sections dynamically
+      fixed_sections <- list(
+        list(id = "meanplot",   label = "Mean Plots"),
+        list(id = "statistics", label = "Summary Statistics"),
+        list(id = "ind_params", label = "PK Parameters"),
+        list(id = "ind_plots",  label = "Individual Plots")
+      )
+
+      additional_analysis <- session$userData$results$additional_analysis
+      if (is.null(additional_analysis)) additional_analysis <- list()
+      additional_available <- Filter(
+        function(x) is.data.frame(x) && nrow(x) > 0,
+        additional_analysis
+      )
+      additional_sections <- lapply(names(additional_available), function(name) {
+        list(id = name, label = gsub("_", " ", tools::toTitleCase(name)))
+      })
+
+      all_sections <- c(fixed_sections, additional_sections)
+      all_ids    <- vapply(all_sections, `[[`, character(1), "id")
+      all_labels <- setNames(vapply(all_sections, `[[`, character(1), "label"), all_ids)
+
+      removeModal()
+      showModal(modalDialog(
+        title = "Customise Slide Contents",
+        checkboxGroupInput(
+          ns("slide_section_choices"),
+          label = "Select sections to include in the slide deck:",
+          choices = all_labels,
+          selected = all_ids
+        ),
+        footer = tagList(
+          downloadButton(ns("download_zip_configured"), "Export"),
+          modalButton("Cancel")
+        ),
+        easyClose = TRUE,
+        size = "m"
+      ))
+    })
+
+    .zip_filename <- function() {
+      project <- session$userData$project_name()
+      if (project == "") {
+        label <- session$userData$study_ids_label()
+        project <- if (label != "") paste0("NCA_", label) else "NCA"
+      }
+      project <- gsub("[^A-Za-z0-9_-]", "_", project)
+      paste0(project, ".zip")
+    }
+
+    .run_export <- function(fname, slide_sections = NULL) {
+      tryCatch(
+        {
+          progress <- shiny::Progress$new(min = 0, max = 1)
+          progress$set(message = "Creating exports...")
+          progress$inc(0.1)
+
+          output_tmpdir <- file.path(tempdir(), "output")
+          unlink(output_tmpdir, recursive = TRUE)
+
+          prepare_export_files(
+            target_dir = output_tmpdir,
+            res_nca = res_nca(),
+            settings = settings,
+            grouping_vars = grouping_vars(),
+            input = input,
+            session = session,
+            progress = progress,
+            slide_sections = slide_sections
+          )
+
+          files <- list.files(output_tmpdir, recursive = TRUE)
+          wd <- getwd()
+          on.exit(setwd(wd), add = TRUE)
+          setwd(output_tmpdir)
+
+          progress$inc(0.9)
+          progress$set(message = "Creating exports...", detail = "Final touches...")
+          zip::zipr(zipfile = fname, files = files, mode = "mirror")
+
+          progress$set(message = "Complete!", detail = "")
+          progress$inc(1)
+        },
+        error = function(e) {
+          message("Download Error: ", e$message)
+          stop(e)
         }
-        project <- gsub("[^A-Za-z0-9_-]", "_", project)
-        paste0(project, ".zip")
-      },
+      )
+    }
+
+    output$download_zip <- downloadHandler(
+      filename = .zip_filename,
       content = function(fname) {
-        tryCatch(
-          {
-            progress <- shiny::Progress$new(min = 0, max = 1)
-            progress$set(message = "Creating exports...")
-            progress$inc(0.1)
+        .run_export(fname, slide_sections = NULL)
+      }
+    )
 
-            output_tmpdir <- file.path(tempdir(), "output")
-            unlink(output_tmpdir, recursive = TRUE)
-
-            prepare_export_files(
-              target_dir = output_tmpdir,
-              res_nca = res_nca(),
-              settings = settings,
-              grouping_vars = grouping_vars(),
-              input = input,
-              session = session,
-              progress = progress
-            )
-
-            files <- list.files(output_tmpdir, recursive = TRUE)
-
-            wd <- getwd()
-            on.exit(setwd(wd), add = TRUE)
-            setwd(output_tmpdir)
-
-            progress$inc(0.9)
-            progress$set(message = "Creating exports...",
-                         detail = "Final touches...")
-            zip::zipr(zipfile = fname, files = files, mode = "mirror")
-
-            progress$set(message = "Complete!",
-                         detail = "")
-            progress$inc(1)
-          },
-          error = function(e) {
-            message("Download Error:")
-            message(e$message)
-            stop(e)
-          }
-        )
+    output$download_zip_configured <- downloadHandler(
+      filename = .zip_filename,
+      content = function(fname) {
+        removeModal()
+        .run_export(fname, slide_sections = input$slide_section_choices)
       }
     )
   })
