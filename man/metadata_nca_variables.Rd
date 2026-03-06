@@ -26,6 +26,8 @@ A data frame with 361 rows and 14 variables:
 \item{mapping_section}{Character. Mapping section where the variable is classified in the App.}
 \item{mapping_alternatives}{Character. Alternative column names for the variable.}
 \item{mapping_order}{Numeric. Defines the mapped variables order in the mapped dataset}
+\item{allow_create_numeric}{Logical.
+Indicates if the mapping input should allow the user to introduce custom numbers}
 }
 }
 \source{

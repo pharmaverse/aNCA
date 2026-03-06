@@ -20,14 +20,18 @@ NON_STD_MAPPING_INFO <- data.frame(
     ""
   ),
   is_multiple_choice = c(TRUE, TRUE),
-  mapping_order = c(18, 5)
+  mapping_order = c(18, 5),
+  allow_create_numeric = c(FALSE, FALSE)
 )
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
-  select(Variable, Label, Values, mapping_tooltip,
-         mapping_section, mapping_alternatives, mapping_order) %>%
+  select(
+    Variable, Label, Values, mapping_tooltip,
+    mapping_section, mapping_alternatives, mapping_order,
+    allow_create_numeric
+  ) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
@@ -61,9 +65,21 @@ MAPPING_DESIRED_ORDER <- c(
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
-#' column_mapping_widget(ns = NS("example"), id = "STUDYID",
-#' tooltip_text = "Select the study identifier column.")
-.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
+#' column_mapping_widget(
+#'   ns = NS("example"), id = "STUDYID",
+#'   tooltip_text = "Select the study identifier column."
+#' )
+.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE,
+                                   allow_create_numeric = FALSE) {
+  selectize_options <- if (allow_create_numeric) {
+    list(
+      create = TRUE,
+      placeholder = "Select column or type a numeric value"
+    )
+  } else {
+    list(placeholder = "Select Column")
+  }
+
   div(
     class = "column-mapping-row",
     tooltip(
@@ -72,7 +88,7 @@ MAPPING_DESIRED_ORDER <- c(
         "",
         choices = NULL,
         multiple = multiple,
-        options = list(placeholder = "Select Column"),
+        options = selectize_options,
         width = "40%"
       ),
       tooltip_text,
@@ -98,9 +114,69 @@ MAPPING_DESIRED_ORDER <- c(
     h5(section_title),
     lapply(seq_len(nrow(mapping_df)), function(i) {
       row <- mapping_df[i, ]
-      .column_mapping_widget(ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice)
+      .column_mapping_widget(
+        ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice,
+        allow_create_numeric = isTRUE(row$allow_create_numeric)
+      )
     })
   )
+}
+
+# --- Helper functions for data_mapping_server ---
+
+.run_mapping_pipeline <- function(data, mapping, metabolites) {
+  data %>%
+    apply_mapping(mapping, MAPPING_DESIRED_ORDER, silent = FALSE) %>%
+    create_metabfl(metabolites) %>%
+    adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
+}
+
+.annotate_duplicates <- function(dataset) {
+  dataset %>%
+    # Annotate exact duplicate records
+    group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+    mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
+    # Annotate duplicate time records
+    group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+    mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
+    mutate(.dup_group = cur_group_id()) %>%
+    ungroup() %>%
+    mutate(ROWID = row_number())
+}
+
+.resolve_duplicates <- function(dataset, selected) {
+  dataset %>%
+    group_by(is.time.duplicate) %>%
+    mutate(
+      DTYPE = ifelse(
+        is.time.duplicate & !row_number() %in% selected,
+        "TIME DUPLICATE",
+        DTYPE
+      )
+    ) %>%
+    group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+    mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
+    ungroup()
+}
+
+.observe_numeric_inputs <- function(input, session, adnca_data, mapping_info) {
+  numeric_vars <- mapping_info$Variable[mapping_info$allow_create_numeric %in% TRUE]
+  lapply(numeric_vars, function(var) {
+    input_id <- paste0("select_", var)
+    observeEvent(input[[input_id]], {
+      value <- input[[input_id]]
+      if (!is.null(value) && value != "" && !value %in% names(adnca_data())) {
+        if (!grepl("^[0-9]+(\\.[0-9]+)?$", value)) {
+          showNotification(
+            paste0(var, ": only numeric values are allowed. '", value, "' is not valid."),
+            type = "warning",
+            duration = 5
+          )
+          updateSelectizeInput(session, input_id, selected = "")
+        }
+      }
+    })
+  })
 }
 
 #' Column Mapping Module
@@ -215,6 +291,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       )
     })
 
+    # Validate numeric inputs for variables with allow_create_numeric = TRUE
+    .observe_numeric_inputs(input, session, adnca_data, MAPPING_INFO)
+
     # Observe submit button click and update processed_data
     mapping <- reactive({
       mapping_list <- setNames(lapply(input_ids, function(id) input[[id]]), input_ids)
@@ -241,74 +320,38 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       mapping_ <- mapping()
       names(mapping_) <- gsub("select_", "", names(mapping_))
 
-      tryCatch({
-        adnca_data() %>%
-          apply_mapping(
-            mapping_,
-            MAPPING_DESIRED_ORDER,
-            silent = FALSE
-          ) %>%
-          create_metabfl(input$select_Metabolites) %>%
-          adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-
-      }, warning = function(w) {
-        withCallingHandlers(
-          {
-            adnca_data() %>%
-              apply_mapping(
-                mapping_,
-                MAPPING_DESIRED_ORDER,
-                silent = FALSE
-              ) %>%
-              create_metabfl(input$select_Metabolites) %>%
-              adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-          },
-          warning = function(w) {
-            log_warn(conditionMessage(w))
-            showNotification(conditionMessage(w), type = "warning", duration = 10)
-          }
-        )
-      }, error = function(e) {
-        log_error(conditionMessage(e))
-        showNotification(conditionMessage(e), type = "error", duration = NULL)
-        NULL
-      })
+      tryCatch(
+        .run_mapping_pipeline(adnca_data(), mapping_, input$select_Metabolites),
+        warning = function(w) {
+          withCallingHandlers(
+            .run_mapping_pipeline(adnca_data(), mapping_, input$select_Metabolites),
+            warning = function(w) {
+              log_warn(conditionMessage(w))
+              showNotification(conditionMessage(w), type = "warning", duration = 10)
+            }
+          )
+        },
+        error = function(e) {
+          log_error(conditionMessage(e))
+          showNotification(conditionMessage(e), type = "error", duration = NULL)
+          NULL
+        }
+      )
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 
-    #Check for blocking duplicates
+    # Check for blocking duplicates
     # groups based on PKNCAconc formula
 
     df_duplicates <- reactiveVal(NULL)
     processed_data <- reactive({
       req(mapped_data())
 
-      dataset <- mapped_data() %>%
-        # Annotate exact duplicate records
-        group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-        mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
-        # Annotate duplicate time records
-        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-        mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
-        mutate(.dup_group = cur_group_id()) %>%
-        ungroup() %>%
-        mutate(ROWID = row_number())
+      dataset <- .annotate_duplicates(mapped_data())
 
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
-        # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
-        dataset <- df_duplicates() %>%
-          group_by(is.time.duplicate) %>%
-          mutate(
-            DTYPE = ifelse(
-              is.time.duplicate & !row_number() %in% selected,
-              "TIME DUPLICATE",
-              DTYPE
-            )
-          ) %>%
-          group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-          mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
-          ungroup()
+        dataset <- .resolve_duplicates(df_duplicates(), selected)
         if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
           showNotification(
             "There are still duplicate time records. Please resolve them before proceeding.",
@@ -317,7 +360,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           return(NULL)
         } else {
           removeModal()
-          select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
+          return(select(dataset, any_of(c(names(mapped_data()), "DTYPE"))))
         }
       }
 
