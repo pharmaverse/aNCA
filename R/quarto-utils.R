@@ -103,42 +103,89 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @returns Invisibly returns TRUE if slides were created.
 create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
-  # Save an accessible object with all results
+  # Read optional filtering attributes
+  slide_sections <- attr(res_dose_slides, "slide_sections")
+  additional_analysis <- attr(res_dose_slides, "additional_analysis")
+
+  # Helper: TRUE when id is selected (NULL slide_sections means all selected)
+  .in_sections <- function(id) is.null(slide_sections) || id %in% slide_sections
+
+  # Save accessible objects with all results
   rda_path <- paste0(dirname(quarto_path), "/results_slides_outputs.rda")
-  save(list = as.character(quote(res_dose_slides)), file = rda_path)
+  save(list = c("res_dose_slides", "additional_analysis"), file = rda_path)
 
   # Generate the main quarto document
   create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
-  for (i in seq_along(res_dose_slides)) {
-    add_qmd_sl_plottabletable(
-      quarto_path = quarto_path,
-      df1 = paste0("res_dose_slides[[", i, "]]$info"),
-      df2 = paste0("res_dose_slides[[", i, "]]$statistics"),
-      plot = paste0("res_dose_slides[[", i, "]]$meanplot"),
-      use_plotly = use_plotly
-    )
-    add_qmd_sl_plot(
-      quarto_path = quarto_path,
-      plot = paste0("res_dose_slides[[", i, "]]$linplot"),
-      use_plotly = use_plotly
-    )
-    add_qmd_sl_plot(
-      quarto_path = quarto_path,
-      plot = paste0("res_dose_slides[[", i, "]]$boxplot"),
-      use_plotly = use_plotly
-    )
-  }
 
-  # Add the individual information slides
-  for (i in seq_along(res_dose_slides)) {
-    for (subj in names(res_dose_slides[[i]]$ind_params)) {
+  # Mean plot + statistics block
+  if (.in_sections("meanplot") || .in_sections("statistics")) {
+    for (i in seq_along(res_dose_slides)) {
       add_qmd_sl_plottabletable(
         quarto_path = quarto_path,
         df1 = paste0("res_dose_slides[[", i, "]]$info"),
-        df2 = paste0("res_dose_slides[[", i, "]]$ind_params[['", subj, "']]"),
-        plot = paste0("res_dose_slides[[", i, "]]$ind_plots[['", subj, "']]"),
+        df2 = paste0("res_dose_slides[[", i, "]]$statistics"),
+        plot = paste0("res_dose_slides[[", i, "]]$meanplot"),
         use_plotly = use_plotly
       )
+      add_qmd_sl_plot(
+        quarto_path = quarto_path,
+        plot = paste0("res_dose_slides[[", i, "]]$linplot"),
+        use_plotly = use_plotly
+      )
+      add_qmd_sl_plot(
+        quarto_path = quarto_path,
+        plot = paste0("res_dose_slides[[", i, "]]$boxplot"),
+        use_plotly = use_plotly
+      )
+    }
+  }
+
+  # Individual plots / parameters block
+  if (.in_sections("ind_plots") || .in_sections("ind_params")) {
+    for (i in seq_along(res_dose_slides)) {
+      for (subj in names(res_dose_slides[[i]]$ind_params)) {
+        add_qmd_sl_plottabletable(
+          quarto_path = quarto_path,
+          df1 = paste0("res_dose_slides[[", i, "]]$info"),
+          df2 = paste0("res_dose_slides[[", i, "]]$ind_params[['", subj, "']]"),
+          plot = if (.in_sections("ind_plots")) {
+            paste0("res_dose_slides[[", i, "]]$ind_plots[['", subj, "']]")
+          } else {
+            "NULL"
+          },
+          use_plotly = use_plotly
+        )
+      }
+    }
+  }
+
+  # Additional analysis section
+  if (!is.null(additional_analysis)) {
+    # Keep only non-empty data frames
+    keep <- vapply(additional_analysis, function(x) is.data.frame(x) && nrow(x) > 0, logical(1))
+    analysis_to_show <- additional_analysis[keep]
+
+    # If slide_sections is specified, further restrict to selected names
+    if (!is.null(slide_sections)) {
+      analysis_to_show <- analysis_to_show[names(analysis_to_show) %in% slide_sections]
+    }
+
+    if (length(analysis_to_show) > 0) {
+      write("\n# Additional Analysis Figures", file = quarto_path, append = TRUE)
+      for (name in names(analysis_to_show)) {
+        slide_title <- tools::toTitleCase(gsub("_", " ", name))
+        write(
+          c(
+            "\n---",
+            "",
+            paste0("## ", slide_title),
+            add_qmd_table(paste0("additional_analysis[['", name, "']]")),
+            ""
+          ),
+          file = quarto_path,
+          append = TRUE
+        )
+      }
     }
   }
 }
