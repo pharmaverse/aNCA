@@ -20,14 +20,16 @@ NON_STD_MAPPING_INFO <- data.frame(
     ""
   ),
   is_multiple_choice = c(TRUE, TRUE),
-  mapping_order = c(18, 5)
+  mapping_order = c(18, 5),
+  allow_create_numeric = c(FALSE, FALSE)
 )
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
   select(Variable, Label, Values, mapping_tooltip,
-         mapping_section, mapping_alternatives, mapping_order) %>%
+         mapping_section, mapping_alternatives, mapping_order,
+         allow_create_numeric) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
@@ -63,7 +65,17 @@ MAPPING_DESIRED_ORDER <- c(
 #' @examples
 #' column_mapping_widget(ns = NS("example"), id = "STUDYID",
 #' tooltip_text = "Select the study identifier column.")
-.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
+.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE,
+                                   allow_create_numeric = FALSE) {
+  selectize_options <- if (allow_create_numeric) {
+    list(
+      create = TRUE,
+      placeholder = "Select column or type a numeric value"
+    )
+  } else {
+    list(placeholder = "Select Column")
+  }
+  
   div(
     class = "column-mapping-row",
     tooltip(
@@ -72,7 +84,7 @@ MAPPING_DESIRED_ORDER <- c(
         "",
         choices = NULL,
         multiple = multiple,
-        options = list(placeholder = "Select Column"),
+        options = selectize_options,
         width = "40%"
       ),
       tooltip_text,
@@ -98,7 +110,10 @@ MAPPING_DESIRED_ORDER <- c(
     h5(section_title),
     lapply(seq_len(nrow(mapping_df)), function(i) {
       row <- mapping_df[i, ]
-      .column_mapping_widget(ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice)
+      .column_mapping_widget(
+        ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice,
+        allow_create_numeric = isTRUE(row$allow_create_numeric)
+      )
     })
   )
 }
@@ -149,7 +164,7 @@ MAPPING_DESIRED_ORDER <- c(
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 data_mapping_ui <- function(id) {
   ns <- NS(id)
-
+  
   div(
     card(
       div(
@@ -172,23 +187,23 @@ data_mapping_ui <- function(id) {
 data_mapping_server <- function(id, adnca_data, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
-
+    
     # Loop through each label and create the renderText outputs
     purrr::walk(MAPPING_INFO$Variable, function(var) {
       output[[paste0("label_", var)]] <- renderText(
         MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
       )
     })
-
+    
     # Populate the static inputs with column names
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
-
+      
       # Exceptions:
       # If by default VOLUME is not mapped, then neither is VOLUMEU
       if (!"VOLUME" %in% column_names) {
@@ -214,33 +229,54 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         choices = choices_metab, selected = selected_metab
       )
     })
-
+    
+    # Validate numeric inputs for variables with allow_create_numeric = TRUE
+    numeric_input_vars <- MAPPING_INFO$Variable[
+      MAPPING_INFO$allow_create_numeric %in% TRUE
+    ]
+    lapply(numeric_input_vars, function(var) {
+      input_id <- paste0("select_", var)
+      observeEvent(input[[input_id]], {
+        value <- input[[input_id]]
+        if (!is.null(value) && value != "" && !value %in% names(adnca_data())) {
+          if (!grepl("^[0-9]+(\\.[0-9]+)?$", value)) {
+            showNotification(
+              paste0(var, ": only numeric values are allowed. '", value, "' is not valid."),
+              type = "warning",
+              duration = 5
+            )
+            updateSelectizeInput(session, input_id, selected = "")
+          }
+        }
+      })
+    })
+    
     # Observe submit button click and update processed_data
     mapping <- reactive({
       mapping_list <- setNames(lapply(input_ids, function(id) input[[id]]), input_ids)
       supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
-
+      
       # Get the names to keep
       names_to_keep <- names(mapping_list) %>%
         keep(\(name) {
           # The logical condition with the any() fix
           !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
         })
-
+      
       # Subset the list with the final names
       mapping_list[names_to_keep]
     })
     observe({
       session$userData$mapping <- mapping()
     })
-
+    
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
-
+      
       mapping_ <- mapping()
       names(mapping_) <- gsub("select_", "", names(mapping_))
-
+      
       tryCatch({
         adnca_data() %>%
           apply_mapping(
@@ -250,7 +286,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           ) %>%
           create_metabfl(input$select_Metabolites) %>%
           adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-
+        
       }, warning = function(w) {
         withCallingHandlers(
           {
@@ -275,14 +311,14 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       })
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
-
+    
     #Check for blocking duplicates
     # groups based on PKNCAconc formula
-
+    
     df_duplicates <- reactiveVal(NULL)
     processed_data <- reactive({
       req(mapped_data())
-
+      
       dataset <- mapped_data() %>%
         # Annotate exact duplicate records
         group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
@@ -293,7 +329,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         mutate(.dup_group = cur_group_id()) %>%
         ungroup() %>%
         mutate(ROWID = row_number())
-
+      
       if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
         # Get selected rows from the reactable
         selected <- getReactableState("duplicate_modal_table", "selected")
@@ -320,7 +356,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
         }
       }
-
+      
       if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
         df_duplicates(dataset)
         return(NULL)
@@ -329,7 +365,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       }
     }) %>%
       bindEvent(list(mapped_data(), input$keep_selected_btn), ignoreInit = FALSE)
-
+    
     observeEvent(df_duplicates(), {
       showModal(
         modalDialog(
@@ -353,7 +389,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         )
       )
     })
-
+    
     output$duplicate_modal_table <- renderReactable({
       reactable(
         df_duplicates() %>%
