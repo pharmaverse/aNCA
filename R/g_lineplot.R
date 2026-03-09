@@ -35,6 +35,7 @@
 #' @param labels_df A data.frame for variable label lookups.
 #' @param vline_var Optional character string specifying the column name for vertical
 #' lines.
+#' @param linetype_by Optional character vector specifying the column name for line types.
 #' @param show_legend Logical; whether to display the plot legend. Default is `TRUE`.
 #' @returns A `ggplot` object representing the line plot.
 #'

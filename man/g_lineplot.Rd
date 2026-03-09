@@ -76,6 +76,8 @@ Only used if \code{show_threshold} is \code{TRUE}.}
 \item{vline_var}{Optional character string specifying the column name for vertical
 lines.}
 
+\item{linetype_by}{Optional character vector specifying the column name for line types.}
+
 \item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 }
 \value{
