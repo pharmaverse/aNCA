@@ -55,12 +55,12 @@
 #'     AVALU = "ng/mL"
 #'   )
 #'
-#'  p <- g_lineplot(
-#'    data = ind_data,
-#'    x_var = "time_var",
-#'    y_var = "AVAL",
-#'    color_by = "USUBJID"
-#'    )
+#' p <- g_lineplot(
+#'   data = ind_data,
+#'   x_var = "time_var",
+#'   y_var = "AVAL",
+#'   color_by = "USUBJID"
+#' )
 #' print(p)
 #' @export
 g_lineplot <- function(data,
@@ -83,27 +83,28 @@ g_lineplot <- function(data,
                        vline_var = NULL,
                        linetype_by = NULL,
                        show_legend = TRUE) {
-  
   if (nrow(data) == 0) {
     return(error_plot("No data available for the plot"))
   }
-  
+
   color_labels <- .resolve_color_labels(color_by, color_labels, labels_df)
   x_lab <- .build_axis_label(x_var, x_unit, data, labels_df)
   y_lab <- .build_axis_label(y_var, y_unit, data, labels_df)
   title <- "PK Concentration - Time Profile"
-  
+
   data <- .build_tooltip(data, tooltip_vars, labels_df)
-  plot_data <- .build_plot_data(data, x_var, color_by, group_by, linetype_by,
-                                facet_by, facet_count_n)
+  plot_data <- .build_plot_data(
+    data, x_var, color_by, group_by, linetype_by,
+    facet_by, facet_count_n
+  )
   facet_label_var <- if (!is.null(facet_count_n) && length(facet_by) > 0) {
     "facet_label"
   } else {
     facet_by
   }
-  
+
   aes_args <- .build_aes(x_var, y_var, group_by, linetype_by)
-  
+
   plt <- ggplot(plot_data, do.call(aes, aes_args)) +
     geom_line() +
     geom_point() +
@@ -134,7 +135,9 @@ g_lineplot <- function(data,
 #' Resolve color labels from labels_df if not explicitly provided
 #' @noRd
 .resolve_color_labels <- function(color_by, color_labels, labels_df) {
-  if (!is.null(color_labels) || is.null(labels_df)) return(color_labels)
+  if (!is.null(color_labels) || is.null(labels_df)) {
+    return(color_labels)
+  }
   vapply(
     color_by,
     function(x) get_label(variable = x, labels_df = labels_df),
@@ -157,7 +160,7 @@ g_lineplot <- function(data,
       group_var = if (!is.null(group_by_vars)) interaction(!!!syms(group_by_vars)) else NULL
     ) %>%
     arrange(!!sym(x_var))
-  
+
   if (!is.null(facet_count_n) && length(facet_by) > 0) {
     plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n)
   }
@@ -214,7 +217,7 @@ g_lineplot <- function(data,
       data$tooltip_text <- paste(parts, collapse = "<br>")
     }
   }
-  
+
   data
 }
 
@@ -236,9 +239,8 @@ g_lineplot <- function(data,
 
 #' @noRd
 .build_facet_labels <- function(data, facet_by, facet_count_n) {
-  
   use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
-  
+
   data %>%
     mutate(
       .facet_label_values = purrr::pmap_chr(
@@ -267,14 +269,14 @@ g_lineplot <- function(data,
 .add_axis_limits <- function(x_limits, y_limits) {
   has_x <- is.numeric(x_limits) && length(x_limits) == 2 && any(is.finite(x_limits))
   has_y <- is.numeric(y_limits) && length(y_limits) == 2 && any(is.finite(y_limits))
-  
+
   if (!has_x && !has_y) {
     return(NULL)
   }
-  
+
   xlim_vals <- if (has_x) x_limits else NULL
   ylim_vals <- if (has_y) y_limits else NULL
-  
+
   coord_cartesian(xlim = xlim_vals, ylim = ylim_vals)
 }
 
@@ -296,7 +298,6 @@ g_lineplot <- function(data,
 
 #' @noRd
 .add_mean_layers <- function(sd_min, sd_max, ci, color_by, y_var, x_var, group_var) {
-  
   # 1. Error bars
   error_bar_layer <- NULL
   if (isTRUE(sd_min) || isTRUE(sd_max)) {
