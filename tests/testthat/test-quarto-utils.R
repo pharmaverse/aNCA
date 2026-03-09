@@ -5,7 +5,7 @@ describe("create_qmd_dose_slides", {
       statistics = data.frame(stat = "Mean", value = 1),
       meanplot = ggplot2::ggplot(),
       linplot = ggplot2::ggplot(),
-      boxplot = ggplot2::ggplot(),
+      boxplot = list(AUCIFO = ggplot2::ggplot()),
       ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
       ind_plots = list(SUBJ01 = ggplot2::ggplot())
     )
@@ -56,6 +56,82 @@ describe("create_qmd_dose_slides", {
     expect_true(grepl("# Additional Analysis Figures", content, fixed = TRUE))
     expect_true(grepl("Matrix Ratios", content, fixed = TRUE))
     expect_true(grepl("Excretion Summary", content, fixed = TRUE))
+  })
+
+  it("skips boxplot expression when boxplot data is NULL", {
+    slides_null_box <- list(
+      list(
+        info = data.frame(group = "A"),
+        statistics = data.frame(stat = "Mean", value = 1),
+        meanplot = ggplot2::ggplot(),
+        linplot = ggplot2::ggplot(),
+        boxplot = list(),
+        ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
+        ind_plots = list(SUBJ01 = ggplot2::ggplot())
+      )
+    )
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides_null_box, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_false(grepl("boxplot", content, fixed = TRUE))
+  })
+
+  it("omits linplot expression when linplot is not in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_false(grepl("linplot", content, fixed = TRUE))
+  })
+
+  it("includes linplot expression when linplot is in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params", "linplot")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("linplot", content, fixed = TRUE))
+  })
+
+  it("omits boxplot expression when boxplot is not in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params", "linplot")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_false(grepl("boxplot", content, fixed = TRUE))
+  })
+
+  it("includes boxplot expression when boxplot is in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c(
+      "meanplot", "statistics", "ind_plots", "ind_params", "linplot", "boxplot"
+    )
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("boxplot", content, fixed = TRUE))
+  })
+
+  it("includes boxplot when only boxplot is in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("boxplot")
+    out_file <- tempfile(fileext = ".qmd")
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+    expect_true(grepl("boxplot", content, fixed = TRUE))
+    expect_false(grepl("meanplot", content, fixed = TRUE))
   })
 
   it("omits additional analysis entry when its name is not in slide_sections", {

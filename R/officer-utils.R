@@ -98,22 +98,22 @@ add_pptx_sl_plot <- function(pptx, plot) {
     subtitle = paste(group_data$group),
     footer = ""
   )
-  if (in_sections("ind_plots")) {
-    pptx <- purrr::reduce(
-      names(group_data$ind_params),
-      function(pptx, subj) {
-        add_pptx_sl_plottable(
-          pptx,
-          df = group_data$ind_params[[subj]],
-          plot = group_data$ind_plots[[subj]]
-        )
-      },
-      .init = pptx
-    )
-    n_slides <- 1 + length(group_data$ind_params)
-  } else {
-    n_slides <- 1 # +1 accounts for the ind header table slide
-  }
+  pptx <- purrr::reduce(
+    names(group_data$ind_params),
+    function(pptx, subj) {
+      if (in_sections("ind_plots") && in_sections("ind_params")) {
+        add_pptx_sl_plottable(pptx,
+                              df   = group_data$ind_params[[subj]],
+                              plot = group_data$ind_plots[[subj]])
+      } else if (in_sections("ind_plots")) {
+        add_pptx_sl_plot(pptx, plot = group_data$ind_plots[[subj]])
+      } else {
+        add_pptx_sl_table(pptx, df = group_data$ind_params[[subj]], footer = "")
+      }
+    },
+    .init = pptx
+  )
+  n_slides <- 1 + length(group_data$ind_params)
   list(pptx = pptx, n_slides = n_slides)
 }
 
@@ -156,19 +156,41 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     n_ind_slides <- ind_result$n_slides
 
     # Generate summary figures and tables
-    if (in_sections("meanplot") || in_sections("statistics")) {
+    if (in_sections("meanplot") || in_sections("statistics") ||
+        in_sections("linplot") || in_sections("boxplot")) {
       pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " Summary"),
                                 subtitle = paste(res_dose_slides[[i]]$group)) %>%
-        ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1)) %>%
-        add_pptx_sl_plottable(
-          df = res_dose_slides[[i]]$statistics,
-          plot = res_dose_slides[[i]]$meanplot
-        ) %>%
-        add_pptx_sl_plot(res_dose_slides[[i]]$linplot) %>%
-        add_pptx_sl_plot(res_dose_slides[[i]]$boxplot)
+        ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1))
+      if (in_sections("meanplot") && in_sections("statistics")) {
+        pptx <- add_pptx_sl_plottable(pptx,
+                                      df   = res_dose_slides[[i]]$statistics,
+                                      plot = res_dose_slides[[i]]$meanplot)
+      } else if (in_sections("meanplot")) {
+        pptx <- add_pptx_sl_plot(pptx, plot = res_dose_slides[[i]]$meanplot)
+      } else {
+        pptx <- add_pptx_sl_table(pptx,
+                                  df    = res_dose_slides[[i]]$statistics,
+                                  title = paste0("Group ", i, " Summary Statistics"),
+                                  footer = "")
+      }
+      pptx <- pptx %>% {
+        if (in_sections("linplot")) add_pptx_sl_plot(., res_dose_slides[[i]]$linplot) else .
+      }
+      boxplots_i <- res_dose_slides[[i]]$boxplot
+      if (in_sections("boxplot") && is.list(boxplots_i)) {
+        for (bp_plot in boxplots_i) {
+          if (!is.null(bp_plot)) pptx <- add_pptx_sl_plot(pptx, bp_plot)
+        }
+      }
 
-      lst_group_slide <- lst_group_slide + n_ind_slides + 4
-      group_slides <- c(group_slides, (lst_group_slide - 3):(lst_group_slide))
+      n_boxplot_slides <- if (in_sections("boxplot") && is.list(boxplots_i)) {
+        sum(vapply(boxplots_i, Negate(is.null), logical(1)))
+      } else {
+        0L
+      }
+      n_summary_slides <- 2L + as.integer(in_sections("linplot")) + n_boxplot_slides
+      lst_group_slide <- lst_group_slide + n_ind_slides + n_summary_slides
+      group_slides <- c(group_slides, (lst_group_slide - n_summary_slides + 1):(lst_group_slide))
     } else {
       lst_group_slide <- lst_group_slide + n_ind_slides
     }
