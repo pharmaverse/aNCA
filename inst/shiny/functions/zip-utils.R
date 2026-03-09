@@ -125,7 +125,7 @@ format_to_xpt_compatible <- function(data) {
 #' @param statistics Character vector of summary statistics to include (default: "Mean").
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
-#' @param boxplot_parameter Character string of the parameter to use for boxplot.
+#' @param boxplot_parameters Character vector of parameters to use for boxplots.
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
 #'
@@ -137,7 +137,7 @@ get_dose_esc_results <- function(
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
   ind_stats_parameters     = stats_parameters,
   summary_stats_parameters = stats_parameters,
-  boxplot_parameter = "AUCIFO",
+  boxplot_parameters = c("AUCIFO"),
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
   labels_df = metadata_nca_variables
 ) {
@@ -212,15 +212,24 @@ get_dose_esc_results <- function(
       pull(group) %>%
       unique()
 
-    boxplot_i <- flexible_violinboxplot(
-      res_nca = o_nca_i,
-      parameter = boxplot_parameter,
-      xvars = facet_vars,
-      colorvars = analyte_col,
-      varvalstofilter = NULL,
-      box = TRUE,
-      tooltip_vars = NULL,
-      plotly = FALSE
+    boxplots_i <- setNames(
+      lapply(boxplot_parameters, function(bp) {
+        if (bp %in% unique(o_res_i$PPTESTCD)) {
+          flexible_violinboxplot(
+            res_nca = o_nca_i,
+            parameter = bp,
+            xvars = facet_vars,
+            colorvars = analyte_col,
+            varvalstofilter = NULL,
+            box = TRUE,
+            tooltip_vars = NULL,
+            plotly = FALSE
+          )
+        } else {
+          NULL
+        }
+      }),
+      boxplot_parameters
     )
 
     ind_params <- merge(o_nca$result, group_i) %>%
@@ -255,7 +264,7 @@ get_dose_esc_results <- function(
       linplot = linplot_i,
       meanplot = meanplot_i,
       statistics = stats_i,
-      boxplot = boxplot_i,
+      boxplot = boxplots_i,
       info = info_i,
       ind_params = ind_params,
       ind_plots = ind_plots,
@@ -429,6 +438,8 @@ prepare_export_files <- function(target_dir,
   slide_sections           <- slide_config$slide_sections
   ind_stats_parameters     <- slide_config$ind_stats_parameters     %||% DEFAULT_STATS_PARAMETERS
   summary_stats_parameters <- slide_config$summary_stats_parameters %||% DEFAULT_STATS_PARAMETERS
+  boxplot_parameters       <- slide_config$boxplot_parameters
+  if (length(boxplot_parameters) == 0) boxplot_parameters <- c("CMAX", "AUCIFO", "LAMZHL")
 
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
@@ -438,15 +449,16 @@ prepare_export_files <- function(target_dir,
     stats_parameters         = union(ind_stats_parameters, summary_stats_parameters),
     ind_stats_parameters     = ind_stats_parameters,
     summary_stats_parameters = summary_stats_parameters,
+    boxplot_parameters        = boxplot_parameters,
     info_vars = grouping_vars
   )
 
   # Attach additional_analysis from session results
   additional_analysis <- session$userData$results$additional_analysis
   if (is.null(additional_analysis)) additional_analysis <- list()
-  attr(res_dose_slides, "additional_analysis") <- list(
-    matrix_ratios = additional_analysis$matrix_ratios,
-    excretion_summary = additional_analysis$excretion_results
+  attr(res_dose_slides, "additional_analysis") <- Filter(
+    function(x) is.data.frame(x) && nrow(x) > 0,
+    additional_analysis
   )
 
   # Attach slide section selection (NULL means all sections)

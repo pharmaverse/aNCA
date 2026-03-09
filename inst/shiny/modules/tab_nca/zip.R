@@ -247,6 +247,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
           label    = "Summary Slides",
           sections = list(
             list(id = "meanplot",   label = "Mean Plots"),
+            list(id = "linplot",    label = "Spaghetti / Group Plot"),
+            list(id = "boxplot",    label = "Box Plot"),
             list(id = "statistics", label = "Summary Statistics")
           )
         )
@@ -339,6 +341,18 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               label                    = "Summary slide:",
               choices                  = virtual_choices,
               selected                 = default_selected,
+              multiple                 = TRUE,
+              search                   = TRUE,
+              showSelectedOptionsFirst = TRUE,
+              hasOptionDescription     = TRUE,
+              showValueAsTags          = TRUE,
+              width                    = "100%"
+            ),
+            shinyWidgets::virtualSelectInput(
+              inputId                  = ns("slide_boxplot_param"),
+              label                    = "Box plot parameter:",
+              choices                  = virtual_choices,
+              selected                 = intersect(c("AUCIFO", "CMAX", "LAMZHL"), available_params),
               multiple                 = TRUE,
               search                   = TRUE,
               showSelectedOptionsFirst = TRUE,
@@ -516,23 +530,20 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       filename = .zip_filename,
       content = function(fname) {
         removeModal()
-        # Map selected tree leaf IDs back to section IDs.
-        # Leaf IDs are "slides_<i>_<j>"; corresponding section id from slide_types_rv().
+        # Map selected tree labels back to section IDs.
+        # treeInput returns the `text` field (sec$label), so match on label not generated leaf ID.
         selected_tree <- input$slide_sections_tree
         types <- slide_types_rv()
-        selected_sections <- unlist(lapply(seq_along(types), function(i) {
-          parent_id <- paste0("slides_", i)
-          sections <- types[[i]]$sections
-          lapply(seq_along(sections), function(j) {
-            leaf_id <- paste0(parent_id, "_", j)
-            if (leaf_id %in% selected_tree) sections[[j]]$id else NULL
+        selected_sections <- unlist(lapply(types, function(type) {
+          lapply(type$sections, function(sec) {
+            if (sec$label %in% selected_tree) sec$id else NULL
           })
         }))
-        selected_sections <- unlist(selected_sections)
         slide_config <- list(
           slide_sections           = selected_sections,
           ind_stats_parameters     = input$slide_ind_params,
-          summary_stats_parameters = input$slide_summary_params
+          summary_stats_parameters = input$slide_summary_params,
+          boxplot_parameters       = input$slide_boxplot_param
         )
         .run_export(fname, slide_config = slide_config)
       }
