@@ -82,55 +82,27 @@ g_lineplot <- function(data,
                        vline_var = NULL,
                        linetype_by = NULL,
                        show_legend = TRUE) {
-
+  
   if (nrow(data) == 0) {
     return(error_plot("No data available for the plot"))
   }
-
-  # Derive color labels from labels_df if not explicitly provided
-  if (is.null(color_labels) && !is.null(labels_df)) {
-    color_labels <- vapply(
-      color_by,
-      function(x) get_label(variable = x, labels_df = labels_df),
-      FUN.VALUE = character(1)
-    )
-  }
-
+  
+  color_labels <- .resolve_color_labels(color_by, color_labels, labels_df)
   x_lab <- .build_axis_label(x_var, x_unit, data, labels_df)
   y_lab <- .build_axis_label(y_var, y_unit, data, labels_df)
   title <- "PK Concentration - Time Profile"
-
+  
   data <- .build_tooltip(data, tooltip_vars, labels_df)
-  # Create color var for aesthetic mapping
-  group_by_vars <- if (!is.null(group_by)) {
-    if (!is.null(linetype_by)) c(group_by, linetype_by) else group_by
+  plot_data <- .build_plot_data(data, x_var, color_by, group_by, linetype_by,
+                                facet_by, facet_count_n)
+  facet_label_var <- if (!is.null(facet_count_n) && length(facet_by) > 0) {
+    "facet_label"
   } else {
-    NULL
+    facet_by
   }
-  plot_data <- data %>%
-    mutate(
-      color_var = interaction(!!!syms(color_by), sep = ", "),
-      group_var = if (!is.null(group_by)) interaction(!!!syms(group_by)) else NULL
-    ) %>%
-    arrange(!!sym(x_var))
-
-  facet_label_var <- facet_by
-  if (!is.null(facet_count_n) && length(facet_by) > 0) {
-    plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n)
-    facet_label_var <- "facet_label"
-  }
-
-  aes_args <- list(
-    x = rlang::sym(x_var),
-    y = rlang::sym(y_var),
-    color = rlang::sym("color_var"),
-    group = if (!is.null(group_by)) rlang::sym("group_var") else NULL,
-    text = rlang::sym("tooltip_text")
-  )
-  if (!is.null(linetype_by)) {
-    aes_args$linetype <- rlang::sym(linetype_by)
-  }
-
+  
+  aes_args <- .build_aes(x_var, y_var, group_by, linetype_by)
+  
   plt <- ggplot(plot_data, do.call(aes, aes_args)) +
     geom_line() +
     geom_point() +
@@ -138,14 +110,9 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = if (!is.null(color_labels)) {
-        paste(ifelse(is.na(color_labels), color_by, color_labels), collapse = "\n")
-      } else {
-        paste(color_by, collapse = ", ")
-      }
+      color = .build_color_legend_title(color_by, color_labels)
     ) +
     theme_bw()
-  # Apply legend
   if (!show_legend) {
     plt <- plt + theme(legend.position = "none")
   }
@@ -162,6 +129,65 @@ g_lineplot <- function(data,
 }
 
 # --- Helper Functions (Internal) ---
+
+#' Resolve color labels from labels_df if not explicitly provided
+#' @noRd
+.resolve_color_labels <- function(color_by, color_labels, labels_df) {
+  if (!is.null(color_labels) || is.null(labels_df)) return(color_labels)
+  vapply(
+    color_by,
+    function(x) get_label(variable = x, labels_df = labels_df),
+    FUN.VALUE = character(1)
+  )
+}
+
+#' Prepare plot data with color, group, and facet variables
+#' @noRd
+.build_plot_data <- function(data, x_var, color_by, group_by, linetype_by,
+                             facet_by, facet_count_n) {
+  group_by_vars <- if (!is.null(group_by)) {
+    if (!is.null(linetype_by)) c(group_by, linetype_by) else group_by
+  } else {
+    NULL
+  }
+  plot_data <- data %>%
+    mutate(
+      color_var = interaction(!!!syms(color_by), sep = ", "),
+      group_var = if (!is.null(group_by_vars)) interaction(!!!syms(group_by_vars)) else NULL
+    ) %>%
+    arrange(!!sym(x_var))
+  
+  if (!is.null(facet_count_n) && length(facet_by) > 0) {
+    plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n)
+  }
+  plot_data
+}
+
+#' Build aesthetic mapping for the line plot
+#' @noRd
+.build_aes <- function(x_var, y_var, group_by, linetype_by) {
+  aes_args <- list(
+    x = rlang::sym(x_var),
+    y = rlang::sym(y_var),
+    color = rlang::sym("color_var"),
+    group = if (!is.null(group_by)) rlang::sym("group_var") else NULL,
+    text = rlang::sym("tooltip_text")
+  )
+  if (!is.null(linetype_by)) {
+    aes_args$linetype <- rlang::sym(linetype_by)
+  }
+  aes_args
+}
+
+#' Build color legend title from labels
+#' @noRd
+.build_color_legend_title <- function(color_by, color_labels) {
+  if (!is.null(color_labels)) {
+    paste(ifelse(is.na(color_labels), color_by, color_labels), collapse = "\n")
+  } else {
+    paste(color_by, collapse = ", ")
+  }
+}
 
 #' Build axis label with optional unit suffix
 #' @noRd
@@ -187,7 +213,7 @@ g_lineplot <- function(data,
       data$tooltip_text <- paste(parts, collapse = "<br>")
     }
   }
-
+  
   data
 }
 
@@ -209,9 +235,9 @@ g_lineplot <- function(data,
 
 #' @noRd
 .build_facet_labels <- function(data, facet_by, facet_count_n) {
-
+  
   use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
-
+  
   data %>%
     mutate(
       .facet_label_values = purrr::pmap_chr(
@@ -240,14 +266,14 @@ g_lineplot <- function(data,
 .add_axis_limits <- function(x_limits, y_limits) {
   has_x <- is.numeric(x_limits) && length(x_limits) == 2 && any(is.finite(x_limits))
   has_y <- is.numeric(y_limits) && length(y_limits) == 2 && any(is.finite(y_limits))
-
+  
   if (!has_x && !has_y) {
     return(NULL)
   }
-
+  
   xlim_vals <- if (has_x) x_limits else NULL
   ylim_vals <- if (has_y) y_limits else NULL
-
+  
   coord_cartesian(xlim = xlim_vals, ylim = ylim_vals)
 }
 
@@ -269,7 +295,7 @@ g_lineplot <- function(data,
 
 #' @noRd
 .add_mean_layers <- function(sd_min, sd_max, ci, color_by, y_var, x_var, group_var) {
-
+  
   # 1. Error bars
   error_bar_layer <- NULL
   if (isTRUE(sd_min) || isTRUE(sd_max)) {
