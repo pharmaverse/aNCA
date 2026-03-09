@@ -3,81 +3,75 @@
 
 ratios_table_ui <- function(id) {
   ns <- NS(id)
-  #accordion_panel(
-   # title = "TEST",
   fluidRow(
     column(
       width = 10,
-    # Main widgets for the ratio table
-    #div(
-     # class = "plot-widget-group",
+      # Main widgets for the ratio table
+
       actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
       actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
-      ),
-      # Help button
-      column(
-        width = 2,
-        dropdown(
-          div(
-            tags$h2("Ratio Calculations Help"),
-            p("
-              This section is to perform ratio calculations within the allowed parameters
-              that you previously selected. Add a new row for each ratio calculation to
-              compute. You can also select and remove rows.
-              "),
-            p("For each ratio you need to specify:"),
-            tags$ul(
-              tags$li(
-                tags$b("RefParameter"),
-                ": The parameter to use for the reference (denominator)."
-              ),
-              tags$li(
-                tags$b("TestParameter"),
-                ": The parameter to use for the test (numerator)."
-              ),
-              tags$li(
-                tags$b("RefGroups"),
-                ": The level/value to use as reference (denominator)."
-              ),
-              tags$li(
-                tags$b("TestGroups"),
-                ": The level/value to use as test (numerator). If you select 'all other levels,'
-                the ratio is calculated using the reference level (e.g., Group = A) against all
-                other values of the variable (e.g., Groups = B, C, D)"
-              ),
-              tags$li(
-                tags$b("Aggregate Subject"),
-                ": `yes` aggregates reference values using the mean of all subjects,
-                `no` does not, and
-                `if-needed` only when ratios cannot be performed within the same subject."
-              ),
-              tags$li(
-                tags$b("Adjusting Factor"),
-                ": Factor to multiply the ratio with i.e, for molecular weight ratios
-                (MW_ref / MW_test)."
-              ),
-              tags$li(
-                tags$b("PPTESTCD"),
-                ": Code name for the ratio. By default, unique
-                CDISC style names are generated."
-              )
+    ),
+    # Help button
+    column(
+      width = 2,
+      dropdown(
+        div(
+          tags$h2("Ratio Calculations Help"),
+          p("
+            This section is to perform ratio calculations within the allowed parameters
+            that you previously selected. Add a new row for each ratio calculation to
+            compute. You can also select and remove rows.
+            "),
+          p("For each ratio you need to specify:"),
+          tags$ul(
+            tags$li(
+              tags$b("RefParameter"),
+              ": The parameter to use for the reference (denominator)."
             ),
-            tags$div(
-              withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
+            tags$li(
+              tags$b("TestParameter"),
+              ": The parameter to use for the test (numerator)."
+            ),
+            tags$li(
+              tags$b("RefGroups"),
+              ": The level/value to use as reference (denominator)."
+            ),
+            tags$li(
+              tags$b("TestGroups"),
+              ": The level/value to use as test (numerator). If you select 'all other levels,'
+              the ratio is calculated using the reference level (e.g., Group = A) against all
+              other values of the variable (e.g., Groups = B, C, D)"
+            ),
+            tags$li(
+              tags$b("Aggregate Subject"),
+              ": `yes` aggregates reference values using the mean of all subjects,
+              `no` does not, and
+              `if-needed` only when ratios cannot be performed within the same subject."
+            ),
+            tags$li(
+              tags$b("Adjusting Factor"),
+              ": Factor to multiply the ratio with i.e, for molecular weight ratios
+              (MW_ref / MW_test)."
+            ),
+            tags$li(
+              tags$b("PPTESTCD"),
+              ": Code name for the ratio. By default, unique
+              CDISC style names are generated."
             )
           ),
-          style = "unite",
-          right = TRUE,
-          icon = icon("question"),
-          status = "primary"
-        )
-      #)
+          tags$div(
+            withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
+          )
+        ),
+        style = "unite",
+        right = TRUE,
+        icon = icon("question"),
+        status = "primary"
+      )
     ),
-    #fluidRow(
-      reactableOutput(ns("ratio_calculations"))
-   #)
+    reactableOutput(ns("ratio_calculations"))
   )
-  #)
+
 }
 
 ratios_table_server <- function(

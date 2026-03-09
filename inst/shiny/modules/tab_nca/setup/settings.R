@@ -95,7 +95,6 @@ settings_ui <- function(id) {
           column(
             width = 10,
             actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
-            #actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
           ),
           column(
             width = 2,
