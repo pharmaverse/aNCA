@@ -151,7 +151,7 @@ settings_ui <- function(id) {
               right = TRUE,
               icon = icon("question"),
               status = "primary",
-              width = "500px"
+              width = "600px"
             )
           )
         ),

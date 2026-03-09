@@ -7,7 +7,6 @@ ratios_table_ui <- function(id) {
     column(
       width = 10,
       # Main widgets for the ratio table
-
       actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
       actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
     ),
@@ -66,7 +65,8 @@ ratios_table_ui <- function(id) {
         style = "unite",
         right = TRUE,
         icon = icon("question"),
-        status = "primary"
+        status = "primary",
+        width = "500px"
       )
     ),
     reactableOutput(ns("ratio_calculations"))
