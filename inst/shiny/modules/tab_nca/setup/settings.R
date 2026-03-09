@@ -94,13 +94,14 @@ settings_ui <- function(id) {
         fluidRow(
           column(
             width = 10,
-            actionButton(ns("addRow"), "Add Row")
+            actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
+            #actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
           ),
           column(
             width = 2,
             dropdown(
               div(
-                tags$h4("Partial Interval Calculations Help"),
+                tags$h2("Partial Interval Calculations Help"),
                 p(
                   "Define custom time intervals for calculating partial area",
                   "and related parameters. Add a row for each interval you need."

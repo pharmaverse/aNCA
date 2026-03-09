@@ -35,7 +35,7 @@ slope_selector_ui <- function(id) {
     # Help widget #
     dropdown(
       div(
-        tags$h1("Slope selector guide"),
+        tags$h2("Slope Selector Help"),
         p("
             Upon the initial NCA run, the plots will showcase the optimal slope selection. 
             However, you have the option to modify it according to your preferences. 
