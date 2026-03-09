@@ -11,23 +11,21 @@
 
 zip_ui <- function(id) {
   ns <- NS(id)
-  tagList(
-    actionButton(
-      inputId = ns("open_zip_modal"),
-      label = "Save",
-      icon = icon("download"),
-      class = "btn btn-primary",
-      style = paste(
-        "margin-left: 10px;",
-        "padding: 8px 18px;",
-        "border-radius: 8px;",
-        "box-shadow: 0 2px 6px rgba(0,0,0,0.08);",
-        "font-weight: 500;",
-        "font-size: 1rem;"
-      ),
-      title = "Export all selected results as a ZIP archive",
-      disabled = TRUE
-    )
+  actionButton(
+    inputId = ns("open_zip_modal"),
+    label = "Save",
+    icon = icon("download"),
+    class = "btn btn-primary",
+    style = paste(
+      "margin-left: 10px;",
+      "padding: 8px 18px;",
+      "border-radius: 8px;",
+      "box-shadow: 0 2px 6px rgba(0,0,0,0.08);",
+      "font-weight: 500;",
+      "font-size: 1rem;"
+    ),
+    title = "Export all selected results as a ZIP archive",
+    disabled = TRUE
   )
 }
 
@@ -120,20 +118,41 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 
     slide_types_rv <- reactiveVal(list())
 
+    export_state <- reactiveValues(
+      res_tree       = NULL,
+      res_tree_texts = NULL,
+      plot_formats   = c("png", "html"),
+      slide_formats  = c("pptx", "qmd"),
+      table_formats  = c("rds", "xpt", "csv")
+    )
+
     observeEvent(input$confirm_export, {
+      export_state$res_tree_texts <- input$res_tree
+      tree_ui_save <- create_tree_from_list_names(TREE_LIST)
+      export_state$res_tree      <- get_tree_ids_for_texts(tree_ui_save, input$res_tree)
+      export_state$plot_formats  <- input$plot_formats
+      export_state$slide_formats <- input$slide_formats
+      export_state$table_formats <- input$table_formats
+
       slides_selected <- "results_slides" %in% input$res_tree &&
         length(input$slide_formats) > 0
 
       if (!slides_selected) {
         removeModal()
         showModal(modalDialog(
-          title = NULL,
-          p("Ready to export. No slide customisation needed."),
+          title = "Ready to Export",
+          p(class = "modal-intro", "Your export is ready. Click the button below to download."),
           footer = tagList(
-            downloadButton(ns("download_zip"), "Export ZIP", class = "btn btn-primary"),
-            modalButton("Cancel")
+            div(
+              style = "display: flex; justify-content: space-between; width: 100%;",
+              actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
+              div(
+                modalButton("Cancel"),
+                downloadButton(ns("download_zip"), "Export", class = "btn btn-primary")
+              )
+            )
           ),
-          easyClose = TRUE,
+          easyClose = FALSE,
           size = "s"
         ))
         return()
@@ -287,6 +306,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 
     observeEvent(input$back_to_export, {
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
+      saved_tree <- if (is.null(export_state$res_tree)) get_tree_leaf_ids(TREE_UI) else export_state$res_tree
       removeModal()
       showModal(
         modalDialog(
@@ -305,7 +325,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                   shinyWidgets::treeInput(
                     inputId = ns("res_tree"),
                     label = NULL,
-                    selected = get_tree_leaf_ids(TREE_UI),
+                    selected = saved_tree,
                     choices = TREE_UI
                   ),
                   style = "text-align: left;"
@@ -319,7 +339,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                     ns("plot_formats"),
                     "Graphics and plots:",
                     choices = c("png", "html"),
-                    selected = c("png", "html"),
+                    selected = export_state$plot_formats,
                     multiple = TRUE
                   ),
                   style = "margin-bottom: 1em;"
@@ -329,7 +349,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                     ns("slide_formats"),
                     "Slide decks:",
                     choices = c("pptx", "qmd"),
-                    selected = c("pptx", "qmd"),
+                    selected = export_state$slide_formats,
                     multiple = TRUE
                   ),
                   style = "margin-bottom: 1em;"
@@ -339,7 +359,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                     ns("table_formats"),
                     "Data tables:",
                     choices = c("rds", "xpt", "csv"),
-                    selected = c("rds", "xpt", "csv"),
+                    selected = export_state$table_formats,
                     multiple = TRUE
                   ),
                   style = "margin-bottom: 2em;"
@@ -373,6 +393,12 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     }
 
     .run_export <- function(fname, slide_config = NULL) {
+      frozen_input <- list(
+        res_tree      = export_state$res_tree_texts,
+        plot_formats  = export_state$plot_formats,
+        slide_formats = export_state$slide_formats,
+        table_formats = export_state$table_formats
+      )
       tryCatch(
         {
           progress <- shiny::Progress$new(min = 0, max = 1)
@@ -383,14 +409,14 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
           unlink(output_tmpdir, recursive = TRUE)
 
           prepare_export_files(
-            target_dir = output_tmpdir,
-            res_nca = res_nca(),
-            settings = settings,
+            target_dir    = output_tmpdir,
+            res_nca       = res_nca(),
+            settings      = settings,
             grouping_vars = grouping_vars(),
-            input = input,
-            session = session,
-            progress = progress,
-            slide_config = slide_config
+            input         = frozen_input,
+            session       = session,
+            progress      = progress,
+            slide_config  = slide_config
           )
 
           files <- list.files(output_tmpdir, recursive = TRUE)
