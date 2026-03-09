@@ -81,6 +81,57 @@ add_pptx_sl_plot <- function(pptx, plot) {
     ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
+#' Add individual-subject slides for one dose group to a pptx object
+#' @param pptx rpptx object
+#' @param group_data Single element from res_dose_slides
+#' @param group_index Integer index of the dose group
+#' @param in_sections Function(id) returning TRUE when id is selected
+#' @return List with updated pptx and n_slides count
+#' @keywords internal
+.add_pptx_ind_slides <- function(pptx, group_data, group_index, in_sections) {
+  if (!in_sections("ind_plots") && !in_sections("ind_params")) {
+    return(list(pptx = pptx, n_slides = 0))
+  }
+  pptx <- add_pptx_sl_table(
+    pptx, group_data$info,
+    title = paste0("Group ", group_index, " (individual)"),
+    subtitle = paste(group_data$group),
+    footer = ""
+  )
+  if (in_sections("ind_plots")) {
+    pptx <- purrr::reduce(
+      names(group_data$ind_params),
+      function(pptx, subj) {
+        add_pptx_sl_plottable(
+          pptx,
+          df = group_data$ind_params[[subj]],
+          plot = group_data$ind_plots[[subj]]
+        )
+      },
+      .init = pptx
+    )
+    n_slides <- 1 + length(group_data$ind_params)
+  } else {
+    n_slides <- 1 # +1 accounts for the ind header table slide
+  }
+  list(pptx = pptx, n_slides = n_slides)
+}
+
+#' Filter an additional_analysis list to non-empty data frames,
+#' optionally restricted to slide_sections
+#' @param additional_analysis Named list of data frames
+#' @param slide_sections Character vector of selected section IDs, or NULL for all
+#' @return Filtered named list
+#' @keywords internal
+.filter_additional_analysis <- function(additional_analysis, slide_sections) {
+  if (is.null(additional_analysis)) return(NULL)
+  result <- Filter(function(x) is.data.frame(x) && nrow(x) > 0, additional_analysis)
+  if (!is.null(slide_sections)) {
+    result <- result[names(result) %in% slide_sections]
+  }
+  result
+}
+
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
 #' Adds slides for summary tables, mean plots, line plots, and individual subject results
 #' @param res_dose_slides List of results for each dose group
@@ -93,45 +144,19 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   slide_sections <- attr(res_dose_slides, "slide_sections")
   additional_analysis <- attr(res_dose_slides, "additional_analysis")
 
-  .in_sections <- function(id) is.null(slide_sections) || id %in% slide_sections
+  in_sections <- function(id) is.null(slide_sections) || id %in% slide_sections
 
   pptx <- create_pptx_doc(path, title, template)
 
   lst_group_slide <- 1
   group_slides <- numeric()
   for (i in seq_along(res_dose_slides)) {
-
-    # Generate the individual figures
-    if (.in_sections("ind_plots") || .in_sections("ind_params")) {
-      pptx <- add_pptx_sl_table(
-        pptx, res_dose_slides[[i]]$info,
-        title = paste0("Group ", i, " (individual)"),
-        subtitle = paste(res_dose_slides[[i]]$group),
-        footer = ""
-      )
-      if (.in_sections("ind_plots")) {
-        pptx <- purrr::reduce(
-          names(res_dose_slides[[i]]$ind_params),
-          function(pptx, subj) {
-            add_pptx_sl_plottable(
-              pptx,
-              df = res_dose_slides[[i]]$ind_params[[subj]],
-              plot = res_dose_slides[[i]]$ind_plots[[subj]]
-            )
-          },
-          .init = pptx
-        )
-        n_ind_slides <- 1 + length(res_dose_slides[[i]]$ind_params)
-      } else {
-        # +1 accounts for the ind header table slide
-        n_ind_slides <- 1
-      }
-    } else {
-      n_ind_slides <- 0
-    }
+    ind_result <- .add_pptx_ind_slides(pptx, res_dose_slides[[i]], i, in_sections)
+    pptx <- ind_result$pptx
+    n_ind_slides <- ind_result$n_slides
 
     # Generate summary figures and tables
-    if (.in_sections("meanplot") || .in_sections("statistics")) {
+    if (in_sections("meanplot") || in_sections("statistics")) {
       pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " Summary"),
                                 subtitle = paste(res_dose_slides[[i]]$group)) %>%
         ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1)) %>%
@@ -161,16 +186,11 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   pptx <- move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
 
   # Add additional analysis slides generically
-  if (!is.null(additional_analysis)) {
-    # Filter to non-empty data frames
-    non_empty <- Filter(function(x) is.data.frame(x) && nrow(x) > 0, additional_analysis)
-    # Further filter by slide_sections if not NULL
-    if (!is.null(slide_sections)) {
-      non_empty <- non_empty[names(non_empty) %in% slide_sections]
-    }
+  non_empty <- .filter_additional_analysis(additional_analysis, slide_sections)
+  if (length(non_empty) > 0) {
+    pptx <- add_pptx_sl_title(pptx, "Additional Analysis Figures")
     for (name in names(non_empty)) {
       label <- tools::toTitleCase(gsub("_", " ", name))
-      pptx <- add_pptx_sl_title(pptx, label)
       pptx <- add_pptx_sl_table(pptx, non_empty[[name]], title = label)
     }
   }

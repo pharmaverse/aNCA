@@ -135,6 +135,8 @@ get_dose_esc_results <- function(
   statistics = "Mean",
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+  ind_stats_parameters     = stats_parameters,
+  summary_stats_parameters = stats_parameters,
   boxplot_parameter = "AUCIFO",
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
   labels_df = metadata_nca_variables
@@ -191,7 +193,7 @@ get_dose_esc_results <- function(
       ) %>%
       select(
         any_of(c(facet_vars, "Statistic")),
-        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% stats_parameters])
+        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% summary_stats_parameters])
       ) %>%
       unique()
 
@@ -222,7 +224,7 @@ get_dose_esc_results <- function(
     )
 
     ind_params <- merge(o_nca$result, group_i) %>%
-      filter(PPTESTCD %in% stats_parameters) %>%
+      filter(PPTESTCD %in% ind_stats_parameters) %>%
       mutate(parameter_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
       select(any_of(
         c(
@@ -303,6 +305,29 @@ get_tree_leaf_ids <- function(tree) {
   ids
 }
 
+#' Convert tree node text values to their corresponding node IDs
+#' @param tree A tree list (output of create_tree_from_list_names)
+#' @param texts Character vector of node text values to look up
+#' @return Character vector of matching node IDs
+get_tree_ids_for_texts <- function(tree, texts) {
+  result <- character(0)
+  for (node in tree) {
+    has_children <- !is.null(node$children) && length(node$children) > 0
+    if (has_children) {
+      if (node$text %in% texts) {
+        # Parent fully selected: add all leaf descendants, never the parent ID
+        result <- c(result, get_tree_leaf_ids(node$children))
+      } else {
+        # Check children individually
+        result <- c(result, get_tree_ids_for_texts(node$children, texts))
+      }
+    } else if (node$text %in% texts) {
+      result <- c(result, node$id)
+    }
+  }
+  result
+}
+
 #' Prepare export files
 #'
 #' @param target_dir Path to the directory where files will be written.
@@ -318,7 +343,7 @@ prepare_export_files <- function(target_dir,
                                  input,
                                  session,
                                  progress,
-                                 slide_sections = NULL) {
+                                 slide_config = NULL) {
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
@@ -357,7 +382,7 @@ prepare_export_files <- function(target_dir,
     progress$set(message = "Creating exports...",
                  detail = "Saving slideshow...")
     .export_slides(target_dir, res_nca, grouping_vars, input, session,
-                   slide_sections = slide_sections)
+                   slide_config = slide_config)
   }
   progress$inc(0.4)
 
@@ -399,13 +424,20 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_slides <- function(target_dir, res_nca, grouping_vars, input, session,
-                           slide_sections = NULL) {
+                           slide_config = NULL) {
+  `%||%` <- function(x, y) if (is.null(x)) y else x
+  slide_sections           <- slide_config$slide_sections
+  ind_stats_parameters     <- slide_config$ind_stats_parameters     %||% DEFAULT_STATS_PARAMETERS
+  summary_stats_parameters <- slide_config$summary_stats_parameters %||% DEFAULT_STATS_PARAMETERS
+
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
     facet_vars = "DOSEA",
     statistics = "Mean",
-    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+    stats_parameters         = union(ind_stats_parameters, summary_stats_parameters),
+    ind_stats_parameters     = ind_stats_parameters,
+    summary_stats_parameters = summary_stats_parameters,
     info_vars = grouping_vars
   )
 

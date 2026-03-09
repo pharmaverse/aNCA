@@ -39,8 +39,71 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       shinyjs::enable("open_zip_modal")
     })
 
+    export_validation <- reactive({
+      if (!modal_shown()) return(character(0))
+
+      tree <- input$res_tree
+      msgs <- character(0)
+
+      if (is.null(tree) || length(tree) == 0) {
+        return("Select at least one result to export.")
+      }
+
+      if (any(PLOT_NODES %in% tree) && length(input$plot_formats) == 0) {
+        msgs <- c(msgs, "Graphics & plots are selected but no graphics format is chosen.")
+      }
+      if (any(TABLE_NODES %in% tree) && length(input$table_formats) == 0) {
+        msgs <- c(msgs, "Data tables are selected but no table format is chosen.")
+      }
+      if (any(SLIDE_NODES %in% tree) && length(input$slide_formats) == 0) {
+        msgs <- c(msgs, "Result slides are selected but no slide format is chosen.")
+      }
+      msgs
+    })
+
+    output$export_validation_ui <- renderUI({
+      msgs <- export_validation()
+      if (length(msgs) == 0) return(NULL)
+      div(
+        style = paste(
+          "text-align: center;",
+          "padding: 6px 0 2px;"
+        ),
+        span(
+          style = paste(
+            "display: inline-block;",
+            "background-color: #dc3545;",
+            "color: #fff;",
+            "border-radius: 20px;",
+            "padding: 5px 14px;",
+            "font-size: 0.85rem;",
+            "font-weight: 500;",
+            "line-height: 1.4;"
+          ),
+          icon("triangle-exclamation"),
+          if (length(msgs) == 1) {
+            span(msgs)
+          } else {
+            tags$ul(
+              style = "margin: 4px 0 0 0; padding-left: 1.2em; text-align: left;",
+              lapply(msgs, function(m) tags$li(style = "margin-bottom: 2px;", m))
+            )
+          }
+        )
+      )
+    })
+
+    observe({
+      if (length(export_validation()) > 0) {
+        shinyjs::disable("confirm_export")
+      } else {
+        shinyjs::enable("confirm_export")
+      }
+    })
+
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
+      modal_shown(TRUE)
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
       showModal(
         modalDialog(
@@ -99,7 +162,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                   style = "margin-bottom: 2em;"
                 )
               )
-            )
+            ),
+            div(class = "w-100", uiOutput(ns("export_validation_ui")))
           ),
           footer = tagList(
             modalButton("Cancel"),
@@ -117,6 +181,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     })
 
     slide_types_rv <- reactiveVal(list())
+    modal_shown    <- reactiveVal(FALSE)
 
     export_state <- reactiveValues(
       res_tree       = NULL,
@@ -305,6 +370,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     })
 
     observeEvent(input$back_to_export, {
+      modal_shown(TRUE)
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
       saved_tree <- if (is.null(export_state$res_tree)) get_tree_leaf_ids(TREE_UI) else export_state$res_tree
       removeModal()
@@ -365,7 +431,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                   style = "margin-bottom: 2em;"
                 )
               )
-            )
+            ),
+            div(class = "w-100", uiOutput(ns("export_validation_ui")))
           ),
           footer = tagList(
             modalButton("Cancel"),
@@ -502,3 +569,8 @@ TREE_LIST <- list(
     settings_file = ""
   )
 )
+
+PLOT_NODES  <- c("individualplot", "meanplot", "qcplot")
+TABLE_NODES <- c("nca_pkparam", "nca_statistics", "pp", "adpp", "adnca",
+                 "matrix_ratios", "excretion_results")
+SLIDE_NODES <- "results_slides"
