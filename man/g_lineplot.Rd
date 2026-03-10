@@ -102,11 +102,11 @@ ind_data <- expand.grid(
     AVALU = "ng/mL"
   )
 
- p <- g_lineplot(
-   data = ind_data,
-   x_var = "time_var",
-   y_var = "AVAL",
-   color_by = "USUBJID"
-   )
+p <- g_lineplot(
+  data = ind_data,
+  x_var = "time_var",
+  y_var = "AVAL",
+  color_by = "USUBJID"
+)
 print(p)
 }
