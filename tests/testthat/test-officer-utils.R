@@ -90,7 +90,9 @@ describe("create_pptx_dose_slides", {
 
   it("omits boxplot slide when boxplot is not in slide_sections", {
     slides <- base_slides
-    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params", "linplot")
+    attr(slides, "slide_sections") <- c(
+      "meanplot", "statistics", "ind_plots", "ind_params", "linplot"
+    )
     # boxplot deliberately omitted
 
     out_with <- tempfile(fileext = ".pptx")

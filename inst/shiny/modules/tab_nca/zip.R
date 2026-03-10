@@ -280,7 +280,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 
       available_params <- sort(unique(res_nca()$result$PPTESTCD))
 
-      param_meta <- metadata_nca_parameters[metadata_nca_parameters$PPTESTCD %in% available_params, ]
+      param_meta <- metadata_nca_parameters[
+        metadata_nca_parameters$PPTESTCD %in% available_params, ]
       params_by_type <- split(param_meta, param_meta$TYPE)
       virtual_choices <- lapply(names(params_by_type), function(type_name) {
         df <- params_by_type[[type_name]]
@@ -363,7 +364,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             helpText(
               icon("circle-info"),
               "Only parameters calculated in this NCA run are available for selection.",
-              "If a parameter you need is missing, return to the NCA tab, include it in the parameter",
+              "If a parameter you need is missing, return to the NCA tab,",
+              "include it in the parameter",
               "selection, and re-run the analysis before exporting."
             )
           )
@@ -386,7 +388,11 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     observeEvent(input$back_to_export, {
       modal_shown(TRUE)
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
-      saved_tree <- if (is.null(export_state$res_tree)) get_tree_leaf_ids(TREE_UI) else export_state$res_tree
+      saved_tree <- if (is.null(export_state$res_tree)) {
+        get_tree_leaf_ids(TREE_UI)
+      } else {
+        export_state$res_tree
+      }
       removeModal()
       showModal(
         modalDialog(
@@ -539,6 +545,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             if (sec$label %in% selected_tree) sec$id else NULL
           })
         }))
+        # Ensure fully-deselected means nothing (not everything): NULL is the "include all" sentinel
+        if (is.null(selected_sections)) selected_sections <- character(0)
         slide_config <- list(
           slide_sections           = selected_sections,
           ind_stats_parameters     = input$slide_ind_params,

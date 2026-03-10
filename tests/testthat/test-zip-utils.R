@@ -45,7 +45,10 @@ describe(".build_exploration_allowlist", {
 
 describe(".export_slides slide_sections threading", {
   it("attaches slide_sections attribute when provided", {
-    skip("Requires full NCA session setup; covered by test-quarto-utils.R and test-officer-utils.R unit tests")
+    skip(paste0(
+      "Requires full NCA session setup; ",
+      "covered by test-quarto-utils.R and test-officer-utils.R unit tests"
+    ))
   })
 })
 
@@ -112,6 +115,10 @@ describe("get_dose_esc_results", {
       logical(1)
     )))
     # The y-axis label references LAMZHL
-    expect_true(any(vapply(boxplots, function(x) grepl("LAMZHL", x[["LAMZHL"]]$labels$y), logical(1))))
+    expect_true(any(vapply(
+      boxplots,
+      function(x) grepl("LAMZHL", x[["LAMZHL"]]$labels$y),
+      logical(1)
+    )))
   })
 })

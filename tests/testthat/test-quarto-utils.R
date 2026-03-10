@@ -91,7 +91,9 @@ describe("create_qmd_dose_slides", {
 
   it("includes linplot expression when linplot is in slide_sections", {
     slides <- base_slides
-    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params", "linplot")
+    attr(slides, "slide_sections") <- c(
+      "meanplot", "statistics", "ind_plots", "ind_params", "linplot"
+    )
     out_file <- tempfile(fileext = ".qmd")
 
     create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
@@ -102,7 +104,9 @@ describe("create_qmd_dose_slides", {
 
   it("omits boxplot expression when boxplot is not in slide_sections", {
     slides <- base_slides
-    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params", "linplot")
+    attr(slides, "slide_sections") <- c(
+      "meanplot", "statistics", "ind_plots", "ind_params", "linplot"
+    )
     out_file <- tempfile(fileext = ".qmd")
 
     create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)

@@ -142,7 +142,6 @@ get_dose_esc_results <- function(
   labels_df = metadata_nca_variables
 ) {
   # Define column names
-  studyid_col <- "STUDYID"
   subj_col <- o_nca$data$conc$columns$subject
   analyte_col <- o_nca$data$conc$columns$groups$group_analyte
   pcspec_col <- "PCSPEC"
