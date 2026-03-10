@@ -433,10 +433,13 @@ prepare_export_files <- function(target_dir,
 #' @noRd
 .export_slides <- function(target_dir, res_nca, grouping_vars, input, session,
                            slide_config = NULL) {
-  `%||%` <- function(x, y) if (is.null(x)) y else x
   slide_sections           <- slide_config$slide_sections
-  ind_stats_parameters     <- slide_config$ind_stats_parameters     %||% DEFAULT_STATS_PARAMETERS
-  summary_stats_parameters <- slide_config$summary_stats_parameters %||% DEFAULT_STATS_PARAMETERS
+  ind_stats_parameters <- rlang::`%||%`(
+    slide_config$ind_stats_parameters, DEFAULT_STATS_PARAMETERS
+  )
+  summary_stats_parameters <- rlang::`%||%`(
+    slide_config$summary_stats_parameters, DEFAULT_STATS_PARAMETERS
+  )
   boxplot_parameters       <- slide_config$boxplot_parameters
   if (length(boxplot_parameters) == 0) boxplot_parameters <- c("CMAX", "AUCIFO", "LAMZHL")
 

@@ -29,6 +29,321 @@ zip_ui <- function(id) {
   )
 }
 
+# Build the slide_types list from session additional_analysis
+.build_slide_types <- function(additional_analysis) {
+  if (is.null(additional_analysis)) additional_analysis <- list()
+  additional_available <- Filter(
+    function(x) is.data.frame(x) && nrow(x) > 0,
+    additional_analysis
+  )
+  additional_sections <- lapply(names(additional_available), function(name) {
+    list(id = name, label = gsub("_", " ", tools::toTitleCase(name)))
+  })
+  slide_types <- list(
+    list(
+      id       = "individual",
+      label    = "Individual Slides",
+      sections = list(
+        list(id = "ind_plots",  label = "Individual Plots"),
+        list(id = "ind_params", label = "PK Parameters")
+      )
+    ),
+    list(
+      id       = "summary",
+      label    = "Summary Slides",
+      sections = list(
+        list(id = "meanplot",   label = "Mean Plots"),
+        list(id = "linplot",    label = "Spaghetti / Group Plot"),
+        list(id = "boxplot",    label = "Box Plot"),
+        list(id = "statistics", label = "Summary Statistics")
+      )
+    )
+  )
+  if (length(additional_sections) > 0) {
+    slide_types <- c(slide_types, list(
+      list(
+        id       = "additional",
+        label    = "Additional Analysis",
+        sections = additional_sections
+      )
+    ))
+  }
+  slide_types
+}
+
+# Build virtualSelectInput grouped choices from available NCA parameters
+.make_param_virtual_choices <- function(available_params) {
+  param_meta <- metadata_nca_parameters[metadata_nca_parameters$PPTESTCD %in% available_params, ]
+  params_by_type <- split(param_meta, param_meta$TYPE)
+  lapply(names(params_by_type), function(type_name) {
+    df <- params_by_type[[type_name]]
+    options_list <- lapply(seq_len(nrow(df)), function(i) {
+      list(
+        label       = as.character(df$PPTESTCD[i]),
+        value       = as.character(df$PPTESTCD[i]),
+        description = as.character(df$PPTEST[i])
+      )
+    })
+    list(label = type_name, options = options_list)
+  })
+}
+
+# Show the "Customise Slide Contents" modal dialog
+.show_customise_slides_modal <- function(ns, slide_tree, all_leaf_ids,
+                                         virtual_choices, available_params, default_selected) {
+  showModal(modalDialog(
+    title = "Customise Slide Contents",
+    p(
+      class = "modal-intro",
+      "Select which slide sections to include and which PK parameters to show.",
+      "Changes apply only to the exported slide deck."
+    ),
+    fluidRow(
+      column(
+        width = 6,
+        div(
+          h4("Slide Sections"),
+          shinyWidgets::treeInput(
+            inputId  = ns("slide_sections_tree"),
+            label    = NULL,
+            choices  = slide_tree,
+            selected = all_leaf_ids
+          ),
+          style = "text-align: left;"
+        )
+      ),
+      column(
+        width = 6,
+        div(
+          h4("PK Parameters", style = "margin-bottom: 0.25em;"),
+          p(style = "color: #777; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;",
+            "Parameters included in the slide tables")
+        ),
+        shinyWidgets::virtualSelectInput(
+          inputId                  = ns("slide_ind_params"),
+          label                    = "Individual slide:",
+          choices                  = virtual_choices,
+          selected                 = default_selected,
+          multiple                 = TRUE,
+          search                   = TRUE,
+          showSelectedOptionsFirst = TRUE,
+          hasOptionDescription     = TRUE,
+          showValueAsTags          = TRUE,
+          width                    = "100%"
+        ),
+        shinyWidgets::virtualSelectInput(
+          inputId                  = ns("slide_summary_params"),
+          label                    = "Summary slide:",
+          choices                  = virtual_choices,
+          selected                 = default_selected,
+          multiple                 = TRUE,
+          search                   = TRUE,
+          showSelectedOptionsFirst = TRUE,
+          hasOptionDescription     = TRUE,
+          showValueAsTags          = TRUE,
+          width                    = "100%"
+        ),
+        shinyWidgets::virtualSelectInput(
+          inputId                  = ns("slide_boxplot_param"),
+          label                    = "Box plot parameter:",
+          choices                  = virtual_choices,
+          selected                 = intersect(c("AUCIFO", "CMAX", "LAMZHL"), available_params),
+          multiple                 = TRUE,
+          search                   = TRUE,
+          showSelectedOptionsFirst = TRUE,
+          hasOptionDescription     = TRUE,
+          showValueAsTags          = TRUE,
+          width                    = "100%"
+        ),
+        helpText(
+          icon("circle-info"),
+          "Only parameters calculated in this NCA run are available for selection.",
+          "If a parameter you need is missing, return to the NCA tab,",
+          "include it in the parameter",
+          "selection, and re-run the analysis before exporting."
+        )
+      )
+    ),
+    footer = tagList(
+      div(
+        style = "display: flex; justify-content: space-between; width: 100%;",
+        actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
+        div(
+          modalButton("Cancel"),
+          downloadButton(ns("download_zip_configured"), "Export", class = "btn btn-primary")
+        )
+      )
+    ),
+    easyClose = FALSE,
+    size = "l"
+  ))
+}
+
+# Check that each selected output type has a corresponding format chosen
+.check_format_selections <- function(tree, plot_formats, table_formats, slide_formats) {
+  msgs <- character(0)
+  if (any(PLOT_NODES %in% tree) && length(plot_formats) == 0) {
+    msgs <- c(msgs, "Graphics & plots are selected but no graphics format is chosen.")
+  }
+  if (any(TABLE_NODES %in% tree) && length(table_formats) == 0) {
+    msgs <- c(msgs, "Data tables are selected but no table format is chosen.")
+  }
+  if (any(SLIDE_NODES %in% tree) && length(slide_formats) == 0) {
+    msgs <- c(msgs, "Result slides are selected but no slide format is chosen.")
+  }
+  msgs
+}
+
+# Validate export form inputs — returns character(0) if valid, else a vector of messages
+.validate_export_inputs <- function(modal_shown_val, tree, plot_formats,
+                                    table_formats, slide_formats) {
+  if (!modal_shown_val) return(character(0))
+  if (is.null(tree) || length(tree) == 0) {
+    return("Select at least one result to export.")
+  }
+  .check_format_selections(tree, plot_formats, table_formats, slide_formats)
+}
+
+# Render export validation messages as a styled UI element
+.render_validation_msgs <- function(msgs) {
+  if (length(msgs) == 0) return(NULL)
+  div(
+    style = paste(
+      "text-align: center;",
+      "padding: 6px 0 2px;"
+    ),
+    span(
+      style = paste(
+        "display: inline-block;",
+        "background-color: #dc3545;",
+        "color: #fff;",
+        "border-radius: 20px;",
+        "padding: 5px 14px;",
+        "font-size: 0.85rem;",
+        "font-weight: 500;",
+        "line-height: 1.4;"
+      ),
+      icon("triangle-exclamation"),
+      if (length(msgs) == 1) {
+        span(msgs)
+      } else {
+        tags$ul(
+          style = "margin: 4px 0 0 0; padding-left: 1.2em; text-align: left;",
+          lapply(msgs, function(m) tags$li(style = "margin-bottom: 2px;", m))
+        )
+      }
+    )
+  )
+}
+
+# Generate ZIP filename from session project/study info
+.make_zip_filename <- function(session) {
+  project <- session$userData$project_name()
+  if (project == "") {
+    label <- session$userData$study_ids_label()
+    project <- if (label != "") paste0("NCA_", label) else "NCA"
+  }
+  project <- gsub("[^A-Za-z0-9_-]", "_", project)
+  paste0(project, ".zip")
+}
+
+# Resolve slide configuration from customise modal inputs
+.resolve_slide_config <- function(input, slide_types_rv) {
+  selected_tree <- input$slide_sections_tree
+  types <- slide_types_rv()
+  selected_sections <- unlist(lapply(types, function(type) {
+    lapply(type$sections, function(sec) {
+      if (sec$label %in% selected_tree) sec$id else NULL
+    })
+  }))
+  # Ensure fully-deselected means nothing (not everything): NULL is the "include all" sentinel
+  if (is.null(selected_sections)) selected_sections <- character(0)
+  list(
+    slide_sections           = selected_sections,
+    ind_stats_parameters     = input$slide_ind_params,
+    summary_stats_parameters = input$slide_summary_params,
+    boxplot_parameters       = input$slide_boxplot_param
+  )
+}
+
+# Show the "Export Results" modal dialog
+.show_export_modal <- function(ns, TREE_UI, selected_tree,
+                               plot_formats, slide_formats, table_formats) {
+  showModal(
+    modalDialog(
+      title = "Export Results",
+      tagList(
+        p(
+          class = "modal-intro",
+          "Choose what to include in your export and the file formats to generate.",
+          "Slide decks can be further customised in the next step."
+        ),
+        fluidRow(
+          column(
+            width = 6,
+            div(
+              h4("Results to Export"),
+              shinyWidgets::treeInput(
+                inputId = ns("res_tree"),
+                label = NULL,
+                selected = selected_tree,
+                choices = TREE_UI
+              ),
+              style = "text-align: left;"
+            )
+          ),
+          column(
+            width = 6,
+            h4("Export Formats"),
+            div(
+              selectizeInput(
+                ns("plot_formats"),
+                "Graphics and plots:",
+                choices = c("png", "html"),
+                selected = plot_formats,
+                multiple = TRUE
+              ),
+              style = "margin-bottom: 1em;"
+            ),
+            div(
+              selectizeInput(
+                ns("slide_formats"),
+                "Slide decks:",
+                choices = c("pptx", "qmd"),
+                selected = slide_formats,
+                multiple = TRUE
+              ),
+              style = "margin-bottom: 1em;"
+            ),
+            div(
+              selectizeInput(
+                ns("table_formats"),
+                "Data tables:",
+                choices = c("rds", "xpt", "csv"),
+                selected = table_formats,
+                multiple = TRUE
+              ),
+              style = "margin-bottom: 2em;"
+            )
+          )
+        ),
+        div(class = "w-100", uiOutput(ns("export_validation_ui")))
+      ),
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton(
+          ns("confirm_export"),
+          label = "Export ZIP with Results",
+          icon  = icon("download"),
+          class = "btn btn-primary"
+        )
+      ),
+      easyClose = FALSE,
+      size = "l"
+    )
+  )
+}
+
 zip_server <- function(id, res_nca, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -40,57 +355,17 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     })
 
     export_validation <- reactive({
-      if (!modal_shown()) return(character(0))
-
-      tree <- input$res_tree
-      msgs <- character(0)
-
-      if (is.null(tree) || length(tree) == 0) {
-        return("Select at least one result to export.")
-      }
-
-      if (any(PLOT_NODES %in% tree) && length(input$plot_formats) == 0) {
-        msgs <- c(msgs, "Graphics & plots are selected but no graphics format is chosen.")
-      }
-      if (any(TABLE_NODES %in% tree) && length(input$table_formats) == 0) {
-        msgs <- c(msgs, "Data tables are selected but no table format is chosen.")
-      }
-      if (any(SLIDE_NODES %in% tree) && length(input$slide_formats) == 0) {
-        msgs <- c(msgs, "Result slides are selected but no slide format is chosen.")
-      }
-      msgs
+      .validate_export_inputs(
+        modal_shown_val = modal_shown(),
+        tree            = input$res_tree,
+        plot_formats    = input$plot_formats,
+        table_formats   = input$table_formats,
+        slide_formats   = input$slide_formats
+      )
     })
 
     output$export_validation_ui <- renderUI({
-      msgs <- export_validation()
-      if (length(msgs) == 0) return(NULL)
-      div(
-        style = paste(
-          "text-align: center;",
-          "padding: 6px 0 2px;"
-        ),
-        span(
-          style = paste(
-            "display: inline-block;",
-            "background-color: #dc3545;",
-            "color: #fff;",
-            "border-radius: 20px;",
-            "padding: 5px 14px;",
-            "font-size: 0.85rem;",
-            "font-weight: 500;",
-            "line-height: 1.4;"
-          ),
-          icon("triangle-exclamation"),
-          if (length(msgs) == 1) {
-            span(msgs)
-          } else {
-            tags$ul(
-              style = "margin: 4px 0 0 0; padding-left: 1.2em; text-align: left;",
-              lapply(msgs, function(m) tags$li(style = "margin-bottom: 2px;", m))
-            )
-          }
-        )
-      )
+      .render_validation_msgs(export_validation())
     })
 
     observe({
@@ -105,79 +380,8 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     observeEvent(input$open_zip_modal, {
       modal_shown(TRUE)
       TREE_UI <- create_tree_from_list_names(TREE_LIST)
-      showModal(
-        modalDialog(
-          title = "Export Results",
-          tagList(
-            p(
-              class = "modal-intro",
-              "Choose what to include in your export and the file formats to generate.",
-              "Slide decks can be further customised in the next step."
-            ),
-            fluidRow(
-              column(
-                width = 6,
-                div(
-                  h4("Results to Export"),
-                  shinyWidgets::treeInput(
-                    inputId = ns("res_tree"),
-                    label = NULL,
-                    selected = get_tree_leaf_ids(TREE_UI),
-                    choices = TREE_UI
-                  ),
-                  style = "text-align: left;"
-                )
-              ),
-              column(
-                width = 6,
-                h4("Export Formats"),
-                div(
-                  selectizeInput(
-                    ns("plot_formats"),
-                    "Graphics and plots:",
-                    choices = c("png", "html"),
-                    selected = c("png", "html"),
-                    multiple = TRUE
-                  ),
-                  style = "margin-bottom: 1em;"
-                ),
-                div(
-                  selectizeInput(
-                    ns("slide_formats"),
-                    "Slide decks:",
-                    choices = c("pptx", "qmd"),
-                    selected = c("pptx", "qmd"),
-                    multiple = TRUE
-                  ),
-                  style = "margin-bottom: 1em;"
-                ),
-                div(
-                  selectizeInput(
-                    ns("table_formats"),
-                    "Data tables:",
-                    choices = c("rds", "xpt", "csv"),
-                    selected = c("rds", "xpt", "csv"),
-                    multiple = TRUE
-                  ),
-                  style = "margin-bottom: 2em;"
-                )
-              )
-            ),
-            div(class = "w-100", uiOutput(ns("export_validation_ui")))
-          ),
-          footer = tagList(
-            modalButton("Cancel"),
-            actionButton(
-              ns("confirm_export"),
-              label = "Export ZIP with Results",
-              icon  = icon("download"),
-              class = "btn btn-primary"
-            )
-          ),
-          easyClose = FALSE,
-          size = "l"
-        )
-      )
+      .show_export_modal(ns, TREE_UI, get_tree_leaf_ids(TREE_UI),
+                         c("png", "html"), c("pptx", "qmd"), c("rds", "xpt", "csv"))
     })
 
     slide_types_rv <- reactiveVal(list())
@@ -223,45 +427,7 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
         return()
       }
 
-      additional_analysis <- session$userData$results$additional_analysis
-      if (is.null(additional_analysis)) additional_analysis <- list()
-      additional_available <- Filter(
-        function(x) is.data.frame(x) && nrow(x) > 0,
-        additional_analysis
-      )
-      additional_sections <- lapply(names(additional_available), function(name) {
-        list(id = name, label = gsub("_", " ", tools::toTitleCase(name)))
-      })
-
-      slide_types <- list(
-        list(
-          id       = "individual",
-          label    = "Individual Slides",
-          sections = list(
-            list(id = "ind_plots",  label = "Individual Plots"),
-            list(id = "ind_params", label = "PK Parameters")
-          )
-        ),
-        list(
-          id       = "summary",
-          label    = "Summary Slides",
-          sections = list(
-            list(id = "meanplot",   label = "Mean Plots"),
-            list(id = "linplot",    label = "Spaghetti / Group Plot"),
-            list(id = "boxplot",    label = "Box Plot"),
-            list(id = "statistics", label = "Summary Statistics")
-          )
-        )
-      )
-      if (length(additional_sections) > 0) {
-        slide_types <- c(slide_types, list(
-          list(
-            id       = "additional",
-            label    = "Additional Analysis",
-            sections = additional_sections
-          )
-        ))
-      }
+      slide_types <- .build_slide_types(session$userData$results$additional_analysis)
       slide_types_rv(slide_types)
 
       slide_tree <- lapply(seq_along(slide_types), function(i) {
@@ -273,116 +439,17 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
         })
         list(text = type$label, id = parent_id, children = children)
       })
-
       all_leaf_ids <- unlist(lapply(slide_tree, function(node) {
         vapply(node$children, `[[`, character(1), "id")
       }))
 
       available_params <- sort(unique(res_nca()$result$PPTESTCD))
-
-      param_meta <- metadata_nca_parameters[
-        metadata_nca_parameters$PPTESTCD %in% available_params, ]
-      params_by_type <- split(param_meta, param_meta$TYPE)
-      virtual_choices <- lapply(names(params_by_type), function(type_name) {
-        df <- params_by_type[[type_name]]
-        options_list <- lapply(seq_len(nrow(df)), function(i) {
-          list(
-            label       = as.character(df$PPTESTCD[i]),
-            value       = as.character(df$PPTESTCD[i]),
-            description = as.character(df$PPTEST[i])
-          )
-        })
-        list(label = type_name, options = options_list)
-      })
+      virtual_choices <- .make_param_virtual_choices(available_params)
       default_selected <- intersect(DEFAULT_STATS_PARAMETERS, available_params)
 
       removeModal()
-      showModal(modalDialog(
-        title = "Customise Slide Contents",
-        p(
-          class = "modal-intro",
-          "Select which slide sections to include and which PK parameters to show.",
-          "Changes apply only to the exported slide deck."
-        ),
-        fluidRow(
-          column(
-            width = 6,
-            div(
-              h4("Slide Sections"),
-              shinyWidgets::treeInput(
-                inputId  = ns("slide_sections_tree"),
-                label    = NULL,
-                choices  = slide_tree,
-                selected = all_leaf_ids
-              ),
-              style = "text-align: left;"
-            )
-          ),
-          column(
-            width = 6,
-            div(
-              h4("PK Parameters", style = "margin-bottom: 0.25em;"),
-              p(style = "color: #777; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;",
-                "Parameters included in the slide tables")
-            ),
-            shinyWidgets::virtualSelectInput(
-              inputId                  = ns("slide_ind_params"),
-              label                    = "Individual slide:",
-              choices                  = virtual_choices,
-              selected                 = default_selected,
-              multiple                 = TRUE,
-              search                   = TRUE,
-              showSelectedOptionsFirst = TRUE,
-              hasOptionDescription     = TRUE,
-              showValueAsTags          = TRUE,
-              width                    = "100%"
-            ),
-            shinyWidgets::virtualSelectInput(
-              inputId                  = ns("slide_summary_params"),
-              label                    = "Summary slide:",
-              choices                  = virtual_choices,
-              selected                 = default_selected,
-              multiple                 = TRUE,
-              search                   = TRUE,
-              showSelectedOptionsFirst = TRUE,
-              hasOptionDescription     = TRUE,
-              showValueAsTags          = TRUE,
-              width                    = "100%"
-            ),
-            shinyWidgets::virtualSelectInput(
-              inputId                  = ns("slide_boxplot_param"),
-              label                    = "Box plot parameter:",
-              choices                  = virtual_choices,
-              selected                 = intersect(c("AUCIFO", "CMAX", "LAMZHL"), available_params),
-              multiple                 = TRUE,
-              search                   = TRUE,
-              showSelectedOptionsFirst = TRUE,
-              hasOptionDescription     = TRUE,
-              showValueAsTags          = TRUE,
-              width                    = "100%"
-            ),
-            helpText(
-              icon("circle-info"),
-              "Only parameters calculated in this NCA run are available for selection.",
-              "If a parameter you need is missing, return to the NCA tab,",
-              "include it in the parameter",
-              "selection, and re-run the analysis before exporting."
-            )
-          )
-        ),
-        footer = tagList(
-          div(
-            style = "display: flex; justify-content: space-between; width: 100%;",
-            actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
-            div(
-              modalButton("Cancel"),
-              downloadButton(ns("download_zip_configured"), "Export", class = "btn btn-primary")
-            )
-          )
-        ),
-        easyClose = FALSE,
-        size = "l"
-      ))
+      .show_customise_slides_modal(ns, slide_tree, all_leaf_ids,
+                                   virtual_choices, available_params, default_selected)
     })
 
     observeEvent(input$back_to_export, {
@@ -394,90 +461,11 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
         export_state$res_tree
       }
       removeModal()
-      showModal(
-        modalDialog(
-          title = "Export Results",
-          tagList(
-            p(
-              class = "modal-intro",
-              "Choose what to include in your export and the file formats to generate.",
-              "Slide decks can be further customised in the next step."
-            ),
-            fluidRow(
-              column(
-                width = 6,
-                div(
-                  h4("Results to Export"),
-                  shinyWidgets::treeInput(
-                    inputId = ns("res_tree"),
-                    label = NULL,
-                    selected = saved_tree,
-                    choices = TREE_UI
-                  ),
-                  style = "text-align: left;"
-                )
-              ),
-              column(
-                width = 6,
-                h4("Export Formats"),
-                div(
-                  selectizeInput(
-                    ns("plot_formats"),
-                    "Graphics and plots:",
-                    choices = c("png", "html"),
-                    selected = export_state$plot_formats,
-                    multiple = TRUE
-                  ),
-                  style = "margin-bottom: 1em;"
-                ),
-                div(
-                  selectizeInput(
-                    ns("slide_formats"),
-                    "Slide decks:",
-                    choices = c("pptx", "qmd"),
-                    selected = export_state$slide_formats,
-                    multiple = TRUE
-                  ),
-                  style = "margin-bottom: 1em;"
-                ),
-                div(
-                  selectizeInput(
-                    ns("table_formats"),
-                    "Data tables:",
-                    choices = c("rds", "xpt", "csv"),
-                    selected = export_state$table_formats,
-                    multiple = TRUE
-                  ),
-                  style = "margin-bottom: 2em;"
-                )
-              )
-            ),
-            div(class = "w-100", uiOutput(ns("export_validation_ui")))
-          ),
-          footer = tagList(
-            modalButton("Cancel"),
-            actionButton(
-              ns("confirm_export"),
-              label = "Export ZIP with Results",
-              icon  = icon("download"),
-              class = "btn btn-primary"
-            )
-          ),
-          easyClose = FALSE,
-          size = "l"
-        )
-      )
+      .show_export_modal(ns, TREE_UI, saved_tree,
+                         export_state$plot_formats,
+                         export_state$slide_formats,
+                         export_state$table_formats)
     })
-
-    .zip_filename <- function() {
-      project <- session$userData$project_name()
-      if (project == "") {
-        label <- session$userData$study_ids_label()
-        project <- if (label != "") paste0("NCA_", label) else "NCA"
-      }
-      project <- gsub("[^A-Za-z0-9_-]", "_", project)
-      paste0(project, ".zip")
-    }
 
     .run_export <- function(fname, slide_config = NULL) {
       frozen_input <- list(
@@ -526,33 +514,17 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     }
 
     output$download_zip <- downloadHandler(
-      filename = .zip_filename,
+      filename = function() .make_zip_filename(session),
       content = function(fname) {
         .run_export(fname, slide_config = NULL)
       }
     )
 
     output$download_zip_configured <- downloadHandler(
-      filename = .zip_filename,
+      filename = function() .make_zip_filename(session),
       content = function(fname) {
         removeModal()
-        # Map selected tree labels back to section IDs.
-        # treeInput returns the `text` field (sec$label), so match on label not generated leaf ID.
-        selected_tree <- input$slide_sections_tree
-        types <- slide_types_rv()
-        selected_sections <- unlist(lapply(types, function(type) {
-          lapply(type$sections, function(sec) {
-            if (sec$label %in% selected_tree) sec$id else NULL
-          })
-        }))
-        # Ensure fully-deselected means nothing (not everything): NULL is the "include all" sentinel
-        if (is.null(selected_sections)) selected_sections <- character(0)
-        slide_config <- list(
-          slide_sections           = selected_sections,
-          ind_stats_parameters     = input$slide_ind_params,
-          summary_stats_parameters = input$slide_summary_params,
-          boxplot_parameters       = input$slide_boxplot_param
-        )
+        slide_config <- .resolve_slide_config(input, slide_types_rv)
         .run_export(fname, slide_config = slide_config)
       }
     )
