@@ -145,11 +145,13 @@ intravascular
 kable
 knitr
 linters
+linplot
 lintr
 logslope
 mL
 macroparameters
 md
+meanplot
 multidose
 nca
 ng
@@ -163,6 +165,7 @@ pkcg
 pknca
 plotly
 pptest
+pptx
 pre
 pred
 qmd
