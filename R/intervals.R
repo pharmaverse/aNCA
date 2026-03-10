@@ -119,9 +119,10 @@ format_pkncadata_intervals <- function(pknca_conc,
     ungroup() %>%
     # Remove scientifically invalid intervals where start > end
     filter(start <= end) %>%
-    select(any_of(c("start", "end", conc_groups,
-                    "ATPTREF", "DOSNOA", "VOLUME", keep_interval_cols))) %>%
-
+    select(any_of(c(
+      "start", "end", conc_groups,
+      "ATPTREF", "DOSNOA", "VOLUME", keep_interval_cols
+    ))) %>%
     # Create logical columns with only TRUE for the NCA parameters requested by the user
     mutate(!!!setNames(rep(FALSE, length(params)), params)) %>%
     # Identify the intervals as the base ones for the NCA analysis
@@ -147,12 +148,11 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
 update_main_intervals <- function(
-  data,
-  parameter_selections,
-  study_types_df, int_parameters,
-  impute = TRUE,
-  blq_imputation_rule = NULL
-) {
+    data,
+    parameter_selections,
+    study_types_df, int_parameters,
+    impute = TRUE,
+    blq_imputation_rule = NULL) {
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
   # Determine the grouping columns from the study_types_df
@@ -255,10 +255,16 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
+  # Half-life category parameters should keep imputation (blq + start_conc)
+  params_halflife <- metadata_nca_parameters %>%
+    filter(CAT == "Half-life") %>%
+    pull(PKNCA)
+
   params_not_to_impute <- metadata_nca_parameters %>%
     filter(
       !grepl("auc|aumc", PKNCA),
-      !grepl(paste0(params_auc_dep, collapse = "|"), Depends)
+      !grepl(paste0(params_auc_dep, collapse = "|"), Depends),
+      !PKNCA %in% params_halflife
     ) %>%
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
