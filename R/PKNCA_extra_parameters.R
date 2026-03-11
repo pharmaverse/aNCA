@@ -74,6 +74,21 @@ pk.calc.ermax <- function(conc, volume, time, duration.conc, check = TRUE) {
   ret
 }
 
+PKNCA::add.interval.col(
+  "ermax",
+  FUN = "pk.calc.ermax",
+  unit_type = "amount_time",
+  pretty_name = "ERmax",
+  desc = "The maximum excretion rate"
+)
+
+PKNCA::PKNCA.set.summary(
+  name = "ermax",
+  description = "geometric mean and geometric coefficient of variation",
+  point = PKNCA::business.geomean,
+  spread = PKNCA::business.geocv
+)
+
 #' Calculate the midpoint collection time of the maximum excretion rate
 #'
 #' @param conc The concentration in the excreta (e.g., urine or feces)
