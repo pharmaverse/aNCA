@@ -94,4 +94,5 @@ This is why we created **aNCA**:
 
 ## Do you want to know more?
 Here is a list of recommended links to deepen your understanding of NCA and related concepts:
+- [R Pharma aNCA video](https://www.youtube.com/watch?v=RW1zbnDkTCM). - Here you can find a video explaining NCA main concepts and how aNCA works.
 <!-- TODO: Add R Pharma aNCA video link once available -->
