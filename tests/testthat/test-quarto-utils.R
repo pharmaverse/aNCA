@@ -198,4 +198,97 @@ describe("create_qmd_dose_slides", {
     # ind_plots expression is absent
     expect_false(grepl("ind_plots", content, fixed = TRUE))
   })
+
+  it("includes # Group 1 heading when summary sections are selected", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("# Group 1", content, fixed = TRUE))
+  })
+
+  it("includes # Group 1 (Individual) heading when individual sections are selected", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("ind_plots", "ind_params")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("# Group 1 (Individual)", content, fixed = TRUE))
+  })
+
+  it("includes # Extra Figures when both summary and individual sections are selected", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "ind_plots")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("# Extra Figures", content, fixed = TRUE))
+  })
+
+  it("omits # Extra Figures when only individual sections are selected", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("ind_plots", "ind_params")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_false(grepl("# Extra Figures", content, fixed = TRUE))
+  })
+
+  it("omits # Extra Figures when only summary sections are selected", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_false(grepl("# Extra Figures", content, fixed = TRUE))
+  })
+
+  it("includes toc: true in YAML header", {
+    out_file <- tempfile(fileext = ".qmd")
+    create_qmd_dose_slides(base_slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("toc: true", content, fixed = TRUE))
+  })
+
+  it("includes info table on section header, not repeated per subject", {
+    slides <- list(
+      list(
+        info = data.frame(group = "A"),
+        statistics = data.frame(stat = "Mean", value = 1),
+        meanplot = ggplot2::ggplot(),
+        linplot = ggplot2::ggplot(),
+        boxplot = list(AUCIFO = ggplot2::ggplot()),
+        ind_params = list(
+          SUBJ01 = data.frame(param = "CMAX", value = 1),
+          SUBJ02 = data.frame(param = "CMAX", value = 2)
+        ),
+        ind_plots = list(
+          SUBJ01 = ggplot2::ggplot(),
+          SUBJ02 = ggplot2::ggplot()
+        )
+      )
+    )
+    attr(slides, "slide_sections") <- c("meanplot", "ind_plots", "ind_params")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    # Info table referenced once per section header (summary + individual = 2),
+    # NOT once per subject (which would be 3: 1 summary + 2 subjects)
+    n_info <- lengths(regmatches(content, gregexpr("res_dose_slides\\[\\[1\\]\\]\\$info", content)))
+    expect_equal(n_info, 2L)
+  })
 })
