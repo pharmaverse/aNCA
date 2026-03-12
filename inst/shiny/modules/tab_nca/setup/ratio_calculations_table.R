@@ -4,16 +4,18 @@
 ratios_table_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
-
-    # Main widgets for the ratio table
-    div(
-      class = "plot-widget-group",
+    column(
+      width = 10,
+      # Main widgets for the ratio table
       actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
-      actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning"),
-      # Help button
+      actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
+    ),
+    # Help button
+    column(
+      width = 2,
       dropdown(
         div(
-          tags$h1("Ratio calculations guide"),
+          tags$h2("Ratio Calculations Help"),
           p("
             This section is to perform ratio calculations within the allowed parameters
             that you previously selected. Add a new row for each ratio calculation to
@@ -63,13 +65,13 @@ ratios_table_ui <- function(id) {
         style = "unite",
         right = TRUE,
         icon = icon("question"),
-        status = "primary"
-      ),
+        status = "primary",
+        width = "500px"
+      )
     ),
-    fluidRow(
-      reactableOutput(ns("ratio_calculations"))
-    )
+    reactableOutput(ns("ratio_calculations"))
   )
+
 }
 
 ratios_table_server <- function(

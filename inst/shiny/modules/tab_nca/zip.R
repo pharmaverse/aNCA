@@ -531,7 +531,9 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
   })
 }
 
-DEFAULT_STATS_PARAMETERS <- c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS")
+DEFAULT_STATS_PARAMETERS <- c(
+  "CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"
+)
 
 # Define a list with the possible outputs to export as end objects.
 # Consider all the zip_server options to create and align accordingly.
