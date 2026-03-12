@@ -562,6 +562,25 @@ describe("export_cdisc", {
       "MRT Extravasc to Last Nonzero Conc"
     )))
   })
+
+  it("includes non-standard grouping_vars columns in ADNCA and ADPP outputs", {
+    test_with_grpvars <- test_pknca_res
+    test_with_grpvars$data$conc$data$GROUP <- "GroupA"
+    test_with_grpvars$result$GROUP <- "GroupA"
+
+    result <- export_cdisc(test_with_grpvars, grouping_vars = "GROUP")
+
+    expect_true("GROUP" %in% names(result$adnca))
+    expect_true("GROUP" %in% names(result$adpp))
+    expect_equal(unique(result$adnca$GROUP), "GroupA")
+    expect_equal(unique(result$adpp$GROUP), "GroupA")
+  })
+
+  it("does not include grouping_vars columns when not specified (default)", {
+    result <- export_cdisc(test_pknca_res)
+    expect_false("GROUP" %in% names(result$adnca))
+    expect_false("GROUP" %in% names(result$adpp))
+  })
 })
 
 describe(".get_subjid", {
