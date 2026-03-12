@@ -4,7 +4,11 @@
 \alias{PKNCA_create_data_object}
 \title{Creates a \code{PKNCA::PKNCAdata} object.}
 \usage{
-PKNCA_create_data_object(adnca_data, nca_exclude_reason_columns = NULL)
+PKNCA_create_data_object(
+  adnca_data,
+  nca_exclude_reason_columns = NULL,
+  dose_column = "DOSEA"
+)
 }
 \arguments{
 \item{adnca_data}{Data table containing ADNCA data.}
