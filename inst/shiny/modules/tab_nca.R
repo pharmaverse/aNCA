@@ -233,7 +233,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca)
+    parameter_datasets_server("parameter_datasets", res_nca, extra_group_vars)
 
     #' Parameter plots module
     parameter_plots_server("parameter_plots", res_nca)
