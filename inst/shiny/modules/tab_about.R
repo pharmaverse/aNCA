@@ -115,7 +115,6 @@ tab_about_ui <- function(id) {
 
 tab_about_server <- function(id) {
   moduleServer(id, function(input, output, session) {
-
     # Version info
     output$version_info <- renderUI({
       anca_ver <- as.character(utils::packageVersion("aNCA"))
@@ -135,8 +134,25 @@ tab_about_server <- function(id) {
 
     # Citation
     output$citation_text <- renderUI({
-      cit <- utils::citation("aNCA")
-      cit_text <- paste(format(cit, style = "text"), collapse = "\n\n")
+      cit_text <- tryCatch(
+        {
+          cit <- utils::citation("aNCA")
+          paste(format(cit, style = "text"), collapse = "\n\n")
+        },
+        error = function(e) {
+          ver <- tryCatch(
+            as.character(utils::packageVersion("aNCA")),
+            error = function(e) "0.1.0"
+          )
+          paste0(
+            "Suekuer E, Rodriguez GJ, Baertschi P, Spinner J, Kolomanski M, ",
+            "Aspridis L, Legras V (2025). ",
+            "\"aNCA: A Dynamic Shiny App to perform NCA.\" ",
+            "Version ", ver, "; License: Apache-2.0. ",
+            "https://github.com/pharmaverse/aNCA"
+          )
+        }
+      )
       tags$blockquote(
         style = "border-left: 3px solid #ccc; padding-left: 1em; color: #555;",
         tags$p(cit_text)
@@ -160,7 +176,9 @@ tab_about_server <- function(id) {
         error = function(e) list()
       )
       author_items <- lapply(authors, function(a) {
-        if (!"aut" %in% a$role) return(NULL)
+        if (!"aut" %in% a$role) {
+          return(NULL)
+        }
         name <- paste(a$given, a$family)
         orcid <- a$comment[["ORCID"]]
         if (!is.null(orcid) && nchar(orcid) > 0) {
@@ -185,7 +203,8 @@ tab_about_server <- function(id) {
 
     # Session info — computed once per session (doesn't change at runtime)
     session_info_text <- paste(
-      utils::capture.output(utils::sessionInfo()), collapse = "\n"
+      utils::capture.output(utils::sessionInfo()),
+      collapse = "\n"
     )
 
     output$session_info <- renderText({
@@ -205,10 +224,12 @@ tab_about_server <- function(id) {
       shinyjs::toggle("session_info_panel")
       if (session_info_visible()) {
         updateActionButton(session, "toggle_session_info",
-                           label = "Hide details", icon = icon("chevron-up"))
+          label = "Hide details", icon = icon("chevron-up")
+        )
       } else {
         updateActionButton(session, "toggle_session_info",
-                           label = "Show details", icon = icon("chevron-down"))
+          label = "Show details", icon = icon("chevron-down")
+        )
       }
     })
   })
