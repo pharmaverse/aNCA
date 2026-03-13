@@ -360,7 +360,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           return(NULL)
         } else {
           removeModal()
-          return(select(dataset, any_of(c(names(mapped_data()), "DTYPE"))))
+          select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
         }
       }
 
