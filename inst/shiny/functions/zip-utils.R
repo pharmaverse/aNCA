@@ -125,7 +125,7 @@ format_to_xpt_compatible <- function(data) {
 #' @param statistics Character vector of summary statistics to include (default: "Mean").
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
-#' @param boxplot_parameter Character string of the parameter to use for boxplot.
+#' @param boxplot_parameters Character vector of parameters to use for boxplots.
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
 #'
@@ -135,12 +135,13 @@ get_dose_esc_results <- function(
   statistics = "Mean",
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
-  boxplot_parameter = "AUCIFO",
+  ind_stats_parameters     = stats_parameters,
+  summary_stats_parameters = stats_parameters,
+  boxplot_parameters = c("AUCIFO"),
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
   labels_df = metadata_nca_variables
 ) {
   # Define column names
-  studyid_col <- "STUDYID"
   subj_col <- o_nca$data$conc$columns$subject
   analyte_col <- o_nca$data$conc$columns$groups$group_analyte
   pcspec_col <- "PCSPEC"
@@ -191,7 +192,7 @@ get_dose_esc_results <- function(
       ) %>%
       select(
         any_of(c(facet_vars, "Statistic")),
-        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% stats_parameters])
+        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% summary_stats_parameters])
       ) %>%
       unique()
 
@@ -210,19 +211,28 @@ get_dose_esc_results <- function(
       pull(group) %>%
       unique()
 
-    boxplot_i <- flexible_violinboxplot(
-      res_nca = o_nca_i,
-      parameter = boxplot_parameter,
-      xvars = facet_vars,
-      colorvars = analyte_col,
-      varvalstofilter = NULL,
-      box = TRUE,
-      tooltip_vars = NULL,
-      plotly = FALSE
+    boxplots_i <- setNames(
+      lapply(boxplot_parameters, function(bp) {
+        if (bp %in% unique(o_res_i$PPTESTCD)) {
+          flexible_violinboxplot(
+            res_nca = o_nca_i,
+            parameter = bp,
+            xvars = facet_vars,
+            colorvars = analyte_col,
+            varvalstofilter = NULL,
+            box = TRUE,
+            tooltip_vars = NULL,
+            plotly = FALSE
+          )
+        } else {
+          NULL
+        }
+      }),
+      boxplot_parameters
     )
 
     ind_params <- merge(o_nca$result, group_i) %>%
-      filter(PPTESTCD %in% stats_parameters) %>%
+      filter(PPTESTCD %in% ind_stats_parameters) %>%
       mutate(parameter_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
       select(any_of(
         c(
@@ -253,7 +263,7 @@ get_dose_esc_results <- function(
       linplot = linplot_i,
       meanplot = meanplot_i,
       statistics = stats_i,
-      boxplot = boxplot_i,
+      boxplot = boxplots_i,
       info = info_i,
       ind_params = ind_params,
       ind_plots = ind_plots,
@@ -303,6 +313,29 @@ get_tree_leaf_ids <- function(tree) {
   ids
 }
 
+#' Convert tree node text values to their corresponding node IDs
+#' @param tree A tree list (output of create_tree_from_list_names)
+#' @param texts Character vector of node text values to look up
+#' @return Character vector of matching node IDs
+get_tree_ids_for_texts <- function(tree, texts) {
+  result <- character(0)
+  for (node in tree) {
+    has_children <- !is.null(node$children) && length(node$children) > 0
+    if (has_children) {
+      if (node$text %in% texts) {
+        # Parent fully selected: add all leaf descendants, never the parent ID
+        result <- c(result, get_tree_leaf_ids(node$children))
+      } else {
+        # Check children individually
+        result <- c(result, get_tree_ids_for_texts(node$children, texts))
+      }
+    } else if (node$text %in% texts) {
+      result <- c(result, node$id)
+    }
+  }
+  result
+}
+
 #' Prepare export files
 #'
 #' @param target_dir Path to the directory where files will be written.
@@ -317,7 +350,8 @@ prepare_export_files <- function(target_dir,
                                  grouping_vars,
                                  input,
                                  session,
-                                 progress) {
+                                 progress,
+                                 slide_config = NULL) {
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
@@ -355,7 +389,8 @@ prepare_export_files <- function(target_dir,
   if ("results_slides" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
                  detail = "Saving slideshow...")
-    .export_slides(target_dir, res_nca, grouping_vars, input, session)
+    .export_slides(target_dir, res_nca, grouping_vars, input, session,
+                   slide_config = slide_config)
   }
   progress$inc(0.4)
 
@@ -402,15 +437,40 @@ prepare_export_files <- function(target_dir,
 #' @param session Shiny session object.
 #' @keywords internal
 #' @noRd
-.export_slides <- function(target_dir, res_nca, grouping_vars, input, session) {
+.export_slides <- function(target_dir, res_nca, grouping_vars, input, session,
+                           slide_config = NULL) {
+  slide_sections           <- slide_config$slide_sections
+  ind_stats_parameters <- rlang::`%||%`(
+    slide_config$ind_stats_parameters, DEFAULT_STATS_PARAMETERS
+  )
+  summary_stats_parameters <- rlang::`%||%`(
+    slide_config$summary_stats_parameters, DEFAULT_STATS_PARAMETERS
+  )
+  boxplot_parameters       <- slide_config$boxplot_parameters
+  if (length(boxplot_parameters) == 0) boxplot_parameters <- c("CMAX", "AUCIFO", "LAMZHL")
+
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
     facet_vars = "DOSEA",
     statistics = "Mean",
-    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"),
+    stats_parameters         = union(ind_stats_parameters, summary_stats_parameters),
+    ind_stats_parameters     = ind_stats_parameters,
+    summary_stats_parameters = summary_stats_parameters,
+    boxplot_parameters        = boxplot_parameters,
     info_vars = grouping_vars
   )
+
+  # Attach additional_analysis from session results
+  additional_analysis <- session$userData$results$additional_analysis
+  if (is.null(additional_analysis)) additional_analysis <- list()
+  attr(res_dose_slides, "additional_analysis") <- Filter(
+    function(x) is.data.frame(x) && nrow(x) > 0,
+    additional_analysis
+  )
+
+  # Attach slide section selection (NULL means all sections)
+  attr(res_dose_slides, "slide_sections") <- slide_sections
 
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
@@ -554,6 +614,10 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data\\.rds$", all_files, value = TRUE))
+  if ("qmd" %in% input$slide_formats) {
+    files_req <- c(files_req, grep("results_slides_outputs\\.rda$", all_files, value = TRUE))
+  }
+
   # Preserve pre-specs only when at least one CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
