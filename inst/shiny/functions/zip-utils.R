@@ -573,6 +573,9 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data\\.rds$", all_files, value = TRUE))
+  if ("qmd" %in% input$slide_formats) {
+    files_req <- c(files_req, grep("results_slides_outputs\\.rda$", all_files, value = TRUE))
+  }
 
   # Preserve pre-specs only when at least one CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
