@@ -27,33 +27,63 @@
 #' Default is `NULL` (no filtering).
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
 #' Default is `FALSE` (time since first dose).
+#' @param line_type Character; "default" (default), "dose-normalized" to specify lines to
+#' be normalized by dose amount or "both" to include both normalized and non-normalized lines.
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
 #' @export
 exploration_individualplot <- function(
-  pknca_data,
-  color_by,
-  facet_by = NULL,
-  show_facet_n = FALSE,
-  ylog_scale = FALSE,
-  show_legend = TRUE,
-  threshold_value = NULL,
-  x_limits = NULL,
-  y_limits = NULL,
-  show_dose = FALSE,
-  palette = "default",
-  tooltip_vars = NULL,
-  labels_df = NULL,
-  filtering_list = NULL,
-  use_time_since_last_dose = FALSE
-) {
-  individual_data <- process_data_individual(
-    pknca_data = pknca_data,
-    filtering_list = filtering_list,
-    ylog_scale = ylog_scale,
-    show_dose = show_dose,
-    use_time_since_last_dose = use_time_since_last_dose
-  )
+    pknca_data,
+    color_by,
+    facet_by = NULL,
+    show_facet_n = FALSE,
+    ylog_scale = FALSE,
+    threshold_value = NULL,
+    x_limits = NULL,
+    y_limits = NULL,
+    show_dose = FALSE,
+    palette = "default",
+    tooltip_vars = NULL,
+    labels_df = NULL,
+    filtering_list = NULL,
+    use_time_since_last_dose = FALSE,
+    show_legend = TRUE,
+    line_type = "default") {
+
+  if (line_type == "both") {
+    # Dose-normalized data
+    dn_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = TRUE
+    )
+    dn_data$line_type_label <- "Dose-normalized"
+    # default data
+    nn_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = FALSE
+    )
+    nn_data$line_type_label <- "default"
+    individual_data <- dplyr::bind_rows(dn_data, nn_data)
+    linetype_by <- "line_type_label"
+  } else {
+    individual_data <- process_data_individual(
+      pknca_data = pknca_data,
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = line_type == "dose-normalized"
+    )
+    linetype_by <- NULL
+  }
 
   # If no tooltip variables defined use some default ones
   if (is.null(tooltip_vars)) {
@@ -83,6 +113,7 @@ exploration_individualplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
+    linetype_by = linetype_by,
     show_legend = show_legend
   )
 }
@@ -123,7 +154,8 @@ exploration_meanplot <- function(
   filtering_list = NULL,
   use_time_since_last_dose = FALSE,
   x_limits = NULL,
-  y_limits = NULL
+  y_limits = NULL,
+  line_type = "default"
 ) {
 
   mean_data <- process_data_mean(
@@ -133,8 +165,28 @@ exploration_meanplot <- function(
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
     show_dose = show_dose,
-    use_time_since_last_dose = use_time_since_last_dose
+    use_time_since_last_dose = use_time_since_last_dose,
+    dose_normalize = FALSE
   )
+
+  if (line_type != "default") {
+    mean_data_dn <- process_data_mean(
+      pknca_data = pknca_data,
+      extra_grouping_vars = c(color_by, facet_by),
+      filtering_list = filtering_list,
+      ylog_scale = ylog_scale,
+      show_dose = show_dose,
+      use_time_since_last_dose = use_time_since_last_dose,
+      dose_normalize = TRUE
+    )
+    mean_data_dn$line_type_label <- "Dose-normalized"
+    mean_data$line_type_label <- "default"
+    mean_data <- dplyr::bind_rows(mean_data, mean_data_dn)
+
+    if (line_type == "dose-normalized") {
+      mean_data <- mean_data %>% filter(line_type_label == "Dose-normalized")
+    }
+  }
 
   # The time variable will always be the first one
   x_var <- names(mean_data)[1]
@@ -168,6 +220,7 @@ exploration_meanplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
+    linetype_by = if (line_type != "default") "line_type_label" else NULL,
     show_legend = show_legend
   )
   # If there is no mean data, just return the plot
@@ -211,19 +264,40 @@ process_data_individual <- function(pknca_data,
                                     ylog_scale = FALSE,
                                     conc_col = "AVAL",
                                     show_dose = FALSE,
-                                    use_time_since_last_dose = FALSE) {
+                                    use_time_since_last_dose = FALSE,
+                                    dose_normalize = FALSE) {
+
+  time_col <- pknca_data$conc$columns$time
+  conc_col <- pknca_data$conc$columns$concentration
+  concu_col <- pknca_data$conc$columns$concu
+  dose_col <- pknca_data$dose$columns$dose
+  doseu_col <- pknca_data$dose$columns$doseu
+
   # Derive dose times if requested
-  data <- if (show_dose || use_time_since_last_dose) {
+  data <- if (show_dose || use_time_since_last_dose || dose_normalize) {
     data <- derive_last_dose_time(
       pknca_data = pknca_data,
       conc_time_col = pknca_data$conc$columns$time
     )
+
     # Adjust time variable with dose time if using time since last dose
     if (use_time_since_last_dose) {
       data <- dplyr::mutate(
         data,
         !!pknca_data$conc$columns$time := !!sym(pknca_data$conc$columns$time) - TIME_DOSE
       )
+    }
+    # If dose normalization requested, adjust concentration by dose amount
+    if (dose_normalize) {
+      data <- data %>%
+        mutate(
+          !!sym(conc_col) := !!sym(conc_col) / !!sym(dose_col),
+          !!sym(concu_col) := if (!is.null(doseu_col)) {
+            paste0("(", .[[concu_col]], ")/(", .[[doseu_col]], ")")
+          } else {
+            NA_character_
+          }
+        )
     }
     data
   } else {
@@ -277,7 +351,8 @@ process_data_mean <- function(pknca_data,
                               filtering_list = NULL,
                               ylog_scale = FALSE,
                               show_dose = FALSE,
-                              use_time_since_last_dose = FALSE) {
+                              use_time_since_last_dose = FALSE,
+                              dose_normalize = FALSE) {
   # Deduce columns and data
   x_var_unit <- pknca_data$conc$columns$timeu
   y_var_unit <- pknca_data$conc$columns$concu
@@ -291,7 +366,7 @@ process_data_mean <- function(pknca_data,
 
   processed <- .prepare_mean_data(
     pknca_data, x_var, y_var, dose_group_cols,
-    filtering_list, show_dose
+    filtering_list, show_dose, dose_normalize
   )
 
   # Calculate summary statistics by grouping columns
@@ -337,21 +412,45 @@ process_data_mean <- function(pknca_data,
 #' Prepare data for mean plot: derive dose times, filter, and adjust
 #' @noRd
 .prepare_mean_data <- function(pknca_data, x_var, y_var, dose_group_cols,
-                               filtering_list, show_dose) {
-  data <- if (show_dose) {
-    derive_last_dose_time(pknca_data = pknca_data, conc_time_col = x_var)
+                               filtering_list, show_dose, dose_normalize) {
+  dose_col <- pknca_data$dose$columns$dose
+  doseu_col <- pknca_data$dose$columns$doseu
+  y_var_unit <- pknca_data$conc$columns$concu
+
+  # Derive dose times if requested
+  data <- if (show_dose || dose_normalize) {
+    data <- derive_last_dose_time(
+      pknca_data = pknca_data,
+      conc_time_col = x_var
+    )
+    if (dose_normalize) {
+      data <- data %>%
+        mutate(
+          !!sym(y_var) := !!sym(y_var) / !!sym(dose_col),
+          !!sym(y_var_unit) := if (!is.null(doseu_col)) {
+            paste0("(", .[[y_var_unit]], ")/(", .[[doseu_col]], ")")
+          } else {
+            NA_character_
+          }
+        )
+    }
+    data
   } else {
     pknca_data$conc$data
   }
-  data <- filter_by_list(data, filtering_list) %>%
+
+  # Apply filtering
+  processed <- filter_by_list(data, filtering_list) %>%
     dplyr::filter(!is.na(!!rlang::sym(y_var)))
+
+  # Adjust time variable with dose time if using time since last dose
   if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
-    data <- data %>%
+    processed <- processed %>%
       dplyr::group_by(!!!rlang::syms(c(dose_group_cols, x_var))) %>%
       dplyr::mutate(TIME_DOSE = mean(TIME_DOSE, na.rm = TRUE)) %>%
       dplyr::ungroup()
   }
-  data
+  processed
 }
 
 #' Filter a data frame by a list of column-value pairs
@@ -434,17 +533,24 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
   dose_data <- pknca_data$dose$data
   dose_time_col <- pknca_data$dose$columns$time
   dose_group_vars <- group_vars(pknca_data$dose)
+  dose_col <- pknca_data$dose$columns$dose
+  doseu_col <- pknca_data$dose$columns$doseu
 
   dplyr::left_join(
-    conc_data,
+    conc_data  %>%
+      select(-any_of(c(dose_col, doseu_col))),
     dose_data %>%
-      dplyr::mutate(TIME_DOSE = !!rlang::sym(dose_time_col)) %>%
-      dplyr::select(!!!rlang::syms(c(dose_group_vars, "TIME_DOSE"))),
+      dplyr::mutate(
+        TIME_DOSE = !!rlang::sym(dose_time_col)
+      ) %>%
+      dplyr::select(any_of(c(dose_group_vars, "TIME_DOSE", dose_col, doseu_col))),
     by = dose_group_vars,
     relationship = "many-to-many"
   ) %>%
     dplyr::filter(TIME_DOSE <= !!rlang::sym(conc_time_col)) %>%
-    dplyr::group_by(!!!rlang::syms(setdiff(names(conc_data), "TIME_DOSE"))) %>%
+    dplyr::group_by(
+      !!!rlang::syms(setdiff(names(conc_data), c("TIME_DOSE", dose_col, doseu_col)))
+    ) %>%
     dplyr::arrange(TIME_DOSE) %>%
     dplyr::slice_tail(n = 1) %>%
     dplyr::ungroup()

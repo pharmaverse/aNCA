@@ -153,6 +153,7 @@
     "lambda.z.time.last",
     "layout",
     "legend_group",
+    "line_type_label",
     "metadata_nca_parameters",
     "metadata_nca_variables",
     "missing_tau",
