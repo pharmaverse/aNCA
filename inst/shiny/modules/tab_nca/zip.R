@@ -189,6 +189,7 @@ TREE_LIST <- list(
   extras = list(
     results_slides = "",
     r_script = "",
-    settings_file = ""
+    settings_file = "",
+    session_info = ""
   )
 )

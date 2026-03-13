@@ -382,6 +382,12 @@ prepare_export_files <- function(target_dir,
                  detail = "Saving R script...")
     .export_script(target_dir, session)
   }
+
+  if ("session_info" %in% input$res_tree) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving session info...")
+    .export_session_info(target_dir)
+  }
   progress$inc(0.8)
 
   .clean_export_dir(target_dir, input, custom_names)
@@ -492,6 +498,41 @@ prepare_export_files <- function(target_dir,
   )
 }
 
+#' Helper to export session info for reproducibility
+#' @param target_dir Target directory to save the session info
+#' @keywords internal
+#' @noRd
+.export_session_info <- function(target_dir) {
+  si <- utils::sessionInfo()
+  lines <- c(
+    paste("R version:", si$R.version$version.string),
+    paste("Platform: ", si$platform),
+    paste("Running under:", si$running),
+    "",
+    "aNCA and attached packages:",
+    ""
+  )
+
+  # Collect attached packages (base + other) with versions, sorted alphabetically
+
+  attached <- c(
+    vapply(si$otherPkgs, function(p) paste0("  ", p$Package, " ", p$Version), ""),
+    vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
+  )
+  lines <- c(lines, sort(attached))
+
+  # Loaded-only (namespace) packages
+  if (length(si$loadedOnly) > 0) {
+    loaded <- vapply(
+      si$loadedOnly,
+      function(p) paste0("  ", p$Package, " ", p$Version), ""
+    )
+    lines <- c(lines, "", "Loaded via namespace (not attached):", "", sort(loaded))
+  }
+
+  writeLines(lines, file.path(target_dir, "session_info.txt"))
+}
+
 #' Clean Export Directory
 #' @param target_dir Target directory to clean
 #' @param input Shiny input object
@@ -516,6 +557,10 @@ prepare_export_files <- function(target_dir,
   # Preserve pre-specs only when at least one CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                   value = TRUE))
+  }
+  if ("session_info" %in% fnames) {
+    files_req <- c(files_req, grep("session_info\\.txt$", all_files,
                                    value = TRUE))
   }
   file.remove(all_files[!all_files %in% files_req])
