@@ -1,3 +1,9 @@
+#' Module for viewing and downloading CDISC parameter datasets (PP, ADPP, ADNCA).
+#'
+#' Renders each dataset in an interactive table with CSV/XLSX download options.
+#'
+#' @param id Module namespace ID.
+
 parameter_datasets_ui <- function(id) {
   ns <- NS(id)
   navset_pill(
