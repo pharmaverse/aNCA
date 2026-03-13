@@ -88,6 +88,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param in_sections Function(id) returning TRUE when id is selected
 #' @return List with updated pptx and n_slides count
 #' @keywords internal
+#' @noRd
 .add_pptx_ind_slides <- function(pptx, group_data, group_index, in_sections) {
   if (!in_sections("ind_plots") && !in_sections("ind_params")) {
     return(list(pptx = pptx, n_slides = 0))
@@ -123,6 +124,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param slide_sections Character vector of selected section IDs, or NULL for all
 #' @return Filtered named list
 #' @keywords internal
+#' @noRd
 .filter_additional_analysis <- function(additional_analysis, slide_sections) {
   if (is.null(additional_analysis)) return(NULL)
   result <- Filter(function(x) is.data.frame(x) && nrow(x) > 0, additional_analysis)
@@ -139,6 +141,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param in_sections Function(id) returning TRUE when the section id is selected.
 #' @return Updated pptx object.
 #' @keywords internal
+#' @noRd
 .add_pptx_main_summary_slide <- function(pptx, group_data, i, in_sections) {
   if (in_sections("meanplot") && in_sections("statistics")) {
     add_pptx_sl_plottable(pptx, df = group_data$statistics, plot = group_data$meanplot)
@@ -160,6 +163,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param in_sections Function(id) returning TRUE when the section id is selected.
 #' @return List with elements `pptx`, `n_slides`.
 #' @keywords internal
+#' @noRd
 .add_pptx_boxplot_slides <- function(pptx, group_data, in_sections) {
   boxplots_i <- group_data$boxplot
   if (!in_sections("boxplot") || !is.list(boxplots_i)) {
@@ -180,6 +184,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param lst_group_slide Integer slide index at the start of this group.
 #' @return List with elements `pptx`, `n_summary_slides`.
 #' @keywords internal
+#' @noRd
 .add_pptx_group_summary <- function(pptx, group_data, i, in_sections, lst_group_slide) {
   pptx <- add_pptx_sl_table(pptx, group_data$info, paste0("Group ", i, " Summary"),
                             subtitle = paste(group_data$group)) %>%
@@ -204,6 +209,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param group_slides Integer vector of summary slide indices accumulated so far.
 #' @return List with elements `pptx`, `lst_group_slide`, `group_slides`.
 #' @keywords internal
+#' @noRd
 .process_pptx_group_slides <- function(pptx, group_data, i, in_sections,
                                        lst_group_slide, group_slides) {
   ind_result <- .add_pptx_ind_slides(pptx, group_data, i, in_sections)

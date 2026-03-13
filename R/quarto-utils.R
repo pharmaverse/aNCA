@@ -101,6 +101,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param i Integer index of the dose group.
 #' @param label Character string used as the # heading text.
 #' @keywords internal
+#' @noRd
 .add_qmd_group_section_header <- function(quarto_path, res_dose_slides, i, label) {
   write(
     c(
@@ -119,6 +120,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param i Integer index of the dose group.
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @keywords internal
+#' @noRd
 .add_qmd_boxplot_slides <- function(quarto_path, boxplots_i, i, use_plotly) {
   for (bp_name in names(boxplots_i)) {
     if (!is.null(boxplots_i[[bp_name]])) {
@@ -137,6 +139,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param in_sections Function(id) returning TRUE when the section id is selected.
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @keywords internal
+#' @noRd
 .add_qmd_summary_slides <- function(quarto_path, res_dose_slides, in_sections, use_plotly) {
   for (i in seq_along(res_dose_slides)) {
     .add_qmd_group_section_header(quarto_path, res_dose_slides, i, paste0("Group ", i))
@@ -175,6 +178,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param in_sections Function(id) returning TRUE when the section id is selected.
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @keywords internal
+#' @noRd
 .add_qmd_ind_slides <- function(quarto_path, res_dose_slides, in_sections, use_plotly) {
   for (i in seq_along(res_dose_slides)) {
     .add_qmd_group_section_header(
@@ -205,6 +209,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param additional_analysis Named list of data frames.
 #' @param slide_sections Character vector of selected section IDs, or NULL for all.
 #' @keywords internal
+#' @noRd
 .add_qmd_additional_analysis <- function(quarto_path, additional_analysis, slide_sections) {
   if (is.null(additional_analysis)) return(invisible(NULL))
   keep <- vapply(additional_analysis, function(x) is.data.frame(x) && nrow(x) > 0, logical(1))
