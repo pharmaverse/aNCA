@@ -4,6 +4,7 @@
 ^\.Rproj\.user$
 ^\.renvignore$
 ^CONTRIBUTING.md$
+^AGENTS\.md$
 ^pkgdown/
 ^dev/
 ^\.lintr$
