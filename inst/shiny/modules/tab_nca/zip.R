@@ -119,41 +119,50 @@ zip_ui <- function(id) {
           p(style = "color: #777; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;",
             "Parameters included in the slide tables")
         ),
-        shinyWidgets::virtualSelectInput(
-          inputId                  = ns("slide_ind_params"),
-          label                    = "Individual slide:",
-          choices                  = virtual_choices,
-          selected                 = default_selected,
-          multiple                 = TRUE,
-          search                   = TRUE,
-          showSelectedOptionsFirst = TRUE,
-          hasOptionDescription     = TRUE,
-          showValueAsTags          = TRUE,
-          width                    = "100%"
+        div(
+          id = ns("ind_params_container"),
+          shinyWidgets::virtualSelectInput(
+            inputId                  = ns("slide_ind_params"),
+            label                    = "Individual slide:",
+            choices                  = virtual_choices,
+            selected                 = default_selected,
+            multiple                 = TRUE,
+            search                   = TRUE,
+            showSelectedOptionsFirst = TRUE,
+            hasOptionDescription     = TRUE,
+            showValueAsTags          = TRUE,
+            width                    = "100%"
+          )
         ),
-        shinyWidgets::virtualSelectInput(
-          inputId                  = ns("slide_summary_params"),
-          label                    = "Summary slide:",
-          choices                  = virtual_choices,
-          selected                 = default_selected,
-          multiple                 = TRUE,
-          search                   = TRUE,
-          showSelectedOptionsFirst = TRUE,
-          hasOptionDescription     = TRUE,
-          showValueAsTags          = TRUE,
-          width                    = "100%"
+        div(
+          id = ns("summary_params_container"),
+          shinyWidgets::virtualSelectInput(
+            inputId                  = ns("slide_summary_params"),
+            label                    = "Summary slide:",
+            choices                  = virtual_choices,
+            selected                 = default_selected,
+            multiple                 = TRUE,
+            search                   = TRUE,
+            showSelectedOptionsFirst = TRUE,
+            hasOptionDescription     = TRUE,
+            showValueAsTags          = TRUE,
+            width                    = "100%"
+          )
         ),
-        shinyWidgets::virtualSelectInput(
-          inputId                  = ns("slide_boxplot_param"),
-          label                    = "Box plot parameter:",
-          choices                  = virtual_choices,
-          selected                 = intersect(c("AUCIFO", "CMAX", "LAMZHL"), available_params),
-          multiple                 = TRUE,
-          search                   = TRUE,
-          showSelectedOptionsFirst = TRUE,
-          hasOptionDescription     = TRUE,
-          showValueAsTags          = TRUE,
-          width                    = "100%"
+        div(
+          id = ns("boxplot_params_container"),
+          shinyWidgets::virtualSelectInput(
+            inputId                  = ns("slide_boxplot_param"),
+            label                    = "Box plot parameter:",
+            choices                  = virtual_choices,
+            selected                 = intersect(c("AUCIFO", "CMAX", "LAMZHL"), available_params),
+            multiple                 = TRUE,
+            search                   = TRUE,
+            showSelectedOptionsFirst = TRUE,
+            hasOptionDescription     = TRUE,
+            showValueAsTags          = TRUE,
+            width                    = "100%"
+          )
         ),
         helpText(
           icon("circle-info"),
@@ -164,6 +173,7 @@ zip_ui <- function(id) {
         )
       )
     ),
+    div(class = "w-100", uiOutput(ns("slide_validation_ui"))),
     footer = tagList(
       div(
         style = "display: flex; justify-content: space-between; width: 100%;",
@@ -202,6 +212,25 @@ zip_ui <- function(id) {
     return("Select at least one result to export.")
   }
   .check_format_selections(tree, plot_formats, table_formats, slide_formats)
+}
+
+# Validate slide configuration — returns character(0) if valid, else a vector of messages
+.validate_slide_config <- function(slide_sections_tree, ind_params,
+                                   summary_params, boxplot_params) {
+  msgs <- character(0)
+  if (is.null(slide_sections_tree) || length(slide_sections_tree) == 0) {
+    msgs <- c(msgs, "Select at least one slide section to include.")
+  }
+  if ("PK Parameters" %in% slide_sections_tree && length(ind_params) == 0) {
+    msgs <- c(msgs, "Individual slide parameters cannot be empty.")
+  }
+  if ("Summary Statistics" %in% slide_sections_tree && length(summary_params) == 0) {
+    msgs <- c(msgs, "Summary slide parameters cannot be empty.")
+  }
+  if ("Box Plot" %in% slide_sections_tree && length(boxplot_params) == 0) {
+    msgs <- c(msgs, "Box plot parameters cannot be empty.")
+  }
+  msgs
 }
 
 # Render export validation messages as a styled UI element
@@ -374,6 +403,34 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       } else {
         shinyjs::enable("confirm_export")
       }
+    })
+
+    slide_validation <- reactive({
+      .validate_slide_config(
+        slide_sections_tree = input$slide_sections_tree,
+        ind_params          = input$slide_ind_params,
+        summary_params      = input$slide_summary_params,
+        boxplot_params      = input$slide_boxplot_param
+      )
+    })
+
+    output$slide_validation_ui <- renderUI({
+      .render_validation_msgs(slide_validation())
+    })
+
+    observe({
+      if (length(slide_validation()) > 0) {
+        shinyjs::disable("download_zip_configured")
+      } else {
+        shinyjs::enable("download_zip_configured")
+      }
+    })
+
+    observe({
+      tree <- input$slide_sections_tree
+      shinyjs::toggle("ind_params_container",     condition = "PK Parameters"    %in% tree)
+      shinyjs::toggle("summary_params_container", condition = "Summary Statistics" %in% tree)
+      shinyjs::toggle("boxplot_params_container", condition = "Box Plot"           %in% tree)
     })
 
     # Show ZIP export modal when button is clicked
