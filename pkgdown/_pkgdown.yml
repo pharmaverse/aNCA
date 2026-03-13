@@ -10,7 +10,7 @@ navbar:
       text: "Get Started"
       href: articles/aNCA.html
     user_guide:
-      text: "User Guide"
+      text: "User Resources"
       icon: fa-book
       menu:
         - text: Manual
@@ -20,7 +20,7 @@ navbar:
         - text: FAQs
           href: articles/FAQs.html
     dev_guide:
-      text: "Developer Guide"
+      text: "Developer Resources"
       icon: fa-code
       menu:
         - text: Contributing
