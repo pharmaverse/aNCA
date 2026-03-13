@@ -51,18 +51,18 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 add_pptx_sl_table <- function(pptx, df, title = "",
                               subtitle = "",
                               footer = "Click here for individual results") {
-
+  
   title_formatted <- fpar(
     ftext(title),
     "\n",
     ftext(subtitle, prop = fp_text(font.size = 12)),
     fp_p = fp_par(text.align = "center", line_spacing = 1)
   )
-
+  
   # Set flextable to autofit and center for better appearance
   ft <- flextable::flextable(df) %>%
     flextable::autofit()
-
+  
   add_slide(pptx, layout = "Title Only") %>%
     ph_with(value = ft, location = "Table Placeholder 1") %>%
     ph_with(value = title_formatted, location = "Title 1") %>%
@@ -79,6 +79,72 @@ add_pptx_sl_plot <- function(pptx, plot) {
     ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
+#' Create a TOC registry to track section titles and their slide indices
+#' @return A list with `add(title, slide_index)` and `get()` methods.
+#' @keywords internal
+new_toc <- function() {
+  entries <- list()
+  list(
+    add = function(title, slide_index) {
+      entries[[length(entries) + 1]] <<- list(title = title, slide = slide_index)
+    },
+    get = function() entries
+  )
+}
+
+#' Add a Table of Contents slide to a PowerPoint presentation
+#'
+#' Each TOC entry is placed as a separate text box with a hyperlink to the
+#' target slide. Inserted at `insert_at` and all target indices are shifted
+#' accordingly.
+#'
+#' @param pptx rpptx object
+#' @param toc_entries List of lists with `title` and `slide` elements.
+#' @param insert_at Slide position for the TOC slide (default: 2).
+#' @importFrom officer add_slide ph_with ph_location fpar ftext fp_text
+#' @importFrom officer move_slide ph_slidelink
+#' @return rpptx object with TOC slide inserted.
+#' @keywords internal
+add_pptx_sl_toc <- function(pptx, toc_entries, insert_at = 2) {
+  if (length(toc_entries) == 0) return(pptx)
+  
+  # Add a blank "Title Only" slide at the end, then move it into position
+  pptx <- add_slide(pptx, layout = "Title Only", master = "Office Theme") %>%
+    ph_with(
+      value = "Summary of Contents",
+      location = ph_location_type(type = "title")
+    )
+  
+  # Place each entry as a separate text box with a link to its target slide.
+  # Inserting the TOC slide shifts all subsequent slides by 1.
+  line_height <- 0.45
+  top_start <- 1.8
+  for (i in seq_along(toc_entries)) {
+    entry <- toc_entries[[i]]
+    entry_label <- paste0("toc_entry_", i)
+    target_slide <- entry$slide + 1 # +1 because the TOC slide itself shifts indices
+    
+    pptx <- ph_with(
+      pptx,
+      value = fpar(
+        ftext(
+          entry$title,
+          prop = fp_text(font.size = 14, color = "#0563C1", underlined = TRUE)
+        )
+      ),
+      location = ph_location(
+        left = 1, top = top_start + (i - 1) * line_height,
+        width = 8, height = line_height,
+        newlabel = entry_label
+      )
+    )
+    pptx <- ph_slidelink(pptx, ph_label = entry_label, slide_index = target_slide)
+  }
+  
+  # Move the TOC slide from the end to the target position
+  move_slide(pptx, index = length(pptx), to = insert_at)
+}
+
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
 #' Adds slides for summary tables, mean plots, line plots, and individual subject results
 #' @param res_dose_slides List of results for each dose group
@@ -89,11 +155,13 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @return TRUE (invisible). Writes the PowerPoint file to the specified path
 create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   pptx <- create_pptx_doc(path, title, template)
-
+  
   lst_group_slide <- 1
   group_slides <- numeric()
+  slides_per_group <- 4 # summary table + meanplot + linplot + boxplot
+  
   for (i in seq_along(res_dose_slides)) {
-
+    
     # Generate the individual figures
     pptx <- add_pptx_sl_table(
       pptx, res_dose_slides[[i]]$info,
@@ -112,7 +180,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
       },
       .init = pptx
     )
-
+    
     # Generate summary figures and tables
     pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " Summary"),
                               subtitle = paste(res_dose_slides[[i]]$group)) %>%
@@ -123,12 +191,12 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
       ) %>%
       add_pptx_sl_plot(res_dose_slides[[i]]$linplot) %>%
       add_pptx_sl_plot(res_dose_slides[[i]]$boxplot)
-
+    
     n_ind <- length(res_dose_slides[[i]]$ind_params)
-    lst_group_slide <- lst_group_slide + 1 + n_ind + 4
+    lst_group_slide <- lst_group_slide + 1 + n_ind + slides_per_group
     group_slides <- c(group_slides, (lst_group_slide - 3):(lst_group_slide))
   }
-
+  
   group_slides_rev <- rev(group_slides) + (seq_along(group_slides) - 1)
   pptx <- purrr::reduce(
     group_slides_rev,
@@ -137,7 +205,23 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   )
   pptx <- add_pptx_sl_title(pptx, "Extra Figures")
   pptx <- move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
-
+  
+  # Build TOC entries based on final slide positions:
+  # Slide 1 = Title, then groups start at slide 2 (4 slides each), then "Extra Figures"
+  n_groups <- length(res_dose_slides)
+  toc <- new_toc()
+  for (i in seq_len(n_groups)) {
+    toc$add(
+      title = paste0("Group ", i, ": ", gsub("\n", " | ", res_dose_slides[[i]]$group)),
+      slide_index = 2 + (i - 1) * slides_per_group
+    )
+  }
+  toc$add(
+    title = "Extra Figures (Individual Results)",
+    slide_index = length(group_slides) + 2
+  )
+  pptx <- add_pptx_sl_toc(pptx, toc$get(), insert_at = 2)
+  
   print(pptx, target = path)
   invisible(TRUE)
 }

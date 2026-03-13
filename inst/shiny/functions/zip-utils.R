@@ -83,15 +83,15 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
 }
 
 save_output <- function(
-  output, output_path,
-  ggplot_formats = c("png", "html"),
-  table_formats = c("csv", "rds", "xpt"),
-  obj_names = NULL
+    output, output_path,
+    ggplot_formats = c("png", "html"),
+    table_formats = c("csv", "rds", "xpt"),
+    obj_names = NULL
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
   for (name in names(output)) {
     x <- output[[name]]
-
+    
     if (!.is_leaf(x) && inherits(x, "list")) {
       save_output(
         x, paste0(output_path, "/", name),
@@ -108,7 +108,7 @@ save_output <- function(
 
 # Helper function to ensure the data.frame object is XPT compatible
 format_to_xpt_compatible <- function(data) {
-
+  
   # Columns should not have brackets or parenthesis
   names(data) <- make.unique(gsub(pattern = "\\[.*\\]", replacement = "", x = names(data)))
   names(data) <- gsub(pattern = "\\.", replacement = "", x = names(data))
@@ -131,13 +131,13 @@ format_to_xpt_compatible <- function(data) {
 #'
 #' @return A list containing dose escalation plots, summary statistics & info tables for each group.
 get_dose_esc_results <- function(
-  o_nca, group_by_vars,
-  statistics = "Mean",
-  facet_vars = "DOSEA",
-  stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
-  boxplot_parameter = "AUCIFO",
-  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
-  labels_df = metadata_nca_variables
+    o_nca, group_by_vars,
+    statistics = "Mean",
+    facet_vars = "DOSEA",
+    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
+    boxplot_parameter = "AUCIFO",
+    info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+    labels_df = metadata_nca_variables
 ) {
   # Define column names
   studyid_col <- "STUDYID"
@@ -145,7 +145,7 @@ get_dose_esc_results <- function(
   analyte_col <- o_nca$data$conc$columns$groups$group_analyte
   pcspec_col <- "PCSPEC"
   profile_col <- "ATPTREF"
-
+  
   groups <- unique(o_nca$data$intervals[, c(group_by_vars, profile_col)])
   output_list <- list()
   o_nca_i <- o_nca
@@ -155,7 +155,7 @@ get_dose_esc_results <- function(
     d_conc_i <- merge(o_nca$data$conc$data, group_i)
     o_res_i <- merge(o_nca$result, group_i)
     o_nca_i$result <- o_res_i
-
+    
     linplot_i <- exploration_individualplot(
       pknca_data = o_nca_i$data,
       color_by = subj_col,
@@ -168,7 +168,7 @@ get_dose_esc_results <- function(
       ),
       ylog_scale = TRUE
     )
-
+    
     meanplot_i <- exploration_meanplot(
       pknca_data = o_nca_i$data,
       color_by = group_by_vars,
@@ -181,7 +181,7 @@ get_dose_esc_results <- function(
       ylog_scale = TRUE,
       sd_max = TRUE
     )
-
+    
     stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
@@ -194,12 +194,12 @@ get_dose_esc_results <- function(
         any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% stats_parameters])
       ) %>%
       unique()
-
+    
     info_i <- merge(o_nca$data$conc$data, group_i) %>%
       # Group by cols from info vars that are in the data
       group_by(across(any_of(info_vars))) %>%
       summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop")
-
+    
     # Create character string of Group
     # Where group_by_vars are concatenated with ": " between label and value
     group_string <- merge(o_nca$data$conc$data, group_i) %>%
@@ -209,7 +209,7 @@ get_dose_esc_results <- function(
       })) %>%
       pull(group) %>%
       unique()
-
+    
     boxplot_i <- flexible_violinboxplot(
       res_nca = o_nca_i,
       parameter = boxplot_parameter,
@@ -220,7 +220,7 @@ get_dose_esc_results <- function(
       tooltip_vars = NULL,
       plotly = FALSE
     )
-
+    
     ind_params <- merge(o_nca$result, group_i) %>%
       filter(PPTESTCD %in% stats_parameters) %>%
       mutate(parameter_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
@@ -232,7 +232,7 @@ get_dose_esc_results <- function(
       )) %>%
       pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
       split(.[[o_nca$data$conc$columns$subject]])
-
+    
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
       lapply(function(d_conc_i) {
@@ -248,7 +248,7 @@ get_dose_esc_results <- function(
           ylog_scale = TRUE
         )
       })
-
+    
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
@@ -318,7 +318,7 @@ prepare_export_files <- function(target_dir,
                                  input,
                                  session,
                                  progress) {
-
+  
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
@@ -332,7 +332,7 @@ prepare_export_files <- function(target_dir,
   selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
   custom_names <- all_custom[all_custom %in% selected_types]
   obj_names <- unique(c(input$res_tree, names(custom_names)))
-
+  
   # Filter exploration list to only include allowed plots
   results <- session$userData$results
   if (!is.null(results$exploration)) {
@@ -341,7 +341,7 @@ prepare_export_files <- function(target_dir,
       intersect(names(results$exploration), allowed)
     ]
   }
-
+  
   save_output(
     output = results,
     output_path = target_dir,
@@ -349,23 +349,23 @@ prepare_export_files <- function(target_dir,
     table_formats = input$table_formats,
     obj_names = obj_names
   )
-
+  
   progress$inc(0.2)
-
+  
   if ("results_slides" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
                  detail = "Saving slideshow...")
     .export_slides(target_dir, res_nca, grouping_vars, input, session)
   }
   progress$inc(0.4)
-
+  
   if ("settings_file" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
                  detail = "Saving settings...")
     .export_settings(target_dir, session)
   }
   progress$inc(0.6)
-
+  
   # Export pre-specification files for selected CDISC datasets
   selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
   if (length(selected_cdisc) > 0) {
@@ -374,9 +374,9 @@ prepare_export_files <- function(target_dir,
     .export_pre_specs(target_dir, selected_cdisc,
                       cdisc_data = session$userData$results$CDISC)
   }
-
+  
   saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
-
+  
   if ("r_script" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
                  detail = "Saving R script...")
@@ -389,7 +389,7 @@ prepare_export_files <- function(target_dir,
     .export_session_info(target_dir)
   }
   progress$inc(0.8)
-
+  
   .clean_export_dir(target_dir, input, custom_names)
 }
 
@@ -411,13 +411,13 @@ prepare_export_files <- function(target_dir,
     stats_parameters = c("CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"),
     info_vars = grouping_vars
   )
-
+  
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
-
+  
   pn <- session$userData$project_name()
   slide_title <- if (pn == "") "NCA Results" else paste0("NCA Results\n", pn)
-
+  
   if ("qmd" %in% input$slide_formats) {
     create_qmd_dose_slides(
       res_dose_slides,
@@ -443,13 +443,13 @@ prepare_export_files <- function(target_dir,
 #' @noRd
 .export_settings <- function(target_dir, session) {
   settings_list <- session$userData$settings()
-
+  
   if (!is.null(settings_list$units)) {
     settings_list$units <- settings_list$units %>%
       dplyr::filter(!default) %>%
       dplyr::select(-default)
   }
-
+  
   settings_to_save <- list(
     settings = settings_list,
     slope_rules = session$userData$slope_rules()
@@ -471,12 +471,12 @@ prepare_export_files <- function(target_dir,
   # Reverse lookup: lowercase keys -> uppercase dataset names
   rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
   datasets <- unname(rev_map[selected])
-
+  
   pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
-
+  
   # Keep only non-empty specs
   pre_specs <- Filter(function(df) nrow(df) > 0, pre_specs)
-
+  
   if (length(pre_specs) > 0) {
     cdisc_dir <- file.path(target_dir, "CDISC")
     dir.create(cdisc_dir, recursive = TRUE, showWarnings = FALSE)
@@ -540,8 +540,10 @@ prepare_export_files <- function(target_dir,
 #' @noRd
 .clean_export_dir <- function(target_dir, input, custom_names = NULL) {
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
-
+  
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
+  # The .qmd file requires its companion .rda data file to render
+  if ("qmd" %in% input$slide_formats) exts <- c(exts, "rda")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
   fnames <- unique(c(input$res_tree, names(custom_names)))
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
@@ -564,7 +566,7 @@ prepare_export_files <- function(target_dir,
                                    value = TRUE))
   }
   file.remove(all_files[!all_files %in% files_req])
-
+  
   # Recursive directory cleanup — remove dirs that contain no files at any depth
   dirs <- list.dirs(target_dir, recursive = TRUE, full.names = TRUE)
   for (d in dirs[rev(order(nchar(dirs)))]) {
