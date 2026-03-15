@@ -187,7 +187,6 @@ describe("PKNCA_calculate_nca", {
     expect_equal(length(colnames(nca_results$result)), 15)
   })
 })
-
 describe("PKNCA_impute_method_start_logslope", {
   it("does not impute when start is in the data", {
     expect_equal(
@@ -228,7 +227,6 @@ describe("PKNCA_impute_method_start_logslope", {
     )
   })
 })
-
 describe("PKNCA_impute_method_start_c1", {
   it("does not impute when start is in the data", {
     expect_equal(
