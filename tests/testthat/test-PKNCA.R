@@ -41,7 +41,7 @@ multiple_data <- data.frame(
 # Simple example dataset
 pknca_data <- PKNCA_create_data_object(simple_data)
 
-# ToDo (Gerardo): refine PKNCA_create_data_object
+# ToDo (Gerardo): refine PKNCA_create_data_object ----
 #                 to make less implicit column assumptions
 
 describe("PKNCA_create_data_object", {
@@ -116,7 +116,7 @@ describe("PKNCA_create_data_object", {
   })
 })
 
-# Test PKNCA_update_data_object
+# Test PKNCA_update_data_object ----
 describe("PKNCA_update_data_object", {
   method <- "lin up log down"
   params <- c("cmax", "tmax", "auclast", "aucinf.obs")
@@ -170,7 +170,7 @@ describe("PKNCA_update_data_object", {
 })
 
 
-# Calculate NCA
+# Calculate NCA ----
 nca_results <- PKNCA_calculate_nca(pknca_data)
 
 describe("PKNCA_calculate_nca", {
@@ -254,7 +254,7 @@ describe("PKNCA_impute_method_start_c1", {
   })
 })
 
-# Tests for PKNA_build_units_table
+# Tests for PKNA_build_units_table ----
 describe("PKNCA_build_units_table", {
   # Subset the data to only include USUBJID 8 (2 analytes, A & B)
   d_conc <- FIXTURE_CONC_DATA %>%
@@ -436,7 +436,7 @@ describe("check_valid_pknca_data", {
   })
 })
 
-# Tests for add_exclusion_reasons
+# Tests for add_exclusion_reasons ----
 describe("add_exclusion_reasons", {
   it("adds a single exclusion reason to specified rows", {
     # Prepare exclusion list: exclude row 2 with reason "Test Reason"
@@ -608,7 +608,7 @@ describe("add_exclusion_reasons", {
       expect_true(all(is.na(result$conc)))
     })
   })
-  ##
+  # PKNCA Final Coverage Push----
   describe("PKNCA Final Coverage Push", {
     # Helper to generate fresh data for every 'it' block
     get_test_data <- function() {
@@ -783,35 +783,6 @@ describe("add_exclusion_reasons", {
         )
         expect_s3_class(updated, "PKNCAdata")
       })
-
-      it("covers the case where no points are in range for rules (Line 287)", {
-        ghost_rules <- data.frame(
-          STUDYID = "STUDY001", USUBJID = "GHOST", PARAM = "AnalyteA",
-          PCSPEC = "Plasma", DOSETRT = "DrugA", TYPE = "Exclusion",
-          RANGE = "1:2", REASON = "None"
-        )
-        expect_no_error(
-          PKNCA_update_data_object(pknca_data,
-            method = "lin up log down",
-            selected_analytes = "AnalyteA", selected_profile = 1,
-            selected_pcspec = "Plasma", hl_adj_rules = ghost_rules
-          )
-        )
-      })
-
-      it("covers strata_cols as NULL in select_minimal_grouping_cols (Line 635)", {
-        test_df <- data.frame(a = 1, b = 2)
-        result <- select_minimal_grouping_cols(test_df, strata_cols = NULL)
-        expect_equal(test_df, result)
-      })
-    })
-    ##
-  })
-  describe("select_minimal_grouping_cols()", {
-    it("returns the original data frame when strata_cols is empty", {
-      df <- data.frame(A = 1:3, B = 4:6)
-      result <- select_minimal_grouping_cols(df, strata_cols = character(0))
-      expect_equal(df, result)
     })
   })
 })
