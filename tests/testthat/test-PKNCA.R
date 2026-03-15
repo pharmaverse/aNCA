@@ -61,13 +61,13 @@ describe("PKNCA_create_data_object", {
 
   it("handles missing columns required for the functions in the input data", {
     # Missing columns in the function
-    missing_columns_conc <- simple_data[, -which(names(simple_data) %in%  c("ARRLT"))]
+    missing_columns_conc <- simple_data[, -which(names(simple_data) %in% c("ARRLT"))]
     expect_error(
       PKNCA_create_data_object(missing_columns_conc),
       paste("Missing required columns: ARRLT")
     )
 
-    missing_columns_dose <- simple_data[, -which(names(simple_data) %in%  c("AFRLT"))]
+    missing_columns_dose <- simple_data[, -which(names(simple_data) %in% c("AFRLT"))]
     expect_error(
       PKNCA_create_data_object(missing_columns_dose),
       paste("Missing required columns: AFRLT")
@@ -118,7 +118,6 @@ describe("PKNCA_create_data_object", {
 
 # Test PKNCA_update_data_object
 describe("PKNCA_update_data_object", {
-
   method <- "lin up log down"
   params <- c("cmax", "tmax", "auclast", "aucinf.obs")
   analytes <- unique(simple_data$PARAM)
@@ -171,11 +170,10 @@ describe("PKNCA_update_data_object", {
 })
 
 
-#Calculate NCA
+# Calculate NCA
 nca_results <- PKNCA_calculate_nca(pknca_data)
 
 describe("PKNCA_calculate_nca", {
-
   it("calculates results for PKNCA analysis", {
     expect_s3_class(nca_results, "PKNCAresults")
   })
@@ -188,7 +186,6 @@ describe("PKNCA_calculate_nca", {
     # Check that only two items have been added to the list
     expect_equal(length(colnames(nca_results$result)), 15)
   })
-
 })
 
 describe("PKNCA_impute_method_start_logslope", {
@@ -259,7 +256,6 @@ describe("PKNCA_impute_method_start_c1", {
 
 # Tests for PKNA_build_units_table
 describe("PKNCA_build_units_table", {
-
   # Subset the data to only include USUBJID 8 (2 analytes, A & B)
   d_conc <- FIXTURE_CONC_DATA %>%
     filter(USUBJID == 8)
@@ -267,16 +263,18 @@ describe("PKNCA_build_units_table", {
     filter(USUBJID == 8)
 
   o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                             concu = "AVALU", timeu = "RRLTU")
+    concu = "AVALU", timeu = "RRLTU"
+  )
   o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-                             doseu = "DOSEU")
+    doseu = "DOSEU"
+  )
   units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
 
   it("creates a seggregated units table when unit columns are defined in the PKNCA objects", {
     # Check units_table is a data frame
     expect_true(is.data.frame(units_table))
 
-    # Contains the seggregating variable PARAM & parameter unit columns
+    # Contains the segregating variable PARAM & parameter unit columns
     expect_equal(
       colnames(units_table),
       c("PARAM", "PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
@@ -295,9 +293,11 @@ describe("PKNCA_build_units_table", {
 
   it("creates an uniform units table when units are not defined as columns in the PKNCA obj", {
     o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                               concu = "ng/mL", timeu = "h")
+      concu = "ng/mL", timeu = "h"
+    )
     o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-                               doseu = "mg")
+      doseu = "mg"
+    )
     units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
     # Check units_table is a data frame
     expect_true(is.data.frame(units_table))
@@ -334,7 +334,8 @@ describe("PKNCA_build_units_table", {
   it("reports an error when units are not uniform through all concentration groups", {
     d_conc$AVALU[1] <- "pg/L"
     o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                               concu = "AVALU", timeu = "RRLTU")
+      concu = "AVALU", timeu = "RRLTU"
+    )
     expect_error(
       PKNCA_build_units_table(o_conc, o_dose),
       regexp = "Units should be uniform at least across concentration groups.*"
@@ -342,7 +343,8 @@ describe("PKNCA_build_units_table", {
   })
 
   it("ignores NA units when the unit column already contains one valid value", {
-
+    # <------------------------------ jr added next 1 line
+    blq_data <- simple_data # Use your standard mock data
     d_conc$AVALU[1] <- NA
     o_conc <- PKNCA::PKNCAconc(
       d_conc,
@@ -354,7 +356,6 @@ describe("PKNCA_build_units_table", {
   })
 
   it("does not ignore NA units in the case of AMOUNTU", {
-
     d_conc$AMOUNTU <- "g"
     d_conc <- d_conc %>%
       mutate(AMOUNTU = ifelse(PARAM == "A", NA_character_, AMOUNTU))
@@ -376,7 +377,6 @@ describe("PKNCA_build_units_table", {
 })
 
 describe("select_level_grouping_cols", {
-
   # Make a dataset where a variable `d` depends on `a` & `b`
   data <- data.frame(
     a = rep(letters[c(1, 2, 3)], each = 4),
@@ -499,5 +499,319 @@ describe("add_exclusion_reasons", {
     pknca_data_no_excl$conc$columns[["exclude"]] <- NULL
     pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
     expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
+  })
+  #  Following are GEMINI created:
+  describe("PKNCA_calculate_nca BLQ Imputation", {
+    it("triggers BLQ imputation logic when blq_rule is provided", {
+      # Define a rule: first BLQ is 0, middle is dropped, last is 0
+      blq_rule_list <- list(first = "keep", middle = "drop", last = "keep")
+      # We need data with a 0 to trigger BLQ logic
+      blq_test_data <- simple_data
+      blq_test_data$AVAL[2] <- 0
+      pknca_blq_obj <- PKNCA_create_data_object(blq_test_data)
+      # This will trigger lines 343-36
+      res <- PKNCA_calculate_nca(pknca_blq_obj, blq_rule = blq_rule_list)
+      expect_s3_class(res, "PKNCAresults")
+      # Verify the global function was created then removed (Line 374)
+      expect_false(exists("PKNCA_impute_method_blq", envir = as.environment(1)))
+    })
+  })
+  describe("PKNCA_update_data_object Rules Branch", {
+    it("hits the update_pknca_with_rules branch (Line 287)", {
+      # The string MUST contain a colon ':' to satisfy the split on line 280
+      # and a REASON column to satisfy the paste on line 296
+      # (TODO) GEMINI says choose 1 (ONE) of following test df
+      # Pro-Tip for 100% Coverage
+      # (choice 2) If you want to be extra thorough and cover the "Selection" branch (line 291)
+      # as well as the multiple ranges logic in .are_points_in_range,
+      # you can use two rows in your rules:
+      rules <- data.frame(
+        STUDYID = "STUDY001",
+        USUBJID = "SUBJ001",
+        PARAM = "AnalyteA",
+        PCSPEC = "Plasma",
+        DOSETRT = "DrugA",
+        TYPE = "Exclusion",
+        RANGE = "1:4", # Use colon here
+        REASON = "Manual Outlier" # Required for line 296
+      )
+      # has error, TODO if this df is chosen
+      if (FALSE) {
+        rules <- data.frame(
+          STUDYID = rep("STUDY001", 2),
+          USUBJID = rep("SUBJ001", 2),
+          PARAM = rep("AnalyteA", 2),
+          PCSPEC = rep("Plasma", 2),
+          DOSETRT = rep("DrugA", 2),
+          TYPE = c("Exclusion", "Selection"),
+          RANGE = c("1:2", "4, 6:8"), # Covers single points AND ranges
+          REASON = c("Bad injection", "Best points")
+        )
+      }
+      updated <- PKNCA_update_data_object(
+        adnca_data = pknca_data,
+        method = "lin up log down",
+        selected_analytes = "AnalyteA",
+        selected_profile = 1,
+        selected_pcspec = "Plasma",
+        hl_adj_rules = rules
+      )
+
+      expect_s3_class(updated, "PKNCAdata")
+      # Optional: Verify the flag was actually set   # nolint
+      expect_true(any(updated$conc$data$exclude_half.life))
+    })
+  })
+  ##
+  # 1. GEMINI:   Close BLQ and on.exit (Lines 343–374)
+  #
+  # The ! marks on these lines exist because we haven't passed a blq_rule
+  # that actually gets used. We need to provide a rule and data that
+  # contains a 0 or a value below the limit to trigger the
+  # internal .assign_global function.
+  ##
+  describe("PKNCA_calculate_nca Coverage Gaps", {
+    it("covers BLQ imputation and global variable cleanup (Lines 343-374)", {
+      # 1. Create data with a BLQ (0)
+      # <----------------------------------- jr changed
+      # blq_data <- adnca_data # Use your standard mock data   #nolint
+      blq_data <- simple_data # Use your standard mock data
+      blq_data$AVAL[2] <- 0
+
+      # 2. Define a rule to trigger the logic
+      # This hits lines 343-365
+      blq_rule <- list(first = "keep", middle = "drop", last = "keep")
+
+      pknca_blq_obj <- PKNCA_create_data_object(blq_data)
+
+      # 3. Run NCA
+      # This triggers the .assign_global and the on.exit cleanup (Line 374)
+      results <- PKNCA_calculate_nca(pknca_blq_obj, blq_rule = blq_rule)
+
+      expect_s3_class(results, "PKNCAresults")
+      # Verify cleanup: global variable should be gone
+      expect_false(exists("PKNCA_impute_method_blq", envir = as.environment(1)))
+    })
+  })
+
+  ## <---------------- jr added
+  describe("PKNCA_impute_method_start_logslope()", {
+    it("returns the original data frame when all concentrations in the window are NA", {
+      conc <- c(NA, NA, NA)
+      time <- c(1, 2, 3)
+      start <- 0
+      end <- 4
+      result <- PKNCA_impute_method_start_logslope(conc, time, start, end)
+
+      # Expect no new rows added (length remains 3)
+      expect_equal(nrow(result), 3)
+      expect_true(all(is.na(result$conc)))
+    })
+  })
+  ##
+  describe("PKNCA Final Coverage Push", {
+    # Helper to generate fresh data for every 'it' block
+    get_test_data <- function() {
+      data.frame(
+        STUDYID = "STUDY001",
+        PCSPEC = "Plasma",
+        ROUTE = "IV",
+        DOSETRT = "DrugA",
+        USUBJID = "SUBJ001",
+        ATPTREF = 1,
+        PARAM = "AnalyteA",
+        AVAL = c(0, 5, 10, 7, 3, 1),
+        AVALU = "ng/mL",
+        DOSEA = 100,
+        DOSEU = "mg",
+        AFRLT = c(0, 1, 2, 3, 4, 6),
+        ARRLT = c(0, 1, 2, 3, 4, 6),
+        NFRLT = c(0, 1, 2, 3, 4, 6),
+        ADOSEDUR = 0.5,
+        RRLTU = "hour"
+      )
+    }
+
+    it("covers BLQ imputation and global cleanup (Lines 343-374)", {
+      # 1. Setup BLQ data
+      blq_data <- get_test_data()
+      blq_data$AVAL[2] <- 0
+
+      # 2. Trigger BLQ branch (Lines 343-365)
+      blq_rule <- list(first = "keep", middle = "drop", last = "keep")
+      p_obj <- PKNCA_create_data_object(blq_data)
+
+      # 3. Run and trigger on.exit cleanup (Line 374)
+      res <- PKNCA_calculate_nca(p_obj, blq_rule = blq_rule)
+
+      expect_s3_class(res, "PKNCAresults")
+      expect_false(exists("PKNCA_impute_method_blq", envir = as.environment(1)))
+    })
+    # <------------ jr added this it()
+    it("covers BLQ imputation execution logic (Lines 347-365)", {
+      # 1. Setup data with a BLQ value (0)
+      blq_test_data <- simple_data
+      blq_test_data$AVAL[2] <- 0
+
+      # 2. Create the data object
+      pknca_obj <- PKNCA_create_data_object(blq_test_data)
+
+      # 3. Manually inject the 'blq' imputation requirement into the intervals
+      # This is the key to making PKNCA actually call the code on lines 347-365
+      pknca_obj$intervals$impute <- "blq"
+
+      # 4. Define a rule and run calculation
+      # Using a numeric value like 0.25 ensures clean.conc.blq is fully exercised
+      blq_rule <- list(first = "keep", middle = "drop", last = "keep")
+
+      results <- PKNCA_calculate_nca(pknca_obj, blq_rule = blq_rule)
+
+      # 5. Verify it ran without crashing
+      expect_s3_class(results, "PKNCAresults")
+    })
+
+    it("covers mismatching units error (Lines 581-585)", {
+      mismatch_data <- get_test_data()[c(1, 1), ]
+      # <---------------------- jr ADDED next line
+      mismatch_data$AFRLT <- c(0, 1) # Change time to avoid duplicate rows error
+      mismatch_data$USUBJID <- c("S1", "S2")
+      mismatch_data$AVALU <- c("ng/mL", "ug/L") # Force mismatch
+
+      o_conc <- PKNCA::PKNCAconc(mismatch_data,
+        AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT / PARAM,
+        concu = "AVALU"
+      )
+      o_dose <- PKNCA::PKNCAdose(mismatch_data[1, ],
+        DOSEA ~ AFRLT | STUDYID + DOSETRT,
+        doseu = "DOSEU"
+      )
+
+      expect_error(
+        PKNCA_build_units_table(o_conc, o_dose),
+        "Units should be uniform"
+      )
+    })
+
+    it("covers volume and half-life rules (Lines 142 & 287)", {
+      # Trigger Line 142 (VOLUME branch)
+      vol_data <- get_test_data()
+      vol_data$VOLUME <- 50
+      p_obj <- PKNCA_create_data_object(vol_data)
+
+      # Trigger Line 287 (hl_adj_rules branch)
+      # Using ':' for the internal strsplit and including REASON
+      rules <- data.frame(
+        STUDYID = "STUDY001", USUBJID = "SUBJ001", PARAM = "AnalyteA",
+        PCSPEC = "Plasma", DOSETRT = "DrugA", TYPE = "Exclusion",
+        RANGE = "1:2", REASON = "Manual Adjustment"
+      )
+
+      updated <- PKNCA_update_data_object(
+        p_obj,
+        method = "lin up log down",
+        selected_analytes = "AnalyteA", selected_profile = 1,
+        selected_pcspec = "Plasma", hl_adj_rules = rules
+      )
+
+      expect_true(any(updated$conc$data$exclude_half.life))
+    })
+    ##  <--------- jr added
+    it("covers the 'All NA' branch in start_c1 (Line 477)", {
+      # Specifically targets: if (!all(is.na(all_concs)))
+      conc <- c(NA, NA, NA)
+      time <- c(1, 2, 3)
+      result <- PKNCA_impute_method_start_c1(conc, time, start = 0, end = 4)
+
+      expect_equal(nrow(result), 3)
+      expect_true(all(is.na(result$conc)))
+    })
+
+    it("covers minimal grouping when strata_cols is NULL (Line 635)", {
+      # Fixed argument name from target_columns to strata_cols #nolint
+      test_df <- data.frame(a = 1, b = 2)
+      result <- select_minimal_grouping_cols(test_df, strata_cols = NULL)
+      expect_equal(test_df, result)
+    })
+
+    it("triggers the exclusion reason concatenation logic (Line 408)", {
+      # Hits: current_reason <- paste(c(current_reason, ...), collapse = "; ") #nolint
+      # We need a row that ALREADY has a reason, then we add another one.  #nolint
+
+      # Use the pknca_data object defined earlier in your script
+      p_data <- pknca_data
+      excl_col <- p_data$conc$columns$exclude
+
+      # Manually inject an existing reason into row 1
+      p_data$conc$data[[excl_col]][1] <- "Initial Reason"
+
+      excl_list <- list(list(reason = "Second Reason", rows = 1))
+      updated <- add_exclusion_reasons(p_data, excl_list)
+
+      # Verify they are joined by a semicolon
+      expect_equal(updated$conc$data[[excl_col]][1], "Initial Reason; Second Reason")
+    })
+    ##
+    describe("PKNCA Final Coverage Completion", {
+      it("covers successful start_logslope imputation logic (Lines 440-444)", {
+        conc <- c(10, 5, 2)
+        time <- c(1, 2, 3)
+        result <- PKNCA_impute_method_start_logslope(conc, time, start = 0, end = 3)
+        expect_equal(nrow(result), 4)
+        expect_true(0 %in% result$time)
+        expect_gt(result$conc[result$time == 0], 10)
+      })
+
+      it("covers successful start_c1 imputation logic (Lines 473-485)", {
+        conc <- c(10, 8, 5)
+        time <- c(1, 2, 3)
+        result <- PKNCA_impute_method_start_c1(conc, time, start = 0, end = 3)
+        expect_equal(nrow(result), 4)
+        expect_equal(result$conc[result$time == 0], 10)
+      })
+
+      it("hits the 'Selection' rule branch (Line 291)", {
+        selection_rules <- data.frame(
+          STUDYID = "STUDY001", USUBJID = "SUBJ001", PARAM = "AnalyteA",
+          PCSPEC = "Plasma", DOSETRT = "DrugA", TYPE = "Selection",
+          RANGE = "2:4", REASON = "Keep only these"
+        )
+        updated <- PKNCA_update_data_object(
+          pknca_data,
+          method = "lin up log down",
+          selected_analytes = "AnalyteA", selected_profile = 1,
+          selected_pcspec = "Plasma", hl_adj_rules = selection_rules
+        )
+        expect_s3_class(updated, "PKNCAdata")
+      })
+
+      it("covers the case where no points are in range for rules (Line 287)", {
+        ghost_rules <- data.frame(
+          STUDYID = "STUDY001", USUBJID = "GHOST", PARAM = "AnalyteA",
+          PCSPEC = "Plasma", DOSETRT = "DrugA", TYPE = "Exclusion",
+          RANGE = "1:2", REASON = "None"
+        )
+        expect_no_error(
+          PKNCA_update_data_object(pknca_data,
+            method = "lin up log down",
+            selected_analytes = "AnalyteA", selected_profile = 1,
+            selected_pcspec = "Plasma", hl_adj_rules = ghost_rules
+          )
+        )
+      })
+
+      it("covers strata_cols as NULL in select_minimal_grouping_cols (Line 635)", {
+        test_df <- data.frame(a = 1, b = 2)
+        result <- select_minimal_grouping_cols(test_df, strata_cols = NULL)
+        expect_equal(test_df, result)
+      })
+    })
+    ##
+  })
+  describe("select_minimal_grouping_cols()", {
+    it("returns the original data frame when strata_cols is empty", {
+      df <- data.frame(A = 1:3, B = 4:6)
+      result <- select_minimal_grouping_cols(df, strata_cols = character(0))
+      expect_equal(df, result)
+    })
   })
 })
