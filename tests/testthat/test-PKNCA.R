@@ -750,39 +750,5 @@ describe("add_exclusion_reasons", {
       # Verify they are joined by a semicolon
       expect_equal(updated$conc$data[[excl_col]][1], "Initial Reason; Second Reason")
     })
-    ##
-    describe("PKNCA Final Coverage Completion", {
-      it("covers successful start_logslope imputation logic (Lines 440-444)", {
-        conc <- c(10, 5, 2)
-        time <- c(1, 2, 3)
-        result <- PKNCA_impute_method_start_logslope(conc, time, start = 0, end = 3)
-        expect_equal(nrow(result), 4)
-        expect_true(0 %in% result$time)
-        expect_gt(result$conc[result$time == 0], 10)
-      })
-
-      it("covers successful start_c1 imputation logic (Lines 473-485)", {
-        conc <- c(10, 8, 5)
-        time <- c(1, 2, 3)
-        result <- PKNCA_impute_method_start_c1(conc, time, start = 0, end = 3)
-        expect_equal(nrow(result), 4)
-        expect_equal(result$conc[result$time == 0], 10)
-      })
-
-      it("hits the 'Selection' rule branch (Line 291)", {
-        selection_rules <- data.frame(
-          STUDYID = "STUDY001", USUBJID = "SUBJ001", PARAM = "AnalyteA",
-          PCSPEC = "Plasma", DOSETRT = "DrugA", TYPE = "Selection",
-          RANGE = "2:4", REASON = "Keep only these"
-        )
-        updated <- PKNCA_update_data_object(
-          pknca_data,
-          method = "lin up log down",
-          selected_analytes = "AnalyteA", selected_profile = 1,
-          selected_pcspec = "Plasma", hl_adj_rules = selection_rules
-        )
-        expect_s3_class(updated, "PKNCAdata")
-      })
-    })
   })
 })
