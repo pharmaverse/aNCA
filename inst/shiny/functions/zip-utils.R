@@ -561,8 +561,11 @@ prepare_export_files <- function(target_dir,
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
+  if ("qmd" %in% input$slide_formats) exts <- c(exts, "rda")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
   fnames <- unique(c(input$res_tree, names(custom_names)))
+  if ("results_slides" %in% fnames) fnames <- c(fnames, "results_slides_outputs")
+
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
   fnames_patt <- paste0(
