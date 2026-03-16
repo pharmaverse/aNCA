@@ -162,7 +162,8 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
         if (length(expected_filters) > 0) {
           .auto_submit_when_ready(filters, expected_filters)
         }
-      }) |> bindEvent(filters_metadata(), once = TRUE)
+      }) %>%
+        bindEvent(filters_metadata(), once = TRUE)
     })
 
     filter_reminder_notification <- reactiveVal(NULL)
