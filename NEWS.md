@@ -22,10 +22,6 @@
 * Section `General Exclusions` allowing to perform in-App NCA exclusions (#851)
 * Mean plots have been added in the TLGs section, with BLQ handling (#555)
 * CMAX automatically selected in box plots if available (#890)
-<<<<<<< HEAD
-* Function created to add labels to the variables and parameters in selectors, function implemented in some selectors. (#899)
-
-=======
 * Allow user to select additional `grouping variables` (chosen in the mapping) for ratio calculations (#868)
 * General button at top page to save all NCA results, settings & draft slides as a ZIP file (#638)
 * Settings are now uploaded on initial opening of the app in the data tab, and applied to the next steps (#860)
@@ -37,7 +33,8 @@
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 * Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
->>>>>>> ced3be30756111fa85a8ea0edf1b01bcdbb1dbae
+* Function created to add labels to the variables and parameters in selectors, function implemented in some selectors. (#899)
+
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
