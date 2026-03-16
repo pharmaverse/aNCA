@@ -96,9 +96,16 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
               selected = initial_values$value
             )
           }
-          shinyjs::toggleElement("value_text", condition = col_numeric)
-          shinyjs::toggleElement("value_select", condition = !col_numeric)
-          shinyjs::toggleState("condition", col_numeric)
+          ns <- session$ns
+          if (col_numeric) {
+            shinyjs::show(id = ns("value_text"), asis = TRUE)
+            shinyjs::hide(id = ns("value_select"), asis = TRUE)
+            shinyjs::enable(id = ns("condition"), asis = TRUE)
+          } else {
+            shinyjs::hide(id = ns("value_text"), asis = TRUE)
+            shinyjs::show(id = ns("value_select"), asis = TRUE)
+            shinyjs::disable(id = ns("condition"), asis = TRUE)
+          }
         })
       })
     }
