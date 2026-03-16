@@ -180,7 +180,7 @@ tab_data_server <- function(id) {
           adnca_data = uploaded_data$adnca_raw(),
           mapping = column_mapping$mapping(),
           applied_filters = filtering_result$applied_filters(),
-          duplicate_dtype = column_mapping$duplicate_dtype()
+          time_duplicate_rows = column_mapping$time_duplicate_rows()
         )
         ############################################################################################
         # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,

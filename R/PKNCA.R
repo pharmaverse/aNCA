@@ -51,11 +51,12 @@
 #' @param applied_filters Optional list of filters to apply (see
 #'   [apply_filters()]). Only used when `mapping` is provided.
 #'   Defaults to `NULL`.
-#' @param duplicate_dtype Optional character vector with the same length as the
-#'   number of rows after mapping. Provides pre-resolved duplicate annotations
-#'   (values: `""`, `"COPY"`, `"TIME DUPLICATE"`). When `NULL` (the default),
-#'   exact duplicates are annotated automatically as `"COPY"`. Use this to
-#'   forward user-resolved time-duplicate selections from the Shiny app.
+#' @param time_duplicate_rows Optional integer vector of row indices (in the
+#'   mapped dataset, before filtering) to mark as `"TIME DUPLICATE"` in the
+#'   `DTYPE` column. When `NULL` (the default) and time duplicates are
+#'   detected, an error of class `"time_duplicate_error"` is raised with the
+#'   duplicate rows attached. Use this to forward user-resolved selections
+#'   from the Shiny duplicate resolution modal.
 #'
 #' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
 #'
@@ -90,7 +91,7 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
   adnca_data,
   mapping = NULL,
   applied_filters = NULL,
-  duplicate_dtype = NULL) {
+  time_duplicate_rows = NULL) {
   
   # Derive nca_exclude_reason_columns from mapping
   nca_exclude_reason_columns <- NULL
@@ -106,19 +107,8 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
     adnca_data <- adnca_data %>%
       apply_mapping(mapping, silent = FALSE) %>%
       create_metabfl(mapping$Metabolites) %>%
-      adjust_class_and_length(metadata_nca_variables)
-    
-    # Annotate duplicate concentration records
-    if (!is.null(duplicate_dtype)) {
-      # Use pre-resolved duplicate annotations (e.g. from Shiny modal)
-      adnca_data$DTYPE <- duplicate_dtype
-    } else {
-      # Auto-annotate exact duplicates
-      adnca_data <- adnca_data %>%
-        group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-        mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
-        ungroup()
-    }
+      adjust_class_and_length(metadata_nca_variables) %>%
+      annotate_duplicates(time_duplicate_rows)
     
     if (!is.null(applied_filters) && length(applied_filters) > 0) {
       adnca_data <- apply_filters(adnca_data, applied_filters)
