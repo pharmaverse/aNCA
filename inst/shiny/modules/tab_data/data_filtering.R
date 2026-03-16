@@ -42,7 +42,7 @@ data_filtering_ui <- function(id) {
   )
 }
 
-data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
+data_filtering_server <- function(id, raw_adnca_data, imported_filters = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
 
     # Handle user-provided filters
@@ -89,10 +89,13 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
       .add_filter()
     })
 
-    # Restore filters from uploaded settings
-    observeEvent(list(imported_filters(),filters_metadata()), {
-      if (!is.null(imported_filters)) {
-        uploaded_filters <- imported_filters()
+    # Restore filters from uploaded settings.
+    observeEvent(imported_filters(), {
+      req(imported_filters())
+      uploaded_filters <- imported_filters()
+
+      observe({
+        req(filters_metadata())
 
         # Remove existing filter panels
         for (fid in names(reactiveValuesToList(filters))) {
@@ -106,17 +109,43 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters = NULL) {
         }
         filter_counter(0)
 
-        # Add each uploaded filter
+        # Track which filter IDs we expect and their target columns
+        expected_filters <- list()
         for (filt in uploaded_filters) {
-          # Validate that the column exists in the data
           if (filt$column %in% names(filters_metadata())) {
             .add_filter(initial_values = filt)
+            fid <- paste0("filter_", filter_counter())
+            expected_filters[[fid]] <- filt$column
           }
         }
 
-        # Auto-submit after a delay to let inputs initialize
-        shinyjs::delay(500, shinyjs::click("submit_filters"))
-      }
+        # Auto-submit once all filter inputs have initialized to their target columns
+        if (length(expected_filters) > 0) {
+          submitted <- reactiveVal(FALSE)
+          observe({
+            if (submitted()) return()
+
+            current_filters <- lapply(
+              reactiveValuesToList(filters), function(x) x()
+            ) %>% purrr::keep(\(x) !is.null(x))
+
+            all_ready <- all(vapply(
+              names(expected_filters),
+              function(fid) {
+                fid %in% names(current_filters) &&
+                  !is.null(current_filters[[fid]]$column) &&
+                  current_filters[[fid]]$column == expected_filters[[fid]]
+              },
+              logical(1)
+            ))
+
+            if (all_ready) {
+              submitted(TRUE)
+              shinyjs::click("submit_filters")
+            }
+          })
+        }
+      }) |> bindEvent(filters_metadata(), once = TRUE)
     })
 
     #' When filters change, show notification reminding the user about submitting
