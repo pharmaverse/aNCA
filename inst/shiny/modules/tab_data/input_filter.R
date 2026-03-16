@@ -62,18 +62,19 @@ input_filter_ui <- function(id, cols) {
 input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
   moduleServer(id, function(input, output, session) {
     is_active <- reactiveVal(TRUE)
-    restore_done <- reactiveVal(is.null(initial_values))
+    # Count of observeEvent(input$column) firings to skip.
+    # Restore triggers column changes that must not apply defaults.
+    skip_column_events <- reactiveVal(0L)
     is_numeric <- reactive({
       req(input$column)
       filters_metadata()[[input$column]]$type == "numeric"
     })
 
-    # Restore saved filter values using onFlushed to wait for UI readiness.
-    # Column is set first; condition/value are set on the next flush after
-    # the column change has propagated.
     if (!is.null(initial_values)) {
+      # Skip: (1) default column from UI init, (2) restored column update
+      isolate(skip_column_events(2L))
+
       session$onFlushed(function() {
-        cat("RESTORE column set for:", initial_values$column, "\n")
         updateSelectizeInput(
           session, "column", selected = initial_values$column
         )
@@ -95,16 +96,16 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
               selected = initial_values$value
             )
           }
-          cat("RESTORE values set for:", initial_values$column, "condition:", initial_values$condition, "\n") # nolint
-          isolate(restore_done(TRUE))
         })
       })
     }
 
     observeEvent(input$column, {
-      cat("observeEvent column:", input$column, "restore_done:", isolate(restore_done()), "\n") # nolint
-      # Skip column-change defaults while restore is in progress
-      if (!restore_done()) return()
+      remaining <- isolate(skip_column_events())
+      if (remaining > 0L) {
+        isolate(skip_column_events(remaining - 1L))
+        return()
+      }
 
       if (!is_numeric()) {
         updateSelectInput(session, "condition", selected = "==")
