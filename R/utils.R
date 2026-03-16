@@ -5,7 +5,7 @@
 #'
 .eval_range <- function(x) {
   val_range <- try({
-    if (!grepl("^[0-9,:]+$", x)) stop("Error: not a valid range notation.")
+    if (!grepl("^[0-9,.:]+$", x)) stop("Error: not a valid range notation.")
     eval(parse(text = paste0("c(", x, ")")))
   }, silent = TRUE)
   if (inherits(val_range, "try-error")) NA else val_range
@@ -134,6 +134,16 @@ parse_annotation <- function(data, text) {
   paste0(title, "\n", paste0(log_msg, collapse = "\n"))
 }
 
+#' Assigns a value to a variable in the global environment.
+#' @param name Name of the variable to assign.
+#' @param value Value to assign to the variable.
+#' @param pos_env Position of the environment to assign the variable to.
+#' Default is 1 (global environment).
+#' @noRd
+#' @keywords internal
+.assign_global <- function(name, value, pos_env = 1) {
+  assign(name, value, envir = as.environment(pos_env))
+}
 #' Helper: adjust class and length (optional) for a data.frame
 #'  based on metadata_nca_variables
 #'

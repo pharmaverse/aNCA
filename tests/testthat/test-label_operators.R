@@ -94,3 +94,77 @@ describe("generate_tooltip_text", {
     expect_equal(tooltips, expected_output)
   })
 })
+
+describe("add_label_attribute", {
+
+  myres_base <- FIXTURE_PKNCA_RES
+
+  it("correctly assigns labels for standard (main) and manual intervals with units", {
+    df_input <- data.frame(
+      cmax = 1,
+      auc1 = 1,
+      auc2 = 1,
+      tmax = 1,
+      random = 1
+    )
+    names(df_input) <- c(
+      "CMAX[ng/mL]",
+      "AUCINT_0-2[hr*ng/mL]",
+      "AUCINT_2-4[hr*ng/mL]",
+      "TMAX[hr]",
+      "RandomCol"
+    )
+
+    df_result <- add_label_attribute(df_input, myres_base)
+
+    expect_equal(attr(df_result[["CMAX[ng/mL]"]], "label"), "Max Conc")
+    expect_equal(attr(df_result[["TMAX[hr]"]], "label"), "Time of CMAX Observation")
+    expect_equal(attr(df_result[["AUCINT_0-2[hr*ng/mL]"]], "label"), "AUC from T1 to T2")
+    expect_null(attr(df_result[["RandomCol"]], "label"))
+  })
+
+  it("handles edge cases Manual/Main intervals WITHOUT units", {
+    myres_mod <- myres_base
+    myres_mod$result <- myres_mod$result %>%
+      mutate(
+        PPSTRESU = case_when(
+          PPTESTCD == "CMAX" ~ "",
+          PPTESTCD == "AUCINT" & start == 0 ~ "",
+          TRUE ~ PPSTRESU
+        )
+      )
+
+    df_input_mod <- data.frame(
+      CMAX = 1,
+      AUCINT = 1
+    )
+    names(df_input_mod) <- c("CMAX", "AUCINT_0-2")
+
+    df_result_mod <- add_label_attribute(df_input_mod, myres_mod)
+
+    expect_equal(attr(df_result_mod[["CMAX"]], "label"), "Max Conc")
+    expect_equal(attr(df_result_mod[["AUCINT_0-2"]], "label"), "AUC from T1 to T2")
+  })
+
+  it("validates specific expected labels list", {
+    expected_labels_map <- c(
+      `CMAX[ng/mL]` = "Max Conc",
+      `TMAX[hr]` = "Time of CMAX Observation",
+      `TLST[hr]` = "Time of Last Nonzero Conc",
+      `CLST[ng/mL]` = "Last Nonzero Conc",
+      `LAMZ[1/hr]` = "Lambda z",
+      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2"
+    )
+
+    df_input <- as.data.frame(matrix(NA, ncol = length(expected_labels_map), nrow = 1))
+    names(df_input) <- names(expected_labels_map)
+
+    df_result <- add_label_attribute(df_input, myres_base)
+
+    purrr::iwalk(expected_labels_map, ~ expect_equal(
+      attr(df_result[[.y]], "label"),
+      .x,
+      info = paste("Checking label for", .y)
+    ))
+  })
+})

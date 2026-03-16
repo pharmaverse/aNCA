@@ -16,34 +16,39 @@ general_exclusions_ui <- function(id) {
   ns <- NS(id)
   tagList(
     # Input row for exclusion reason and add button
-    div(
-      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
-      textInput(
-        ns("exclusion_reason"),
-        label = NULL,
-        placeholder = "Enter exclusion reason"
-      ),
-      actionButton(
-        ns("add_exclusion_reason"),
-        label = "Add",
-        class = "btn btn-primary btn-sm"
+    fluidRow(
+      column(
+        width = 10,
+        textInput(
+          ns("exclusion_reason"),
+          label = NULL,
+          placeholder = "Enter exclusion reason"
+        ),
+        actionButton(
+          ns("add_exclusion_reason"),
+          label = "Add",
+          class = "btn btn-primary btn-sm"
+        ),
       ),
       # Help button (dropdown)
-      dropdown(
-        div(
-          style = "min-width:340px; max-width:480px;",
-          tags$h2("NCA Exclusions Help", style = "font-size:1.2em; margin-bottom:8px;"),
-          p("Records excluded here are not used in the NCA PK calculations."),
-          tags$ul(
-            tags$li(tags$b("Yellow"), ": Default exclusion (NCAwXRS columns mapped)"),
-            tags$li(tags$b("Red"), ": In-App exclusion (added via this interface)")
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h2("NCA Exclusions Help"),
+            p("Records excluded here are not used in the NCA PK calculations."),
+            tags$ul(
+              tags$li(tags$b("Yellow"), ": Default exclusion (NCAwXRS columns mapped)"),
+              tags$li(tags$b("Red"), ": In-App exclusion (added via this interface)")
+            ),
+            p("Select rows and add a reason to exclude. Remove exclusions anytime.")
           ),
-          p("Select rows and add a reason to exclude. Remove exclusions anytime.")
-        ),
-        style = "unite",
-        right = TRUE,
-        icon = icon("question"),
-        status = "primary"
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "500px"
+        )
       )
     ),
     # Table of current manual exclusions (compact, below input)
@@ -67,16 +72,34 @@ general_exclusions_ui <- function(id) {
       )
     ),
     # Main concentration data table with row selection and color coding
-    reactable_ui(ns("conc_table"))
+    card(reactable_ui(ns("conc_table")), class = "border-0 shadow-none")
   )
 }
 
-general_exclusions_server <- function(id, processed_pknca_data) {
+general_exclusions_server <- function(id, processed_pknca_data, general_exclusions_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     # Store the list of manual exclusions and a counter for unique button IDs
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
+
+    # Initalise settings override if available
+    observeEvent(general_exclusions_override(), {
+      overrides <- general_exclusions_override()
+
+      if (!is.null(overrides) && length(overrides) > 0) {
+        # Reconstruct list with new button IDs to match current session context
+        new_ids <- seq_along(overrides) + xbtn_counter()
+        rehydrated_list <- purrr::map2(overrides, new_ids, function(item, id) {
+          item$xbtn_id <- paste0("remove_exclusion_reason_", id)
+          item
+        })
+
+        # Update state
+        xbtn_counter(max(new_ids))
+        exclusion_list(rehydrated_list)
+      }
+    })
 
     # Reactive for the concentration data table rendered
     conc_data <- reactive({
@@ -91,8 +114,6 @@ general_exclusions_server <- function(id, processed_pknca_data) {
       selection = "multiple",
       onClick = "select",
       borderless = TRUE,
-      defaultPageSize = 25,
-      style = list(fontSize = "0.75em"),
       rowStyle = function(x) {
         function(index) {
           excl_indices <- unlist(lapply(exclusion_list(), function(excl) excl$rows))
@@ -186,6 +207,6 @@ general_exclusions_server <- function(id, processed_pknca_data) {
     })
 
     # Return the exclusion list as a reactive
-    list(exclusion_list = exclusion_list_for_return)
+    exclusion_list_for_return
   })
 }

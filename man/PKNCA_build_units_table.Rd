@@ -26,6 +26,9 @@ The function performs the following steps:
 \item Generates a PKNCA units table for each group, including conversion factors and custom units.
 \item Returns a unique table with relevant columns for PKNCA analysis.
 }
+
+Any NA units in groups already containing at least one valid value will
+be ignored from the creation of the units table.
 }
 \examples{
 # Assuming `o_conc` and `o_dose` are valid PKNCA objects:

@@ -124,7 +124,7 @@ describe("PKNCA_update_data_object", {
   analytes <- unique(simple_data$PARAM)
   dosnos <- unique(simple_data$ATPTREF)
   pcspecs <- unique(simple_data$PCSPEC)
-  auc_data <- data.frame(start_auc = numeric(), end_auc = numeric())
+  int_parameters <- data.frame(start_auc = numeric(), end_auc = numeric())
 
   ma_data <- PKNCA_create_data_object(multiple_data)
 
@@ -189,14 +189,6 @@ describe("PKNCA_calculate_nca", {
     expect_equal(length(colnames(nca_results$result)), 15)
   })
 
-  it("handles warning levels correctly", {
-
-    # Modify the data to eliminate points needed for half life
-    modified_data <- simple_data[1, ] # Remove one time point
-    modified_data$AVAL <- NA
-    pknca_data_modified <- suppressWarnings(PKNCA_create_data_object(modified_data))
-    pknca_data_modified$intervals$half.life <- TRUE
-  })
 })
 
 describe("PKNCA_impute_method_start_logslope", {
@@ -348,6 +340,39 @@ describe("PKNCA_build_units_table", {
       regexp = "Units should be uniform at least across concentration groups.*"
     )
   })
+
+  it("ignores NA units when the unit column already contains one valid value", {
+
+    d_conc$AVALU[1] <- NA
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc,
+      AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "AVALU",
+      timeu = "RRLTU"
+    )
+    expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+  })
+
+  it("does not ignore NA units in the case of AMOUNTU", {
+
+    d_conc$AMOUNTU <- "g"
+    d_conc <- d_conc %>%
+      mutate(AMOUNTU = ifelse(PARAM == "A", NA_character_, AMOUNTU))
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc,
+      AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "AVALU",
+      timeu = "RRLTU",
+      amountu = "AMOUNTU"
+    )
+
+    units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
+    # expect NA for ae for PARAM = "A"
+    amountu_a <- units_table %>%
+      dplyr::filter(PARAM == "A", PPTESTCD == "ae") %>%
+      dplyr::pull(PPSTRESU)
+    expect_true(is.na(amountu_a))
+  })
 })
 
 describe("select_level_grouping_cols", {
@@ -377,6 +402,37 @@ describe("select_level_grouping_cols", {
     data[, "a"] <- 10
     result <- select_minimal_grouping_cols(data, "d")
     expect_equal(result, data["d"])
+  })
+})
+
+describe("check_valid_pknca_data", {
+  pknca_data <- FIXTURE_PKNCA_DATA
+
+  it("returns the input object if no issues are found", {
+    # Without exclusions for half-life
+    result <- check_valid_pknca_data(pknca_data)
+    expect_identical(result, pknca_data)
+  })
+
+  # Make checks for half-life exclusions ----
+  pknca_data_with_excl <- pknca_data
+  excl_hl_col <- pknca_data_with_excl$conc$columns$exclude_half.life
+
+  pknca_data_with_excl$conc$data[1, excl_hl_col] <- TRUE
+
+  it("does not throw an error if exclusions for half-life include a REASON value", {
+    pknca_data_with_excl$conc$data$REASON <- "Test reason"
+    expect_no_error(
+      check_valid_pknca_data(pknca_data_with_excl, check_exclusion_has_reason = TRUE)
+    )
+  })
+
+  it("throws an error if exclusions for half-life do not include a REASON value", {
+    pknca_data_with_excl$conc$data$REASON <- ""
+    expect_error(
+      check_valid_pknca_data(pknca_data_with_excl, check_exclusion_has_reason = TRUE),
+      "No reason provided for at least one half-life exclusion"
+    )
   })
 })
 

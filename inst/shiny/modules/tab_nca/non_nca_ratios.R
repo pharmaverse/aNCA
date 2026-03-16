@@ -8,9 +8,17 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
   ns <- NS(id)
 
   tagList(
+    # Header row with help button
+    div(
+      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
+      tags$h2(
+        paste0(title, " Setup"),
+        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
+      ),
+      non_nca_ratio_help_ui(title)
+    ),
     card(
       style = "height: 33vh;",
-      card_header(paste0(title, " Setup")),
       card_body(
         fluidRow(
           column(
@@ -35,9 +43,7 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
     card(
       height = "60vh",
       card_header(paste0(title, " Results")),
-      card_body(
-        reactable_ui(ns("results"))
-      )
+      card(reactable_ui(ns("results")), class = "border-0 shadow-none")
     )
   )
 }
@@ -190,12 +196,10 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
     reactable_server(
       "results",
       full_output,
-      download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0("Ratios_result_", Sys.Date()),
       defaultPageSize = 10,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 50, nrow(full_output()))),
-      style = list(fontSize = "0.75em")
+      download_buttons = c("csv", "xlsx"),
+      pageSizeOptions = reactive(c(10, 25, 50, nrow(full_output()))),
+      file_name = function() paste0("Ratios_result_", Sys.Date())
     )
 
     # Save the results in the output folder
@@ -203,4 +207,38 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       session$userData$results$additional_analysis$matrix_ratios <- full_output()
     })
   })
+}
+
+# Help UI button for the non-nca ratio module
+non_nca_ratio_help_ui <- function(title) {
+  dropdown(
+    div(
+      class = "anca-help-dropdown",
+      style = "min-width:22em; max-width:30em;",
+      tags$h2(paste0(title, " Help")),
+      p("Calculate ratios between specimen types (e.g., blood/plasma) for selected groups."),
+      tags$ul(
+        tags$li(
+          tags$b("Add Ratio Pair"),
+          ": Adds a new numerator and denominator specimen pairs for a new ratio."
+        ),
+        tags$li(
+          tags$b("Summarise By"),
+          ": Choose grouping variables to summarise the ratio results and compute geometric means."
+        ),
+        tags$li(
+          tags$b("Matrix Ratios Results"),
+          ": View and download the calculated ratios displayed as a table."
+        )
+      ),
+      p(
+        "You can add multiple ratio pairs. Remove pairs with the trash icon. ",
+        "Results update automatically."
+      )
+    ),
+    style = "unite",
+    placement = "left",
+    icon = icon("question"),
+    status = "primary"
+  )
 }

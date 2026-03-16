@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.1.0.9038
+Version: 0.1.0.9099
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -44,7 +44,9 @@ Imports:
     tern,
     tidyr,
     units,
-    utils
+    utils,
+    writexl,
+    yaml
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -64,8 +66,8 @@ Suggests:
     markdown,
     mockery,
     nestcolor,
-    openxlsx2,
     pak,
+    readxl,
     reactable,
     reactable.extras,
     rmarkdown,
@@ -82,7 +84,6 @@ Suggests:
     quarto,
     vdiffr,
     withr,
-    yaml,
     zip
 Config/testthat/edition: 3
 Language: en-US

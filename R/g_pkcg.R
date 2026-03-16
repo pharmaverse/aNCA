@@ -49,14 +49,15 @@ g_pkcg01_log <- function(data, ...) {
 #' @importFrom ggplot2 aes scale_x_continuous labs
 #' @importFrom tern g_ipp
 #' @importFrom stats setNames
+#' @importFrom plotly ggplotly layout
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- adnca_example
 #' adnca <- subset(adnca, adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)])
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'
-#' plots_lin <- pkcg01(adnca = adnca, xmax = 1)
+#' plots_lin <- pkcg01(adnca = adnca, xmax = 1, scale = "LIN")
 #'
 #' @export
 #' @author Gerardo Rodriguez
@@ -389,7 +390,7 @@ g_pkcg02_log <- function(data, ...) {
 
 #' @examples
 #' # Make an example small dataset
-#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- adnca_example
 #' adnca <- adnca[adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)],]
 #' attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #' attr(adnca[["AVAL"]], "label") <- "Analysis value"
@@ -692,7 +693,7 @@ g_pkcg03_log <- function(data, ...) {
 
 #' @examples
 #' \dontrun{
-#'   adnca <- read.csv("inst/shiny/data/example-ADNCA.csv")
+#'   adnca <- adnca_example
 #'   attr(adnca[["AFRLT"]], "label") <- "Actual time from first dose"
 #'   attr(adnca[["AVAL"]], "label") <- "Analysis val"
 #'

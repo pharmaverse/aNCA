@@ -11,6 +11,15 @@ excretion_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
+    # Header row with help button
+    div(
+      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
+      tags$h2(
+        "Excretion Analysis",
+        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
+      ),
+      excretion_help_ui()
+    ),
     div(
       class = "excretion-section-container",
       id = ns("excretion_section_container"),
@@ -34,9 +43,7 @@ excretion_ui <- function(id) {
             actionButton(ns("submit_btn"), "Submit")
           )
         ),
-        card(
-          reactable_ui(ns("results_table"))
-        )
+        card(reactable_ui(ns("results_table")), class = "border-0 shadow-none")
       )
     )
   )
@@ -110,15 +117,17 @@ excretion_server <- function(id, input_pknca_data) {
 
       dose_col <- data$dose$columns$dose
       doseu <- data$dose$columns$doseu
-      weight_col <- "WEIGHT"
-      weightu <- "WEIGHTU"
+      weight_col <- "WTBL"
+      weightu <- "WTBLU"
 
       # Adjust dose by bodyweight if selected
       if (input$adjust_bw) {
         # Check if weight columns exist
         if (!(weight_col %in% names(data$dose$data)) || !(weightu %in% names(data$dose$data))) {
-          showNotification("Please ensure WEIGHT and WEIGHTU columns exist in the dose data.
-                           No adjustments can be made.", type = "warning")
+          showNotification(
+            glue::glue("Please ensure {weight_col} and {weightu} columns exist in the dose data.
+                      No adjustments can be made."), type = "warning"
+          )
           return(NULL)
         }
 
@@ -216,10 +225,7 @@ excretion_server <- function(id, input_pknca_data) {
       "results_table",
       results_output,
       defaultPageSize = 10,
-      compact = TRUE,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output())))
     )
 
     # Save the results in the output folder
@@ -227,4 +233,44 @@ excretion_server <- function(id, input_pknca_data) {
       session$userData$results$additional_analysis$excretion_results <- results_output()
     })
   })
+}
+
+# Excretion analysis help button dropdown
+excretion_help_ui <- function() {
+  dropdown(
+    div(
+      class = "anca-help-dropdown",
+      style = "min-width:22em; max-width:30em;",
+      tags$h2("Excretion Analysis Help"),
+      p("Analyze excretion parameters for selected matrices (e.g., URINE) and intervals."),
+      tags$ul(
+        tags$li(
+          tags$b("Select Matrices"), ": Choose specimen types for excretion analysis."
+        ),
+        tags$li(
+          tags$b("Map End Time"), ": Select the column marking the end of sample collection."
+        ),
+        tags$li(
+          tags$b("Adjust for Body Weight"),
+          ": Optionally adjust dose by body weight if available."
+        ),
+        tags$li(
+          tags$b("Select Parameters"), ": Pick excretion PK parameters to calculate."
+        ),
+        tags$li(
+          tags$b("Interval Types"), ": Choose to analyze by samples, dose profiles or both."
+        ),
+        tags$li(
+          tags$b("Results Table"), ": View and download calculated excretion results."
+        )
+      ),
+      p(
+        "Complete selections and click Submit. Results update below. ",
+        "If VOLUME is missing, analysis is disabled."
+      )
+    ),
+    style = "unite",
+    icon = icon("question"),
+    status = "primary"
+  )
 }

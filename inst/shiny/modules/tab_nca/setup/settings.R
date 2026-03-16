@@ -22,7 +22,8 @@ settings_ui <- function(id) {
         title = "General Settings",
         # Selection of analyte, dose number and specimen
         fluidRow(
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_analyte"),
               "Choose the Analyte:",
@@ -31,7 +32,8 @@ settings_ui <- function(id) {
               options = list(`actions-box` = TRUE)
             )
           ),
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_profile"),
               "Choose the NCA Profile:",
@@ -40,7 +42,8 @@ settings_ui <- function(id) {
               options = list(`actions-box` = TRUE)
             )
           ),
-          column(4,
+          column(
+            4,
             pickerInput(
               ns("select_pcspec"),
               "Choose the Specimen:",
@@ -52,7 +55,8 @@ settings_ui <- function(id) {
         ),
         # Method, NCA parameters, and units table
         fluidRow(
-          column(4,
+          column(
+            4,
             selectInput(
               ns("method"),
               "Extrapolation Method:",
@@ -60,7 +64,8 @@ settings_ui <- function(id) {
               selected = "lin up/log down"
             )
           ),
-          column(4, # pickerinput only enabled when IV and EX data present
+          column(
+            4, # pickerinput only enabled when IV and EX data present
             shinyjs::hidden(
               div(
                 class = "bioavailability-picker",
@@ -80,25 +85,77 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Data Imputation",
-        input_switch(
-          id = ns("should_impute_c0"),
-          label = "Impute Concentration",
-          value = TRUE
-        ),
-        br(),
-        helpText(HTML(paste(
-          "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-          "- If first dose & IV infusion: C0 = 0",
-          "- If not first dose & IV infusion: C0 = predose",
-          "- If IV bolus & monoexponential data: logslope",
-          "- If IV bolus & not monoexponential data: C0 = C1",
-          sep = "<br>"
-        )))
+
+        # Moved input_switch for should_impute_c0 into the data_imputation module
+        data_imputation_ui(ns("data_imputation"))
       ),
       accordion_panel(
-        title = "Partial AUCs",
-        reactableOutput(ns("auc_table")),
-        actionButton(ns("addRow"), "Add Row")
+        title = "Partial Interval Calculations",
+        fluidRow(
+          column(
+            width = 10,
+            actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
+          ),
+          column(
+            width = 2,
+            dropdown(
+              div(
+                tags$h2("Partial Interval Calculations Help"),
+                p(
+                  "Define custom time intervals for calculating partial area",
+                  "and related parameters. Add a row for each interval you need."
+                ),
+                p("For each row, specify:"),
+                tags$ul(
+                  tags$li(
+                    tags$b("Parameter"),
+                    ": The interval calculation to perform (e.g., AUCINT, AUCINTA, CAVGINT)."
+                  ),
+                  tags$li(
+                    tags$b("Start"),
+                    ": Start time of the interval."
+                  ),
+                  tags$li(
+                    tags$b("End"),
+                    ": End time of the interval."
+                  )
+                ),
+                p(
+                  tags$b("Note:"),
+                  " Rows with missing Start or End values will be ignored."
+                ),
+                tags$table(
+                  class = "imputation-help-table",
+                  tags$thead(
+                    tags$tr(
+                      tags$th("Parameter"),
+                      tags$th("Description")
+                    )
+                  ),
+                  tags$tbody(
+                    tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
+                    tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
+                    tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
+                    tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
+                    tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
+                    tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
+                    tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
+                    tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
+                    tr("CAVGINT", "Average Concentration from T1 to T2"),
+                    tr("RCAMINT", "Amount Recovered from T1 to T2"),
+                    tr("FREXINT", "Fraction Excreted from T1 to T2")
+                  )
+                )
+              ),
+              style = "unite",
+              right = TRUE,
+              icon = icon("question"),
+              status = "primary",
+              width = "600px"
+            )
+          )
+        ),
+        reactableOutput(ns("int_parameters_table"))
       ),
       accordion_panel(
         title = "Flag Rule Sets",
@@ -135,88 +192,147 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     conc_data <- reactive(adnca_data()$conc$data)
 
+    # Modules for Data Imputation
+    data_imputation <- data_imputation_server("data_imputation")
+
     # File Upload Handling
-    observeEvent(settings_override(), {
+    observeEvent(c(data(), settings_override()), {
+      req(data())
+      # Initialize Analyte + Global Validation
+      choices <- unique(data()$PARAM) %>% na.omit()
       settings <- settings_override()
 
-      log_debug_list("User settings override:", settings)
-
+      # Defaults
+      selected <- choices
       not_compatible <- c()
 
-      # General #
-      if (all(settings$analyte %in% unique(data()$PARAM))) {
-        updatePickerInput(inputId = "select_analyte", selected = settings$analyte)
-      } else {
-        not_compatible <- append(not_compatible, "Analyte")
+      # if settings exist, update analyte picker input and check compatibility
+      if (!is.null(settings)) {
+
+        if (!is.null(settings$analyte) && all(settings$analyte %in% choices)) {
+          selected <- settings$analyte
+        } else {
+          not_compatible <- c(not_compatible, "Analyte")
+        }
+
+        # We check raw data here just to see if the settings exist
+        if (!all(settings$profile %in% data()$ATPTREF)) {
+          not_compatible <- c(not_compatible, "Profile")
+        }
+        if (!all(settings$pcspec %in% data()$PCSPEC)) {
+          not_compatible <- c(not_compatible, "Dose Specimen")
+        }
+
+        # Additional settings (PCSPEC and ATPTREF handled later)
+        updateSelectInput(session, inputId = "method", selected = settings$method)
+
+        if (!is.null(settings$bioavailability) &&
+              adnca_data()$dose$data$std_route %>%
+                unique() %>%
+                length() > 1) {
+          updateSelectInput(session,
+            inputId = "bioavailability",
+            selected = settings$bioavailability
+          )
+        }
+
+        # Data imputation #
+        update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+
+        # Partial AUCs #
+        if (!is.null(settings$int_parameters)) {
+          int_parameters(settings$int_parameters)
+          refresh_reactable(refresh_reactable() + 1)
+        }
+
+        # Flags #
+        .update_rule_input(
+          session,
+          "R2ADJ",
+          settings$flags$R2ADJ$is.checked,
+          settings$flags$R2ADJ$threshold
+        )
+
+        .update_rule_input(
+          session,
+          "R2",
+          settings$flags$R2$is.checked,
+          settings$flags$R2$threshold
+        )
+
+        .update_rule_input(
+          session,
+          "AUCPEO",
+          settings$flags$AUCPEO$is.checked,
+          settings$flags$AUCPEO$threshold
+        )
+
+        .update_rule_input(
+          session,
+          "AUCPEP",
+          settings$flags$AUCPEP$is.checked,
+          settings$flags$AUCPEP$threshold
+        )
+
+        .update_rule_input(
+          session,
+          "LAMZSPN",
+          settings$flags$LAMZSPN$is.checked,
+          settings$flags$LAMZSPN$threshold
+        )
       }
 
-      if (all(settings$profile %in% unique(data()$ATPTREF))) {
-        updatePickerInput(inputId = "select_profile", selected = settings$profile)
-      } else {
-        not_compatible <- append(not_compatible, "NCA Profile")
-      }
-
-      if (all(settings$pcspec %in% unique(data()$PCSPEC))) {
-        updatePickerInput(inputId = "select_pcspec", selected = settings$pcspec)
-      } else {
-        not_compatible <- append(not_compatible, "Dose Specimen")
-      }
-
-      if (length(not_compatible) != 0) {
+      if (!is.null(settings$analyte) && length(not_compatible) > 0) {
         msg <- paste0(
           paste0(not_compatible, collapse = ", "),
-          " not compatible with current data, leaving as default."
+          " settings not found in data. Reverting to defaults."
         )
         log_warn(msg)
         showNotification(msg, type = "warning", duration = 10)
       }
 
-      updateSelectInput(inputId = "method", selected = settings$method)
+      updatePickerInput(session, "select_analyte", choices = choices, selected = selected)
+    })
 
-      if (!is.null(settings$bioavailability))
-        updateSelectInput(inputId = "bioavailability", selected = settings$bioavailability)
+    # Update Downstream Inputs (Profile & Specimen)
+    observeEvent(input$select_analyte, {
+      req(data())
 
-      # Data imputation #
-      update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+      settings <- settings_override()
 
-      # Partial AUCs #
-      auc_data(settings$partial_aucs)
-      refresh_reactable(refresh_reactable() + 1)
+      # Filter data based on Analyte
+      filtered_data <- data() %>%
+        filter(PARAM %in% input$select_analyte, !is.na(PCSPEC), !is.na(ATPTREF))
 
-      # Flags #
-      .update_rule_input(
-        session,
-        "R2ADJ",
-        settings$flags$R2ADJ$is.checked,
-        settings$flags$R2ADJ$threshold
+      profile_choices <- sort(unique(filtered_data$ATPTREF))
+      pcspec_choices <- unique(filtered_data$PCSPEC)
+
+      target_profile <- .get_target_selection(
+        current_val = isolate(input$select_profile),
+        available_choices = profile_choices,
+        override_val = settings$profile
       )
 
-      .update_rule_input(
-        session,
-        "R2",
-        settings$flags$R2$is.checked,
-        settings$flags$R2$threshold
+      target_pcspec <- .get_target_selection(
+        current_val = isolate(input$select_pcspec),
+        available_choices = pcspec_choices,
+        override_val = settings$pcspec,
+        default_logic = function(choices) {
+          grep("^plasma$|^serum$", choices, value = TRUE, ignore.case = TRUE)
+        }
       )
 
-      .update_rule_input(
+      updatePickerInput(
         session,
-        "AUCPEO",
-        settings$flags$AUCPEO$is.checked,
-        settings$flags$AUCPEO$threshold
+        "select_profile",
+        choices = profile_choices,
+        selected = target_profile
       )
-
-      .update_rule_input(
+      updatePickerInput(
         session,
-        "AUCPEP",
-        settings$flags$AUCPEP$is.checked,
-        settings$flags$AUCPEP$threshold
-      )
-
-      .update_rule_input(
-        session,
-        "LAMZSPN",
-        settings$flags$LAMZSPN$is.checked,
-        settings$flags$LAMZSPN$threshold
+        "select_pcspec",
+        choices = pcspec_choices,
+        selected = target_pcspec
       )
     })
 
@@ -228,93 +344,45 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
 
+    # Reactive value to store the partial intervals data table
+    # Define the parameters that can be used for partial area calculations
+    PARTIAL_INT_PARAMS <- metadata_nca_parameters %>%
+      filter(
+        grepl("INT", PPTESTCD),
+        TYPE != "PKNCA-not-covered"
+      ) %>%
+      arrange(PPTESTCD)
 
-    # Choose data to be analyzed
-    observeEvent(data(), priority = -1, {
-      req(data())
-
-      choices <- unique(data()$PARAM) %>%
-        na.omit()
-
-      updatePickerInput(
-        session,
-        inputId = "select_analyte",
-        choices = choices,
-        selected = choices
+    int_parameters <- reactiveVal(
+      tibble(
+        parameter = PARTIAL_INT_PARAMS$PPTESTCD[1],
+        start_auc = rep(NA_real_, 2),
+        end_auc = rep(NA_real_, 2)
       )
-
-    })
-
-    observeEvent(input$select_analyte, {
-      req(data())
-
-      # Isolate current selections to prevent reactive loops
-      current_profile <- isolate(input$select_profile)
-      current_pcspec <- isolate(input$select_pcspec)
-
-      filtered_data <- data() %>%
-        filter(PARAM %in% input$select_analyte,
-               !is.na(PCSPEC),
-               !is.na(ATPTREF)) # Filter together so there's no combinations of NAs
-
-      profile_choices <- unique(filtered_data$ATPTREF) %>%
-        sort()
-
-      pcspec_choices <- unique(filtered_data$PCSPEC)
-
-
-      # Fallback if the current selection is empty
-      if (length(current_profile) == 0) {
-        current_profile <- profile_choices[1]
-      }
-      if (length(current_pcspec) == 0) {
-        # Select plasma/serum if available
-        plasma_serum_values <- grep("^plasma$|^serum$",
-                                    pcspec_choices,
-                                    value = TRUE,
-                                    ignore.case = TRUE)
-
-        # Assign to current_pcspec if found, otherwise select all
-        if (length(plasma_serum_values) > 0) {
-          current_pcspec <- plasma_serum_values
-        } else {
-          current_pcspec <- pcspec_choices
-        }
-      }
-
-      updatePickerInput(
-        session,
-        inputId = "select_profile",
-        choices = profile_choices,
-        selected = current_profile
-      )
-
-      updatePickerInput(
-        session,
-        inputId = "select_pcspec",
-        choices = pcspec_choices,
-        selected = current_pcspec
-      )
-    })
-
-    # Reactive value to store the AUC data table
-    auc_data <- reactiveVal(
-      tibble(start_auc = rep(NA_real_, 2), end_auc = rep(NA_real_, 2))
     )
 
     # Render the editable reactable table
     refresh_reactable <- reactiveVal(1)
-    output$auc_table <- renderReactable({
+    output$int_parameters_table <- renderReactable({
       reactable(
-        auc_data(),
+        int_parameters(),
         columns = list(
+          parameter = colDef(
+            name = "Parameter",
+            cell = dropdown_extra(
+              id = ns("edit_parameter"),
+              choices = PARTIAL_INT_PARAMS$PPTESTCD,
+              class = "table-dropdown"
+            ),
+            align = "center"
+          ),
           start_auc = colDef(
-            name = "Start",  # Display name
+            name = "Start", # Display name
             cell = text_extra(id = ns("edit_start_auc")),
             align = "center"
           ),
           end_auc = colDef(
-            name = "End",    # Display name
+            name = "End", # Display name
             cell = text_extra(id = ns("edit_end_auc")),
             align = "center"
           )
@@ -325,8 +393,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Add a blank row on button click
     observeEvent(input$addRow, {
-      df <- auc_data()
-      auc_data(bind_rows(df, tibble(start_auc = NA_real_, end_auc = NA_real_)))
+      int_parameters() %>%
+        bind_rows(
+          tibble(
+            parameter = PARTIAL_INT_PARAMS$PPTESTCD[2],
+            start_auc = NA_real_,
+            end_auc = NA_real_
+          )
+        ) %>%
+        int_parameters()
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
@@ -334,14 +409,16 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     #' For each of the columns in partial aucs data frame, attach an event that will read
     #' edits for that column made in the reactable.
     observe({
-      req(auc_data())
+      req(int_parameters())
       # Dynamically attach observers for each column
-      purrr::walk(c("start_auc", "end_auc"), function(colname) {
-        observeEvent(input[[paste0("edit_", colname)]], {
-          edit <- input[[paste0("edit_", colname)]]
-          partial_aucs <- auc_data()
-          partial_aucs[edit$row, edit$column] <- as.numeric(edit$value)
-          auc_data(partial_aucs)
+      edit_inputs <- intersect(names(input), paste0("edit_", names(int_parameters())))
+      purrr::walk(edit_inputs, function(edit_input) {
+        observeEvent(input[[edit_input]], {
+          edit <- input[[edit_input]]
+          partial_aucs <- int_parameters()
+          val <- if (edit$column != "parameter") as.numeric(edit$value) else edit$value
+          partial_aucs[edit$row, edit$column] <- val
+          int_parameters(partial_aucs)
         })
       })
     })
@@ -356,9 +433,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         method = input$method,
         bioavailability = input$bioavailability,
         data_imputation = list(
-          impute_c0 = input$should_impute_c0
+          impute_c0 = data_imputation$should_impute_c0(),
+          blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
-        partial_aucs = auc_data(),
+        int_parameters = int_parameters(),
         flags = list(
           R2ADJ = list(
             is.checked = input$R2ADJ_rule,
@@ -395,14 +473,19 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       runjs(str_glue(
         "buttonTimeout(
           '#nca-run_nca',
-          {settings_debounce + 250},
+          {settings_debounce + 100},
           'Applying settings...',
           'Run NCA'
         );"
       ))
     })
 
-    settings_debounced
+    list(
+      all = settings_debounced,
+      analyte = reactive(input$select_analyte),
+      pcspec = reactive(input$select_pcspec),
+      profile = reactive(input$select_profile)
+    )
   })
 }
 
@@ -467,7 +550,40 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   threshold_id <- paste0(id, "_threshold")
   rule_id <- paste0(id, "_rule")
 
+  # If checked is NULL do nothing
+  if (is.null(checked)) return()
+
   updateCheckboxInput(session = session, inputId = rule_id, value = checked)
-  if (checked)
+  if (checked) {
     updateNumericInput(session = session, inputId = threshold_id, value = value)
+  }
+}
+
+#'Helper to get target selection
+#' @param current_val Current selected value(s).
+#' @param available_choices Available choices to select from.
+#' @param override_val Override value(s) to use if valid.
+#' @param default_logic Optional function to determine default selection from available choices.
+.get_target_selection <- function(
+  current_val,
+  available_choices,
+  override_val,
+  default_logic = NULL
+) {
+  # Check Settings Override
+  if (!is.null(override_val) && all(override_val %in% available_choices)) {
+    return(override_val)
+  }
+
+  # Maintain Selection
+  if (length(intersect(current_val, available_choices)) > 0) {
+    return(current_val)
+  }
+
+  # Fallback to Default Logic or First Choice
+  if (!is.null(default_logic)) {
+    fallback <- default_logic(available_choices)
+    if (length(fallback) > 0) return(fallback)
+  }
+  available_choices[1]
 }
