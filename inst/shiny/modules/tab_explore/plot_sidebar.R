@@ -55,9 +55,8 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
         options = list(`actions-box` = TRUE)
       )
     },
-<<<<<<< HEAD:inst/shiny/modules/tab_explore/lineplots.R
     uiOutput(ns("colorby_ui_wrapper")
-=======
+    ),
     pickerInput(
       inputId = ns("profiles"),
       label = "Choose the profile(s):",
@@ -65,15 +64,6 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       selected = NULL,
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
-    ),
-    pickerInput(
-      inputId = ns("colorby"),
-      label = "Choose the variables to color by:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
->>>>>>> ced3be30756111fa85a8ea0edf1b01bcdbb1dbae:inst/shiny/modules/tab_explore/plot_sidebar.R
     ),
     uiOutput(ns("facetby_ui_wrapper")
     ),
@@ -178,6 +168,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         selected = profile_choices
       )
 
+
+      # Get the grouping variables for colory and facetby
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
                                      dose_col, grouping_vars(), "ATPTREF"))
 
@@ -195,11 +187,25 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
           choices = usubjid_choices,
           selected = usubjid_choices
         )
+        default_color <- subject_col
+        default_facet <- NULL
+      } else {
+        color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", dose_col)
+        available_color <- intersect(color_priority, full_grouping_vars)
+        default_color <- if (length(available_color) > 0) {
+          available_color[1]
+        } else {
+          dose_col
+        }
 
-<<<<<<< HEAD:inst/shiny/modules/tab_explore/lineplots.R
-      # Get the grouping variables for colory and facetby
-      full_grouping_vars <- unique(c(conc_groups, dose_groups,
-                                     dose_col, grouping_vars(), "ATPTREF"))
+        facet_priority <- c("TRT01A", dose_col, "GROUP", "ACTARM", "COHORT")
+        available_facet <- intersect(facet_priority, full_grouping_vars)
+        default_facet <- if (length(available_facet) > 0) {
+          available_facet[1]
+        } else {
+          NULL
+        }
+      }
 
       # Rendering colorby selector with labels
       selector_label(input = input,
@@ -222,41 +228,6 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
                      id = "facetby",
                      label = "Choose the variables to facet by:",
                      metadata_type = "variable")
-=======
-        default_color <- subject_col
-        default_facet <- NULL
-      } else {
-        color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", dose_col)
-        available_color <- intersect(color_priority, full_grouping_vars)
-        default_color <- if (length(available_color) > 0) {
-          available_color[1]
-        } else {
-          dose_col
-        }
-
-        facet_priority <- c("TRT01A", dose_col, "GROUP", "ACTARM", "COHORT")
-        available_facet <- intersect(facet_priority, full_grouping_vars)
-        default_facet <- if (length(available_facet) > 0) {
-          available_facet[1]
-        } else {
-          NULL
-        }
-      }
-
-      updatePickerInput(
-        session,
-        "colorby",
-        choices = full_grouping_vars,
-        selected = default_color
-      )
-
-      updatePickerInput(
-        session,
-        "facetby",
-        choices = full_grouping_vars,
-        selected = default_facet
-      )
->>>>>>> ced3be30756111fa85a8ea0edf1b01bcdbb1dbae:inst/shiny/modules/tab_explore/plot_sidebar.R
     })
 
     # Create a reactive value to store the filtering list

@@ -11,15 +11,13 @@
 
 pk_dose_qc_plot_ui <- function(id) {
   ns <- NS(id)
+
   # The nav_panel function creates the tab
   layout_sidebar(
     fillable = TRUE,
     sidebar = sidebar(
       position = "right",
       open = TRUE,
-<<<<<<< HEAD
-      uiOutput(ns("groupvar_ui_wrapper")
-=======
       actionButton(
         ns("add_to_exports"),
         label = "Add to Exports",
@@ -27,14 +25,7 @@ pk_dose_qc_plot_ui <- function(id) {
         class = "btn btn-primary btn-sm",
         width = "100%"
       ),
-      pickerInput(
-        inputId = ns("group_var"),
-        label = "Choose the variables to group by:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
->>>>>>> ced3be30756111fa85a8ea0edf1b01bcdbb1dbae
+      uiOutput(ns("groupvar_ui_wrapper")
       ),
       pickerInput(
         inputId = ns("colour_var"),
