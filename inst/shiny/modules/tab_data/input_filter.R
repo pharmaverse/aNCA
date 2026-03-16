@@ -68,42 +68,38 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
       filters_metadata()[[input$column]]$type == "numeric"
     })
 
-    # Restore: set column, then wait for it to take effect and apply
-    # condition/value. Uses observe() so it re-runs whenever input$column
-    # changes, catching the update even after async round-trip.
-    observe({
-      req(!restore_done())
-      req(initial_values$column %in% names(filters_metadata()))
-
-      if (!isTRUE(input$column == initial_values$column)) {
-        # Column not yet set to target — send the update and wait
-        updateSelectizeInput(session, "column", selected = initial_values$column)
-        return()
-      }
-
-      # Column matches — apply condition and value
-      col_numeric <- filters_metadata()[[input$column]]$type == "numeric"
-      if (col_numeric) {
-        updateSelectInput(session, "condition", selected = initial_values$condition)
-        updateTextInput(session, "value_text", value = initial_values$value)
-      } else {
-        updateSelectInput(session, "condition", selected = initial_values$condition)
-        updatePickerInput(
-          session,
-          "value_select",
-          choices = filters_metadata()[[input$column]]$choices,
-          selected = initial_values$value
+    # Restore saved filter values using onFlushed to wait for UI readiness.
+    # Column is set first; condition/value are set on the next flush after
+    # the column change has propagated.
+    if (!is.null(initial_values)) {
+      session$onFlushed(function() {
+        updateSelectizeInput(
+          session, "column", selected = initial_values$column
         )
-      }
-
-      shinyjs::toggleElement("value_text", condition = col_numeric)
-      shinyjs::toggleElement("value_select", condition = !col_numeric)
-      shinyjs::toggleState("condition", col_numeric)
-      restore_done(TRUE)
-    })
+        session$onFlushed(function() {
+          col_numeric <- filters_metadata()[[initial_values$column]]$type == "numeric" # nolint
+          updateSelectInput(
+            session, "condition", selected = initial_values$condition
+          )
+          if (col_numeric) {
+            updateTextInput(
+              session, "value_text", value = initial_values$value
+            )
+          } else {
+            updatePickerInput(
+              session,
+              "value_select",
+              choices = filters_metadata()[[initial_values$column]]$choices,
+              selected = initial_values$value
+            )
+          }
+          restore_done(TRUE)
+        })
+      })
+    }
 
     observeEvent(input$column, {
-      # Skip during restore — handled by the observe above
+      # Skip column-change defaults while restore is in progress
       if (!restore_done()) return()
 
       if (!is_numeric()) {

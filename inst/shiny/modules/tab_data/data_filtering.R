@@ -108,7 +108,7 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
         }
         filter_counter(0)
 
-        # Track which filter IDs we expect and their target columns
+        # Create filter panels with initial values
         expected_filters <- list()
         for (filt in uploaded_filters) {
           if (filt$column %in% names(filters_metadata())) {
@@ -118,7 +118,7 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
           }
         }
 
-        # Auto-submit once all filter inputs have initialized to their target columns
+        # Auto-submit once all filters have initialized to their target columns
         if (length(expected_filters) > 0) {
           submitted <- reactiveVal(FALSE)
           observe({
