@@ -1,3 +1,12 @@
+# Default column order after mapping.
+# Used as the default `desired_order` in apply_mapping().
+MAPPING_DESIRED_ORDER <- c( # nolint: object_name_linter
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
+  "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
+  "VOLUME", "VOLUMEU", "WTBL", "WTBLU", "TRTRINT", "METABFL"
+)
+
 #' Apply UI-Based Column Mapping to a Dataset
 #'
 #' This function takes a dataset and applies user-specified column mappings
@@ -9,7 +18,7 @@
 #' @param dataset A data frame containing the raw data to be transformed.
 #' @param mapping A named list of column mappings.
 #' @param desired_order A character vector specifying the desired column order
-#'                      in the output dataset.
+#'                      in the output dataset. Defaults to `MAPPING_DESIRED_ORDER`.
 #' @param req_mappings A character vector indicating the names of the mapping object
 #'                     that must always be populated
 #' @param silent Boolean, whether to print message with applied mapping.
@@ -32,26 +41,26 @@
 #' @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
 apply_mapping <- function(
-  dataset, mapping, desired_order, silent = TRUE,
-  req_mappings = c(
-    "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
-    "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
-    "AVALU", "RRLTU", "DOSEU", "PARAM"
-  )
+    dataset, mapping, desired_order = MAPPING_DESIRED_ORDER, silent = TRUE,
+    req_mappings = c(
+      "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
+      "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
+      "AVALU", "RRLTU", "DOSEU", "PARAM"
+    )
 ) {
-
+  
   if (!silent) {
     paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") %>%
       message()
   }
   .validate_column_mapping(mapping, req_mappings)
-
+  
   new_dataset <- dataset
-
+  
   ####### TODO (Gerardo): This would be better to be explicit outside the function
   # Grouping_Variables should not be renamed
   mapping <- mapping[!names(mapping) %in% c("Grouping_Variables", "Metabolites", "NCAwXRS")]
-
+  
   # Special case: If ADOSEDUR is not mapped, we assume is 0
   if (is.null(mapping$ADOSEDUR)) {
     new_dataset$ADOSEDUR <- 0       # TODO: Make it default in select
@@ -62,7 +71,7 @@ apply_mapping <- function(
     new_dataset$DOSETRT <- dataset[[mapping$PARAM]]
     warning("Treatment is assumed to be the same as the analyte for all records (DOSETRT = PARAM)")
   }
-
+  
   # Conflictive original columns with the mapping will be removed. Warn the user
   is_col_rep_in_map_and_df <- names(mapping) %in% names(dataset)
   is_col_not_used_in_map <- sapply(names(mapping), function(n) !any(n %in% unname(mapping)))
@@ -77,14 +86,14 @@ apply_mapping <- function(
     )
   }
   ################################################################################
-
+  
   # If a variable to map is not a column in the data, assume is the value to use for its creation
   mappings_not_in_data <- mapping[!unname(mapping) %in% names(dataset) & mapping != ""]
   for (col in names(mappings_not_in_data)) {
     new_dataset[[col]] <- mappings_not_in_data[[col]]
   }
   mapping <- mapping[unname(mapping) %in% names(dataset)]
-
+  
   # Apply the changes to the data
   new_dataset <- new_dataset %>%
     # Rename variables based on mapping instructions (allowing duplicate uses)
@@ -93,16 +102,16 @@ apply_mapping <- function(
     select(any_of(desired_order), everything()) %>%
     # Apply the default ADNCA labels
     apply_labels()
-
+  
   # Remove variables that are now redundant due to the renaming
   redundant_cols <- unname(mapping)[!unname(mapping) %in% names(mapping)]
   new_dataset <- new_dataset[!names(new_dataset) %in% redundant_cols]
-
+  
   # Special case: make ATPTREF a factor. TODO: Try make it in the mapping obj
   if (!is.null(new_dataset$ATPTREF)) {
     new_dataset[["ATPTREF"]] <- as.factor(new_dataset[["ATPTREF"]])
   }
-
+  
   new_dataset
 }
 

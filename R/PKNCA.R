@@ -1,14 +1,25 @@
 #' Creates a `PKNCA::PKNCAdata` object.
 #'
 #' @details
-#' This function creates a standard PKNCAdata object from ADNCA data.
-#' It requires the following columns in the ADNCA data:
+#' This function creates a standard PKNCAdata object from raw or pre-processed
+#' ADNCA data.
+#'
+#' When `mapping` is provided, the function runs the full preprocessing pipeline
+#' internally: column mapping ([apply_mapping()]), metabolite flagging
+#' ([create_metabfl()]), class/length adjustment ([adjust_class_and_length()]),
+#' and optional filtering ([apply_filters()]). The `nca_exclude_reason_columns`
+#' are derived from `mapping$NCAwXRS` (plus `"DTYPE"`).
+#'
+#' When `mapping` is `NULL` (the default), the function expects already
+#' pre-processed ADNCA data with the standard column names in place.
+#'
+#' The ADNCA data (after preprocessing, if applicable) must contain:
 #' - STUDYID: Study identifier.
 #' - PCSPEC: Matrix.
 #' - ROUTE: Route of administration.
 #' - DOSETRT: Drug identifier.
 #' - USUBJID: Unique subject identifier.
-#' - ATPTREF: (Non- standard column). Can be any column, used for filtering the data for NCA
+#' - ATPTREF: (Non-standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
@@ -20,19 +31,31 @@
 #' - ADOSEDUR: Duration of dose.
 #' - RRLTU: Time unit.
 #'
+#' Then it proceeds to:
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
-#' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
+#' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`
 #' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM`.
-#' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
+#' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`
 #' with formula `DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
-#' @param adnca_data Data table containing ADNCA data.
+#' @param adnca_data Data frame containing raw or pre-processed ADNCA data.
+#' @param mapping Optional named list of column mappings (as produced by the
+#'   Shiny mapping UI). When provided, the preprocessing pipeline
+#'   (`apply_mapping`, `create_metabfl`, `adjust_class_and_length`,
+#'   `apply_filters`) is run internally. Metabolite names are taken from
+#'   `mapping$Metabolites` and NCA exclusion flag columns from
+#'   `mapping$NCAwXRS`. Defaults to `NULL` (no preprocessing).
+#' @param applied_filters Optional list of filters to apply (see
+#'   [apply_filters()]). Only used when `mapping` is provided.
+#'   Defaults to `NULL`.
 #' @param nca_exclude_reason_columns Optional character vector of column names.
-#' Excluding records from the NCA
-#' must be indicated by populating any of these columns with a non-empty character value.
+#'   Excluding records from the NCA
+#'   must be indicated by populating any of these columns with a non-empty
+#'   character value. When `mapping` is provided this is derived automatically
+#'   from `mapping$NCAwXRS` and `"DTYPE"`, so it does not need to be set.
 #'
 #' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
 #'
@@ -63,7 +86,29 @@
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NULL) { # nolint: object_name_linter
+PKNCA_create_data_object <- function( # nolint: object_name_linter
+  adnca_data,
+  mapping = NULL,
+  applied_filters = NULL,
+  nca_exclude_reason_columns = NULL) {
+  
+  # --- Preprocessing pipeline (when mapping is provided) ---
+  if (!is.null(mapping)) {
+    adnca_data <- adnca_data %>%
+      apply_mapping(mapping, silent = FALSE) %>%
+      create_metabfl(mapping$Metabolites) %>%
+      adjust_class_and_length(metadata_nca_variables)
+    
+    if (!is.null(applied_filters) && length(applied_filters) > 0) {
+      adnca_data <- apply_filters(adnca_data, applied_filters)
+    }
+    
+    # Derive nca_exclude_reason_columns from mapping
+    nca_exclude_reason_columns <- c("DTYPE", mapping$NCAwXRS)
+    nca_exclude_reason_columns <- nca_exclude_reason_columns[
+      nchar(nca_exclude_reason_columns) > 0
+    ]
+  }
   # Define column names based on ADNCA vars
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
@@ -78,19 +123,19 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
   conc_column <- "AVAL"
   studyid_column <- "STUDYID"
   drug_column <- "DOSETRT"
-
+  
   all_group_columns <- c(group_columns, usubjid_column, analyte_column, matrix_column)
-
+  
   conc_formula <-
     "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" %>% # nolint
     glue::glue() %>%
     as.formula()
-
+  
   dose_formula <-
     "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
     glue::glue() %>%
     as.formula()
-
+  
   # Create concentration data
   df_conc <- format_pkncaconc_data(
     ADNCA = adnca_data,
@@ -102,10 +147,10 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     nca_exclude_reason_columns = nca_exclude_reason_columns
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
-
+  
   # Check for missing values in group columns
   na_columns <- all_group_columns[sapply(df_conc[, all_group_columns], function(x) any(is.na(x)))]
-
+  
   if (length(na_columns) > 0) {
     stop(
       "Missing values detected in grouping columns: ",
@@ -113,18 +158,18 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
       ". Please ensure all columns contain values."
     )
   }
-
+  
   # Set default settings
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- ""
   df_conc$exclude_half.life <- FALSE
-
+  
   # Create PKNCA conc object
-
+  
   # ensure units are correct for excretion calculations
   df_conc <- convert_volume_units(df_conc)
-
+  
   args_list <- list(
     data = df_conc,
     formula = conc_formula,
@@ -137,19 +182,19 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     amountu = if ("AMOUNTU" %in% colnames(df_conc)) "AMOUNTU" else NULL,
     exclude = "nca_exclude"
   )
-
+  
   if ("VOLUME" %in% colnames(df_conc)) {
     args_list$volume <- volume_column
   }
-
+  
   pknca_conc <- do.call(PKNCA::PKNCAconc, args_list)
-
+  
   # Create dosing data
   df_dose <- format_pkncadose_data(
     pkncaconc_data = df_conc,
     group_columns = c(group_columns, usubjid_column)
   )
-
+  
   pknca_dose <- PKNCA::PKNCAdose(
     data = df_dose,
     formula = dose_formula,
@@ -158,7 +203,7 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
     duration = "ADOSEDUR",
     doseu = "DOSEU"
   )
-
+  
   # create basic intervals so that PKNCAdata can be created
   # TODO: investigate if this is required
   intervals <-
@@ -169,14 +214,14 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
       auclast = FALSE,
       aucinf.obs = FALSE
     )
-
+  
   pknca_data_object <- PKNCA::PKNCAdata(
     data.conc = pknca_conc,
     data.dose = pknca_dose,
     intervals = intervals, # TODO: should be default
     units = PKNCA_build_units_table(pknca_conc, pknca_dose)
   )
-
+  
   pknca_data_object
 }
 
@@ -228,20 +273,20 @@ PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NU
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
-    adnca_data,
-    method,
-    selected_analytes,
-    selected_profile,
-    selected_pcspec,
-    should_impute_c0 = TRUE,
-    hl_adj_rules = NULL,
-    exclusion_list = NULL,
-    keep_interval_cols = NULL) {
-
+  adnca_data,
+  method,
+  selected_analytes,
+  selected_profile,
+  selected_pcspec,
+  should_impute_c0 = TRUE,
+  hl_adj_rules = NULL,
+  exclusion_list = NULL,
+  keep_interval_cols = NULL) {
+  
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
-
+  
   data$options <- list(
     auc.method = method,
     progress = FALSE,
@@ -253,10 +298,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     min.hl.r.squared = 0.01,
     allow_partial_missing_units = TRUE
   )
-
+  
   # Add on top of the default ones, the exclusions listed
   data <- add_exclusion_reasons(data, exclusion_list)
-
+  
   # Format intervals
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
@@ -273,7 +318,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       ) %>% unique(),
       by = group_vars(adnca_data$dose)
     )
-
+  
   # Apply filtering
   data$intervals <- data$intervals %>%
     filter(
@@ -281,7 +326,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       ATPTREF %in% selected_profile,
       PCSPEC %in% selected_pcspec
     )
-
+  
   # Update concentration data to indicate points excluded / selected manually for half-life
   if (!is.null(hl_adj_rules)) {
     data <- update_pknca_with_rules(data, hl_adj_rules)
@@ -337,20 +382,20 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #'
 #' @export
 PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_name_linter
-
+  
   # Define BLQ imputation method in global environment for PKNCA to access
   if (!is.null(blq_rule)) {
     .assign_global(
       "PKNCA_impute_method_blq", # nolint
       function(conc, time, ...) { # nolint
-
+        
         d <- PKNCA::clean.conc.blq(
           conc = conc,
           time = time,
           conc.blq = blq_rule,
           conc.na = "drop"
         )
-
+        
         # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
         # drop values, this was only affecting BLQ branch (#139) but not main, related
         # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
@@ -366,7 +411,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
       }
     )
   }
-
+  
   # Ensure removal of the global PKNCA_impute_method_blq once NCA is run to avoid side effects
   on.exit(
     {
@@ -376,11 +421,11 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     },
     add = TRUE
   )
-
+  
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
-
-
+  
+  
   dose_data_to_join <- select(
     pknca_data$dose$data,
     unlist(unname(pknca_data$dose$columns$groups)),
@@ -388,7 +433,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     pknca_data$dose$columns$dose,
     DOSNOA
   )
-
+  
   results$result <- results$result %>%
     inner_join(
       dose_data_to_join,
@@ -405,7 +450,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     group_by(across(-c(intersect(names(.), c("PPSTRES", "PPORRES", "exclude"))))) %>%
     slice_tail(n = 1) %>%
     ungroup()
-
+  
   results
 }
 
@@ -534,10 +579,10 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
 #' @importFrom utils capture.output
 #' @export
 PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
-
+  
   o_conc <- ensure_column_unit_exists(o_conc, c("concu", "timeu", "amountu"))
   o_dose <- ensure_column_unit_exists(o_dose, c("doseu"))
-
+  
   # Extract relevant columns from o_conc and o_dose
   group_dose_cols <- group_vars(o_dose)
   group_conc_cols <- group_vars(o_conc)
@@ -546,7 +591,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
   timeu_col <- o_conc$columns$timeu
   doseu_col <- o_dose$columns$doseu
   all_unit_cols <- c(concu_col, amountu_col, timeu_col, doseu_col)
-
+  
   # Join dose units with concentration group columns and units
   groups_units_tbl <- left_join(
     o_conc$data %>%
@@ -560,23 +605,23 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
     # Prevent any issue with NAs in the group(s) or unit columns
     mutate(across(everything(), ~ as.character(.))) %>%
     unique()
-
+  
   # Identify unit columns that exist in data AND have at least one non-NA value
   valid_unit_cols <- groups_units_tbl %>%
     # excluding AMOUNTU as NAs are allowed
     select(any_of(c(concu_col, timeu_col, doseu_col))) %>%
     select(where(~ !all(is.na(.)))) %>%
     names()
-
+  
   groups_units_clean <- groups_units_tbl %>%
     drop_na(all_of(valid_unit_cols))
-
+  
   # Check that at least for each concentration group units are uniform
   mismatching_units_groups <- groups_units_clean %>%
     add_count(!!!syms(group_conc_cols), name = "n") %>%
     filter(n > 1) %>%
     select(-n)
-
+  
   if (nrow(mismatching_units_groups) > 0) {
     stop(
       "Units should be uniform at least across concentration groups.",
@@ -584,7 +629,7 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
       paste(utils::capture.output(print(mismatching_units_groups)), collapse = "\n")
     )
   }
-
+  
   # Generate the PKNCA units table
   groups_units_clean %>%
     # Pick only the group columns that are relevant in stratifying the units
@@ -659,28 +704,28 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
   if (length(strata_cols) == 0) {
     return(df)
   }
-
+  
   # Obtain the comb_vals values of the target column(s)
   strata_vals <- df %>%
     mutate(strata_cols_comb = paste(!!!syms(strata_cols), sep = "_")) %>%
     pull(strata_cols_comb)
-
+  
   # If the target column(s) only has one level, there are no relevant columns
   if (length(unique(strata_vals)) == 1) {
     return(df[strata_cols])
   }
-
+  
   candidate_cols <- setdiff(names(df), strata_cols)
   # 1. Remove columns that are duplicates in levels terms
   candidate_levels <- lapply(
     df[candidate_cols], function(x) as.numeric(factor(x, levels = unique(x)))
   )
   candidate_cols <- candidate_cols[!duplicated(candidate_levels)]
-
+  
   # 2. Remove columns with only 1 level
   candidate_n_levels <- sapply(df[candidate_cols], function(x) length(unique(x)))
   candidate_cols <- candidate_cols[candidate_n_levels > 1]
-
+  
   # 3. Check combinations of columns to find minimal key combination to level group strata_cols
   for (n in seq_along(candidate_cols)) {
     all_candidate_combs <- combn(candidate_cols, n, simplify = FALSE)
@@ -753,19 +798,19 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' # Suppose processed_pknca_data is a valid PKNCA data object
 #' # check_valid_pknca_data(processed_pknca_data)
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
-
+  
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
-
+    
     if (!is.null(excl_hl_col)) {
       data_conc <- processed_pknca_data$conc$data
       conc_groups <- group_vars(processed_pknca_data$conc)
       time_col <- processed_pknca_data$conc$columns$time
-
+      
       has_no_reason <- (nchar(data_conc[["REASON"]]) == 0) | is.na(data_conc[["REASON"]])
       has_hl_excl <- data_conc[[excl_hl_col]]
       missing_reasons <- has_hl_excl & has_no_reason
-
+      
       if (any(missing_reasons)) {
         stop(
           "No reason provided for at least one half-life exclusion.\n",
@@ -800,7 +845,7 @@ remove_pp_not_requested <- function(pknca_res) {
       .groups = "drop"
     ) %>%
     filter(!is_requested)
-
+  
   # Filter for requested params based on intervals
   pknca_res$result <- pknca_res$result %>%
     anti_join(params_not_requested, by = intersect(names(.), names(params_not_requested)))
