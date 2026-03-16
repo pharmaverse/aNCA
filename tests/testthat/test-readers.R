@@ -19,11 +19,12 @@ describe("read_pk", {
   })
 
   it("reads excel data correctly", {
-    skip_if_not_installed("openxlsx2")
+    skip_if_not_installed("readxl")
+    skip_if_not_installed("writexl") # used to write the test file
     skip_on_cran()
 
     tmp_xlsx <- withr::local_tempfile(fileext = ".xlsx")
-    openxlsx2::write_xlsx(data_dummy, tmp_xlsx)
+    writexl::write_xlsx(data_dummy, tmp_xlsx)
 
     df <- read_pk(tmp_xlsx)
 
@@ -145,7 +146,6 @@ describe("read_settings", {
   it("handles empty or null units/general_exclusions gracefully", {
     res <- read_settings(path)
 
-    # units is ~ (null) in the test fixture, so it stays NULL
     expect_null(res$settings$units)
   })
 

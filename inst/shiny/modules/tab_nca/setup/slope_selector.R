@@ -22,7 +22,7 @@
 #' @details
 #' - The module's main output is the manual_slopes table, which is updated by user
 #'   edits in the table UI (slopes_table) or by plot clicking (handle_plotly_click).
-#' - The parent module (setup.R) uses manual_slopes to update processed_pknca_data,
+#' - The parent module (nca_setup.R) uses manual_slopes to update processed_pknca_data,
 #'   which is then fed back in this module to update plots.
 
 slope_selector_ui <- function(id) {
@@ -33,41 +33,57 @@ slope_selector_ui <- function(id) {
     class = "slope-selector-module",
     manual_slopes_table_ui(ns("manual_slopes")),
     # Help widget #
-    dropdown(
-      div(
-        tags$h1("Slope selector guide"),
-        p("
-            Upon initial NCA run, the plots will display the optimal slope selection.
-            However, you have the flexibility to change it. Remember to apply your
-            changes once you are done!
-          "),
-        div(class = "gif-grid",
+    fluidRow(
+      column(
+        width = 12,
+        dropdown(
           div(
-            class = "gif-container",
-            tags$h1("Check"),
-            img(src = "images/slope_plot_check.gif", alt = "Check")
+            tags$h2("Slope Selector Help"),
+            p("
+                Upon the initial NCA run, the plots will showcase the optimal slope selection. 
+                However, you have the option to modify it according to your preferences. 
+                Please remember to apply your changes once you are done by clicking Run NCA again!
+              "),
+            div(class = "gif-grid",
+              div(
+                class = "gif-container",
+                tags$h1("Check"),
+                tags$h6("Hover the mouse over points to inspect individual samples."),
+                img(src = "images/slope_plot_check.gif", alt = "Check")
+              ),
+              div(
+                class = "gif-container",
+                tags$h1("Zoom"),
+                tags$h6("Click and drag to select and zoom in a specific area.",
+                  " Double click to zoom out."
+                ),
+                img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
+              ),
+              div(
+                class = "gif-container",
+                tags$h1("Select"),
+                tags$h6("Click the first and then the last point",
+                        " you want to include in the slope."),
+                img(src = "images/slope_plot_select.gif", alt = "Select")
+              ),
+              div(
+                class = "gif-container",
+                tags$h1("Exclude"),
+                tags$h6(
+                  tags$div("Double click a point to exclude it."),
+                  tags$div("Double click it again to include it back.")
+                ),
+                img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
+              )
+            )
           ),
-          div(
-            class = "gif-container",
-            tags$h1("Zoom"),
-            img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
-          ),
-          div(
-            class = "gif-container",
-            tags$h1("Select"),
-            img(src = "images/slope_plot_select.gif", alt = "Select")
-          ),
-          div(
-            class = "gif-container",
-            tags$h1("Exclude"),
-            img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
-          )
-        )
-      ),
-      style = "unite",
-      right = TRUE,
-      icon = icon("question"),
-      status = "primary"
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "600px"
+        ),
+      )
     ),
     # Widgets for manipulating plots display #
     fluidRow(
@@ -135,12 +151,14 @@ slope_selector_server <- function( # nolint
 
       if (changes$in_data) {
         # New data or major changes: regenerate all plots
-        plot_outputs(get_halflife_plots(new_pknca_data)[["plots"]])
+        plot_outputs(get_halflife_plots(
+          new_pknca_data, title_vars = "ATPTREF"
+        )[["plots"]])
       } else if (changes$in_hl_adj) {
         # Modify plots with new half-life adjustments (inclusions/exclusions)
         plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
       } else if (changes$in_selected_intervals) {
-        # Add/remove plots based on intervals (analyte, profile, specimen selection from setup.R)
+        # Add/remove plots based on intervals (selection from nca_setup.R)
         plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
       }
 
@@ -239,9 +257,7 @@ slope_selector_server <- function( # nolint
       )
 
     })
-    #' returns half life adjustments rules to update processed_pknca_data in setup.R
-    list(
-      manual_slopes = manual_slopes
-    )
+    #' returns half life adjustments rules to update processed_pknca_data in nca_setup.R
+    manual_slopes
   })
 }

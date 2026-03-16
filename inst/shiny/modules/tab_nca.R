@@ -33,7 +33,7 @@ tab_nca_ui <- function(id) {
         class = "btn btn-primary",
         width = "100%"
       ),
-      setup_ui(ns("nca_setup")),
+      nca_setup_ui(ns("nca_setup")),
     ),
     #' Results
     nav_panel(
@@ -75,7 +75,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
-    nca_setup <- setup_server(
+    nca_setup <- nca_setup_server(
       "nca_setup",
       adnca_data,
       pknca_data,
@@ -95,7 +95,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     session$userData$slope_rules <- slope_rules
 
     reactable_server("manual_slopes",
-                     reactive(slope_rules$manual_slopes()),
+                     reactive(slope_rules()),
                      columns = NULL)
 
     #' Triggers NCA analysis, creating res_nca reactive
@@ -124,7 +124,17 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         # Update units table
         processed_pknca_data <- processed_pknca_data()
         if (!is.null(session$userData$units_table())) {
-          processed_pknca_data$units <- session$userData$units_table()
+          custom_units <- select(
+            session$userData$units_table(), -any_of("default")
+          )
+          by_cols <- intersect(names(processed_pknca_data$units), names(custom_units))
+          by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
+          processed_pknca_data$units <- rows_update(
+            processed_pknca_data$units,
+            custom_units,
+            by = by_cols,
+            unmatched = "ignore"
+          )
         }
 
         #' Calculate results

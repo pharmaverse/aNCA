@@ -21,41 +21,53 @@ parameter_selection_ui <- function(id) {
   ns <- NS(id)
   tagList(
     # Header row with help button
-    div(
-      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
-      tags$h2(
-        "Parameter Selection",
-        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
+    fluidRow(
+      column(
+        width = 2,
+        tags$h2(
+          "Parameter Selection",
+          style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
+        )
       ),
-      dropdown(
-        div(
-          class = "anca-help-dropdown",
-          style = "min-width:22em; max-width:30em;",
-          tags$h2("Parameter Selection Help"),
-          p(
-            "Selections are independent for each study type and can be customized as needed. ",
-            "From top-to-bottom, this page shows:"
-          ),
-          tags$ul(
-            tags$li(
-              tags$b("Study types table"),
-              ": Detected study types and the number of subjects associated with it."
+      column(
+        width = 8,
+        actionButton(ns("show_param_ref"),
+          label = "PK parameter details",
+          icon = icon("book"),
+          class = "btn-sm btn-outline-primary"
+        )
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h2("Parameter Selection Help"),
+            p(
+              "Selections are independent for each study type and can be customized as needed. ",
+              "From top-to-bottom, this page shows:"
             ),
-            tags$li(
-              tags$b("Current selections table"),
-              ": Display of PK parameters selected for each study type."
-            ),
-            tags$li(
-              tags$b("Input widgets"),
-              ": Search and select the PK parameters to calculate for each study type."
+            tags$ul(
+              tags$li(
+                tags$b("Study types table"),
+                ": Detected study types and the number of subjects associated with it."
+              ),
+              tags$li(
+                tags$b("Current selections table"),
+                ": Display of PK parameters selected for each study type."
+              ),
+              tags$li(
+                tags$b("Input widgets"),
+                ": Search and select the PK parameters to calculate for each study type."
+              )
             )
-          )
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "500px"
         ),
-        style = "unite",
-        right = TRUE,
-        icon = icon("question"),
-        status = "primary"
-      )
+      ),
     ),
     p("The following study types were detected in the data:"),
     card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
@@ -120,16 +132,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
             length(unique(processed_pknca_data()$conc$data[[col]])) > 1
         })
 
-      subj_column <- processed_pknca_data()$conc$columns$subject
-
-      filtered_intervals <- processed_pknca_data()$intervals %>%
-        select(all_of(c(groups, subj_column)))
-      # keep subj col to prevent issues if only one subject selected (#858)
-
-      df <- semi_join(processed_pknca_data()$conc$data, filtered_intervals)
-
       detect_study_types(
-        df,
+        processed_pknca_data()$conc$data,
         groups,
         metabfl_column = "METABFL",
         route_column = processed_pknca_data()$dose$columns$route,
@@ -381,6 +385,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       ))
     })
 
+    # PK parameter reference modal
+    observeEvent(input$show_param_ref, .show_param_ref_modal())
+
     # Return list
     list(
       selections = parameter_lists_by_type,
@@ -431,6 +438,122 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # Reorder columns
     select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(study_types_list))
 
+}
+
+#' Show the PK parameter reference modal with a searchable reactable.
+#' @noRd
+.show_param_ref_modal <- function() {
+  ref_data <- .build_param_ref_data()
+  pknca_ref_base <- "https://humanpred.github.io/pknca/reference/"
+  showModal(modalDialog(
+    title = "PK Parameter Details",
+    size = "l",
+    easyClose = TRUE,
+    reactable(
+      ref_data,
+      searchable = TRUE,
+      sortable = TRUE,
+      filterable = TRUE,
+      highlight = TRUE,
+      striped = TRUE,
+      compact = TRUE,
+      defaultPageSize = 10,
+      showPageSizeOptions = TRUE,
+      pageSizeOptions = c(10, 25, 50, nrow(ref_data)),
+      width = "100%",
+      style = list(fontSize = "0.75em"),
+      columns = list(
+        PPTESTCD = colDef(name = "Short Name"),
+        PPTEST = colDef(name = "Parameter Name"),
+        Description = colDef(
+          name = "Description",
+          minWidth = 200,
+          style = list(whiteSpace = "normal")
+        ),
+        App_Location = colDef(
+          name = "App Location",
+          style = list(whiteSpace = "normal")
+        ),
+        PKNCA_Function = colDef(
+          name = "PKNCA Function",
+          html = TRUE,
+          cell = function(value) {
+            if (value == "\u2014") {
+              "\u2014"
+            } else if (startsWith(value, "pk.calc.")) {
+              func_url <- paste0(pknca_ref_base, value, ".html")
+              as.character(htmltools::tags$a(
+                href = func_url,
+                target = "_blank",
+                style = paste0(
+                  "color: #0d6efd;",
+                  "text-decoration: underline;"
+                ),
+                value
+              ))
+            } else {
+              value
+            }
+          }
+        )
+      )
+    ),
+    footer = modalButton("Close")
+  ))
+}
+
+#' Build the parameter reference data frame for the modal.
+#' Derives App Location from TYPE, CAT, and can_excretion.
+#' @return A data frame with 5 columns for display.
+.build_param_ref_data <- function() {
+  params <- metadata_nca_parameters
+
+  app_location <- vapply(
+    seq_len(nrow(params)),
+    function(i) {
+      type <- params$TYPE[i]
+      cat <- params$CAT[i]
+      can_exc <- params$can_excretion[i]
+      locs <- character(0)
+      if (type %in% c("Standard", "IV")) {
+        locs <- c(locs, "Setup > Parameter Selection")
+      }
+      if (type == "Urine" || identical(can_exc, "T")) {
+        locs <- c(
+          locs, "Additional Analysis > Excretion"
+        )
+      }
+      if (type == "PKNCA-not-covered" && cat == "Ratio") {
+        locs <- c(
+          locs, "Additional Analysis > Ratios"
+        )
+      }
+      # if (type == "Sparse") {
+      #   locs <- c(
+      #     locs, "Setup > Parameter Selection (sparse)"
+      #   )
+      # }
+      if (length(locs) == 0) "Setup > Parameter Selection"
+      else paste(locs, collapse = "; ")
+    },
+    character(1)
+  )
+
+  pknca_fun <- ifelse(
+    is.na(params$FUN) | params$FUN == "" |
+      params$TYPE == "PKNCA-not-covered",
+    "\u2014",
+    params$FUN
+  )
+
+  data.frame(
+    PPTESTCD = params$PPTESTCD,
+    PPTEST = params$PPTEST,
+    Description = params$description,
+    App_Location = app_location,
+    PKNCA_Function = pknca_fun,
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Helper to Apply Default or Override Parameter Selections
