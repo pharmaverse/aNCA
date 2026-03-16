@@ -14,6 +14,7 @@
 * Section `General Exclusions` allowing to perform in-App NCA exclusions (#851)
 * Mean plots have been added in the TLGs section, with BLQ handling (#555)
 * CMAX automatically selected in box plots if available (#890)
+* Function created to add labels to the variables and parameters in selectors, function implemented in some selectors. (#899)
 
 
 ## Bugs fixed
