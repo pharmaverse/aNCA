@@ -1,4 +1,4 @@
-format_selector_choices <- function(choices, metadata_type = c("variable", "parameter")) {
+selector_label <- function(choices, metadata_type = c("variable", "parameter")) {
   metadata_type <- match.arg(metadata_type)
 
   if (metadata_type == "variable") {
@@ -25,9 +25,9 @@ format_selector_choices <- function(choices, metadata_type = c("variable", "para
 }
 
 
-describe("format_selector_choices", {
+describe("selector_label", {
   it("returns formatted list for variables", {
-    result <- format_selector_choices(choices = "AGE", "variable")
+    result <- selector_label(choices = "AGE", "variable")
 
     expect_equal(length(result), 1)
     expect_equal(result[[1]]$value, "AGE")
@@ -35,7 +35,7 @@ describe("format_selector_choices", {
   })
 
   it("returns formatted list for parameters", {
-    result <- format_selector_choices(choices = "CMAX", "parameter")
+    result <- selector_label(choices = "CMAX", "parameter")
 
     expect_equal(length(result), 1)
     expect_equal(result[[1]]$value, "CMAX")
@@ -43,12 +43,12 @@ describe("format_selector_choices", {
   })
 
   it("handles missing/empty choices gracefully", {
-    result <- format_selector_choices(choices = "FAKE", "variable")
+    result <- selector_label(choices = "FAKE", "variable")
     expect_equal(length(result), 0)
   })
 
   it("drops choices not found in metadata", {
-    result <- format_selector_choices(
+    result <- selector_label(
       c("USUBJID", "NOT_A_REAL_VARIABLE"),
       "variable"
     )
@@ -58,25 +58,25 @@ describe("format_selector_choices", {
   })
 
   it("returns empty list for empty input", {
-    result <- format_selector_choices(character(0), "variable")
+    result <- selector_label(character(0), "variable")
     expect_equal(result, list())
   })
 
   it("deduplicates variables that appear multiple times in metadata", {
     # Some variables appear in multiple Dataset rows
-    result <- format_selector_choices("USUBJID", "variable")
+    result <- selector_label("USUBJID", "variable")
     vals <- vapply(result, function(x) x$value, character(1))
     expect_equal(sum(vals == "USUBJID"), 1)
   })
 
   it("handles multiple parameters", {
-    result <- format_selector_choices(c("CMAX", "TMAX", "AUCLST"), "parameter")
+    result <- selector_label(c("CMAX", "TMAX", "AUCLST"), "parameter")
     vals <- vapply(result, function(x) x$value, character(1))
     expect_true(all(c("CMAX", "TMAX", "AUCLST") %in% vals))
   })
 
   it("drops parameters not in metadata", {
-    result <- format_selector_choices(
+    result <- selector_label(
       c("CMAX", "FAKE_PARAM"),
       "parameter"
     )
@@ -86,17 +86,17 @@ describe("format_selector_choices", {
   })
 
   it("returns empty list for unrecognized parameters", {
-    result <- format_selector_choices("ZZZZZ", "parameter")
+    result <- selector_label("ZZZZZ", "parameter")
     expect_equal(result, list())
   })
 
   it("label and value are identical (variable name used for both)", {
-    result <- format_selector_choices("USUBJID", "variable")
+    result <- selector_label("USUBJID", "variable")
     expect_equal(result[[1]]$label, result[[1]]$value)
   })
 
   it("all values are character strings", {
-    result <- format_selector_choices(c("USUBJID", "AVAL"), "variable")
+    result <- selector_label(c("USUBJID", "AVAL"), "variable")
     for (item in result) {
       expect_type(item$label, "character")
       expect_type(item$value, "character")
@@ -106,7 +106,7 @@ describe("format_selector_choices", {
 
   it("rejects invalid metadata_type", {
     expect_error(
-      format_selector_choices("USUBJID", "invalid_type"),
+      selector_label("USUBJID", "invalid_type"),
       "arg"
     )
   })

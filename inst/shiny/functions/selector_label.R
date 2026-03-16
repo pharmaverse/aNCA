@@ -20,12 +20,7 @@
 #'   attempts to intelligently guess the `initial_selection` based on
 #'   subject or dose columns.
 #'
-#' @return A reactive UI output rendered into the specified `selector_ui_wrapper`.
-#'
-#' @importFrom shiny req reactive renderUI isolate
-#' @importFrom shinyWidgets virtualSelectInput
-#' @importFrom purrr pmap
-#' @importFrom dplyr filter select distinct rename
+#' @returns A reactive UI output rendered into the specified `selector_ui_wrapper`.
 selector_label <- function(input, output, session,
                            choices,
                            initial_selection = NULL,

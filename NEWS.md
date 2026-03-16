@@ -33,7 +33,7 @@
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 * Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
-* Function created to add labels to the variables and parameters in selectors, function implemented in some selectors. (#899)
+* SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
 
 
 ## Bugs fixed
