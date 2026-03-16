@@ -77,7 +77,8 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
           session, "column", selected = initial_values$column
         )
         session$onFlushed(function() {
-          col_numeric <- filters_metadata()[[initial_values$column]]$type == "numeric" # nolint
+          meta <- isolate(filters_metadata())
+          col_numeric <- meta[[initial_values$column]]$type == "numeric"
           updateSelectInput(
             session, "condition", selected = initial_values$condition
           )
@@ -89,11 +90,11 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
             updatePickerInput(
               session,
               "value_select",
-              choices = filters_metadata()[[initial_values$column]]$choices,
+              choices = meta[[initial_values$column]]$choices,
               selected = initial_values$value
             )
           }
-          restore_done(TRUE)
+          isolate(restore_done(TRUE))
         })
       })
     }
