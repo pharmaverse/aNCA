@@ -179,15 +179,27 @@ describe("PKNCA_create_data_object", {
     expect_true(all(result$conc$data$USUBJID == "SUBJ001"))
   })
   
-  it("handles exclusions indicated through nca_exclude_reason_columns", {
+  it("handles exclusions derived from mapping NCAwXRS", {
     subjs <- unique(multiple_data$USUBJID)
     adnca_excl_cols <- multiple_data %>%
       mutate(
         NCA1XRS = ifelse(USUBJID == subjs[1], "Patient Disconsidered", ""),
         NCA2XRS = ifelse(USUBJID == subjs[2], "Patient Vomiting", "")
       )
-    pknca_excl_subj1 <- PKNCA_create_data_object(adnca_excl_cols, "NCA1XRS")
-    pknca_excl_all <- PKNCA_create_data_object(adnca_excl_cols, c("NCA1XRS", "NCA2XRS"))
+    
+    # Identity mapping with NCAwXRS exclusion columns
+    identity_mapping <- as.list(setNames(names(adnca_excl_cols), names(adnca_excl_cols)))
+    identity_mapping$Metabolites <- character(0)
+    identity_mapping$Grouping_Variables <- character(0)
+    
+    mapping_one <- identity_mapping
+    mapping_one$NCAwXRS <- "NCA1XRS"
+    
+    mapping_all <- identity_mapping
+    mapping_all$NCAwXRS <- c("NCA1XRS", "NCA2XRS")
+    
+    pknca_excl_subj1 <- PKNCA_create_data_object(adnca_excl_cols, mapping = mapping_one)
+    pknca_excl_all <- PKNCA_create_data_object(adnca_excl_cols, mapping = mapping_all)
     excl_col <- pknca_excl_subj1$conc$columns$exclude
     expect_true(all(
       suppressWarnings(PKNCA::pk.nca(pknca_excl_subj1))[["result"]][["USUBJID"]] == subjs[2]

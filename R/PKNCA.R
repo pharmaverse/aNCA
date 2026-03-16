@@ -7,8 +7,8 @@
 #' When `mapping` is provided, the function runs the full preprocessing pipeline
 #' internally: column mapping ([apply_mapping()]), metabolite flagging
 #' ([create_metabfl()]), class/length adjustment ([adjust_class_and_length()]),
-#' and optional filtering ([apply_filters()]). The `nca_exclude_reason_columns`
-#' are derived from `mapping$NCAwXRS` (plus `"DTYPE"`).
+#' duplicate annotation, optional filtering ([apply_filters()]), and derives
+#' NCA exclusion flag columns from `mapping$NCAwXRS` (plus `"DTYPE"`).
 #'
 #' When `mapping` is `NULL` (the default), the function expects already
 #' pre-processed ADNCA data with the standard column names in place.
@@ -43,19 +43,19 @@
 #'
 #' @param adnca_data Data frame containing raw or pre-processed ADNCA data.
 #' @param mapping Optional named list of column mappings (as produced by the
-#'   Shiny mapping UI). When provided, the preprocessing pipeline
-#'   (`apply_mapping`, `create_metabfl`, `adjust_class_and_length`,
-#'   `apply_filters`) is run internally. Metabolite names are taken from
-#'   `mapping$Metabolites` and NCA exclusion flag columns from
-#'   `mapping$NCAwXRS`. Defaults to `NULL` (no preprocessing).
+#'   Shiny mapping UI). When provided, the preprocessing pipeline is run
+#'   internally and NCA exclusion flag columns are derived from
+#'   `mapping$NCAwXRS` (plus `"DTYPE"`). Metabolite names are taken from
+#'   `mapping$Metabolites`. Defaults to `NULL` (no preprocessing, no
+#'   exclusion columns).
 #' @param applied_filters Optional list of filters to apply (see
 #'   [apply_filters()]). Only used when `mapping` is provided.
 #'   Defaults to `NULL`.
-#' @param nca_exclude_reason_columns Optional character vector of column names.
-#'   Excluding records from the NCA
-#'   must be indicated by populating any of these columns with a non-empty
-#'   character value. When `mapping` is provided this is derived automatically
-#'   from `mapping$NCAwXRS` and `"DTYPE"`, so it does not need to be set.
+#' @param duplicate_dtype Optional character vector with the same length as the
+#'   number of rows after mapping. Provides pre-resolved duplicate annotations
+#'   (values: `""`, `"COPY"`, `"TIME DUPLICATE"`). When `NULL` (the default),
+#'   exact duplicates are annotated automatically as `"COPY"`. Use this to
+#'   forward user-resolved time-duplicate selections from the Shiny app.
 #'
 #' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
 #'
@@ -80,7 +80,7 @@
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
-#' @importFrom dplyr filter select arrange across
+#' @importFrom dplyr filter select arrange across group_by mutate ungroup
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units deparse_unit
 #' @importFrom stats as.formula
@@ -90,7 +90,16 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
   adnca_data,
   mapping = NULL,
   applied_filters = NULL,
-  nca_exclude_reason_columns = NULL) {
+  duplicate_dtype = NULL) {
+  
+  # Derive nca_exclude_reason_columns from mapping
+  nca_exclude_reason_columns <- NULL
+  if (!is.null(mapping)) {
+    nca_exclude_reason_columns <- c("DTYPE", mapping$NCAwXRS)
+    nca_exclude_reason_columns <- nca_exclude_reason_columns[
+      nchar(nca_exclude_reason_columns) > 0
+    ]
+  }
   
   # --- Preprocessing pipeline (when mapping is provided) ---
   if (!is.null(mapping)) {
@@ -99,15 +108,21 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
       create_metabfl(mapping$Metabolites) %>%
       adjust_class_and_length(metadata_nca_variables)
     
+    # Annotate duplicate concentration records
+    if (!is.null(duplicate_dtype)) {
+      # Use pre-resolved duplicate annotations (e.g. from Shiny modal)
+      adnca_data$DTYPE <- duplicate_dtype
+    } else {
+      # Auto-annotate exact duplicates
+      adnca_data <- adnca_data %>%
+        group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+        mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
+        ungroup()
+    }
+    
     if (!is.null(applied_filters) && length(applied_filters) > 0) {
       adnca_data <- apply_filters(adnca_data, applied_filters)
     }
-    
-    # Derive nca_exclude_reason_columns from mapping
-    nca_exclude_reason_columns <- c("DTYPE", mapping$NCAwXRS)
-    nca_exclude_reason_columns <- nca_exclude_reason_columns[
-      nchar(nca_exclude_reason_columns) > 0
-    ]
   }
   # Define column names based on ADNCA vars
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))

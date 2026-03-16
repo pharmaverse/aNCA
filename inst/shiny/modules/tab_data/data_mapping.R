@@ -369,10 +369,24 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         style = list(fontSize = "0.75em")
       )
     })
+    # Cleaned mapping with select_ prefix removed
+    cleaned_mapping <- reactive({
+      m <- mapping()
+      names(m) <- gsub("select_", "", names(m))
+      m
+    })
+    
+    # Expose the DTYPE column from duplicate resolution
+    duplicate_dtype <- reactive({
+      req(processed_data())
+      processed_data()$DTYPE
+    })
+    
     list(
       processed_data = processed_data,
+      mapping = cleaned_mapping,
       grouping_variables = reactive(input$select_Grouping_Variables),
-      nca_exclusion_flags = reactive(input$select_NCAwXRS)
+      duplicate_dtype = duplicate_dtype
     )
   })
 }
