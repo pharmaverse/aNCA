@@ -62,52 +62,58 @@ input_filter_ui <- function(id, cols) {
 input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
   moduleServer(id, function(input, output, session) {
     is_active <- reactiveVal(TRUE)
-    # Track restore state: pending_restore is TRUE once the column update has
-    # been sent but before observeEvent(input$column) processes it.
-    pending_restore <- reactiveVal(FALSE)
     restore_done <- reactiveVal(is.null(initial_values))
     is_numeric <- reactive({
       req(input$column)
       filters_metadata()[[input$column]]$type == "numeric"
     })
 
-    # Apply initial column selection when restoring from settings
+    # Restore: set column, then wait for it to take effect and apply
+    # condition/value. Uses observe() so it re-runs whenever input$column
+    # changes, catching the update even after async round-trip.
     observe({
       req(!restore_done())
       req(initial_values$column %in% names(filters_metadata()))
-      pending_restore(TRUE)
-      updateSelectizeInput(session, "column", selected = initial_values$column)
-    })
 
-    observeEvent(input$column, {
-      # While waiting for the restore column update to arrive, skip any
-      # intermediate column changes (e.g. the selectizeInput default).
-      if (pending_restore() && input$column != initial_values$column) return()
+      if (!isTRUE(input$column == initial_values$column)) {
+        # Column not yet set to target — send the update and wait
+        updateSelectizeInput(session, "column", selected = initial_values$column)
+        return()
+      }
 
-      restoring <- pending_restore()
-
-      if (!is_numeric()) {
-        init_condition <- if (restoring) initial_values$condition else "=="
-        init_selected <- if (restoring) {
-          initial_values$value
-        } else {
-          filters_metadata()[[input$column]]$choices
-        }
-        updateSelectInput(session, "condition", selected = init_condition)
+      # Column matches — apply condition and value
+      col_numeric <- filters_metadata()[[input$column]]$type == "numeric"
+      if (col_numeric) {
+        updateSelectInput(session, "condition", selected = initial_values$condition)
+        updateTextInput(session, "value_text", value = initial_values$value)
+      } else {
+        updateSelectInput(session, "condition", selected = initial_values$condition)
         updatePickerInput(
           session,
           "value_select",
           choices = filters_metadata()[[input$column]]$choices,
-          selected = init_selected
+          selected = initial_values$value
         )
-      } else if (restoring) {
-        updateSelectInput(session, "condition", selected = initial_values$condition)
-        updateTextInput(session, "value_text", value = initial_values$value)
       }
 
-      if (restoring) {
-        pending_restore(FALSE)
-        restore_done(TRUE)
+      shinyjs::toggleElement("value_text", condition = col_numeric)
+      shinyjs::toggleElement("value_select", condition = !col_numeric)
+      shinyjs::toggleState("condition", col_numeric)
+      restore_done(TRUE)
+    })
+
+    observeEvent(input$column, {
+      # Skip during restore — handled by the observe above
+      if (!restore_done()) return()
+
+      if (!is_numeric()) {
+        updateSelectInput(session, "condition", selected = "==")
+        updatePickerInput(
+          session,
+          "value_select",
+          choices = filters_metadata()[[input$column]]$choices,
+          selected = filters_metadata()[[input$column]]$choices
+        )
       }
 
       shinyjs::toggleElement("value_text", condition = is_numeric())
