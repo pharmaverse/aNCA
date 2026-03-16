@@ -80,8 +80,11 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
     })
 
     observeEvent(input$column, {
-      restoring <- pending_restore() &&
-        input$column == initial_values$column
+      # While waiting for the restore column update to arrive, skip any
+      # intermediate column changes (e.g. the selectizeInput default).
+      if (pending_restore() && input$column != initial_values$column) return()
+
+      restoring <- pending_restore()
 
       if (!is_numeric()) {
         init_condition <- if (restoring) initial_values$condition else "=="
