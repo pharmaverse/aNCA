@@ -88,6 +88,47 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
       .add_filter()
     })
 
+    # Remove all existing filter panels and reset counter
+    .clear_filters <- function() {
+      for (fid in names(reactiveValuesToList(filters))) {
+        removeUI(
+          selector = paste0(
+            ".accordion-item[data-value='",
+            session$ns(fid), "']"
+          )
+        )
+        filters[[fid]] <- NULL
+      }
+      filter_counter(0)
+    }
+
+    # Auto-submit once all filters match their expected columns
+    .auto_submit_when_ready <- function(expected_filters) {
+      submitted <- reactiveVal(FALSE)
+      observe({
+        if (submitted()) return()
+
+        current_filters <- lapply(
+          reactiveValuesToList(filters), function(x) x()
+        ) %>% purrr::keep(\(x) !is.null(x))
+
+        all_ready <- all(vapply(
+          names(expected_filters),
+          function(fid) {
+            fid %in% names(current_filters) &&
+              !is.null(current_filters[[fid]]$column) &&
+              current_filters[[fid]]$column == expected_filters[[fid]]
+          },
+          logical(1)
+        ))
+
+        if (all_ready) {
+          submitted(TRUE)
+          shinyjs::click("submit_filters")
+        }
+      })
+    }
+
     # Restore filters from uploaded settings
     observeEvent(imported_filters(), {
       req(imported_filters())
@@ -95,20 +136,8 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
 
       observe({
         req(filters_metadata())
+        .clear_filters()
 
-        # Remove existing filter panels
-        for (fid in names(reactiveValuesToList(filters))) {
-          removeUI(
-            selector = paste0(
-              ".accordion-item[data-value='",
-              session$ns(fid), "']"
-            )
-          )
-          filters[[fid]] <- NULL
-        }
-        filter_counter(0)
-
-        # Create filter panels with initial values
         expected_filters <- list()
         for (filt in uploaded_filters) {
           if (filt$column %in% names(filters_metadata())) {
@@ -118,31 +147,8 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
           }
         }
 
-        # Auto-submit once all filters have initialized to their target columns
         if (length(expected_filters) > 0) {
-          submitted <- reactiveVal(FALSE)
-          observe({
-            if (submitted()) return()
-
-            current_filters <- lapply(
-              reactiveValuesToList(filters), function(x) x()
-            ) %>% purrr::keep(\(x) !is.null(x))
-
-            all_ready <- all(vapply(
-              names(expected_filters),
-              function(fid) {
-                fid %in% names(current_filters) &&
-                  !is.null(current_filters[[fid]]$column) &&
-                  current_filters[[fid]]$column == expected_filters[[fid]]
-              },
-              logical(1)
-            ))
-
-            if (all_ready) {
-              submitted(TRUE)
-              shinyjs::click("submit_filters")
-            }
-          })
+          .auto_submit_when_ready(expected_filters)
         }
       }) |> bindEvent(filters_metadata(), once = TRUE)
     })
