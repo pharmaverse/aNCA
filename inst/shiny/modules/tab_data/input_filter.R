@@ -73,6 +73,7 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
     # the column change has propagated.
     if (!is.null(initial_values)) {
       session$onFlushed(function() {
+        cat("RESTORE column set for:", initial_values$column, "\n")
         updateSelectizeInput(
           session, "column", selected = initial_values$column
         )
@@ -94,12 +95,14 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
               selected = initial_values$value
             )
           }
+          cat("RESTORE values set for:", initial_values$column, "condition:", initial_values$condition, "\n") # nolint
           isolate(restore_done(TRUE))
         })
       })
     }
 
     observeEvent(input$column, {
+      cat("observeEvent column:", input$column, "restore_done:", isolate(restore_done()), "\n") # nolint
       # Skip column-change defaults while restore is in progress
       if (!restore_done()) return()
 
