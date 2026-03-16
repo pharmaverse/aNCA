@@ -68,43 +68,69 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
       filters_metadata()[[input$column]]$type == "numeric"
     })
 
-    # Pre-populate column if initial values provided
-    if (!is.null(initial_values)) {
-      observe({
-        req(filters_metadata())
-        updateSelectizeInput(session, "column", selected = initial_values$column)
-        is_initialized(TRUE)
-      }) %>% bindEvent(filters_metadata(), once = TRUE)
-    }
+    # Apply saved condition and value for the current column
+    .apply_initial_values <- function() {
+      meta <- filters_metadata()[[initial_values$column]]
+      is_num <- meta$type == "numeric"
 
-    observeEvent(input$column, {
-      if (!is_numeric()) {
-        updateSelectInput(session, "condition", selected = "==")
+      shinyjs::toggleElement("value_text", condition = is_num)
+      shinyjs::toggleElement("value_select", condition = !is_num)
+      shinyjs::toggleState("condition", is_num)
+
+      updateSelectInput(session, "condition", selected = initial_values$condition)
+      if (is_num) {
+        updateTextInput(session, "value_text", value = initial_values$value)
+      } else {
         updatePickerInput(
           session,
           "value_select",
-          choices = filters_metadata()[[input$column]]$choices,
-          selected = filters_metadata()[[input$column]]$choices
+          choices = meta$choices,
+          selected = initial_values$value
         )
       }
+      is_initialized(FALSE)
+    }
 
-      shinyjs::toggleElement("value_text", condition = is_numeric())
-      shinyjs::toggleElement("value_select", condition = !is_numeric())
-      shinyjs::toggleState("condition", is_numeric())
-
-      # Apply initial condition and value after column observer fires
-      if (!is.null(initial_values) && is_initialized()) {
-        updateSelectInput(session, "condition", selected = initial_values$condition)
-        if (is_numeric()) {
-          updateTextInput(session, "value_text", value = initial_values$value)
+    # Pre-populate column if initial values provided.
+    # is_initialized gates the column observer so it applies initial condition/value
+    # only after the column has updated to the target.
+    if (!is.null(initial_values)) {
+      observe({
+        req(filters_metadata(), input$column)
+        is_initialized(TRUE)
+        if (input$column == initial_values$column) {
+          # Column already matches — apply initial values directly since
+          # updateSelectizeInput won't trigger observeEvent(input$column)
+          .apply_initial_values()
         } else {
+          updateSelectizeInput(session, "column", selected = initial_values$column)
+        }
+      }) %>% bindEvent(filters_metadata(), once = TRUE)
+    }
+
+    # When column changes, update the condition/value widgets for that column.
+    # If restoring from initial values, apply them once the column matches.
+    observeEvent(input$column, {
+      if (is_initialized() && input$column == initial_values$column) {
+        .apply_initial_values()
+      } else if (!is_initialized()) {
+        # Normal column change: reset to defaults
+        meta <- filters_metadata()[[input$column]]
+        is_num <- meta$type == "numeric"
+
+        shinyjs::toggleElement("value_text", condition = is_num)
+        shinyjs::toggleElement("value_select", condition = !is_num)
+        shinyjs::toggleState("condition", is_num)
+
+        if (!is_num) {
+          updateSelectInput(session, "condition", selected = "==")
           updatePickerInput(
             session,
             "value_select",
-            selected = initial_values$value
+            choices = meta$choices,
+            selected = meta$choices
           )
         }
-        is_initialized(FALSE)
       }
     })
 
