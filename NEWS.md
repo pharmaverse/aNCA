@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Data tab filters are now persisted in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1081)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
 * Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). (#1027)
 * Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
