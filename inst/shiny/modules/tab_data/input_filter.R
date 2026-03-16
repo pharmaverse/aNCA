@@ -62,7 +62,10 @@ input_filter_ui <- function(id, cols) {
 input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
   moduleServer(id, function(input, output, session) {
     is_active <- reactiveVal(TRUE)
-    initialized <- reactiveVal(is.null(initial_values))
+    # Track restore state: pending_restore is TRUE once the column update has
+    # been sent but before observeEvent(input$column) processes it.
+    pending_restore <- reactiveVal(FALSE)
+    restore_done <- reactiveVal(is.null(initial_values))
     is_numeric <- reactive({
       req(input$column)
       filters_metadata()[[input$column]]$type == "numeric"
@@ -70,13 +73,14 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
 
     # Apply initial column selection when restoring from settings
     observe({
-      req(!initialized())
+      req(!restore_done())
       req(initial_values$column %in% names(filters_metadata()))
+      pending_restore(TRUE)
       updateSelectizeInput(session, "column", selected = initial_values$column)
     })
 
     observeEvent(input$column, {
-      restoring <- !initialized() && !is.null(initial_values) &&
+      restoring <- pending_restore() &&
         input$column == initial_values$column
 
       if (!is_numeric()) {
@@ -98,8 +102,10 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
         updateTextInput(session, "value_text", value = initial_values$value)
       }
 
-      # Mark as initialized after applying initial values
-      if (restoring) initialized(TRUE)
+      if (restoring) {
+        pending_restore(FALSE)
+        restore_done(TRUE)
+      }
 
       shinyjs::toggleElement("value_text", condition = is_numeric())
       shinyjs::toggleElement("value_select", condition = !is_numeric())
