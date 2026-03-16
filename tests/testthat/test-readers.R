@@ -168,4 +168,35 @@ describe("read_settings", {
     # Ensure it didn't crash on the NULL checks for missing keys
     expect_null(res$content$slope_rules)
   })
+
+  it("parses filters from YAML and converts values to vectors", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      filters = list(
+        list(column = "DOSEA", condition = "==", value = list("100", "200")),
+        list(column = "AGE", condition = ">", value = list("18"))
+      ),
+      settings = list(method = "linear")
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+
+    expect_type(res$filters, "list")
+    expect_length(res$filters, 2)
+    expect_equal(res$filters[[1]]$column, "DOSEA")
+    expect_equal(res$filters[[1]]$condition, "==")
+    expect_equal(res$filters[[1]]$value, c("100", "200"))
+    expect_equal(res$filters[[2]]$column, "AGE")
+    expect_equal(res$filters[[2]]$condition, ">")
+    expect_equal(res$filters[[2]]$value, "18")
+  })
+
+  it("returns NULL filters when not present in settings file", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+
+    expect_null(res$filters)
+  })
 })

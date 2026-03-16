@@ -42,10 +42,11 @@ data_filtering_ui <- function(id) {
   )
 }
 
-data_filtering_server <- function(id, raw_adnca_data) {
+data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
   moduleServer(id, function(input, output, session) {
     # Handle user-provided filters
     filters <- reactiveValues()
+    filter_counter <- reactiveVal(0)
 
     # Hold information about data types and choices for filters.
     filters_metadata <- reactive({
@@ -62,13 +63,13 @@ data_filtering_server <- function(id, raw_adnca_data) {
         purrr::keep(~ .x$type == "numeric" || length(.x$choices) > 1)
     })
 
-    observeEvent(input$add_filter, {
+    # Helper to insert a single filter panel
+    .add_filter <- function(initial_values = NULL) {
+      filter_counter(filter_counter() + 1)
       accordion_panel_close(id = "filters", values = TRUE)
 
-      # Create a unique ID for each filter
-      filter_id <- paste0("filter_", input$add_filter)
+      filter_id <- paste0("filter_", filter_counter())
 
-      # Insert a new filter UI
       accordion_panel_insert(
         id = "filters",
         panel = input_filter_ui(session$ns(filter_id), names(filters_metadata()))
@@ -76,7 +77,74 @@ data_filtering_server <- function(id, raw_adnca_data) {
 
       accordion_panel_open(id = "filters", value = session$ns(filter_id))
 
-      filters[[filter_id]] <- input_filter_server(filter_id, filters_metadata = filters_metadata)
+      filters[[filter_id]] <- input_filter_server(
+        filter_id,
+        filters_metadata = filters_metadata,
+        initial_values = initial_values
+      )
+    }
+
+    observeEvent(input$add_filter, {
+      .add_filter()
+    })
+
+    # Restore filters from uploaded settings
+    observeEvent(imported_filters(), {
+      req(imported_filters())
+      uploaded_filters <- imported_filters()
+
+      observe({
+        req(filters_metadata())
+
+        # Remove existing filter panels
+        for (fid in names(reactiveValuesToList(filters))) {
+          removeUI(
+            selector = paste0(
+              ".accordion-item[data-value='",
+              session$ns(fid), "']"
+            )
+          )
+          filters[[fid]] <- NULL
+        }
+        filter_counter(0)
+
+        # Track which filter IDs we expect and their target columns
+        expected_filters <- list()
+        for (filt in uploaded_filters) {
+          if (filt$column %in% names(filters_metadata())) {
+            .add_filter(initial_values = filt)
+            fid <- paste0("filter_", filter_counter())
+            expected_filters[[fid]] <- filt$column
+          }
+        }
+
+        # Auto-submit once all filter inputs have initialized to their target columns
+        if (length(expected_filters) > 0) {
+          submitted <- reactiveVal(FALSE)
+          observe({
+            if (submitted()) return()
+
+            current_filters <- lapply(
+              reactiveValuesToList(filters), function(x) x()
+            ) %>% purrr::keep(\(x) !is.null(x))
+
+            all_ready <- all(vapply(
+              names(expected_filters),
+              function(fid) {
+                fid %in% names(current_filters) &&
+                  !is.null(current_filters[[fid]]$column) &&
+                  current_filters[[fid]]$column == expected_filters[[fid]]
+              },
+              logical(1)
+            ))
+
+            if (all_ready) {
+              submitted(TRUE)
+              shinyjs::click("submit_filters")
+            }
+          })
+        }
+      }) |> bindEvent(filters_metadata(), once = TRUE)
     })
 
     #' When filters change, show notification reminding the user about submitting

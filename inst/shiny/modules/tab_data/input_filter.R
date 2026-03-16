@@ -59,24 +59,47 @@ input_filter_ui <- function(id, cols) {
   )
 }
 
-input_filter_server <- function(id, filters_metadata) {
+input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
   moduleServer(id, function(input, output, session) {
     is_active <- reactiveVal(TRUE)
+    initialized <- reactiveVal(is.null(initial_values))
     is_numeric <- reactive({
       req(input$column)
       filters_metadata()[[input$column]]$type == "numeric"
     })
 
+    # Apply initial column selection when restoring from settings
+    observe({
+      req(!initialized())
+      req(initial_values$column %in% names(filters_metadata()))
+      updateSelectizeInput(session, "column", selected = initial_values$column)
+    })
+
     observeEvent(input$column, {
+      restoring <- !initialized() && !is.null(initial_values) &&
+        input$column == initial_values$column
+
       if (!is_numeric()) {
-        updateSelectInput(session, "condition", selected = "==")
+        init_condition <- if (restoring) initial_values$condition else "=="
+        init_selected <- if (restoring) {
+          initial_values$value
+        } else {
+          filters_metadata()[[input$column]]$choices
+        }
+        updateSelectInput(session, "condition", selected = init_condition)
         updatePickerInput(
           session,
           "value_select",
           choices = filters_metadata()[[input$column]]$choices,
-          selected = filters_metadata()[[input$column]]$choices
+          selected = init_selected
         )
+      } else if (restoring) {
+        updateSelectInput(session, "condition", selected = initial_values$condition)
+        updateTextInput(session, "value_text", value = initial_values$value)
       }
+
+      # Mark as initialized after applying initial values
+      if (restoring) initialized(TRUE)
 
       shinyjs::toggleElement("value_text", condition = is_numeric())
       shinyjs::toggleElement("value_select", condition = !is_numeric())
