@@ -96,6 +96,9 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
               selected = initial_values$value
             )
           }
+          shinyjs::toggleElement("value_text", condition = col_numeric)
+          shinyjs::toggleElement("value_select", condition = !col_numeric)
+          shinyjs::toggleState("condition", col_numeric)
         })
       })
     }
