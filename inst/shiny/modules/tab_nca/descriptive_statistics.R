@@ -94,7 +94,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
     summary_stats_filtered <- reactive({
       summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
+        select(any_of(c(input$summary_groupby, "Statistic", input$select_display_parameters))) %>%
         filter(Statistic %in% input$select_display_statistic)
     })
 
