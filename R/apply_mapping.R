@@ -41,12 +41,13 @@ MAPPING_DESIRED_ORDER <- c( # nolint: object_name_linter
 #' @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
 apply_mapping <- function(
-    dataset, mapping, desired_order = MAPPING_DESIRED_ORDER, silent = TRUE,
-    req_mappings = c(
-      "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
-      "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
-      "AVALU", "RRLTU", "DOSEU", "PARAM"
-    )) {
+  dataset, mapping, desired_order = MAPPING_DESIRED_ORDER, silent = TRUE,
+  req_mappings = c(
+    "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
+    "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
+    "AVALU", "RRLTU", "DOSEU", "PARAM"
+  )
+) {
   if (!silent) {
     paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") %>%
       message()

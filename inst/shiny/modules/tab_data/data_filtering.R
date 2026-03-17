@@ -118,20 +118,18 @@ data_filtering_server <- function(id, raw_adnca_data) {
       session$userData$applied_filters <- applied_filters
 
       # Filter and return data
-      withCallingHandlers(
-        {
-          apply_filters(raw_adnca_data(), applied_filters)
-        },
-        warning = function(w) {
-          log_warn(conditionMessage(w))
-          showNotification(
-            paste0("Warning during filtering: ", conditionMessage(w)),
-            type = "warning",
-            duration = 10
-          )
-          invokeRestart("muffleWarning")
-        }
-      )
+      withCallingHandlers({
+        apply_filters(raw_adnca_data(), applied_filters)
+      },
+      warning = function(w) {
+        log_warn(conditionMessage(w))
+        showNotification(
+          paste0("Warning during filtering: ", conditionMessage(w)),
+          type = "warning",
+          duration = 10
+        )
+        invokeRestart("muffleWarning")
+      })
     }) %>%
       bindEvent(input$submit_filters, raw_adnca_data())
 
