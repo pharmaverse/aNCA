@@ -45,6 +45,7 @@ Imports:
     tidyr,
     units,
     utils,
+    writexl,
     yaml
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -65,8 +66,8 @@ Suggests:
     markdown,
     mockery,
     nestcolor,
-    openxlsx2,
     pak,
+    readxl,
     reactable,
     reactable.extras,
     rmarkdown,
