@@ -6,7 +6,7 @@
 * Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). (#1027)
 * Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
 * Exploration plots: "Add to Exports" button saves named plot snapshots to the ZIP export. When custom snapshots exist for a plot type, only the snapshots are exported (the default plot is omitted). QC plot also included in the export tree (#1002)
-* CDISC ZIP export now includes a `Pre_Specs.xlsx` file with variable-level metadata for each selected dataset (#998)
+* CDISC ZIP export now includes a `Pre_Specs.xlsx` file with variable-level metadata for each selected dataset (#998) and a session information file (#829)
 * New "About" tab in the app sidebar with links, citation, authors, license, version info, and a "Copy session info" button (#1015)
 * Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
 * Project name auto-populated from STUDYID on data upload (#1000)
@@ -52,6 +52,7 @@ identify difference between missing and not requested (#934)
 * Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
 * Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 * Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
+* Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
 
 # aNCA 0.1.0
 
