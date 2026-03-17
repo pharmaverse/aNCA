@@ -31,7 +31,6 @@
 #' be normalized by dose amount or "both" to include both normalized and non-normalized lines.
 #'
 #' @return A `ggplot` object representing the individual PK line plot.
-#' @importFrom dplyr bind_rows
 #' @export
 exploration_individualplot <- function(
     pknca_data,
@@ -50,42 +49,19 @@ exploration_individualplot <- function(
     use_time_since_last_dose = FALSE,
     show_legend = TRUE,
     line_type = "default") {
-
-  if (line_type == "both") {
-    # Dose-normalized data
-    dn_data <- process_data_individual(
-      pknca_data = pknca_data,
-      filtering_list = filtering_list,
-      ylog_scale = ylog_scale,
-      show_dose = show_dose,
-      use_time_since_last_dose = use_time_since_last_dose,
-      dose_normalize = TRUE
-    )
-    dn_data$line_type_label <- "Dose-normalized"
-    # default data
-    nn_data <- process_data_individual(
-      pknca_data = pknca_data,
-      filtering_list = filtering_list,
-      ylog_scale = ylog_scale,
-      show_dose = show_dose,
-      use_time_since_last_dose = use_time_since_last_dose,
-      dose_normalize = FALSE
-    )
-    nn_data$line_type_label <- "default"
-    individual_data <- bind_rows(dn_data, nn_data)
-    linetype_by <- "line_type_label"
-  } else {
-    individual_data <- process_data_individual(
-      pknca_data = pknca_data,
-      filtering_list = filtering_list,
-      ylog_scale = ylog_scale,
-      show_dose = show_dose,
-      use_time_since_last_dose = use_time_since_last_dose,
-      dose_normalize = line_type == "dose-normalized"
-    )
-    linetype_by <- NULL
-  }
-
+  
+  result <- .prepare_line_type_data(
+    line_type = line_type,
+    process_fn = process_data_individual,
+    pknca_data = pknca_data,
+    filtering_list = filtering_list,
+    ylog_scale = ylog_scale,
+    show_dose = show_dose,
+    use_time_since_last_dose = use_time_since_last_dose
+  )
+  individual_data <- result$data
+  linetype_by <- result$linetype_by
+  
   # If no tooltip variables defined use some default ones
   if (is.null(tooltip_vars)) {
     tooltip_vars <- unique(c(
@@ -136,7 +112,6 @@ exploration_individualplot <- function(
 #' Default is `NULL` (no limits).
 #' @return A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
-#' @importFrom dplyr bind_rows filter
 #' @export
 exploration_meanplot <- function(
     pknca_data,
@@ -159,40 +134,23 @@ exploration_meanplot <- function(
     y_limits = NULL,
     line_type = "default"
 ) {
-
-  mean_data <- process_data_mean(
+  
+  result <- .prepare_line_type_data(
+    line_type = line_type,
+    process_fn = process_data_mean,
     pknca_data = pknca_data,
     extra_grouping_vars = c(color_by, facet_by),
     facet_by = facet_by,
     filtering_list = filtering_list,
     ylog_scale = ylog_scale,
     show_dose = show_dose,
-    use_time_since_last_dose = use_time_since_last_dose,
-    dose_normalize = FALSE
+    use_time_since_last_dose = use_time_since_last_dose
   )
-
-  if (line_type != "default") {
-    mean_data_dn <- process_data_mean(
-      pknca_data = pknca_data,
-      extra_grouping_vars = c(color_by, facet_by),
-      filtering_list = filtering_list,
-      ylog_scale = ylog_scale,
-      show_dose = show_dose,
-      use_time_since_last_dose = use_time_since_last_dose,
-      dose_normalize = TRUE
-    )
-    mean_data_dn$line_type_label <- "Dose-normalized"
-    mean_data$line_type_label <- "default"
-    mean_data <- bind_rows(mean_data, mean_data_dn)
-
-    if (line_type == "dose-normalized") {
-      mean_data <- mean_data %>% filter(line_type_label == "Dose-normalized")
-    }
-  }
-
+  mean_data <- result$data
+  
   # The time variable will always be the first one
   x_var <- names(mean_data)[1]
-
+  
   # If no tooltip variable specified, use the default ones
   if (is.null(tooltip_vars)) {
     tooltip_vars <- unique(c(
@@ -203,7 +161,7 @@ exploration_meanplot <- function(
       color_by
     ))
   }
-
+  
   plot <- g_lineplot(
     data = mean_data,
     x_var = x_var,
@@ -222,14 +180,14 @@ exploration_meanplot <- function(
     tooltip_vars = tooltip_vars,
     labels_df = labels_df,
     vline_var = if (show_dose) "TIME_DOSE" else NULL,
-    linetype_by = if (line_type != "default") "line_type_label" else NULL,
+    linetype_by = result$linetype_by,
     show_legend = show_legend
   )
   # If there is no mean data, just return the plot
   if (nrow(mean_data) == 0) {
     return(plot)
   }
-
+  
   # Add final layers for meanplot with error bars and CIs
   finalize_meanplot(
     plot = plot,
@@ -260,6 +218,7 @@ exploration_meanplot <- function(
 #' @return Data frame filtered and ready for individual spaghetti plots,
 #' with optional TIME_DOSE column.
 #' @importFrom dplyr filter mutate
+#' @importFrom rlang sym
 #' @keywords internal
 #' @noRd
 process_data_individual <- function(pknca_data,
@@ -269,20 +228,20 @@ process_data_individual <- function(pknca_data,
                                     show_dose = FALSE,
                                     use_time_since_last_dose = FALSE,
                                     dose_normalize = FALSE) {
-
+  
   time_col <- pknca_data$conc$columns$time
   conc_col <- pknca_data$conc$columns$concentration
   concu_col <- pknca_data$conc$columns$concu
   dose_col <- pknca_data$dose$columns$dose
   doseu_col <- pknca_data$dose$columns$doseu
-
+  
   # Derive dose times if requested
   data <- if (show_dose || use_time_since_last_dose || dose_normalize) {
     data <- derive_last_dose_time(
       pknca_data = pknca_data,
       conc_time_col = pknca_data$conc$columns$time
     )
-
+    
     # Adjust time variable with dose time if using time since last dose
     if (use_time_since_last_dose) {
       data <- mutate(
@@ -290,17 +249,8 @@ process_data_individual <- function(pknca_data,
         !!pknca_data$conc$columns$time := !!sym(pknca_data$conc$columns$time) - TIME_DOSE
       )
     }
-    # If dose normalization requested, adjust concentration by dose amount
     if (dose_normalize) {
-      data <- data %>%
-        mutate(
-          !!sym(conc_col) := !!sym(conc_col) / !!sym(dose_col),
-          !!sym(concu_col) := if (!is.null(doseu_col)) {
-            paste0("(", .[[concu_col]], ")/(", .[[doseu_col]], ")")
-          } else {
-            NA_character_
-          }
-        )
+      data <- .apply_dose_normalization(data, conc_col, concu_col, dose_col, doseu_col)
     }
     data
   } else {
@@ -317,7 +267,7 @@ process_data_individual <- function(pknca_data,
       )
     }
   }
-
+  
   # Apply filtering
   processed_data <- filter_by_list(data, filtering_list) %>%
     filter(!is.na(!!sym(conc_col)))
@@ -368,12 +318,12 @@ process_data_mean <- function(pknca_data,
     c(extra_grouping_vars, x_var, x_var_unit, y_var_unit, dose_group_cols)
   )
   grouping_cols <- if (show_dose) c(grouping_cols, "TIME_DOSE") else grouping_cols
-
+  
   processed <- .prepare_mean_data(
     pknca_data, x_var, y_var, dose_group_cols,
     filtering_list, show_dose, dose_normalize
   )
-
+  
   # Calculate summary statistics by grouping columns
   summarised_data <- processed %>%
     group_by(!!!syms(grouping_cols)) %>%
@@ -393,19 +343,19 @@ process_data_mean <- function(pknca_data,
     ) %>%
     # Make sure the nominal time column is always the first column
     select(any_of(c(x_var)), everything())
-
+  
   if (!is.null(facet_by) && length(facet_by) > 0) {
     subj_col <- pknca_data$conc$columns$subject
     facet_counts <- processed %>%
       distinct(!!!syms(facet_by), !!sym(subj_col)) %>%
       group_by(!!!syms(facet_by)) %>%
       summarise(USUBJID_COUNT = n_distinct(!!sym(subj_col)), .groups = "drop")
-
+    
     summarised_data <- summarised_data %>%
       left_join(facet_counts, by = facet_by) %>%
       mutate(USUBJID_COUNT = ifelse(is.na(USUBJID_COUNT), 0L, USUBJID_COUNT))
   }
-
+  
   # Remove non-positive means if log scale is selected (for posterior plotting)
   if (isTRUE(ylog_scale)) {
     summarised_data <- summarised_data %>%
@@ -423,7 +373,7 @@ process_data_mean <- function(pknca_data,
   dose_col <- pknca_data$dose$columns$dose
   doseu_col <- pknca_data$dose$columns$doseu
   y_var_unit <- pknca_data$conc$columns$concu
-
+  
   # Derive dose times if requested
   data <- if (show_dose || dose_normalize) {
     data <- derive_last_dose_time(
@@ -431,25 +381,17 @@ process_data_mean <- function(pknca_data,
       conc_time_col = x_var
     )
     if (dose_normalize) {
-      data <- data %>%
-        mutate(
-          !!sym(y_var) := !!sym(y_var) / !!sym(dose_col),
-          !!sym(y_var_unit) := if (!is.null(doseu_col)) {
-            paste0("(", .[[y_var_unit]], ")/(", .[[doseu_col]], ")")
-          } else {
-            NA_character_
-          }
-        )
+      data <- .apply_dose_normalization(data, y_var, y_var_unit, dose_col, doseu_col)
     }
     data
   } else {
     pknca_data$conc$data
   }
-
+  
   # Apply filtering
   processed <- filter_by_list(data, filtering_list) %>%
     filter(!is.na(!!sym(y_var)))
-
+  
   # Adjust time variable with dose time if using time since last dose
   if (show_dose && !is.null(dose_group_cols) && !is.null(x_var)) {
     processed <- processed %>%
@@ -458,6 +400,43 @@ process_data_mean <- function(pknca_data,
       ungroup()
   }
   processed
+}
+
+#' Normalize concentration values by dose amount and update units
+#' @importFrom dplyr mutate
+#' @importFrom rlang sym
+#' @noRd
+.apply_dose_normalization <- function(data, conc_col, concu_col, dose_col, doseu_col) {
+  data %>%
+    mutate(
+      !!sym(conc_col) := !!sym(conc_col) / !!sym(dose_col),
+      !!sym(concu_col) := if (!is.null(doseu_col)) {
+        paste0("(", .[[concu_col]], ")/(", .[[doseu_col]], ")")
+      } else {
+        NA_character_
+      }
+    )
+}
+
+#' Prepare data for a given line_type by calling a processing function
+#'
+#' When line_type is "both", calls process_fn twice (normalized and default),
+#' labels each, and combines them. When "dose-normalized", calls once with
+#' normalization. Otherwise calls once without.
+#' @importFrom dplyr bind_rows filter
+#' @noRd
+.prepare_line_type_data <- function(line_type, process_fn, ...) {
+  if (line_type == "both") {
+    dn_data <- process_fn(..., dose_normalize = TRUE)
+    dn_data$line_type_label <- "Dose-normalized"
+    nn_data <- process_fn(..., dose_normalize = FALSE)
+    nn_data$line_type_label <- "default"
+    list(data = bind_rows(dn_data, nn_data), linetype_by = "line_type_label")
+  } else if (line_type == "dose-normalized") {
+    list(data = process_fn(..., dose_normalize = TRUE), linetype_by = NULL)
+  } else {
+    list(data = process_fn(..., dose_normalize = FALSE), linetype_by = NULL)
+  }
 }
 
 #' Filter a data frame by a list of column-value pairs
@@ -497,7 +476,7 @@ filter_by_list <- function(data, filtering_list) {
 #' @noRd
 finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) {
   plot_build <- ggplot2::ggplot_build(plot)
-
+  
   mean_title <- paste0("Mean ", plot_build$plot$labels$title)
   if (isTRUE(ci)) mean_title <- paste0(mean_title, " (95% CI)")
   p <- plot +
@@ -544,7 +523,7 @@ derive_last_dose_time <- function(pknca_data, conc_time_col = pknca_data$conc$co
   dose_group_vars <- group_vars(pknca_data$dose)
   dose_col <- pknca_data$dose$columns$dose
   doseu_col <- pknca_data$dose$columns$doseu
-
+  
   left_join(
     conc_data %>%
       select(-any_of(c(dose_col, doseu_col))),
