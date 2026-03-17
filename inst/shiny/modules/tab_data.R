@@ -17,9 +17,9 @@
 
 tab_data_ui <- function(id) {
   ns <- NS(id)
-  
+
   tabs <- c("Upload", "Mapping", "Filtering", "Preview")
-  
+
   tagList(
     shinyjs::useShinyjs(),
     div(
@@ -106,13 +106,13 @@ tab_data_server <- function(id) {
         shinyjs::runjs("document.querySelector(`a[data-value='exploration']`).click();")
       }
     })
-    
+
     # enable next step after progression
     observe({
       data_step()
       shinyjs::enable("next_step")
     })
-    
+
     observeEvent(input$prev_step, {
       current <- data_step()
       idx <- match(current, steps)
@@ -123,7 +123,7 @@ tab_data_server <- function(id) {
     })
     #' Load raw ADNCA data
     uploaded_data <- data_upload_server("raw_data")
-    
+
     # Call the column mapping module
     column_mapping <- data_mapping_server(
       id = "column_mapping",
@@ -132,17 +132,17 @@ tab_data_server <- function(id) {
     )
     #' Reactive value for the processed dataset (used for preview and filtering UI)
     adnca_mapped <- column_mapping$processed_data
-    
+
     observeEvent(adnca_mapped(), {
       req(adnca_mapped())
       data_step("filtering")
       updateTabsetPanel(session, "data_navset", selected = "Filtering")
     })
-    
+
     #' Filter data (module returns filtered data for preview + filters list)
     filtering_result <- data_filtering_server("data_filtering", adnca_mapped)
     processed_data <- filtering_result$filtered_data
-    
+
     #' Global variable to store grouping variables
     extra_group_vars <- column_mapping$grouping_variables
     output$processed_data_message <- renderUI({
@@ -159,7 +159,7 @@ tab_data_server <- function(id) {
         }
       )
     })
-    
+
     # Update the data table object with the filtered data
     reactable_server(
       "data_processed",
@@ -167,62 +167,65 @@ tab_data_server <- function(id) {
       height = "50vh",
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data())))
     )
-    
+
     # Use raw data + mapping to create a PKNCA object
     #' Initializes PKNCA::PKNCAdata object from raw adnca data
     pknca_data <- reactive({
       req(processed_data())
       log_trace("Creating PKNCA::data object.")
-      
-      tryCatch({
-        #' Create data object
-        pknca_object <- PKNCA_create_data_object(
-          adnca_data = uploaded_data$adnca_raw(),
-          mapping = column_mapping$mapping(),
-          applied_filters = filtering_result$applied_filters(),
-          time_duplicate_rows = column_mapping$time_duplicate_rows()
-        )
-        ############################################################################################
-        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
-        # this is implemented here via hardcoding in PPSTRESU
-        pknca_object$units <- pknca_object$units %>%
-          mutate(
-            PPSTRESU = {
-              new_ppstresu <- ifelse(
+
+      tryCatch(
+        {
+          #' Create data object
+          pknca_object <- PKNCA_create_data_object(
+            adnca_data = uploaded_data$adnca_raw(),
+            mapping = column_mapping$mapping(),
+            applied_filters = filtering_result$applied_filters(),
+            time_duplicate_rows = column_mapping$time_duplicate_rows()
+          )
+          ###############################################################################
+          # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
+          # this is implemented here via hardcoding in PPSTRESU
+          pknca_object$units <- pknca_object$units %>%
+            mutate(
+              PPSTRESU = {
+                new_ppstresu <- ifelse(
+                  PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                    metadata_nca_parameters$unit_type == "volume"
+                  ],
+                  sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
+                  PPSTRESU
+                )
+                # Only accept changes producing simple units
+                ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
+              },
+              conversion_factor = ifelse(
                 PPTESTCD %in% metadata_nca_parameters$PKNCA[
                   metadata_nca_parameters$unit_type == "volume"
                 ],
-                sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
-                PPSTRESU
+                get_conversion_factor(PPORRESU, PPSTRESU),
+                conversion_factor
               )
-              # Only accept changes producing simple units
-              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
-            },
-            conversion_factor = ifelse(
-              PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                metadata_nca_parameters$unit_type == "volume"
-              ],
-              get_conversion_factor(PPORRESU, PPSTRESU),
-              conversion_factor
             )
-          )
-        ############################################################################################
-        log_success("PKNCA data object created.")
-        
-        #' Enable related tabs and update the curent view if data is created succesfully.
-        purrr::walk(c("nca", "exploration", "tlg"), function(tab) {
-          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
-        })
-        
-        pknca_object
-      }, error = function(e) {
-        log_error(e$message)
-        showNotification(e$message, type = "error", duration = NULL)
-        NULL
-      })
+          ################################################################################
+          log_success("PKNCA data object created.")
+
+          #' Enable related tabs and update the curent view if data is created succesfully.
+          purrr::walk(c("nca", "exploration", "tlg"), function(tab) {
+            shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+          })
+
+          pknca_object
+        },
+        error = function(e) {
+          log_error(e$message)
+          showNotification(e$message, type = "error", duration = NULL)
+          NULL
+        }
+      )
     }) %>%
       bindEvent(processed_data())
-    
+
     list(
       pknca_data = pknca_data,
       adnca_raw = uploaded_data$adnca_raw,

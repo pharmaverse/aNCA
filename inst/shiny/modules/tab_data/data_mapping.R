@@ -26,8 +26,10 @@ NON_STD_MAPPING_INFO <- data.frame(
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
-  select(Variable, Label, Values, mapping_tooltip,
-         mapping_section, mapping_alternatives, mapping_order) %>%
+  select(
+    Variable, Label, Values, mapping_tooltip,
+    mapping_section, mapping_alternatives, mapping_order
+  ) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
@@ -55,8 +57,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
-#' column_mapping_widget(ns = NS("example"), id = "STUDYID",
-#' tooltip_text = "Select the study identifier column.")
+#' column_mapping_widget(
+#'   ns = NS("example"), id = "STUDYID",
+#'   tooltip_text = "Select the study identifier column."
+#' )
 .column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
   div(
     class = "column-mapping-row",
@@ -143,7 +147,7 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 #' The processed dataset and selected grouping variables are returned as reactive expressions.
 data_mapping_ui <- function(id) {
   ns <- NS(id)
-  
+
   div(
     card(
       div(
@@ -166,23 +170,23 @@ data_mapping_ui <- function(id) {
 data_mapping_server <- function(id, adnca_data, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
-    
+
     # Loop through each label and create the renderText outputs
     purrr::walk(MAPPING_INFO$Variable, function(var) {
       output[[paste0("label_", var)]] <- renderText(
         MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
       )
     })
-    
+
     # Populate the static inputs with column names
     observeEvent(adnca_data(), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
-      
+
       # Exceptions:
       # If by default VOLUME is not mapped, then neither is VOLUMEU
       if (!"VOLUME" %in% column_names) {
@@ -208,117 +212,126 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         choices = choices_metab, selected = selected_metab
       )
     })
-    
+
     # Observe submit button click and update processed_data
     mapping <- reactive({
       mapping_list <- setNames(lapply(input_ids, function(id) input[[id]]), input_ids)
       supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
-      
+
       # Get the names to keep
       names_to_keep <- names(mapping_list) %>%
         keep(\(name) {
           # The logical condition with the any() fix
           !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
         })
-      
+
       # Subset the list with the final names
       mapping_list[names_to_keep]
     })
     observe({
       session$userData$mapping <- mapping()
     })
-    
+
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
-      
+
       mapping_ <- mapping()
       names(mapping_) <- gsub("select_", "", names(mapping_))
-      
-      tryCatch({
-        adnca_data() %>%
-          apply_mapping(
-            mapping_,
-            silent = FALSE
-          ) %>%
-          create_metabfl(input$select_Metabolites) %>%
-          adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-        
-      }, warning = function(w) {
-        withCallingHandlers(
-          {
-            adnca_data() %>%
-              apply_mapping(
-                mapping_,
-                silent = FALSE
-              ) %>%
-              create_metabfl(input$select_Metabolites) %>%
-              adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-          },
-          warning = function(w) {
-            log_warn(conditionMessage(w))
-            showNotification(conditionMessage(w), type = "warning", duration = 10)
-          }
-        )
-      }, error = function(e) {
-        log_error(conditionMessage(e))
-        showNotification(conditionMessage(e), type = "error", duration = NULL)
-        NULL
-      })
+
+      tryCatch(
+        {
+          adnca_data() %>%
+            apply_mapping(
+              mapping_,
+              silent = FALSE
+            ) %>%
+            create_metabfl(input$select_Metabolites) %>%
+            adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
+        },
+        warning = function(w) {
+          withCallingHandlers(
+            {
+              adnca_data() %>%
+                apply_mapping(
+                  mapping_,
+                  silent = FALSE
+                ) %>%
+                create_metabfl(input$select_Metabolites) %>%
+                adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
+            },
+            warning = function(w) {
+              log_warn(conditionMessage(w))
+              showNotification(conditionMessage(w), type = "warning", duration = 10)
+            }
+          )
+        },
+        error = function(e) {
+          log_error(conditionMessage(e))
+          showNotification(conditionMessage(e), type = "error", duration = NULL)
+          NULL
+        }
+      )
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
-    
+
     # Check for blocking duplicates using annotate_duplicates()
     df_duplicates <- reactiveVal(NULL)
     resolved_time_duplicate_rows <- reactiveVal(NULL)
-    
+
     processed_data <- reactive({
       req(mapped_data())
-      
-      tryCatch({
-        result <- annotate_duplicates(mapped_data(), resolved_time_duplicate_rows())
-        select(result, any_of(c(names(mapped_data()), "DTYPE")))
-      }, time_duplicate_error = function(e) {
-        df_duplicates(e$duplicate_data)
-        NULL
-      })
+
+      tryCatch(
+        {
+          result <- annotate_duplicates(mapped_data(), resolved_time_duplicate_rows())
+          select(result, any_of(c(names(mapped_data()), "DTYPE")))
+        },
+        time_duplicate_error = function(e) {
+          df_duplicates(e$duplicate_data)
+          NULL
+        }
+      )
     }) %>%
       bindEvent(
         list(mapped_data(), resolved_time_duplicate_rows()),
         ignoreInit = FALSE
       )
-    
+
     observeEvent(input$keep_selected_btn, {
       req(df_duplicates())
       selected <- getReactableState("duplicate_modal_table", "selected")
-      
+
       # Derive rows to EXCLUDE (all duplicate rows the user did NOT select)
       dup_data <- df_duplicates()
       dup_row_indices <- dup_data$ROWID
       keep_indices <- if (!is.null(selected)) dup_row_indices[selected] else integer(0)
       exclude_indices <- setdiff(dup_row_indices, keep_indices)
-      
+
       # Combine with any previously resolved rows
       prev <- resolved_time_duplicate_rows()
       new_exclusions <- unique(c(prev, exclude_indices))
-      
+
       # Validate: check if the selection resolves all time duplicates
-      tryCatch({
-        annotate_duplicates(mapped_data(), new_exclusions)
-        # Selection resolves all duplicates — proceed
-        resolved_time_duplicate_rows(new_exclusions)
-        removeModal()
-      }, time_duplicate_error = function(e) {
-        # Still unresolved duplicates — update and re-show modal
-        resolved_time_duplicate_rows(new_exclusions)
-        df_duplicates(e$duplicate_data)
-        showNotification(
-          "There are still unresolved time duplicates. Please select rows to keep.",
-          type = "warning"
-        )
-      })
+      tryCatch(
+        {
+          annotate_duplicates(mapped_data(), new_exclusions)
+          # Selection resolves all duplicates — proceed
+          resolved_time_duplicate_rows(new_exclusions)
+          removeModal()
+        },
+        time_duplicate_error = function(e) {
+          # Still unresolved duplicates — update and re-show modal
+          resolved_time_duplicate_rows(new_exclusions)
+          df_duplicates(e$duplicate_data)
+          showNotification(
+            "There are still unresolved time duplicates. Please select rows to keep.",
+            type = "warning"
+          )
+        }
+      )
     })
-    
+
     observeEvent(df_duplicates(), {
       showModal(
         modalDialog(
@@ -342,7 +355,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         )
       )
     })
-    
+
     output$duplicate_modal_table <- renderReactable({
       req(df_duplicates())
       dup_data <- df_duplicates()
@@ -371,14 +384,14 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         style = list(fontSize = "0.75em")
       )
     })
-    
+
     # Cleaned mapping with select_ prefix removed
     cleaned_mapping <- reactive({
       m <- mapping()
       names(m) <- gsub("select_", "", names(m))
       m
     })
-    
+
     list(
       processed_data = processed_data,
       mapping = cleaned_mapping,

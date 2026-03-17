@@ -46,24 +46,22 @@ apply_mapping <- function(
       "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
       "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
       "AVALU", "RRLTU", "DOSEU", "PARAM"
-    )
-) {
-  
+    )) {
   if (!silent) {
     paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") %>%
       message()
   }
   .validate_column_mapping(mapping, req_mappings)
-  
+
   new_dataset <- dataset
-  
+
   ####### TODO (Gerardo): This would be better to be explicit outside the function
   # Grouping_Variables should not be renamed
   mapping <- mapping[!names(mapping) %in% c("Grouping_Variables", "Metabolites", "NCAwXRS")]
-  
+
   # Special case: If ADOSEDUR is not mapped, we assume is 0
   if (is.null(mapping$ADOSEDUR)) {
-    new_dataset$ADOSEDUR <- 0       # TODO: Make it default in select
+    new_dataset$ADOSEDUR <- 0 # TODO: Make it default in select
     warning("Dose duration is assumed to be 0  for all records (ADOSEDUR = 0)")
   }
   # Special case: If DOSETRT is not mapped, we assume is equal to PARAM
@@ -71,7 +69,7 @@ apply_mapping <- function(
     new_dataset$DOSETRT <- dataset[[mapping$PARAM]]
     warning("Treatment is assumed to be the same as the analyte for all records (DOSETRT = PARAM)")
   }
-  
+
   # Conflictive original columns with the mapping will be removed. Warn the user
   is_col_rep_in_map_and_df <- names(mapping) %in% names(dataset)
   is_col_not_used_in_map <- sapply(names(mapping), function(n) !any(n %in% unname(mapping)))
@@ -86,14 +84,14 @@ apply_mapping <- function(
     )
   }
   ################################################################################
-  
+
   # If a variable to map is not a column in the data, assume is the value to use for its creation
   mappings_not_in_data <- mapping[!unname(mapping) %in% names(dataset) & mapping != ""]
   for (col in names(mappings_not_in_data)) {
     new_dataset[[col]] <- mappings_not_in_data[[col]]
   }
   mapping <- mapping[unname(mapping) %in% names(dataset)]
-  
+
   # Apply the changes to the data
   new_dataset <- new_dataset %>%
     # Rename variables based on mapping instructions (allowing duplicate uses)
@@ -102,16 +100,16 @@ apply_mapping <- function(
     select(any_of(desired_order), everything()) %>%
     # Apply the default ADNCA labels
     apply_labels()
-  
+
   # Remove variables that are now redundant due to the renaming
   redundant_cols <- unname(mapping)[!unname(mapping) %in% names(mapping)]
   new_dataset <- new_dataset[!names(new_dataset) %in% redundant_cols]
-  
+
   # Special case: make ATPTREF a factor. TODO: Try make it in the mapping obj
   if (!is.null(new_dataset$ATPTREF)) {
     new_dataset[["ATPTREF"]] <- as.factor(new_dataset[["ATPTREF"]])
   }
-  
+
   new_dataset
 }
 
@@ -164,18 +162,18 @@ create_metabfl <- function(dataset, metabolites) {
 #' @keywords internal
 annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
   dataset$ROWID <- seq_len(nrow(dataset))
-  
+
   # Mark exact duplicates
   dataset <- dataset %>%
     group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
     mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
     ungroup()
-  
+
   # Mark user-specified time duplicate rows
   if (!is.null(time_duplicate_rows) && length(time_duplicate_rows) > 0) {
     dataset$DTYPE[time_duplicate_rows] <- "TIME DUPLICATE"
   }
-  
+
   # Detect remaining time duplicates
   dataset <- dataset %>%
     group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
@@ -184,7 +182,7 @@ annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
       .dup_group = cur_group_id()
     ) %>%
     ungroup()
-  
+
   if (any(dataset$.is_time_dup, na.rm = TRUE)) {
     dup_data <- dataset[dataset$.is_time_dup, ]
     stop(
@@ -200,6 +198,6 @@ annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
       )
     )
   }
-  
+
   dataset[, !names(dataset) %in% c(".is_time_dup", ".dup_group", "ROWID")]
 }
