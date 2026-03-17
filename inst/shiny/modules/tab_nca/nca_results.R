@@ -60,7 +60,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       reactive({          #' Pass `pknca_data` to the units table only when the results
         req(res_nca())    #' are available.
         pknca_data()
-      })
+      }),
+      ratio_table
     )
 
     final_results <- reactive({
@@ -70,13 +71,44 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       #' Apply units
       if (!is.null(session$userData$units_table())) {
         res$data$units <- session$userData$units_table()
-        res$result <- res$result %>%
-          select(-PPSTRESU, -PPSTRES) %>%
-          left_join(
-            session$userData$units_table() %>%
-              mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
-            by = intersect(names(.), names(session$userData$units_table()))
-          ) %>%
+        custom_units <- session$userData$units_table() %>%
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+
+        # Split into PKNCA units (with group cols) and ratio units (NA groups)
+        group_cols <- setdiff(
+          names(custom_units),
+          c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+        )
+        has_groups <- length(group_cols) > 0
+        if (has_groups) {
+          is_ratio_row <- rowSums(is.na(custom_units[, group_cols, drop = FALSE])) > 0
+        } else {
+          is_ratio_row <- rep(FALSE, nrow(custom_units))
+        }
+        pknca_custom <- custom_units[!is_ratio_row, , drop = FALSE]
+        ratio_custom <- custom_units[is_ratio_row, , drop = FALSE] %>%
+          select(PPTESTCD, PPSTRESU, conversion_factor)
+
+        result <- res$result %>% select(-PPSTRESU, -PPSTRES)
+
+        # Join PKNCA parameters by all shared columns (including groups)
+        if (nrow(pknca_custom) > 0) {
+          result <- result %>%
+            left_join(pknca_custom, by = intersect(names(result), names(pknca_custom)))
+        }
+        # Join ratio parameters by PPTESTCD only
+        if (nrow(ratio_custom) > 0) {
+          # Only update rows not already matched by PKNCA join
+          unmatched <- is.na(result$PPSTRESU)
+          if (any(unmatched)) {
+            matched_ratios <- result[unmatched, ] %>%
+              select(-any_of(c("PPSTRESU", "conversion_factor"))) %>%
+              left_join(ratio_custom, by = "PPTESTCD")
+            result[unmatched, names(matched_ratios)] <- matched_ratios
+          }
+        }
+
+        res$result <- result %>%
           mutate(PPSTRES = ifelse(
             !is.null(conversion_factor),
             PPORRES * conversion_factor,

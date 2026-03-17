@@ -19,15 +19,73 @@ units_table_ui <- function(id) {
   )
 }
 
-units_table_server <- function(id, mydata) {
+units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Build unit rows for ratio parameters from the ratio table.
+    # Derives PPORRESU by looking up test/ref parameter units and checking
+    # whether they are convertible (-> "fraction") or not (-> "unit/unit").
+    ratio_units <- reactive({
+      req(ratio_table())
+      rt <- ratio_table()
+      if (nrow(rt) == 0) return(NULL)
+
+      pknca_units <- mydata()$units
+      group_cols <- setdiff(
+        names(pknca_units), c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+      )
+
+      # Translate ratio PPTESTCD params to PKNCA names for unit lookup
+      pknca_test <- translate_terms(rt$TestParameter, "PPTESTCD", "PKNCA")
+      pknca_ref <- translate_terms(rt$RefParameter, "PPTESTCD", "PKNCA")
+
+      ratio_unit_rows <- lapply(seq_len(nrow(rt)), function(i) {
+        test_unit <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pknca_test[i]]
+        ref_unit <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pknca_ref[i]]
+        # Use first match if multiple groups
+        test_unit <- test_unit[1]
+        ref_unit <- ref_unit[1]
+
+        if (is.na(test_unit) || is.na(ref_unit)) {
+          pporresu <- NA_character_
+        } else {
+          factor <- get_conversion_factor(ref_unit, test_unit)
+          pporresu <- if (!is.na(factor)) "fraction" else paste0(test_unit, "/", ref_unit)
+        }
+
+        row <- data.frame(
+          PPTESTCD = rt$PPTESTCD[i],
+          PPORRESU = pporresu,
+          PPSTRESU = pporresu,
+          conversion_factor = 1,
+          stringsAsFactors = FALSE
+        )
+        # Add group columns as NA
+        for (gc in group_cols) row[[gc]] <- NA_character_
+        row
+      })
+      dplyr::bind_rows(ratio_unit_rows)
+    })
 
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
       default_units <- mydata()$units %>%
         dplyr::mutate(default = TRUE)
+
+      # Append ratio parameter rows
+      ratio_rows <- ratio_units()
+      if (!is.null(ratio_rows) && nrow(ratio_rows) > 0) {
+        ratio_rows$default <- TRUE
+        # Ensure same columns, fill missing with NA
+        for (col in setdiff(names(default_units), names(ratio_rows))) {
+          ratio_rows[[col]] <- NA
+        }
+        default_units <- dplyr::bind_rows(
+          default_units, ratio_rows[, names(default_units)]
+        )
+      }
 
       if (!is.null(session$userData$units_table())) {
         custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
@@ -57,25 +115,41 @@ units_table_server <- function(id, mydata) {
       ))
     })
 
-    # Define rows from units table not of interest for the user
+    # Define rows from units table not of interest for the user.
+    # Ratio parameter rows are always visible.
     rows_to_hide_units_table <- reactive({
+      req(modal_units_table())
+      tbl <- modal_units_table()
+
       group_cols <- intersect(
         names(PKNCA::getGroups(mydata()$conc)), names(mydata()$units)
       )
       groups_to_keep <- select(mydata()$intervals, any_of(group_cols))
       params_to_keep <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
 
-      rows_to_keep <- mydata()$units %>%
+      # Identify ratio rows (group columns are NA)
+      ratio_pptestcds <- if (!is.null(ratio_units())) ratio_units()$PPTESTCD else character(0)
+
+      rows_to_keep <- tbl %>%
         mutate(nrow = row_number()) %>%
-        filter(PPTESTCD %in% params_to_keep)
-      if (ncol(groups_to_keep) > 0) {
+        filter(PPTESTCD %in% params_to_keep | PPTESTCD %in% ratio_pptestcds)
+      if (ncol(groups_to_keep) > 0 && length(ratio_pptestcds) > 0) {
+        # Keep ratio rows unconditionally, apply group filter only to PKNCA rows
+        pknca_rows <- rows_to_keep %>% filter(!PPTESTCD %in% ratio_pptestcds)
+        ratio_rows <- rows_to_keep %>% filter(PPTESTCD %in% ratio_pptestcds)
+        pknca_rows <- inner_join(
+          pknca_rows, unique(groups_to_keep),
+          by = intersect(names(pknca_rows), names(groups_to_keep))
+        )
+        rows_to_keep <- dplyr::bind_rows(pknca_rows, ratio_rows)
+      } else if (ncol(groups_to_keep) > 0) {
         rows_to_keep <- inner_join(
           rows_to_keep, unique(groups_to_keep),
           by = intersect(names(rows_to_keep), names(groups_to_keep))
         )
       }
 
-      setdiff(seq_len(nrow(mydata()$units)), rows_to_keep$nrow)
+      setdiff(seq_len(nrow(tbl)), rows_to_keep$nrow)
     })
 
     #' Rendering the modal units table
@@ -204,6 +278,18 @@ units_table_server <- function(id, mydata) {
     observeEvent(session$userData$units_table(), {
       default_units <- mydata()$units %>%
         dplyr::mutate(default = TRUE)
+
+      # Append ratio rows
+      ratio_rows <- ratio_units()
+      if (!is.null(ratio_rows) && nrow(ratio_rows) > 0) {
+        ratio_rows$default <- TRUE
+        for (col in setdiff(names(default_units), names(ratio_rows))) {
+          ratio_rows[[col]] <- NA
+        }
+        default_units <- dplyr::bind_rows(
+          default_units, ratio_rows[, names(default_units)]
+        )
+      }
 
       custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
       by_cols <- intersect(names(default_units), names(custom_units))
