@@ -70,7 +70,6 @@
 #'   colour_var_units = "DOSE_UNIT",
 #'   title = "Sample Dosing and PK Plot"
 #' )
-#' @export
 pk_dose_qc_plot <- function(data_conc,
                             data_dose = NULL,
                             x_var,

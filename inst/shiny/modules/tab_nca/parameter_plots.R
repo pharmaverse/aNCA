@@ -1,3 +1,10 @@
+#' Module for interactive violin/box plots of NCA parameters.
+#'
+#' Provides controls to select a parameter, grouping variables, coloring
+#' variables, and filter values, then renders the plot with export support.
+#'
+#' @param id Module namespace ID.
+
 parameter_plots_ui <- function(id) {
   ns <- NS(id)
 
