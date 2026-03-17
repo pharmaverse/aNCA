@@ -114,25 +114,25 @@ exploration_individualplot <- function(
 #' with error bars and/or confidence intervals if requested.
 #' @export
 exploration_meanplot <- function(
-    pknca_data,
-    color_by,
-    facet_by = NULL,
-    show_facet_n = FALSE,
-    ylog_scale = FALSE,
-    show_legend = TRUE,
-    threshold_value = NULL,
-    show_dose = FALSE,
-    palette = "default",
-    sd_min = FALSE,
-    sd_max = FALSE,
-    ci = FALSE,
-    tooltip_vars = NULL,
-    labels_df = NULL,
-    filtering_list = NULL,
-    use_time_since_last_dose = FALSE,
-    x_limits = NULL,
-    y_limits = NULL,
-    line_type = "default"
+  pknca_data,
+  color_by,
+  facet_by = NULL,
+  show_facet_n = FALSE,
+  ylog_scale = FALSE,
+  show_legend = TRUE,
+  threshold_value = NULL,
+  show_dose = FALSE,
+  palette = "default",
+  sd_min = FALSE,
+  sd_max = FALSE,
+  ci = FALSE,
+  tooltip_vars = NULL,
+  labels_df = NULL,
+  filtering_list = NULL,
+  use_time_since_last_dose = FALSE,
+  x_limits = NULL,
+  y_limits = NULL,
+  line_type = "default"
 ) {
 
   result <- .prepare_line_type_data(
