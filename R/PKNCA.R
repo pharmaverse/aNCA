@@ -286,6 +286,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     hl_adj_rules = NULL,
     exclusion_list = NULL,
     keep_interval_cols = NULL) {
+
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
@@ -801,6 +802,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' # Suppose processed_pknca_data is a valid PKNCA data object
 #' # check_valid_pknca_data(processed_pknca_data)
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
+
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
