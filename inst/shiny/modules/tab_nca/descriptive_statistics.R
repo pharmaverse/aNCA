@@ -64,6 +64,11 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
                      id = "summary_groupby",
                      label = "Group by variables:",
                      metadata_type = "variable")
+
+      updatePickerInput(session, "summary_groupby",
+                        choices = unique(c(group_cols, classification_cols, subj_col)),
+                        selected = unique(c(group_cols, classification_cols)))
+
     })
 
     # Reactive expression for summary table based on selected group and parameters

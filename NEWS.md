@@ -54,6 +54,7 @@ identify difference between missing and not requested (#934)
 * Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
 * Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 * Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
+* Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
 
 # aNCA 0.1.0
 
