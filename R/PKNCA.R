@@ -634,6 +634,8 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 #' 1. Checks if the specified unit columns exist in the PKNCA object.
 #' 2. If a column does not exist, it creates the column and assigns default values.
 #' 3. If not default values are provided, it assigns NA to the new column.
+#' @keywords internal
+#' @noRd
 ensure_column_unit_exists <- function(pknca_obj, unit_name) {
   for (unit in unit_name) {
     if (is.null(pknca_obj$columns[[unit]])) {
@@ -659,6 +661,8 @@ ensure_column_unit_exists <- function(pknca_obj, unit_name) {
 #' @param df A data frame.
 #' @param strata_cols Column names in df whose unique combination defines the strata.
 #' @returns A data frame containing the strata columns and their minimal set of grouping columns.
+#' @keywords internal
+#' @noRd
 select_minimal_grouping_cols <- function(df, strata_cols) {
   # If there is no strata_cols specified, simply return the original df
   if (length(strata_cols) == 0) {
@@ -757,6 +761,8 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @examples
 #' # Suppose processed_pknca_data is a valid PKNCA data object
 #' # check_valid_pknca_data(processed_pknca_data)
+#' @keywords internal
+#' @noRd
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
 
   if (check_exclusion_has_reason) {
