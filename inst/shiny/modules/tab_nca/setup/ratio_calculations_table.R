@@ -74,8 +74,57 @@ ratios_table_ui <- function(id) {
 
 }
 
+#' Validate imported ratio rows against available options.
+#' @param ratio_df Data.frame of imported ratio rows.
+#' @param param_options Character vector of valid parameter codes.
+#' @param ref_options Character vector of valid group reference strings.
+#' @returns List with `valid` (data.frame) and `skipped` (character vector of reasons).
+#' @noRd
+.validate_imported_ratios <- function(ratio_df, param_options, ref_options) {
+  required_cols <- c(
+    "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+    "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+  )
+  if (!all(required_cols %in% names(ratio_df))) {
+    return(list(valid = ratio_df[0, ], skipped = "Missing required columns"))
+  }
+
+  all_group_options <- c(ref_options, "(all other levels)")
+  valid_agg <- c("yes", "no", "if-needed")
+
+  keep <- logical(nrow(ratio_df))
+  skipped <- character()
+
+  for (i in seq_len(nrow(ratio_df))) {
+    row <- ratio_df[i, ]
+    reasons <- character()
+    if (!row$TestParameter %in% param_options) {
+      reasons <- c(reasons, paste0("TestParameter '", row$TestParameter, "' not available"))
+    }
+    if (!row$RefParameter %in% param_options) {
+      reasons <- c(reasons, paste0("RefParameter '", row$RefParameter, "' not available"))
+    }
+    if (!row$RefGroups %in% ref_options) {
+      reasons <- c(reasons, paste0("RefGroups '", row$RefGroups, "' not available"))
+    }
+    if (!row$TestGroups %in% all_group_options) {
+      reasons <- c(reasons, paste0("TestGroups '", row$TestGroups, "' not available"))
+    }
+    if (!tolower(row$AggregateSubject) %in% valid_agg) {
+      reasons <- c(reasons, paste0("AggregateSubject '", row$AggregateSubject, "' invalid"))
+    }
+    if (length(reasons) == 0) {
+      keep[i] <- TRUE
+    } else {
+      skipped <- c(skipped, paste0("Row ", i, " (", row$PPTESTCD, "): ", paste(reasons, collapse = "; ")))
+    }
+  }
+
+  list(valid = ratio_df[keep, , drop = FALSE], skipped = skipped)
+}
+
 ratios_table_server <- function(
-    id, adnca_data, extra_group_vars) {
+    id, adnca_data, extra_group_vars, imported_ratios = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -147,6 +196,32 @@ ratios_table_server <- function(
         PPTESTCD = character(),
         stringsAsFactors = FALSE
       )
+    })
+
+    # Restore ratios from uploaded settings (append to existing rows).
+    observeEvent(imported_ratios(), {
+      req(imported_ratios(), ratio_param_options(), ratio_reference_options())
+
+      result <- .validate_imported_ratios(
+        imported_ratios(), ratio_param_options(), ratio_reference_options()
+      )
+
+      if (length(result$skipped) > 0) {
+        showNotification(
+          paste0(
+            "Skipped ratio rows:\n",
+            paste(result$skipped, collapse = "\n")
+          ),
+          type = "warning",
+          duration = 10
+        )
+      }
+
+      if (nrow(result$valid) > 0) {
+        ratio_table(rbind(ratio_table(), result$valid))
+        reset_reactable_memory()
+        refresh_reactable(refresh_reactable() + 1)
+      }
     })
 
     # Add row

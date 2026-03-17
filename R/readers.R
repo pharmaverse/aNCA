@@ -117,5 +117,9 @@ read_settings <- function(path, name) {
     obj$settings$int_parameters <- bind_rows(obj$settings$int_parameters)
   }
 
+  if (!is.null(obj$settings$ratio_table) && is.list(obj$settings$ratio_table)) {
+    obj$settings$ratio_table <- as.data.frame(bind_rows(obj$settings$ratio_table))
+  }
+
   obj
 }
