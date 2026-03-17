@@ -132,7 +132,6 @@ format_pkncadata_intervals <- function(pknca_conc,
 #'
 #' @param data A PKNCAdata object containing intervals and dosing data.
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
-#' @param study_types_df A data frame mapping analysis profiles to their study type.
 #' @param int_parameters A data frame containing partial AUC ranges.
 #' @param impute Logical indicating whether to impute start values for parameters.
 #' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
@@ -149,11 +148,47 @@ format_pkncadata_intervals <- function(pknca_conc,
 update_main_intervals <- function(
   data,
   parameter_selections,
-  study_types_df, int_parameters,
+  int_parameters,
   impute = TRUE,
   blq_imputation_rule = NULL
 ) {
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
+
+  # Derive study types from the PKNCAdata object
+  conc_data <- data$conc$data
+  conc_groups <- group_vars(data$conc)
+  dose_groups <- group_vars(data$dose)
+  groups <- unique(c(conc_groups, dose_groups))
+  groups <- groups[vapply(groups, function(col) {
+    !is.null(col) && length(unique(conc_data[[col]])) > 1
+  }, logical(1))]
+
+  if (!"METABFL" %in% names(conc_data)) {
+    conc_data$METABFL <- ""
+  }
+
+  # ADOSEDUR may live in dose data only; merge it for detect_study_types
+  if (!"ADOSEDUR" %in% names(conc_data)) {
+    dose_data <- data$dose$data
+    if ("ADOSEDUR" %in% names(dose_data)) {
+      dose_cols <- c(dose_groups, "ADOSEDUR")
+      conc_data <- conc_data %>%
+        left_join(
+          dose_data[, intersect(dose_cols, names(dose_data)), drop = FALSE] %>% unique(),
+          by = intersect(dose_groups, names(conc_data))
+        )
+    } else {
+      conc_data$ADOSEDUR <- 0
+    }
+  }
+
+  study_types_df <- detect_study_types(
+    conc_data,
+    groups,
+    metabfl_column = "METABFL",
+    route_column = data$dose$columns$route,
+    volume_column = data$conc$columns$volume
+  )
 
   # Determine the grouping columns from the study_types_df
   grouping_cols <- setdiff(names(study_types_df), c("type"))
