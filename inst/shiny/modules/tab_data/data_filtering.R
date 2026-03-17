@@ -130,8 +130,18 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
 
       .clear_filter_panels(session, filters, filter_counter)
 
+      meta <- filters_metadata()
       valid_filters <- Filter(
-        function(filt) filt$column %in% names(filters_metadata()),
+        function(filt) {
+          col <- filt$column
+          if (!col %in% names(meta)) return(FALSE)
+          # For categorical columns, check that at least one value exists
+          if (meta[[col]]$type != "numeric") {
+            any(filt$value %in% meta[[col]]$choices)
+          } else {
+            TRUE
+          }
+        },
         filters_to_restore
       )
 
