@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Non-standard grouping variables (chosen in the data mapping) are now
+  included as columns in ADPP and ADNCA outputs
+  ([\#1077](https://github.com/pharmaverse/aNCA/issues/1077))
 - Searchable PK parameter reference table added to NCA \> Setup, showing
   metadata, app location, and PKNCA function for each parameter
   ([\#1023](https://github.com/pharmaverse/aNCA/issues/1023))

@@ -7,7 +7,7 @@ pptest dataframe will be lost in this pipeline!
 ## Usage
 
 ``` r
-export_cdisc(res_nca)
+export_cdisc(res_nca, grouping_vars = character(0))
 ```
 
 ## Arguments
@@ -15,6 +15,12 @@ export_cdisc(res_nca)
 - res_nca:
 
   Object with results of the NCA analysis.
+
+- grouping_vars:
+
+  Character vector of non-standard grouping variable names to include as
+  additional columns in ADNCA, ADPP, and PP outputs. Defaults to
+  `character(0)`.
 
 ## Value
 
