@@ -199,11 +199,22 @@ ratios_table_server <- function(
     })
 
     # Restore ratios from uploaded settings (append to existing rows).
+    # pending_ratios stores the import until param/group options are available.
+    pending_ratios <- reactiveVal(NULL)
+
     observeEvent(imported_ratios(), {
-      req(imported_ratios(), ratio_param_options(), ratio_reference_options())
+      req(imported_ratios())
+      pending_ratios(imported_ratios())
+    })
+
+    observe({
+      req(pending_ratios(), ratio_param_options(), ratio_reference_options())
+
+      imported <- isolate(pending_ratios())
+      pending_ratios(NULL)
 
       result <- .validate_imported_ratios(
-        imported_ratios(), ratio_param_options(), ratio_reference_options()
+        imported, ratio_param_options(), ratio_reference_options()
       )
 
       if (length(result$skipped) > 0) {
