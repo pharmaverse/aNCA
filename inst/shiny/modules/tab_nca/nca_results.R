@@ -89,28 +89,35 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         ratio_custom <- custom_units[is_ratio_row, , drop = FALSE] %>%
           select(PPTESTCD, PPSTRESU, conversion_factor)
 
-        result <- res$result %>% select(-PPSTRESU, -PPSTRES)
+        result <- res$result %>%
+          select(-PPSTRESU, -PPSTRES) %>%
+          mutate(PPSTRESU = NA_character_, conversion_factor = NA_real_)
 
         # Join PKNCA parameters by all shared columns (including groups)
         if (nrow(pknca_custom) > 0) {
-          result <- result %>%
-            left_join(pknca_custom, by = intersect(names(result), names(pknca_custom)))
+          pknca_join_cols <- intersect(names(result), names(pknca_custom))
+          pknca_join_cols <- setdiff(pknca_join_cols, c("PPSTRESU", "conversion_factor"))
+          matched <- result %>%
+            select(-PPSTRESU, -conversion_factor) %>%
+            left_join(pknca_custom, by = pknca_join_cols)
+          result$PPSTRESU <- matched$PPSTRESU
+          result$conversion_factor <- matched$conversion_factor
         }
-        # Join ratio parameters by PPTESTCD only
+        # Join ratio parameters by PPTESTCD only for unmatched rows
         if (nrow(ratio_custom) > 0) {
-          # Only update rows not already matched by PKNCA join
           unmatched <- is.na(result$PPSTRESU)
           if (any(unmatched)) {
-            matched_ratios <- result[unmatched, ] %>%
-              select(-any_of(c("PPSTRESU", "conversion_factor"))) %>%
+            ratio_matched <- result[unmatched, ] %>%
+              select(-PPSTRESU, -conversion_factor) %>%
               left_join(ratio_custom, by = "PPTESTCD")
-            result[unmatched, names(matched_ratios)] <- matched_ratios
+            result$PPSTRESU[unmatched] <- ratio_matched$PPSTRESU
+            result$conversion_factor[unmatched] <- ratio_matched$conversion_factor
           }
         }
 
         res$result <- result %>%
           mutate(PPSTRES = ifelse(
-            !is.null(conversion_factor),
+            !is.na(conversion_factor),
             PPORRES * conversion_factor,
             PPORRES
           )) %>%
