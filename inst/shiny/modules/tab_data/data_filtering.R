@@ -48,9 +48,11 @@ data_filtering_ui <- function(id) {
 #' @param filter_counter ReactiveVal with current filter count.
 #' @param filters_metadata Reactive with column metadata.
 #' @param initial_values Optional list with column, condition, value to restore.
+#' @param on_restored Optional callback invoked when this filter finishes restoring.
 #' @noRd
 .insert_filter_panel <- function(session, filters, filter_counter,
-                                 filters_metadata, initial_values = NULL) {
+                                 filters_metadata, initial_values = NULL,
+                                 on_restored = NULL) {
   filter_counter(filter_counter() + 1)
   accordion_panel_close(id = "filters", values = TRUE)
 
@@ -65,7 +67,8 @@ data_filtering_ui <- function(id) {
   filters[[filter_id]] <- input_filter_server(
     filter_id,
     filters_metadata = filters_metadata,
-    initial_values = initial_values
+    initial_values = initial_values,
+    on_restored = on_restored
   )
 }
 
@@ -85,19 +88,6 @@ data_filtering_ui <- function(id) {
     filters[[fid]] <- NULL
   }
   filter_counter(0)
-}
-
-#' Schedule a callback after n flush cycles.
-#' @param session Shiny session.
-#' @param n Number of flush cycles to wait.
-#' @param callback Function to call after n cycles.
-#' @noRd
-.delay_flush <- function(session, n, callback) {
-  if (n <= 0L) {
-    callback()
-  } else {
-    session$onFlushed(function() .delay_flush(session, n - 1L, callback))
-  }
 }
 
 data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
@@ -142,23 +132,25 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
 
       .clear_filter_panels(session, filters, filter_counter)
 
-      has_filters <- FALSE
-      for (filt in filters_to_restore) {
-        if (filt$column %in% names(filters_metadata())) {
-          .insert_filter_panel(
-            session, filters, filter_counter, filters_metadata, filt
-          )
-          has_filters <- TRUE
-        }
-      }
+      valid_filters <- Filter(
+        function(filt) filt$column %in% names(filters_metadata()),
+        filters_to_restore
+      )
 
-      if (has_filters) {
-        # Each filter module needs two flush cycles to restore its
-        # inputs (column, then condition/value). Delay the submit
-        # click until those cycles complete.
-        .delay_flush(session, 3L, function() {
-          shinyjs::click("submit_filters")
-        })
+      if (length(valid_filters) > 0) {
+        # Submit once every filter module has finished restoring.
+        remaining <- length(valid_filters)
+        on_restored <- function() {
+          remaining <<- remaining - 1L
+          if (remaining == 0L) shinyjs::click("submit_filters")
+        }
+
+        for (filt in valid_filters) {
+          .insert_filter_panel(
+            session, filters, filter_counter, filters_metadata,
+            filt, on_restored
+          )
+        }
       }
     })
 

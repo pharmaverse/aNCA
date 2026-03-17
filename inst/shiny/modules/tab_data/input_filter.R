@@ -65,10 +65,11 @@ input_filter_ui <- function(id, cols) {
 #' @param ns Namespace function.
 #' @param filters_metadata Reactive with column metadata.
 #' @param initial_values List with column, condition, value.
+#' @param on_restored Optional callback invoked after restore completes.
 #' @returns A function suitable for session$onFlushed.
 #' @noRd
 .restore_filter_values <- function(session, ns, filters_metadata,
-                                   initial_values) {
+                                   initial_values, on_restored = NULL) {
   function() {
     meta <- isolate(filters_metadata())
     col_numeric <- meta[[initial_values$column]]$type == "numeric"
@@ -90,10 +91,12 @@ input_filter_ui <- function(id, cols) {
       shinyjs::show(id = ns("value_select"), asis = TRUE)
       shinyjs::disable(id = ns("condition"), asis = TRUE)
     }
+    if (is.function(on_restored)) on_restored()
   }
 }
 
-input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
+input_filter_server <- function(id, filters_metadata, initial_values = NULL,
+                                on_restored = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     is_active <- reactiveVal(TRUE)
@@ -119,7 +122,7 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
         # Condition and value must wait for the column update to flush,
         # so we schedule them on the next cycle.
         session$onFlushed(.restore_filter_values(
-          session, ns, filters_metadata, initial_values
+          session, ns, filters_metadata, initial_values, on_restored
         ))
       })
     }
