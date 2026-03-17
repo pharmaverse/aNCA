@@ -87,6 +87,19 @@ data_filtering_ui <- function(id) {
   filter_counter(0)
 }
 
+#' Schedule a callback after n flush cycles.
+#' @param session Shiny session.
+#' @param n Number of flush cycles to wait.
+#' @param callback Function to call after n cycles.
+#' @noRd
+.delay_flush <- function(session, n, callback) {
+  if (n <= 0L) {
+    callback()
+  } else {
+    session$onFlushed(function() .delay_flush(session, n - 1L, callback))
+  }
+}
+
 data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
   moduleServer(id, function(input, output, session) {
     filters <- reactiveValues()
@@ -140,8 +153,10 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
       }
 
       if (has_filters) {
-        # Auto-submit once Shiny has flushed the restored filter UI.
-        session$onFlushed(function() {
+        # Each filter module needs two flush cycles to restore its
+        # inputs (column, then condition/value). Delay the submit
+        # click until those cycles complete.
+        .delay_flush(session, 3L, function() {
           shinyjs::click("submit_filters")
         })
       }
