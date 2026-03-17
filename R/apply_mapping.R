@@ -48,6 +48,7 @@ apply_mapping <- function(
     "AVALU", "RRLTU", "DOSEU", "PARAM"
   )
 ) {
+
   if (!silent) {
     paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n") %>%
       message()
@@ -62,7 +63,7 @@ apply_mapping <- function(
 
   # Special case: If ADOSEDUR is not mapped, we assume is 0
   if (is.null(mapping$ADOSEDUR)) {
-    new_dataset$ADOSEDUR <- 0 # TODO: Make it default in select
+    new_dataset$ADOSEDUR <- 0       # TODO: Make it default in select
     warning("Dose duration is assumed to be 0  for all records (ADOSEDUR = 0)")
   }
   # Special case: If DOSETRT is not mapped, we assume is equal to PARAM

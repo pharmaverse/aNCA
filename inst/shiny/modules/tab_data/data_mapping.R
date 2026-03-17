@@ -26,10 +26,8 @@ NON_STD_MAPPING_INFO <- data.frame(
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
-  select(
-    Variable, Label, Values, mapping_tooltip,
-    mapping_section, mapping_alternatives, mapping_order
-  ) %>%
+  select(Variable, Label, Values, mapping_tooltip,
+         mapping_section, mapping_alternatives, mapping_order) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
@@ -57,10 +55,8 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
-#' column_mapping_widget(
-#'   ns = NS("example"), id = "STUDYID",
-#'   tooltip_text = "Select the study identifier column."
-#' )
+#' column_mapping_widget(ns = NS("example"), id = "STUDYID",
+#' tooltip_text = "Select the study identifier column.")
 .column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
   div(
     class = "column-mapping-row",
@@ -247,8 +243,8 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           ) %>%
           create_metabfl(input$select_Metabolites) %>%
           adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-      },
-      warning = function(w) {
+
+      }, warning = function(w) {
         withCallingHandlers(
           {
             adnca_data() %>%
@@ -264,8 +260,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
             showNotification(conditionMessage(w), type = "warning", duration = 10)
           }
         )
-      },
-      error = function(e) {
+      }, error = function(e) {
         log_error(conditionMessage(e))
         showNotification(conditionMessage(e), type = "error", duration = NULL)
         NULL

@@ -130,7 +130,7 @@ tab_data_server <- function(id) {
       adnca_data = uploaded_data$adnca_raw,
       trigger = trigger_mapping_submit
     )
-    #' Reactive value for the processed dataset (used for preview and filtering UI)
+    #' Reactive value for the processed dataset
     adnca_mapped <- column_mapping$processed_data
 
     observeEvent(adnca_mapped(), {
@@ -139,7 +139,7 @@ tab_data_server <- function(id) {
       updateTabsetPanel(session, "data_navset", selected = "Filtering")
     })
 
-    #' Filter data (module returns filtered data for preview + filters list)
+    #' Filter data
     filtering_result <- data_filtering_server("data_filtering", adnca_mapped)
     processed_data <- filtering_result$filtered_data
 
@@ -182,7 +182,7 @@ tab_data_server <- function(id) {
           applied_filters = filtering_result$applied_filters(),
           time_duplicate_rows = column_mapping$time_duplicate_rows()
         )
-        ###############################################################################
+        ############################################################################################
         # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
         # this is implemented here via hardcoding in PPSTRESU
         pknca_object$units <- pknca_object$units %>%
@@ -206,7 +206,7 @@ tab_data_server <- function(id) {
               conversion_factor
             )
           )
-        ################################################################################
+        ############################################################################################
         log_success("PKNCA data object created.")
 
         #' Enable related tabs and update the curent view if data is created succesfully.
@@ -215,8 +215,7 @@ tab_data_server <- function(id) {
         })
 
         pknca_object
-      },
-      error = function(e) {
+      }, error = function(e) {
         log_error(e$message)
         showNotification(e$message, type = "error", duration = NULL)
         NULL

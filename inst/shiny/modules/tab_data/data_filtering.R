@@ -104,9 +104,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
 
-      if (length(applied_filters) == 0) {
-        return(raw_adnca_data())
-      }
+      if (length(applied_filters) == 0) return(raw_adnca_data())
 
       applied_filters %>%
         sapply(\(filt) str_glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) %>% # nolint
@@ -120,8 +118,7 @@ data_filtering_server <- function(id, raw_adnca_data) {
       # Filter and return data
       withCallingHandlers({
         apply_filters(raw_adnca_data(), applied_filters)
-      },
-      warning = function(w) {
+      }, warning = function(w) {
         log_warn(conditionMessage(w))
         showNotification(
           paste0("Warning during filtering: ", conditionMessage(w)),
