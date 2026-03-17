@@ -48,11 +48,9 @@ data_filtering_ui <- function(id) {
 #' @param filter_counter ReactiveVal with current filter count.
 #' @param filters_metadata Reactive with column metadata.
 #' @param initial_values Optional list with column, condition, value to restore.
-#' @param on_restored Optional callback invoked when this filter finishes restoring.
 #' @noRd
 .insert_filter_panel <- function(session, filters, filter_counter,
-                                 filters_metadata, initial_values = NULL,
-                                 on_restored = NULL) {
+                                 filters_metadata, initial_values = NULL) {
   filter_counter(filter_counter() + 1)
   accordion_panel_close(id = "filters", values = TRUE)
 
@@ -67,8 +65,7 @@ data_filtering_ui <- function(id) {
   filters[[filter_id]] <- input_filter_server(
     filter_id,
     filters_metadata = filters_metadata,
-    initial_values = initial_values,
-    on_restored = on_restored
+    initial_values = initial_values
   )
 }
 
@@ -137,20 +134,34 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
         filters_to_restore
       )
 
-      if (length(valid_filters) > 0) {
-        # Submit once every filter module has finished restoring.
-        remaining <- length(valid_filters)
-        on_restored <- function() {
-          remaining <<- remaining - 1L
-          if (remaining == 0L) shinyjs::click("submit_filters")
-        }
+      expected_columns <- vapply(valid_filters, `[[`, character(1), "column")
 
-        for (filt in valid_filters) {
-          .insert_filter_panel(
-            session, filters, filter_counter, filters_metadata,
-            filt, on_restored
+      for (filt in valid_filters) {
+        .insert_filter_panel(
+          session, filters, filter_counter, filters_metadata, filt
+        )
+      }
+
+      # Auto-submit once all restored filters report the expected column.
+      # The observer checks reactively and destroys itself after submitting.
+      if (length(expected_columns) > 0) {
+        submitted <- FALSE
+        observe({
+          if (submitted) return()
+
+          current <- lapply(
+            reactiveValuesToList(filters), function(x) x()
+          ) %>% purrr::keep(\(x) !is.null(x))
+
+          current_cols <- vapply(
+            current, function(f) f$column %||% "", character(1)
           )
-        }
+
+          if (all(expected_columns %in% current_cols)) {
+            submitted <<- TRUE
+            shinyjs::click("submit_filters")
+          }
+        })
       }
     })
 
