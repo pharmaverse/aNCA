@@ -68,7 +68,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
     uiOutput(ns("facetby_ui_wrapper")
     ),
     conditionalPanel(
-      condition = "input.facetby.length > 0",
+      condition = "input.facetby && input.facetby.length > 0",
       checkboxInput(ns("show_facet_n"), "Show number of subjects", value = FALSE),
       ns = ns
     ),
