@@ -1,5 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://pharmaverse.github.io/aNCA/404.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/AGENTS.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/CODE_OF_CONDUCT.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/CONTRIBUTING.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/LICENSE.html</loc></url>
@@ -16,6 +17,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/articles/roadmap.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/articles/validations.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/authors.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/copilot-instructions.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/index.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/news/index.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_build_units_table.html</loc></url>
