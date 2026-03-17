@@ -148,6 +148,10 @@
   slope selector- apart from changes to analyte and pcspec that change
   the study types detected
   ([\#1008](https://github.com/pharmaverse/aNCA/issues/1008))
+- Prevent a crash when selecting already defined identity variables
+  (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the
+  `Mapping Tab`
+  ([\#1060](https://github.com/pharmaverse/aNCA/issues/1060))
 
 ## aNCA 0.1.0
 
