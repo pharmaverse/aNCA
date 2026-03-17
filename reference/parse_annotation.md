@@ -1,8 +1,8 @@
-# Parses annotations in the context of data. Special characters and syntax are substituted by actual data and/or substituted for format that is better parsed via rendering functions (e.g. plotly).
+# Generate an Empty Plotly Object
 
-Parses annotations in the context of data. Special characters and syntax
-are substituted by actual data and/or substituted for format that is
-better parsed via rendering functions (e.g. plotly).
+This function returns a blank Plotly plot with optional annotation text.
+It ensures that when no valid data is available, a meaningful
+placeholder plot is displayed instead of causing an error.
 
 ## Usage
 
@@ -27,6 +27,10 @@ parse_annotation(data, text)
 Parsed annotation text.
 
 ## Details
+
+Parses annotations in the context of data. Special characters and syntax
+are substituted by actual data and/or substituted for format that is
+better parsed via rendering functions (e.g. plotly).
 
 - `\n` character is substituted for `<br>` tag in order to add new lines
   in rendered image.

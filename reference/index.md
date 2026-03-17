@@ -143,9 +143,6 @@
 - [`.handle_tooltips()`](https://pharmaverse.github.io/aNCA/reference/dot-handle_tooltips.md)
   : Tooltip construction helper
 
-- [`.plotly_empty_plot()`](https://pharmaverse.github.io/aNCA/reference/dot-plotly_empty_plot.md)
-  : Generate an Empty Plotly Object
-
 - [`exploration_individualplot()`](https://pharmaverse.github.io/aNCA/reference/exploration_individualplot.md)
   : Create an Individual PK Line Plot
 
@@ -257,9 +254,7 @@
   ratios should be calculated.
 
 - [`parse_annotation()`](https://pharmaverse.github.io/aNCA/reference/parse_annotation.md)
-  : Parses annotations in the context of data. Special characters and
-  syntax are substituted by actual data and/or substituted for format
-  that is better parsed via rendering functions (e.g. plotly).
+  : Generate an Empty Plotly Object
 
 - [`pivot_wider_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/pivot_wider_pknca_results.md)
   : Reshape PKNCA Results
