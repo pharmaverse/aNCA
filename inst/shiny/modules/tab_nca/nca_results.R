@@ -125,8 +125,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       }
 
       #' Transform results
-      # Calculate bioavailability if available
-      results <- res_nca()
+      # Use res (with unit conversions applied) rather than re-reading res_nca()
+      results <- res
 
       # Transform results
       extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
