@@ -61,6 +61,7 @@ input_filter_ui <- function(id, cols) {
 
 input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
     is_active <- reactiveVal(TRUE)
     # Count of observeEvent(input$column) firings to skip.
     # Restore triggers column changes that must not apply defaults.
@@ -88,6 +89,10 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
             updateTextInput(
               session, "value_text", value = initial_values$value
             )
+            
+            shinyjs::show(id = ns("value_text"), asis = TRUE)
+            shinyjs::hide(id = ns("value_select"), asis = TRUE)
+            shinyjs::enable(id = ns("condition"), asis = TRUE)
           } else {
             updatePickerInput(
               session,
@@ -95,13 +100,6 @@ input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
               choices = meta[[initial_values$column]]$choices,
               selected = initial_values$value
             )
-          }
-          ns <- session$ns
-          if (col_numeric) {
-            shinyjs::show(id = ns("value_text"), asis = TRUE)
-            shinyjs::hide(id = ns("value_select"), asis = TRUE)
-            shinyjs::enable(id = ns("condition"), asis = TRUE)
-          } else {
             shinyjs::hide(id = ns("value_text"), asis = TRUE)
             shinyjs::show(id = ns("value_select"), asis = TRUE)
             shinyjs::disable(id = ns("condition"), asis = TRUE)
