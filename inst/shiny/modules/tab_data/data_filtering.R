@@ -110,17 +110,18 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
     })
 
     # Restore filters from uploaded settings.
-    # pending_import stores filters until metadata is ready, avoiding a
-    # nested observe to wait for filters_metadata().
+    # pending_import stores filters until metadata is ready.
+    # awaiting_columns stores expected columns for auto-submit;
+    # cleared after submit so the observer becomes a no-op.
     pending_import <- reactiveVal(NULL)
+    awaiting_columns <- reactiveVal(NULL)
 
     observeEvent(imported_filters(), {
       req(imported_filters())
       pending_import(imported_filters())
     })
 
-    # Fires when pending_import is set or when filters_metadata becomes
-    # available. Clears pending_import after restoring to prevent re-runs.
+    # Restore filter panels once metadata is available.
     observe({
       req(pending_import(), filters_metadata())
 
@@ -134,34 +135,32 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
         filters_to_restore
       )
 
-      expected_columns <- vapply(valid_filters, `[[`, character(1), "column")
-
       for (filt in valid_filters) {
         .insert_filter_panel(
           session, filters, filter_counter, filters_metadata, filt
         )
       }
 
-      # Auto-submit once all restored filters report the expected column.
-      # The observer checks reactively and destroys itself after submitting.
-      if (length(expected_columns) > 0) {
-        submitted <- FALSE
-        observe({
-          if (submitted) return()
+      awaiting_columns(
+        vapply(valid_filters, `[[`, character(1), "column")
+      )
+    })
 
-          current <- lapply(
-            reactiveValuesToList(filters), function(x) x()
-          ) %>% purrr::keep(\(x) !is.null(x))
+    # Auto-submit once all restored filters report the expected columns.
+    observe({
+      req(awaiting_columns())
 
-          current_cols <- vapply(
-            current, function(f) f$column %||% "", character(1)
-          )
+      current <- lapply(
+        reactiveValuesToList(filters), function(x) x()
+      ) %>% purrr::keep(\(x) !is.null(x))
 
-          if (all(expected_columns %in% current_cols)) {
-            submitted <<- TRUE
-            shinyjs::click("submit_filters")
-          }
-        })
+      current_cols <- vapply(
+        current, function(f) f$column %||% "", character(1)
+      )
+
+      if (all(awaiting_columns() %in% current_cols)) {
+        awaiting_columns(NULL)
+        shinyjs::click("submit_filters")
       }
     })
 
