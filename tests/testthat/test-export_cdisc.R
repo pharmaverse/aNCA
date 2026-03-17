@@ -572,6 +572,7 @@ describe("export_cdisc", {
 
     expect_true("GROUP" %in% names(result$adnca))
     expect_true("GROUP" %in% names(result$adpp))
+    expect_false("GROUP" %in% names(result$pp))
     expect_equal(unique(result$adnca$GROUP), "GroupA")
     expect_equal(unique(result$adpp$GROUP), "GroupA")
   })
@@ -580,6 +581,7 @@ describe("export_cdisc", {
     result <- export_cdisc(test_pknca_res)
     expect_false("GROUP" %in% names(result$adnca))
     expect_false("GROUP" %in% names(result$adpp))
+    expect_false("GROUP" %in% names(result$pp))
   })
 })
 

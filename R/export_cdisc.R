@@ -199,7 +199,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
 
   # select pp columns
   pp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$PP$Variable, "PPFAST", grouping_vars))) %>%
+    select(any_of(c(CDISC_COLS$PP$Variable, "PPFAST"))) %>%
     # Deselect permitted columns with only NAs
     select(
       -which(
