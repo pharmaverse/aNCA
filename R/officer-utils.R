@@ -7,6 +7,7 @@
 #' @param template Path to PowerPoint template file
 #' @importFrom officer read_pptx add_slide ph_with ph_location_type
 #' @return rpptx object
+#' @keywords internal
 create_pptx_doc <- function(path, title, template) {
   pptx <- read_pptx(template)
   add_pptx_sl_title(pptx, title)
