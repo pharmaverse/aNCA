@@ -245,14 +245,19 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c(
-      "ATPTREF", "DOSNOA", "type_interval",
-      adnca_data$dose$columns$route, "ROUTE",
-      keep_interval_cols
+    keep_interval_cols = setdiff(
+      c(
+        "ATPTREF", "DOSNOA", "type_interval",
+        adnca_data$dose$columns$route, "ROUTE",
+        keep_interval_cols
+      ),
+      # Columns already in the formula should not be re-added
+      group_vars(data$conc)
     ),
     min.hl.r.squared = 0.01,
     allow_partial_missing_units = TRUE
   )
+
 
   # Add on top of the default ones, the exclusions listed
   data <- add_exclusion_reasons(data, exclusion_list)
