@@ -87,36 +87,6 @@ data_filtering_ui <- function(id) {
   filter_counter(0)
 }
 
-#' Create an observer that auto-submits filters once all match expected columns.
-#' @param filters ReactiveValues storing filter modules.
-#' @param expected_filters Named list mapping filter IDs to expected columns.
-#' @noRd
-.auto_submit_when_ready <- function(filters, expected_filters) {
-  submitted <- reactiveVal(FALSE)
-  observe({
-    if (submitted()) return()
-
-    current_filters <- lapply(
-      reactiveValuesToList(filters), function(x) x()
-    ) %>% purrr::keep(\(x) !is.null(x))
-
-    all_ready <- all(vapply(
-      names(expected_filters),
-      function(fid) {
-        fid %in% names(current_filters) &&
-          !is.null(current_filters[[fid]]$column) &&
-          current_filters[[fid]]$column == expected_filters[[fid]]
-      },
-      logical(1)
-    ))
-
-    if (all_ready) {
-      submitted(TRUE)
-      shinyjs::click("submit_filters")
-    }
-  })
-}
-
 data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
   moduleServer(id, function(input, output, session) {
     filters <- reactiveValues()
@@ -139,31 +109,42 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
       .insert_filter_panel(session, filters, filter_counter, filters_metadata)
     })
 
-    # Restore filters from uploaded settings
+    # Restore filters from uploaded settings.
+    # pending_import stores filters until metadata is ready, avoiding a
+    # nested observe to wait for filters_metadata().
+    pending_import <- reactiveVal(NULL)
+
     observeEvent(imported_filters(), {
       req(imported_filters())
-      uploaded_filters <- imported_filters()
+      pending_import(imported_filters())
+    })
 
-      observe({
-        req(filters_metadata())
-        .clear_filter_panels(session, filters, filter_counter)
+    # Fires when pending_import is set or when filters_metadata becomes
+    # available. Clears pending_import after restoring to prevent re-runs.
+    observe({
+      req(pending_import(), filters_metadata())
 
-        expected_filters <- list()
-        for (filt in uploaded_filters) {
-          if (filt$column %in% names(filters_metadata())) {
-            .insert_filter_panel(
-              session, filters, filter_counter, filters_metadata, filt
-            )
-            fid <- paste0("filter_", filter_counter())
-            expected_filters[[fid]] <- filt$column
-          }
+      filters_to_restore <- isolate(pending_import())
+      pending_import(NULL)
+
+      .clear_filter_panels(session, filters, filter_counter)
+
+      has_filters <- FALSE
+      for (filt in filters_to_restore) {
+        if (filt$column %in% names(filters_metadata())) {
+          .insert_filter_panel(
+            session, filters, filter_counter, filters_metadata, filt
+          )
+          has_filters <- TRUE
         }
+      }
 
-        if (length(expected_filters) > 0) {
-          .auto_submit_when_ready(filters, expected_filters)
-        }
-      }) %>%
-        bindEvent(filters_metadata(), once = TRUE)
+      if (has_filters) {
+        # Auto-submit once Shiny has flushed the restored filter UI.
+        session$onFlushed(function() {
+          shinyjs::click("submit_filters")
+        })
+      }
     })
 
     filter_reminder_notification <- reactiveVal(NULL)
