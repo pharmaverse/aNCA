@@ -50,7 +50,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/check_valid_pknca_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/clean_deparse.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_to_iso8601_duration.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/convert_volume_units.html</loc></url>
@@ -68,7 +67,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-eval_range.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-handle_tooltips.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dot-plotly_empty_plot.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/ensure_column_unit_exists.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/error_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/exploration_individualplot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/exploration_meanplot.html</loc></url>
@@ -120,7 +118,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_pp_not_requested.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/rm_impute_obs_params.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/select_minimal_grouping_cols.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/simplify_unit.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/update_main_intervals.html</loc></url>

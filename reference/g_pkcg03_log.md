@@ -21,4 +21,4 @@ g_pkcg03_log(data, ...)
 
 ## Value
 
-ggplot2 object for pkcg01.
+ggplot2 object for pkcg03.

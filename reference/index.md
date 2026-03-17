@@ -98,9 +98,6 @@
 - [`calculate_table_ratios()`](https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.md)
   : Apply Ratio Calculations to PKNCAresult Object
 
-- [`check_valid_pknca_data()`](https://pharmaverse.github.io/aNCA/reference/check_valid_pknca_data.md)
-  : Checks Before Running NCA
-
 - [`convert_volume_units()`](https://pharmaverse.github.io/aNCA/reference/convert_volume_units.md)
   : Convert Volume Units to Match Concentration Denominator Units
 
@@ -109,10 +106,6 @@
 
 - [`create_metabfl()`](https://pharmaverse.github.io/aNCA/reference/create_metabfl.md)
   : Create METABFL Column Based on Selected Metabolites
-
-- [`create_pptx_doc()`](https://pharmaverse.github.io/aNCA/reference/create_pptx_doc.md)
-  : Create a new PowerPoint document from a template and add a title
-  slide
 
 - [`create_pptx_dose_slides()`](https://pharmaverse.github.io/aNCA/reference/create_pptx_dose_slides.md)
   : Create a PowerPoint presentation with dose escalation results,
@@ -152,9 +145,6 @@
 
 - [`.plotly_empty_plot()`](https://pharmaverse.github.io/aNCA/reference/dot-plotly_empty_plot.md)
   : Generate an Empty Plotly Object
-
-- [`ensure_column_unit_exists()`](https://pharmaverse.github.io/aNCA/reference/ensure_column_unit_exists.md)
-  : Ensure Unit Columns Exist in PKNCA Object
 
 - [`exploration_individualplot()`](https://pharmaverse.github.io/aNCA/reference/exploration_individualplot.md)
   : Create an Individual PK Line Plot
@@ -319,9 +309,6 @@
 
 - [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
   : Run the Shiny app
-
-- [`select_minimal_grouping_cols()`](https://pharmaverse.github.io/aNCA/reference/select_minimal_grouping_cols.md)
-  : Find Minimal Grouping Columns for Strata Reconstruction
 
 - [`simplify_unit()`](https://pharmaverse.github.io/aNCA/reference/simplify_unit.md)
   : Simplify compound unit expressions
