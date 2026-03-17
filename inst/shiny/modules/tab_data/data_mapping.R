@@ -239,39 +239,37 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       mapping_ <- mapping()
       names(mapping_) <- gsub("select_", "", names(mapping_))
 
-      tryCatch(
-        {
-          adnca_data() %>%
-            apply_mapping(
-              mapping_,
-              silent = FALSE
-            ) %>%
-            create_metabfl(input$select_Metabolites) %>%
-            adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-        },
-        warning = function(w) {
-          withCallingHandlers(
-            {
-              adnca_data() %>%
-                apply_mapping(
-                  mapping_,
-                  silent = FALSE
-                ) %>%
-                create_metabfl(input$select_Metabolites) %>%
-                adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-            },
-            warning = function(w) {
-              log_warn(conditionMessage(w))
-              showNotification(conditionMessage(w), type = "warning", duration = 10)
-            }
-          )
-        },
-        error = function(e) {
-          log_error(conditionMessage(e))
-          showNotification(conditionMessage(e), type = "error", duration = NULL)
-          NULL
-        }
-      )
+      tryCatch({
+        adnca_data() %>%
+          apply_mapping(
+            mapping_,
+            silent = FALSE
+          ) %>%
+          create_metabfl(input$select_Metabolites) %>%
+          adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
+      },
+      warning = function(w) {
+        withCallingHandlers(
+          {
+            adnca_data() %>%
+              apply_mapping(
+                mapping_,
+                silent = FALSE
+              ) %>%
+              create_metabfl(input$select_Metabolites) %>%
+              adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
+          },
+          warning = function(w) {
+            log_warn(conditionMessage(w))
+            showNotification(conditionMessage(w), type = "warning", duration = 10)
+          }
+        )
+      },
+      error = function(e) {
+        log_error(conditionMessage(e))
+        showNotification(conditionMessage(e), type = "error", duration = NULL)
+        NULL
+      })
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 

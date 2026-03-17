@@ -174,55 +174,53 @@ tab_data_server <- function(id) {
       req(processed_data())
       log_trace("Creating PKNCA::data object.")
 
-      tryCatch(
-        {
-          #' Create data object
-          pknca_object <- PKNCA_create_data_object(
-            adnca_data = uploaded_data$adnca_raw(),
-            mapping = column_mapping$mapping(),
-            applied_filters = filtering_result$applied_filters(),
-            time_duplicate_rows = column_mapping$time_duplicate_rows()
-          )
-          ###############################################################################
-          # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
-          # this is implemented here via hardcoding in PPSTRESU
-          pknca_object$units <- pknca_object$units %>%
-            mutate(
-              PPSTRESU = {
-                new_ppstresu <- ifelse(
-                  PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                    metadata_nca_parameters$unit_type == "volume"
-                  ],
-                  sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
-                  PPSTRESU
-                )
-                # Only accept changes producing simple units
-                ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
-              },
-              conversion_factor = ifelse(
+      tryCatch({
+        #' Create data object
+        pknca_object <- PKNCA_create_data_object(
+          adnca_data = uploaded_data$adnca_raw(),
+          mapping = column_mapping$mapping(),
+          applied_filters = filtering_result$applied_filters(),
+          time_duplicate_rows = column_mapping$time_duplicate_rows()
+        )
+        ###############################################################################
+        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
+        # this is implemented here via hardcoding in PPSTRESU
+        pknca_object$units <- pknca_object$units %>%
+          mutate(
+            PPSTRESU = {
+              new_ppstresu <- ifelse(
                 PPTESTCD %in% metadata_nca_parameters$PKNCA[
                   metadata_nca_parameters$unit_type == "volume"
                 ],
-                get_conversion_factor(PPORRESU, PPSTRESU),
-                conversion_factor
+                sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
+                PPSTRESU
               )
+              # Only accept changes producing simple units
+              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
+            },
+            conversion_factor = ifelse(
+              PPTESTCD %in% metadata_nca_parameters$PKNCA[
+                metadata_nca_parameters$unit_type == "volume"
+              ],
+              get_conversion_factor(PPORRESU, PPSTRESU),
+              conversion_factor
             )
-          ################################################################################
-          log_success("PKNCA data object created.")
+          )
+        ################################################################################
+        log_success("PKNCA data object created.")
 
-          #' Enable related tabs and update the curent view if data is created succesfully.
-          purrr::walk(c("nca", "exploration", "tlg"), function(tab) {
-            shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
-          })
+        #' Enable related tabs and update the curent view if data is created succesfully.
+        purrr::walk(c("nca", "exploration", "tlg"), function(tab) {
+          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+        })
 
-          pknca_object
-        },
-        error = function(e) {
-          log_error(e$message)
-          showNotification(e$message, type = "error", duration = NULL)
-          NULL
-        }
-      )
+        pknca_object
+      },
+      error = function(e) {
+        log_error(e$message)
+        showNotification(e$message, type = "error", duration = NULL)
+        NULL
+      })
     }) %>%
       bindEvent(processed_data())
 
