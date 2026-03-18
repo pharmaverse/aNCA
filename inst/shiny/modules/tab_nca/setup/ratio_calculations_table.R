@@ -86,7 +86,9 @@ ratios_table_ui <- function(id) {
     "AggregateSubject", "AdjustingFactor", "PPTESTCD"
   )
   if (!all(required_cols %in% names(ratio_df))) {
-    return(list(valid = ratio_df[0, ], skipped = "Missing required columns"))
+    empty <- data.frame(matrix(ncol = length(required_cols), nrow = 0))
+    names(empty) <- required_cols
+    return(list(valid = empty, skipped = "Missing required columns"))
   }
 
   all_group_options <- c(ref_options, "(all other levels)")
