@@ -19,3 +19,4 @@ rpptx object
 \description{
 Create a new PowerPoint document from a template and add a title slide
 }
+\keyword{internal}

@@ -12,7 +12,7 @@ g_pkcg03_log(data, ...)
 \item{...}{Any other parameters to be passed into the plotting function.}
 }
 \value{
-ggplot2 object for pkcg01.
+ggplot2 object for pkcg03.
 }
 \description{
 Wrapper around aNCA::pkcg03() function. Calls the function with \code{LOG} scale argument.

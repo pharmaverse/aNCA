@@ -1,3 +1,9 @@
+#' Module for viewing and downloading CDISC parameter datasets (PP, ADPP, ADNCA).
+#'
+#' Renders each dataset in an interactive table with CSV/XLSX download options.
+#'
+#' @param id Module namespace ID.
+
 parameter_datasets_ui <- function(id) {
   ns <- NS(id)
   navset_pill(
@@ -7,11 +13,11 @@ parameter_datasets_ui <- function(id) {
   )
 }
 
-parameter_datasets_server <- function(id, res_nca) {
+parameter_datasets_server <- function(id, res_nca, grouping_vars = reactive(character(0))) {
   moduleServer(id, function(input, output, session) {
     CDISC <- reactive({
       req(res_nca())
-      export_cdisc(res_nca())
+      export_cdisc(res_nca(), grouping_vars = grouping_vars())
     })
 
     reactable_server(

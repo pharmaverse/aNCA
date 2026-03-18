@@ -1,3 +1,10 @@
+#' Module for displaying NCA results.
+#'
+#' Provides a parameter picker, units table, interactive results table with
+#' color-coded acceptance flags and a download button for the NCA output.
+#'
+#' @param id Module namespace ID.
+
 # nca_results UI Module
 nca_results_ui <- function(id) {
   ns <- NS(id)
