@@ -140,7 +140,10 @@ tab_data_server <- function(id) {
     })
 
     #' Filter data
-    processed_data <- data_filtering_server("data_filtering", adnca_mapped)
+    imported_filters <- reactive(uploaded_data$settings_override()$filters)
+    processed_data <- data_filtering_server(
+      "data_filtering", adnca_mapped, imported_filters
+    )
 
     #' Global variable to store grouping variables
     extra_group_vars <- column_mapping$grouping_variables
