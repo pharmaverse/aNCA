@@ -59,15 +59,78 @@ input_filter_ui <- function(id, cols) {
   )
 }
 
-input_filter_server <- function(id, filters_metadata) {
+#' Build a callback that restores condition and value inputs for a filter.
+#' Extracted to avoid deeply nested onFlushed closures.
+#' @param session Shiny session.
+#' @param ns Namespace function.
+#' @param filters_metadata Reactive with column metadata.
+#' @param initial_values List with column, condition, value.
+#' @returns A function suitable for session$onFlushed.
+#' @noRd
+.restore_filter_values <- function(session, ns, filters_metadata,
+                                   initial_values) {
+  function() {
+    meta <- isolate(filters_metadata())
+    col_numeric <- meta[[initial_values$column]]$type == "numeric"
+    updateSelectInput(
+      session, "condition", selected = initial_values$condition
+    )
+    if (col_numeric) {
+      updateTextInput(session, "value_text", value = initial_values$value)
+      shinyjs::show(id = ns("value_text"), asis = TRUE)
+      shinyjs::hide(id = ns("value_select"), asis = TRUE)
+      shinyjs::enable(id = ns("condition"), asis = TRUE)
+    } else {
+      updatePickerInput(
+        session, "value_select",
+        choices = meta[[initial_values$column]]$choices,
+        selected = initial_values$value
+      )
+      shinyjs::hide(id = ns("value_text"), asis = TRUE)
+      shinyjs::show(id = ns("value_select"), asis = TRUE)
+      shinyjs::disable(id = ns("condition"), asis = TRUE)
+    }
+  }
+}
+
+input_filter_server <- function(id, filters_metadata, initial_values = NULL) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
     is_active <- reactiveVal(TRUE)
+    # Count of observeEvent(input$column) firings to skip.
+    # Restore triggers column changes that must not apply defaults.
+    skip_column_events <- reactiveVal(0L)
     is_numeric <- reactive({
       req(input$column)
       filters_metadata()[[input$column]]$type == "numeric"
     })
 
+    if (!is.null(initial_values)) {
+      # Skip: (1) default column from UI init, (2) restored column update
+      isolate(skip_column_events(2L))
+
+      # Restore all filter inputs in a single onFlushed callback.
+      # The column update takes effect on the next flush cycle, so we
+      # schedule a second onFlushed only for the condition/value updates.
+      session$onFlushed(function() {
+        updateSelectizeInput(
+          session, "column", selected = initial_values$column
+        )
+        # Condition and value must wait for the column update to flush,
+        # so we schedule them on the next cycle.
+        session$onFlushed(.restore_filter_values(
+          session, ns, filters_metadata, initial_values
+        ))
+      })
+    }
+
     observeEvent(input$column, {
+      remaining <- isolate(skip_column_events())
+      if (remaining > 0L) {
+        isolate(skip_column_events(remaining - 1L))
+        return()
+      }
+
       if (!is_numeric()) {
         updateSelectInput(session, "condition", selected = "==")
         updatePickerInput(

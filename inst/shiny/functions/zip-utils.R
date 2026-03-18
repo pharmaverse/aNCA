@@ -453,6 +453,7 @@ prepare_export_files <- function(target_dir,
   settings_list$ratio_table <- session$userData$ratio_table()
 
   settings_to_save <- list(
+    filters = session$userData$applied_filters,
     settings = settings_list,
     slope_rules = session$userData$slope_rules()
   )
