@@ -20,14 +20,18 @@ NON_STD_MAPPING_INFO <- data.frame(
     ""
   ),
   is_multiple_choice = c(TRUE, TRUE),
-  mapping_order = c(18, 5)
+  mapping_order = c(18, 5),
+  allow_create_numeric = c(FALSE, FALSE)
 )
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
-  select(Variable, Label, Values, mapping_tooltip,
-         mapping_section, mapping_alternatives, mapping_order) %>%
+  select(
+    Variable, Label, Values, mapping_tooltip,
+    mapping_section, mapping_alternatives, mapping_order,
+    allow_create_numeric
+  ) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
@@ -55,9 +59,21 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
-#' column_mapping_widget(ns = NS("example"), id = "STUDYID",
-#' tooltip_text = "Select the study identifier column.")
-.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
+#' column_mapping_widget(
+#'   ns = NS("example"), id = "STUDYID",
+#'   tooltip_text = "Select the study identifier column."
+#' )
+.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE,
+                                   allow_create_numeric = FALSE) {
+  selectize_options <- if (allow_create_numeric) {
+    list(
+      create = TRUE,
+      placeholder = "Select column or type a numeric value"
+    )
+  } else {
+    list(placeholder = "Select Column")
+  }
+
   div(
     class = "column-mapping-row",
     tooltip(
@@ -66,7 +82,7 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
         "",
         choices = NULL,
         multiple = multiple,
-        options = list(placeholder = "Select Column"),
+        options = selectize_options,
         width = "40%"
       ),
       tooltip_text,
@@ -92,9 +108,31 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
     h5(section_title),
     lapply(seq_len(nrow(mapping_df)), function(i) {
       row <- mapping_df[i, ]
-      .column_mapping_widget(ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice)
+      .column_mapping_widget(
+        ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice,
+        allow_create_numeric = isTRUE(row$allow_create_numeric)
+      )
     })
   )
+}
+.observe_numeric_inputs <- function(input, session, adnca_data, mapping_info) {
+  numeric_vars <- mapping_info$Variable[mapping_info$allow_create_numeric %in% TRUE]
+  lapply(numeric_vars, function(var) {
+    input_id <- paste0("select_", var)
+    observeEvent(input[[input_id]], {
+      value <- input[[input_id]]
+      if (!is.null(value) && value != "" && !value %in% names(adnca_data())) {
+        if (!grepl("^[0-9]+(\\.[0-9]+)?$", value)) {
+          showNotification(
+            paste0(var, ": only numeric values are allowed. '", value, "' is not valid."),
+            type = "warning",
+            duration = 5
+          )
+          updateSelectizeInput(session, input_id, selected = "")
+        }
+      }
+    })
+  })
 }
 
 #' Column Mapping Module
@@ -208,6 +246,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         choices = choices_metab, selected = selected_metab
       )
     })
+
+    # Validate numeric inputs for variables with allow_create_numeric = TRUE
+    .observe_numeric_inputs(input, session, adnca_data, MAPPING_INFO)
 
     # Observe submit button click and update processed_data
     mapping <- reactive({

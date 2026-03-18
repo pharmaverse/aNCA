@@ -98,7 +98,7 @@ pknca_res <- pknca_obj %>%
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- pknca_res %>%
-  export_cdisc()
+  export_cdisc(grouping_vars = extra_vars_to_keep)
 
 pivoted_results <- pivot_wider_pknca_results(
   myres = pknca_res,

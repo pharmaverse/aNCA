@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
 * Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). (#1027)
 * Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
@@ -32,6 +33,7 @@
 * Slope selector plots count with grouping options (#333)
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
+* Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
 * Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
 
 ## Bugs fixed
@@ -52,6 +54,7 @@ identify difference between missing and not requested (#934)
 * Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
 * Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 * Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
+* Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
 
 # aNCA 0.1.0
 

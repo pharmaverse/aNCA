@@ -134,12 +134,18 @@ PKNCA::PKNCA.set.summary(
 
 
 
-# Helper to generate missing-data checking messages for paired vectors
-#
-# This function accepts two columns/vectors (for example, concentrations
-# and volumes). It computes missingness internally and produces a character
-# vector of human-readable messages describing the missingness that matches
-# the style used in the package (used previously in `pk.calc.ae`).
+#' Generate missing-data checking messages for paired vectors
+#'
+#' Accepts two columns/vectors (e.g., concentrations and volumes), computes
+#' missingness, and returns human-readable messages describing it.
+#'
+#' @param a First vector.
+#' @param b Second vector.
+#' @param name_a Label for the first vector in messages.
+#' @param name_b Label for the second vector in messages.
+#' @returns Character vector of missingness messages (empty if none).
+#' @keywords internal
+#' @noRd
 generate_missing_messages <- function(a, b,
                                       name_a = deparse(substitute(a)),
                                       name_b = deparse(substitute(b))) {
