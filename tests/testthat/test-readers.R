@@ -138,6 +138,25 @@ describe("read_settings", {
     expect_null(res$settings$int_parameters)
   })
 
+  it("converts ratio_table to a data.frame when present", {
+    res <- read_settings(path)
+    expect_s3_class(res$settings$ratio_table, "data.frame")
+    expect_equal(nrow(res$settings$ratio_table), 2)
+    expect_named(res$settings$ratio_table, c(
+      "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+      "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+    ))
+    expect_equal(res$settings$ratio_table$PPTESTCD, c("MRCMAX", "FABS"))
+    expect_equal(res$settings$ratio_table$AdjustingFactor, c(1, 1))
+  })
+
+  it("returns NULL ratio_table when not in settings file", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
+    res <- read_settings(tmp_yaml)
+    expect_null(res$settings$ratio_table)
+  })
+
   it("keeps types_df as-is (only needed for R script generation)", {
     res <- read_settings(path)
     expect_type(res$settings$parameters$types_df, "list")
@@ -167,5 +186,87 @@ describe("read_settings", {
     expect_equal(res$settings$other_param, "test")
     # Ensure it didn't crash on the NULL checks for missing keys
     expect_null(res$content$slope_rules)
+  })
+})
+
+# Source the validation helper from the Shiny app code
+source(
+  system.file("shiny/modules/tab_nca/setup/ratio_calculations_table.R",
+              package = "aNCA"),
+  local = TRUE
+)
+
+describe(".validate_imported_ratios", {
+  param_options <- c("CMAX", "AUCLAST", "AUCINF.OBS")
+  ref_options <- c("ANALYTE: DrugA", "ANALYTE: DrugB", "ROUTE: INTRAVASCULAR")
+
+  valid_row <- data.frame(
+    TestParameter = "CMAX",
+    RefParameter = "CMAX",
+    RefGroups = "ANALYTE: DrugA",
+    TestGroups = "(all other levels)",
+    AggregateSubject = "no",
+    AdjustingFactor = 1,
+    PPTESTCD = "MRCMAX",
+    stringsAsFactors = FALSE
+  )
+
+  it("passes valid rows through", {
+    result <- .validate_imported_ratios(valid_row, param_options, ref_options)
+    expect_equal(nrow(result$valid), 1)
+    expect_length(result$skipped, 0)
+  })
+
+  it("skips rows with invalid TestParameter", {
+    bad <- valid_row
+    bad$TestParameter <- "FAKE"
+    result <- .validate_imported_ratios(bad, param_options, ref_options)
+    expect_equal(nrow(result$valid), 0)
+    expect_length(result$skipped, 1)
+    expect_true(grepl("TestParameter", result$skipped))
+  })
+
+  it("skips rows with invalid RefGroups", {
+    bad <- valid_row
+    bad$RefGroups <- "UNKNOWN: X"
+    result <- .validate_imported_ratios(bad, param_options, ref_options)
+    expect_equal(nrow(result$valid), 0)
+    expect_true(grepl("RefGroups", result$skipped))
+  })
+
+  it("accepts (all other levels) as TestGroups", {
+    result <- .validate_imported_ratios(valid_row, param_options, ref_options)
+    expect_equal(nrow(result$valid), 1)
+  })
+
+  it("skips rows with invalid TestGroups", {
+    bad <- valid_row
+    bad$TestGroups <- "NONEXISTENT: X"
+    result <- .validate_imported_ratios(bad, param_options, ref_options)
+    expect_equal(nrow(result$valid), 0)
+    expect_true(grepl("TestGroups", result$skipped))
+  })
+
+  it("skips rows with invalid AggregateSubject", {
+    bad <- valid_row
+    bad$AggregateSubject <- "invalid"
+    result <- .validate_imported_ratios(bad, param_options, ref_options)
+    expect_equal(nrow(result$valid), 0)
+    expect_true(grepl("AggregateSubject", result$skipped))
+  })
+
+  it("returns empty when required columns are missing", {
+    bad <- data.frame(PPTESTCD = "X", stringsAsFactors = FALSE)
+    result <- .validate_imported_ratios(bad, param_options, ref_options)
+    expect_equal(nrow(result$valid), 0)
+    expect_true(grepl("Missing required columns", result$skipped))
+  })
+
+  it("handles mixed valid and invalid rows", {
+    mixed <- rbind(valid_row, valid_row)
+    mixed$TestParameter[2] <- "FAKE"
+    result <- .validate_imported_ratios(mixed, param_options, ref_options)
+    expect_equal(nrow(result$valid), 1)
+    expect_length(result$skipped, 1)
   })
 })
