@@ -7,6 +7,7 @@
 \format{
 A data frame with one row per subject and 9 variables:
 \describe{
+\item{DOMAIN}{Character. Domain Abbreviation.}
 \item{STUDYID}{Character. Study identifier.}
 \item{USUBJID}{Character. Unique subject identifier.}
 \item{AGE}{Numeric. Age of the subject.}

@@ -7,6 +7,7 @@
 \format{
 A data frame with 8 variables:
 \describe{
+\item{DOMAIN}{Character. Domain Abbreviation.}
 \item{STUDYID}{Character. Study identifier.}
 \item{USUBJID}{Character. Unique subject identifier.}
 \item{EXTRT}{Character. Name of the treatment (mapped from DOSETRT).}

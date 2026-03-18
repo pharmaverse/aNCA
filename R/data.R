@@ -123,6 +123,7 @@
 #' @format A data frame with the same number of rows as \code{adnca_example}
 #'   and 11 variables:
 #' \describe{
+#'   \item{DOMAIN}{Character. Domain Abbreviation.}
 #'   \item{STUDYID}{Character. Study identifier.}
 #'   \item{USUBJID}{Character. Unique subject identifier.}
 #'   \item{PCTEST}{Character. Name of the measured analyte (mapped from PARAM).}
@@ -151,6 +152,7 @@
 #'
 #' @format A data frame with 8 variables:
 #' \describe{
+#'   \item{DOMAIN}{Character. Domain Abbreviation.}
 #'   \item{STUDYID}{Character. Study identifier.}
 #'   \item{USUBJID}{Character. Unique subject identifier.}
 #'   \item{EXTRT}{Character. Name of the treatment (mapped from DOSETRT).}
@@ -177,6 +179,7 @@
 #'
 #' @format A data frame with one row per subject and 9 variables:
 #' \describe{
+#'   \item{DOMAIN}{Character. Domain Abbreviation.}
 #'   \item{STUDYID}{Character. Study identifier.}
 #'   \item{USUBJID}{Character. Unique subject identifier.}
 #'   \item{AGE}{Numeric. Age of the subject.}

@@ -18,6 +18,7 @@ subject_offsets_days <- seq(0, by = 3, length.out = nrow(subjects))
 rfxstdtc <- base_date + subject_offsets_days * 86400
 
 dm_example <- data.frame(
+  DOMAIN = "DM",
   STUDYID  = subjects$STUDYID,
   USUBJID  = subjects$USUBJID,
   AGE      = subjects$AGE,
@@ -45,6 +46,7 @@ subject_origin_pc <- ref_dates[adnca_example$USUBJID]
 dose_time_from_first <- adnca_example$AFRLT - adnca_example$ARRLT
 
 pc_example <- data.frame(
+  DOMAIN = "PC",
   STUDYID  = adnca_example$STUDYID,
   USUBJID  = adnca_example$USUBJID,
   PCTEST   = adnca_example$PARAM,
@@ -73,6 +75,7 @@ doses <- adnca_example[dose_rows, ]
 subject_origin_ex <- ref_dates[doses$USUBJID]
 
 ex_example <- data.frame(
+  DOMAIN = "EX",
   STUDYID  = doses$STUDYID,
   USUBJID  = doses$USUBJID,
   EXTRT    = doses$DOSETRT,

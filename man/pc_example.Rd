@@ -8,6 +8,7 @@
 A data frame with the same number of rows as \code{adnca_example}
 and 11 variables:
 \describe{
+\item{DOMAIN}{Character. Domain Abbreviation.}
 \item{STUDYID}{Character. Study identifier.}
 \item{USUBJID}{Character. Unique subject identifier.}
 \item{PCTEST}{Character. Name of the measured analyte (mapped from PARAM).}
