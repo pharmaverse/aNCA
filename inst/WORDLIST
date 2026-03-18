@@ -1,4 +1,3 @@
-ACTARM
 ADNCA
 ADOSEDUR
 ADPP
@@ -18,6 +17,7 @@ AVALU
 AdjustingFactor
 AggregateSubject
 Analyte
+Analytes
 BLQ
 Buckeridge
 CDISC
@@ -26,6 +26,7 @@ Clast
 Cmax
 Cond
 Customizable
+DM
 DOSEA
 DOSETRT
 DOSEU
@@ -82,6 +83,7 @@ Pre
 QMD
 README
 RENALCL
+RFXSTDTC
 RRLTU
 RStudio
 RefGroups
@@ -114,9 +116,8 @@ WTBL
 WTBLU
 XPT
 YAML
-adnca
 aNCA's
-amountu
+adnca
 analysing
 analyte
 analytes
@@ -128,13 +129,15 @@ cdisc
 cmax
 colour
 conc
-concu
 customizable
 customizations
 dataformat
 dateTime
+datetime
+datetimes
 devtools
 df
+dm
 doi
 extravascular
 ggplot
@@ -155,6 +158,7 @@ nca
 ng
 oligo
 pak
+pc
 pcspec
 pharmacodynamics
 pharmacokinetic
@@ -175,14 +179,13 @@ rpptx
 runnable
 signif
 src
-subfolder
 standardizations
+synthesised
 th
 tibble
 tidyverse
 timeframe
 timepoint
-timeu
 tlg
 tooltip
 tooltips
@@ -190,9 +193,6 @@ ug
 unmapped
 utilise
 visualizable
-readxl
-writexl
-xlsx
 yaml
 µg
 Ĉlast
