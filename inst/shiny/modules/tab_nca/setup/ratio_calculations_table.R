@@ -116,7 +116,8 @@ ratios_table_ui <- function(id) {
     if (length(reasons) == 0) {
       keep[i] <- TRUE
     } else {
-      skipped <- c(skipped, paste0("Row ", i, " (", row$PPTESTCD, "): ", paste(reasons, collapse = "; ")))
+      skipped <- c(skipped, paste0("Row ", i, " (", row$PPTESTCD, "): ",
+                                   paste(reasons, collapse = "; ")))
     }
   }
 
