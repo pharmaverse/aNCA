@@ -139,7 +139,7 @@
 #'   \item{VOLUMEU}{Character. Volume units.}
 #' }
 #' @source Derived from \code{\link{adnca_example}} and \code{\link{dm_example}}
-#'   via \code{data-raw/pc_example.R}.
+#'   via \code{data-raw/sdtm_example.R}.
 "pc_example"
 
 
@@ -163,7 +163,7 @@
 #'     (e.g., "PT2.9H"), derived from ADOSEDUR.}
 #' }
 #' @source Derived from \code{\link{adnca_example}} and \code{\link{dm_example}}
-#'   via \code{data-raw/ex_example.R}.
+#'   via \code{data-raw/sdtm_example.R}.
 "ex_example"
 
 
@@ -189,5 +189,5 @@
 #'     Synthetic, staggered by 3 days per subject to simulate different
 #'     enrollment dates.}
 #' }
-#' @source Derived from \code{\link{adnca_example}} via \code{data-raw/dm_example.R}.
+#' @source Derived from \code{\link{adnca_example}} via \code{data-raw/sdtm_example.R}.
 "dm_example"
