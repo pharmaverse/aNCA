@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#874)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
 * Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). (#1027)
 * Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
