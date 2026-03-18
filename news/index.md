@@ -96,6 +96,9 @@
 - Settings upload and processing is flexible, so non-data specific
   template settings can be uploaded
   ([\#993](https://github.com/pharmaverse/aNCA/issues/993))
+- Mapping will allow custom numeric input values instead of columns for
+  `ADOSEDUR` and `TRTRINT`
+  ([\#1051](https://github.com/pharmaverse/aNCA/issues/1051))
 - Help buttons have been included/updated for most App sections:
   `Parameter Selection`, `Slope Selector`, `Additional Analysis` and
   `Partial Interval calculations`

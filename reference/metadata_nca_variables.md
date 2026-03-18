@@ -92,6 +92,11 @@ A data frame with 361 rows and 14 variables:
 
   Numeric. Defines the mapped variables order in the mapped dataset
 
+- allow_create_numeric:
+
+  Logical. Indicates if the mapping input should allow the user to
+  introduce custom numbers
+
 ## Source
 
 Used for PP and ADPP mapping rules and checks in the export_cdisc
