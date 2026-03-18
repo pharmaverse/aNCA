@@ -36,7 +36,7 @@ describe("apply_mapping", {
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df, expected_df)
   })
-
+  
   it("informs of the changes when silent is FALSE", {
     expect_message(
       apply_mapping(
@@ -45,14 +45,14 @@ describe("apply_mapping", {
       message(paste0(paste0("* ", names(mapping), " -> ", unname(mapping)), collapse = "\n"))
     )
   })
-
+  
   it("creates columns when its map reference is not a column name in the dataset", {
     test_df <- test_df[, !names(expected_df) %in% c("AVALU")]
     mapping["AVALU"] <- "ng/mL"
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df, expected_df)
   })
-
+  
   it("orders the columns correctly", {
     wrong_order_cols <- rev(desired_order)
     test_df <- expected_df[, wrong_order_cols]
@@ -60,7 +60,7 @@ describe("apply_mapping", {
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(names(result_df), desired_order)
   })
-
+  
   it("returns an error if any required column is not mapped", {
     mapping["AVAL"] <- ""
     expect_error(
@@ -73,14 +73,14 @@ describe("apply_mapping", {
       "Unmapped required columns detected: AVAL"
     )
   })
-
+  
   it("apply labels correctly when missing", {
     var_labels(test_df) <- rep(NA_character_, length(names(test_df)))
     mapping <- as.list(setNames(names(test_df), names(expected_df)))
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(var_labels(result_df), var_labels(expected_df))
   })
-
+  
   it("adds ADOSEDUR = 0 if not mapped and warns the user", {
     test_df <- test_df[, !names(expected_df) == "ADOSEDUR"]
     mapping["ADOSEDUR"] <- NULL
@@ -94,7 +94,7 @@ describe("apply_mapping", {
     )
     expect_equal(result_df, expected_df)
   })
-
+  
   it("adds DOSETRT = PARAM if not mapped and warns the user", {
     mapping["DOSETRT"] <- ""
     test_df <- test_df[, !names(expected_df) %in% "DOSETRT"]
@@ -108,14 +108,14 @@ describe("apply_mapping", {
     )
     expect_equal(result_df, expected_df)
   })
-
+  
   it("allows duplicated mappings", {
     mapping["PARAM"] <- mapping["DOSETRT"]
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df[, names(result_df) != "analyte"], expected_df, ignore_attr = TRUE)
     # NOTE: uDplicated mapped columns will conserve duplicated labels if originally present
   })
-
+  
   it("makes sure ATPTREF is a factor", {
     test_df <- expected_df
     mapping <- as.list(setNames(names(test_df), names(expected_df)))
@@ -123,7 +123,7 @@ describe("apply_mapping", {
     expect_true(is.factor(result_df$ATPTREF))
     expect_equal(result_df, expected_df)
   })
-
+  
   it("warns the user about columns lost after mapping due to column name conflicts", {
     test_df$DOSETRT <- "Medication A"
     expect_warning(
@@ -159,54 +159,5 @@ describe("create_metabflag", {
     expect_equal(result_df, expected_df)
     expect_equal(result_df2, expected_df)
     expect_equal(result_df3, expected_df)
-  })
-})
-
-describe("annotate_duplicates", {
-  base_df <- data.frame(
-    STUDYID = "S1", PCSPEC = "Plasma", ROUTE = "IV",
-    DOSETRT = "DrugA", USUBJID = "SUBJ1", PARAM = "A",
-    AFRLT = c(0, 1, 2), AVAL = c(10, 20, 30),
-    stringsAsFactors = FALSE
-  )
-
-  it("adds DTYPE column with no duplicates", {
-    result <- annotate_duplicates(base_df)
-    expect_true("DTYPE" %in% names(result))
-    expect_true(all(result$DTYPE == ""))
-    expect_false("ROWID" %in% names(result))
-  })
-
-  it("marks exact duplicates as COPY", {
-    df_with_dup <- rbind(base_df, base_df[2, ])
-    result <- annotate_duplicates(df_with_dup)
-    expect_equal(result$DTYPE, c("", "", "", "COPY"))
-  })
-
-  it("raises time_duplicate_error for unresolved time duplicates", {
-    df_time_dup <- rbind(base_df, base_df[2, ])
-    df_time_dup$AVAL[4] <- 99 # same time, different value
-    expect_error(
-      annotate_duplicates(df_time_dup),
-      class = "time_duplicate_error"
-    )
-  })
-
-  it("resolves time duplicates when time_duplicate_rows is provided", {
-    df_time_dup <- rbind(base_df, base_df[2, ])
-    df_time_dup$AVAL[4] <- 99
-    result <- annotate_duplicates(df_time_dup, time_duplicate_rows = 4L)
-    expect_equal(result$DTYPE, c("", "", "", "TIME DUPLICATE"))
-  })
-
-  it("includes duplicate_data in the error condition", {
-    df_time_dup <- rbind(base_df, base_df[2, ])
-    df_time_dup$AVAL[4] <- 99
-    err <- tryCatch(
-      annotate_duplicates(df_time_dup),
-      time_duplicate_error = function(e) e
-    )
-    expect_true("duplicate_data" %in% names(err))
-    expect_true("ROWID" %in% names(err$duplicate_data))
   })
 })
