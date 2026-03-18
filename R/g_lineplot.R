@@ -86,12 +86,12 @@ g_lineplot <- function(data,
   if (nrow(data) == 0) {
     return(error_plot("No data available for the plot"))
   }
-  
+
   color_labels <- .resolve_color_labels(color_by, color_labels, labels_df)
   x_lab <- .build_axis_label(x_var, x_unit, data, labels_df)
   y_lab <- .build_axis_label(y_var, y_unit, data, labels_df)
   title <- "PK Concentration - Time Profile"
-  
+
   data <- .build_tooltip(data, tooltip_vars, labels_df)
   plot_data <- .build_plot_data(
     data, x_var, color_by, group_by, linetype_by,
@@ -102,9 +102,9 @@ g_lineplot <- function(data,
   } else {
     facet_by
   }
-  
+
   aes_args <- .build_aes(x_var, y_var, group_by, linetype_by)
-  
+
   plt <- ggplot(plot_data, do.call(aes, aes_args)) +
     geom_line() +
     geom_point() +
@@ -164,7 +164,7 @@ g_lineplot <- function(data,
       color_var = interaction(!!!syms(color_by), sep = ", "),
       group_var = if (!is.null(group_by_vars)) interaction(!!!syms(group_by_vars)) else NULL
     )
-  
+
   # When linetype_by is present ("both" mode), append non-empty labels
   # to color_var so the color legend distinguishes default from dose-normalised
   if (!is.null(linetype_by) && linetype_by %in% names(plot_data)) {
@@ -185,9 +185,9 @@ g_lineplot <- function(data,
     )
     plot_data$color_var <- factor(plot_data$color_var, levels = ordered_levels)
   }
-  
+
   plot_data <- plot_data %>% arrange(!!sym(x_var))
-  
+
   if (!is.null(facet_count_n) && length(facet_by) > 0) {
     plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n)
   }
@@ -245,7 +245,7 @@ g_lineplot <- function(data,
       data$tooltip_text <- paste(parts, collapse = "<br>")
     }
   }
-  
+
   data
 }
 
@@ -268,7 +268,7 @@ g_lineplot <- function(data,
 #' @noRd
 .build_facet_labels <- function(data, facet_by, facet_count_n) {
   use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
-  
+
   data %>%
     mutate(
       .facet_label_values = purrr::pmap_chr(
@@ -297,14 +297,14 @@ g_lineplot <- function(data,
 .add_axis_limits <- function(x_limits, y_limits) {
   has_x <- is.numeric(x_limits) && length(x_limits) == 2 && any(is.finite(x_limits))
   has_y <- is.numeric(y_limits) && length(y_limits) == 2 && any(is.finite(y_limits))
-  
+
   if (!has_x && !has_y) {
     return(NULL)
   }
-  
+
   xlim_vals <- if (has_x) x_limits else NULL
   ylim_vals <- if (has_y) y_limits else NULL
-  
+
   coord_cartesian(xlim = xlim_vals, ylim = ylim_vals)
 }
 
