@@ -158,7 +158,7 @@ update_main_intervals <- function(
   conc_data <- data$conc$data
   conc_groups <- group_vars(data$conc)
   dose_groups <- group_vars(data$dose)
-  groups <- unique(c(conc_groups, dose_groups))
+  groups <- intersect(dose_groups, conc_groups)
   groups <- groups[vapply(groups, function(col) {
     !is.null(col) && length(unique(conc_data[[col]])) > 1
   }, logical(1))]
