@@ -18,9 +18,6 @@ applied_filters <- settings_list$applied_filters
 
 preprocessed_adnca <- adnca_data %>%
 
-  # Filter the data
-  apply_filters(applied_filters) %>%
-
   # Map columns to their standards
   apply_mapping(
     mapping = mapping,
@@ -37,7 +34,10 @@ preprocessed_adnca <- adnca_data %>%
   create_metabfl(mapping$Metabolites) %>%
   
   # Make sure all variables are in its correct class
-  adjust_class_and_length(metadata_nca_variables)
+  adjust_class_and_length(metadata_nca_variables) %>%
+
+  # Filter the data
+  apply_filters(applied_filters)
 
 ## Setup NCA settings in the PKNCA object ########################
 int_parameters <- settings_list$settings$int_parameters
@@ -121,7 +121,7 @@ pknca_res <- pknca_obj %>%
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- pknca_res %>%
-  export_cdisc()
+  export_cdisc(grouping_vars = extra_vars_to_keep)
 
 pivoted_results <- pivot_wider_pknca_results(
   myres = pknca_res,

@@ -651,7 +651,7 @@ g_pkcg03_lin <- function(data, ...) {
 #' Wrapper around aNCA::pkcg03() function. Calls the function with `LOG` scale argument.
 #' @param data Data to be passed into the plotting function.
 #' @param ...  Any other parameters to be passed into the plotting function.
-#' @returns ggplot2 object for pkcg01.
+#' @returns ggplot2 object for pkcg03.
 #' @export
 g_pkcg03_log <- function(data, ...) {
   pkcg03(adnca = data, scale = "LOG", ...)
