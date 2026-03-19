@@ -408,11 +408,13 @@ describe("PKNCA_build_units_table", {
   d_dose <- FIXTURE_DOSE_DATA %>%
     filter(USUBJID == 8)
 
-  o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                             concu = "AVALU", timeu = "RRLTU"
+  o_conc <- PKNCA::PKNCAconc(
+    d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+    concu = "AVALU", timeu = "RRLTU"
   )
-  o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-                             doseu = "DOSEU"
+  o_dose <- PKNCA::PKNCAdose(
+    d_dose, DOSEA ~ AFRLT | USUBJID,
+    doseu = "DOSEU"
   )
   units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
 
@@ -438,11 +440,13 @@ describe("PKNCA_build_units_table", {
   })
 
   it("creates an uniform units table when units are not defined as columns in the PKNCA obj", {
-    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                               concu = "ng/mL", timeu = "h"
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "ng/mL", timeu = "h"
     )
-    o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-                               doseu = "mg"
+    o_dose <- PKNCA::PKNCAdose(
+      d_dose, DOSEA ~ AFRLT | USUBJID,
+      doseu = "mg"
     )
     units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
     # Check units_table is a data frame
@@ -479,8 +483,9 @@ describe("PKNCA_build_units_table", {
 
   it("reports an error when units are not uniform through all concentration groups", {
     d_conc$AVALU[1] <- "pg/L"
-    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                               concu = "AVALU", timeu = "RRLTU"
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "AVALU", timeu = "RRLTU"
     )
     expect_error(
       PKNCA_build_units_table(o_conc, o_dose),
