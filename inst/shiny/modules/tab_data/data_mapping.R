@@ -276,16 +276,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       mapping_ <- mapping()
       names(mapping_) <- gsub("select_", "", names(mapping_))
 
-      tryCatch({
-        adnca_data() %>%
-          apply_mapping(
-            mapping_,
-            silent = FALSE
-          ) %>%
-          create_metabfl(input$select_Metabolites) %>%
-          adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-
-      }, warning = function(w) {
+      tryCatch(
         withCallingHandlers(
           {
             adnca_data() %>%
@@ -299,13 +290,15 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           warning = function(w) {
             log_warn(conditionMessage(w))
             showNotification(conditionMessage(w), type = "warning", duration = 10)
+            invokeRestart("muffleWarning")
           }
-        )
-      }, error = function(e) {
-        log_error(conditionMessage(e))
-        showNotification(conditionMessage(e), type = "error", duration = NULL)
-        NULL
-      })
+        ),
+        error = function(e) {
+          log_error(conditionMessage(e))
+          showNotification(conditionMessage(e), type = "error", duration = NULL)
+          NULL
+        }
+      )
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 
