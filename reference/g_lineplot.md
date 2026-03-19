@@ -26,6 +26,7 @@ g_lineplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   vline_var = NULL,
+  linetype_by = NULL,
   show_legend = TRUE
 )
 ```
@@ -119,6 +120,10 @@ g_lineplot(
   Optional character string specifying the column name for vertical
   lines.
 
+- linetype_by:
+
+  Optional character vector specifying the column name for line types.
+
 - show_legend:
 
   Logical; whether to display the plot legend. Default is `TRUE`.
@@ -151,11 +156,13 @@ ind_data <- expand.grid(
     AVALU = "ng/mL"
   )
 
- p <- g_lineplot(
-   data = ind_data,
-   x_var = "time_var",
-   y_var = "AVAL",
-   color_by = "USUBJID"
-   )
+p <- g_lineplot(
+  data = ind_data,
+  x_var = "time_var",
+  y_var = "AVAL",
+  color_by = "USUBJID"
+)
 print(p)
+#> Ignoring unknown labels:
+#> • linetype : ""
 ```

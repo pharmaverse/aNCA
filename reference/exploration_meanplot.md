@@ -24,7 +24,8 @@ exploration_meanplot(
   filtering_list = NULL,
   use_time_since_last_dose = FALSE,
   x_limits = NULL,
-  y_limits = NULL
+  y_limits = NULL,
+  line_type = "default"
 )
 ```
 
@@ -115,6 +116,12 @@ exploration_meanplot(
 
   Numeric vector of length 2 for y-axis limits (min, max). Default is
   `NULL` (no limits).
+
+- line_type:
+
+  Character; "default" (default), "dose-normalized" to specify lines to
+  be normalized by dose amount or "both" to include both normalized and
+  non-normalized lines.
 
 ## Value
 

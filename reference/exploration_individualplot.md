@@ -12,7 +12,6 @@ exploration_individualplot(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
-  show_legend = TRUE,
   threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
@@ -21,7 +20,9 @@ exploration_individualplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   filtering_list = NULL,
-  use_time_since_last_dose = FALSE
+  use_time_since_last_dose = FALSE,
+  show_legend = TRUE,
+  line_type = "default"
 )
 ```
 
@@ -50,10 +51,6 @@ exploration_individualplot(
 
   Logical; whether to use a logarithmic scale for the y-axis. Default is
   `FALSE`.
-
-- show_legend:
-
-  Logical; whether to display the plot legend. Default is `TRUE`.
 
 - threshold_value:
 
@@ -99,6 +96,16 @@ exploration_individualplot(
 
   Logical; if `TRUE`, x-axis represents time since last dose. Default is
   `FALSE` (time since first dose).
+
+- show_legend:
+
+  Logical; whether to display the plot legend. Default is `TRUE`.
+
+- line_type:
+
+  Character; "default" (default), "dose-normalized" to specify lines to
+  be normalized by dose amount or "both" to include both normalized and
+  non-normalized lines.
 
 ## Value
 
