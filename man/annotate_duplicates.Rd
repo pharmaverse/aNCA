@@ -10,13 +10,15 @@ annotate_duplicates(dataset, time_duplicate_rows = NULL)
 \item{dataset}{A mapped data frame with standard ADNCA columns.}
 
 \item{time_duplicate_rows}{Optional integer vector of row indices
-(in the mapped dataset) to mark as \code{"TIME DUPLICATE"}. When \code{NULL}
-and time duplicates are detected, an error is raised.}
+(in the mapped dataset) to mark as \code{"TIME DUPLICATE"}. These indices
+refer to row positions after mapping (1-based). Row order is preserved
+through \code{group_by}/\code{mutate} operations (dplyr guarantees this).
+When \code{NULL} and time duplicates are detected, an error is raised.}
 }
 \value{
 The dataset with a \code{DTYPE} column added. Raises an error of class
-\code{"time_duplicate_error"} if unresolved time duplicates are found, with
-the duplicate rows attached as \code{duplicate_data} in the condition.
+\code{"time_duplicate_error"} if unresolved time duplicates are found, with the duplicate rows
+attached as \code{duplicate_data} in the condition.
 }
 \description{
 Detects and annotates duplicate records in mapped ADNCA data. Exact
