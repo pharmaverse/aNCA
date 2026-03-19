@@ -23,6 +23,7 @@ g_lineplot(
   tooltip_vars = NULL,
   labels_df = NULL,
   vline_var = NULL,
+  linetype_by = NULL,
   show_legend = TRUE
 )
 }
@@ -75,6 +76,8 @@ Only used if \code{show_threshold} is \code{TRUE}.}
 \item{vline_var}{Optional character string specifying the column name for vertical
 lines.}
 
+\item{linetype_by}{Optional character vector specifying the column name for line types.}
+
 \item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 }
 \value{
@@ -99,11 +102,11 @@ ind_data <- expand.grid(
     AVALU = "ng/mL"
   )
 
- p <- g_lineplot(
-   data = ind_data,
-   x_var = "time_var",
-   y_var = "AVAL",
-   color_by = "USUBJID"
-   )
+p <- g_lineplot(
+  data = ind_data,
+  x_var = "time_var",
+  y_var = "AVAL",
+  color_by = "USUBJID"
+)
 print(p)
 }
