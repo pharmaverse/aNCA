@@ -83,9 +83,9 @@ format_pkncadata_intervals <- function(pknca_conc,
 
   # Based on dose times create a data frame with start and end times
   dose_intervals <- left_join(sub_pknca_dose,
-    sub_pknca_conc,
-    by = intersect(names(sub_pknca_dose), c(conc_groups, "DOSNOA")),
-    relationship = "many-to-many"
+                              sub_pknca_conc,
+                              by = intersect(names(sub_pknca_dose), c(conc_groups, "DOSNOA")),
+                              relationship = "many-to-many"
   ) %>%
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
@@ -147,11 +147,11 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
 update_main_intervals <- function(
-  data,
-  parameter_selections,
-  int_parameters,
-  impute = TRUE,
-  blq_imputation_rule = NULL
+    data,
+    parameter_selections,
+    int_parameters,
+    impute = TRUE,
+    blq_imputation_rule = NULL
 ) {
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
@@ -207,6 +207,12 @@ update_main_intervals <- function(
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
+
+  # Deduplicate study_types_df by grouping_cols to prevent interval row
+  # duplication when detect_study_types produces multiple types per group
+  # (e.g., metabolite vs non-metabolite for the same USUBJID + ROUTE).
+  study_types_df <- study_types_df %>%
+    distinct(across(all_of(grouping_cols)), .keep_all = TRUE)
 
   # Add the 'type' column to the intervals data
   intervals_with_types <- data$intervals %>%
