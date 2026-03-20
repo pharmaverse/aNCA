@@ -12,7 +12,7 @@ annotate_duplicates(dataset, time_duplicate_rows = NULL)
 \item{time_duplicate_rows}{Optional integer vector of row indices
 (in the mapped dataset) to mark as \code{"TIME DUPLICATE"}. These indices
 refer to row positions after mapping (1-based). Row order is preserved
-through \code{group_by}/\code{mutate} operations (dplyr guarantees this).
+through \code{group_by}/\code{mutate} operations.
 When \code{NULL} and time duplicates are detected, an error is raised.}
 }
 \value{

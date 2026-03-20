@@ -42,11 +42,11 @@ MAPPING_DESIRED_ORDER <- c( # nolint: object_name_linter
 #' @export
 apply_mapping <- function(
   dataset, mapping, desired_order = MAPPING_DESIRED_ORDER, silent = TRUE,
-    req_mappings = c(
-      "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
-      "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
-      "AVALU", "RRLTU", "DOSEU", "PARAM"
-    )
+  req_mappings = c(
+    "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
+    "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
+    "AVALU", "RRLTU", "DOSEU", "PARAM"
+  )
 ) {
 
   if (!silent) {
@@ -155,7 +155,7 @@ create_metabfl <- function(dataset, metabolites) {
 #' @param time_duplicate_rows Optional integer vector of row indices
 #'   (in the mapped dataset) to mark as `"TIME DUPLICATE"`. These indices
 #'   refer to row positions after mapping (1-based). Row order is preserved
-#'   through `group_by`/`mutate` operations (dplyr guarantees this).
+#'   through `group_by`/`mutate` operations.
 #'   When `NULL` and time duplicates are detected, an error is raised.
 #'
 #' @returns The dataset with a `DTYPE` column added. Raises an error of class
