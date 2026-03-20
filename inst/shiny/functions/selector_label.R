@@ -27,10 +27,14 @@ selector_label <- function(input, output, session,
                            selector_ui_wrapper,
                            id,
                            label,
-                           metadata_type = c("variable", "parameter"),
-                           pknca_data = NULL) {
+                           metadata_type = "variable",
+                           pknca_data = NULL,
+                           has_option_description = TRUE,
+                           show_value_as_tags = TRUE,
+                           show_selected_options_first = TRUE,
+                           position = "bottom",
+                           dropbox_wrapper = "body") {
   ns <- session$ns
-  metadata_type <- match.arg(metadata_type)
 
   # Dataframe of choices
   # Conditional logic for if the data are variables or parameters
@@ -43,7 +47,7 @@ selector_label <- function(input, output, session,
         filter(!is.na(Variable), Variable != "") %>%
         filter(Variable %in% choices) %>%
         rename(val = Variable, desc = Label)
-    } else {
+    } else if (metadata_type == "parameter") {
       req(metadata_nca_parameters)
       choices_df <- metadata_nca_parameters %>%
         select(PPTESTCD, PPTEST) %>%
@@ -51,6 +55,8 @@ selector_label <- function(input, output, session,
         filter(!is.na(PPTESTCD), PPTESTCD != "") %>%
         filter(PPTESTCD %in% choices) %>%
         rename(val = PPTESTCD, desc = PPTEST)
+    } else {
+      data.frame(val = choices, desc = choices)
     }
 
     # Mapping to virtualSelectInput format
@@ -93,11 +99,11 @@ selector_label <- function(input, output, session,
       multiple = TRUE,
       selected = initial_selection,
       search = TRUE,
-      hasOptionDescription = TRUE,
-      showValueAsTags = TRUE,
-      showSelectedOptionsFirst = TRUE,
+      hasOptionDescription = has_option_description,
+      showValueAsTags = show_value_as_tags,
+      showSelectedOptionsFirst = show_selected_options_first,
       position = "bottom",
-      dropboxWrapper = "body" # Making sure the selector doesn't automatically open upwards
+      dropboxWrapper = dropbox_wrapper # Making sure the selector doesn't automatically open upwards
     )
   })
 }
