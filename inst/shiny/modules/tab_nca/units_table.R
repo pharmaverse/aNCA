@@ -52,17 +52,16 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
         }
         test_unit <- .find_unit(pknca_test[i], rt$TestParameter[i])
         ref_unit <- .find_unit(pknca_ref[i], rt$RefParameter[i])
-        message(sprintf(
-          "Ratio %s: test=%s(%s) unit=%s, ref=%s(%s) unit=%s",
-          rt$PPTESTCD[i], rt$TestParameter[i], pknca_test[i],
-          test_unit, rt$RefParameter[i], pknca_ref[i], ref_unit
-        ))
 
         if (is.na(test_unit) || is.na(ref_unit)) {
           pporresu <- NA_character_
         } else {
           factor <- get_conversion_factor(ref_unit, test_unit)
-          pporresu <- if (!is.na(factor)) "fraction" else paste0(test_unit, "/", ref_unit)
+          pporresu <- if (!is.na(factor)) {
+            "fraction"
+          } else {
+            simplify_unit(paste0(test_unit, "/", ref_unit), as_character = TRUE)
+          }
         }
 
         row <- data.frame(
