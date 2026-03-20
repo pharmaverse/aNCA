@@ -284,6 +284,37 @@ describe("simplify_unit", {
   })
 })
 
+describe("compose_ratio_unit", {
+  it("wraps denominator in parentheses for simple units", {
+    result <- compose_ratio_unit("mg", "mL")
+    expect_equal(result, "mg/(mL)")
+  })
+
+  it("wraps compound denominator in parentheses", {
+    result <- compose_ratio_unit("mg", "hr*ug/mL")
+    expect_equal(result, "mg/(hr*ug/mL)")
+  })
+
+  it("produces a parseable unit string", {
+    result <- compose_ratio_unit("ng/mL", "ng/mL")
+    # Should be parseable by units::set_units
+    expect_no_error(units::set_units(1, result, mode = "standard"))
+  })
+
+  it("falls back to plain slash for unparseable combinations", {
+    result <- compose_ratio_unit("fakeunit", "otherfake")
+    expect_equal(result, "fakeunit/otherfake")
+  })
+
+  it("handles identical numerator and denominator", {
+    result <- compose_ratio_unit("ng/mL", "ng/mL")
+    expect_equal(result, "ng/mL/(ng/mL)")
+    # The result should simplify to dimensionless
+    val <- units::set_units(1, result, mode = "standard")
+    expect_equal(as.numeric(val), 1)
+  })
+})
+
 describe("apply_unit_defaults", {
   data_units <- data.frame(
     PPTESTCD = c("CMAX", "AUCLST", "TMAX", "LAMZHL"),

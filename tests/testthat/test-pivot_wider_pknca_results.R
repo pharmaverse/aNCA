@@ -221,6 +221,48 @@ describe("pivot_wider_pknca_results", {
   })
 })
 
+describe("pivot_wider_pknca_results with custom units (PPSTRESU)", {
+
+  it("does not produce NA column names when PPSTRESU is empty string", {
+    pknca_res <- FIXTURE_PKNCA_RES %>% filter(USUBJID %in% 1:3)
+    # Ensure all PPSTRESU are "" for unitless/fraction, or the original unit
+    pknca_res$result <- pknca_res$result %>%
+      mutate(PPSTRESU = ifelse(PPSTRESU == "", "", PPSTRESU))
+    result <- pivot_wider_pknca_results(pknca_res)
+    expect_false("NA" %in% names(result))
+    expect_false(any(is.na(names(result))))
+  })
+
+  it("appends unit suffix to column names for converted parameters", {
+    pknca_res <- FIXTURE_PKNCA_RES %>% filter(USUBJID %in% 1:3)
+    # Simulate a unit conversion: change CMAX PPSTRESU from ng/mL to ug/mL
+    pknca_res$result <- pknca_res$result %>%
+      mutate(
+        PPSTRESU = ifelse(PPTESTCD == "CMAX" & PPSTRESU == "ng/mL", "ug/mL", PPSTRESU),
+        PPSTRES = ifelse(PPTESTCD == "CMAX" & PPORRESU == "ng/mL", PPORRES * 0.001, PPSTRES)
+      )
+    result <- pivot_wider_pknca_results(pknca_res)
+    expect_true("CMAX[ug/mL]" %in% names(result))
+    expect_false("CMAX[ng/mL]" %in% names(result))
+    # Values should be the converted ones
+    cmax_vals <- result[["CMAX[ug/mL]"]]
+    expect_true(all(!is.na(cmax_vals)))
+  })
+
+  it("handles mix of converted and unconverted parameters", {
+    pknca_res <- FIXTURE_PKNCA_RES %>% filter(USUBJID %in% 1:3)
+    # Convert CMAX but leave AUCLST unchanged
+    pknca_res$result <- pknca_res$result %>%
+      mutate(
+        PPSTRESU = ifelse(PPTESTCD == "CMAX" & PPSTRESU == "ng/mL", "ug/mL", PPSTRESU)
+      )
+    result <- pivot_wider_pknca_results(pknca_res)
+    expect_true("CMAX[ug/mL]" %in% names(result))
+    expect_true("AUCLST[hr*ng/mL]" %in% names(result))
+    expect_false("NA" %in% names(result))
+  })
+})
+
 describe("pivot_wider_pknca_results flagging integration", {
 
   pknca_res <- FIXTURE_PKNCA_RES
