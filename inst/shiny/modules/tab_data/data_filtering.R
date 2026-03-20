@@ -221,12 +221,21 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
     }) %>%
       bindEvent(input$submit_filters, raw_adnca_data())
 
+    # Expose the applied filters list
+    applied_filters_list <- reactive({
+      lapply(reactiveValuesToList(filters), function(x) x()) %>%
+        purrr::keep(\(x) !is.null(x))
+    })
+
     reactable_server(
       "filtered_data_display",
       filtered_data,
       height = "50vh"
     )
 
-    filtered_data
+    list(
+      filtered_data = filtered_data,
+      applied_filters = applied_filters_list
+    )
   })
 }

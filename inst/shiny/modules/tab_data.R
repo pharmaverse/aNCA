@@ -141,9 +141,10 @@ tab_data_server <- function(id) {
 
     #' Filter data
     imported_filters <- reactive(uploaded_data$settings_override()$filters)
-    processed_data <- data_filtering_server(
+    filtering_result <- data_filtering_server(
       "data_filtering", adnca_mapped, imported_filters
     )
+    processed_data <- filtering_result$filtered_data
 
     #' Global variable to store grouping variables
     extra_group_vars <- column_mapping$grouping_variables
@@ -170,8 +171,8 @@ tab_data_server <- function(id) {
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(processed_data())))
     )
 
-    # Use the pre-processed data to create a PKNCA object
-    #' Initializes PKNCA::PKNCAdata object from pre-processed adnca data
+    # Use raw data + mapping to create a PKNCA object
+    #' Initializes PKNCA::PKNCAdata object from raw adnca data
     pknca_data <- reactive({
       req(processed_data())
       log_trace("Creating PKNCA::data object.")
@@ -179,8 +180,10 @@ tab_data_server <- function(id) {
       tryCatch({
         #' Create data object
         pknca_object <- PKNCA_create_data_object(
-          adnca_data = processed_data(),
-          nca_exclude_reason_columns = c("DTYPE", column_mapping$nca_exclusion_flags())
+          adnca_data = uploaded_data$adnca_raw(),
+          mapping = column_mapping$mapping(),
+          applied_filters = filtering_result$applied_filters(),
+          time_duplicate_rows = column_mapping$time_duplicate_rows()
         )
         ############################################################################################
         # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
