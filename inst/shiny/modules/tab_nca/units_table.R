@@ -42,16 +42,8 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
       pknca_ref <- translate_terms(rt$RefParameter, "PPTESTCD", "PKNCA")
 
       ratio_unit_rows <- lapply(seq_len(nrow(rt)), function(i) {
-        # Look up unit by PKNCA name, fall back to PPTESTCD if not found
-        .find_unit <- function(pknca_name, pptestcd) {
-          matches <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pknca_name]
-          if (length(matches) == 0) {
-            matches <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pptestcd]
-          }
-          na.omit(matches)[1]
-        }
-        test_unit <- .find_unit(pknca_test[i], rt$TestParameter[i])
-        ref_unit <- .find_unit(pknca_ref[i], rt$RefParameter[i])
+        test_unit <- find_param_unit(pknca_units, pknca_test[i], rt$TestParameter[i])
+        ref_unit <- find_param_unit(pknca_units, pknca_ref[i], rt$RefParameter[i])
 
         if (is.na(test_unit) || is.na(ref_unit)) {
           pporresu <- NA_character_

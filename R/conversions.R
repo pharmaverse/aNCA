@@ -53,6 +53,26 @@ compose_ratio_unit <- function(numerator_unit, denominator_unit) {
 }
 
 
+#' Look up a parameter's original unit from a units table
+#'
+#' Searches for `PPORRESU` by matching `PPTESTCD` in a units data frame.
+#' Tries `pknca_name` first; if no match, falls back to `pptestcd`.
+#' Returns the first non-NA unit found, or `NA` if none match.
+#'
+#' @param units_df Data frame with at least `PPTESTCD` and `PPORRESU` columns.
+#' @param pknca_name Character, PKNCA-style parameter name to look up first.
+#' @param pptestcd Character, CDISC PPTESTCD fallback name.
+#' @returns A single character string (the unit) or `NA_character_`.
+#' @keywords internal
+find_param_unit <- function(units_df, pknca_name, pptestcd) {
+  matches <- units_df$PPORRESU[units_df$PPTESTCD == pknca_name]
+  if (length(matches) == 0) {
+    matches <- units_df$PPORRESU[units_df$PPTESTCD == pptestcd]
+  }
+  stats::na.omit(matches)[1]
+}
+
+
 #' Apply default target units onto a data-derived units table
 #'
 #' Takes a table of desired target units (with `PPTESTCD` and `PPSTRESU`)
