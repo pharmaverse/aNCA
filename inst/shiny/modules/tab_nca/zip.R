@@ -1,13 +1,13 @@
-##' NCA ZIP Export Module
-##'
-##' This module provides UI and server logic to export all relevant App results a ZIP file.
-##' Users can select which results to export and the output formats for graphics, tables and slides.
-##' This module indirectly uses the stored session$userData$results.
-##'
-##' @param id A character string used to uniquely identify the module.
-##' @param res_nca NCA results object (for server).
-##' @param settings Settings object (for server).
-##' @param grouping_vars Grouping variables (for server).
+#' NCA ZIP Export Module
+#'
+#' This module provides UI and server logic to export all relevant App results a ZIP file.
+#' Users can select which results to export and the output formats for graphics, tables and slides.
+#' This module indirectly uses the stored session$userData$results.
+#'
+#' @param id A character string used to uniquely identify the module.
+#' @param res_nca NCA results object (for server).
+#' @param settings Settings object (for server).
+#' @param grouping_vars Grouping variables (for server).
 
 zip_ui <- function(id) {
   ns <- NS(id)

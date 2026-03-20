@@ -168,4 +168,76 @@ describe("read_settings", {
     # Ensure it didn't crash on the NULL checks for missing keys
     expect_null(res$content$slope_rules)
   })
+
+  it("parses filters from YAML and converts values to vectors", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      filters = list(
+        list(column = "DOSEA", condition = "==", value = list("100", "200")),
+        list(column = "AGE", condition = ">", value = list("18"))
+      ),
+      settings = list(method = "linear")
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+
+    expect_type(res$filters, "list")
+    expect_length(res$filters, 2)
+    expect_equal(res$filters[[1]]$column, "DOSEA")
+    expect_equal(res$filters[[1]]$condition, "==")
+    expect_equal(res$filters[[1]]$value, c("100", "200"))
+    expect_equal(res$filters[[2]]$column, "AGE")
+    expect_equal(res$filters[[2]]$condition, ">")
+    expect_equal(res$filters[[2]]$value, "18")
+  })
+
+  it("returns NULL filters when not present in settings file", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+
+    expect_null(res$filters)
+  })
+})
+
+describe(".convert_list_to_df", {
+  it("converts a list to a data.frame", {
+    input <- list(list(a = 1, b = "x"), list(a = 2, b = "y"))
+    result <- .convert_list_to_df(input)
+    expect_s3_class(result, "data.frame")
+    expect_equal(nrow(result), 2)
+    expect_equal(result$a, c(1, 2))
+  })
+
+  it("returns NULL for NULL input", {
+    expect_null(.convert_list_to_df(NULL))
+  })
+
+  it("returns non-list input unchanged", {
+    expect_equal(.convert_list_to_df("text"), "text")
+  })
+})
+
+describe(".convert_filter_values", {
+  it("converts list values to vectors", {
+    input <- list(
+      list(column = "A", condition = "==", value = list("1", "2")),
+      list(column = "B", condition = ">", value = list("10"))
+    )
+    result <- .convert_filter_values(input)
+    expect_equal(result[[1]]$value, c("1", "2"))
+    expect_equal(result[[2]]$value, "10")
+  })
+
+  it("returns NULL for NULL input", {
+    expect_null(.convert_filter_values(NULL))
+  })
+
+  it("preserves other filter fields", {
+    input <- list(list(column = "X", condition = "!=", value = list("a")))
+    result <- .convert_filter_values(input)
+    expect_equal(result[[1]]$column, "X")
+    expect_equal(result[[1]]$condition, "!=")
+  })
 })
