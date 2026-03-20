@@ -116,11 +116,15 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         }
 
         res$result <- result %>%
-          mutate(PPSTRES = ifelse(
-            !is.na(conversion_factor),
-            PPORRES * conversion_factor,
-            PPORRES
-          )) %>%
+          mutate(
+            PPSTRES = ifelse(
+              !is.na(conversion_factor),
+              PPORRES * conversion_factor,
+              PPORRES
+            ),
+            # pivot_wider_pknca_results expects "" not NA for no-custom-unit rows
+            PPSTRESU = ifelse(is.na(PPSTRESU), "", PPSTRESU)
+          ) %>%
           select(-conversion_factor)
       }
 
