@@ -12,7 +12,7 @@ concentration records.
 apply_mapping(
   dataset,
   mapping,
-  desired_order,
+  desired_order = MAPPING_DESIRED_ORDER,
   silent = TRUE,
   req_mappings = c("USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT", "PCSPEC", "ROUTE",
     "AVAL", "STUDYID", "ATPTREF", "AVALU", "RRLTU", "DOSEU", "PARAM")
@@ -32,7 +32,7 @@ apply_mapping(
 - desired_order:
 
   A character vector specifying the desired column order in the output
-  dataset.
+  dataset. Defaults to `MAPPING_DESIRED_ORDER`.
 
 - silent:
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9097</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,12 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">PKNCA_create_data_object</span><span class="op">(</span><span class="va">adnca_data</span>, nca_exclude_reason_columns <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">PKNCA_create_data_object</span><span class="op">(</span></span>
+<span>  <span class="va">adnca_data</span>,</span>
+<span>  mapping <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  applied_filters <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  time_duplicate_rows <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -72,13 +77,31 @@
 
 
 <dl><dt id="arg-adnca-data">adnca_data<a class="anchor" aria-label="anchor" href="#arg-adnca-data"></a></dt>
-<dd><p>Data table containing ADNCA data.</p></dd>
+<dd><p>Data frame containing raw or pre-processed ADNCA data.</p></dd>
 
 
-<dt id="arg-nca-exclude-reason-columns">nca_exclude_reason_columns<a class="anchor" aria-label="anchor" href="#arg-nca-exclude-reason-columns"></a></dt>
-<dd><p>Optional character vector of column names.
-Excluding records from the NCA
-must be indicated by populating any of these columns with a non-empty character value.</p></dd>
+<dt id="arg-mapping">mapping<a class="anchor" aria-label="anchor" href="#arg-mapping"></a></dt>
+<dd><p>Optional named list of column mappings (as produced by the
+Shiny mapping UI). When provided, the preprocessing pipeline is run
+internally and NCA exclusion flag columns are derived from
+<code>mapping$NCAwXRS</code> (plus <code>"DTYPE"</code>). Metabolite names are taken from
+<code>mapping$Metabolites</code>. Defaults to <code>NULL</code> (no preprocessing, no
+exclusion columns).</p></dd>
+
+
+<dt id="arg-applied-filters">applied_filters<a class="anchor" aria-label="anchor" href="#arg-applied-filters"></a></dt>
+<dd><p>Optional list of filters to apply (see
+<code><a href="apply_filters.html">apply_filters()</a></code>). Only used when <code>mapping</code> is provided.
+Defaults to <code>NULL</code>.</p></dd>
+
+
+<dt id="arg-time-duplicate-rows">time_duplicate_rows<a class="anchor" aria-label="anchor" href="#arg-time-duplicate-rows"></a></dt>
+<dd><p>Optional integer vector of row indices (in the
+mapped dataset, before filtering) to mark as <code>"TIME DUPLICATE"</code> in the
+<code>DTYPE</code> column. When <code>NULL</code> (the default) and time duplicates are
+detected, an error of class <code>"time_duplicate_error"</code> is raised with the
+duplicate rows attached. Use this to forward user-resolved selections
+from the Shiny duplicate resolution modal.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -87,13 +110,21 @@ must be indicated by populating any of these columns with a non-empty character 
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>This function creates a standard PKNCAdata object from ADNCA data.
-It requires the following columns in the ADNCA data:</p><ul><li><p>STUDYID: Study identifier.</p></li>
+    <p>This function creates a standard PKNCAdata object from raw or pre-processed
+ADNCA data.</p>
+<p>When <code>mapping</code> is provided, the function runs the full preprocessing pipeline
+internally: column mapping (<code><a href="apply_mapping.html">apply_mapping()</a></code>), metabolite flagging
+(<code><a href="create_metabfl.html">create_metabfl()</a></code>), class/length adjustment (<code><a href="adjust_class_and_length.html">adjust_class_and_length()</a></code>),
+duplicate annotation, optional filtering (<code><a href="apply_filters.html">apply_filters()</a></code>), and derives
+NCA exclusion flag columns from <code>mapping$NCAwXRS</code> (plus <code>"DTYPE"</code>).</p>
+<p>When <code>mapping</code> is <code>NULL</code> (the default), the function expects already
+pre-processed ADNCA data with the standard column names in place.</p>
+<p>The ADNCA data (after preprocessing, if applicable) must contain:</p><ul><li><p>STUDYID: Study identifier.</p></li>
 <li><p>PCSPEC: Matrix.</p></li>
 <li><p>ROUTE: Route of administration.</p></li>
 <li><p>DOSETRT: Drug identifier.</p></li>
 <li><p>USUBJID: Unique subject identifier.</p></li>
-<li><p>ATPTREF: (Non- standard column). Can be any column, used for filtering the data for NCA</p></li>
+<li><p>ATPTREF: (Non-standard column). Can be any column, used for filtering the data for NCA</p></li>
 <li><p>PARAM: Analyte.</p></li>
 <li><p>AVAL: Analysis value.</p></li>
 <li><p>AVALU: AVAL unit.</p></li>
@@ -104,11 +135,11 @@ It requires the following columns in the ADNCA data:</p><ul><li><p>STUDYID: Stud
 <li><p>NFRLT: Nominal time from first dose.</p></li>
 <li><p>ADOSEDUR: Duration of dose.</p></li>
 <li><p>RRLTU: Time unit.</p></li>
-</ul><ol><li><p>Creating pk concentration data using <code><a href="format_pkncaconc_data.html">format_pkncaconc_data()</a></code>.</p></li>
+</ul><p>Then it proceeds to:</p><ol><li><p>Creating pk concentration data using <code><a href="format_pkncaconc_data.html">format_pkncaconc_data()</a></code>.</p></li>
 <li><p>Creating dosing data using <code><a href="format_pkncadose_data.html">format_pkncadose_data()</a></code>.</p></li>
-<li><p>Creating <code>PKNCAconc</code> object using <code><a href="http://humanpred.github.io/pknca/reference/PKNCAconc.html" class="external-link">PKNCA::PKNCAconc()</a></code>.
+<li><p>Creating <code>PKNCAconc</code> object using <code><a href="http://humanpred.github.io/pknca/reference/PKNCAconc.html" class="external-link">PKNCA::PKNCAconc()</a></code>
 with formula <code>AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM</code>.</p></li>
-<li><p>Creating PKNCAdose object using <code><a href="http://humanpred.github.io/pknca/reference/PKNCAdose.html" class="external-link">PKNCA::PKNCAdose()</a></code>.
+<li><p>Creating PKNCAdose object using <code><a href="http://humanpred.github.io/pknca/reference/PKNCAdose.html" class="external-link">PKNCA::PKNCAdose()</a></code>
 with formula <code>DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID</code>.</p></li>
 <li><p>Creating PKNCAdata object using <code><a href="http://humanpred.github.io/pknca/reference/PKNCAdata.html" class="external-link">PKNCA::PKNCAdata()</a></code>.</p></li>
 <li><p>Updating units in PKNCAdata object so each analyte has its own unit.</p></li>
@@ -137,7 +168,7 @@ with formula <code>DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID</code>.</p></li>
 <span class="r-in"><span><span class="fu">PKNCA_create_data_object</span><span class="op">(</span><span class="va">adnca_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Formula for concentration:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55641a67e7a8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x557ef8c09e38&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data are dense PK.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With 1 subjects defined in the 'USUBJID' column.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>

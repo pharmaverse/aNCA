@@ -15,7 +15,7 @@ and removes detected duplicate concentration records."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9097</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@ and removes detected duplicate concentration records.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">apply_mapping</span><span class="op">(</span></span>
 <span>  <span class="va">dataset</span>,</span>
 <span>  <span class="va">mapping</span>,</span>
-<span>  <span class="va">desired_order</span>,</span>
+<span>  desired_order <span class="op">=</span> <span class="va">MAPPING_DESIRED_ORDER</span>,</span>
 <span>  silent <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  req_mappings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"USUBJID"</span>, <span class="st">"AFRLT"</span>, <span class="st">"NFRLT"</span>, <span class="st">"ARRLT"</span>, <span class="st">"NRRLT"</span>, <span class="st">"PCSPEC"</span>, <span class="st">"ROUTE"</span>,</span>
 <span>    <span class="st">"AVAL"</span>, <span class="st">"STUDYID"</span>, <span class="st">"ATPTREF"</span>, <span class="st">"AVALU"</span>, <span class="st">"RRLTU"</span>, <span class="st">"DOSEU"</span>, <span class="st">"PARAM"</span><span class="op">)</span></span>
@@ -100,7 +100,7 @@ and removes detected duplicate concentration records.</p>
 
 <dt id="arg-desired-order">desired_order<a class="anchor" aria-label="anchor" href="#arg-desired-order"></a></dt>
 <dd><p>A character vector specifying the desired column order
-in the output dataset.</p></dd>
+in the output dataset. Defaults to <code>MAPPING_DESIRED_ORDER</code>.</p></dd>
 
 
 <dt id="arg-silent">silent<a class="anchor" aria-label="anchor" href="#arg-silent"></a></dt>
