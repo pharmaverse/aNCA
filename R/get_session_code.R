@@ -8,11 +8,11 @@
 #' @keywords internal
 #' @noRd
 get_code <- function(
-  setts_obj,
-  output_path,
-  template_path = system.file("www/templates/script_template.R", package = "aNCA")
+    setts_obj,
+    output_path,
+    template_path = system.file("www/templates/script_template.R", package = "aNCA")
 ) {
-
+  
   # Helper to get value from settings_list by path (e.g., 'settings$method')
   get_session_value <- function(path) {
     parts <- strsplit(path, "\\$")[[1]]
@@ -32,7 +32,7 @@ get_code <- function(
   # Read template
   script <- readLines(template_path, warn = FALSE) %>%
     paste(collapse = "\n")
-
+  
   # Find all settings_list$...
   pattern <- "settings_list(\\$[a-zA-Z0-9_]+(\\(\\))?(\\$[a-zA-Z0-9_]+)*)"
   matches <- gregexpr(pattern, script, perl = TRUE)[[1]]
@@ -43,7 +43,7 @@ get_code <- function(
       "or a modified template without placeholders."
     )
   }
-
+  
   # Replace each match with deparsed value
   for (i in rev(seq_along(matches))) {
     start <- matches[i]
@@ -52,7 +52,7 @@ get_code <- function(
     # Extract the path after settings_list$
     path <- sub("^settings_list\\$", "", matched)
     value <- get_session_value(path)
-
+    
     deparsed <- clean_deparse(value, max_per_line = 15)
     script <- paste0(
       substr(script, 1, start - 1),
@@ -60,7 +60,7 @@ get_code <- function(
       substr(script, start + len, nchar(script))
     )
   }
-
+  
   # Split back into lines
   script_lines <- strsplit(script, "\n")[[1]]
   writeLines(script_lines, output_path)
@@ -86,7 +86,7 @@ get_code <- function(
 clean_deparse <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   # Handle tbl_df objects as data.frame
   if (inherits(obj, "tbl_df")) obj <- as.data.frame(obj)
-
+  
   # Handle trivial length-0 constructors (character(0), numeric(0), list(), data.frame(), ...)
   if (length(obj) == 0 && !is.null(obj)) {
     return(paste0(class(obj)[1], "()"))
@@ -102,11 +102,11 @@ clean_deparse.default <- function(obj, indent = 0, max_per_line = 10, min_to_rep
 #' @noRd
 clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   ind <- paste(rep("  ", indent), collapse = "")
-
+  
   cols <- lapply(obj, function(col) {
     clean_deparse(col, indent + 1, max_per_line = max_per_line)
   })
-
+  
   col_strs <- paste0(ind, "  ", names(obj), " = ", unlist(cols))
   if (length(col_strs) > 1) {
     not_last <- seq_len(length(col_strs) - 1)
@@ -238,14 +238,14 @@ default_mapping <- list(
 #' @return Invisibly returns the output_path.
 #' @export
 get_settings_code <- function(
-  settings_file_path,
-  data_path,
-  output_path = "settings_code.R",
-  template_path = system.file("www/templates/script_template.R", package = "aNCA"),
-  # TODO: mapping & ratio_table should be included in the settings file as well
-  # so they keep working as expected also from the settings file
-  mapping = default_mapping,
-  ratio_table = data.frame()
+    settings_file_path,
+    data_path,
+    output_path = "settings_code.R",
+    template_path = system.file("www/templates/script_template.R", package = "aNCA"),
+    # TODO: mapping & ratio_table should be included in the settings file as well
+    # so they keep working as expected also from the settings file
+    mapping = default_mapping,
+    ratio_table = data.frame()
 ) {
   settings <- read_settings(settings_file_path)
   session <- list(
@@ -253,7 +253,8 @@ get_settings_code <- function(
     slope_rules = settings[["slope_rules"]],
     data_path = data_path,
     mapping = mapping,
-    ratio_table = ratio_table
+    ratio_table = ratio_table,
+    time_duplicate_rows = NULL
   )
   get_code(
     template_path = template_path,
@@ -277,9 +278,9 @@ get_settings_code <- function(
 #' @keywords Internal
 #' @noRd
 get_session_code <- function(
-  session,
-  output_path,
-  template_path = system.file("www/templates/script_template.R", package = "aNCA")
+    session,
+    output_path,
+    template_path = system.file("www/templates/script_template.R", package = "aNCA")
 ) {
   get_code(
     template_path = template_path,
