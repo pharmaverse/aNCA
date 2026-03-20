@@ -24,50 +24,9 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Build unit rows for ratio parameters from the ratio table.
-    # Derives PPORRESU by looking up test/ref parameter units and checking
-    # whether they are convertible (-> "fraction") or not (-> "unit/unit").
     ratio_units <- reactive({
       req(ratio_table())
-      rt <- ratio_table()
-      if (nrow(rt) == 0) return(NULL)
-
-      pknca_units <- mydata()$units
-      group_cols <- setdiff(
-        names(pknca_units), c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
-      )
-
-      # Translate ratio PPTESTCD params to PKNCA names for unit lookup
-      pknca_test <- translate_terms(rt$TestParameter, "PPTESTCD", "PKNCA")
-      pknca_ref <- translate_terms(rt$RefParameter, "PPTESTCD", "PKNCA")
-
-      ratio_unit_rows <- lapply(seq_len(nrow(rt)), function(i) {
-        test_unit <- find_param_unit(pknca_units, pknca_test[i], rt$TestParameter[i])
-        ref_unit <- find_param_unit(pknca_units, pknca_ref[i], rt$RefParameter[i])
-
-        if (is.na(test_unit) || is.na(ref_unit)) {
-          pporresu <- NA_character_
-        } else {
-          factor <- get_conversion_factor(ref_unit, test_unit)
-          pporresu <- if (!is.na(factor)) {
-            "fraction"
-          } else {
-            compose_ratio_unit(test_unit, ref_unit)
-          }
-        }
-
-        row <- data.frame(
-          PPTESTCD = rt$PPTESTCD[i],
-          PPORRESU = pporresu,
-          PPSTRESU = pporresu,
-          conversion_factor = 1,
-          stringsAsFactors = FALSE
-        )
-        # Add group columns as NA
-        for (gc in group_cols) row[[gc]] <- NA_character_
-        row
-      })
-      dplyr::bind_rows(ratio_unit_rows)
+      derive_ratio_units(ratio_table(), mydata()$units)
     })
 
     modal_units_table <- reactiveVal(NULL)
