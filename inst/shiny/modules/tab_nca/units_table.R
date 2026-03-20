@@ -42,11 +42,21 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
       pknca_ref <- translate_terms(rt$RefParameter, "PPTESTCD", "PKNCA")
 
       ratio_unit_rows <- lapply(seq_len(nrow(rt)), function(i) {
-        test_unit <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pknca_test[i]]
-        ref_unit <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pknca_ref[i]]
-        # Use first match if multiple groups
-        test_unit <- test_unit[1]
-        ref_unit <- ref_unit[1]
+        # Look up unit by PKNCA name, fall back to PPTESTCD if not found
+        .find_unit <- function(pknca_name, pptestcd) {
+          matches <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pknca_name]
+          if (length(matches) == 0) {
+            matches <- pknca_units$PPORRESU[pknca_units$PPTESTCD == pptestcd]
+          }
+          na.omit(matches)[1]
+        }
+        test_unit <- .find_unit(pknca_test[i], rt$TestParameter[i])
+        ref_unit <- .find_unit(pknca_ref[i], rt$RefParameter[i])
+        message(sprintf(
+          "Ratio %s: test=%s(%s) unit=%s, ref=%s(%s) unit=%s",
+          rt$PPTESTCD[i], rt$TestParameter[i], pknca_test[i],
+          test_unit, rt$RefParameter[i], pknca_ref[i], ref_unit
+        ))
 
         if (is.na(test_unit) || is.na(ref_unit)) {
           pporresu <- NA_character_
