@@ -7,7 +7,6 @@
 update_main_intervals(
   data,
   parameter_selections,
-  study_types_df,
   int_parameters,
   impute = TRUE,
   blq_imputation_rule = NULL
@@ -17,8 +16,6 @@ update_main_intervals(
 \item{data}{A PKNCAdata object containing intervals and dosing data.}
 
 \item{parameter_selections}{A named list of selected PKNCA parameters by study type.}
-
-\item{study_types_df}{A data frame mapping analysis profiles to their study type.}
 
 \item{int_parameters}{A data frame containing partial AUC ranges.}
 
