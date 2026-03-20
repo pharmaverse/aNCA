@@ -60,7 +60,7 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
           pporresu <- if (!is.na(factor)) {
             "fraction"
           } else {
-            simplify_unit(paste0(test_unit, "/", ref_unit), as_character = TRUE)
+            compose_ratio_unit(test_unit, ref_unit)
           }
         }
 
