@@ -1,8 +1,10 @@
 .onLoad <- function(libname, pkgname) {
   utils::globalVariables(c(
     ".",
+    ".dose_time",
     ".facet_label_values",
     ".facet_n",
+    ".ROWID",
     "facet_label",
     ":=",
     "ADOSEDUR",
