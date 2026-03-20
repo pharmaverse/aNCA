@@ -305,15 +305,15 @@ describe("update_main_intervals", {
   })
 
   it("handles missing columns correctly", {
-    # remove PCSPEC column from intervals
-    data$intervals$PCSPEC <- NULL
+    # remove USUBJID column from intervals (required for study type join)
+    data$intervals$USUBJID <- NULL
 
     expect_error(
       update_main_intervals(data, parameters,
         int_parameters,
         impute = FALSE
       ),
-      "Missing required columns: PCSPEC"
+      "Missing required columns: USUBJID"
     )
   })
 

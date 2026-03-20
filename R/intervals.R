@@ -142,6 +142,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' which does not specify any BLQ imputation in any interval.
 #'
 #' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
+#' @importFrom dplyr group_by ungroup slice_max
 #' @importFrom purrr pmap
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
@@ -167,16 +168,25 @@ update_main_intervals <- function(
     conc_data$METABFL <- ""
   }
 
-  # ADOSEDUR may live in dose data only; merge it for detect_study_types
+  # ADOSEDUR may live in dose data only; merge it for detect_study_types.
+  # Join by shared groups and keep only the latest dose before each conc sample.
   if (!"ADOSEDUR" %in% names(conc_data)) {
     dose_data <- data$dose$data
     if ("ADOSEDUR" %in% names(dose_data)) {
-      dose_cols <- c(dose_groups, "ADOSEDUR")
+      conc_time <- data$conc$columns$time
+      dose_time <- data$dose$columns$time
+      join_by <- intersect(dose_groups, conc_groups)
+
+      dose_subset <- dose_data[, unique(c(join_by, dose_time, "ADOSEDUR")), drop = FALSE]
+      dose_subset <- unique(dose_subset)
+      names(dose_subset)[names(dose_subset) == dose_time] <- ".dose_time"
+
       conc_data <- conc_data %>%
-        left_join(
-          dose_data[, intersect(dose_cols, names(dose_data)), drop = FALSE] %>% unique(),
-          by = intersect(dose_groups, names(conc_data))
-        )
+        mutate(.ROWID = seq_len(n())) %>%
+        left_join(dose_subset, by = join_by, relationship = "many-to-many") %>%
+        filter(.dose_time <= .data[[conc_time]] | is.na(.dose_time)) %>%
+        slice_max(.dose_time, n = 1, by = .ROWID, with_ties = FALSE) %>%
+        select(-".ROWID", -".dose_time")
     } else {
       conc_data$ADOSEDUR <- 0
     }
