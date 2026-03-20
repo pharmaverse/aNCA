@@ -15,7 +15,7 @@
   for (col in setdiff(names(default_units), names(ratio_rows))) {
     ratio_rows[[col]] <- NA
   }
-  dplyr::bind_rows(default_units, ratio_rows[, names(default_units)])
+  bind_rows(default_units, ratio_rows[, names(default_units)])
 }
 
 #' Merge custom units into a default units table
@@ -25,10 +25,10 @@
 #' @param custom_units Data frame of user-edited units from `session$userData$units_table()`.
 #' @return The merged data frame.
 .merge_custom_units <- function(default_units, custom_units) {
-  custom_units <- dplyr::mutate(custom_units, default = FALSE)
+  custom_units <- mutate(custom_units, default = FALSE)
   by_cols <- intersect(names(default_units), names(custom_units))
   by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
-  dplyr::rows_update(default_units, custom_units, by = by_cols, unmatched = "ignore")
+  rows_update(default_units, custom_units, by = by_cols, unmatched = "ignore")
 }
 
 #' Determine which row indices in the units table should be hidden
@@ -43,23 +43,23 @@
   group_cols <- intersect(
     names(PKNCA::getGroups(mydata$conc)), names(mydata$units)
   )
-  groups_to_keep <- dplyr::select(mydata$intervals, dplyr::any_of(group_cols))
+  groups_to_keep <- select(mydata$intervals, any_of(group_cols))
   params_to_keep <- names(purrr::keep(mydata$intervals, ~ is.logical(.x) && any(.x)))
 
   rows_to_keep <- tbl %>%
-    dplyr::mutate(nrow = dplyr::row_number()) %>%
-    dplyr::filter(PPTESTCD %in% params_to_keep | PPTESTCD %in% ratio_pptestcds)
+    mutate(nrow = row_number()) %>%
+    filter(PPTESTCD %in% params_to_keep | PPTESTCD %in% ratio_pptestcds)
 
   if (ncol(groups_to_keep) > 0 && length(ratio_pptestcds) > 0) {
-    pknca_rows <- dplyr::filter(rows_to_keep, !PPTESTCD %in% ratio_pptestcds)
-    ratio_rows <- dplyr::filter(rows_to_keep, PPTESTCD %in% ratio_pptestcds)
-    pknca_rows <- dplyr::inner_join(
+    pknca_rows <- filter(rows_to_keep, !PPTESTCD %in% ratio_pptestcds)
+    ratio_rows <- filter(rows_to_keep, PPTESTCD %in% ratio_pptestcds)
+    pknca_rows <- inner_join(
       pknca_rows, unique(groups_to_keep),
       by = intersect(names(pknca_rows), names(groups_to_keep))
     )
-    rows_to_keep <- dplyr::bind_rows(pknca_rows, ratio_rows)
+    rows_to_keep <- bind_rows(pknca_rows, ratio_rows)
   } else if (ncol(groups_to_keep) > 0) {
-    rows_to_keep <- dplyr::inner_join(
+    rows_to_keep <- inner_join(
       rows_to_keep, unique(groups_to_keep),
       by = intersect(names(rows_to_keep), names(groups_to_keep))
     )

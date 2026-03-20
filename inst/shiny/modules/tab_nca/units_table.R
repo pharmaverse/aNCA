@@ -31,7 +31,7 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
 
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
-      default_units <- mydata()$units %>% dplyr::mutate(default = TRUE)
+      default_units <- mydata()$units %>% mutate(default = TRUE)
       default_units <- .append_ratio_rows(default_units, ratio_units())
 
       if (!is.null(session$userData$units_table())) {
@@ -174,7 +174,7 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
 
       log_trace("Applying custom units specification.")
       modal_units_table() %>%
-        dplyr::filter(!default) %>%
+        filter(!default) %>%
         session$userData$units_table()
 
       # Close the modal message window for the user
@@ -183,7 +183,7 @@ units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
 
     #' Update local `modal_units_table()` if the global value changes.
     observeEvent(session$userData$units_table(), {
-      default_units <- mydata()$units %>% dplyr::mutate(default = TRUE)
+      default_units <- mydata()$units %>% mutate(default = TRUE)
       default_units <- .append_ratio_rows(default_units, ratio_units())
       modal_units_table(.merge_custom_units(default_units, session$userData$units_table()))
     })
