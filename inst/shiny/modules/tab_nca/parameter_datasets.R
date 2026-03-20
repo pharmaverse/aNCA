@@ -13,11 +13,11 @@ parameter_datasets_ui <- function(id) {
   )
 }
 
-parameter_datasets_server <- function(id, res_nca) {
+parameter_datasets_server <- function(id, res_nca, grouping_vars = reactive(character(0))) {
   moduleServer(id, function(input, output, session) {
     CDISC <- reactive({
       req(res_nca())
-      export_cdisc(res_nca())
+      export_cdisc(res_nca(), grouping_vars = grouping_vars())
     })
 
     reactable_server(

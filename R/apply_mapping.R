@@ -1,3 +1,12 @@
+# Default column order after mapping.
+# Used as the default `desired_order` in apply_mapping().
+MAPPING_DESIRED_ORDER <- c( # nolint: object_name_linter
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
+  "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
+  "VOLUME", "VOLUMEU", "WTBL", "WTBLU", "TRTRINT", "METABFL"
+)
+
 #' Apply UI-Based Column Mapping to a Dataset
 #'
 #' This function takes a dataset and applies user-specified column mappings
@@ -9,7 +18,7 @@
 #' @param dataset A data frame containing the raw data to be transformed.
 #' @param mapping A named list of column mappings.
 #' @param desired_order A character vector specifying the desired column order
-#'                      in the output dataset.
+#'                      in the output dataset. Defaults to `MAPPING_DESIRED_ORDER`.
 #' @param req_mappings A character vector indicating the names of the mapping object
 #'                     that must always be populated
 #' @param silent Boolean, whether to print message with applied mapping.
@@ -32,7 +41,7 @@
 #' @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
 apply_mapping <- function(
-  dataset, mapping, desired_order, silent = TRUE,
+  dataset, mapping, desired_order = MAPPING_DESIRED_ORDER, silent = TRUE,
   req_mappings = c(
     "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
     "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
@@ -133,4 +142,66 @@ apply_mapping <- function(
 #' @export
 create_metabfl <- function(dataset, metabolites) {
   mutate(dataset, METABFL = ifelse(PARAM %in% metabolites, "Y", ""))
+}
+
+#' Annotate Duplicate Concentration Records
+#'
+#' Detects and annotates duplicate records in mapped ADNCA data. Exact
+#' duplicates (same AVAL and time point within a group) are marked as
+#' `DTYPE = "COPY"`. Time duplicates (same time point but different AVAL)
+#' can be resolved via `time_duplicate_rows`.
+#'
+#' @param dataset A mapped data frame with standard ADNCA columns.
+#' @param time_duplicate_rows Optional integer vector of row indices
+#'   (in the mapped dataset) to mark as `"TIME DUPLICATE"`. These indices
+#'   refer to row positions after mapping (1-based). Row order is preserved
+#'   through `group_by`/`mutate` operations.
+#'   When `NULL` and time duplicates are detected, an error is raised.
+#'
+#' @returns The dataset with a `DTYPE` column added. Raises an error of class
+#' `"time_duplicate_error"` if unresolved time duplicates are found, with the duplicate rows
+#'   attached as `duplicate_data` in the condition.
+#'
+#' @importFrom dplyr group_by mutate ungroup cur_group_id n row_number
+#' @keywords internal
+annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
+  dataset$ROWID <- seq_len(nrow(dataset))
+
+  # Mark exact duplicates
+  dataset <- dataset %>%
+    group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+    mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
+    ungroup()
+
+  # Mark user-specified time duplicate rows
+  if (!is.null(time_duplicate_rows) && length(time_duplicate_rows) > 0) {
+    dataset$DTYPE[time_duplicate_rows] <- "TIME DUPLICATE"
+  }
+
+  # Detect remaining time duplicates
+  dataset <- dataset %>%
+    group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+    mutate(
+      .is_time_dup = (n() - sum(DTYPE != "")) > 1,
+      .dup_group = cur_group_id()
+    ) %>%
+    ungroup()
+
+  if (any(dataset$.is_time_dup, na.rm = TRUE)) {
+    dup_data <- dataset[dataset$.is_time_dup, ]
+    stop(
+      errorCondition(
+        paste0(
+          "Time duplicate rows detected. ",
+          "Multiple records share the same time point within a group ",
+          "but have different concentration values. ",
+          "Resolve by providing `time_duplicate_rows` with the row indices to exclude."
+        ),
+        class = "time_duplicate_error",
+        duplicate_data = dup_data
+      )
+    )
+  }
+
+  dataset[, !names(dataset) %in% c(".is_time_dup", ".dup_group", "ROWID")]
 }
