@@ -11,46 +11,23 @@ library(dplyr)
 data_path <- "../input_data.rds"
 adnca_data <- read_pk(data_path)
 
-## Preprocess data ########################################
+## Preprocess data & create PKNCA object ######################
 mapping <- settings_list$mapping
 names(mapping) <- gsub("select_", "", names(mapping))
 applied_filters <- settings_list$applied_filters
 
-preprocessed_adnca <- adnca_data %>%
-
-  # Map columns to their standards
-  apply_mapping(
-    mapping = mapping,
-    desired_order =  c(
-      "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
-      "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-      "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
-      "VOLUME", "VOLUMEU", "TRTRINT", "METABFL"
-    ),
-    silent = FALSE
-  ) %>%
-
-  # Derive METABFL column using PARAM metabolites
-  create_metabfl(mapping$Metabolites) %>%
-  
-  # Make sure all variables are in its correct class
-  adjust_class_and_length(metadata_nca_variables) %>%
-
-  # Filter the data
-  apply_filters(applied_filters)
-
-## Setup NCA settings in the PKNCA object ########################
 int_parameters <- settings_list$settings$int_parameters
 units_table <- settings_list$units_table
 parameters_selected_per_study <- settings_list$settings$parameters$selections
 extra_vars_to_keep <-  settings_list$extra_vars_to_keep
 slope_rules <- settings_list$slope_rules
 
-pknca_obj <- preprocessed_adnca %>%
+pknca_obj <- adnca_data %>%
 
-  # Create from ADNCA the PKNCA object
+  # Preprocess raw data and create the PKNCA object
   PKNCA_create_data_object(
-    nca_exclude_reason_columns = c("DTYPE", mapping$NCAwXRS)
+    mapping = mapping,
+    applied_filters = applied_filters
   ) %>%
 
   # Setup NCA settings, intervals, parameter selections, and units
@@ -96,13 +73,13 @@ pknca_res <- pknca_obj %>%
 
   # Derive secondary parameters (ratio parameters)
   calculate_table_ratios(ratio_table) %>%
-  
+
   # Filter only parameters that have been requested
   remove_pp_not_requested()
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- pknca_res %>%
-  export_cdisc()
+  export_cdisc(grouping_vars = extra_vars_to_keep)
 
 pivoted_results <- pivot_wider_pknca_results(
   myres = pknca_res,
