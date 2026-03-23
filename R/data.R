@@ -105,6 +105,7 @@
 #'   \item{NERRLT}{Numeric. Nominal relative time to reference dose (alternative column).}
 #'   \item{AEFRLT}{Numeric. Actual relative time to first dose (alternative column).}
 #'   \item{AERRLT}{Numeric. Actual relative time to reference dose (alternative column).}
+#'   \item{DOSEFRM}{Character. Dose formulation (e.g., "ORAL OF DRUG B").}
 #' }
 #' @details
 #' This dataset contains pharmacokinetic data from multiple subjects receiving
