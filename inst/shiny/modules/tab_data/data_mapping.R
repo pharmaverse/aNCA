@@ -201,10 +201,23 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, adnca_data, trigger) {
+data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    observeEvent(imported_mapping(), {
+      mapping <- imported_mapping()
+      if (!is.null(mapping)) {
+        # Update inputs based on imported mapping
+        for (var in MAPPING_INFO$Variable) {
+          input_id <- paste0("select_", var)
+          if (input_id %in% names(mapping)) {
+            updateSelectizeInput(session, input_id, selected = mapping[[input_id]])
+          }
+        }
+      }
+    })
+    
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
