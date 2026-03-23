@@ -451,6 +451,7 @@ prepare_export_files <- function(target_dir,
   }
 
   settings_to_save <- list(
+    mapping = session$userData$mapping,
     filters = session$userData$applied_filters,
     settings = settings_list,
     slope_rules = session$userData$slope_rules()
