@@ -208,11 +208,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     observeEvent(imported_mapping(), {
       mapping <- imported_mapping()
       if (!is.null(mapping)) {
-        # Update inputs based on imported mapping
         for (var in MAPPING_INFO$Variable) {
-          input_id <- paste0("select_", var)
-          if (input_id %in% names(mapping)) {
-            updateSelectizeInput(session, input_id, selected = mapping[[input_id]])
+          if (var %in% names(mapping)) {
+            updateSelectizeInput(session, paste0("select_", var), selected = mapping[[var]])
           }
         }
       }
@@ -279,7 +277,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       mapping_list[names_to_keep]
     })
     observe({
-      session$userData$mapping <- mapping()
+      m <- mapping()
+      names(m) <- gsub("^select_", "", names(m))
+      session$userData$mapping <- m
     })
 
     mapped_data <- reactive({
@@ -287,7 +287,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       log_info("Processing data mapping...")
 
       mapping_ <- mapping()
-      names(mapping_) <- gsub("select_", "", names(mapping_))
+      names(mapping_) <- gsub("^select_", "", names(mapping_))
 
       tryCatch(
         withCallingHandlers(

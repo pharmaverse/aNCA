@@ -13,7 +13,6 @@ adnca_data <- read_pk(data_path)
 
 ## Preprocess data & create PKNCA object ######################
 mapping <- settings_list$mapping
-names(mapping) <- gsub("select_", "", names(mapping))
 applied_filters <- settings_list$applied_filters
 
 int_parameters <- settings_list$settings$int_parameters
