@@ -205,13 +205,19 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    pending_metabolites <- reactiveVal(NULL)
+
     observeEvent(imported_mapping(), {
       mapping <- imported_mapping()
       if (!is.null(mapping)) {
         for (var in MAPPING_INFO$Variable) {
-          if (var %in% names(mapping)) {
+          if (var %in% names(mapping) && var != "Metabolites") {
             updateSelectizeInput(session, paste0("select_", var), selected = mapping[[var]])
           }
+        }
+        # Metabolites choices depend on select_PARAM; defer via reactiveVal
+        if ("Metabolites" %in% names(mapping)) {
+          pending_metabolites(mapping[["Metabolites"]])
         }
       }
     })
@@ -247,7 +253,12 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       req(input$select_PARAM != "")
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
-      selected_metab <- if ("METABFL" %in% names(adnca_data())) {
+      # Use pending import if available, otherwise fall back to METABFL default
+      selected_metab <- if (!is.null(isolate(pending_metabolites()))) {
+        imported <- isolate(pending_metabolites())
+        pending_metabolites(NULL)
+        imported
+      } else if ("METABFL" %in% names(adnca_data())) {
         unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
       } else {
         NULL
