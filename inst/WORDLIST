@@ -1,4 +1,3 @@
-ACTARM
 ADNCA
 ADOSEDUR
 ADPP
@@ -18,6 +17,7 @@ AVALU
 AdjustingFactor
 AggregateSubject
 Analyte
+Analytes
 BLQ
 Buckeridge
 CDISC
@@ -115,9 +115,8 @@ WTBL
 WTBLU
 XPT
 YAML
-adnca
 aNCA's
-amountu
+adnca
 analysing
 analyte
 analytes
@@ -129,7 +128,6 @@ cdisc
 cmax
 colour
 conc
-concu
 customizable
 customizations
 dataformat
@@ -176,14 +174,12 @@ rpptx
 runnable
 signif
 src
-subfolder
 standardizations
 th
 tibble
 tidyverse
 timeframe
 timepoint
-timeu
 tlg
 tooltip
 tooltips
@@ -191,9 +187,6 @@ ug
 unmapped
 utilise
 visualizable
-readxl
-writexl
-xlsx
 yaml
 µg
 Ĉlast

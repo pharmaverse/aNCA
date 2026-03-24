@@ -3,6 +3,7 @@
 ## Features added
 
 * General Exclusions: "Excl. TLG" checkbox per exclusion entry sets PKSUM1F to "1", filtering those rows from TLGs (#1018)
+* Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
 * Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
 * Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
