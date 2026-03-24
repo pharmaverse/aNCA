@@ -133,6 +133,12 @@ data_upload_server <- function(id) {
               #mutate all to character to prevent errors
               dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
 
+            # Store uploaded data filenames for settings versioning
+            data_names <- purrr::map_chr(found_data, "name")
+            session$userData$dataset_filename <- paste(
+              data_names, collapse = ", "
+            )
+
             log_success("All user data loaded successfully.")
           }, error = function(e) {
             # combine errors
@@ -168,10 +174,11 @@ data_upload_server <- function(id) {
       versioned <- pending_versioned()
       req(versioned)
 
-      selected_idx <- as.integer(input$version_choice)
-      if (is.na(selected_idx) || selected_idx < 1 ||
-            selected_idx > length(versioned$versions)) {
-        showNotification("Invalid version selection.", type = "error")
+      selected_idx <- reactable::getReactableState(
+        ns("version_table"), "selected"
+      )
+      if (is.null(selected_idx) || length(selected_idx) == 0) {
+        showNotification("Please select a version first.", type = "warning")
         return()
       }
 
@@ -198,23 +205,28 @@ data_upload_server <- function(id) {
       versioned <- pending_versioned()
       req(versioned)
 
-      selected_idx <- as.integer(input$version_choice)
-      if (is.na(selected_idx) || selected_idx < 1 ||
-            selected_idx > length(versioned$versions)) {
-        showNotification("Invalid version selection.", type = "error")
+      selected_idx <- reactable::getReactableState(
+        ns("version_table"), "selected"
+      )
+      if (is.null(selected_idx) || length(selected_idx) == 0) {
+        showNotification("Please select a version to delete.", type = "warning")
         return()
       }
 
       if (length(versioned$versions) <= 1) {
-        showNotification("Cannot delete the last remaining version.", type = "warning")
+        showNotification(
+          "Cannot delete the last remaining version.",
+          type = "warning"
+        )
         return()
       }
 
-      updated_versions <- delete_settings_version(versioned$versions, selected_idx)
+      updated_versions <- delete_settings_version(
+        versioned$versions, selected_idx
+      )
       updated <- list(versions = updated_versions, format = "versioned")
       pending_versioned(updated)
 
-      # Re-show modal with updated list
       .show_version_modal(session, ns, updated_versions)
       showNotification("Version deleted.", type = "message")
     })
@@ -234,41 +246,44 @@ data_upload_server <- function(id) {
 .show_version_modal <- function(session, ns, versions) {
   summary_df <- settings_version_summary(versions)
 
-  choices <- setNames(summary_df$index, paste0(
-    ifelse(nzchar(summary_df$comment), summary_df$comment, "(no comment)"),
-    " — ", summary_df$datetime,
-    ifelse(nzchar(summary_df$dataset), paste0(" [", summary_df$dataset, "]"), "")
-  ))
+  # Column order: datetime, anca_version, tab, dataset, comment
+  display_df <- summary_df[, c(
+    "datetime", "anca_version", "tab", "dataset", "comment"
+  )]
 
   showModal(modalDialog(
     title = "Select Settings Version",
-    p("This settings file contains multiple versions. Select which version to restore."),
-    radioButtons(
-      ns("version_choice"),
-      label = NULL,
-      choices = choices,
-      selected = 1
-    ),
-    tags$div(
-      style = "margin-top: 8px;",
-      reactable::reactable(
-        summary_df[, c("comment", "datetime", "dataset", "anca_version", "tab")],
-        compact = TRUE,
-        bordered = TRUE,
-        highlight = TRUE,
-        defaultPageSize = 5,
-        columns = list(
-          comment = reactable::colDef(name = "Comment"),
-          datetime = reactable::colDef(name = "Date/Time"),
-          dataset = reactable::colDef(name = "Dataset"),
-          anca_version = reactable::colDef(name = "aNCA Version"),
-          tab = reactable::colDef(name = "Tab")
+    p("Select a row to choose which version to restore."),
+    reactable::reactable(
+      display_df,
+      elementId = ns("version_table"),
+      selection = "single",
+      defaultSelected = 1,
+      onClick = "select",
+      compact = TRUE,
+      bordered = TRUE,
+      highlight = TRUE,
+      defaultPageSize = 10,
+      theme = reactable::reactableTheme(
+        rowSelectedStyle = list(
+          backgroundColor = "#CCE5FF",
+          boxShadow = "inset 2px 0 0 0 #0d6efd"
         )
+      ),
+      columns = list(
+        datetime = reactable::colDef(name = "Date/Time", minWidth = 160),
+        anca_version = reactable::colDef(name = "aNCA Version", minWidth = 110),
+        tab = reactable::colDef(name = "Tab", minWidth = 70),
+        dataset = reactable::colDef(name = "Dataset", minWidth = 120),
+        comment = reactable::colDef(name = "Comment", minWidth = 140)
       )
     ),
     footer = tagList(
       actionButton(ns("version_select_btn"), "Restore", class = "btn-primary"),
-      actionButton(ns("version_delete_btn"), "Delete Selected", class = "btn-danger"),
+      actionButton(
+        ns("version_delete_btn"), "Delete Selected",
+        class = "btn-danger"
+      ),
       modalButton("Cancel")
     ),
     easyClose = TRUE,

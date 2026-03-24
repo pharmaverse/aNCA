@@ -98,6 +98,14 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
               )
             ),
             div(
+              textInput(
+                ns("settings_comment"),
+                label = "Settings comment (optional)",
+                placeholder = "e.g. final NCA, first draft"
+              ),
+              style = "margin-top: 1em;"
+            ),
+            div(
               downloadButton(ns("download_zip"), "Export ZIP with Results"),
               style = "width: 100%; text-align: center; margin-top: 0.5em;"
             )
@@ -122,6 +130,9 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       content = function(fname) {
         tryCatch(
           {
+            # Store settings comment for versioned export
+            session$userData$settings_save_comment <- input$settings_comment
+
             progress <- shiny::Progress$new(min = 0, max = 1)
             progress$set(message = "Creating exports...")
             progress$inc(0.1)

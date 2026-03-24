@@ -175,6 +175,9 @@ server <- function(input, output, session) {
   # Versioned settings storage (list of version entries)
   session$userData$settings_versions <- reactiveVal(list())
 
+  # Uploaded dataset filename (set by data_upload module)
+  session$userData$dataset_filename <- NULL
+
   # Helper (plain function, not reactive): prepend project name with separator
   session$userData$project_prefix <- function(sep = "-") {
     pn <- session$userData$project_name()

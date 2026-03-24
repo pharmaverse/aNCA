@@ -240,10 +240,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           filters = session$userData$applied_filters
         )
 
-        dataset_name <- tryCatch(
-          session$userData$study_ids_label(),
-          error = function(e) ""
-        )
+        dataset_name <- session$userData$dataset_filename %||% ""
 
         active_tab <- tryCatch(
           session$userData$active_tab(),

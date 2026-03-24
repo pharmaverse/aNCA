@@ -456,19 +456,22 @@ prepare_export_files <- function(target_dir,
     filters = session$userData$applied_filters
   )
 
-  dataset_name <- tryCatch(
-    session$userData$study_ids_label(),
-    error = function(e) ""
-  )
+  dataset_name <- session$userData$dataset_filename %||% ""
 
   active_tab <- tryCatch(
     session$userData$active_tab(),
     error = function(e) ""
   )
 
+  # Use comment from ZIP modal if available
+  save_comment <- tryCatch(
+    session$userData$settings_save_comment %||% "",
+    error = function(e) ""
+  )
+
   new_version <- create_settings_version(
     settings_data = payload,
-    comment = "ZIP export",
+    comment = save_comment,
     dataset = dataset_name,
     tab = active_tab
   )
