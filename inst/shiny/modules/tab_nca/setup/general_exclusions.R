@@ -5,18 +5,14 @@
 #' type(s), provide a reason, and manage exclusions with color-coded feedback.
 #'
 #' Row color scheme:
-#' - Blue:       Default NCA exclusion (from data)
-#' - Red:        Manual NCA exclusion only
-#' - Yellow:     TLG exclusion only
-#' - Orange:     Manual NCA + TLG exclusion
-#' - Teal:       Default NCA + TLG exclusion
+#' - Red:    NCA exclusion (from data or manual)
+#' - Yellow: TLG exclusion only
+#' - Orange: NCA + TLG exclusion
 
 # Color constants for exclusion row highlighting
-EXCL_COLOR_DEFAULT     <- "#CCE5FF"  # blue — default NCA exclusion
-EXCL_COLOR_MANUAL_NCA  <- "#FFCCCC"  # red — manual NCA exclusion only
-EXCL_COLOR_TLG         <- "#FFFFCC"  # yellow — TLG exclusion only
-EXCL_COLOR_BOTH        <- "#FFD9B3"  # orange — manual NCA + TLG
-EXCL_COLOR_DEFAULT_TLG <- "#B3E0E6"  # teal — default NCA + TLG exclusion
+EXCL_COLOR_NCA  <- "#FFCCCC"  # red — NCA exclusion
+EXCL_COLOR_TLG  <- "#FFFFCC"  # yellow — TLG exclusion only
+EXCL_COLOR_BOTH <- "#FFD9B3"  # orange — NCA + TLG
 
 general_exclusions_ui <- function(id) {
   ns <- NS(id)
@@ -76,11 +72,9 @@ general_exclusions_ui <- function(id) {
             style = "font-size:1.05em; margin:10px 0 4px;"
           ),
           tags$ul(
-            tags$li(tags$b("Blue"), ": Default NCA exclusion (from data)"),
-            tags$li(tags$b("Red"), ": Manual NCA exclusion only"),
+            tags$li(tags$b("Red"), ": NCA exclusion"),
             tags$li(tags$b("Yellow"), ": TLG exclusion only"),
-            tags$li(tags$b("Orange"), ": Manual NCA + TLG exclusion"),
-            tags$li(tags$b("Teal"), ": Default NCA + TLG exclusion")
+            tags$li(tags$b("Orange"), ": NCA + TLG exclusion")
           ),
           p(
             "Select rows and add a reason to exclude.",
@@ -106,11 +100,9 @@ general_exclusions_ui <- function(id) {
         style = "font-weight:600; font-size:0.95em; margin-right:8px;",
         "Row Colors:"
       ),
-      .legend_swatch(EXCL_COLOR_DEFAULT, "Default NCA exclusion"),
-      .legend_swatch(EXCL_COLOR_MANUAL_NCA, "Manual NCA exclusion"),
+      .legend_swatch(EXCL_COLOR_NCA, "NCA exclusion"),
       .legend_swatch(EXCL_COLOR_TLG, "TLG exclusion"),
-      .legend_swatch(EXCL_COLOR_BOTH, "Manual NCA + TLG"),
-      .legend_swatch(EXCL_COLOR_DEFAULT_TLG, "Default NCA + TLG")
+      .legend_swatch(EXCL_COLOR_BOTH, "NCA + TLG exclusion")
     ),
     # Main concentration data table with row selection and color coding
     card(reactable_ui(ns("conc_table")), class = "border-0 shadow-none")
@@ -146,19 +138,17 @@ general_exclusions_ui <- function(id) {
     }
   }
 
+  # Default NCA exclusion from data counts as NCA exclusion
   row_default <- !is.null(data[index, ]$nca_exclude) &&
     nzchar(data[index, ]$nca_exclude)
+  is_nca <- row_nca || row_default
 
-  color <- if (row_nca && row_tlg) {
+  color <- if (is_nca && row_tlg) {
     EXCL_COLOR_BOTH
-  } else if (row_nca) {
-    EXCL_COLOR_MANUAL_NCA
-  } else if (row_default && row_tlg) {
-    EXCL_COLOR_DEFAULT_TLG
+  } else if (is_nca) {
+    EXCL_COLOR_NCA
   } else if (row_tlg) {
     EXCL_COLOR_TLG
-  } else if (row_default) {
-    EXCL_COLOR_DEFAULT
   } else {
     NULL
   }
