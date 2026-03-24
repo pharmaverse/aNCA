@@ -27,7 +27,7 @@ general_exclusions_ui <- function(id) {
         ),
         checkboxInput(
           ns("cb_manual_nca"), "Manual NCA exclusion",
-          value = TRUE, width = "100%"
+          value = FALSE, width = "100%"
         ),
         checkboxInput(
           ns("cb_tlg"), "TLG exclusion",
@@ -122,6 +122,23 @@ general_exclusions_ui <- function(id) {
   )
 }
 
+#' Check whether a row has manual NCA or TLG exclusions.
+#' @param index Row index.
+#' @param exclusion_lst List of exclusion entries.
+#' @returns Named logical list with `nca` and `tlg`.
+#' @noRd
+.row_exclusion_flags <- function(index, exclusion_lst) {
+  nca <- FALSE
+  tlg <- FALSE
+  for (excl in exclusion_lst) {
+    if (index %in% excl$rows) {
+      if (isTRUE(excl$exclude_nca)) nca <- TRUE
+      if (isTRUE(excl$exclude_tlg)) tlg <- TRUE
+    }
+  }
+  list(nca = nca, tlg = tlg)
+}
+
 #' Determine the background color for a row based on exclusion state.
 #' @param index Row index in the table.
 #' @param data The data frame rendered in the reactable.
@@ -129,25 +146,18 @@ general_exclusions_ui <- function(id) {
 #' @returns A list with `background` style or NULL.
 #' @noRd
 .exclusion_row_color <- function(index, data, exclusion_lst) {
-  row_nca <- FALSE
-  row_tlg <- FALSE
-  for (excl in exclusion_lst) {
-    if (index %in% excl$rows) {
-      if (isTRUE(excl$exclude_nca)) row_nca <- TRUE
-      if (isTRUE(excl$exclude_tlg)) row_tlg <- TRUE
-    }
-  }
+  flags <- .row_exclusion_flags(index, exclusion_lst)
 
   # Default NCA exclusion from data counts as NCA exclusion
-  row_default <- !is.null(data[index, ]$nca_exclude) &&
+  has_default <- !is.null(data[index, ]$nca_exclude) &&
     nzchar(data[index, ]$nca_exclude)
-  is_nca <- row_nca || row_default
+  is_nca <- flags$nca || has_default
 
-  color <- if (is_nca && row_tlg) {
+  color <- if (is_nca && flags$tlg) {
     EXCL_COLOR_BOTH
   } else if (is_nca) {
     EXCL_COLOR_NCA
-  } else if (row_tlg) {
+  } else if (flags$tlg) {
     EXCL_COLOR_TLG
   } else {
     NULL
