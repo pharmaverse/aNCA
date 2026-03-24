@@ -19,9 +19,12 @@ general_exclusions_ui <- function(id) {
   tagList(
     # Input row: checkboxes, reason text, add button, help
     div(
-      class = "excl-input-row",
+      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
       div(
-        class = "excl-checkbox-col",
+        style = paste(
+          "display: flex; flex-direction: column;",
+          "gap: 0; margin-right: 4px; min-width: 170px;"
+        ),
         checkboxInput(
           ns("cb_manual_nca"), "Manual NCA exclusion",
           value = FALSE, width = "100%"
@@ -44,8 +47,11 @@ general_exclusions_ui <- function(id) {
       # Help button (dropdown)
       dropdown(
         div(
-          class = "excl-help-content",
-          tags$h2("NCA Exclusions Help"),
+          style = "min-width:340px; max-width:480px;",
+          tags$h2(
+            "NCA Exclusions Help",
+            style = "font-size:1.2em; margin-bottom:8px;"
+          ),
           p(
             "Records excluded here can be removed from NCA PK",
             "calculations, from mean plots and summary tables",
@@ -61,7 +67,10 @@ general_exclusions_ui <- function(id) {
               ": excluded from mean plots and summary tables"
             )
           ),
-          tags$h3("Row Colors"),
+          tags$h3(
+            "Row Colors",
+            style = "font-size:1.05em; margin:10px 0 4px;"
+          ),
           tags$ul(
             tags$li(tags$b("Red"), ": NCA exclusion"),
             tags$li(tags$b("Yellow"), ": TLG exclusion only"),
@@ -82,8 +91,15 @@ general_exclusions_ui <- function(id) {
     uiOutput(ns("exclusion_list_ui")),
     # Color legend for the exclusions table
     div(
-      class = "excl-legend",
-      div(class = "excl-legend-title", "Row Colors:"),
+      class = "results-legend",
+      style = paste(
+        "display:flex; gap:12px; align-items:center;",
+        "margin:8px 0; flex-wrap:wrap;"
+      ),
+      div(
+        style = "font-weight:600; font-size:0.95em; margin-right:8px;",
+        "Row Colors:"
+      ),
       .legend_swatch(EXCL_COLOR_NCA, "NCA exclusion"),
       .legend_swatch(EXCL_COLOR_TLG, "TLG exclusion"),
       .legend_swatch(EXCL_COLOR_BOTH, "NCA + TLG exclusion")
@@ -97,12 +113,12 @@ general_exclusions_ui <- function(id) {
 #' @noRd
 .legend_swatch <- function(color, label) {
   div(
-    class = "excl-swatch",
-    div(
-      class = "excl-swatch-box",
-      style = paste0("background:", color, ";")
-    ),
-    span(label, class = "excl-swatch-label")
+    style = "display:flex; align-items:center; gap:6px;",
+    div(style = paste0(
+      "width:14px; height:14px; background:", color,
+      "; border:1px solid #ddd;"
+    )),
+    span(label, style = "font-size:0.9em;")
   )
 }
 
@@ -189,13 +205,22 @@ general_exclusions_ui <- function(id) {
 .render_exclusion_list_table <- function(lst, ns) {
   if (length(lst) == 0) return(NULL)
   tags$table(
-    class = "excl-list-table",
+    style = paste(
+      "width:100%",
+      "background:#f9f9f9",
+      "font-size:0.95em",
+      "margin-bottom:12px",
+      "border-radius:4px",
+      "border-collapse:separate",
+      "border-spacing:0",
+      sep = "; "
+    ),
     tags$thead(
       tags$tr(
-        tags$th("Rows"),
-        tags$th("Reason"),
-        tags$th("Type"),
-        tags$th("", class = "excl-remove-col")
+        tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("Type", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("", style = "width:36px;")
       )
     ),
     tags$tbody(
@@ -204,15 +229,19 @@ general_exclusions_ui <- function(id) {
           item$exclude_nca, item$exclude_tlg
         )
         tags$tr(
-          tags$td(paste(item$rows, collapse = ", ")),
-          tags$td(item$reason),
-          tags$td(type_label),
+          tags$td(
+            paste(item$rows, collapse = ", "),
+            style = "padding:4px 8px;"
+          ),
+          tags$td(item$reason, style = "padding:4px 8px;"),
+          tags$td(type_label, style = "padding:4px 8px;"),
           tags$td(
             actionButton(
               ns(item$xbtn_id),
               label = NULL,
               icon = shiny::icon("times"),
-              class = "btn btn-link btn-sm excl-remove-btn"
+              class = "btn btn-link btn-sm",
+              style = "padding:2px 6px;"
             )
           )
         )
