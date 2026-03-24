@@ -161,6 +161,8 @@
   (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the
   `Mapping Tab`
   ([\#1060](https://github.com/pharmaverse/aNCA/issues/1060))
+- Filtering will now correctly also affect all the input widgets in NCA
+  setup ([\#1092](https://github.com/pharmaverse/aNCA/issues/1092))
 
 ## aNCA 0.1.0
 
