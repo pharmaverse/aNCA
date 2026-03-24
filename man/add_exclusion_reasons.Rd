@@ -16,12 +16,12 @@ add_exclusion_reasons(pknca_data, exclusion_list)
 \item exclude_nca: logical, if TRUE the rows are excluded from NCA
 calculations (added to the exclude column)
 \item exclude_tlg: logical, if TRUE the rows are flagged with
-ANL01FL = NA so TLGs can filter them out
+ANL01FL = NA and PKSUM1F = "1" so TLGs can filter them out
 }}
 }
 \value{
 The modified PKNCAdata object with updated exclusion
-reasons and ANL01FL in the concentration object.
+reasons, ANL01FL, and PKSUM1F in the concentration object.
 }
 \description{
 This function adds exclusion reasons to the \code{exclude} column of the concentration object

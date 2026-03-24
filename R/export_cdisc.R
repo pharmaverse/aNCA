@@ -243,6 +243,17 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
         }
         flag
       },
+      PKSUM1F = {
+        flag <- if ("PKSUM1F" %in% names(.)) {
+          PKSUM1F
+        } else {
+          rep(NA_character_, nrow(.))
+        }
+        if ("is.excluded.hl" %in% names(.)) {
+          flag <- ifelse(is.excluded.hl, "1", flag)
+        }
+        flag
+      },
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT

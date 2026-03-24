@@ -356,3 +356,4 @@ ADNCA,171,VISITDY,Planned Study Day of Visit,integer,Grouping Qualifier,Req,FALS
 ADNCA,172,VISITNUM,Visit Number,integer,Grouping Qualifier,Req,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,160,WBCBL,WBC Count at Baseline,float,Synonym Qualifier,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,161,WBCBLU,WBC Count at baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA,FALSE
+ADNCA,264,PKSUM1F,PK Summary Exclusion Flag 1,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
