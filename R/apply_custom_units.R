@@ -20,7 +20,7 @@ apply_custom_units <- function(result, custom_units) {
   )
   has_groups <- length(group_cols) > 0
   if (has_groups) {
-    is_ratio_row <- rowSums(is.na(custom_units[, group_cols, drop = FALSE])) > 0
+    is_ratio_row <- rowSums(is.na(custom_units[, group_cols, drop = FALSE])) == length(group_cols)
   } else {
     is_ratio_row <- rep(FALSE, nrow(custom_units))
   }

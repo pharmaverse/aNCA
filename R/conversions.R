@@ -69,7 +69,8 @@ find_param_unit <- function(units_df, pknca_name, pptestcd) {
   if (length(matches) == 0) {
     matches <- units_df$PPORRESU[units_df$PPTESTCD == pptestcd]
   }
-  stats::na.omit(matches)[1]
+  result <- stats::na.omit(matches)[1]
+  if (is.na(result)) NA_character_ else result
 }
 
 
