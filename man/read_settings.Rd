@@ -14,8 +14,8 @@ read_settings(path, name)
 }
 \value{
 A list with parsed settings. For versioned files, the
-  attribute \code{"versioned"} contains the full
-  \code{\link[=read_versioned_settings]{read_versioned_settings()}} result.
+attribute \code{"versioned"} contains the full
+\code{\link[=read_versioned_settings]{read_versioned_settings()}} result.
 }
 \description{
 Supports both the legacy flat format (top-level \code{settings} key) and

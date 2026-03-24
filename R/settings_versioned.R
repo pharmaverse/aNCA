@@ -38,7 +38,6 @@ create_settings_version <- function(settings_data,
 #' @returns A list with elements `versions` and `format`.
 #'
 #' @importFrom yaml read_yaml
-#' @importFrom rlang %||%
 #' @export
 read_versioned_settings <- function(path) {
   obj <- yaml::read_yaml(path)

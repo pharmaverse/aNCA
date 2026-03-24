@@ -11,7 +11,7 @@ settings_version_summary(versions)
 }
 \value{
 A data.frame with columns: \code{index}, \code{comment}, \code{datetime},
-  \code{dataset}, \code{anca_version}, \code{tab}.
+\code{dataset}, \code{anca_version}, \code{tab}.
 }
 \description{
 Creates a data.frame with one row per version, suitable for

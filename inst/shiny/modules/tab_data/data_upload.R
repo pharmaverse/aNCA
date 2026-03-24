@@ -75,80 +75,23 @@ data_upload_server <- function(id) {
           filenames <- input$data_upload$name
         }
 
-        # Iterate over files: Identify file extension and read either settings or data
-        read_results <- purrr::map2(paths, filenames, function(path, name) {
-          if (tools::file_ext(path) %in% c("yml", "yaml")) {
-            tryCatch({
-              obj <- read_settings(path)
-              list(status = "success", type = "settings", content = obj, name = name)
-            }, error = function(e) {
-              list(status = "error", msg = conditionMessage(e), name = name)
-            })
-          } else {
-            tryCatch({
-              obj <- read_pk(path)
-              list(status = "success", type = "data", content = obj, name = name)
-            }, error = function(e) {
-              list(status = "error", msg = conditionMessage(e), name = name)
-            })
-          }
-        })
+        read_results <- purrr::map2(paths, filenames, .read_uploaded_file)
 
         # Process results
         successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
         errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
           purrr::map(\(x) paste0(x$name, ": ", x$msg))
 
-        # Extract and apply settings if any found
-        found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
+        errors <- .apply_uploaded_settings(
+          successful_loads, errors, settings_override,
+          pending_versioned, session, ns
+        )
 
-        if (length(found_settings) > 1) {
-          # Error: Too many settings files
-          errors <- append(errors, "Error: Multiple settings files detected.
-                           Please upload only one settings file.")
-          # Do not apply any settings if ambiguous
-          settings_override(NULL)
-
-        } else if (length(found_settings) == 1) {
-          latest <- found_settings[[1]]
-          versioned_attr <- attr(latest$content, "versioned")
-
-          if (!is.null(versioned_attr)) {
-            # Versioned file — always show selection modal
-            pending_versioned(versioned_attr)
-            .show_version_modal(session, ns, versioned_attr$versions)
-          } else {
-            # Legacy format — apply directly
-            settings_override(latest$content)
-            log_success("Settings successfully loaded from ", latest$name)
-            showNotification("Settings successfully loaded.", type = "message")
-          }
-        }
-
-        loaded_data <- DUMMY_DATA
-
-        found_data <- purrr::keep(successful_loads, \(x) x$type == "data")
-        # Handle Errors
-        if (length(found_data) > 0) {
-          tryCatch({
-            loaded_data <- found_data %>%
-              purrr::map("content") %>%
-              dplyr::bind_rows() %>%
-              #mutate all to character to prevent errors
-              dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
-
-            # Store uploaded data filenames for settings versioning
-            data_names <- purrr::map_chr(found_data, "name")
-            session$userData$dataset_filename <- paste(
-              data_names, collapse = ", "
-            )
-
-            log_success("All user data loaded successfully.")
-          }, error = function(e) {
-            # combine errors
-            errors <<- append(errors, paste0("Error combining files: ", e$message))
-            log_error("Error binding user data: ", e$message)
-          })
+        loaded_data <- .combine_uploaded_data(
+          successful_loads, DUMMY_DATA, session
+        )
+        if (!is.null(loaded_data$error)) {
+          errors <- append(errors, loaded_data$error)
         }
 
         if (length(errors) > 0) {
@@ -156,7 +99,7 @@ data_upload_server <- function(id) {
           log_error("Errors loading files: ", paste(errors, collapse = "; "))
         }
 
-        loaded_data
+        loaded_data$data
 
       }) %>%
         bindEvent(input$data_upload, ignoreNULL = FALSE)
@@ -273,6 +216,97 @@ data_upload_server <- function(id) {
       settings_override = settings_override
     )
   })
+}
+
+#' Read a single uploaded file and return a status list.
+#' @param path File path.
+#' @param name Original filename.
+#' @returns A list with status, type, content/msg, and name.
+#' @noRd
+.read_uploaded_file <- function(path, name) {
+  if (tools::file_ext(path) %in% c("yml", "yaml")) {
+    tryCatch({
+      obj <- read_settings(path)
+      list(status = "success", type = "settings", content = obj, name = name)
+    }, error = function(e) {
+      list(status = "error", msg = conditionMessage(e), name = name)
+    })
+  } else {
+    tryCatch({
+      obj <- read_pk(path)
+      list(status = "success", type = "data", content = obj, name = name)
+    }, error = function(e) {
+      list(status = "error", msg = conditionMessage(e), name = name)
+    })
+  }
+}
+
+#' Process uploaded settings files: validate count, handle versioned vs legacy.
+#' @param successful_loads List of successful load results.
+#' @param errors Current error list.
+#' @param settings_override reactiveVal to store settings.
+#' @param pending_versioned reactiveVal for versioned settings.
+#' @param session Shiny session.
+#' @param ns Namespace function.
+#' @returns Updated error list.
+#' @noRd
+.apply_uploaded_settings <- function(successful_loads, errors,
+                                     settings_override, pending_versioned,
+                                     session, ns) {
+  found_settings <- purrr::keep(successful_loads, \(x) x$type == "settings")
+
+  if (length(found_settings) > 1) {
+    errors <- append(errors, "Error: Multiple settings files detected.
+                     Please upload only one settings file.")
+    settings_override(NULL)
+  } else if (length(found_settings) == 1) {
+    latest <- found_settings[[1]]
+    versioned_attr <- attr(latest$content, "versioned")
+
+    if (!is.null(versioned_attr)) {
+      pending_versioned(versioned_attr)
+      .show_version_modal(session, ns, versioned_attr$versions)
+    } else {
+      settings_override(latest$content)
+      log_success("Settings successfully loaded from ", latest$name)
+      showNotification("Settings successfully loaded.", type = "message")
+    }
+  }
+
+  errors
+}
+
+#' Combine uploaded data files into a single data.frame.
+#' @param successful_loads List of successful load results.
+#' @param fallback Default data to return if no data files found.
+#' @param session Shiny session (for storing dataset_filename).
+#' @returns A list with `data` and optional `error`.
+#' @noRd
+.combine_uploaded_data <- function(successful_loads, fallback, session) {
+  found_data <- purrr::keep(successful_loads, \(x) x$type == "data")
+  loaded_data <- fallback
+  error <- NULL
+
+  if (length(found_data) > 0) {
+    tryCatch({
+      loaded_data <- found_data %>%
+        purrr::map("content") %>%
+        dplyr::bind_rows() %>%
+        dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
+
+      data_names <- purrr::map_chr(found_data, "name")
+      session$userData$dataset_filename <- paste(
+        data_names, collapse = ", "
+      )
+
+      log_success("All user data loaded successfully.")
+    }, error = function(e) {
+      error <<- paste0("Error combining files: ", e$message)
+      log_error("Error binding user data: ", e$message)
+    })
+  }
+
+  list(data = loaded_data, error = error)
 }
 
 #' Show a modal for selecting a settings version.
