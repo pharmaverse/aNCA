@@ -29,6 +29,7 @@ selector_label <- function(input, output, session,
                            label,
                            metadata_type = "variable",
                            pknca_data = NULL,
+                           multiple = TRUE,
                            has_option_description = TRUE,
                            show_value_as_tags = TRUE,
                            show_selected_options_first = TRUE,
@@ -41,20 +42,24 @@ selector_label <- function(input, output, session,
   formatted_choices <- reactive({
     if (metadata_type == "variable") {
       req(metadata_nca_variables)
-      choices_df <- metadata_nca_variables %>%
-        select(Variable, Label) %>%
-        distinct(Variable, .keep_all = TRUE) %>%
-        filter(!is.na(Variable), Variable != "") %>%
-        filter(Variable %in% choices) %>%
-        rename(val = Variable, desc = Label)
+      choices_df <- data.frame(Variable = choices, stringsAsFactors = FALSE)
+      choices_df <- choices_df %>%
+        left_join(
+          metadata_nca_variables %>% select(Variable, Label) %>% distinct(),
+          by = "Variable"
+        ) %>%
+        mutate(desc = ifelse(is.na(Label), Variable, Label)) %>%
+        rename(val = Variable)
     } else if (metadata_type == "parameter") {
       req(metadata_nca_parameters)
-      choices_df <- metadata_nca_parameters %>%
-        select(PPTESTCD, PPTEST) %>%
-        distinct(PPTESTCD, .keep_all = TRUE) %>%
-        filter(!is.na(PPTESTCD), PPTESTCD != "") %>%
-        filter(PPTESTCD %in% choices) %>%
-        rename(val = PPTESTCD, desc = PPTEST)
+      choices_df <- data.frame(PPTESTCD = choices, stringsAsFactors = FALSE)
+      choices_df <- choices_df %>%
+        left_join(
+          metadata_nca_parameters %>% select(PPTESTCD, PPTEST) %>% distinct(),
+          by = "PPTESTCD"
+        ) %>%
+        mutate(desc = ifelse(is.na(PPTEST), PPTESTCD, PPTEST)) %>%
+        rename(val = PPTESTCD)
     } else {
       data.frame(val = choices, desc = choices)
     }
@@ -96,7 +101,7 @@ selector_label <- function(input, output, session,
       inputId = ns(id),
       label = label,
       choices = selected_choices,
-      multiple = TRUE,
+      multiple = multiple,
       selected = initial_selection,
       search = TRUE,
       hasOptionDescription = has_option_description,

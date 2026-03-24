@@ -27,12 +27,7 @@ pk_dose_qc_plot_ui <- function(id) {
       ),
       uiOutput(ns("groupvar_ui_wrapper")
       ),
-      pickerInput(
-        inputId = ns("colour_var"),
-        label = "Choose the variables to colour by:",
-        choices = NULL,
-        selected = NULL,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("colourvar_ui_wrapper")
       ),
       pickerInput(
         inputId = ns("pcspec"),
@@ -97,12 +92,17 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       )
 
       param_choices_colour <- c(dose_col, route_col)
-      updatePickerInput(
-        session,
-        "colour_var",
-        choices = param_choices_colour,
-        selected = param_choices_colour[1]
-      )
+
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = param_choices_colour,
+                     initial_selection = param_choices_colour[1],
+                     selector_ui_wrapper = "colourvar_ui_wrapper",
+                     id = "colour_var",
+                     label = "Choose the variables to colour by:",
+                     metadata_type = "variable",
+                     multiple = FALSE)
 
       variable_choices_group <- grouping_vars()
 
