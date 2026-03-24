@@ -102,14 +102,14 @@ readers <- list(
 #'   attribute `"versioned"` contains the full
 #'   [read_versioned_settings()] result.
 #'
-#' @importFrom tools file_ext
 #' @importFrom yaml read_yaml
 #'
 #' @export
 read_settings <- function(path, name) {
   obj <- yaml::read_yaml(path)
 
-  if ("current" %in% names(obj)) {
+  if ("current" %in% names(obj) && is.list(obj$current) &&
+        "datetime" %in% names(obj$current)) {
     # Versioned format — parse via read_versioned_settings, return
     # the most recent version's settings as the top-level result
     versioned <- read_versioned_settings(path)
@@ -129,6 +129,7 @@ read_settings <- function(path, name) {
   obj$settings$units <- .convert_list_to_df(obj$settings$units)
   obj$settings$int_parameters <- .convert_list_to_df(obj$settings$int_parameters)
   obj$filters <- .convert_filter_values(obj$filters)
+  obj$settings$ratio_table <- .convert_list_to_df(obj$settings$ratio_table)
 
   obj
 }

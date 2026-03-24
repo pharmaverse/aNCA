@@ -219,3 +219,87 @@ describe("read_settings with versioned format", {
     expect_equal(va$versions[[1]]$comment, "new")
   })
 })
+
+describe("extract_version_settings edge cases", {
+  it("returns NULL and warns for version with empty settings", {
+    v <- list(
+      comment = "empty",
+      datetime = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+      settings = list()
+    )
+    expect_warning(
+      result <- extract_version_settings(v),
+      "empty settings content"
+    )
+    expect_null(result)
+  })
+
+  it("returns NULL and warns for version with NULL settings", {
+    v <- list(
+      comment = "null",
+      datetime = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+      settings = NULL
+    )
+    expect_warning(
+      result <- extract_version_settings(v),
+      "empty settings content"
+    )
+    expect_null(result)
+  })
+})
+
+describe("read_versioned_settings edge cases", {
+  it("sorts versions by timestamp descending", {
+    old <- create_settings_version(
+      list(settings = list(method = "old"), slope_rules = NULL, filters = NULL),
+      comment = "first"
+    )
+    # Force an older timestamp
+    old$datetime <- "2020-01-01 00:00:00"
+
+    new <- create_settings_version(
+      list(settings = list(method = "new"), slope_rules = NULL, filters = NULL),
+      comment = "second"
+    )
+
+    tmp <- tempfile(fileext = ".yaml")
+    on.exit(unlink(tmp), add = TRUE)
+
+    # Write with old first (wrong order)
+    write_versioned_settings(list(old, new), tmp)
+    result <- read_versioned_settings(tmp)
+
+    # Should be sorted newest first
+    expect_equal(result$versions[[1]]$comment, "second")
+    expect_equal(result$versions[[2]]$comment, "first")
+  })
+
+  it("errors on YAML with no recognized format", {
+    tmp <- tempfile(fileext = ".yaml")
+    on.exit(unlink(tmp), add = TRUE)
+    yaml::write_yaml(list(unrelated = "data"), tmp)
+    expect_error(read_versioned_settings(tmp))
+  })
+})
+
+describe("read_settings format detection", {
+  it("treats a legacy file with a 'current' key but no datetime as legacy", {
+    tmp <- tempfile(fileext = ".yaml")
+    on.exit(unlink(tmp), add = TRUE)
+    yaml::write_yaml(list(settings = list(method = "linear"), current = "v1"), tmp)
+    result <- read_settings(tmp)
+    expect_equal(result$settings$method, "linear")
+    expect_null(attr(result, "versioned"))
+  })
+})
+
+describe("settings_version_summary edge cases", {
+  it("handles empty comment as empty string", {
+    v <- create_settings_version(
+      list(settings = list(method = "linear"), slope_rules = NULL, filters = NULL),
+      comment = ""
+    )
+    summary_df <- settings_version_summary(list(v))
+    expect_equal(summary_df$comment[1], "")
+  })
+})

@@ -38,6 +38,7 @@ create_settings_version <- function(settings_data,
 #' @returns A list with elements `versions` and `format`.
 #'
 #' @importFrom yaml read_yaml
+#' @importFrom rlang %||%
 #' @export
 read_versioned_settings <- function(path) {
   obj <- yaml::read_yaml(path)
@@ -51,6 +52,11 @@ read_versioned_settings <- function(path) {
         versions[[length(versions) + 1]] <- .parse_version_entry(entry)
       }
     }
+    # Sort by timestamp descending (newest first) to handle manual edits
+    timestamps <- vapply(versions, function(v) v$datetime %||% "", character(1))
+    ord <- order(timestamps, decreasing = TRUE)
+    versions <- versions[ord]
+
     list(versions = versions, format = "versioned")
   } else if ("settings" %in% names(obj)) {
     # Legacy flat format — wrap as a single version
@@ -172,7 +178,10 @@ settings_version_summary <- function(versions) {
 #' @export
 extract_version_settings <- function(version) {
   s <- version$settings
-  if (is.null(s)) return(NULL)
+  if (is.null(s) || length(s) == 0) {
+    warning("Version entry has empty settings content.")
+    return(NULL)
+  }
 
   s$slope_rules <- .convert_list_to_df(s$slope_rules)
   s$settings$units <- .convert_list_to_df(s$settings$units)

@@ -450,6 +450,8 @@ prepare_export_files <- function(target_dir,
       dplyr::select(-default)
   }
 
+  settings_list$ratio_table <- session$userData$ratio_table()
+
   payload <- list(
     settings = settings_list,
     slope_rules = session$userData$slope_rules(),
