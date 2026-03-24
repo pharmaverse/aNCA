@@ -169,16 +169,17 @@ update_main_intervals <- function(
     conc_data$METABFL <- ""
   }
 
-  # ADOSEDUR may live in dose data only; merge it for detect_study_types.
+  # Dose duration may live in dose data only; merge it for detect_study_types.
   # Join by shared groups and keep only the latest dose before each conc sample.
-  if (!"ADOSEDUR" %in% names(conc_data)) {
+  duration_col <- data$dose$columns$duration
+  if (!is.null(duration_col) && !duration_col %in% names(conc_data)) {
     dose_data <- data$dose$data
-    if ("ADOSEDUR" %in% names(dose_data)) {
+    if (duration_col %in% names(dose_data)) {
       conc_time <- data$conc$columns$time
       dose_time <- data$dose$columns$time
       join_by <- intersect(dose_groups, conc_groups)
 
-      dose_subset <- dose_data[, unique(c(join_by, dose_time, "ADOSEDUR")), drop = FALSE]
+      dose_subset <- dose_data[, unique(c(join_by, dose_time, duration_col)), drop = FALSE]
       dose_subset <- unique(dose_subset)
       names(dose_subset)[names(dose_subset) == dose_time] <- ".dose_time"
 
@@ -189,7 +190,7 @@ update_main_intervals <- function(
         slice_max(.dose_time, n = 1, by = .ROWID, with_ties = FALSE) %>%
         select(-".ROWID", -".dose_time")
     } else {
-      conc_data$ADOSEDUR <- 0
+      conc_data[[duration_col]] <- 0
     }
   }
 
