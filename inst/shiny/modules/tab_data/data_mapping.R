@@ -135,6 +135,38 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   })
 }
 
+.process_imported_mapping <- function(mapping, adnca_data, session, pending_metabolites) {
+
+  if (!is.null(mapping)) {
+    column_names <- names(adnca_data)
+    skipped <- character(0)
+
+    for (var in MAPPING_INFO$Variable) {
+      if (!var %in% names(mapping) || var == "Metabolites") next
+      val <- mapping[[var]]
+      # Validate: mapping values should be columns in the data (except Metabolites)
+      invalid <- val[val != "" & !val %in% column_names]
+      if (length(invalid) > 0) {
+        skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
+        next
+      }
+      updateSelectizeInput(session, paste0("select_", var), selected = val)
+    }
+
+    if (length(skipped) > 0) {
+      showNotification(
+        paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
+        type = "warning", duration = 10
+      )
+    }
+
+    # Metabolites choices depend on select_PARAM; defer via reactiveVal
+    if ("Metabolites" %in% names(mapping)) {
+      pending_metabolites(mapping[["Metabolites"]])
+    }
+  }
+}
+
 #' Column Mapping Module
 #' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
@@ -209,36 +241,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
 
     observeEvent(imported_mapping(), {
       mapping <- imported_mapping()
-      if (!is.null(mapping)) {
-        column_names <- names(adnca_data())
-        skipped <- character(0)
-
-        for (var in MAPPING_INFO$Variable) {
-          if (!var %in% names(mapping) || var == "Metabolites") next
-          val <- mapping[[var]]
-          # Validate: mapping values should be columns in the data (except Metabolites)
-          invalid <- val[val != "" & !val %in% column_names]
-          if (length(invalid) > 0) {
-            skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
-            next
-          }
-          updateSelectizeInput(session, paste0("select_", var), selected = val)
-        }
-
-        if (length(skipped) > 0) {
-          showNotification(
-            paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
-            type = "warning", duration = 10
-          )
-        }
-
-        # Metabolites choices depend on select_PARAM; defer via reactiveVal
-        if ("Metabolites" %in% names(mapping)) {
-          pending_metabolites(mapping[["Metabolites"]])
-        }
-      }
+      .process_imported_mapping(mapping, adnca_data(), session, pending_metabolites)
     })
-    
+
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
