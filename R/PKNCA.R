@@ -1,14 +1,25 @@
 #' Creates a `PKNCA::PKNCAdata` object.
 #'
 #' @details
-#' This function creates a standard PKNCAdata object from ADNCA data.
-#' It requires the following columns in the ADNCA data:
+#' This function creates a standard PKNCAdata object from raw or pre-processed
+#' ADNCA data.
+#'
+#' When `mapping` is provided, the function runs the full preprocessing pipeline
+#' internally: column mapping ([apply_mapping()]), metabolite flagging
+#' ([create_metabfl()]), class/length adjustment ([adjust_class_and_length()]),
+#' duplicate annotation, optional filtering ([apply_filters()]), and derives
+#' NCA exclusion flag columns from `mapping$NCAwXRS` (plus `"DTYPE"`).
+#'
+#' When `mapping` is `NULL` (the default), the function expects already
+#' pre-processed ADNCA data with the standard column names in place.
+#'
+#' The ADNCA data (after preprocessing, if applicable) must contain:
 #' - STUDYID: Study identifier.
 #' - PCSPEC: Matrix.
 #' - ROUTE: Route of administration.
 #' - DOSETRT: Drug identifier.
 #' - USUBJID: Unique subject identifier.
-#' - ATPTREF: (Non- standard column). Can be any column, used for filtering the data for NCA
+#' - ATPTREF: (Non-standard column). Can be any column, used for filtering the data for NCA
 #' - PARAM: Analyte.
 #' - AVAL: Analysis value.
 #' - AVALU: AVAL unit.
@@ -20,19 +31,32 @@
 #' - ADOSEDUR: Duration of dose.
 #' - RRLTU: Time unit.
 #'
+#' Then it proceeds to:
 #' 1. Creating pk concentration data using `format_pkncaconc_data()`.
 #' 2. Creating dosing data using `format_pkncadose_data()`.
-#' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`.
+#' 3. Creating `PKNCAconc` object using `PKNCA::PKNCAconc()`
 #' with formula `AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM`.
-#' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`.
+#' 4. Creating PKNCAdose object using `PKNCA::PKNCAdose()`
 #' with formula `DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID`.
 #' 5. Creating PKNCAdata object using `PKNCA::PKNCAdata()`.
 #' 6. Updating units in PKNCAdata object so each analyte has its own unit.
 #'
-#' @param adnca_data Data table containing ADNCA data.
-#' @param nca_exclude_reason_columns Optional character vector of column names.
-#' Excluding records from the NCA
-#' must be indicated by populating any of these columns with a non-empty character value.
+#' @param adnca_data Data frame containing raw or pre-processed ADNCA data.
+#' @param mapping Optional named list of column mappings (as produced by the
+#'   Shiny mapping UI). When provided, the preprocessing pipeline is run
+#'   internally and NCA exclusion flag columns are derived from
+#'   `mapping$NCAwXRS` (plus `"DTYPE"`). Metabolite names are taken from
+#'   `mapping$Metabolites`. Defaults to `NULL` (no preprocessing, no
+#'   exclusion columns).
+#' @param applied_filters Optional list of filters to apply (see
+#'   [apply_filters()]). Only used when `mapping` is provided.
+#'   Defaults to `NULL`.
+#' @param time_duplicate_rows Optional integer vector of row indices (in the
+#'   mapped dataset, before filtering) to mark as `"TIME DUPLICATE"` in the
+#'   `DTYPE` column. When `NULL` (the default) and time duplicates are
+#'   detected, an error of class `"time_duplicate_error"` is raised with the
+#'   duplicate rows attached. Use this to forward user-resolved selections
+#'   from the Shiny duplicate resolution modal.
 #'
 #' @returns `PKNCAdata` object with concentration, doses, and units based on ADNCA data.
 #'
@@ -57,13 +81,38 @@
 #' )
 #' PKNCA_create_data_object(adnca_data)
 #'
-#' @importFrom dplyr filter select arrange across
+#' @importFrom dplyr filter select arrange across group_by mutate ungroup
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units deparse_unit
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function(adnca_data, nca_exclude_reason_columns = NULL) { # nolint: object_name_linter
+PKNCA_create_data_object <- function( # nolint: object_name_linter
+    adnca_data,
+    mapping = NULL,
+    applied_filters = NULL,
+    time_duplicate_rows = NULL) {
+  # Derive nca_exclude_reason_columns from mapping
+  nca_exclude_reason_columns <- NULL
+  if (!is.null(mapping)) {
+    nca_exclude_reason_columns <- c("DTYPE", mapping$NCAwXRS)
+    nca_exclude_reason_columns <- nca_exclude_reason_columns[
+      nchar(nca_exclude_reason_columns) > 0
+    ]
+  }
+
+  # --- Preprocessing pipeline (when mapping is provided) ---
+  if (!is.null(mapping)) {
+    adnca_data <- adnca_data %>%
+      apply_mapping(mapping, silent = FALSE) %>%
+      create_metabfl(mapping$Metabolites) %>%
+      adjust_class_and_length(metadata_nca_variables) %>%
+      annotate_duplicates(time_duplicate_rows)
+
+    if (!is.null(applied_filters) && length(applied_filters) > 0) {
+      adnca_data <- apply_filters(adnca_data, applied_filters)
+    }
+  }
   # Define column names based on ADNCA vars
   group_columns <- intersect(colnames(adnca_data), c("STUDYID", "ROUTE", "DOSETRT"))
   usubjid_column <- "USUBJID"
@@ -245,14 +294,19 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$options <- list(
     auc.method = method,
     progress = FALSE,
-    keep_interval_cols = c(
-      "ATPTREF", "DOSNOA", "type_interval",
-      adnca_data$dose$columns$route, "ROUTE",
-      keep_interval_cols
+    keep_interval_cols = setdiff(
+      c(
+        "ATPTREF", "DOSNOA", "type_interval",
+        adnca_data$dose$columns$route, "ROUTE",
+        keep_interval_cols
+      ),
+      # Columns already in the formula should not be re-added
+      group_vars(data$conc)
     ),
     min.hl.r.squared = 0.01,
     allow_partial_missing_units = TRUE
   )
+
 
   # Add on top of the default ones, the exclusions listed
   data <- add_exclusion_reasons(data, exclusion_list)
@@ -629,6 +683,8 @@ PKNCA_build_units_table <- function(o_conc, o_dose) { # nolint
 #' 1. Checks if the specified unit columns exist in the PKNCA object.
 #' 2. If a column does not exist, it creates the column and assigns default values.
 #' 3. If not default values are provided, it assigns NA to the new column.
+#' @keywords internal
+#' @noRd
 ensure_column_unit_exists <- function(pknca_obj, unit_name) {
   for (unit in unit_name) {
     if (is.null(pknca_obj$columns[[unit]])) {
@@ -654,6 +710,8 @@ ensure_column_unit_exists <- function(pknca_obj, unit_name) {
 #' @param df A data frame.
 #' @param strata_cols Column names in df whose unique combination defines the strata.
 #' @returns A data frame containing the strata columns and their minimal set of grouping columns.
+#' @keywords internal
+#' @noRd
 select_minimal_grouping_cols <- function(df, strata_cols) {
   # If there is no strata_cols specified, simply return the original df
   if (length(strata_cols) == 0) {
@@ -752,6 +810,8 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @examples
 #' # Suppose processed_pknca_data is a valid PKNCA data object
 #' # check_valid_pknca_data(processed_pknca_data)
+#' @keywords internal
+#' @noRd
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
 
   if (check_exclusion_has_reason) {

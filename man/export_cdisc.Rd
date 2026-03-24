@@ -4,10 +4,15 @@
 \alias{export_cdisc}
 \title{Export CDISC Data}
 \usage{
-export_cdisc(res_nca)
+export_cdisc(res_nca, grouping_vars = character(0))
 }
 \arguments{
-\item{res_nca}{Object with results of the NCA analysis.}
+\item{res_nca}{Object with results of the NCA analysis. If
+\code{res_nca$result} contains a \code{.__excl__} column (logical), excluded rows
+(\code{TRUE}) get \code{ANL01FL = ""} in ADPP; included rows get \code{ANL01FL = "Y"}.}
+
+\item{grouping_vars}{Character vector of non-standard grouping variable names to include
+as additional columns in ADNCA, ADPP, and PP outputs. Defaults to \code{character(0)}.}
 }
 \value{
 A list with two data frames:

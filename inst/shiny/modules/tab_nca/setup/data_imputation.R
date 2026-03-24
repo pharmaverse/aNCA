@@ -22,7 +22,7 @@ data_imputation_ui <- function(id) {
         width = 2,
         dropdown(
           div(
-            tags$h4("BLQ Imputation Help"),
+            tags$h2("BLQ Imputation Help"),
             p(
               "Imputes concentration values for BLQ (Below Limit of Quantification) samples.",
               "Only applies to non-observational parameters:"
@@ -55,7 +55,7 @@ data_imputation_ui <- function(id) {
           right = TRUE,
           icon = icon("question"),
           status = "primary",
-          width = "400px"
+          width = "500px"
         )
       )
     ),
@@ -98,7 +98,7 @@ data_imputation_ui <- function(id) {
         width = 2,
         dropdown(
           div(
-            tags$h4("Start Concentration Imputation Help"),
+            tags$h2("Start Concentration Imputation Help"),
             p(
               "Imputes a start-of-interval concentration (dose time).",
               "It only applies to non-observational parameters.",

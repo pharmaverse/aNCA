@@ -86,7 +86,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         threshold_value = individual_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
         use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
-        palette = individual_inputs()$palette
+        palette = individual_inputs()$palette,
+        line_type = individual_inputs()$y_axis_values
       )
     })
 
@@ -117,7 +118,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         y_limits = mean_inputs()$y_limits,
         threshold_value = mean_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
-        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
+        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
+        line_type = mean_inputs()$y_axis_values
       )
     })
 

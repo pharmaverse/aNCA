@@ -10,7 +10,7 @@ page_and_searcher_ui <- function(id) {
       class = "plot-widget-group",
       actionButton(
         ns("previous_page"),
-        "Previous Page",
+        "\u276e",
         class = "btn-page"
       )
     ),
@@ -25,7 +25,7 @@ page_and_searcher_ui <- function(id) {
       class = "plot-widget-group",
       actionButton(
         ns("next_page"),
-        "Next Page",
+        "\u276f",
         class = "btn-page"
       )
     )

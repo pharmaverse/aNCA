@@ -2,9 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{parse_annotation}
 \alias{parse_annotation}
-\title{Parses annotations in the context of data. Special characters and syntax are substituted by
-actual data and/or substituted for format that is better parsed via rendering functions
-(e.g. plotly).}
+\title{Generate an Empty Plotly Object}
 \usage{
 parse_annotation(data, text)
 }
@@ -19,11 +17,14 @@ result.}
 Parsed annotation text.
 }
 \description{
+This function returns a blank Plotly plot with optional annotation text.
+It ensures that when no valid data is available, a meaningful placeholder plot is displayed
+instead of causing an error.
+}
+\details{
 Parses annotations in the context of data. Special characters and syntax are substituted by
 actual data and/or substituted for format that is better parsed via rendering functions
 (e.g. plotly).
-}
-\details{
 \itemize{
 \item \verb{\\n} character is substituted for \verb{<br>} tag in order to add new lines in rendered image.
 \item \verb{$COLNAME} is parsed to provide unique data value from the mentioned column.

@@ -178,11 +178,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
             remove_pp_not_requested()
         },
         warning = function(w) {
-          log_warn("Warning during NCA calculation: {conditionMessage(w)}")
-          pknca_warn_env$warnings <- append(
-            pknca_warn_env$warnings,
-            .parse_pknca_warning(w)
-          )
+          parsed <- .parse_pknca_warning(w)
+          if (!is.null(parsed)) {
+            log_warn("Warning during NCA calculation: {conditionMessage(w)}")
+            pknca_warn_env$warnings <- append(pknca_warn_env$warnings, parsed)
+          }
+          invokeRestart("muffleWarning")
         })
 
         # Display unique warnings thrown by PKNCA run.
@@ -275,7 +276,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca_tagged)
+    parameter_datasets_server("parameter_datasets", res_nca_tagged, extra_group_vars)
 
     #' Parameter plots module (uses filtered results)
     parameter_plots_server("parameter_plots", res_nca_filtered)

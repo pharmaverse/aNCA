@@ -6,6 +6,7 @@ ADaM
 ADaMIG
 AEFRLT
 AFRLT
+ANL
 ARRLT
 ATPTREF
 AUCPEO
@@ -114,8 +115,8 @@ WTBL
 WTBLU
 XPT
 YAML
-adnca
 aNCA's
+adnca
 amountu
 analysing
 analyte
@@ -167,6 +168,7 @@ pre
 pred
 qmd
 rds
+readxl
 renderable
 reproducibility
 reupload
@@ -175,8 +177,8 @@ rpptx
 runnable
 signif
 src
-subfolder
 standardizations
+subfolder
 th
 tibble
 tidyverse
@@ -190,7 +192,6 @@ ug
 unmapped
 utilise
 visualizable
-readxl
 writexl
 xlsx
 yaml
