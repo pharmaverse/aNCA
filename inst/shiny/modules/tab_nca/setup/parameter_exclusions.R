@@ -168,20 +168,17 @@ parameter_exclusions_server <- function(id, res_nca) {
 
       df$PKSUM1F <- ifelse(is_excl, "1", NA_character_)
       df$PKSUM1R <- reason_vec
-      df$.__is_excluded__ <- is_excl
       df
     })
 
-    # Render the reactable with row coloring driven by exclusion_list()
-    # (same pattern as general_exclusions.R — the reactive is called inside
-    # the closure and the table re-renders because param_data depends on it).
+    # Render the reactable with row coloring via exclusion_list() closure
+    # (same pattern as general_exclusions.R).
     param_table_state <- reactable_server(
       "param_table",
       param_data,
       selection = "multiple",
       onClick = "select",
       borderless = TRUE,
-      columns = list(.__is_excluded__ = reactable::colDef(show = FALSE)),
       rowStyle = function(x) {
         function(index) {
           excl_indices <- unlist(lapply(
