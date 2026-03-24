@@ -197,43 +197,57 @@ general_exclusions_ui <- function(id) {
   }
 }
 
-#' Render the exclusion list as an HTML table.
+#' Render the exclusion list as a reactable.
 #' @param lst List of exclusion entries.
 #' @param ns Shiny namespace function.
-#' @returns An HTML table tag or NULL if empty.
+#' @returns A reactable widget or NULL if empty.
 #' @noRd
 .render_exclusion_list_table <- function(lst, ns) {
   if (length(lst) == 0) return(NULL)
-  tags$table(
-    class = "excl-list-table",
-    tags$thead(
-      tags$tr(
-        tags$th("Rows"),
-        tags$th("Reason"),
-        tags$th("Type"),
-        tags$th("", class = "excl-remove-col")
-      )
+
+  df <- data.frame(
+    Rows = vapply(lst, function(item) {
+      paste(item$rows, collapse = ", ")
+    }, character(1)),
+    Reason = vapply(lst, "[[", character(1), "reason"),
+    Type = vapply(lst, function(item) {
+      .exclusion_type_label(item$exclude_nca, item$exclude_tlg)
+    }, character(1)),
+    xbtn_id = vapply(lst, "[[", character(1), "xbtn_id"),
+    stringsAsFactors = FALSE
+  )
+
+  reactable::reactable(
+    df[, c("Rows", "Reason", "Type", "xbtn_id")],
+    compact = TRUE,
+    bordered = TRUE,
+    highlight = TRUE,
+    pagination = FALSE,
+    defaultPageSize = nrow(df),
+    theme = reactable::reactableTheme(
+      headerStyle = list(background = "#e9e9e9")
     ),
-    tags$tbody(
-      lapply(lst, function(item) {
-        type_label <- .exclusion_type_label(
-          item$exclude_nca, item$exclude_tlg
-        )
-        tags$tr(
-          tags$td(paste(item$rows, collapse = ", ")),
-          tags$td(item$reason),
-          tags$td(type_label),
-          tags$td(
+    columns = list(
+      Rows = reactable::colDef(name = "Rows"),
+      Reason = reactable::colDef(name = "Reason"),
+      Type = reactable::colDef(name = "Type"),
+      xbtn_id = reactable::colDef(
+        name = "",
+        width = 50,
+        sortable = FALSE,
+        cell = function(value) {
+          as.character(
             actionButton(
-              ns(item$xbtn_id),
+              ns(value),
               label = NULL,
               icon = shiny::icon("times"),
               class = "btn btn-link btn-sm",
               style = "padding:2px 6px;"
             )
           )
-        )
-      })
+        },
+        html = TRUE
+      )
     )
   )
 }
