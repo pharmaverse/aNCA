@@ -32,6 +32,7 @@ data_upload_ui <- function(id) {
 
 data_upload_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
     #' Dummy data is automatically loaded on startup if no data path is provided
     DUMMY_DATA <- adnca_example
@@ -108,21 +109,13 @@ data_upload_server <- function(id) {
           latest <- found_settings[[1]]
           versioned_attr <- attr(latest$content, "versioned")
 
-          if (!is.null(versioned_attr) && length(versioned_attr$versions) > 1) {
-            # Versioned file with multiple versions — show selection modal
+          if (!is.null(versioned_attr)) {
+            # Versioned file — always show selection modal
             pending_versioned(versioned_attr)
             .show_version_modal(session, ns, versioned_attr$versions)
           } else {
-            # Single version or legacy — apply directly
-            content <- latest$content
-            attr(content, "versioned") <- NULL
-            settings_override(content)
-
-            # Store versions for future saves
-            if (!is.null(versioned_attr)) {
-              session$userData$settings_versions(versioned_attr$versions)
-            }
-
+            # Legacy format — apply directly
+            settings_override(latest$content)
             log_success("Settings successfully loaded from ", latest$name)
             showNotification("Settings successfully loaded.", type = "message")
           }

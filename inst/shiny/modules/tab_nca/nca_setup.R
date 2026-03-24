@@ -21,9 +21,11 @@ nca_setup_ui <- function(id) {
     nav_panel(
       "Settings",
       fluidRow(
-        downloadButton(
-          ns("settings_download"),
-          label = "Download settings"
+        actionButton(
+          ns("open_save_settings_modal"),
+          label = "Download settings",
+          icon = icon("download"),
+          class = "btn btn-default"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
@@ -44,6 +46,7 @@ nca_setup_ui <- function(id) {
 
 nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
     imported_settings <- reactive(settings_override()$settings)
     imported_slopes <- reactive(settings_override()$slope_rules)
@@ -198,9 +201,30 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       imported_slopes
     )
 
+    # Open comment modal before downloading settings
+    observeEvent(input$open_save_settings_modal, {
+      showModal(modalDialog(
+        title = "Save Settings",
+        textInput(
+          ns("settings_save_comment"),
+          label = "Comment (optional)",
+          placeholder = "e.g. final NCA, first draft"
+        ),
+        footer = tagList(
+          downloadButton(ns("settings_download"), "Save", class = "btn-primary"),
+          modalButton("Cancel")
+        ),
+        easyClose = TRUE,
+        size = "m"
+      ))
+    })
+
     output$settings_download <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_prefix("_"), "settings_", Sys.Date(), ".yaml")
+        paste0(
+          session$userData$project_prefix("_"),
+          "settings_", Sys.Date(), ".yaml"
+        )
       },
       content = function(con) {
         export_settings <- final_settings()
@@ -209,13 +233,41 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
             dplyr::filter(!default) %>%
             dplyr::select(-default)
         }
-        settings_to_save <- list(
-          filters = session$userData$applied_filters,
+
+        payload <- list(
           settings = export_settings,
-          slope_rules = slope_rules()
+          slope_rules = slope_rules(),
+          filters = session$userData$applied_filters
         )
-        # write yaml file
-        yaml::write_yaml(settings_to_save, file = con)
+
+        dataset_name <- tryCatch(
+          session$userData$study_ids_label(),
+          error = function(e) ""
+        )
+
+        active_tab <- tryCatch(
+          session$userData$active_tab(),
+          error = function(e) ""
+        )
+
+        new_version <- create_settings_version(
+          settings_data = payload,
+          comment = input$settings_save_comment %||% "",
+          dataset = dataset_name,
+          tab = active_tab
+        )
+
+        existing <- tryCatch(
+          session$userData$settings_versions(),
+          error = function(e) list()
+        )
+        if (is.null(existing)) existing <- list()
+
+        versions <- add_settings_version(existing, new_version)
+        session$userData$settings_versions(versions)
+
+        write_versioned_settings(versions, con)
+        removeModal()
       }
     )
 
