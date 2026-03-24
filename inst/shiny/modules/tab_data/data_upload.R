@@ -169,14 +169,52 @@ data_upload_server <- function(id) {
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data())))
     )
 
+    # Render the version table reactable (driven by pending_versioned)
+    output$version_table <- renderReactable({
+      versioned <- pending_versioned()
+      req(versioned)
+
+      summary_df <- settings_version_summary(versioned$versions)
+      display_df <- summary_df[, c(
+        "datetime", "anca_version", "tab", "dataset", "comment"
+      )]
+
+      reactable(
+        display_df,
+        selection = "single",
+        defaultSelected = 1,
+        onClick = "select",
+        compact = TRUE,
+        bordered = TRUE,
+        highlight = TRUE,
+        defaultPageSize = 10,
+        theme = reactableTheme(
+          rowSelectedStyle = list(
+            backgroundColor = "#CCE5FF",
+            boxShadow = "inset 2px 0 0 0 #0d6efd"
+          )
+        ),
+        columns = list(
+          datetime = colDef(name = "Date/Time", minWidth = 160),
+          anca_version = colDef(name = "aNCA Version", minWidth = 110),
+          tab = colDef(name = "Tab", minWidth = 70),
+          dataset = colDef(name = "Dataset", minWidth = 120),
+          comment = colDef(name = "Comment", minWidth = 140)
+        )
+      )
+    })
+
+    # Helper to get the selected row index from the version table
+    .get_selected_version <- function() {
+      getReactableState("version_table", "selected")
+    }
+
     # Handle version selection from modal
     observeEvent(input$version_select_btn, {
       versioned <- pending_versioned()
       req(versioned)
 
-      selected_idx <- reactable::getReactableState(
-        ns("version_table"), "selected"
-      )
+      selected_idx <- .get_selected_version()
       if (is.null(selected_idx) || length(selected_idx) == 0) {
         showNotification("Please select a version first.", type = "warning")
         return()
@@ -186,7 +224,6 @@ data_upload_server <- function(id) {
       content <- extract_version_settings(chosen)
       settings_override(content)
 
-      # Store all versions for future saves
       session$userData$settings_versions(versioned$versions)
 
       removeModal()
@@ -205,9 +242,7 @@ data_upload_server <- function(id) {
       versioned <- pending_versioned()
       req(versioned)
 
-      selected_idx <- reactable::getReactableState(
-        ns("version_table"), "selected"
-      )
+      selected_idx <- .get_selected_version()
       if (is.null(selected_idx) || length(selected_idx) == 0) {
         showNotification("Please select a version to delete.", type = "warning")
         return()
@@ -226,8 +261,6 @@ data_upload_server <- function(id) {
       )
       updated <- list(versions = updated_versions, format = "versioned")
       pending_versioned(updated)
-
-      .show_version_modal(session, ns, updated_versions)
       showNotification("Version deleted.", type = "message")
     })
 
@@ -244,40 +277,10 @@ data_upload_server <- function(id) {
 #' @param versions List of version entries.
 #' @noRd
 .show_version_modal <- function(session, ns, versions) {
-  summary_df <- settings_version_summary(versions)
-
-  # Column order: datetime, anca_version, tab, dataset, comment
-  display_df <- summary_df[, c(
-    "datetime", "anca_version", "tab", "dataset", "comment"
-  )]
-
   showModal(modalDialog(
     title = "Select Settings Version",
     p("Select a row to choose which version to restore."),
-    reactable::reactable(
-      display_df,
-      elementId = ns("version_table"),
-      selection = "single",
-      defaultSelected = 1,
-      onClick = "select",
-      compact = TRUE,
-      bordered = TRUE,
-      highlight = TRUE,
-      defaultPageSize = 10,
-      theme = reactable::reactableTheme(
-        rowSelectedStyle = list(
-          backgroundColor = "#CCE5FF",
-          boxShadow = "inset 2px 0 0 0 #0d6efd"
-        )
-      ),
-      columns = list(
-        datetime = reactable::colDef(name = "Date/Time", minWidth = 160),
-        anca_version = reactable::colDef(name = "aNCA Version", minWidth = 110),
-        tab = reactable::colDef(name = "Tab", minWidth = 70),
-        dataset = reactable::colDef(name = "Dataset", minWidth = 120),
-        comment = reactable::colDef(name = "Comment", minWidth = 140)
-      )
-    ),
+    reactableOutput(ns("version_table")),
     footer = tagList(
       actionButton(ns("version_select_btn"), "Restore", class = "btn-primary"),
       actionButton(

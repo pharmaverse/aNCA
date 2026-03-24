@@ -97,13 +97,16 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                 )
               )
             ),
-            div(
-              textInput(
-                ns("settings_comment"),
-                label = "Settings comment (optional)",
-                placeholder = "e.g. final NCA, first draft"
-              ),
-              style = "margin-top: 1em;"
+            shinyjs::hidden(
+              div(
+                id = ns("settings_comment_container"),
+                textInput(
+                  ns("settings_comment"),
+                  label = "Settings comment (optional)",
+                  placeholder = "e.g. final NCA, first draft"
+                ),
+                style = "margin-top: 1em;"
+              )
             ),
             div(
               downloadButton(ns("download_zip"), "Export ZIP with Results"),
@@ -115,6 +118,16 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
           size = "l"
         )
       )
+    })
+
+    # Show/hide settings comment based on settings_file selection
+    observe({
+      selected <- input$res_tree
+      if ("settings_file" %in% selected) {
+        shinyjs::show("settings_comment_container")
+      } else {
+        shinyjs::hide("settings_comment_container")
+      }
     })
 
     output$download_zip <- downloadHandler(
