@@ -54,53 +54,21 @@ data_upload_server <- function(id) {
 
     raw_data <- (
       reactive({
-        # Reset errors at the start of the reactive
         file_loading_error(NULL)
 
-        #' If no data is provided by the user, load dummy data
-        if (is.null(input$data_upload$datapath) & is.null(datapath)) {
+        upload_paths <- .resolve_upload_paths(
+          input$data_upload, datapath, session
+        )
+        if (is.null(upload_paths)) {
           session$userData$dataset_filename <- "adnca_example"
           return(DUMMY_DATA)
         }
 
-        if (is.null(input$data_upload$datapath)) {
-          log_info("Data upload module initialized with datapath: ", datapath)
-          paths <- datapath
-          filenames <- basename(datapath)
-          session$userData$dataset_filename <- paste(
-            filenames, collapse = ", "
-          )
-        } else {
-          paths <- input$data_upload$datapath
-          filenames <- input$data_upload$name
-        }
-
-        read_results <- purrr::map2(paths, filenames, .read_uploaded_file)
-
-        # Process results
-        successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
-        errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
-          purrr::map(\(x) paste0(x$name, ": ", x$msg))
-
-        errors <- .apply_uploaded_settings(
-          successful_loads, errors, settings_override,
-          pending_versioned, session, ns
+        .process_uploaded_files(
+          upload_paths$paths, upload_paths$filenames,
+          DUMMY_DATA, settings_override, pending_versioned,
+          file_loading_error, session, ns
         )
-
-        loaded_data <- .combine_uploaded_data(
-          successful_loads, DUMMY_DATA, session
-        )
-        if (!is.null(loaded_data$error)) {
-          errors <- append(errors, loaded_data$error)
-        }
-
-        if (length(errors) > 0) {
-          file_loading_error(paste(errors, collapse = "<br>"))
-          log_error("Errors loading files: ", paste(errors, collapse = "; "))
-        }
-
-        loaded_data$data
-
       }) %>%
         bindEvent(input$data_upload, ignoreNULL = FALSE)
     )
@@ -116,99 +84,25 @@ data_upload_server <- function(id) {
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data())))
     )
 
-    # Render the version table reactable (driven by pending_versioned)
     output$version_table <- renderReactable({
       versioned <- pending_versioned()
       req(versioned)
-
-      summary_df <- settings_version_summary(versioned$versions)
-      display_df <- summary_df[, c(
-        "datetime", "anca_version", "tab", "dataset", "comment"
-      )]
-
-      reactable(
-        display_df,
-        selection = "single",
-        defaultSelected = 1,
-        onClick = "select",
-        compact = TRUE,
-        bordered = TRUE,
-        highlight = TRUE,
-        defaultPageSize = 10,
-        theme = reactableTheme(
-          rowSelectedStyle = list(
-            backgroundColor = "#CCE5FF",
-            boxShadow = "inset 2px 0 0 0 #0d6efd"
-          )
-        ),
-        columns = list(
-          datetime = colDef(name = "Date/Time", minWidth = 240),
-          anca_version = colDef(name = "aNCA Version", minWidth = 165),
-          tab = colDef(name = "Tab", minWidth = 105),
-          dataset = colDef(name = "Dataset", minWidth = 180),
-          comment = colDef(name = "Comment", minWidth = 210)
-        )
-      )
+      .build_version_reactable(versioned$versions)
     })
 
-    # Helper to get the selected row index from the version table
     .get_selected_version <- function() {
       getReactableState("version_table", "selected")
     }
 
-    # Handle version selection from modal
     observeEvent(input$version_select_btn, {
-      versioned <- pending_versioned()
-      req(versioned)
-
-      selected_idx <- .get_selected_version()
-      if (is.null(selected_idx) || length(selected_idx) == 0) {
-        showNotification("Please select a version first.", type = "warning")
-        return()
-      }
-
-      chosen <- versioned$versions[[selected_idx]]
-      content <- extract_version_settings(chosen)
-      settings_override(content)
-
-      session$userData$settings_versions(versioned$versions)
-
-      removeModal()
-      pending_versioned(NULL)
-
-      comment_label <- if (nzchar(chosen$comment)) chosen$comment else chosen$datetime
-      log_success("Settings restored from version: ", comment_label)
-      showNotification(
-        paste0("Settings restored (", comment_label, ")."),
-        type = "message"
+      .handle_version_restore(
+        pending_versioned, .get_selected_version,
+        settings_override, session
       )
     })
 
-    # Handle version deletion from modal
     observeEvent(input$version_delete_btn, {
-      versioned <- pending_versioned()
-      req(versioned)
-
-      selected_idx <- .get_selected_version()
-      if (is.null(selected_idx) || length(selected_idx) == 0) {
-        showNotification("Please select a version to delete.", type = "warning")
-        return()
-      }
-
-      if (length(versioned$versions) <= 1) {
-        showNotification(
-          "Cannot delete the last remaining version.",
-          type = "warning"
-        )
-        return()
-      }
-
-      updated_versions <- delete_settings_version(
-        versioned$versions, selected_idx
-      )
-      updated <- list(versions = updated_versions, format = "versioned")
-      pending_versioned(updated)
-      showNotification("Version deleted.", type = "message")
+      .handle_version_delete(pending_versioned, .get_selected_version)
     })
 
     list(
@@ -216,6 +110,168 @@ data_upload_server <- function(id) {
       settings_override = settings_override
     )
   })
+}
+
+#' Resolve file paths and names from upload input or datapath option.
+#' @param data_upload The file input value (input$data_upload).
+#' @param datapath Option-based data path.
+#' @param session Shiny session.
+#' @returns A list with `paths` and `filenames`, or NULL if no data.
+#' @noRd
+.resolve_upload_paths <- function(data_upload, datapath, session) {
+  if (is.null(data_upload$datapath) & is.null(datapath)) {
+    return(NULL)
+  }
+
+  if (is.null(data_upload$datapath)) {
+    log_info("Data upload module initialized with datapath: ", datapath)
+    filenames <- basename(datapath)
+    session$userData$dataset_filename <- paste(filenames, collapse = ", ")
+    list(paths = datapath, filenames = filenames)
+  } else {
+    list(paths = data_upload$datapath, filenames = data_upload$name)
+  }
+}
+
+#' Read, classify, and combine uploaded files.
+#' @param paths Character vector of file paths.
+#' @param filenames Character vector of original file names.
+#' @param fallback Default data.frame when no data files are found.
+#' @param settings_override reactiveVal for settings.
+#' @param pending_versioned reactiveVal for versioned settings.
+#' @param file_loading_error reactiveVal for error display.
+#' @param session Shiny session.
+#' @param ns Namespace function.
+#' @returns A data.frame of loaded data.
+#' @noRd
+.process_uploaded_files <- function(paths, filenames, fallback,
+                                    settings_override, pending_versioned,
+                                    file_loading_error, session, ns) {
+  read_results <- purrr::map2(paths, filenames, .read_uploaded_file)
+
+  successful_loads <- purrr::keep(read_results, \(x) x$status == "success")
+  errors <- purrr::keep(read_results, \(x) x$status == "error") %>%
+    purrr::map(\(x) paste0(x$name, ": ", x$msg))
+
+  errors <- .apply_uploaded_settings(
+    successful_loads, errors, settings_override,
+    pending_versioned, session, ns
+  )
+
+  loaded_data <- .combine_uploaded_data(successful_loads, fallback, session)
+  if (!is.null(loaded_data$error)) {
+    errors <- append(errors, loaded_data$error)
+  }
+
+  if (length(errors) > 0) {
+    file_loading_error(paste(errors, collapse = "<br>"))
+    log_error("Errors loading files: ", paste(errors, collapse = "; "))
+  }
+
+  loaded_data$data
+}
+
+#' Build a reactable for version selection.
+#' @param versions List of version entries.
+#' @returns A reactable widget.
+#' @noRd
+.build_version_reactable <- function(versions) {
+  summary_df <- settings_version_summary(versions)
+  display_df <- summary_df[, c(
+    "datetime", "anca_version", "tab", "dataset", "comment"
+  )]
+
+  reactable(
+    display_df,
+    selection = "single",
+    defaultSelected = 1,
+    onClick = "select",
+    compact = TRUE,
+    bordered = TRUE,
+    highlight = TRUE,
+    defaultPageSize = 10,
+    theme = reactableTheme(
+      rowSelectedStyle = list(
+        backgroundColor = "#CCE5FF",
+        boxShadow = "inset 2px 0 0 0 #0d6efd"
+      )
+    ),
+    columns = list(
+      datetime = colDef(name = "Date/Time", minWidth = 240),
+      anca_version = colDef(name = "aNCA Version", minWidth = 165),
+      tab = colDef(name = "Tab", minWidth = 105),
+      dataset = colDef(name = "Dataset", minWidth = 180),
+      comment = colDef(name = "Comment", minWidth = 210)
+    )
+  )
+}
+
+#' Handle restoring a selected version from the modal.
+#' @param pending_versioned reactiveVal with versioned data.
+#' @param get_selected Function returning selected row index.
+#' @param settings_override reactiveVal for settings.
+#' @param session Shiny session.
+#' @noRd
+.handle_version_restore <- function(pending_versioned, get_selected,
+                                    settings_override, session) {
+  versioned <- pending_versioned()
+  req(versioned)
+
+  selected_idx <- get_selected()
+  if (is.null(selected_idx) || length(selected_idx) == 0) {
+    showNotification("Please select a version first.", type = "warning")
+    return()
+  }
+
+  chosen <- versioned$versions[[selected_idx]]
+  content <- extract_version_settings(chosen)
+  settings_override(content)
+
+  session$userData$settings_versions(versioned$versions)
+
+  removeModal()
+  pending_versioned(NULL)
+
+  comment_label <- if (nzchar(chosen$comment)) {
+    chosen$comment
+  } else {
+    chosen$datetime
+  }
+  log_success("Settings restored from version: ", comment_label)
+  showNotification(
+    paste0("Settings restored (", comment_label, ")."),
+    type = "message"
+  )
+}
+
+#' Handle deleting a selected version from the modal.
+#' @param pending_versioned reactiveVal with versioned data.
+#' @param get_selected Function returning selected row index.
+#' @noRd
+.handle_version_delete <- function(pending_versioned, get_selected) {
+  versioned <- pending_versioned()
+  req(versioned)
+
+  selected_idx <- get_selected()
+  if (is.null(selected_idx) || length(selected_idx) == 0) {
+    showNotification("Please select a version to delete.", type = "warning")
+    return()
+  }
+
+  if (length(versioned$versions) <= 1) {
+    showNotification(
+      "Cannot delete the last remaining version.",
+      type = "warning"
+    )
+    return()
+  }
+
+  updated_versions <- delete_settings_version(
+    versioned$versions, selected_idx
+  )
+  updated <- list(versions = updated_versions, format = "versioned")
+  pending_versioned(updated)
+  showNotification("Version deleted.", type = "message")
 }
 
 #' Read a single uploaded file and return a status list.
