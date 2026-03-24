@@ -412,4 +412,3 @@ describe("derive_ratio_units", {
     expect_equal(result$PPORRESU, c("fraction", "fraction"))
   })
 })
-
