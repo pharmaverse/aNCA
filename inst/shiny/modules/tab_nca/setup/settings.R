@@ -226,11 +226,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         # Additional settings (PCSPEC and ATPTREF handled later)
         updateSelectInput(session, inputId = "method", selected = settings$method)
 
-        if (!is.null(settings$bioavailability) &&
-              adnca_data()$dose$data$std_route %>%
-                unique() %>%
-                length() > 1) {
-          updateSelectInput(session,
+        dose_routes <- unique(adnca_data()$dose$data$std_route)
+        if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
+          updateSelectInput(
+            session,
             inputId = "bioavailability",
             selected = settings$bioavailability
           )
@@ -295,8 +294,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     })
 
     # Update Downstream Inputs (Profile & Specimen)
-    observeEvent(input$select_analyte, {
-      req(data())
+    # React to both analyte selection and data changes
+    observeEvent(c(input$select_analyte, data()), {
+      req(data(), input$select_analyte)
 
       settings <- settings_override()
 
