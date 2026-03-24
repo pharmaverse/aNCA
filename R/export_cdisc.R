@@ -10,7 +10,7 @@
 #'
 #' @param res_nca Object with results of the NCA analysis. If
 #'   `res_nca$result` contains a `.__excl__` column (logical), excluded rows
-#'   (`TRUE`) get `ANL01FL = ""` in ADPP; included rows get `ANL01FL = "Y"`.
+#'   (`TRUE`) get `PKSUM1F = "1"` in ADPP; included rows get `PKSUM1F = NA`.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #'
@@ -222,10 +222,10 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
       )
     ) %>%
     mutate(
-      ANL01FL = if (".__excl__" %in% names(.)) {
-        ifelse(.__excl__, "", "Y")
+      PKSUM1F = if (".__excl__" %in% names(.)) {
+        ifelse(.__excl__, "1", NA_character_)
       } else {
-        "Y"
+        NA_character_
       }
     ) %>%
     select(-any_of(".__excl__"))

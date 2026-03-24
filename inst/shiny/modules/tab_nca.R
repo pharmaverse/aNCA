@@ -48,24 +48,21 @@ tab_nca_ui <- function(id) {
             nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
           )
         ),
-        nav_menu(
-          "Parameter",
-          nav_panel(
-            "Descriptive Statistics",
-            descriptive_statistics_ui(ns("descriptive_stats"))
-          ),
-          nav_panel(
-            "Plots",
-            parameter_plots_ui(ns("parameter_plots"))
-          ),
-          nav_panel(
-            "Dataset",
-            parameter_datasets_ui(ns("parameter_datasets"))
-          ),
-          nav_panel(
-            "Exclusions",
-            parameter_exclusions_ui(ns("parameter_exclusions"))
-          )
+        nav_panel(
+          "Descriptive Statistics",
+          descriptive_statistics_ui(ns("descriptive_stats"))
+        ),
+        nav_panel(
+          "Plots",
+          parameter_plots_ui(ns("parameter_plots"))
+        ),
+        nav_panel(
+          "Dataset",
+          parameter_datasets_ui(ns("parameter_datasets"))
+        ),
+        nav_panel(
+          "Exclusions",
+          parameter_exclusions_ui(ns("parameter_exclusions"))
         )
       )
     ),
@@ -215,7 +212,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     })
 
     # Parameter exclusions: users can exclude individual PK parameter rows
-    # from summary tables and mean plots. Excluded rows get ANL01FL = "" in ADPP.
+    # from summary tables and mean plots. Excluded rows get PKSUM1F = "1" in ADPP.
     param_excl_rows <- parameter_exclusions_server(
       "parameter_exclusions", res_nca
     )

@@ -2,7 +2,7 @@
 #'
 #' UI and server logic for excluding PK parameter rows from TLG summary tables.
 #' Users select rows from the NCA results table and mark them for exclusion.
-#' Excluded rows are flagged via ANL01FL = "" in ADPP.
+#' Excluded rows are flagged via PKSUM1F = "1" in ADPP.
 #'
 #' - Red: Manually excluded parameter rows
 
@@ -32,7 +32,7 @@ parameter_exclusions_ui <- function(id) {
           p("Exclude PK parameter results from TLG summary tables and mean plots."),
           tags$ul(
             tags$li("Select rows in the table below and provide a reason."),
-            tags$li(tags$b("Red"), ": Excluded from TLGs (ANL01FL = \"\" in ADPP)"),
+            tags$li(tags$b("Red"), ": Excluded from PK summaries (PKSUM1F = \"1\" in ADPP)"),
             tags$li("Excluded rows remain in the dataset but are filtered from summaries.")
           ),
           p("Remove exclusions anytime by clicking the X button.")
@@ -54,7 +54,7 @@ parameter_exclusions_ui <- function(id) {
           "width:14px; height:14px; background:", PARAM_EXCL_COLOR,
           "; border:1px solid #ddd;"
         )),
-        span("Excluded from TLGs (summary tables and mean plots)",
+        span("Excluded from PK summaries (summary tables and mean plots)",
              style = "font-size:0.9em;")
       )
     ),

@@ -563,21 +563,20 @@ describe("export_cdisc", {
     )))
   })
 
-  it("sets ANL01FL to Y for all ADPP rows when no exclusions", {
+  it("sets PKSUM1F to NA for all ADPP rows when no exclusions", {
     result <- export_cdisc(test_pknca_res)
-    expect_true("ANL01FL" %in% names(result$adpp))
-    expect_true(all(result$adpp$ANL01FL == "Y"))
+    expect_true("PKSUM1F" %in% names(result$adpp))
+    expect_true(all(is.na(result$adpp$PKSUM1F)))
   })
 
-  it("sets ANL01FL to empty string for excluded rows via .__excl__ marker", {
+  it("sets PKSUM1F to 1 for excluded rows via .__excl__ marker", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
-    expect_true("ANL01FL" %in% names(result$adpp))
-    expect_true(any(result$adpp$ANL01FL == ""))
-    expect_true(any(result$adpp$ANL01FL == "Y"))
-    expect_equal(sum(result$adpp$ANL01FL == ""), 1)
+    expect_true("PKSUM1F" %in% names(result$adpp))
+    expect_equal(sum(result$adpp$PKSUM1F == "1", na.rm = TRUE), 1)
+    expect_equal(sum(is.na(result$adpp$PKSUM1F)), n - 1)
     expect_false(".__excl__" %in% names(result$adpp))
   })
 
