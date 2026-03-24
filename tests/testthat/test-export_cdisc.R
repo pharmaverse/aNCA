@@ -604,3 +604,35 @@ describe(".get_subjid", {
     expect_true(all(is.na(result)))
   })
 })
+
+describe("export_cdisc PKSUM1F derivation", {
+  it("defaults PKSUM1F to NA when not in conc data", {
+    result <- export_cdisc(test_pknca_res)
+    adnca <- result$adnca
+    expect_true("PKSUM1F" %in% names(adnca))
+    expect_true(all(is.na(adnca$PKSUM1F)))
+  })
+
+  it("preserves PKSUM1F from conc data", {
+    res_with_flags <- test_pknca_res
+    n <- nrow(res_with_flags$data$conc$data)
+    res_with_flags$data$conc$data$PKSUM1F <- rep(NA_character_, n)
+    res_with_flags$data$conc$data$PKSUM1F[1] <- "1"
+
+    result <- export_cdisc(res_with_flags)
+    adnca <- result$adnca
+
+    expect_equal(adnca$PKSUM1F[1], "1")
+    expect_true(all(is.na(adnca$PKSUM1F[-1])))
+  })
+
+  it("PKSUM1F is listed in ADNCA metadata", {
+    adnca_vars <- metadata_nca_variables %>%
+      filter(Dataset == "ADNCA")
+    expect_true("PKSUM1F" %in% adnca_vars$Variable)
+    pksum1f_row <- adnca_vars %>% filter(Variable == "PKSUM1F")
+    expect_equal(pksum1f_row$Label, "PK Summary Exclusion Flag 1")
+    expect_equal(pksum1f_row$Type, "text")
+    expect_equal(pksum1f_row$Core, "Perm")
+  })
+})

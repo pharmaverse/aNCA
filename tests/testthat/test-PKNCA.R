@@ -649,4 +649,71 @@ describe("add_exclusion_reasons", {
     pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
     expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
   })
+
+  it("sets PKSUM1F to 1 for TLG exclusions", {
+    excl_list <- list(
+      list(
+        reason = "TLG only", rows = c(2, 3),
+        exclude_nca = FALSE, exclude_tlg = TRUE
+      )
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # NCA exclude column should be untouched for these rows
+    expect_true(all(result$conc$data[[excl_col]][c(2, 3)] %in% c("", NA)))
+
+    # PKSUM1F should be "1" for excluded rows, NA for others
+    expect_equal(result$conc$data$PKSUM1F[c(2, 3)], c("1", "1"))
+    expect_true(all(is.na(result$conc$data$PKSUM1F[-c(2, 3)])))
+  })
+
+  it("applies NCA exclusion only when exclude_nca is TRUE", {
+    excl_list <- list(
+      list(
+        reason = "NCA only", rows = 1,
+        exclude_nca = TRUE, exclude_tlg = FALSE
+      )
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # NCA exclude column should have the reason
+    expect_equal(result$conc$data[[excl_col]][1], "NCA only")
+
+    # PKSUM1F should remain NA (no TLG exclusion)
+    expect_true(is.na(result$conc$data$PKSUM1F[1]))
+  })
+
+  it("applies both NCA and TLG exclusion together", {
+    excl_list <- list(
+      list(
+        reason = "Both", rows = 4,
+        exclude_nca = TRUE, exclude_tlg = TRUE
+      )
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # NCA exclusion applied
+    expect_equal(result$conc$data[[excl_col]][4], "Both")
+
+    # TLG exclusion applied
+    expect_equal(result$conc$data$PKSUM1F[4], "1")
+  })
+
+  it("defaults exclude_nca to TRUE for backward compatibility", {
+    # Old-style exclusion without exclude_nca/exclude_tlg fields
+    excl_list <- list(
+      list(reason = "Legacy", rows = 5)
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # Should still apply NCA exclusion
+    expect_equal(result$conc$data[[excl_col]][5], "Legacy")
+
+    # No TLG exclusion (exclude_tlg not set)
+    expect_true(is.na(result$conc$data$PKSUM1F[5]))
+  })
 })

@@ -879,10 +879,10 @@ remove_pp_not_requested <- function(pknca_res) {
 #'   - exclude_nca: logical, if TRUE the rows are excluded from NCA
 #'     calculations (added to the exclude column)
 #'   - exclude_tlg: logical, if TRUE the rows are flagged with
-#'     ANL01FL = NA and PKSUM1F = "1" so TLGs can filter them out
+#'     PKSUM1F = "1" so TLGs can filter them out
 #'
 #' @return The modified PKNCAdata object with updated exclusion
-#'   reasons, ANL01FL, and PKSUM1F in the concentration object.
+#'   reasons and PKSUM1F in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   if (is.null(exclusion_list) || length(exclusion_list) == 0) {
@@ -896,10 +896,7 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     exclude_col <- "exclude"
   }
 
-  # Initialise ANL01FL and PKSUM1F if not present
-  if (!"ANL01FL" %in% names(pknca_data$conc$data)) {
-    pknca_data$conc$data$ANL01FL <- "Y"
-  }
+  # Initialise PKSUM1F if not present
   if (!"PKSUM1F" %in% names(pknca_data$conc$data)) {
     pknca_data$conc$data$PKSUM1F <- NA_character_
   }
@@ -927,7 +924,6 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     }
     # TLG exclusion: flag rows for PK summary exclusion
     if (isTRUE(excl$exclude_tlg)) {
-      pknca_data$conc$data$ANL01FL[rows] <- NA_character_
       pknca_data$conc$data$PKSUM1F[rows] <- "1"
     }
   }
