@@ -80,31 +80,6 @@ ratios_table_ui <- function(id) {
 #' @param ref_options Character vector of valid group reference strings.
 #' @returns List with `valid` (data.frame) and `skipped` (character vector of reasons).
 #' @noRd
-# Validate a single ratio row against available options.
-# Returns a character vector of reasons (empty if valid).
-.validate_ratio_row <- function(row, param_options, ref_options,
-                                all_group_options, valid_agg) {
-  reasons <- character()
-  if (!row$TestParameter %in% param_options)
-    reasons <- c(reasons, paste0("TestParameter '", row$TestParameter, "' not available"))
-  if (!row$RefParameter %in% param_options)
-    reasons <- c(reasons, paste0("RefParameter '", row$RefParameter, "' not available"))
-  if (!row$RefGroups %in% ref_options)
-    reasons <- c(reasons, paste0("RefGroups '", row$RefGroups, "' not available"))
-  if (!row$TestGroups %in% all_group_options)
-    reasons <- c(reasons, paste0("TestGroups '", row$TestGroups, "' not available"))
-  if (!tolower(row$AggregateSubject) %in% valid_agg)
-    reasons <- c(reasons, paste0("AggregateSubject '", row$AggregateSubject, "' invalid"))
-  if (!is.numeric(row$AdjustingFactor) || length(row$AdjustingFactor) != 1 ||
-      is.na(row$AdjustingFactor))
-    reasons <- c(reasons, paste0(
-      "AdjustingFactor '", row$AdjustingFactor, "' must be a single numeric value"
-    ))
-  reasons
-}
-
-
-
 ratios_table_server <- function(
     id, adnca_data, extra_group_vars, imported_ratios) {
   moduleServer(id, function(input, output, session) {
@@ -205,33 +180,19 @@ ratios_table_server <- function(
         return()
       }
 
-      all_group_options <- c(ratio_reference_options(), "(all other levels)")
-      valid_agg <- c("yes", "no", "if-needed")
-      skipped <- character()
-      keep <- logical(nrow(ratio_df))
+      result <- .validate_ratio_table(
+        ratio_df, ratio_param_options(), ratio_reference_options()
+      )
 
-      for (i in seq_len(nrow(ratio_df))) {
-        reasons <- .validate_ratio_row(
-          ratio_df[i, ], ratio_param_options(), ratio_reference_options(),
-          all_group_options, valid_agg
-        )
-        if (length(reasons) == 0) {
-          keep[i] <- TRUE
-        } else {
-          skipped <- c(skipped, paste0("Row ", i, " (", ratio_df$PPTESTCD[i], "): ",
-                                       paste(reasons, collapse = "; ")))
-        }
-      }
-
-      if (length(skipped) > 0) {
+      if (length(result$skipped) > 0) {
         showNotification(
-          paste0("Skipped ratio rows:\n", paste(skipped, collapse = "\n")),
+          paste0("Skipped ratio rows:\n", paste(result$skipped, collapse = "\n")),
           type = "warning", duration = 10
         )
       }
 
-      if (any(keep)) {
-        ratio_table(ratio_df[keep, , drop = FALSE])
+      if (any(result$keep)) {
+        ratio_table(ratio_df[result$keep, , drop = FALSE])
         reset_reactable_memory()
         refresh_reactable(refresh_reactable() + 1)
       }
@@ -412,4 +373,48 @@ ratios_table_server <- function(
       ),
       PPTESTCD = make.unique(PPTESTCD, sep = "")
     )
+}
+
+# Validate all rows in a ratio table. Returns list(keep, skipped).
+.validate_ratio_table <- function(ratio_df, param_options, ref_options) {
+  all_group_options <- c(ref_options, "(all other levels)")
+  valid_agg <- c("yes", "no", "if-needed")
+  skipped <- character()
+  keep <- logical(nrow(ratio_df))
+
+  for (i in seq_len(nrow(ratio_df))) {
+    reasons <- .validate_ratio_row(
+      ratio_df[i, ], param_options, ref_options, all_group_options, valid_agg
+    )
+    if (length(reasons) == 0) {
+      keep[i] <- TRUE
+    } else {
+      skipped <- c(skipped, paste0("Row ", i, " (", ratio_df$PPTESTCD[i], "): ",
+                                   paste(reasons, collapse = "; ")))
+    }
+  }
+  list(keep = keep, skipped = skipped)
+}
+
+# Validate a single ratio row against available options.
+# Returns a character vector of reasons (empty if valid).
+.validate_ratio_row <- function(row, param_options, ref_options,
+                                all_group_options, valid_agg) {
+  reasons <- character()
+  if (!row$TestParameter %in% param_options)
+    reasons <- c(reasons, paste0("TestParameter '", row$TestParameter, "' not available"))
+  if (!row$RefParameter %in% param_options)
+    reasons <- c(reasons, paste0("RefParameter '", row$RefParameter, "' not available"))
+  if (!row$RefGroups %in% ref_options)
+    reasons <- c(reasons, paste0("RefGroups '", row$RefGroups, "' not available"))
+  if (!row$TestGroups %in% all_group_options)
+    reasons <- c(reasons, paste0("TestGroups '", row$TestGroups, "' not available"))
+  if (!tolower(row$AggregateSubject) %in% valid_agg)
+    reasons <- c(reasons, paste0("AggregateSubject '", row$AggregateSubject, "' invalid"))
+  if (!is.numeric(row$AdjustingFactor) || length(row$AdjustingFactor) != 1 ||
+      is.na(row$AdjustingFactor))
+    reasons <- c(reasons, paste0(
+      "AdjustingFactor '", row$AdjustingFactor, "' must be a single numeric value"
+    ))
+  reasons
 }
