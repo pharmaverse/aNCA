@@ -580,6 +580,63 @@ describe("export_cdisc", {
     expect_false(".__excl__" %in% names(result$adpp))
   })
 
+  it("PKSUM1F is character type", {
+    result <- export_cdisc(test_pknca_res)
+    expect_type(result$adpp$PKSUM1F, "character")
+  })
+
+  it("PKSUM1F has the correct CDISC label", {
+    result <- export_cdisc(test_pknca_res)
+    expect_equal(
+      attr(result$adpp$PKSUM1F, "label"),
+      "PK Summary Exclusion Flag"
+    )
+  })
+
+  it("PKSUM1F handles multiple excluded rows", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.__excl__ <- c(TRUE, TRUE, TRUE, rep(FALSE, n - 3))
+    result <- export_cdisc(tagged_res)
+    expect_equal(sum(result$adpp$PKSUM1F == "1", na.rm = TRUE), 3)
+    expect_equal(sum(is.na(result$adpp$PKSUM1F)), n - 3)
+  })
+
+  it("PKSUM1F handles all rows excluded", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.__excl__ <- rep(TRUE, n)
+    result <- export_cdisc(tagged_res)
+    expect_true(all(result$adpp$PKSUM1F == "1"))
+    expect_equal(sum(is.na(result$adpp$PKSUM1F)), 0)
+  })
+
+  it("PKSUM1F does not appear in PP output", {
+    tagged_res <- test_pknca_res
+    tagged_res$result$.__excl__ <- rep(FALSE, nrow(tagged_res$result))
+    result <- export_cdisc(tagged_res)
+    expect_false("PKSUM1F" %in% names(result$pp))
+    expect_false(".__excl__" %in% names(result$pp))
+  })
+
+  it("PKSUM1F is the last column in ADPP", {
+    result <- export_cdisc(test_pknca_res)
+    adpp_names <- names(result$adpp)
+    expect_equal(adpp_names[length(adpp_names)], "PKSUM1F")
+  })
+
+  it("PKSUM1F works correctly with grouping_vars", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.__excl__ <- c(TRUE, rep(FALSE, n - 1))
+    tagged_res$data$conc$data$GROUP <- "GroupA"
+    tagged_res$result$GROUP <- "GroupA"
+    result <- export_cdisc(tagged_res, grouping_vars = "GROUP")
+    expect_true("PKSUM1F" %in% names(result$adpp))
+    expect_true("GROUP" %in% names(result$adpp))
+    expect_equal(sum(result$adpp$PKSUM1F == "1", na.rm = TRUE), 1)
+  })
+
   it("includes non-standard grouping_vars columns in ADNCA and ADPP outputs", {
     test_with_grpvars <- test_pknca_res
     test_with_grpvars$data$conc$data$GROUP <- "GroupA"
