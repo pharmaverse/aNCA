@@ -268,9 +268,11 @@ source(
   local = TRUE
 )
 
-describe(".validate_imported_ratios", {
+describe(".validate_ratio_row", {
   param_options <- c("CMAX", "AUCLAST", "AUCINF.OBS")
   ref_options <- c("ANALYTE: DrugA", "ANALYTE: DrugB", "ROUTE: INTRAVASCULAR")
+  all_group_options <- c(ref_options, "(all other levels)")
+  valid_agg <- c("yes", "no", "if-needed")
 
   valid_row <- data.frame(
     TestParameter = "CMAX",
@@ -283,62 +285,88 @@ describe(".validate_imported_ratios", {
     stringsAsFactors = FALSE
   )
 
-  it("passes valid rows through", {
-    result <- .validate_imported_ratios(valid_row, param_options, ref_options)
-    expect_equal(nrow(result$valid), 1)
-    expect_length(result$skipped, 0)
+  it("returns empty reasons for a valid row", {
+    reasons <- .validate_ratio_row(
+      valid_row, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 0)
   })
 
-  it("skips rows with invalid TestParameter", {
+  it("flags invalid TestParameter", {
     bad <- valid_row
     bad$TestParameter <- "FAKE"
-    result <- .validate_imported_ratios(bad, param_options, ref_options)
-    expect_equal(nrow(result$valid), 0)
-    expect_length(result$skipped, 1)
-    expect_true(grepl("TestParameter", result$skipped))
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("TestParameter", reasons))
   })
 
-  it("skips rows with invalid RefGroups", {
+  it("flags invalid RefParameter", {
+    bad <- valid_row
+    bad$RefParameter <- "FAKE"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("RefParameter", reasons))
+  })
+
+  it("flags invalid RefGroups", {
     bad <- valid_row
     bad$RefGroups <- "UNKNOWN: X"
-    result <- .validate_imported_ratios(bad, param_options, ref_options)
-    expect_equal(nrow(result$valid), 0)
-    expect_true(grepl("RefGroups", result$skipped))
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("RefGroups", reasons))
   })
 
   it("accepts (all other levels) as TestGroups", {
-    result <- .validate_imported_ratios(valid_row, param_options, ref_options)
-    expect_equal(nrow(result$valid), 1)
+    reasons <- .validate_ratio_row(
+      valid_row, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 0)
   })
 
-  it("skips rows with invalid TestGroups", {
+  it("flags invalid TestGroups", {
     bad <- valid_row
     bad$TestGroups <- "NONEXISTENT: X"
-    result <- .validate_imported_ratios(bad, param_options, ref_options)
-    expect_equal(nrow(result$valid), 0)
-    expect_true(grepl("TestGroups", result$skipped))
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("TestGroups", reasons))
   })
 
-  it("skips rows with invalid AggregateSubject", {
+  it("flags invalid AggregateSubject", {
     bad <- valid_row
     bad$AggregateSubject <- "invalid"
-    result <- .validate_imported_ratios(bad, param_options, ref_options)
-    expect_equal(nrow(result$valid), 0)
-    expect_true(grepl("AggregateSubject", result$skipped))
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("AggregateSubject", reasons))
   })
 
-  it("returns empty when required columns are missing", {
-    bad <- data.frame(PPTESTCD = "X", stringsAsFactors = FALSE)
-    result <- .validate_imported_ratios(bad, param_options, ref_options)
-    expect_equal(nrow(result$valid), 0)
-    expect_true(grepl("Missing required columns", result$skipped))
+  it("flags non-numeric AdjustingFactor", {
+    bad <- valid_row
+    bad$AdjustingFactor <- "abc"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("AdjustingFactor", reasons))
   })
 
-  it("handles mixed valid and invalid rows", {
-    mixed <- rbind(valid_row, valid_row)
-    mixed$TestParameter[2] <- "FAKE"
-    result <- .validate_imported_ratios(mixed, param_options, ref_options)
-    expect_equal(nrow(result$valid), 1)
-    expect_length(result$skipped, 1)
+  it("collects multiple reasons for a row with several issues", {
+    bad <- valid_row
+    bad$TestParameter <- "FAKE"
+    bad$RefGroups <- "UNKNOWN: X"
+    bad$AggregateSubject <- "invalid"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 3)
   })
 })
