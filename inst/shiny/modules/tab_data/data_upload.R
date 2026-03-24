@@ -199,11 +199,11 @@ data_upload_server <- function(id) {
           )
         ),
         columns = list(
-          datetime = colDef(name = "Date/Time", minWidth = 160),
-          anca_version = colDef(name = "aNCA Version", minWidth = 110),
-          tab = colDef(name = "Tab", minWidth = 70),
-          dataset = colDef(name = "Dataset", minWidth = 120),
-          comment = colDef(name = "Comment", minWidth = 140)
+          datetime = colDef(name = "Date/Time", minWidth = 240),
+          anca_version = colDef(name = "aNCA Version", minWidth = 165),
+          tab = colDef(name = "Tab", minWidth = 105),
+          dataset = colDef(name = "Dataset", minWidth = 180),
+          comment = colDef(name = "Comment", minWidth = 210)
         )
       )
     })

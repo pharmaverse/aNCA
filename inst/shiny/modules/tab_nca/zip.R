@@ -98,9 +98,10 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                 shinyjs::hidden(
                   div(
                     id = ns("settings_comment_container"),
+                    h4("Comment"),
                     textInput(
                       ns("settings_comment"),
-                      label = "Settings comment (optional)",
+                      label = "(optional)",
                       placeholder = "e.g. final NCA, first draft"
                     )
                   )
