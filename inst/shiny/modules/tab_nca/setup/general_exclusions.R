@@ -325,7 +325,12 @@ general_exclusions_server <- function(
 
     # Render the exclusions table (not shown if empty)
     output$exclusion_list_ui <- renderUI({
-      .render_exclusion_list_table(exclusion_list(), ns)
+      tbl <- .render_exclusion_list_table(exclusion_list(), ns)
+      if (is.null(tbl)) return(NULL)
+      tagList(
+        tbl,
+        tags$script("setTimeout(function(){ Shiny.bindAll(); }, 100);")
+      )
     })
 
     # Prepare exclusion list for return (without xbtn_id)
