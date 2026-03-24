@@ -62,6 +62,67 @@ parameter_exclusions_ui <- function(id) {
   )
 }
 
+# Build a reason-per-index vector from an exclusion list.
+# Concatenates with "; " when multiple exclusions cover the same row.
+.build_exclusion_reasons <- function(lst) {
+  all_indices <- sort(unique(unlist(lapply(lst, function(x) x$rows))))
+  reasons <- rep(NA_character_, max(c(all_indices, 0L)))
+  for (entry in lst) {
+    for (idx in entry$rows) {
+      if (idx <= length(reasons)) {
+        reasons[idx] <- if (is.na(reasons[idx])) {
+          entry$reason
+        } else {
+          paste(reasons[idx], entry$reason, sep = "; ")
+        }
+      }
+    }
+  }
+  list(indices = all_indices, reasons = reasons[all_indices])
+}
+
+# Render the exclusion list as an HTML table with remove buttons.
+.render_exclusion_table <- function(lst, ns) {
+  if (length(lst) == 0) return(NULL)
+  tags$table(
+    style = paste(
+      "width:100%",
+      "background:#f9f9f9",
+      "font-size:0.95em",
+      "margin-bottom:12px",
+      "border-radius:4px",
+      "border-collapse:separate",
+      "border-spacing:0",
+      sep = "; "
+    ),
+    tags$thead(
+      tags$tr(
+        tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("", style = "width:36px;")
+      )
+    ),
+    tags$tbody(
+      lapply(lst, function(item) {
+        tags$tr(
+          tags$td(paste(item$rows, collapse = ", "),
+                  style = "padding:4px 8px;"),
+          tags$td(item$reason, style = "padding:4px 8px;"),
+          tags$td(
+            actionButton(
+              ns(item$xbtn_id),
+              label = NULL,
+              icon = shiny::icon("times"),
+              class = "btn btn-link btn-sm",
+              style = "padding:2px 6px;"
+            )
+          )
+        )
+      })
+    )
+  )
+}
+
 parameter_exclusions_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -80,10 +141,8 @@ parameter_exclusions_server <- function(id, res_nca) {
     param_data <- reactive({
       req(res_nca())
       lst <- exclusion_list()
-      res <- res_nca()
-      result_df <- res$result
+      result_df <- res_nca()$result
 
-      # Select key columns for display
       display_cols <- c(
         "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
         "PPTESTCD", "PPTEST", "PPORRES", "PPORRESU",
@@ -92,7 +151,6 @@ parameter_exclusions_server <- function(id, res_nca) {
       available_cols <- intersect(display_cols, names(result_df))
       df <- result_df[, available_cols, drop = FALSE]
 
-      # Mark excluded rows in the data so rowStyle can read it
       excl_indices <- sort(unique(unlist(lapply(lst, function(e) e$rows))))
       df$.__is_excluded__ <- seq_len(nrow(df)) %in% excl_indices
       df
@@ -124,7 +182,9 @@ parameter_exclusions_server <- function(id, res_nca) {
         current <- exclusion_list()
         xbtn_id <- paste0("remove_param_excl_", xbtn_counter() + 1)
         xbtn_counter(xbtn_counter() + 1)
-        new_entry <- list(list(reason = reason, rows = rows_sel, xbtn_id = xbtn_id))
+        new_entry <- list(list(
+          reason = reason, rows = rows_sel, xbtn_id = xbtn_id
+        ))
         exclusion_list(append(current, new_entry))
         updateTextInput(session, "exclusion_reason", value = "")
         updateReactable("param_table-table", selected = NA)
@@ -154,70 +214,10 @@ parameter_exclusions_server <- function(id, res_nca) {
       registered_xbtns(union(already, new_ids))
     })
 
-    # Render exclusion list table
     output$exclusion_list_ui <- renderUI({
-      lst <- exclusion_list()
-      if (length(lst) == 0) return(NULL)
-      tags$table(
-        style = paste(
-          "width:100%",
-          "background:#f9f9f9",
-          "font-size:0.95em",
-          "margin-bottom:12px",
-          "border-radius:4px",
-          "border-collapse:separate",
-          "border-spacing:0",
-          sep = "; "
-        ),
-        tags$thead(
-          tags$tr(
-            tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
-            tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
-            tags$th("", style = "width:36px;")
-          )
-        ),
-        tags$tbody(
-          lapply(lst, function(item) {
-            tags$tr(
-              tags$td(paste(item$rows, collapse = ", "),
-                      style = "padding:4px 8px;"),
-              tags$td(item$reason, style = "padding:4px 8px;"),
-              tags$td(
-                actionButton(
-                  ns(item$xbtn_id),
-                  label = NULL,
-                  icon = shiny::icon("times"),
-                  class = "btn btn-link btn-sm",
-                  style = "padding:2px 6px;"
-                )
-              )
-            )
-          })
-        )
-      )
+      .render_exclusion_table(exclusion_list(), ns)
     })
 
-    # Return excluded row indices and per-row reasons as a reactive list
-    reactive({
-      lst <- exclusion_list()
-      all_indices <- sort(unique(unlist(lapply(lst, function(x) x$rows))))
-      # Build reason per index (concatenate if multiple exclusions cover same row)
-      reasons <- rep(NA_character_, max(c(all_indices, 0L)))
-      for (entry in lst) {
-        for (idx in entry$rows) {
-          if (idx <= length(reasons)) {
-            reasons[idx] <- if (is.na(reasons[idx])) {
-              entry$reason
-            } else {
-              paste(reasons[idx], entry$reason, sep = "; ")
-            }
-          }
-        }
-      }
-      list(
-        indices = all_indices,
-        reasons = reasons[all_indices]
-      )
-    })
+    reactive(.build_exclusion_reasons(exclusion_list()))
   })
 }

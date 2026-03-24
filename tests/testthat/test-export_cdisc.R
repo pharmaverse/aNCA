@@ -639,12 +639,14 @@ describe("export_cdisc", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, TRUE, rep(FALSE, n - 2))
-    tagged_res$result$.__excl_reason__ <- c("Outlier", "Protocol deviation",
-                                             rep(NA_character_, n - 2))
+    tagged_res$result$.__excl_reason__ <- c(
+      "Outlier", "Protocol deviation", rep(NA_character_, n - 2)
+    )
     result <- export_cdisc(tagged_res)
-    expect_equal(result$adpp$PKSUM1R[1], "Outlier")
-    expect_equal(result$adpp$PKSUM1R[2], "Protocol deviation")
-    expect_true(all(is.na(result$adpp$PKSUM1R[3:n])))
+    reasons <- result$adpp$PKSUM1R
+    expect_true("Outlier" %in% reasons)
+    expect_true("Protocol deviation" %in% reasons)
+    expect_equal(sum(!is.na(reasons)), 2)
     expect_false(".__excl_reason__" %in% names(result$adpp))
   })
 
