@@ -127,7 +127,7 @@ ratios_table_ui <- function(id) {
 }
 
 ratios_table_server <- function(
-    id, adnca_data, extra_group_vars, imported_ratios = reactive(NULL)) {
+    id, adnca_data, extra_group_vars, imported_ratios) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -232,7 +232,7 @@ ratios_table_server <- function(
       }
 
       if (nrow(result$valid) > 0) {
-        ratio_table(rbind(ratio_table(), result$valid))
+        ratio_table(result$valid)
         reset_reactable_memory()
         refresh_reactable(refresh_reactable() + 1)
       }
