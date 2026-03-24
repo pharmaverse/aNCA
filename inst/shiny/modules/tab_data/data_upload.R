@@ -59,6 +59,7 @@ data_upload_server <- function(id) {
 
         #' If no data is provided by the user, load dummy data
         if (is.null(input$data_upload$datapath) & is.null(datapath)) {
+          session$userData$dataset_filename <- "adnca_example"
           return(DUMMY_DATA)
         }
 
@@ -66,6 +67,9 @@ data_upload_server <- function(id) {
           log_info("Data upload module initialized with datapath: ", datapath)
           paths <- datapath
           filenames <- basename(datapath)
+          session$userData$dataset_filename <- paste(
+            filenames, collapse = ", "
+          )
         } else {
           paths <- input$data_upload$datapath
           filenames <- input$data_upload$name

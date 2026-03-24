@@ -93,19 +93,18 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                     selected = c("rds", "xpt", "csv"),
                     multiple = TRUE
                   ),
-                  style = "margin-bottom: 2em;"
-                )
-              )
-            ),
-            shinyjs::hidden(
-              div(
-                id = ns("settings_comment_container"),
-                textInput(
-                  ns("settings_comment"),
-                  label = "Settings comment (optional)",
-                  placeholder = "e.g. final NCA, first draft"
+                  style = "margin-bottom: 1em;"
                 ),
-                style = "margin-top: 1em;"
+                shinyjs::hidden(
+                  div(
+                    id = ns("settings_comment_container"),
+                    textInput(
+                      ns("settings_comment"),
+                      label = "Settings comment (optional)",
+                      placeholder = "e.g. final NCA, first draft"
+                    )
+                  )
+                )
               )
             ),
             div(
