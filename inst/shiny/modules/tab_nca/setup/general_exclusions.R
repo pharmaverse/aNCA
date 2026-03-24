@@ -205,22 +205,13 @@ general_exclusions_ui <- function(id) {
 .render_exclusion_list_table <- function(lst, ns) {
   if (length(lst) == 0) return(NULL)
   tags$table(
-    style = paste(
-      "width:100%",
-      "background:#f9f9f9",
-      "font-size:0.95em",
-      "margin-bottom:12px",
-      "border-radius:4px",
-      "border-collapse:separate",
-      "border-spacing:0",
-      sep = "; "
-    ),
+    class = "excl-list-table",
     tags$thead(
       tags$tr(
-        tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
-        tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
-        tags$th("Type", style = "font-weight:600; padding:4px 8px;"),
-        tags$th("", style = "width:36px;")
+        tags$th("Rows"),
+        tags$th("Reason"),
+        tags$th("Type"),
+        tags$th("", class = "excl-remove-col")
       )
     ),
     tags$tbody(
@@ -229,12 +220,9 @@ general_exclusions_ui <- function(id) {
           item$exclude_nca, item$exclude_tlg
         )
         tags$tr(
-          tags$td(
-            paste(item$rows, collapse = ", "),
-            style = "padding:4px 8px;"
-          ),
-          tags$td(item$reason, style = "padding:4px 8px;"),
-          tags$td(type_label, style = "padding:4px 8px;"),
+          tags$td(paste(item$rows, collapse = ", ")),
+          tags$td(item$reason),
+          tags$td(type_label),
           tags$td(
             actionButton(
               ns(item$xbtn_id),
