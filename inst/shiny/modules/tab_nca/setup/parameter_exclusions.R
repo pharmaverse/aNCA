@@ -33,7 +33,7 @@ parameter_exclusions_ui <- function(id) {
           tags$ul(
             tags$li("Select rows in the table below and provide a reason."),
             tags$li(tags$b("Yellow"), ": excluded (PKSUM1F = \"1\" in ADPP)"),
-            tags$li("Excluded rows remain in the dataset but are filtered from summaries.")
+            tags$li("Excluded rows remain in the dataset but are filtered from summary tables and mean plots.")
           ),
           p("Remove exclusions anytime by clicking the X button.")
         ),
@@ -144,7 +144,7 @@ parameter_exclusions_server <- function(id, res_nca) {
     })
 
     # Build a wide-format results table for display.
-    # Includes .__is_excluded__ so rowStyle can use the data directly.
+    # Includes PKSUM1F/PKSUM1R columns and .__is_excluded__ for row styling.
     param_data <- reactive({
       req(res_nca())
       lst <- exclusion_list()
@@ -158,8 +158,17 @@ parameter_exclusions_server <- function(id, res_nca) {
       available_cols <- intersect(display_cols, names(result_df))
       df <- result_df[, available_cols, drop = FALSE]
 
-      excl_indices <- sort(unique(unlist(lapply(lst, function(e) e$rows))))
-      df$.__is_excluded__ <- seq_len(nrow(df)) %in% excl_indices
+      excl_info <- .build_exclusion_reasons(lst)
+      n <- nrow(df)
+      is_excl <- seq_len(n) %in% excl_info$indices
+      reason_vec <- rep(NA_character_, n)
+      if (length(excl_info$indices) > 0) {
+        reason_vec[excl_info$indices] <- excl_info$reasons
+      }
+
+      df$PKSUM1F <- ifelse(is_excl, "1", NA_character_)
+      df$PKSUM1R <- reason_vec
+      df$.__is_excluded__ <- is_excl
       df
     })
 
