@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Ratio calculations table is now included in settings YAML export and
+  restored on upload, with validation against available parameters and
+  groups ([\#1091](https://github.com/pharmaverse/aNCA/issues/1091))
 - Data tab filters are now included in the settings YAML file and
   restored on upload, for both standalone settings download and ZIP
   export ([\#1082](https://github.com/pharmaverse/aNCA/issues/1082))
