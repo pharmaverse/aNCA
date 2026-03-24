@@ -70,7 +70,12 @@ h5 {
 
 /* modals */
 .modal-dialog {
-  max-width: 800px;
+  max-width: 1000px;
+  margin-top: 1rem;
+}
+
+.modal.fade .modal-dialog {
+  transform: translate(0, 0);
 }
 
 .modal-header {
