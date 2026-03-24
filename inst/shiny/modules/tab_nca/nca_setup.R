@@ -210,6 +210,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
             dplyr::select(-default)
         }
         settings_to_save <- list(
+          filters = session$userData$applied_filters,
           settings = export_settings,
           slope_rules = slope_rules()
         )

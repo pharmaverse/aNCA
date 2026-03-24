@@ -130,6 +130,126 @@ general_exclusions_ui <- function(id) {
   )
 }
 
+#' Determine the background color for a row based on exclusion state.
+#' @param index Row index in the table.
+#' @param data The data frame rendered in the reactable.
+#' @param exclusion_lst Current list of exclusion entries.
+#' @returns A list with `background` style or NULL.
+#' @noRd
+.exclusion_row_color <- function(index, data, exclusion_lst) {
+  row_nca <- FALSE
+  row_tlg <- FALSE
+  for (excl in exclusion_lst) {
+    if (index %in% excl$rows) {
+      if (isTRUE(excl$exclude_nca)) row_nca <- TRUE
+      if (isTRUE(excl$exclude_tlg)) row_tlg <- TRUE
+    }
+  }
+
+  row_default <- !is.null(data[index, ]$nca_exclude) &&
+    nzchar(data[index, ]$nca_exclude)
+
+  color <- if (row_nca && row_tlg) {
+    EXCL_COLOR_BOTH
+  } else if (row_nca) {
+    EXCL_COLOR_MANUAL_NCA
+  } else if (row_default && row_tlg) {
+    EXCL_COLOR_DEFAULT_TLG
+  } else if (row_tlg) {
+    EXCL_COLOR_TLG
+  } else if (row_default) {
+    EXCL_COLOR_DEFAULT
+  } else {
+    NULL
+  }
+
+  if (!is.null(color)) list(background = color) else NULL
+}
+
+#' Handle adding a new exclusion entry from UI inputs.
+#' @param input Shiny input object.
+#' @param session Shiny session object.
+#' @param exclusion_list reactiveVal holding the exclusion list.
+#' @param xbtn_counter reactiveVal holding the button counter.
+#' @noRd
+.handle_add_exclusion <- function(input, session, exclusion_list, xbtn_counter) {
+  rows_sel <- getReactableState("conc_table-table", "selected")
+  reason <- input$exclusion_reason
+  nca_checked <- isTRUE(input$cb_manual_nca)
+  tlg_checked <- isTRUE(input$cb_tlg)
+
+  if (length(rows_sel) > 0 && nzchar(reason) &&
+        (nca_checked || tlg_checked)) {
+    current <- exclusion_list()
+    xbtn_id <- paste0(
+      "remove_exclusion_reason_", xbtn_counter() + 1
+    )
+    xbtn_counter(xbtn_counter() + 1)
+    list_new_reason <- list(list(
+      reason = reason, rows = rows_sel,
+      xbtn_id = xbtn_id,
+      exclude_nca = nca_checked,
+      exclude_tlg = tlg_checked
+    ))
+    exclusion_list(append(current, list_new_reason))
+    updateTextInput(session, "exclusion_reason", value = "")
+    updateReactable("conc_table-table", selected = NA)
+  }
+}
+
+#' Render the exclusion list as an HTML table.
+#' @param lst List of exclusion entries.
+#' @param ns Shiny namespace function.
+#' @returns An HTML table tag or NULL if empty.
+#' @noRd
+.render_exclusion_list_table <- function(lst, ns) {
+  if (length(lst) == 0) return(NULL)
+  tags$table(
+    style = paste(
+      "width:100%",
+      "background:#f9f9f9",
+      "font-size:0.95em",
+      "margin-bottom:12px",
+      "border-radius:4px",
+      "border-collapse:separate",
+      "border-spacing:0",
+      sep = "; "
+    ),
+    tags$thead(
+      tags$tr(
+        tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("Type", style = "font-weight:600; padding:4px 8px;"),
+        tags$th("", style = "width:36px;")
+      )
+    ),
+    tags$tbody(
+      lapply(lst, function(item) {
+        type_label <- .exclusion_type_label(
+          item$exclude_nca, item$exclude_tlg
+        )
+        tags$tr(
+          tags$td(
+            paste(item$rows, collapse = ", "),
+            style = "padding:4px 8px;"
+          ),
+          tags$td(item$reason, style = "padding:4px 8px;"),
+          tags$td(type_label, style = "padding:4px 8px;"),
+          tags$td(
+            actionButton(
+              ns(item$xbtn_id),
+              label = NULL,
+              icon = shiny::icon("times"),
+              class = "btn btn-link btn-sm",
+              style = "padding:2px 6px;"
+            )
+          )
+        )
+      })
+    )
+  )
+}
+
 general_exclusions_server <- function(
   id, processed_pknca_data, general_exclusions_override
 ) {
@@ -175,70 +295,16 @@ general_exclusions_server <- function(
       borderless = TRUE,
       rowStyle = function(x) {
         function(index) {
-          lst <- exclusion_list()
-          # Determine manual exclusion type for this row
-          row_nca <- FALSE
-          row_tlg <- FALSE
-          for (excl in lst) {
-            if (index %in% excl$rows) {
-              if (isTRUE(excl$exclude_nca)) row_nca <- TRUE
-              if (isTRUE(excl$exclude_tlg)) row_tlg <- TRUE
-            }
-          }
-
-          # Check default NCA exclusion from data
-          row_default <- FALSE
-          row_data <- x[index, ]
-          if (!is.null(row_data$nca_exclude) &&
-                nzchar(row_data$nca_exclude)) {
-            row_default <- TRUE
-          }
-
-          # Determine color based on combination
-          color <- if (row_nca && row_tlg) {
-            EXCL_COLOR_BOTH
-          } else if (row_nca) {
-            EXCL_COLOR_MANUAL_NCA
-          } else if (row_default && row_tlg) {
-            EXCL_COLOR_DEFAULT_TLG
-          } else if (row_tlg) {
-            EXCL_COLOR_TLG
-          } else if (row_default) {
-            EXCL_COLOR_DEFAULT
-          } else {
-            NULL
-          }
-
-          if (!is.null(color)) list(background = color) else NULL
+          .exclusion_row_color(index, x, exclusion_list())
         }
       }
     )
 
     # Add a new exclusion when the Add button is pressed
     observeEvent(input$add_exclusion_reason, {
-      rows_sel <- getReactableState("conc_table-table", "selected")
-      reason <- input$exclusion_reason
-      nca_checked <- isTRUE(input$cb_manual_nca)
-      tlg_checked <- isTRUE(input$cb_tlg)
-
-      if (length(rows_sel) > 0 && nzchar(reason) &&
-            (nca_checked || tlg_checked)) {
-        current <- exclusion_list()
-        xbtn_id <- paste0(
-          "remove_exclusion_reason_", xbtn_counter() + 1
-        )
-        xbtn_counter(xbtn_counter() + 1)
-        list_new_reason <- list(list(
-          reason = reason, rows = rows_sel,
-          xbtn_id = xbtn_id,
-          exclude_nca = nca_checked,
-          exclude_tlg = tlg_checked
-        ))
-        exclusion_list(append(current, list_new_reason))
-        # Clear selected rows and reason input
-        updateTextInput(session, "exclusion_reason", value = "")
-        updateReactable("conc_table-table", selected = NA)
-      }
+      .handle_add_exclusion(
+        input, session, exclusion_list, xbtn_counter
+      )
     })
 
     # Dynamically observe all remove buttons for exclusion reasons
@@ -257,58 +323,7 @@ general_exclusions_server <- function(
 
     # Render the exclusions table (not shown if empty)
     output$exclusion_list_ui <- renderUI({
-      lst <- exclusion_list()
-      if (length(lst) == 0) return(NULL)
-      tags$table(
-        style = paste(
-          "width:100%",
-          "background:#f9f9f9",
-          "font-size:0.95em",
-          "margin-bottom:12px",
-          "border-radius:4px",
-          "border-collapse:separate",
-          "border-spacing:0",
-          sep = "; "
-        ),
-        tags$thead(
-          tags$tr(
-            tags$th(
-              "Rows", style = "font-weight:600; padding:4px 8px;"
-            ),
-            tags$th(
-              "Reason", style = "font-weight:600; padding:4px 8px;"
-            ),
-            tags$th(
-              "Type", style = "font-weight:600; padding:4px 8px;"
-            ),
-            tags$th("", style = "width:36px;")
-          )
-        ),
-        tags$tbody(
-          lapply(lst, function(item) {
-            type_label <- .exclusion_type_label(
-              item$exclude_nca, item$exclude_tlg
-            )
-            tags$tr(
-              tags$td(
-                paste(item$rows, collapse = ", "),
-                style = "padding:4px 8px;"
-              ),
-              tags$td(item$reason, style = "padding:4px 8px;"),
-              tags$td(type_label, style = "padding:4px 8px;"),
-              tags$td(
-                actionButton(
-                  ns(item$xbtn_id),
-                  label = NULL,
-                  icon = shiny::icon("times"),
-                  class = "btn btn-link btn-sm",
-                  style = "padding:2px 6px;"
-                )
-              )
-            )
-          })
-        )
-      )
+      .render_exclusion_list_table(exclusion_list(), ns)
     })
 
     # Prepare exclusion list for return (without xbtn_id)
