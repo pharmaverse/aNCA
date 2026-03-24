@@ -59,7 +59,7 @@ general_exclusions_ui <- function(id) {
           ),
           tags$ul(
             tags$li(
-              tags$b("Manual NCA exclusion"),
+              tags$b("NCA exclusion"),
               ": excluded from NCA PK calculations"
             ),
             tags$li(
