@@ -236,11 +236,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       }
       res_tagged$result$.__excl_reason__ <- reason_vec
 
-      # Filtered: excluded rows removed
-      res_filtered <- res
-      if (length(excl_indices) > 0) {
-        res_filtered$result <- res$result[-excl_indices, , drop = FALSE]
-      }
+      # Filtered: derive from tagged to avoid a third copy of res$result
+      res_filtered <- res_tagged
+      keep <- !res_tagged$result$.__excl__
+      res_filtered$result <- res_tagged$result[keep, , drop = FALSE]
+      res_filtered$result$.__excl__ <- NULL
+      res_filtered$result$.__excl_reason__ <- NULL
 
       list(tagged = res_tagged, filtered = res_filtered)
     })
