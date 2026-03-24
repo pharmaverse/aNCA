@@ -39,6 +39,7 @@ data_upload_server <- function(id) {
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
     settings_override <- reactiveVal(NULL) # Store loaded settings
+    pending_versioned <- reactiveVal(NULL) # Versioned settings awaiting selection
 
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
@@ -104,11 +105,27 @@ data_upload_server <- function(id) {
           settings_override(NULL)
 
         } else if (length(found_settings) == 1) {
-          # Success: Single settings file
           latest <- found_settings[[1]]
-          settings_override(latest$content)
-          log_success("Settings successfully loaded from ", latest$name)
-          showNotification(paste("Settings successfully loaded."), type = "message")
+          versioned_attr <- attr(latest$content, "versioned")
+
+          if (!is.null(versioned_attr) && length(versioned_attr$versions) > 1) {
+            # Versioned file with multiple versions — show selection modal
+            pending_versioned(versioned_attr)
+            .show_version_modal(session, ns, versioned_attr$versions)
+          } else {
+            # Single version or legacy — apply directly
+            content <- latest$content
+            attr(content, "versioned") <- NULL
+            settings_override(content)
+
+            # Store versions for future saves
+            if (!is.null(versioned_attr)) {
+              session$userData$settings_versions(versioned_attr$versions)
+            }
+
+            log_success("Settings successfully loaded from ", latest$name)
+            showNotification("Settings successfully loaded.", type = "message")
+          }
         }
 
         loaded_data <- DUMMY_DATA
@@ -153,9 +170,115 @@ data_upload_server <- function(id) {
       pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(raw_data())))
     )
 
+    # Handle version selection from modal
+    observeEvent(input$version_select_btn, {
+      versioned <- pending_versioned()
+      req(versioned)
+
+      selected_idx <- as.integer(input$version_choice)
+      if (is.na(selected_idx) || selected_idx < 1 ||
+            selected_idx > length(versioned$versions)) {
+        showNotification("Invalid version selection.", type = "error")
+        return()
+      }
+
+      chosen <- versioned$versions[[selected_idx]]
+      content <- extract_version_settings(chosen)
+      settings_override(content)
+
+      # Store all versions for future saves
+      session$userData$settings_versions(versioned$versions)
+
+      removeModal()
+      pending_versioned(NULL)
+
+      comment_label <- if (nzchar(chosen$comment)) chosen$comment else chosen$datetime
+      log_success("Settings restored from version: ", comment_label)
+      showNotification(
+        paste0("Settings restored (", comment_label, ")."),
+        type = "message"
+      )
+    })
+
+    # Handle version deletion from modal
+    observeEvent(input$version_delete_btn, {
+      versioned <- pending_versioned()
+      req(versioned)
+
+      selected_idx <- as.integer(input$version_choice)
+      if (is.na(selected_idx) || selected_idx < 1 ||
+            selected_idx > length(versioned$versions)) {
+        showNotification("Invalid version selection.", type = "error")
+        return()
+      }
+
+      if (length(versioned$versions) <= 1) {
+        showNotification("Cannot delete the last remaining version.", type = "warning")
+        return()
+      }
+
+      updated_versions <- delete_settings_version(versioned$versions, selected_idx)
+      updated <- list(versions = updated_versions, format = "versioned")
+      pending_versioned(updated)
+
+      # Re-show modal with updated list
+      .show_version_modal(session, ns, updated_versions)
+      showNotification("Version deleted.", type = "message")
+    })
+
     list(
       adnca_raw = raw_data,
       settings_override = settings_override
     )
   })
+}
+
+#' Show a modal for selecting a settings version.
+#' @param session Shiny session.
+#' @param ns Namespace function.
+#' @param versions List of version entries.
+#' @noRd
+.show_version_modal <- function(session, ns, versions) {
+  summary_df <- settings_version_summary(versions)
+
+  choices <- setNames(summary_df$index, paste0(
+    ifelse(nzchar(summary_df$comment), summary_df$comment, "(no comment)"),
+    " — ", summary_df$datetime,
+    ifelse(nzchar(summary_df$dataset), paste0(" [", summary_df$dataset, "]"), "")
+  ))
+
+  showModal(modalDialog(
+    title = "Select Settings Version",
+    p("This settings file contains multiple versions. Select which version to restore."),
+    radioButtons(
+      ns("version_choice"),
+      label = NULL,
+      choices = choices,
+      selected = 1
+    ),
+    tags$div(
+      style = "margin-top: 8px;",
+      reactable::reactable(
+        summary_df[, c("comment", "datetime", "dataset", "anca_version", "tab")],
+        compact = TRUE,
+        bordered = TRUE,
+        highlight = TRUE,
+        defaultPageSize = 5,
+        columns = list(
+          comment = reactable::colDef(name = "Comment"),
+          datetime = reactable::colDef(name = "Date/Time"),
+          dataset = reactable::colDef(name = "Dataset"),
+          anca_version = reactable::colDef(name = "aNCA Version"),
+          tab = reactable::colDef(name = "Tab")
+        )
+      )
+    ),
+    footer = tagList(
+      actionButton(ns("version_select_btn"), "Restore", class = "btn-primary"),
+      actionButton(ns("version_delete_btn"), "Delete Selected", class = "btn-danger"),
+      modalButton("Cancel")
+    ),
+    easyClose = TRUE,
+    size = "l"
+  ))
 }

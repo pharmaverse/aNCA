@@ -55,6 +55,7 @@ ui <- function() {
         class = "project-name-container",
         textInput("project_name", label = NULL, placeholder = "Project Name"),
         icon("file", class = "project-name-icon"),
+        save_settings_ui("save_settings"),
         zip_ui("zip_modal")
       )
     ),
@@ -167,6 +168,14 @@ server <- function(input, output, session) {
     if (input$project_name != "") input$project_name else ""
   })
 
+  # Track active tab for settings versioning
+  session$userData$active_tab <- reactive({
+    input$page %||% ""
+  })
+
+  # Versioned settings storage (list of version entries)
+  session$userData$settings_versions <- reactiveVal(list())
+
   # Helper (plain function, not reactive): prepend project name with separator
   session$userData$project_prefix <- function(sep = "-") {
     pn <- session$userData$project_name()
@@ -227,6 +236,9 @@ server <- function(input, output, session) {
     settings = session$userData$settings,
     grouping_vars = tab_data_outputs$extra_group_vars
   )
+
+  # Save settings (header button)
+  save_settings_server("save_settings")
 }
 
 shiny::shinyApp(ui, server)

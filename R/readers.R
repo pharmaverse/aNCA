@@ -88,21 +88,41 @@ readers <- list(
 )
 
 #' Helper Logic to parse and structure settings YAML
+#'
+#' Supports both the legacy flat format (top-level `settings` key) and
+#' the versioned format (top-level `current` key). For versioned files
+#' the most recent version is returned by default. The full versioned
+#' object is attached as attribute `"versioned"` so callers can offer
+#' version selection.
+#'
 #' @param path Character string with path to the settings YAML file.
-#' @param name Character string with the name of the settings YAML file.
-#' @returns A list with parsed settings or NULL if not a valid settings file.
+#' @param name Character string with the name of the settings YAML file
+#'   (unused, kept for backward compatibility).
+#' @returns A list with parsed settings. For versioned files, the
+#'   attribute `"versioned"` contains the full
+#'   [read_versioned_settings()] result.
 #'
 #' @importFrom tools file_ext
 #' @importFrom yaml read_yaml
 #'
 #' @export
 read_settings <- function(path, name) {
-
   obj <- yaml::read_yaml(path)
 
+  if ("current" %in% names(obj)) {
+    # Versioned format — parse via read_versioned_settings, return
+    # the most recent version's settings as the top-level result
+    versioned <- read_versioned_settings(path)
+    result <- extract_version_settings(versioned$versions[[1]])
+    attr(result, "versioned") <- versioned
+    return(result)
+  }
+
   if (!is.list(obj) || !"settings" %in% names(obj)) {
-    stop("The file does not appear to be a valid settings YAML file.",
-         "Please ensure that the file is a list with element 'settings'.")
+    stop(
+      "The file does not appear to be a valid settings YAML file. ",
+      "Please ensure that the file is a list with element 'settings'."
+    )
   }
 
   obj$slope_rules <- .convert_list_to_df(obj$slope_rules)

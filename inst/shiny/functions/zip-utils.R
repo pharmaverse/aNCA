@@ -450,14 +450,39 @@ prepare_export_files <- function(target_dir,
       dplyr::select(-default)
   }
 
-  settings_to_save <- list(
-    filters = session$userData$applied_filters,
+  payload <- list(
     settings = settings_list,
-    slope_rules = session$userData$slope_rules()
+    slope_rules = session$userData$slope_rules(),
+    filters = session$userData$applied_filters
   )
-  yaml::write_yaml(
-    settings_to_save, file.path(target_dir, "settings.yaml")
+
+  dataset_name <- tryCatch(
+    session$userData$study_ids_label(),
+    error = function(e) ""
   )
+
+  active_tab <- tryCatch(
+    session$userData$active_tab(),
+    error = function(e) ""
+  )
+
+  new_version <- create_settings_version(
+    settings_data = payload,
+    comment = "ZIP export",
+    dataset = dataset_name,
+    tab = active_tab
+  )
+
+  existing <- tryCatch(
+    session$userData$settings_versions(),
+    error = function(e) list()
+  )
+  if (is.null(existing)) existing <- list()
+
+  versions <- add_settings_version(existing, new_version)
+  session$userData$settings_versions(versions)
+
+  write_versioned_settings(versions, file.path(target_dir, "settings.yaml"))
 }
 
 #' Helper to export a single pre-specification xlsx file for CDISC datasets.
