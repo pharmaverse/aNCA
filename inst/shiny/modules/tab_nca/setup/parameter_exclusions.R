@@ -129,11 +129,18 @@ parameter_exclusions_server <- function(id, res_nca) {
 
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
+    prev_fingerprint <- reactiveVal(NULL)
 
-    # Clear exclusions when NCA results change (stale row indices)
+    # Clear exclusions only when result structure changes (row count or columns),
+    # not on every recomputation (e.g. unit changes that preserve row identity).
     observeEvent(res_nca(), {
-      exclusion_list(list())
-      xbtn_counter(0)
+      res <- res_nca()$result
+      fp <- paste(nrow(res), paste(names(res), collapse = ","))
+      if (!identical(fp, prev_fingerprint())) {
+        exclusion_list(list())
+        xbtn_counter(0)
+        prev_fingerprint(fp)
+      }
     })
 
     # Build a wide-format results table for display.
