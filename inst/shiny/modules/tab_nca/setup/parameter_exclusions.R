@@ -172,7 +172,9 @@ parameter_exclusions_server <- function(id, res_nca) {
       df
     })
 
-    # Render the reactable with row coloring driven by data
+    # Render the reactable with row coloring driven by exclusion_list()
+    # (same pattern as general_exclusions.R — the reactive is called inside
+    # the closure and the table re-renders because param_data depends on it).
     param_table_state <- reactable_server(
       "param_table",
       param_data,
@@ -182,7 +184,10 @@ parameter_exclusions_server <- function(id, res_nca) {
       columns = list(.__is_excluded__ = reactable::colDef(show = FALSE)),
       rowStyle = function(x) {
         function(index) {
-          if (isTRUE(x[index, ".__is_excluded__"])) {
+          excl_indices <- unlist(lapply(
+            exclusion_list(), function(excl) excl$rows
+          ))
+          if (index %in% excl_indices) {
             return(list(background = PARAM_EXCL_COLOR))
           }
           NULL
