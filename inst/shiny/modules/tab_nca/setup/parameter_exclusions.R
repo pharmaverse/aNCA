@@ -4,10 +4,10 @@
 #' Users select rows from the NCA results table and mark them for exclusion.
 #' Excluded rows are flagged via PKSUM1F = "1" in ADPP.
 #'
-#' - Red: Manually excluded parameter rows
+#' - Yellow: Manually excluded parameter rows
 
 # Color constant for excluded parameter rows
-PARAM_EXCL_COLOR <- "#FFCCCC"  # red, matching general_exclusions convention
+PARAM_EXCL_COLOR <- "#FFF3CD"  # yellow
 
 parameter_exclusions_ui <- function(id) {
   ns <- NS(id)
@@ -27,12 +27,12 @@ parameter_exclusions_ui <- function(id) {
       dropdown(
         div(
           style = "min-width:340px; max-width:480px;",
-          tags$h2("Parameter Exclusions Help",
+          tags$h2("TLG Exclusion",
                   style = "font-size:1.2em; margin-bottom:8px;"),
-          p("Exclude PK parameter results from TLG summary tables and mean plots."),
+          p("Exclude PK parameter rows from tables, listings, and graphs."),
           tags$ul(
             tags$li("Select rows in the table below and provide a reason."),
-            tags$li(tags$b("Red"), ": Excluded from PK summaries (PKSUM1F = \"1\" in ADPP)"),
+            tags$li(tags$b("Yellow"), ": excluded (PKSUM1F = \"1\" in ADPP)"),
             tags$li("Excluded rows remain in the dataset but are filtered from summaries.")
           ),
           p("Remove exclusions anytime by clicking the X button.")
@@ -54,7 +54,7 @@ parameter_exclusions_ui <- function(id) {
           "width:14px; height:14px; background:", PARAM_EXCL_COLOR,
           "; border:1px solid #ddd;"
         )),
-        span("Excluded from PK summaries (summary tables and mean plots)",
+        span("TLG exclusion",
              style = "font-size:0.9em;")
       )
     ),
