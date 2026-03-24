@@ -21,7 +21,7 @@ parameter_exclusions_ui <- function(id) {
       ),
       actionButton(
         ns("add_exclusion"),
-        label = "Exclude Selected",
+        label = "Add",
         class = "btn btn-primary btn-sm"
       ),
       dropdown(
