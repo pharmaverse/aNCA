@@ -76,10 +76,10 @@ parameter_exclusions_server <- function(id, res_nca) {
     })
 
     # Build a wide-format results table for display.
-    # Depends on exclusion_list() so the table re-renders with updated row colors.
+    # Includes .__is_excluded__ so rowStyle can use the data directly.
     param_data <- reactive({
       req(res_nca())
-      exclusion_list()
+      lst <- exclusion_list()
       res <- res_nca()
       result_df <- res$result
 
@@ -90,20 +90,25 @@ parameter_exclusions_server <- function(id, res_nca) {
         "PPSTRESN", "PPSTRESU", "exclude"
       )
       available_cols <- intersect(display_cols, names(result_df))
-      result_df[, available_cols, drop = FALSE]
+      df <- result_df[, available_cols, drop = FALSE]
+
+      # Mark excluded rows in the data so rowStyle can read it
+      excl_indices <- sort(unique(unlist(lapply(lst, function(e) e$rows))))
+      df$.__is_excluded__ <- seq_len(nrow(df)) %in% excl_indices
+      df
     })
 
-    # Render the reactable with row coloring for exclusions
-    reactable_server(
+    # Render the reactable with row coloring driven by data
+    param_table_state <- reactable_server(
       "param_table",
       param_data,
       selection = "multiple",
       onClick = "select",
       borderless = TRUE,
+      columns = list(.__is_excluded__ = reactable::colDef(show = FALSE)),
       rowStyle = function(x) {
         function(index) {
-          excl_indices <- unlist(lapply(exclusion_list(), function(excl) excl$rows))
-          if (index %in% excl_indices) {
+          if (isTRUE(x[index, ".__is_excluded__"])) {
             return(list(background = PARAM_EXCL_COLOR))
           }
           NULL
@@ -113,7 +118,7 @@ parameter_exclusions_server <- function(id, res_nca) {
 
     # Add exclusion when button is pressed
     observeEvent(input$add_exclusion, {
-      rows_sel <- getReactableState("param_table-table", "selected")
+      rows_sel <- param_table_state()$selected
       reason <- input$exclusion_reason
       if (length(rows_sel) > 0 && nzchar(reason)) {
         current <- exclusion_list()
@@ -126,16 +131,27 @@ parameter_exclusions_server <- function(id, res_nca) {
       }
     })
 
-    # Observe remove buttons
+    # Track which remove buttons already have observers to avoid duplicates
+    registered_xbtns <- reactiveVal(character(0))
+
+    # Register observers only for new remove buttons
     observe({
       lst <- exclusion_list()
-      lapply(lst, function(item) {
-        xbtn_id <- item$xbtn_id
-        observeEvent(input[[xbtn_id]], {
-          current <- exclusion_list()
-          exclusion_list(Filter(function(x) x$xbtn_id != xbtn_id, current))
-        }, ignoreInit = TRUE, once = TRUE)
-      })
+      already <- registered_xbtns()
+      new_ids <- setdiff(
+        vapply(lst, function(x) x$xbtn_id, character(1)),
+        already
+      )
+      for (xbtn_id in new_ids) {
+        local({
+          local_id <- xbtn_id
+          observeEvent(input[[local_id]], {
+            current <- exclusion_list()
+            exclusion_list(Filter(function(x) x$xbtn_id != local_id, current))
+          }, ignoreInit = TRUE, once = TRUE)
+        })
+      }
+      registered_xbtns(union(already, new_ids))
     })
 
     # Render exclusion list table
@@ -181,9 +197,27 @@ parameter_exclusions_server <- function(id, res_nca) {
       )
     })
 
-    # Return excluded row indices as a reactive
+    # Return excluded row indices and per-row reasons as a reactive list
     reactive({
-      sort(unique(unlist(lapply(exclusion_list(), function(x) x$rows))))
+      lst <- exclusion_list()
+      all_indices <- sort(unique(unlist(lapply(lst, function(x) x$rows))))
+      # Build reason per index (concatenate if multiple exclusions cover same row)
+      reasons <- rep(NA_character_, max(c(all_indices, 0L)))
+      for (entry in lst) {
+        for (idx in entry$rows) {
+          if (idx <= length(reasons)) {
+            reasons[idx] <- if (is.na(reasons[idx])) {
+              entry$reason
+            } else {
+              paste(reasons[idx], entry$reason, sep = "; ")
+            }
+          }
+        }
+      }
+      list(
+        indices = all_indices,
+        reasons = reasons[all_indices]
+      )
     })
   })
 }

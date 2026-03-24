@@ -217,27 +217,36 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       "parameter_exclusions", res_nca
     )
 
-    # Tag res_nca results with .__excl__ marker for CDISC export.
-    # The marker column survives arrange() reordering in export_cdisc().
-    res_nca_tagged <- reactive({
+    # Compute tagged and filtered views of res_nca in a single reactive
+    # to avoid duplicating the (potentially large) result object.
+    res_nca_excl <- reactive({
       req(res_nca())
       res <- res_nca()
-      excl <- param_excl_rows()
-      res$result$.__excl__ <- seq_len(nrow(res$result)) %in% excl
-      res
+      excl_info <- param_excl_rows()
+      excl_indices <- excl_info$indices
+      excl_reasons <- excl_info$reasons
+
+      # Tagged: .__excl__ and .__excl_reason__ markers for CDISC export
+      res_tagged <- res
+      n <- nrow(res$result)
+      res_tagged$result$.__excl__ <- seq_len(n) %in% excl_indices
+      reason_vec <- rep(NA_character_, n)
+      if (length(excl_indices) > 0) {
+        reason_vec[excl_indices] <- excl_reasons
+      }
+      res_tagged$result$.__excl_reason__ <- reason_vec
+
+      # Filtered: excluded rows removed
+      res_filtered <- res
+      if (length(excl_indices) > 0) {
+        res_filtered$result <- res$result[-excl_indices, , drop = FALSE]
+      }
+
+      list(tagged = res_tagged, filtered = res_filtered)
     })
 
-    # Filtered results with excluded rows removed
-    # (for descriptive stats and parameter plots)
-    res_nca_filtered <- reactive({
-      req(res_nca())
-      res <- res_nca()
-      excl <- param_excl_rows()
-      if (length(excl) > 0) {
-        res$result <- res$result[-excl, , drop = FALSE]
-      }
-      res
-    })
+    res_nca_tagged <- reactive(res_nca_excl()$tagged)
+    res_nca_filtered <- reactive(res_nca_excl()$filtered)
 
     #' Show slopes results
     pivoted_slopes <- reactive({

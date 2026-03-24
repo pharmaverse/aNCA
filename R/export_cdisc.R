@@ -11,6 +11,7 @@
 #' @param res_nca Object with results of the NCA analysis. If
 #'   `res_nca$result` contains a `.__excl__` column (logical), excluded rows
 #'   (`TRUE`) get `PKSUM1F = "1"` in ADPP; included rows get `PKSUM1F = NA`.
+#'   If `.__excl_reason__` (character) is also present, it populates `PKSUM1R`.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #'
@@ -161,8 +162,11 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select only columns needed for PP, ADPP, ADNCA (keep .__excl__ marker)
-    select(any_of(c(metadata_nca_variables[["Variable"]], grouping_vars, ".__excl__"))) %>%
+    # Select only columns needed for PP, ADPP, ADNCA (keep exclusion markers)
+    select(any_of(c(
+      metadata_nca_variables[["Variable"]], grouping_vars,
+      ".__excl__", ".__excl_reason__"
+    ))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
@@ -212,7 +216,10 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
     )
 
   adpp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable, grouping_vars, ".__excl__"))) %>%
+    select(any_of(c(
+      CDISC_COLS$ADPP$Variable, grouping_vars,
+      ".__excl__", ".__excl_reason__"
+    ))) %>%
     # Deselect permitted columns with only NAs
     select(
       -which(
@@ -226,9 +233,18 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
         ifelse(.__excl__, "1", NA_character_)
       } else {
         NA_character_
+      },
+      PKSUM1R = if (".__excl_reason__" %in% names(.)) {
+        .__excl_reason__
+      } else {
+        NA_character_
       }
     ) %>%
-    select(-any_of(".__excl__"))
+    select(-any_of(c(".__excl__", ".__excl_reason__")))
+
+  # Re-apply labels lost by mutate (mutate drops column attributes)
+  attr(adpp[["PKSUM1F"]], "label") <- labels_map[["PKSUM1F"]]
+  attr(adpp[["PKSUM1R"]], "label") <- labels_map[["PKSUM1R"]]
 
   adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,

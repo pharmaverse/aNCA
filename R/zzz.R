@@ -2,6 +2,7 @@
   utils::globalVariables(c(
     ".",
     ".__excl__",
+    ".__excl_reason__",
     ".facet_label_values",
     ".facet_n",
     "facet_label",
@@ -63,6 +64,7 @@
     "PCTPTREF",
     "PKNCA",
     "PKSUM1F",
+    "PKSUM1R",
     "PPANMETH",
     "PPORRES",
     "PPORRESU",
