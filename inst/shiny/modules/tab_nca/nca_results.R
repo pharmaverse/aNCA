@@ -73,59 +73,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         res$data$units <- session$userData$units_table()
         custom_units <- session$userData$units_table() %>%
           mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
-
-        # Split into PKNCA units (with group cols) and ratio units (NA groups)
-        group_cols <- setdiff(
-          names(custom_units),
-          c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
-        )
-        has_groups <- length(group_cols) > 0
-        if (has_groups) {
-          is_ratio_row <- rowSums(is.na(custom_units[, group_cols, drop = FALSE])) > 0
-        } else {
-          is_ratio_row <- rep(FALSE, nrow(custom_units))
-        }
-        pknca_custom <- custom_units[!is_ratio_row, , drop = FALSE]
-        ratio_custom <- custom_units[is_ratio_row, , drop = FALSE] %>%
-          select(PPTESTCD, PPSTRESU, conversion_factor)
-
-        result <- res$result %>%
-          select(-PPSTRESU, -PPSTRES) %>%
-          mutate(PPSTRESU = NA_character_, conversion_factor = NA_real_)
-
-        # Join PKNCA parameters by all shared columns (including groups)
-        if (nrow(pknca_custom) > 0) {
-          pknca_join_cols <- intersect(names(result), names(pknca_custom))
-          pknca_join_cols <- setdiff(pknca_join_cols, c("PPSTRESU", "conversion_factor"))
-          matched <- result %>%
-            select(-PPSTRESU, -conversion_factor) %>%
-            left_join(pknca_custom, by = pknca_join_cols)
-          result$PPSTRESU <- matched$PPSTRESU
-          result$conversion_factor <- matched$conversion_factor
-        }
-        # Join ratio parameters by PPTESTCD only for unmatched rows
-        if (nrow(ratio_custom) > 0) {
-          unmatched <- is.na(result$PPSTRESU)
-          if (any(unmatched)) {
-            ratio_matched <- result[unmatched, ] %>%
-              select(-PPSTRESU, -conversion_factor) %>%
-              left_join(ratio_custom, by = "PPTESTCD")
-            result$PPSTRESU[unmatched] <- ratio_matched$PPSTRESU
-            result$conversion_factor[unmatched] <- ratio_matched$conversion_factor
-          }
-        }
-
-        res$result <- result %>%
-          mutate(
-            PPSTRES = ifelse(
-              !is.na(conversion_factor),
-              PPORRES * conversion_factor,
-              PPORRES
-            ),
-            # pivot_wider_pknca_results expects "" not NA for no-custom-unit rows
-            PPSTRESU = ifelse(is.na(PPSTRESU), "", PPSTRESU)
-          ) %>%
-          select(-conversion_factor)
+        res$result <- apply_custom_units(res$result, custom_units)
       }
 
       #' Transform results
