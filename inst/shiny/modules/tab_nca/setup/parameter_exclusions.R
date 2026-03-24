@@ -33,7 +33,10 @@ parameter_exclusions_ui <- function(id) {
           tags$ul(
             tags$li("Select rows in the table below and provide a reason."),
             tags$li(tags$b("Yellow"), ": excluded (PKSUM1F = \"1\" in ADPP)"),
-            tags$li("Excluded rows remain in the dataset but are filtered from summary tables and mean plots.")
+            tags$li(
+              "Excluded rows remain in the dataset but are",
+              "filtered from summary tables and mean plots."
+            )
           ),
           p("Remove exclusions anytime by clicking the X button.")
         ),
