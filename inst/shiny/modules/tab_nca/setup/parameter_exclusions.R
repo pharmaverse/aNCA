@@ -84,44 +84,49 @@ parameter_exclusions_ui <- function(id) {
   list(indices = all_indices, reasons = reasons[all_indices])
 }
 
-# Render the exclusion list as an HTML table with remove buttons.
+# Render the exclusion list as a reactable with remove buttons.
 .render_exclusion_table <- function(lst, ns) {
   if (length(lst) == 0) return(NULL)
-  tags$table(
-    style = paste(
-      "width:100%",
-      "background:#f9f9f9",
-      "font-size:0.95em",
-      "margin-bottom:12px",
-      "border-radius:4px",
-      "border-collapse:separate",
-      "border-spacing:0",
-      sep = "; "
+
+  df <- data.frame(
+    Rows = vapply(lst, function(item) {
+      paste(item$rows, collapse = ", ")
+    }, character(1)),
+    Reason = vapply(lst, "[[", character(1), "reason"),
+    xbtn_id = vapply(lst, "[[", character(1), "xbtn_id"),
+    stringsAsFactors = FALSE
+  )
+
+  reactable::reactable(
+    df,
+    compact = TRUE,
+    bordered = TRUE,
+    highlight = TRUE,
+    pagination = FALSE,
+    defaultPageSize = nrow(df),
+    theme = reactable::reactableTheme(
+      headerStyle = list(background = "#e9e9e9")
     ),
-    tags$thead(
-      tags$tr(
-        tags$th("Rows", style = "font-weight:600; padding:4px 8px;"),
-        tags$th("Reason", style = "font-weight:600; padding:4px 8px;"),
-        tags$th("", style = "width:36px;")
-      )
-    ),
-    tags$tbody(
-      lapply(lst, function(item) {
-        tags$tr(
-          tags$td(paste(item$rows, collapse = ", "),
-                  style = "padding:4px 8px;"),
-          tags$td(item$reason, style = "padding:4px 8px;"),
-          tags$td(
+    columns = list(
+      Rows = reactable::colDef(name = "Rows"),
+      Reason = reactable::colDef(name = "Reason"),
+      xbtn_id = reactable::colDef(
+        name = "",
+        width = 50,
+        sortable = FALSE,
+        cell = function(value) {
+          as.character(
             actionButton(
-              ns(item$xbtn_id),
+              ns(value),
               label = NULL,
               icon = shiny::icon("times"),
               class = "btn btn-link btn-sm",
               style = "padding:2px 6px;"
             )
           )
-        )
-      })
+        },
+        html = TRUE
+      )
     )
   )
 }
@@ -236,7 +241,12 @@ parameter_exclusions_server <- function(id, res_nca) {
     })
 
     output$exclusion_list_ui <- renderUI({
-      .render_exclusion_table(exclusion_list(), ns)
+      tbl <- .render_exclusion_table(exclusion_list(), ns)
+      if (is.null(tbl)) return(NULL)
+      tagList(
+        tbl,
+        tags$script("setTimeout(function(){ Shiny.bindAll(); }, 100);")
+      )
     })
 
     reactive(.build_exclusion_reasons(exclusion_list()))
