@@ -412,7 +412,7 @@ ratios_table_server <- function(
   if (!tolower(row$AggregateSubject) %in% valid_agg)
     reasons <- c(reasons, paste0("AggregateSubject '", row$AggregateSubject, "' invalid"))
   if (!is.numeric(row$AdjustingFactor) || length(row$AdjustingFactor) != 1 ||
-      is.na(row$AdjustingFactor))
+        is.na(row$AdjustingFactor))
     reasons <- c(reasons, paste0(
       "AdjustingFactor '", row$AdjustingFactor, "' must be a single numeric value"
     ))
