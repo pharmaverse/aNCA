@@ -898,6 +898,10 @@ h4.modal-title:has(#loading-title) {
   border-spacing: 0;
 }
 
+.excl-list-table thead tr {
+  background: #e9e9e9;
+}
+
 .excl-list-table th {
   font-weight: 600;
   padding: 4px 8px;
