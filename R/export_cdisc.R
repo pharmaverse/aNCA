@@ -10,8 +10,8 @@
 #'
 #' @param res_nca Object with results of the NCA analysis. If
 #'   `res_nca$result` contains a `.__excl__` column (logical), excluded rows
-#'   (`TRUE`) get `PKSUM1F = "1"` in ADPP; included rows get `PKSUM1F = NA`.
-#'   If `.__excl_reason__` (character) is also present, it populates `PKSUM1R`.
+#'   (`TRUE`) get `PPSUM1F = "1"` in ADPP; included rows get `PPSUM1F = NA`.
+#'   If `.__excl_reason__` (character) is also present, it populates `PPSUM1R`.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #'
@@ -229,12 +229,12 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
       )
     ) %>%
     mutate(
-      PKSUM1F = if (".__excl__" %in% names(.)) {
+      PPSUM1F = if (".__excl__" %in% names(.)) {
         ifelse(.__excl__, "1", NA_character_)
       } else {
         NA_character_
       },
-      PKSUM1R = if (".__excl_reason__" %in% names(.)) {
+      PPSUM1R = if (".__excl_reason__" %in% names(.)) {
         .__excl_reason__
       } else {
         NA_character_
@@ -243,8 +243,8 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
     select(-any_of(c(".__excl__", ".__excl_reason__")))
 
   # Re-apply labels lost by mutate (mutate drops column attributes)
-  attr(adpp[["PKSUM1F"]], "label") <- labels_map[["PKSUM1F"]]
-  attr(adpp[["PKSUM1R"]], "label") <- labels_map[["PKSUM1R"]]
+  attr(adpp[["PPSUM1F"]], "label") <- labels_map[["PPSUM1F"]]
+  attr(adpp[["PPSUM1R"]], "label") <- labels_map[["PPSUM1R"]]
 
   adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,

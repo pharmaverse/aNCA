@@ -2,7 +2,7 @@
 #'
 #' UI and server logic for excluding PK parameter rows from TLG summary tables.
 #' Users select rows from the NCA results table and mark them for exclusion.
-#' Excluded rows are flagged via PKSUM1F = "1" in ADPP.
+#' Excluded rows are flagged via PPSUM1F = "1" in ADPP.
 #'
 #' - Yellow: Manually excluded parameter rows
 
@@ -32,7 +32,7 @@ parameter_exclusions_ui <- function(id) {
           p("Exclude PK parameter rows from tables, listings, and graphs."),
           tags$ul(
             tags$li("Select rows in the table below and provide a reason."),
-            tags$li(tags$b("Yellow"), ": excluded (PKSUM1F = \"1\" in ADPP)"),
+            tags$li(tags$b("Yellow"), ": excluded (PPSUM1F = \"1\" in ADPP)"),
             tags$li(
               "Excluded rows remain in the dataset but are",
               "filtered from summary tables and mean plots."
@@ -152,7 +152,7 @@ parameter_exclusions_server <- function(id, res_nca) {
     })
 
     # Build a wide-format results table for display.
-    # Includes PKSUM1F/PKSUM1R columns and .__is_excluded__ for row styling.
+    # Includes PPSUM1F/PPSUM1R columns and .__is_excluded__ for row styling.
     param_data <- reactive({
       req(res_nca())
       lst <- exclusion_list()
@@ -174,8 +174,8 @@ parameter_exclusions_server <- function(id, res_nca) {
         reason_vec[excl_info$indices] <- excl_info$reasons
       }
 
-      df$PKSUM1F <- ifelse(is_excl, "1", NA_character_)
-      df$PKSUM1R <- reason_vec
+      df$PPSUM1F <- ifelse(is_excl, "1", NA_character_)
+      df$PPSUM1R <- reason_vec
       df
     })
 

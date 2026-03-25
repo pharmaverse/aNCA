@@ -563,79 +563,79 @@ describe("export_cdisc", {
     )))
   })
 
-  it("sets PKSUM1F to NA for all ADPP rows when no exclusions", {
+  it("sets PPSUM1F to NA for all ADPP rows when no exclusions", {
     result <- export_cdisc(test_pknca_res)
-    expect_true("PKSUM1F" %in% names(result$adpp))
-    expect_true(all(is.na(result$adpp$PKSUM1F)))
+    expect_true("PPSUM1F" %in% names(result$adpp))
+    expect_true(all(is.na(result$adpp$PPSUM1F)))
   })
 
-  it("sets PKSUM1F to 1 for excluded rows via .__excl__ marker", {
+  it("sets PPSUM1F to 1 for excluded rows via .__excl__ marker", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
-    expect_true("PKSUM1F" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PKSUM1F == "1", na.rm = TRUE), 1)
-    expect_equal(sum(is.na(result$adpp$PKSUM1F)), n - 1)
+    expect_true("PPSUM1F" %in% names(result$adpp))
+    expect_equal(sum(result$adpp$PPSUM1F == "1", na.rm = TRUE), 1)
+    expect_equal(sum(is.na(result$adpp$PPSUM1F)), n - 1)
     expect_false(".__excl__" %in% names(result$adpp))
     expect_false(".__excl_reason__" %in% names(result$adpp))
   })
 
-  it("PKSUM1F is character type", {
+  it("PPSUM1F is character type", {
     result <- export_cdisc(test_pknca_res)
-    expect_type(result$adpp$PKSUM1F, "character")
+    expect_type(result$adpp$PPSUM1F, "character")
   })
 
-  it("PKSUM1F has the correct CDISC label", {
+  it("PPSUM1F has the correct CDISC label", {
     result <- export_cdisc(test_pknca_res)
     expect_equal(
-      attr(result$adpp$PKSUM1F, "label"),
+      attr(result$adpp$PPSUM1F, "label"),
       "PK Summary Exclusion Flag"
     )
   })
 
-  it("PKSUM1F handles multiple excluded rows", {
+  it("PPSUM1F handles multiple excluded rows", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, TRUE, TRUE, rep(FALSE, n - 3))
     result <- export_cdisc(tagged_res)
-    expect_equal(sum(result$adpp$PKSUM1F == "1", na.rm = TRUE), 3)
-    expect_equal(sum(is.na(result$adpp$PKSUM1F)), n - 3)
+    expect_equal(sum(result$adpp$PPSUM1F == "1", na.rm = TRUE), 3)
+    expect_equal(sum(is.na(result$adpp$PPSUM1F)), n - 3)
   })
 
-  it("PKSUM1F handles all rows excluded", {
+  it("PPSUM1F handles all rows excluded", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- rep(TRUE, n)
     result <- export_cdisc(tagged_res)
-    expect_true(all(result$adpp$PKSUM1F == "1"))
-    expect_equal(sum(is.na(result$adpp$PKSUM1F)), 0)
+    expect_true(all(result$adpp$PPSUM1F == "1"))
+    expect_equal(sum(is.na(result$adpp$PPSUM1F)), 0)
   })
 
-  it("PKSUM1F and PKSUM1R do not appear in PP output", {
+  it("PPSUM1F and PPSUM1R do not appear in PP output", {
     tagged_res <- test_pknca_res
     tagged_res$result$.__excl__ <- rep(FALSE, nrow(tagged_res$result))
     result <- export_cdisc(tagged_res)
-    expect_false("PKSUM1F" %in% names(result$pp))
-    expect_false("PKSUM1R" %in% names(result$pp))
+    expect_false("PPSUM1F" %in% names(result$pp))
+    expect_false("PPSUM1R" %in% names(result$pp))
     expect_false(".__excl__" %in% names(result$pp))
   })
 
-  it("PKSUM1F and PKSUM1R are the last two columns in ADPP", {
+  it("PPSUM1F and PPSUM1R are the last two columns in ADPP", {
     result <- export_cdisc(test_pknca_res)
     adpp_names <- names(result$adpp)
     n <- length(adpp_names)
-    expect_equal(adpp_names[n - 1], "PKSUM1F")
-    expect_equal(adpp_names[n], "PKSUM1R")
+    expect_equal(adpp_names[n - 1], "PPSUM1F")
+    expect_equal(adpp_names[n], "PPSUM1R")
   })
 
-  it("PKSUM1R is NA when no exclusion reasons provided", {
+  it("PPSUM1R is NA when no exclusion reasons provided", {
     result <- export_cdisc(test_pknca_res)
-    expect_true("PKSUM1R" %in% names(result$adpp))
-    expect_true(all(is.na(result$adpp$PKSUM1R)))
+    expect_true("PPSUM1R" %in% names(result$adpp))
+    expect_true(all(is.na(result$adpp$PPSUM1R)))
   })
 
-  it("PKSUM1R contains exclusion reason from .__excl_reason__", {
+  it("PPSUM1R contains exclusion reason from .__excl_reason__", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, TRUE, rep(FALSE, n - 2))
@@ -643,36 +643,36 @@ describe("export_cdisc", {
       "Outlier", "Protocol deviation", rep(NA_character_, n - 2)
     )
     result <- export_cdisc(tagged_res)
-    reasons <- result$adpp$PKSUM1R
+    reasons <- result$adpp$PPSUM1R
     expect_true("Outlier" %in% reasons)
     expect_true("Protocol deviation" %in% reasons)
     expect_equal(sum(!is.na(reasons)), 2)
     expect_false(".__excl_reason__" %in% names(result$adpp))
   })
 
-  it("PKSUM1R has the correct CDISC label", {
+  it("PPSUM1R has the correct CDISC label", {
     result <- export_cdisc(test_pknca_res)
     expect_equal(
-      attr(result$adpp$PKSUM1R, "label"),
+      attr(result$adpp$PPSUM1R, "label"),
       "PK Summary Exclusion Reason"
     )
   })
 
-  it("PKSUM1R is character type", {
+  it("PPSUM1R is character type", {
     result <- export_cdisc(test_pknca_res)
-    expect_type(result$adpp$PKSUM1R, "character")
+    expect_type(result$adpp$PPSUM1R, "character")
   })
 
-  it("PKSUM1F works correctly with grouping_vars", {
+  it("PPSUM1F works correctly with grouping_vars", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, rep(FALSE, n - 1))
     tagged_res$data$conc$data$GROUP <- "GroupA"
     tagged_res$result$GROUP <- "GroupA"
     result <- export_cdisc(tagged_res, grouping_vars = "GROUP")
-    expect_true("PKSUM1F" %in% names(result$adpp))
+    expect_true("PPSUM1F" %in% names(result$adpp))
     expect_true("GROUP" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PKSUM1F == "1", na.rm = TRUE), 1)
+    expect_equal(sum(result$adpp$PPSUM1F == "1", na.rm = TRUE), 1)
   })
 
   it("includes non-standard grouping_vars columns in ADNCA and ADPP outputs", {
