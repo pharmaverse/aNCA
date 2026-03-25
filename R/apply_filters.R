@@ -38,13 +38,13 @@ apply_filters <- function(data, filters) {
     # check if data if correct #
     if (!column %in% names(data)) stop("Data is missing filtered column: ", column)
 
+    # Handle "(NA)" sentinel before numeric coercion to avoid as.numeric("(NA)") warnings
+    include_na <- "(NA)" %in% value
+    if (include_na) value <- setdiff(value, "(NA)")
+
     if (is.numeric(data[[column]]) && filter$condition != "min-max") {
       value <- as.numeric(value)
     }
-
-    # Handle "(NA)" sentinel used by the filter UI for missing values
-    include_na <- "(NA)" %in% value
-    if (include_na) value <- setdiff(value, "(NA)")
 
     switch(
       filter$condition,

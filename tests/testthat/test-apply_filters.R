@@ -166,6 +166,13 @@ describe("apply_filters handles (NA) sentinel", {
     expect_equal(result$x, c("b", NA))
   })
 
+  it("!= with only (NA) returns all rows", {
+    df <- data.frame(x = c("a", "b", NA), stringsAsFactors = FALSE)
+    filter <- list(list(column = "x", condition = "!=", value = "(NA)"))
+    result <- apply_filters(df, filter)
+    expect_equal(nrow(result), 3)
+  })
+
   it("== without (NA) excludes NA rows", {
     df <- data.frame(x = c("a", "b", NA), stringsAsFactors = FALSE)
     filter <- list(list(column = "x", condition = "==", value = "a"))
