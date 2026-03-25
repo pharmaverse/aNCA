@@ -70,6 +70,7 @@
 #'   print(listing_ex)
 #'
 #' @import dplyr formatters
+#' @importFrom rlistings as_listing fmt_config
 #' @importFrom stats setNames
 #' @export
 #' @author Gerardo Rodriguez
@@ -225,7 +226,7 @@ l_pkcl01 <- function(
 
 
     # Build the listing object
-    rl <- rlistings::as_listing(
+    rl <- as_listing(
       df = list_data,
       key_cols = grouping_vars,
       disp_cols = displaying_vars,
