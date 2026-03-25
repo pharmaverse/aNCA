@@ -66,27 +66,33 @@ pc_example <- data.frame(
 # --- EX (Exposure / Dosing) ---------------------------------------------------
 # One row per dosing event, deduplicated from adnca_example.
 
-adnca_example$dose_time <- adnca_example$AFRLT - adnca_example$ARRLT
-
-dose_keys <- c("STUDYID", "USUBJID", "DOSETRT", "ATPTREF")
-dose_rows <- !duplicated(adnca_example[, dose_keys])
-doses <- adnca_example[dose_rows, ]
-
-subject_origin_ex <- ref_dates[doses$USUBJID]
-
-ex_example <- data.frame(
-  DOMAIN = "EX",
-  STUDYID  = doses$STUDYID,
-  USUBJID  = doses$USUBJID,
-  EXTRT    = doses$DOSETRT,
-  EXDOSE   = doses$DOSEA,
-  EXDOSU   = doses$DOSEU,
-  EXROUTE  = doses$ROUTE,
-  EXSTDTC  = format(subject_origin_ex + doses$dose_time * 3600,
-                    "%Y-%m-%dT%H:%M:%S"),
-  EXDUR    = sprintf("PT%gH", doses$ADOSEDUR),
-  stringsAsFactors = FALSE
-)
+ex_example <- adnca_example %>%
+  dplyr::mutate(
+    dose_time = AFRLT - ARRLT,
+    nominal_dose_time = NFRLT - NRRLT
+  ) %>%
+  dplyr::distinct(STUDYID, USUBJID, DOSETRT, ATPTREF, .keep_all = TRUE) %>%
+  dplyr::group_by(USUBJID) %>%
+  dplyr::mutate(
+    subject_origin = ref_dates[USUBJID],
+    exeltm = nominal_dose_time - min(nominal_dose_time)
+  ) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(
+    DOMAIN   = "EX",
+    STUDYID,
+    USUBJID,
+    EXTRT    = DOSETRT,
+    EXDOSE   = DOSEA,
+    EXDOSU   = DOSEU,
+    EXROUTE  = ROUTE,
+    EXSTDTC  = format(subject_origin + dose_time * 3600, "%Y-%m-%dT%H:%M:%S"),
+    EXENDTC  = format(subject_origin + dose_time * 3600 + ADOSEDUR * 3600,
+                      "%Y-%m-%dT%H:%M:%S"),
+    EXDUR    = sprintf("PT%gH", ADOSEDUR),
+    EXELTM   = sprintf("PT%gH", exeltm)
+  ) %>%
+  as.data.frame()
 
 # --- Save all three -----------------------------------------------------------
 

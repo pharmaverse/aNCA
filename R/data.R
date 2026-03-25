@@ -150,9 +150,9 @@
 #' \code{\link{adnca_example}}. Contains one row per dosing event per subject.
 #' Intended to support and test the PC+EX upload workflow (see GitHub issue #624).
 #'
-#' @format A data frame with 8 variables:
+#' @format A data frame with 11 variables:
 #' \describe{
-#'   \item{DOMAIN}{Character. Domain Abbreviation.}
+#'   \item{DOMAIN}{Character. Domain abbreviation.}
 #'   \item{STUDYID}{Character. Study identifier.}
 #'   \item{USUBJID}{Character. Unique subject identifier.}
 #'   \item{EXTRT}{Character. Name of the treatment (mapped from DOSETRT).}
@@ -160,9 +160,14 @@
 #'   \item{EXDOSU}{Character. Dose units (mapped from DOSEU).}
 #'   \item{EXROUTE}{Character. Route of administration (mapped from ROUTE).}
 #'   \item{EXSTDTC}{Character. Dosing start datetime (ISO 8601), synthesised
-#'     from AFRLT - ARRLT using an arbitrary reference origin.}
+#'     from AFRLT - ARRLT using the subject's RFXSTDTC as reference origin.}
+#'   \item{EXENDTC}{Character. Dosing end datetime (ISO 8601), computed as
+#'     EXSTDTC + ADOSEDUR.}
 #'   \item{EXDUR}{Character. Duration of dose in ISO 8601 duration format
 #'     (e.g., "PT2.9H"), derived from ADOSEDUR.}
+#'   \item{EXELTM}{Character. Planned elapsed time from first dose in ISO 8601
+#'     duration format (e.g., "PT0H"), derived from NFRLT - NRRLT relative to
+#'     the subject's first dose.}
 #' }
 #' @source Derived from \code{\link{adnca_example}} and \code{\link{dm_example}}
 #'   via \code{data-raw/sdtm_example.R}.

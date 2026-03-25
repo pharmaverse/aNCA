@@ -83,7 +83,7 @@ describe("SDTM example datasets", {
     it("contains all expected columns", {
       expected_cols <- c(
         "STUDYID", "USUBJID", "EXTRT", "EXDOSE", "EXDOSU",
-        "EXROUTE", "EXSTDTC", "EXDUR"
+        "EXROUTE", "EXSTDTC", "EXENDTC", "EXDUR", "EXELTM"
       )
       expect_true(all(expected_cols %in% names(ex_example)))
     })
@@ -95,6 +95,18 @@ describe("SDTM example datasets", {
     it("has valid ISO 8601 datetimes in EXSTDTC", {
       parsed <- as.POSIXct(ex_example$EXSTDTC, format = "%Y-%m-%dT%H:%M:%S", tz = "UTC")
       expect_false(any(is.na(parsed)))
+    })
+
+    it("has EXENDTC >= EXSTDTC for all rows", {
+      start <- as.POSIXct(ex_example$EXSTDTC, format = "%Y-%m-%dT%H:%M:%S", tz = "UTC")
+      end   <- as.POSIXct(ex_example$EXENDTC, format = "%Y-%m-%dT%H:%M:%S", tz = "UTC")
+      expect_false(any(is.na(end)))
+      expect_true(all(end >= start))
+    })
+
+    it("has EXELTM starting at PT0H for each subject's first dose", {
+      first_eltm <- tapply(ex_example$EXELTM, ex_example$USUBJID, function(x) x[1])
+      expect_true(all(first_eltm == "PT0H"))
     })
 
     it("has no duplicate dose events", {
