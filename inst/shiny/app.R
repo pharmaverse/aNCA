@@ -10,7 +10,6 @@ require(plotly)
 require(purrr)
 require(reactable)
 require(reactable.extras)
-require(sass)
 require(shiny)
 require(shinycssloaders)
 require(shinyjs)
@@ -31,11 +30,6 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 assets <- system.file("shiny/www", package = "aNCA")
 
 shiny::addResourcePath("logos", system.file("man/figures", package = "aNCA"))
-
-sass(
-  sass_file(file.path(assets, "styles/main.scss")),
-  output = file.path(assets, "main.css")
-)
 
 setup_logger()
 
