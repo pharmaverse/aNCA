@@ -119,7 +119,7 @@ data_upload_server <- function(id) {
 #' @returns A list with `paths` and `filenames`, or NULL if no data.
 #' @noRd
 .resolve_upload_paths <- function(data_upload, datapath, session) {
-  if (is.null(data_upload$datapath) & is.null(datapath)) {
+  if (is.null(data_upload$datapath) && is.null(datapath)) {
     return(NULL)
   }
 
