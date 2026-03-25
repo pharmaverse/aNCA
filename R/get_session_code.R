@@ -251,7 +251,6 @@ get_settings_code <- function(
     slope_rules = settings[["slope_rules"]],
     data_path = data_path,
     mapping = mapping,
-    ratio_table = settings[["settings"]][["ratio_table"]] %||% data.frame(),
     time_duplicate_rows = NULL
   )
   get_code(
