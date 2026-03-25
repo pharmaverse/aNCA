@@ -286,7 +286,12 @@ add_label_attribute <- function(df, myres) {
                 by = intersect(names(data), names(missing_flags))) %>%
       mutate(
         flagged = case_when(
-          sapply(Exclude, function(x) any(vapply(flag_rule_msgs, grepl, logical(1), x = x, fixed = TRUE))) ~ "FLAGGED",
+          sapply(
+            Exclude,
+            function(x) {
+              any(vapply(flag_rule_msgs, grepl, logical(1), x = x, fixed = TRUE))
+            }
+          ) ~ "FLAGGED",
           is.na(Missing) ~ "ACCEPTED",
           TRUE ~ "MISSING"
         )
