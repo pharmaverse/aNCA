@@ -1,4 +1,11 @@
-# Source the general exclusions module to test pure utility functions
+# Source exclusion helpers (extracted to utils-exclusions.R) and the module
+source(
+  file.path(
+    system.file("shiny", package = "aNCA"),
+    "functions", "utils-exclusions.R"
+  ),
+  local = TRUE
+)
 source(
   file.path(
     system.file("shiny", package = "aNCA"),
