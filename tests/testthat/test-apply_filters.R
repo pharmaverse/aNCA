@@ -142,6 +142,39 @@ describe("apply_filters works correctly", {
 
 })
 
+describe("apply_filters handles (NA) sentinel", {
+  it("== with (NA) includes rows where column is NA", {
+    df <- data.frame(x = c("a", "b", NA, NA, "a"), stringsAsFactors = FALSE)
+    filter <- list(list(column = "x", condition = "==", value = "(NA)"))
+    result <- apply_filters(df, filter)
+    expect_equal(nrow(result), 2)
+    expect_true(all(is.na(result$x)))
+  })
+
+  it("== with (NA) and other values includes both", {
+    df <- data.frame(x = c("a", "b", NA, NA, "a"), stringsAsFactors = FALSE)
+    filter <- list(list(column = "x", condition = "==", value = c("a", "(NA)")))
+    result <- apply_filters(df, filter)
+    expect_equal(nrow(result), 4)
+  })
+
+  it("!= with (NA) keeps NA rows and excludes matched values", {
+    df <- data.frame(x = c("a", "b", NA, "a"), stringsAsFactors = FALSE)
+    filter <- list(list(column = "x", condition = "!=", value = c("a", "(NA)")))
+    result <- apply_filters(df, filter)
+    expect_equal(nrow(result), 2)
+    expect_equal(result$x, c("b", NA))
+  })
+
+  it("== without (NA) excludes NA rows", {
+    df <- data.frame(x = c("a", "b", NA), stringsAsFactors = FALSE)
+    filter <- list(list(column = "x", condition = "==", value = "a"))
+    result <- apply_filters(df, filter)
+    expect_equal(nrow(result), 1)
+    expect_equal(result$x, "a")
+  })
+})
+
 describe("apply_filters throws errors for invalid input", {
   test_that("apply_filters throws error when filter misses required fields", {
     filter <- list(

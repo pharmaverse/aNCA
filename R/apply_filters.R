@@ -42,10 +42,18 @@ apply_filters <- function(data, filters) {
       value <- as.numeric(value)
     }
 
+    # Handle "(NA)" sentinel used by the filter UI for missing values
+    include_na <- "(NA)" %in% value
+    if (include_na) value <- setdiff(value, "(NA)")
+
     switch(
       filter$condition,
       "==" = {
-        data <- dplyr::filter(data, !!sym(column) %in% value)
+        if (include_na) {
+          data <- dplyr::filter(data, !!sym(column) %in% value | is.na(!!sym(column)))
+        } else {
+          data <- dplyr::filter(data, !!sym(column) %in% value)
+        }
       },
       ">" = {
         data <- dplyr::filter(data, !!sym(column) > value)
@@ -60,7 +68,11 @@ apply_filters <- function(data, filters) {
         data <- dplyr::filter(data, !!sym(column) <= value)
       },
       "!=" = {
-        data <- dplyr::filter(data, !!sym(column) != value)
+        if (include_na) {
+          data <- dplyr::filter(data, !(!!sym(column) %in% value) | is.na(!!sym(column)))
+        } else {
+          data <- dplyr::filter(data, !!sym(column) != value)
+        }
       },
       "min-max" = {
         min_max <- value %>%
