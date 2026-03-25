@@ -34,7 +34,6 @@
 #' @importFrom dplyr filter slice across where
 #' @importFrom tidyr pivot_wider pivot_longer
 #' @importFrom purrr pmap_chr map_lgl map2_chr keep
-#' @importFrom stringr str_detect fixed str_remove
 #' @importFrom rlang syms sym
 #'
 #' @export
@@ -287,7 +286,7 @@ add_label_attribute <- function(df, myres) {
                 by = intersect(names(data), names(missing_flags))) %>%
       mutate(
         flagged = case_when(
-          sapply(Exclude, function(x) any(str_detect(x, fixed(flag_rule_msgs)))) ~ "FLAGGED",
+          sapply(Exclude, function(x) any(vapply(flag_rule_msgs, grepl, logical(1), x = x, fixed = TRUE))) ~ "FLAGGED",
           is.na(Missing) ~ "ACCEPTED",
           TRUE ~ "MISSING"
         )
@@ -309,7 +308,7 @@ add_label_attribute <- function(df, myres) {
   if (length(missing_names) == 0) return(NA_character_)
 
   missing_names %>%
-    stringr::str_remove("missing_") %>%
+    sub("missing_", "", .) %>%
     paste0(" is NA") %>%
     paste(collapse = "; ")
 }

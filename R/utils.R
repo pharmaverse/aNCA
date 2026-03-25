@@ -17,10 +17,9 @@
 #' @param range_vector numeric vector with numbers to compress into string
 #' @returns simplest possible character string representing provided vector
 #'
-#' @importFrom methods is
 #'
 .compress_range <- function(range_vector) {
-  if (!is(range_vector, "numeric")) range_vector <- suppressWarnings(as.numeric(range_vector))
+  if (!is.numeric(range_vector)) range_vector <- suppressWarnings(as.numeric(range_vector))
   if (any(is.na(range_vector))) stop("Error: only numeric values allowed")
   if (length(range_vector) == 0) return(NA_integer_)
 
@@ -59,7 +58,6 @@
 #' @returns Parsed annotation text.
 #'
 #' @importFrom magrittr `%>%`
-#' @importFrom stringr str_glue
 #'
 #' @export
 parse_annotation <- function(data, text) {
@@ -67,7 +65,7 @@ parse_annotation <- function(data, text) {
     gsub("\n", "<br>", .) %>%
     gsub("\\$(\\w+)", "{unique(data[['\\1']])}", .) %>%
     gsub("!(\\w+)", "{attr(data[['\\1']], 'label')}", .) %>%
-    str_glue(.na = "ERR", .null = "ERR")
+    glue::glue(.na = "ERR", .null = "ERR")
 }
 
 #' Contatenates a list and data frame objects into formatted string for logging.

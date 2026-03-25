@@ -190,7 +190,6 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' @importFrom dplyr `%>%` mutate sym
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units drop_units
-#' @importFrom stringr str_split str_trim
 #' @examples
 #' df <- data.frame(
 #'   PCSPEC = c("urine", "feces", "plasma"),
@@ -221,10 +220,10 @@ convert_volume_units <- function(df,
 
     if (any(is.na(c(concu, vol, volu)))) next
 
-    unit_parts <- str_split(concu, "/", simplify = TRUE)
-    if (ncol(unit_parts) != 2) next
+    unit_parts <- strsplit(concu, "/")[[1]]
+    if (length(unit_parts) != 2) next
 
-    denom_unit <- str_trim(unit_parts[2])
+    denom_unit <- trimws(unit_parts[2])
 
     tryCatch({
       u_vol <- set_units(vol, volu, mode = "standard")

@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Removed `methods`, `scales`, and `stringr` from Imports; replaced with base R equivalents and `glue` (#1105)
+
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
 * Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
 * Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
