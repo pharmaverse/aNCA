@@ -360,19 +360,13 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   }
 
   # Update intervals with parameter selections and partial AUCs
-  if (!is.null(parameter_selections) || !is.null(int_parameters)) {
-    data <- update_main_intervals(
-      data = data,
-      parameter_selections = if (is.null(parameter_selections)) list() else parameter_selections,
-      int_parameters = if (is.null(int_parameters)) {
-        data.frame(parameter = character(), start_auc = numeric(), end_auc = numeric())
-      } else {
-        int_parameters
-      },
-      impute = start_impute,
-      blq_imputation_rule = blq_imputation_rule
-    )
-  }
+  data <- update_main_intervals(
+    data = data,
+    parameter_selections = parameter_selections,
+    int_parameters = int_parameters,
+    impute = start_impute,
+    blq_imputation_rule = blq_imputation_rule
+  )
 
   # Apply custom units table
   if (!is.null(custom_units_table)) {

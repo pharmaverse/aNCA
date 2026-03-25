@@ -149,11 +149,18 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @export
 update_main_intervals <- function(
   data,
-  parameter_selections,
-  int_parameters,
+  parameter_selections = NULL,
+  int_parameters = NULL,
   impute = TRUE,
   blq_imputation_rule = NULL
 ) {
+  if (is.null(parameter_selections)) parameter_selections <- list()
+  if (is.null(int_parameters)) {
+    int_parameters <- data.frame(
+      parameter = character(), start_auc = numeric(), end_auc = numeric()
+    )
+  }
+
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
   # Derive study types from the PKNCAdata object
