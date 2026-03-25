@@ -188,6 +188,7 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' The function assumes that the `AVALU` column contains concentration units
 #' in the form of "x/y" (e.g., "ug/mL", "mg/g").
 #' @importFrom dplyr `%>%` mutate sym
+#' @importFrom glue glue
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units drop_units
 #' @examples
@@ -242,7 +243,7 @@ convert_volume_units <- function(df,
       log_conversion(i, vol, volu, u_vol_new, denom_unit, concu, verbose = TRUE)
       TRUE
     }, error = function(e) {
-      warning(glue::glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit}
+      warning(glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit}
                          (concentration: {concu}): {e$message}"))
     })
 

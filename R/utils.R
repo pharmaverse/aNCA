@@ -58,6 +58,7 @@
 #' @returns Parsed annotation text.
 #'
 #' @importFrom magrittr `%>%`
+#' @importFrom glue glue
 #'
 #' @export
 parse_annotation <- function(data, text) {
@@ -65,7 +66,7 @@ parse_annotation <- function(data, text) {
     gsub("\n", "<br>", .) %>%
     gsub("\\$(\\w+)", "{unique(data[['\\1']])}", .) %>%
     gsub("!(\\w+)", "{attr(data[['\\1']], 'label')}", .) %>%
-    glue::glue(.na = "ERR", .null = "ERR")
+    glue(.na = "ERR", .null = "ERR")
 }
 
 #' Contatenates a list and data frame objects into formatted string for logging.
