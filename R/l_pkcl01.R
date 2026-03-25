@@ -30,7 +30,7 @@
 #'   - `format_fun`: The formatting function to use ("round" or "signif").
 #'   - `digits`: The number of digits to use for numeric formatting.
 #'
-#' @examples
+#' @examplesIf requireNamespace("rlistings", quietly = TRUE)
 #'   # Create a sample dataframe 'data' with the required variables
 #'   set.seed(123)
 #'   data <- data.frame(
