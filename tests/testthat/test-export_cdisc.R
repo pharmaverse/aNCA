@@ -590,7 +590,7 @@ describe("export_cdisc", {
     result <- export_cdisc(test_pknca_res)
     expect_equal(
       attr(result$adpp$PPSUM1F, "label"),
-      "PK Summary Exclusion Flag"
+      "PP Summary Exclusion Flag"
     )
   })
 
@@ -654,7 +654,7 @@ describe("export_cdisc", {
     result <- export_cdisc(test_pknca_res)
     expect_equal(
       attr(result$adpp$PPSUM1R, "label"),
-      "PK Summary Exclusion Reason"
+      "PP Summary Exclusion Reason"
     )
   })
 
