@@ -69,6 +69,7 @@ Suggests:
     reactable.extras,
     rmarkdown,
     sass,
+    scales,
     shiny,
     shinycssloaders,
     shinyjs,
