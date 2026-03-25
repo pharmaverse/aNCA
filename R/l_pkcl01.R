@@ -69,8 +69,9 @@
 #'                          )
 #'   print(listing_ex)
 #'
-#' @import dplyr formatters
-#' @importFrom rlistings as_listing fmt_config
+#' @import dplyr
+#' @importFrom formatters fmt_config
+#' @importFrom rlistings as_listing
 #' @importFrom stats setNames
 #' @export
 #' @author Gerardo Rodriguez
