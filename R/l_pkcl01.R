@@ -144,7 +144,7 @@ l_pkcl01 <- function(
   formatting_vars_list <- formatting_vars_table %>%
     dplyr::rowwise() %>%
     group_map(~ {
-      rlistings::fmt_config(na_str = .x$na_str, format = NULL, align = .x$align)
+      formatters::fmt_config(na_str = .x$na_str, format = NULL, align = .x$align)
     }) %>%
     setNames(nm = formatting_vars_table$var_name)
 
