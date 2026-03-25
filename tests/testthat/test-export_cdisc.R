@@ -617,12 +617,12 @@ describe("export_cdisc PKSUM1F derivation", {
     res_with_flags <- test_pknca_res
     n <- nrow(res_with_flags$data$conc$data)
     res_with_flags$data$conc$data$PKSUM1F <- rep(NA_character_, n)
-    res_with_flags$data$conc$data$PKSUM1F[1] <- "1"
+    res_with_flags$data$conc$data$PKSUM1F[1] <- "Y"
 
     result <- export_cdisc(res_with_flags)
     adnca <- result$adnca
 
-    expect_equal(adnca$PKSUM1F[1], "1")
+    expect_equal(adnca$PKSUM1F[1], "Y")
     expect_true(all(is.na(adnca$PKSUM1F[-1])))
   })
 

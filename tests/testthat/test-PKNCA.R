@@ -663,8 +663,8 @@ describe("add_exclusion_reasons", {
     # NCA exclude column should be untouched for these rows
     expect_true(all(result$conc$data[[excl_col]][c(2, 3)] %in% c("", NA)))
 
-    # PKSUM1F should be "1" for excluded rows, NA for others
-    expect_equal(result$conc$data$PKSUM1F[c(2, 3)], c("1", "1"))
+    # PKSUM1F should be "Y" for excluded rows, NA for others
+    expect_equal(result$conc$data$PKSUM1F[c(2, 3)], c("Y", "Y"))
     expect_true(all(is.na(result$conc$data$PKSUM1F[-c(2, 3)])))
   })
 
@@ -699,7 +699,7 @@ describe("add_exclusion_reasons", {
     expect_equal(result$conc$data[[excl_col]][4], "Both")
 
     # TLG exclusion applied
-    expect_equal(result$conc$data$PKSUM1F[4], "1")
+    expect_equal(result$conc$data$PKSUM1F[4], "Y")
   })
 
   it("defaults exclude_nca to TRUE for backward compatibility", {

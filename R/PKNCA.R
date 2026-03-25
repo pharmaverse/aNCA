@@ -879,7 +879,7 @@ remove_pp_not_requested <- function(pknca_res) {
 #'   - exclude_nca: logical, if TRUE the rows are excluded from NCA
 #'     calculations (added to the exclude column)
 #'   - exclude_tlg: logical, if TRUE the rows are flagged with
-#'     PKSUM1F = "1" so TLGs can filter them out
+#'     PKSUM1F = "Y" so TLGs can filter them out
 #'
 #' @return The modified PKNCAdata object with updated exclusion
 #'   reasons and PKSUM1F in the concentration object.
@@ -924,7 +924,7 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     }
     # TLG exclusion: flag rows for PK summary exclusion
     if (isTRUE(excl$exclude_tlg)) {
-      pknca_data$conc$data$PKSUM1F[rows] <- "1"
+      pknca_data$conc$data$PKSUM1F[rows] <- "Y"
     }
   }
   pknca_data

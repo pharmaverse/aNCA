@@ -239,7 +239,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
           rep(NA_character_, nrow(.))
         }
         if ("is.excluded.hl" %in% names(.)) {
-          flag <- ifelse(is.excluded.hl, "1", flag)
+          flag <- ifelse(is.excluded.hl, "Y", flag)
         }
         flag
       },

@@ -16,7 +16,7 @@ add_exclusion_reasons(pknca_data, exclusion_list)
 \item exclude_nca: logical, if TRUE the rows are excluded from NCA
 calculations (added to the exclude column)
 \item exclude_tlg: logical, if TRUE the rows are flagged with
-PKSUM1F = "1" so TLGs can filter them out
+PKSUM1F = "Y" so TLGs can filter them out
 }}
 }
 \value{

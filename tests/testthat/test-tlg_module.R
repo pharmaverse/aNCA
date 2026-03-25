@@ -8,10 +8,10 @@ source(
 )
 
 describe("filter_tlg_excluded", {
-  it("removes rows where PKSUM1F is '1'", {
+  it("removes rows where PKSUM1F is 'Y'", {
     df <- data.frame(
       x = 1:5,
-      PKSUM1F = c(NA, "1", NA, "1", NA),
+      PKSUM1F = c(NA, "Y", NA, "Y", NA),
       stringsAsFactors = FALSE
     )
     result <- filter_tlg_excluded(df)
@@ -39,7 +39,7 @@ describe("filter_tlg_excluded", {
   it("returns empty data frame when all rows are excluded", {
     df <- data.frame(
       x = 1:2,
-      PKSUM1F = c("1", "1"),
+      PKSUM1F = c("Y", "Y"),
       stringsAsFactors = FALSE
     )
     result <- filter_tlg_excluded(df)
