@@ -431,8 +431,10 @@ prepare_export_files <- function(target_dir,
     )
   }
   if ("pptx" %in% input$slide_formats) {
-    if (!requireNamespace("officer", quietly = TRUE) ||
-        !requireNamespace("flextable", quietly = TRUE)) {
+    if (
+      !requireNamespace("officer", quietly = TRUE) ||
+        !requireNamespace("flextable", quietly = TRUE)
+    ) {
       showNotification(
         paste(
           "The 'officer' and 'flextable' packages are required to export PowerPoint slides.",

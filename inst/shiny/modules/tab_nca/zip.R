@@ -97,16 +97,20 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
                     "Slide decks:",
                     choices = {
                       slide_choices <- "qmd"
-                      if (requireNamespace("officer", quietly = TRUE) &&
-                          requireNamespace("flextable", quietly = TRUE)) {
+                      if (
+                        requireNamespace("officer", quietly = TRUE) &&
+                          requireNamespace("flextable", quietly = TRUE)
+                      ) {
                         slide_choices <- c("pptx", slide_choices)
                       }
                       slide_choices
                     },
                     selected = {
                       slide_sel <- "qmd"
-                      if (requireNamespace("officer", quietly = TRUE) &&
-                          requireNamespace("flextable", quietly = TRUE)) {
+                      if (
+                        requireNamespace("officer", quietly = TRUE) &&
+                          requireNamespace("flextable", quietly = TRUE)
+                      ) {
                         slide_sel <- c("pptx", slide_sel)
                       }
                       slide_sel
