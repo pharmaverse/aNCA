@@ -5,25 +5,23 @@
 #' @param path File path to save the presentation
 #' @param title Title for the presentation
 #' @param template Path to PowerPoint template file
-#' @importFrom officer read_pptx
 #' @return rpptx object
 #' @keywords internal
 create_pptx_doc <- function(path, title, template) {
-  pptx <- read_pptx(template)
+  pptx <- officer::read_pptx(template)
   add_pptx_sl_title(pptx, title)
 }
 
 #' Add a title slide to the rpptx document
 #' @param pptx rpptx object
 #' @param title Title text
-#' @importFrom officer add_slide ph_with ph_location_type
 #' @return rpptx object with title slide added
 #' @keywords internal
 add_pptx_sl_title <- function(pptx, title) {
-  add_slide(pptx, layout = "Title Slide", master = "Office Theme") %>%
-    ph_with(
+  officer::add_slide(pptx, layout = "Title Slide", master = "Office Theme") %>%
+    officer::ph_with(
       value = title,
-      location = ph_location_type(type = "ctrTitle")
+      location = officer::ph_location_type(type = "ctrTitle")
     )
 }
 
@@ -31,13 +29,13 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @param pptx rpptx object
 #' @param df Data frame to show as table
 #' @param plot ggplot object to show as plot
-#' @importFrom officer add_slide ph_with
-#' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
-  add_slide(pptx, layout = "Content with Caption") %>%
-    ph_with(value = plot, location = "Content Placeholder 1") %>%
-    ph_with(value = flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  officer::add_slide(pptx, layout = "Content with Caption") %>%
+    officer::ph_with(value = plot, location = "Content Placeholder 1") %>%
+    officer::ph_with(
+      value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1"
+    )
 }
 
 #' Add a slide with a table only
@@ -46,38 +44,35 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @param title Title text for the slide
 #' @param subtitle Subtitle text for the slide
 #' @param footer Footer text for the slide
-#' @importFrom officer add_slide ph_with fpar ftext fp_par fp_text
-#' @importFrom flextable flextable autofit
 #' @return rpptx object with slide added
 add_pptx_sl_table <- function(pptx, df, title = "",
                               subtitle = "",
                               footer = "Click here for individual results") {
 
-  title_formatted <- fpar(
-    ftext(title),
+  title_formatted <- officer::fpar(
+    officer::ftext(title),
     "\n",
-    ftext(subtitle, prop = fp_text(font.size = 12)),
-    fp_p = fp_par(text.align = "center", line_spacing = 1)
+    officer::ftext(subtitle, prop = officer::fp_text(font.size = 12)),
+    fp_p = officer::fp_par(text.align = "center", line_spacing = 1)
   )
 
   # Set flextable to autofit and center for better appearance
-  ft <- flextable(df) %>%
-    autofit()
+  ft <- flextable::flextable(df) %>%
+    flextable::autofit()
 
-  add_slide(pptx, layout = "Title Only") %>%
-    ph_with(value = ft, location = "Table Placeholder 1") %>%
-    ph_with(value = title_formatted, location = "Title 1") %>%
-    ph_with(value = footer, location = "Footer Placeholder 3")
+  officer::add_slide(pptx, layout = "Title Only") %>%
+    officer::ph_with(value = ft, location = "Table Placeholder 1") %>%
+    officer::ph_with(value = title_formatted, location = "Title 1") %>%
+    officer::ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
 #' Add a slide with a plot only
 #' @param pptx rpptx object
 #' @param plot ggplot object to show as plot
-#' @importFrom officer add_slide ph_with
 #' @return rpptx object with slide added
 add_pptx_sl_plot <- function(pptx, plot) {
-  add_slide(pptx, layout = "Picture with Caption") %>%
-    ph_with(value = plot, location = "Picture Placeholder 2")
+  officer::add_slide(pptx, layout = "Picture with Caption") %>%
+    officer::ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
@@ -86,8 +81,6 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param path File path to save the presentation
 #' @param title Title for the presentation
 #' @param template Path to PowerPoint template file
-#' @importFrom officer ph_slidelink move_slide
-#' @importFrom purrr reduce
 #' @return TRUE (invisible). Writes the PowerPoint file to the specified path
 create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   for (pkg in c("officer", "flextable")) {
@@ -112,7 +105,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
       subtitle = paste(res_dose_slides[[i]]$group),
       footer = ""
     )
-    pptx <- reduce(
+    pptx <- purrr::reduce(
       names(res_dose_slides[[i]]$ind_params),
       function(pptx, subj) {
         add_pptx_sl_plottable(
@@ -127,8 +120,8 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     # Generate summary figures and tables
     pptx <- add_pptx_sl_table(pptx, res_dose_slides[[i]]$info, paste0("Group ", i, " Summary"),
                               subtitle = paste(res_dose_slides[[i]]$group)) %>%
-      ph_slidelink(ph_label = "Footer Placeholder 3",
-                   slide_index = (lst_group_slide + 1)) %>%
+      officer::ph_slidelink(ph_label = "Footer Placeholder 3",
+                            slide_index = (lst_group_slide + 1)) %>%
       add_pptx_sl_plottable(
         df = res_dose_slides[[i]]$statistics,
         plot = res_dose_slides[[i]]$meanplot
@@ -142,13 +135,15 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   }
 
   group_slides_rev <- rev(group_slides) + (seq_along(group_slides) - 1)
-  pptx <- reduce(
+  pptx <- purrr::reduce(
     group_slides_rev,
-    function(pptx, slide_index) move_slide(pptx, index = slide_index, to = 2),
+    function(pptx, slide_index) officer::move_slide(pptx, index = slide_index, to = 2),
     .init = pptx
   )
   pptx <- add_pptx_sl_title(pptx, "Extra Figures")
-  pptx <- move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
+  pptx <- officer::move_slide(
+    x = pptx, index = length(pptx), to = (length(group_slides) + 2)
+  )
 
   print(pptx, target = path)
   invisible(TRUE)

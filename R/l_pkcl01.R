@@ -69,9 +69,7 @@
 #'                          )
 #'   print(listing_ex)
 #'
-#' @import dplyr
-#' @importFrom formatters fmt_config
-#' @importFrom rlistings as_listing
+#' @import dplyr formatters
 #' @importFrom stats setNames
 #' @export
 #' @author Gerardo Rodriguez
@@ -146,7 +144,7 @@ l_pkcl01 <- function(
   formatting_vars_list <- formatting_vars_table %>%
     dplyr::rowwise() %>%
     group_map(~ {
-      fmt_config(na_str = .x$na_str, format = NULL, align = .x$align)
+      rlistings::fmt_config(na_str = .x$na_str, format = NULL, align = .x$align)
     }) %>%
     setNames(nm = formatting_vars_table$var_name)
 
@@ -227,7 +225,7 @@ l_pkcl01 <- function(
 
 
     # Build the listing object
-    rl <- as_listing(
+    rl <- rlistings::as_listing(
       df = list_data,
       key_cols = grouping_vars,
       disp_cols = displaying_vars,
