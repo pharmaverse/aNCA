@@ -450,6 +450,8 @@ prepare_export_files <- function(target_dir,
       dplyr::select(-default)
   }
 
+  settings_list$ratio_table <- session$userData$ratio_table()
+
   settings_to_save <- list(
     filters = session$userData$applied_filters,
     settings = settings_list,
