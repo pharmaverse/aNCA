@@ -461,7 +461,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     # Cleaned mapping with select_ prefix removed
     cleaned_mapping <- reactive({
       m <- mapping()
-      names(m) <- gsub("select_", "", names(m))
+      names(m) <- gsub("^select_", "", names(m))
       m
     })
 
