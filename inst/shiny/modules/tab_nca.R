@@ -39,27 +39,30 @@ tab_nca_ui <- function(id) {
     nav_panel(
       "Results", fluid = TRUE,
       div(
-        class = "nca-results-container",
+        class = "excretion-section-container",
         div(
-          class = "nca-results-overlay",
+          class = "excretion-overlay nca-run-overlay",
           "Run NCA first"
         ),
-        navset_pill_list(
-          widths = c(2, 10),
-          nca_results_ui(ns("nca_results")),
-          nav_panel(
-            "Slopes Information",
-            navset_pill(
-              nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
-                                               class = "border-0 shadow-none")),
-              nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
-            )
-          ),
-          nav_panel(
-            "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
-          ),
-          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+        div(
+          style = "position: relative;",
+          navset_pill_list(
+            widths = c(2, 10),
+            nca_results_ui(ns("nca_results")),
+            nav_panel(
+              "Slopes Information",
+              navset_pill(
+                nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
+                                                 class = "border-0 shadow-none")),
+                nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+              )
+            ),
+            nav_panel(
+              "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
+            ),
+            nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+          )
         )
       )
     ),
@@ -206,7 +209,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     # Hide "Run NCA first" overlay once results are available
     observe({
       shinyjs::toggle(
-        selector = ".nca-results-overlay",
+        selector = ".nca-run-overlay",
         condition = is.null(res_nca())
       )
     })
