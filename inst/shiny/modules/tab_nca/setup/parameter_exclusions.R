@@ -125,6 +125,63 @@ parameter_exclusions_ui <- function(id) {
   )
 }
 
+# Restore exclusions from uploaded settings by matching keys against current results.
+# Matched entries are added to the exclusion list with resolved row indices.
+# Unmatched entries produce a warning message stored in restore_warnings.
+.restore_exclusions_from_keys <- function(overrides, res_nca_val, exclusion_list,
+                                          xbtn_counter, restore_warnings) {
+  result_df <- res_nca_val$result
+  key_cols <- .get_excl_key_cols(res_nca_val)
+  all_unmatched <- list()
+  restored <- list()
+
+  for (entry in overrides) {
+    keys_df <- entry$keys
+    if (is.null(keys_df) || !is.data.frame(keys_df) || nrow(keys_df) == 0) next
+
+    match_result <- .match_keys_to_rows(keys_df, result_df)
+
+    if (length(match_result$matched) > 0) {
+      counter_val <- xbtn_counter() + length(restored) + 1L
+      restored <- append(restored, list(list(
+        reason = entry$reason,
+        rows = match_result$matched,
+        keys = .extract_row_keys(result_df, match_result$matched, key_cols),
+        xbtn_id = paste0("remove_param_excl_", counter_val)
+      )))
+    }
+
+    if (!is.null(match_result$unmatched)) {
+      all_unmatched <- append(all_unmatched, list(list(
+        reason = entry$reason,
+        keys = match_result$unmatched
+      )))
+    }
+  }
+
+  if (length(restored) > 0) {
+    xbtn_counter(xbtn_counter() + length(restored))
+    exclusion_list(restored)
+  }
+
+  if (length(all_unmatched) > 0) {
+    msgs <- vapply(all_unmatched, function(u) {
+      key_desc <- paste(
+        apply(u$keys, 1, function(r) paste(names(u$keys), "=", r, collapse = ", ")),
+        collapse = "; "
+      )
+      paste0("\"", u$reason, "\": ", key_desc)
+    }, character(1))
+    restore_warnings(paste(
+      "Some exclusions from settings could not be restored",
+      "(values may have changed):\n",
+      paste("-", msgs, collapse = "\n")
+    ))
+  } else {
+    restore_warnings(NULL)
+  }
+}
+
 # Render the exclusion list as a reactable with remove buttons.
 .render_exclusion_table <- function(lst, ns) {
   if (length(lst) == 0) return(NULL)
@@ -179,9 +236,12 @@ parameter_exclusions_server <- function(id, res_nca, param_excl_override) {
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
     prev_fingerprint <- reactiveVal(NULL)
+    pending_override <- reactiveVal(NULL)
+    restore_warnings <- reactiveVal(NULL)
 
     # Clear exclusions when result structure changes (row count or columns),
     # not on every recomputation (e.g. unit changes that preserve row identity).
+    # After clearing, apply any pending override from uploaded settings.
     observeEvent(res_nca(), {
       res <- res_nca()$result
       fp <- paste(nrow(res), paste(names(res), collapse = ","))
@@ -189,15 +249,23 @@ parameter_exclusions_server <- function(id, res_nca, param_excl_override) {
         exclusion_list(list())
         xbtn_counter(0)
         prev_fingerprint(fp)
+
+        overrides <- pending_override()
+        if (!is.null(overrides) && length(overrides) > 0) {
+          .restore_exclusions_from_keys(
+            overrides, res_nca(), exclusion_list, xbtn_counter, restore_warnings
+          )
+          pending_override(NULL)
+        }
       }
     })
 
-    # Restore exclusions from uploaded settings
+    # Queue uploaded exclusions for application after NCA results are ready.
     observeEvent(param_excl_override(), {
       overrides <- param_excl_override()
       if (!is.null(overrides) && length(overrides) > 0) {
-        rehydrate_exclusions(overrides, exclusion_list, xbtn_counter,
-                             prefix = "remove_param_excl_")
+        restore_warnings(NULL)
+        pending_override(overrides)
       }
     })
 
