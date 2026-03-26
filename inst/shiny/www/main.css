@@ -887,21 +887,20 @@ h4.modal-title:has(#loading-title) {
 }
 
 /* NCA setup: fix pill-list nav column to 200px */
-.page-container .row:has(> [class*="col-sm"] > .nav-pills) {
+.nca-setup-pills > .row {
   display: flex !important;
   flex-wrap: nowrap !important;
 }
 
-.page-container .row > [class*="col-sm"]:has(.nav-pills) {
+.nca-setup-pills > .row > [class*="col-"]:first-child {
   width: 200px !important;
   min-width: 200px !important;
   max-width: 200px !important;
   flex: 0 0 200px !important;
-  padding-right: 0 !important;
 }
 
-.page-container .row > [class*="col-sm"]:has(.nav-pills) ~ [class*="col-sm"] {
+.nca-setup-pills > .row > [class*="col-"]:last-child {
   flex: 1 1 auto !important;
-  width: calc(100% - 200px) !important;
-  max-width: calc(100% - 200px) !important;
+  width: auto !important;
+  max-width: none !important;
 }

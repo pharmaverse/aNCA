@@ -17,29 +17,31 @@
 nca_setup_ui <- function(id) {
   ns <- NS(id)
 
-  navset_pill_list(
-    widths = c(2, 10),
-    nav_panel(
-      "Settings",
-      fluidRow(
-        downloadButton(
-          ns("settings_download"),
-          label = "Download settings"
+  div(
+    class = "nca-setup-pills",
+    navset_pill_list(
+      nav_panel(
+        "Settings",
+        fluidRow(
+          downloadButton(
+            ns("settings_download"),
+            label = "Download settings"
+          )
+        ),
+        fluidRow(units_table_ui(ns("units_table"))),
+        settings_ui(ns("nca_settings")),
+        accordion(
+          accordion_panel(
+            title = "Ratio Calculations",
+            ratios_table_ui(ns("ratio_calculations_table"))
+          ),
+          open = c("General Settings", "Parameter Selection")
         )
       ),
-      fluidRow(units_table_ui(ns("units_table"))),
-      settings_ui(ns("nca_settings")),
-      accordion(
-        accordion_panel(
-          title = "Ratio Calculations",
-          ratios_table_ui(ns("ratio_calculations_table"))
-        ),
-        open = c("General Settings", "Parameter Selection")
-      )
-    ),
-    nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
-    nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
-    nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
+      nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
+      nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
+      nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
+    )
   )
 }
 
