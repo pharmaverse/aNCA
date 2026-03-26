@@ -2,7 +2,7 @@
 
 ## UI improvements
 
-* Replaced bslib page_sidebar with a custom 100px navigation sidebar (#1133)
+* Reduced main navigation sidebar width to 100px (#1133)
 * Added vertical spacing after each Exploration plot section (#1133)
 
 ## Features added
