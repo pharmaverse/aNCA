@@ -305,9 +305,6 @@ div[data-value="Settings"] > div.row a {
   padding: 0;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 136px !important;
-}
 
 .sidebar .sidebar-content {
   padding-left: 0 !important;
@@ -650,9 +647,6 @@ div[data-value="Settings"] > div.row a {
   background-color: #E7ECFA;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 136px !important;
-}
 
 .sidebar .sidebar-content {
   padding-left: 0 !important;

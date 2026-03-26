@@ -87,42 +87,45 @@ ui <- function() {
     includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
 
-    sidebar = navset_pill_list(
-      id = "page",
-      well = FALSE,
-      selected = "data",
-      # DATA ----
-      nav_panel(
-        "Data",
-        value = "data",
-        icon = icon("database"),
-        fluid = TRUE
-      ),
-      # VISUALISATION ----
-      nav_panel(
-        "Exploration",
-        value = "exploration",
-        icon = icon("chart-line"),
-        fluid = TRUE
-      ),
-      # NCA ----
-      nav_panel(
-        "NCA",
-        value = "nca",
-        icon = icon("microscope"),
-        fluid = TRUE
-      ),
-      # New TLG tab
-      nav_panel(
-        "TLG",
-        value = "tlg",
-        icon = icon("table-list")
-      ),
-      # ABOUT ----
-      nav_panel(
-        "About",
-        value = "about",
-        icon = icon("circle-info")
+    sidebar = sidebar(
+      width = 136,
+      navset_pill_list(
+        id = "page",
+        well = FALSE,
+        selected = "data",
+        # DATA ----
+        nav_panel(
+          "Data",
+          value = "data",
+          icon = icon("database"),
+          fluid = TRUE
+        ),
+        # VISUALISATION ----
+        nav_panel(
+          "Exploration",
+          value = "exploration",
+          icon = icon("chart-line"),
+          fluid = TRUE
+        ),
+        # NCA ----
+        nav_panel(
+          "NCA",
+          value = "nca",
+          icon = icon("microscope"),
+          fluid = TRUE
+        ),
+        # New TLG tab
+        nav_panel(
+          "TLG",
+          value = "tlg",
+          icon = icon("table-list")
+        ),
+        # ABOUT ----
+        nav_panel(
+          "About",
+          value = "about",
+          icon = icon("circle-info")
+        )
       )
     ),
     div(
