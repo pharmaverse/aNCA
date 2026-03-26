@@ -2,6 +2,7 @@
 
 ## UI improvements
 
+* NCA settings panel list (Settings, Parameter Selection, etc.) fixed at 100px width (#1133)
 * Added vertical spacing after each Exploration plot section (#1133)
 
 ## Features added

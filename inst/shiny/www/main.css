@@ -885,3 +885,23 @@ h4.modal-title:has(#loading-title) {
   background-color: #9b9b9b;
   border-color: #9b9b9b;
 }
+
+/* NCA setup: fix pill-list nav column to 100px */
+.page-container .row:has(> .col-sm-1 > .nav-pills) {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+}
+
+.page-container .row > .col-sm-1:has(.nav-pills) {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  flex: 0 0 100px !important;
+  padding-right: 0 !important;
+}
+
+.page-container .row > .col-sm-11 {
+  flex: 1 !important;
+  width: auto !important;
+  max-width: none !important;
+}
