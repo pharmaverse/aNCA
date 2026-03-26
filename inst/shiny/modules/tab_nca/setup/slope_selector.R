@@ -136,6 +136,9 @@ slope_selector_server <- function( # nolint
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
 
+    # Track whether lambda z is available for the UI guard
+    has_lambda_z <- reactiveVal(FALSE)
+
     observeEvent(processed_pknca_data(), {
       req(processed_pknca_data())
 
@@ -143,6 +146,16 @@ slope_selector_server <- function( # nolint
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
         filter(type_interval == "main", half.life) %>%
         unique()
+
+      # Guard: lambda z not selected — nothing to display
+      if (nrow(new_pknca_data$intervals) == 0) {
+        has_lambda_z(FALSE)
+        plot_outputs(NULL)
+        pknca_data(NULL)
+        return()
+      }
+      has_lambda_z(TRUE)
+
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
         new = new_pknca_data,
@@ -205,10 +218,25 @@ slope_selector_server <- function( # nolint
     )
 
     observe({
-      req(plot_outputs())
       output$slope_plots_ui <- renderUI({
+        if (!has_lambda_z()) {
+          return(tags$p(
+            class = "text-muted",
+            "Lambda z has not been added to the selected parameters.",
+            "Add lambda z to use the slope selector."
+          ))
+        }
+
+        plots <- plot_outputs()
+        if (is.null(plots) || length(plots) == 0) {
+          return(tags$p(
+            class = "text-muted",
+            "Plot cannot be displayed: no data available."
+          ))
+        }
+
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs() %>%
+        plots %>%
           # Filter plots based on user search
           .[page_search$is_plot_searched()] %>%
           # Arrange plots by the specified group order
