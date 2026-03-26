@@ -88,7 +88,7 @@ ui <- function() {
     includeScript(file.path(assets, "index.js")),
 
     sidebar = sidebar(
-      width = 136,
+      width = "100px",
       navset_pill_list(
         id = "page",
         well = FALSE,

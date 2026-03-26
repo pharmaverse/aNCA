@@ -301,6 +301,11 @@ div[data-value="Settings"] > div.row a {
   height: 100%;
 }
 
+/* Main navigation sidebar: 100px wide */
+body > .bslib-page-sidebar > .bslib-sidebar-layout {
+  --_sidebar-width: 100px !important;
+}
+
 .bslib-sidebar-layout > .main {
   padding: 0;
 }
@@ -344,8 +349,8 @@ div[data-value="Settings"] > div.row a {
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a {
-  padding-left: 30px;
-  padding-right: 30px;
+  padding-left: 15px;
+  padding-right: 15px;
   color: #21201f;
 }
 
@@ -686,8 +691,8 @@ div[data-value="Settings"] > div.row a {
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a {
-  padding-left: 30px;
-  padding-right: 30px;
+  padding-left: 15px;
+  padding-right: 15px;
   color: #21201f;
 }
 
