@@ -131,7 +131,7 @@ parameter_exclusions_ui <- function(id) {
   )
 }
 
-parameter_exclusions_server <- function(id, res_nca) {
+parameter_exclusions_server <- function(id, res_nca, param_excl_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -139,7 +139,7 @@ parameter_exclusions_server <- function(id, res_nca) {
     xbtn_counter <- reactiveVal(0)
     prev_fingerprint <- reactiveVal(NULL)
 
-    # Clear exclusions only when result structure changes (row count or columns),
+    # Clear exclusions when result structure changes (row count or columns),
     # not on every recomputation (e.g. unit changes that preserve row identity).
     observeEvent(res_nca(), {
       res <- res_nca()$result
@@ -148,6 +148,15 @@ parameter_exclusions_server <- function(id, res_nca) {
         exclusion_list(list())
         xbtn_counter(0)
         prev_fingerprint(fp)
+      }
+    })
+
+    # Restore exclusions from uploaded settings
+    observeEvent(param_excl_override(), {
+      overrides <- param_excl_override()
+      if (!is.null(overrides) && length(overrides) > 0) {
+        rehydrate_exclusions(overrides, exclusion_list, xbtn_counter,
+                             prefix = "remove_param_excl_")
       }
     })
 
@@ -217,28 +226,9 @@ parameter_exclusions_server <- function(id, res_nca) {
       }
     })
 
-    # Track which remove buttons already have observers to avoid duplicates
+    # Register remove-button observers for exclusion entries
     registered_xbtns <- reactiveVal(character(0))
-
-    # Register observers only for new remove buttons
-    observe({
-      lst <- exclusion_list()
-      already <- registered_xbtns()
-      new_ids <- setdiff(
-        vapply(lst, function(x) x$xbtn_id, character(1)),
-        already
-      )
-      for (xbtn_id in new_ids) {
-        local({
-          local_id <- xbtn_id
-          observeEvent(input[[local_id]], {
-            current <- exclusion_list()
-            exclusion_list(Filter(function(x) x$xbtn_id != local_id, current))
-          }, ignoreInit = TRUE, once = TRUE)
-        })
-      }
-      registered_xbtns(union(already, new_ids))
-    })
+    observe_remove_buttons(exclusion_list, registered_xbtns, input)
 
     output$exclusion_list_ui <- renderUI({
       tbl <- .render_exclusion_table(exclusion_list(), ns)
@@ -249,6 +239,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       )
     })
 
-    reactive(.build_exclusion_reasons(exclusion_list()))
+    # Return the exclusion list without xbtn_id (same pattern as general_exclusions)
+    reactive(clean_exclusion_list(exclusion_list()))
   })
 }

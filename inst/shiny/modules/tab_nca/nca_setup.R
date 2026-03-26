@@ -212,6 +212,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
             dplyr::select(-default)
         }
         export_settings$ratio_table <- ratio_table()
+        export_settings$param_exclusions <- session$userData$param_exclusions()
         settings_to_save <- list(
           filters = session$userData$applied_filters,
           settings = export_settings,

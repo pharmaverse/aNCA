@@ -451,6 +451,7 @@ prepare_export_files <- function(target_dir,
   }
 
   settings_list$ratio_table <- session$userData$ratio_table()
+  settings_list$param_exclusions <- session$userData$param_exclusions()
 
   settings_to_save <- list(
     filters = session$userData$applied_filters,
