@@ -37,6 +37,7 @@
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 * Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
 * Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
+* Removed `methods`, `scales`, and `stringr` from package dependencies, replacing all usages with base R equivalents (#1108)
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
