@@ -773,13 +773,11 @@ div[data-value="Settings"] > div.row a {
   box-sizing: border-box;
 }
 
-.excretion-section-container,
-.runncafirst-section-container {
+.excretion-section-container {
   position: relative;
 }
 
-.excretion-section-container .excretion-overlay,
-.runncafirst-section-container .nca-run-overlay {
+.excretion-section-container .excretion-overlay {
   position: absolute;
   top: 0;
   left: 0;

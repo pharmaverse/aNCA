@@ -39,9 +39,10 @@ tab_nca_ui <- function(id) {
     nav_panel(
       "Results", fluid = TRUE,
       div(
-        class = "runncafirst-section-container",
+        class = "excretion-section-container",
         div(
-          class = "nca-run-overlay",
+          id = ns("nca_run_overlay"),
+          class = "excretion-overlay",
           "Run NCA first"
         ),
         div(
@@ -209,7 +210,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     # Hide "Run NCA first" overlay once results are available
     observe({
       shinyjs::toggle(
-        selector = ".nca-run-overlay",
+        id = "nca_run_overlay",
         condition = is.null(res_nca())
       )
     })
