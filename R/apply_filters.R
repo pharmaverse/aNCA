@@ -38,58 +38,88 @@ apply_filters <- function(data, filters) {
     # check if data if correct #
     if (!column %in% names(data)) stop("Data is missing filtered column: ", column)
 
-    # Handle "(NA)" sentinel before numeric coercion to avoid as.numeric("(NA)") warnings
-    include_na <- "(NA)" %in% value
-    if (include_na) value <- setdiff(value, "(NA)")
+    # Strip "(NA)" sentinel before numeric coercion
+    na_result <- strip_na_sentinel(value)
+    value <- na_result$value
+    include_na <- na_result$include_na
 
     if (is.numeric(data[[column]]) && filter$condition != "min-max") {
       value <- as.numeric(value)
     }
 
-    switch(
-      filter$condition,
-      "==" = {
-        if (include_na) {
-          data <- dplyr::filter(data, !!sym(column) %in% value | is.na(!!sym(column)))
-        } else {
-          data <- dplyr::filter(data, !!sym(column) %in% value)
-        }
-      },
-      ">" = {
-        data <- dplyr::filter(data, !!sym(column) > value)
-      },
-      "<" = {
-        data <- dplyr::filter(data, !!sym(column) < value)
-      },
-      ">=" = {
-        data <- dplyr::filter(data, !!sym(column) >= value)
-      },
-      "<=" = {
-        data <- dplyr::filter(data, !!sym(column) <= value)
-      },
-      "!=" = {
-        if (include_na) {
-          data <- dplyr::filter(data, !(!!sym(column) %in% value) | is.na(!!sym(column)))
-        } else {
-          data <- dplyr::filter(data, !!sym(column) != value)
-        }
-      },
-      "min-max" = {
-        min_max <- value %>%
-          strsplit("-") %>%
-          unlist() %>%
-          as.numeric() %>%
-          suppressWarnings()
-
-        if (any(is.na(min_max)) || length(min_max) != 2) {
-          warning("Invalid min-max value format for ", column, ". Ignoring.")
-          return(data)
-        }
-
-        data <- dplyr::filter(data, dplyr::between(!!sym(column), min_max[1], min_max[2]))
-      }
-    )
+    data <- apply_single_filter(data, column, filter$condition, value, include_na)
   }
 
   data
+}
+
+#' Strip the "(NA)" sentinel from a filter value vector
+#'
+#' @param value Character vector of filter values.
+#'
+#' @returns A list with `value` (cleaned vector) and `include_na` (logical).
+#'
+#' @keywords internal
+strip_na_sentinel <- function(value) {
+  include_na <- "(NA)" %in% value
+  if (include_na) value <- setdiff(value, "(NA)")
+  list(value = value, include_na = include_na)
+}
+
+#' Apply a single filter condition to a data frame
+#'
+#' @param data A data frame.
+#' @param column Column name to filter on.
+#' @param condition Filter condition string.
+#' @param value Filter value(s).
+#' @param include_na Logical; whether to include NA rows.
+#'
+#' @returns A filtered data frame.
+#'
+#' @keywords internal
+apply_single_filter <- function(data, column, condition, value, include_na) {
+  switch(
+    condition,
+    "==" = filter_eq(data, column, value, include_na),
+    ">" = dplyr::filter(data, !!sym(column) > value),
+    "<" = dplyr::filter(data, !!sym(column) < value),
+    ">=" = dplyr::filter(data, !!sym(column) >= value),
+    "<=" = dplyr::filter(data, !!sym(column) <= value),
+    "!=" = filter_neq(data, column, value, include_na),
+    "min-max" = filter_min_max(data, column, value)
+  )
+}
+
+#' @keywords internal
+filter_eq <- function(data, column, value, include_na) {
+  if (include_na) {
+    dplyr::filter(data, !!sym(column) %in% value | is.na(!!sym(column)))
+  } else {
+    dplyr::filter(data, !!sym(column) %in% value)
+  }
+}
+
+#' @keywords internal
+filter_neq <- function(data, column, value, include_na) {
+  if (include_na) {
+    dplyr::filter(data, !(!!sym(column) %in% value) | is.na(!!sym(column)))
+  } else {
+    dplyr::filter(data, !!sym(column) != value)
+  }
+}
+
+#' @keywords internal
+filter_min_max <- function(data, column, value) {
+  min_max <- value %>%
+    strsplit("-") %>%
+    unlist() %>%
+    as.numeric() %>%
+    suppressWarnings()
+
+  if (any(is.na(min_max)) || length(min_max) != 2) {
+    warning("Invalid min-max value format for ", column, ". Ignoring.")
+    return(data)
+  }
+
+  dplyr::filter(data, dplyr::between(!!sym(column), min_max[1], min_max[2]))
 }
