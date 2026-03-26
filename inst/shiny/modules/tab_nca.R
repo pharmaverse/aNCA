@@ -42,7 +42,6 @@ tab_nca_ui <- function(id) {
         class = "nca-results-container",
         div(
           class = "nca-results-overlay",
-          id = ns("nca_results_overlay"),
           "Run NCA first"
         ),
         navset_pill_list(
@@ -206,10 +205,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 
     # Hide "Run NCA first" overlay once results are available
     observe({
-      nca_pending <- is.null(res_nca())
-      shinyjs::toggle(id = "nca_results_overlay", condition = nca_pending)
-    }) %>%
-      bindEvent(input$run_nca)
+      shinyjs::toggle(
+        selector = ".nca-results-overlay",
+        condition = is.null(res_nca())
+      )
+    })
 
     observe({
       req(res_nca())
