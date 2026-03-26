@@ -606,24 +606,24 @@ describe(".get_subjid", {
 })
 
 describe("export_cdisc PKSUM1F derivation", {
-  it("defaults PKSUM1F to NA when not in conc data", {
+  it("defaults PKSUM1F to empty string when not in conc data", {
     result <- export_cdisc(test_pknca_res)
     adnca <- result$adnca
     expect_true("PKSUM1F" %in% names(adnca))
-    expect_true(all(is.na(adnca$PKSUM1F)))
+    expect_true(all(adnca$PKSUM1F == ""))
   })
 
   it("preserves PKSUM1F from conc data", {
     res_with_flags <- test_pknca_res
     n <- nrow(res_with_flags$data$conc$data)
-    res_with_flags$data$conc$data$PKSUM1F <- rep(NA_character_, n)
+    res_with_flags$data$conc$data$PKSUM1F <- rep("", n)
     res_with_flags$data$conc$data$PKSUM1F[1] <- "Y"
 
     result <- export_cdisc(res_with_flags)
     adnca <- result$adnca
 
     expect_equal(adnca$PKSUM1F[1], "Y")
-    expect_true(all(is.na(adnca$PKSUM1F[-1])))
+    expect_true(all(adnca$PKSUM1F[-1] == ""))
   })
 
   it("PKSUM1F is listed in ADNCA metadata", {

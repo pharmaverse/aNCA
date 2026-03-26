@@ -11,7 +11,7 @@ describe("filter_tlg_excluded", {
   it("removes rows where PKSUM1F is 'Y'", {
     df <- data.frame(
       x = 1:5,
-      PKSUM1F = c(NA, "Y", NA, "Y", NA),
+      PKSUM1F = c("", "Y", "", "Y", ""),
       stringsAsFactors = FALSE
     )
     result <- filter_tlg_excluded(df)
@@ -26,10 +26,10 @@ describe("filter_tlg_excluded", {
     expect_equal(result$x, 1:3)
   })
 
-  it("returns all rows when PKSUM1F is all NA", {
+  it("returns all rows when PKSUM1F is all empty", {
     df <- data.frame(
       x = 1:3,
-      PKSUM1F = rep(NA_character_, 3),
+      PKSUM1F = rep("", 3),
       stringsAsFactors = FALSE
     )
     result <- filter_tlg_excluded(df)

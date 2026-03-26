@@ -898,7 +898,7 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
 
   # Initialise PKSUM1F if not present
   if (!"PKSUM1F" %in% names(pknca_data$conc$data)) {
-    pknca_data$conc$data$PKSUM1F <- NA_character_
+    pknca_data$conc$data$PKSUM1F <- ""
   }
 
   for (excl in exclusion_list) {

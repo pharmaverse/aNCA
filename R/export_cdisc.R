@@ -236,7 +236,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
         flag <- if ("PKSUM1F" %in% names(.)) {
           PKSUM1F
         } else {
-          rep(NA_character_, nrow(.))
+          rep("", nrow(.))
         }
         if ("is.excluded.hl" %in% names(.)) {
           flag <- ifelse(is.excluded.hl, "Y", flag)
