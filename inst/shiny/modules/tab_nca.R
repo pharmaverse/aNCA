@@ -213,16 +213,19 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 
     # Parameter exclusions: users can exclude individual PK parameter rows
     # from summary tables and mean plots. Excluded rows get PPSUM1F = "1" in ADPP.
-    param_excl_rows <- parameter_exclusions_server(
-      "parameter_exclusions", res_nca
+    param_excl_override <- reactive(settings_override()$settings$param_exclusions)
+    param_exclusions <- parameter_exclusions_server(
+      "parameter_exclusions", res_nca, param_excl_override
     )
+    # Store the exclusion list for settings download/ZIP export
+    session$userData$param_exclusions <- param_exclusions
 
     # Compute tagged and filtered views of res_nca in a single reactive
     # to avoid duplicating the (potentially large) result object.
     res_nca_excl <- reactive({
       req(res_nca())
       res <- res_nca()
-      excl_info <- param_excl_rows()
+      excl_info <- .build_exclusion_reasons(param_exclusions())
       excl_indices <- excl_info$indices
       excl_reasons <- excl_info$reasons
 
