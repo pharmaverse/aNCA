@@ -773,11 +773,14 @@ div[data-value="Settings"] > div.row a {
   box-sizing: border-box;
 }
 
-.excretion-section-container {
+/* Shared overlay pattern for disabled sections */
+.excretion-section-container,
+.nca-results-container {
   position: relative;
 }
 
-.excretion-section-container .excretion-overlay {
+.excretion-section-container .excretion-overlay,
+.nca-results-container .nca-results-overlay {
   position: absolute;
   top: 0;
   left: 0;

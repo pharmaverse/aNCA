@@ -38,21 +38,30 @@ tab_nca_ui <- function(id) {
     #' Results
     nav_panel(
       "Results", fluid = TRUE,
-      navset_pill_list(
-        nca_results_ui(ns("nca_results")),
-        nav_panel(
-          "Slopes Information",
-          navset_pill(
-            nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
-                                             class = "border-0 shadow-none")),
-            nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
-          )
+      div(
+        class = "nca-results-container",
+        div(
+          class = "nca-results-overlay",
+          id = ns("nca_results_overlay"),
+          "Run NCA first"
         ),
-        nav_panel(
-          "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
-        ),
-        nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-        nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+        navset_pill_list(
+          widths = c(2, 10),
+          nca_results_ui(ns("nca_results")),
+          nav_panel(
+            "Slopes Information",
+            navset_pill(
+              nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
+                                               class = "border-0 shadow-none")),
+              nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+            )
+          ),
+          nav_panel(
+            "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
+          ),
+          nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+          nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+        )
       )
     ),
     #' Additional analysis
@@ -192,6 +201,13 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         # Delay the removal of loading modal to give it enough time to render
         later::later(~shiny::removeModal(session = session), delay = 0.5)
       })
+    }) %>%
+      bindEvent(input$run_nca)
+
+    # Hide "Run NCA first" overlay once results are available
+    observe({
+      nca_pending <- is.null(res_nca())
+      shinyjs::toggle(id = "nca_results_overlay", condition = nca_pending)
     }) %>%
       bindEvent(input$run_nca)
 
