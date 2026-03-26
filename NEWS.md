@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Slope selector now shows a message instead of crashing when lambda z is not selected or when plot data is empty (#1122)
+
 ## Features added
 
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
