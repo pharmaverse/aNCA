@@ -1,0 +1,191 @@
+filters: ~
+settings:
+  analyte:
+  - DrugA
+  - Metab-DrugA
+  profile: DOSE 1
+  pcspec: SERUM
+  method: lin up/log down
+  bioavailability: ~
+  data_imputation:
+    impute_c0: yes
+    blq_imputation_rule:
+      first: keep
+      middle: keep
+      last: keep
+  int_parameters:
+    parameter:
+    - AUCINT
+    - AUCINT
+    start_auc:
+    - .na.real
+    - .na.real
+    end_auc:
+    - .na.real
+    - .na.real
+  flags:
+    R2ADJ:
+      is.checked: yes
+      threshold: 0.7
+    R2:
+      is.checked: no
+      threshold: 0.7
+    AUCPEO:
+      is.checked: yes
+      threshold: 20
+    AUCPEP:
+      is.checked: yes
+      threshold: 20
+    LAMZSPN:
+      is.checked: yes
+      threshold: 2
+  units: ~
+  general_exclusions: []
+  parameters:
+    selections:
+      Multiple IV Bolus:
+      - adj.r.squared
+      - auclast
+      - auclast.dn
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vss.obs
+      Multiple IV Bolus (Metabolite):
+      - adj.r.squared
+      - auclast
+      - clast.obs
+      - cmax
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      Multiple IV Infusion:
+      - adj.r.squared
+      - auclast
+      - auclast.dn
+      - clast.obs
+      - clast.obs.dn
+      - cmax
+      - cmax.dn
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+      - vss.obs
+      Multiple IV Infusion (Metabolite):
+      - adj.r.squared
+      - auclast
+      - clast.obs
+      - cmax
+      - half.life
+      - lambda.z
+      - lambda.z.n.points
+      - lambda.z.time.first
+      - r.squared
+      - span.ratio
+      - tlast
+      - tmax
+    types_df:
+      USUBJID:
+      - S1-01
+      - S1-01
+      - S1-02
+      - S1-02
+      - S1-03
+      - S1-03
+      - S1-04
+      - S1-04
+      - S1-05
+      - S1-05
+      - S1-06
+      - S1-06
+      - S1-07
+      - S1-07
+      - S1-08
+      - S1-08
+      PARAM:
+      - DrugA
+      - Metab-DrugA
+      - DrugA
+      - Metab-DrugA
+      - DrugA
+      - Metab-DrugA
+      - DrugA
+      - Metab-DrugA
+      - DrugA
+      - Metab-DrugA
+      - DrugA
+      - Metab-DrugA
+      - DrugA
+      - Metab-DrugA
+      - DrugA
+      - Metab-DrugA
+      std_route:
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      - intravascular
+      type:
+      - Multiple IV Infusion
+      - Multiple IV Infusion (Metabolite)
+      - Multiple IV Infusion
+      - Multiple IV Infusion (Metabolite)
+      - Multiple IV Infusion
+      - Multiple IV Infusion (Metabolite)
+      - Multiple IV Infusion
+      - Multiple IV Infusion (Metabolite)
+      - Multiple IV Infusion
+      - Multiple IV Infusion (Metabolite)
+      - Multiple IV Bolus
+      - Multiple IV Bolus (Metabolite)
+      - Multiple IV Bolus
+      - Multiple IV Bolus (Metabolite)
+      - Multiple IV Bolus
+      - Multiple IV Bolus (Metabolite)
+  ratio_table:
+    TestParameter: []
+    RefParameter: []
+    RefGroups: []
+    TestGroups: []
+    AggregateSubject: []
+    AdjustingFactor: []
+    PPTESTCD: []
+slope_rules:
+  STUDYID: []
+  PCSPEC: []
+  DOSETRT: []
+  USUBJID: []
+  PARAM: []
+  TYPE: []
+  RANGE: []
+  REASON: []

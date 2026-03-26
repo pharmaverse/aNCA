@@ -257,9 +257,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       if (!"WTBL" %in% column_names) {
         updateSelectizeInput(session, "select_WTBLU", selected = "")
       }
-      
+
       mapping <- imported_mapping()
-      if(!is.null(mapping)) {
+      if (!is.null(mapping)) {
         # process mapping using settings to override default selections
         .process_imported_mapping(mapping, adnca_data(), session)
       }
