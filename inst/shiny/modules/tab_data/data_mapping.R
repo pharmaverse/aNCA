@@ -135,7 +135,7 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   })
 }
 
-.process_imported_mapping <- function(mapping, adnca_data, session, pending_metabolites) {
+.process_imported_mapping <- function(mapping, adnca_data, session) {
 
   if (!is.null(mapping)) {
     column_names <- names(adnca_data)
@@ -158,11 +158,6 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
         paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
         type = "warning", duration = 10
       )
-    }
-
-    # Metabolites choices depend on select_PARAM; defer via reactiveVal
-    if ("Metabolites" %in% names(mapping)) {
-      pending_metabolites(mapping[["Metabolites"]])
     }
   }
 }
@@ -237,13 +232,6 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    pending_metabolites <- reactiveVal(NULL)
-
-    observeEvent(imported_mapping(), {
-      mapping <- imported_mapping()
-      .process_imported_mapping(mapping, adnca_data(), session, pending_metabolites)
-    })
-
     duplicates <- reactiveVal(NULL)
     # Derive input IDs from column_groups
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
@@ -256,7 +244,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     })
 
     # Populate the static inputs with column names
-    observeEvent(adnca_data(), {
+    observeEvent(c(adnca_data(), imported_mapping()), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
 
@@ -269,6 +257,12 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       if (!"WTBL" %in% column_names) {
         updateSelectizeInput(session, "select_WTBLU", selected = "")
       }
+      
+      mapping <- imported_mapping()
+      if(!is.null(mapping)) {
+        # process mapping using settings to override default selections
+        .process_imported_mapping(mapping, adnca_data(), session)
+      }
     })
     # Populate the dynamic input Metabolites
     observe({
@@ -276,9 +270,8 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
       # Use pending import if available, otherwise fall back to METABFL default
-      selected_metab <- if (!is.null(isolate(pending_metabolites()))) {
-        imported <- isolate(pending_metabolites())
-        pending_metabolites(NULL)
+      selected_metab <- if (!is.null(imported_mapping()$Metabolites)) {
+        imported <- imported_mapping()$Metabolites
         imported
       } else if ("METABFL" %in% names(adnca_data())) {
         unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
