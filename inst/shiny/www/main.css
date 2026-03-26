@@ -797,16 +797,6 @@ div[data-value="Settings"] > div.row a {
   border-radius: 8px;
 }
 
-/* Ensure container fills available space so overlay covers content */
-.runncafirst-section-container {
-  min-height: 300px;
-}
-
-/* Hidden by default — shown via shinyjs::toggle when data is loaded */
-.runncafirst-section-container .nca-run-overlay {
-  display: none;
-}
-
 .loading-spinner-container {
   height: 4em;
 }

@@ -206,9 +206,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     }) %>%
       bindEvent(input$run_nca)
 
-    # Show "Run NCA first" overlay only when data is loaded but NCA hasn't run
+    # Hide "Run NCA first" overlay once results are available
     observe({
-      req(processed_pknca_data())
       shinyjs::toggle(
         selector = ".nca-run-overlay",
         condition = is.null(res_nca())
