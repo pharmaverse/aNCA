@@ -773,11 +773,13 @@ div[data-value="Settings"] > div.row a {
   box-sizing: border-box;
 }
 
-.excretion-section-container {
+.excretion-section-container,
+.runncafirst-section-container {
   position: relative;
 }
 
-.excretion-section-container .excretion-overlay {
+.excretion-section-container .excretion-overlay,
+.runncafirst-section-container .nca-run-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -793,6 +795,16 @@ div[data-value="Settings"] > div.row a {
   border: 2px solid #cfe2f3;
   padding: 20px;
   border-radius: 8px;
+}
+
+/* Ensure container fills available space so overlay covers content */
+.runncafirst-section-container {
+  min-height: 300px;
+}
+
+/* Hidden by default — shown via shinyjs::toggle when data is loaded */
+.runncafirst-section-container .nca-run-overlay {
+  display: none;
 }
 
 .loading-spinner-container {
