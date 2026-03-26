@@ -207,13 +207,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     }) %>%
       bindEvent(input$run_nca)
 
-    # Hide "Run NCA first" overlay once results are available
+    # Hide "Run NCA first" overlay when Run NCA is clicked
     observe({
-      shinyjs::toggle(
-        id = "nca_run_overlay",
-        condition = is.null(res_nca())
-      )
-    })
+      shinyjs::hide(id = "nca_run_overlay")
+    }) %>%
+      bindEvent(input$run_nca)
 
     observe({
       req(res_nca())
