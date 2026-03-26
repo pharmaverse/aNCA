@@ -86,7 +86,13 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         by = intersect(names(results$result), names(results_to_join)),
         relationship = "many-to-many"
       ) %>%
-        filter(type_interval != "manual")
+        # Rename manual interval parameters to include the interval range
+        # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
+        mutate(PPTESTCD = ifelse(
+          type_interval == "manual",
+          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
+          PPTESTCD
+        ))
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
