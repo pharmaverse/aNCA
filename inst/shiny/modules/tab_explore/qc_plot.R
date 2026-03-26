@@ -12,60 +12,63 @@
 pk_dose_qc_plot_ui <- function(id) {
   ns <- NS(id)
   # The nav_panel function creates the tab
-  layout_sidebar(
-    fillable = TRUE,
-    sidebar = sidebar(
-      position = "right",
-      open = TRUE,
-      actionButton(
-        ns("add_to_exports"),
-        label = "Add to Exports",
-        icon = icon("plus"),
-        class = "btn btn-primary btn-sm",
-        width = "100%"
+  div(
+    class = "exploration-sidebar",
+    layout_sidebar(
+      fillable = TRUE,
+      sidebar = sidebar(
+        position = "right",
+        open = TRUE,
+        actionButton(
+          ns("add_to_exports"),
+          label = "Add to Exports",
+          icon = icon("plus"),
+          class = "btn btn-primary btn-sm",
+          width = "100%"
+        ),
+        pickerInput(
+          inputId = ns("group_var"),
+          label = "Choose the variables to group by:",
+          choices = NULL,
+          selected = NULL,
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = ns("colour_var"),
+          label = "Choose the variables to colour by:",
+          choices = NULL,
+          selected = NULL,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = ns("pcspec"),
+          label = "Select the specimen:",
+          choices = NULL,
+          selected = NULL,
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = ns("usubjid"),
+          label = "Select Subjects:",
+          choices = NULL,
+          selected = NULL,
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        ),
+        pickerInput(
+          inputId = ns("show_samples_doses"),
+          label = "Show:",
+          choices = NULL,
+          selected = NULL,
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE)
+        )
       ),
-      pickerInput(
-        inputId = ns("group_var"),
-        label = "Choose the variables to group by:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
-      ),
-      pickerInput(
-        inputId = ns("colour_var"),
-        label = "Choose the variables to colour by:",
-        choices = NULL,
-        selected = NULL,
-        options = list(`actions-box` = TRUE)
-      ),
-      pickerInput(
-        inputId = ns("pcspec"),
-        label = "Select the specimen:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
-      ),
-      pickerInput(
-        inputId = ns("usubjid"),
-        label = "Select Subjects:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
-      ),
-      pickerInput(
-        inputId = ns("show_samples_doses"),
-        label = "Show:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
-      )
-    ),
-    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
-    br()
+      plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
+      br(), br()
+    )
   )
 }
 

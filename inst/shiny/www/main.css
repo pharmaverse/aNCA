@@ -301,12 +301,13 @@ div[data-value="Settings"] > div.row a {
   height: 100%;
 }
 
+/* Main navigation sidebar (Data / Exploration / NCA / TLG) */
 .bslib-sidebar-layout > .main {
   padding: 0;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
+.bslib-page-sidebar > .bslib-sidebar-layout {
+  --_sidebar-width: 136px !important;
 }
 
 .sidebar .sidebar-content {
@@ -650,62 +651,6 @@ div[data-value="Settings"] > div.row a {
   background-color: #E7ECFA;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
-}
-
-.sidebar .sidebar-content {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100% !important;
-}
-
-.sidebar .sidebar-content .row > :nth-child(2) {
-  display: none;
-}
-
-.sidebar .sidebar-content .row {
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.sidebar .sidebar-content .row > :first-child {
-  width: 100%;
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul {
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li:last-child {
-  margin-top: auto;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a {
-  padding-left: 30px;
-  padding-right: 30px;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #E7ECFA;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
-  color: #c0c0c0;
-}
-
 .stepper-wrapper {
   max-width: 100%;
   margin-bottom: 40px;
@@ -884,4 +829,21 @@ h4.modal-title:has(#loading-title) {
 .ratio-pair-row .ratio-remove-btn-wrapper .btn:hover {
   background-color: #9b9b9b;
   border-color: #9b9b9b;
+}
+
+/* Exploration tab: right sidebar — wider default and resizable */
+.exploration-sidebar .sidebar {
+  --_sidebar-width: 325px !important;
+  resize: horizontal;
+  overflow: auto;
+  min-width: 200px;
+  max-width: 600px;
+}
+
+/* NCA tab: pill list sidebar sized to content */
+.navset-pill-list > .nav {
+  width: fit-content !important;
+  min-width: auto !important;
+  max-width: none !important;
+  flex-shrink: 0;
 }

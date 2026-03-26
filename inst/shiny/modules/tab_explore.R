@@ -11,20 +11,26 @@ tab_explore_ui <- function(id) {
     full_screen = TRUE,
     nav_panel(
       "Individual Plots",
-      layout_sidebar(
-        sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
-        fillable = TRUE,
-        plotlyOutput(ns("individualplot"), height = "100%"),
-        br()
+      div(
+        class = "exploration-sidebar",
+        layout_sidebar(
+          sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
+          fillable = TRUE,
+          plotlyOutput(ns("individualplot"), height = "100%"),
+          br(), br()
+        )
       )
     ),
     nav_panel(
       "Mean Plots",
-      layout_sidebar(
-        sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
-        fillable = TRUE,
-        plotlyOutput(ns("mean_plot"), height = "100%"),
-        br()
+      div(
+        class = "exploration-sidebar",
+        layout_sidebar(
+          sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
+          fillable = TRUE,
+          plotlyOutput(ns("mean_plot"), height = "100%"),
+          br(), br()
+        )
       )
     ),
     nav_panel(

@@ -1,5 +1,12 @@
 # aNCA (development version)
 
+## UI improvements
+
+* Reduced main navigation sidebar width (0.8× previous size) (#1133)
+* Exploration plot sidebars are now wider by default (1.3×) and resizable via drag handle (#1133)
+* Added vertical spacing after each Exploration plot section (#1133)
+* NCA settings panels (Settings, Parameter Selection, etc.) now size to content width instead of window percentage (#1133)
+
 ## Features added
 
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
