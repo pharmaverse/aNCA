@@ -301,21 +301,95 @@ div[data-value="Settings"] > div.row a {
   height: 100%;
 }
 
-/* Main navigation sidebar: 100px wide */
-.bslib-page-sidebar > .bslib-sidebar-layout {
-  --_sidebar-width: 100px !important;
-  --_sidebar-max-width: 100px !important;
+/* Header bar */
+.anca-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #dadada;
+  background-color: #ffffff;
+  flex-shrink: 0;
 }
 
-.bslib-page-sidebar > .bslib-sidebar-layout > .sidebar {
-  width: 100px !important;
-  min-width: 100px !important;
-  max-width: 100px !important;
-  flex-basis: 100px !important;
+/* Main layout: narrow nav + content */
+.anca-main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
-.bslib-sidebar-layout > .main {
+/* Narrow navigation sidebar */
+.anca-nav-sidebar {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  background-color: #f8f8f8;
+  border-right: 1px solid #dadada;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.anca-nav-list {
+  list-style: none;
   padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.anca-nav-spacer {
+  margin-top: auto;
+}
+
+.anca-nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  color: #21201f;
+  text-decoration: none !important;
+  font-size: 12px;
+  text-align: center;
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s;
+}
+
+.anca-nav-link:hover {
+  background-color: #E7ECFA;
+  color: #21201f;
+}
+
+.anca-nav-link.active {
+  background-color: #E7ECFA;
+  border-left-color: #007bc2;
+  color: #21201f;
+}
+
+.anca-nav-link.disabled,
+.anca-nav-link[disabled] {
+  color: #c0c0c0;
+  pointer-events: none;
+}
+
+.anca-nav-link .fa,
+.anca-nav-link .fas,
+.anca-nav-link .far {
+  font-size: 18px;
+}
+
+.anca-nav-link span {
+  font-size: 11px;
+}
+
+/* Content area fills remaining space */
+.anca-main-layout > .content-container {
+  flex: 1;
+  overflow-y: auto;
 }
 
 

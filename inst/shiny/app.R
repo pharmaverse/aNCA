@@ -40,24 +40,10 @@ sass(
 setup_logger()
 
 ui <- function() {
-  page_sidebar(
-    id = "sidebar",
-    title = tagList(
-      div(
-        style = "display: flex; align-items: center; gap: 10px;",
-        tags$img(
-          src = "logos/aNCA_logo.png", # Ensure file is in www/ or resource path
-          alt = "aNCA logo",
-          width = "40px" # Adjusted for sidebar header scale
-        )
-      ),
-      div(
-        class = "project-name-container",
-        textInput("project_name", label = NULL, placeholder = "Project Name"),
-        icon("file", class = "project-name-icon"),
-        zip_ui("zip_modal")
-      )
-    ),
+  page_fillable(
+    title = "aNCA",
+    padding = 0,
+    gap = 0,
 
     tags$script("
       Shiny.addCustomMessageHandler('update', function(value) {
@@ -84,75 +70,107 @@ ui <- function() {
       });
     "),
 
+    # JS to wire nav clicks to Shiny input$page and initialize on load
+    tags$script(HTML("
+      $(document).on('shiny:connected', function() {
+        Shiny.setInputValue('page', 'data');
+      });
+      $(document).on('click', '.anca-nav-link', function(e) {
+        e.preventDefault();
+        var val = $(this).data('value');
+        if ($(this).hasClass('disabled') || $(this).prop('disabled')) return;
+        $('.anca-nav-link').removeClass('active');
+        $(this).addClass('active');
+        Shiny.setInputValue('page', val, {priority: 'event'});
+      });
+    ")),
+
     includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
 
-    sidebar = navset_pill_list(
-      id = "page",
-      well = FALSE,
-      selected = "data",
-      # DATA ----
-      nav_panel(
-        "Data",
-        value = "data",
-        icon = icon("database"),
-        fluid = TRUE
-      ),
-      # VISUALISATION ----
-      nav_panel(
-        "Exploration",
-        value = "exploration",
-        icon = icon("chart-line"),
-        fluid = TRUE
-      ),
-      # NCA ----
-      nav_panel(
-        "NCA",
-        value = "nca",
-        icon = icon("microscope"),
-        fluid = TRUE
-      ),
-      # New TLG tab
-      nav_panel(
-        "TLG",
-        value = "tlg",
-        icon = icon("table-list")
-      ),
-      # ABOUT ----
-      nav_panel(
-        "About",
-        value = "about",
-        icon = icon("circle-info")
-      )
-    ),
+    # Top header bar
     div(
-      class = "content-container",
-      conditionalPanel(
-        class = "page-container",
-        condition = "input.page == 'data'",
-        tab_data_ui("data")
+      class = "anca-header",
+      div(
+        style = "display: flex; align-items: center; gap: 10px;",
+        tags$img(
+          src = "logos/aNCA_logo.png",
+          alt = "aNCA logo",
+          width = "40px"
+        )
       ),
-      conditionalPanel(
-        class = "page-container",
-        condition = "input.page == 'nca'",
-        tab_nca_ui("nca")
-      ),
-      conditionalPanel(
-        class = "page-container",
-        condition = "input.page == 'exploration'",
-        tab_explore_ui("explore")
-      ),
-      conditionalPanel(
-        class = "page-container",
-        condition = "input.page == 'tlg'",
-        tab_tlg_ui("tlg")
-      ),
-      conditionalPanel(
-        class = "page-container",
-        condition = "input.page == 'about'",
-        tab_about_ui("about")
+      div(
+        class = "project-name-container",
+        textInput("project_name", label = NULL, placeholder = "Project Name"),
+        icon("file", class = "project-name-icon"),
+        zip_ui("zip_modal")
       )
     ),
+
+    # Main layout: narrow nav + content
+    div(
+      class = "anca-main-layout",
+      # Narrow navigation sidebar
+      tags$nav(
+        class = "anca-nav-sidebar",
+        tags$ul(
+          class = "anca-nav-list",
+          id = "page",
+          tags$li(tags$a(
+            class = "anca-nav-link active", href = "#", `data-value` = "data",
+            icon("database"), tags$span("Data")
+          )),
+          tags$li(tags$a(
+            class = "anca-nav-link disabled", href = "#", `data-value` = "exploration",
+            icon("chart-line"), tags$span("Exploration")
+          )),
+          tags$li(tags$a(
+            class = "anca-nav-link disabled", href = "#", `data-value` = "nca",
+            icon("microscope"), tags$span("NCA")
+          )),
+          tags$li(tags$a(
+            class = "anca-nav-link disabled", href = "#", `data-value` = "tlg",
+            icon("table-list"), tags$span("TLG")
+          )),
+          tags$li(
+            class = "anca-nav-spacer",
+            tags$a(
+              class = "anca-nav-link", href = "#", `data-value` = "about",
+              icon("circle-info"), tags$span("About")
+            )
+          )
+        )
+      ),
+      # Content area
+      div(
+        class = "content-container",
+        conditionalPanel(
+          class = "page-container",
+          condition = "input.page == 'data'",
+          tab_data_ui("data")
+        ),
+        conditionalPanel(
+          class = "page-container",
+          condition = "input.page == 'nca'",
+          tab_nca_ui("nca")
+        ),
+        conditionalPanel(
+          class = "page-container",
+          condition = "input.page == 'exploration'",
+          tab_explore_ui("explore")
+        ),
+        conditionalPanel(
+          class = "page-container",
+          condition = "input.page == 'tlg'",
+          tab_tlg_ui("tlg")
+        ),
+        conditionalPanel(
+          class = "page-container",
+          condition = "input.page == 'about'",
+          tab_about_ui("about")
+        )
+      )
+    ), # close anca-main-layout
 
     shinyjs::useShinyjs(),
     reactable.extras::reactable_extras_dependency()
