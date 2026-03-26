@@ -302,8 +302,16 @@ div[data-value="Settings"] > div.row a {
 }
 
 /* Main navigation sidebar: 100px wide */
-body > .bslib-page-sidebar > .bslib-sidebar-layout {
+.bslib-page-sidebar > .bslib-sidebar-layout {
   --_sidebar-width: 100px !important;
+  --_sidebar-max-width: 100px !important;
+}
+
+.bslib-page-sidebar > .bslib-sidebar-layout > .sidebar {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  flex-basis: 100px !important;
 }
 
 .bslib-sidebar-layout > .main {
