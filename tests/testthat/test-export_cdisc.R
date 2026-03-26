@@ -563,20 +563,20 @@ describe("export_cdisc", {
     )))
   })
 
-  it("sets PPSUM1F to NA for all ADPP rows when no exclusions", {
+  it("sets PPSUM1F to empty string for all ADPP rows when no exclusions", {
     result <- export_cdisc(test_pknca_res)
     expect_true("PPSUM1F" %in% names(result$adpp))
-    expect_true(all(is.na(result$adpp$PPSUM1F)))
+    expect_true(all(result$adpp$PPSUM1F == ""))
   })
 
-  it("sets PPSUM1F to 1 for excluded rows via .__excl__ marker", {
+  it("sets PPSUM1F to Y for excluded rows via .__excl__ marker", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
     expect_true("PPSUM1F" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PPSUM1F == "1", na.rm = TRUE), 1)
-    expect_equal(sum(is.na(result$adpp$PPSUM1F)), n - 1)
+    expect_equal(sum(result$adpp$PPSUM1F == "Y"), 1)
+    expect_equal(sum(result$adpp$PPSUM1F == ""), n - 1)
     expect_false(".__excl__" %in% names(result$adpp))
     expect_false(".__excl_reason__" %in% names(result$adpp))
   })
@@ -599,8 +599,8 @@ describe("export_cdisc", {
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- c(TRUE, TRUE, TRUE, rep(FALSE, n - 3))
     result <- export_cdisc(tagged_res)
-    expect_equal(sum(result$adpp$PPSUM1F == "1", na.rm = TRUE), 3)
-    expect_equal(sum(is.na(result$adpp$PPSUM1F)), n - 3)
+    expect_equal(sum(result$adpp$PPSUM1F == "Y"), 3)
+    expect_equal(sum(result$adpp$PPSUM1F == ""), n - 3)
   })
 
   it("PPSUM1F handles all rows excluded", {
@@ -608,8 +608,8 @@ describe("export_cdisc", {
     n <- nrow(tagged_res$result)
     tagged_res$result$.__excl__ <- rep(TRUE, n)
     result <- export_cdisc(tagged_res)
-    expect_true(all(result$adpp$PPSUM1F == "1"))
-    expect_equal(sum(is.na(result$adpp$PPSUM1F)), 0)
+    expect_true(all(result$adpp$PPSUM1F == "Y"))
+    expect_equal(sum(result$adpp$PPSUM1F == ""), 0)
   })
 
   it("PPSUM1F and PPSUM1R do not appear in PP output", {
@@ -672,7 +672,7 @@ describe("export_cdisc", {
     result <- export_cdisc(tagged_res, grouping_vars = "GROUP")
     expect_true("PPSUM1F" %in% names(result$adpp))
     expect_true("GROUP" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PPSUM1F == "1", na.rm = TRUE), 1)
+    expect_equal(sum(result$adpp$PPSUM1F == "Y"), 1)
   })
 
   it("includes non-standard grouping_vars columns in ADNCA and ADPP outputs", {
