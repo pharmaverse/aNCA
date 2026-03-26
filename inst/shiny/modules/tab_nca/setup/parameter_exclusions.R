@@ -84,6 +84,47 @@ parameter_exclusions_ui <- function(id) {
   list(indices = all_indices, reasons = reasons[all_indices])
 }
 
+# Columns used to identify excluded rows across NCA runs.
+.get_excl_key_cols <- function(res_nca) {
+  group_cols <- unname(unlist(res_nca$data$conc$columns$groups))
+  unique(c(group_cols, "PPTESTCD", "PPORRES"))
+}
+
+# Extract key columns from result rows at given indices.
+.extract_row_keys <- function(result_df, row_indices, key_cols) {
+  available <- intersect(key_cols, names(result_df))
+  result_df[row_indices, available, drop = FALSE]
+}
+
+# Match key rows against a result data frame.
+# Returns a list with `matched` (row indices) and `unmatched` (key data frame rows).
+.match_keys_to_rows <- function(keys_df, result_df) {
+  available <- intersect(names(keys_df), names(result_df))
+  if (length(available) == 0) {
+    return(list(matched = integer(0), unmatched = keys_df))
+  }
+  matched <- integer(0)
+  unmatched_idx <- integer(0)
+  for (i in seq_len(nrow(keys_df))) {
+    key_row <- keys_df[i, available, drop = FALSE]
+    # Find rows in result_df that match all key columns
+    match_mask <- rep(TRUE, nrow(result_df))
+    for (col in available) {
+      match_mask <- match_mask & (as.character(result_df[[col]]) == as.character(key_row[[col]]))
+    }
+    hits <- which(match_mask)
+    if (length(hits) > 0) {
+      matched <- c(matched, hits[1])
+    } else {
+      unmatched_idx <- c(unmatched_idx, i)
+    }
+  }
+  list(
+    matched = matched,
+    unmatched = if (length(unmatched_idx) > 0) keys_df[unmatched_idx, , drop = FALSE] else NULL
+  )
+}
+
 # Render the exclusion list as a reactable with remove buttons.
 .render_exclusion_table <- function(lst, ns) {
   if (length(lst) == 0) return(NULL)
@@ -214,11 +255,15 @@ parameter_exclusions_server <- function(id, res_nca, param_excl_override) {
       rows_sel <- param_table_state()$selected
       reason <- input$exclusion_reason
       if (length(rows_sel) > 0 && nzchar(reason)) {
+        result_df <- res_nca()$result
+        key_cols <- .get_excl_key_cols(res_nca())
+        keys <- .extract_row_keys(result_df, rows_sel, key_cols)
+
         current <- exclusion_list()
         xbtn_id <- paste0("remove_param_excl_", xbtn_counter() + 1)
         xbtn_counter(xbtn_counter() + 1)
         new_entry <- list(list(
-          reason = reason, rows = rows_sel, xbtn_id = xbtn_id
+          reason = reason, rows = rows_sel, keys = keys, xbtn_id = xbtn_id
         ))
         exclusion_list(append(current, new_entry))
         updateTextInput(session, "exclusion_reason", value = "")
@@ -239,7 +284,13 @@ parameter_exclusions_server <- function(id, res_nca, param_excl_override) {
       )
     })
 
-    # Return the exclusion list without xbtn_id (same pattern as general_exclusions)
-    reactive(clean_exclusion_list(exclusion_list()))
+    # Return the exclusion list for persistence.
+    # Strip xbtn_id (session-only) and rows (ephemeral indices).
+    # Only reason + keys are persisted to YAML.
+    reactive({
+      lapply(exclusion_list(), function(x) {
+        x[intersect(names(x), c("reason", "keys"))]
+      })
+    })
   })
 }
