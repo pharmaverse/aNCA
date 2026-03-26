@@ -46,6 +46,7 @@ parameter_exclusions_ui <- function(id) {
         status = "primary"
       )
     ),
+    uiOutput(ns("restore_warning_ui")),
     uiOutput(ns("exclusion_list_ui")),
     div(
       class = "results-legend",
@@ -342,6 +343,21 @@ parameter_exclusions_server <- function(id, res_nca, param_excl_override) {
     # Register remove-button observers for exclusion entries
     registered_xbtns <- reactiveVal(character(0))
     observe_remove_buttons(exclusion_list, registered_xbtns, input)
+
+    output$restore_warning_ui <- renderUI({
+      msg <- restore_warnings()
+      if (is.null(msg)) return(NULL)
+      div(
+        class = "alert alert-warning alert-dismissible",
+        role = "alert",
+        tags$button(
+          type = "button", class = "btn-close",
+          `data-bs-dismiss` = "alert", `aria-label` = "Close"
+        ),
+        tags$strong("Settings restore: "),
+        lapply(strsplit(msg, "\n")[[1]], function(line) tags$div(line))
+      )
+    })
 
     output$exclusion_list_ui <- renderUI({
       tbl <- .render_exclusion_table(exclusion_list(), ns)
