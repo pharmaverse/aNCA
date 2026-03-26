@@ -16,7 +16,7 @@ columns are treated as ratio parameters and joined by PPTESTCD only.}
 }
 \value{
 Data frame with PPSTRESU and PPSTRES applied, conversion_factor
-  removed. PPSTRESU is "" (not NA) for rows without custom units.
+removed. PPSTRESU is "" (not NA) for rows without custom units.
 }
 \description{
 Joins PKNCA parameter units by all shared columns (including groups),
