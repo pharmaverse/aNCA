@@ -196,10 +196,9 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
       reactable::colDef(
         html = TRUE,
         header = htmltools::tags$span(
-          col_name,
-          `data-toggle` = "tooltip",
-          `data-placement` = "top",
-          title = label
+          class = "col-header-tooltip",
+          `data-tooltip` = label,
+          col_name
         ),
         minWidth = min_width,
         maxWidth = max_width,

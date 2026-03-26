@@ -1,8 +1,17 @@
 /**
- * Enables bootstrap tooltips for the whole application.
+ * Enables bootstrap tooltips for the whole application,
+ * including dynamically rendered elements.
  */
 $(document).ready(() => {
   $('[data-toggle="tooltip"]').tooltip();
+
+  // Re-initialize tooltips when new elements are added to the DOM
+  const observer = new MutationObserver(() => {
+    $('[data-toggle="tooltip"]').not('[data-tooltip-initialized]')
+      .tooltip()
+      .attr('data-tooltip-initialized', 'true');
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 
   const results_table = document.getElementById('nca-nca_results-myresults-table');
   observe_visible(results_table, "nca-results_visible");

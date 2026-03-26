@@ -184,6 +184,35 @@ h5 {
   transform: scale(1.05);
 }
 
+/* column header tooltips */
+.col-header-tooltip {
+  position: relative;
+  cursor: default;
+}
+
+.col-header-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: normal;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 300px;
+  width: max-content;
+  z-index: 9999;
+  pointer-events: none;
+  margin-bottom: 4px;
+  line-height: 1.4;
+  text-align: left;
+}
+
 /* general reactable rules */
 .rt-table input {
   width: 100%;
