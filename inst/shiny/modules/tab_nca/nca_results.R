@@ -60,7 +60,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       reactive({          #' Pass `pknca_data` to the units table only when the results
         req(res_nca())    #' are available.
         pknca_data()
-      })
+      }),
+      ratio_table
     )
 
     final_results <- reactive({
@@ -70,24 +71,14 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       #' Apply units
       if (!is.null(session$userData$units_table())) {
         res$data$units <- session$userData$units_table()
-        res$result <- res$result %>%
-          select(-PPSTRESU, -PPSTRES) %>%
-          left_join(
-            session$userData$units_table() %>%
-              mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
-            by = intersect(names(.), names(session$userData$units_table()))
-          ) %>%
-          mutate(PPSTRES = ifelse(
-            !is.null(conversion_factor),
-            PPORRES * conversion_factor,
-            PPORRES
-          )) %>%
-          select(-conversion_factor)
+        custom_units <- session$userData$units_table() %>%
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+        res$result <- apply_custom_units(res$result, custom_units)
       }
 
       #' Transform results
-      # Calculate bioavailability if available
-      results <- res_nca()
+      # Use res (with unit conversions applied) rather than re-reading res_nca()
+      results <- res
 
       # Transform results
       extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")

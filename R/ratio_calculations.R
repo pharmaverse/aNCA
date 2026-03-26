@@ -270,9 +270,60 @@ calculate_ratios.PKNCAresults <- function(
   data
 }
 
+#' Derive expected units for ratio parameters
+#'
+#' For each row in `ratio_table`, looks up the original units of the test and
+#' reference parameters in `units_table`, then determines the ratio unit:
+#' `"fraction"` when the units are convertible, or a compound string via
+#' [compose_ratio_unit()] otherwise.
+#'
+#' @param ratio_table Data frame with columns `TestParameter`, `RefParameter`,
+#'   and `PPTESTCD` (as produced by the ratio calculations table in the app).
+#' @param units_table Data frame with at least `PPTESTCD` and `PPORRESU`
+#'   columns (typically from `PKNCAdata$units`).
+#' @returns A data frame with columns `PPTESTCD`, `PPORRESU`, `PPSTRESU`,
+#'   `conversion_factor`, plus any group columns from `units_table` set to `NA`.
+#'   Returns `NULL` if `ratio_table` has zero rows.
+#' @importFrom dplyr bind_rows
+#' @keywords internal
+derive_ratio_units <- function(ratio_table, units_table) {
+  if (nrow(ratio_table) == 0) return(NULL)
+
+  group_cols <- setdiff(
+    names(units_table), c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+  )
+
+  pknca_test <- translate_terms(ratio_table$TestParameter, "PPTESTCD", "PKNCA")
+  pknca_ref <- translate_terms(ratio_table$RefParameter, "PPTESTCD", "PKNCA")
+
+  ratio_unit_rows <- lapply(seq_len(nrow(ratio_table)), function(i) {
+    test_unit <- find_param_unit(units_table, pknca_test[i], ratio_table$TestParameter[i])
+    ref_unit <- find_param_unit(units_table, pknca_ref[i], ratio_table$RefParameter[i])
+
+    if (is.na(test_unit) || is.na(ref_unit)) {
+      pporresu <- NA_character_
+    } else {
+      factor <- get_conversion_factor(ref_unit, test_unit)
+      pporresu <- if (!is.na(factor)) "fraction" else compose_ratio_unit(test_unit, ref_unit)
+    }
+
+    row <- data.frame(
+      PPTESTCD = ratio_table$PPTESTCD[i],
+      PPORRESU = pporresu,
+      PPSTRESU = pporresu,
+      conversion_factor = 1,
+      stringsAsFactors = FALSE
+    )
+    for (gc in group_cols) row[[gc]] <- NA_character_
+    row
+  })
+  bind_rows(ratio_unit_rows)
+}
+
+
 #' Apply Ratio Calculations to PKNCAresult Object
 #'
-#' This function takes a PKNCAresult object and a data.frame specifying ratio calculations.
+#' Takes a PKNCAresult object and a data.frame specifying ratio calculations.
 #'
 #' @param res A PKNCAresult object.
 #' @param ratio_table Data.frame with columns:

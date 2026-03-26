@@ -19,27 +19,23 @@ units_table_ui <- function(id) {
   )
 }
 
-units_table_server <- function(id, mydata) {
+units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    ratio_units <- reactive({
+      req(ratio_table())
+      derive_ratio_units(ratio_table(), mydata()$units)
+    })
+
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
-      default_units <- mydata()$units %>%
-        dplyr::mutate(default = TRUE)
+      default_units <- mydata()$units %>% mutate(default = TRUE)
+      default_units <- .append_ratio_rows(default_units, ratio_units())
 
       if (!is.null(session$userData$units_table())) {
-        custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
-        by_cols <- intersect(names(default_units), names(custom_units))
-        by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
-        dplyr::rows_update(
-          default_units,
-          custom_units,
-          by = by_cols,
-          unmatched = "ignore"
-        ) %>%
-          modal_units_table()
+        modal_units_table(.merge_custom_units(default_units, session$userData$units_table()))
       } else {
         modal_units_table(default_units)
       }
@@ -57,25 +53,10 @@ units_table_server <- function(id, mydata) {
       ))
     })
 
-    # Define rows from units table not of interest for the user
     rows_to_hide_units_table <- reactive({
-      group_cols <- intersect(
-        names(PKNCA::getGroups(mydata()$conc)), names(mydata()$units)
-      )
-      groups_to_keep <- select(mydata()$intervals, any_of(group_cols))
-      params_to_keep <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
-
-      rows_to_keep <- mydata()$units %>%
-        mutate(nrow = row_number()) %>%
-        filter(PPTESTCD %in% params_to_keep)
-      if (ncol(groups_to_keep) > 0) {
-        rows_to_keep <- inner_join(
-          rows_to_keep, unique(groups_to_keep),
-          by = intersect(names(rows_to_keep), names(groups_to_keep))
-        )
-      }
-
-      setdiff(seq_len(nrow(mydata()$units)), rows_to_keep$nrow)
+      req(modal_units_table())
+      ratio_pptestcds <- if (!is.null(ratio_units())) ratio_units()$PPTESTCD else character(0)
+      .compute_rows_to_hide(modal_units_table(), mydata(), ratio_pptestcds)
     })
 
     #' Rendering the modal units table
@@ -193,7 +174,7 @@ units_table_server <- function(id, mydata) {
 
       log_trace("Applying custom units specification.")
       modal_units_table() %>%
-        dplyr::filter(!default) %>%
+        filter(!default) %>%
         session$userData$units_table()
 
       # Close the modal message window for the user
@@ -202,19 +183,9 @@ units_table_server <- function(id, mydata) {
 
     #' Update local `modal_units_table()` if the global value changes.
     observeEvent(session$userData$units_table(), {
-      default_units <- mydata()$units %>%
-        dplyr::mutate(default = TRUE)
-
-      custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
-      by_cols <- intersect(names(default_units), names(custom_units))
-      by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
-      dplyr::rows_update(
-        default_units,
-        custom_units,
-        by = by_cols,
-        unmatched = "ignore"
-      ) %>%
-        modal_units_table()
+      default_units <- mydata()$units %>% mutate(default = TRUE)
+      default_units <- .append_ratio_rows(default_units, ratio_units())
+      modal_units_table(.merge_custom_units(default_units, session$userData$units_table()))
     })
   })
 }

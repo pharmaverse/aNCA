@@ -28,6 +28,52 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 }, USE.NAMES = FALSE)
 
 
+#' Build a parseable ratio unit string
+#'
+#' Combines a numerator and denominator unit into a string that
+#' `units::set_units` can parse, by wrapping the denominator in
+#' parentheses (e.g. `"mg/(hr*ug/mL)"`). Falls back to a plain
+#' `"numerator/denominator"` string if the result is not parseable.
+#'
+#' @param numerator_unit Character, unit of the numerator.
+#' @param denominator_unit Character, unit of the denominator.
+#' @returns Unit string parseable by `units::set_units`.
+#' @examples
+#' compose_ratio_unit("mg", "hr*ug/mL")
+#' @importFrom units set_units
+#' @export
+compose_ratio_unit <- function(numerator_unit, denominator_unit) {
+  unit_str <- paste0(numerator_unit, "/(", denominator_unit, ")")
+  tryCatch({
+    units::set_units(1, unit_str, mode = "standard")
+    unit_str
+  }, error = function(e) {
+    paste0(numerator_unit, "/", denominator_unit)
+  })
+}
+
+
+#' Look up a parameter's original unit from a units table
+#'
+#' Searches for `PPORRESU` by matching `PPTESTCD` in a units data frame.
+#' Tries `pknca_name` first; if no match, falls back to `pptestcd`.
+#' Returns the first non-NA unit found, or `NA` if none match.
+#'
+#' @param units_df Data frame with at least `PPTESTCD` and `PPORRESU` columns.
+#' @param pknca_name Character, PKNCA-style parameter name to look up first.
+#' @param pptestcd Character, CDISC PPTESTCD fallback name.
+#' @returns A single character string (the unit) or `NA_character_`.
+#' @keywords internal
+find_param_unit <- function(units_df, pknca_name, pptestcd) {
+  matches <- units_df$PPORRESU[units_df$PPTESTCD == pknca_name]
+  if (length(matches) == 0) {
+    matches <- units_df$PPORRESU[units_df$PPTESTCD == pptestcd]
+  }
+  result <- stats::na.omit(matches)[1]
+  if (is.na(result)) NA_character_ else result
+}
+
+
 #' Apply default target units onto a data-derived units table
 #'
 #' Takes a table of desired target units (with `PPTESTCD` and `PPSTRESU`)

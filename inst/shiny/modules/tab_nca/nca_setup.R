@@ -190,7 +190,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     })
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
-    units_table_server("units_table", processed_pknca_data)
+    units_table_server("units_table", processed_pknca_data, ratio_table)
 
     # Collect all half life manual adjustments done in the `Slope Selector` section
     # and controls the half life plots that are displayed

@@ -284,6 +284,80 @@ describe("simplify_unit", {
   })
 })
 
+describe("find_param_unit", {
+  units_df <- data.frame(
+    PPTESTCD = c("auclast", "cmax", "half.life", "AUCLST", "CMAX"),
+    PPORRESU = c("hr*ng/mL", "ng/mL", "hr", "hr*ug/mL", "ug/mL"),
+    stringsAsFactors = FALSE
+  )
+
+  it("finds unit by PKNCA name (first argument)", {
+    result <- find_param_unit(units_df, "auclast", "AUCLST")
+    expect_equal(result, "hr*ng/mL")
+  })
+
+  it("falls back to PPTESTCD when PKNCA name has no match", {
+    result <- find_param_unit(units_df, "nonexistent", "CMAX")
+    expect_equal(result, "ug/mL")
+  })
+
+  it("returns NA when neither name matches", {
+    result <- find_param_unit(units_df, "nonexistent", "ALSO_MISSING")
+    expect_true(is.na(result))
+  })
+
+  it("returns first non-NA match when duplicates exist", {
+    df <- data.frame(
+      PPTESTCD = c("cmax", "cmax"),
+      PPORRESU = c(NA, "ng/mL"),
+      stringsAsFactors = FALSE
+    )
+    result <- find_param_unit(df, "cmax", "CMAX")
+    expect_equal(result, "ng/mL")
+  })
+
+  it("returns first match when multiple rows have the same PPTESTCD", {
+    df <- data.frame(
+      PPTESTCD = c("cmax", "cmax"),
+      PPORRESU = c("ng/mL", "ug/mL"),
+      stringsAsFactors = FALSE
+    )
+    result <- find_param_unit(df, "cmax", "CMAX")
+    expect_equal(result, "ng/mL")
+  })
+})
+
+describe("compose_ratio_unit", {
+  it("wraps denominator in parentheses for simple units", {
+    result <- compose_ratio_unit("mg", "mL")
+    expect_equal(result, "mg/(mL)")
+  })
+
+  it("wraps compound denominator in parentheses", {
+    result <- compose_ratio_unit("mg", "hr*ug/mL")
+    expect_equal(result, "mg/(hr*ug/mL)")
+  })
+
+  it("produces a parseable unit string", {
+    result <- compose_ratio_unit("ng/mL", "ng/mL")
+    # Should be parseable by units::set_units
+    expect_no_error(units::set_units(1, result, mode = "standard"))
+  })
+
+  it("falls back to plain slash for unparseable combinations", {
+    result <- compose_ratio_unit("fakeunit", "otherfake")
+    expect_equal(result, "fakeunit/otherfake")
+  })
+
+  it("handles identical numerator and denominator", {
+    result <- compose_ratio_unit("ng/mL", "ng/mL")
+    expect_equal(result, "ng/mL/(ng/mL)")
+    # The result should simplify to dimensionless
+    val <- units::set_units(1, result, mode = "standard")
+    expect_equal(as.numeric(val), 1)
+  })
+})
+
 describe("apply_unit_defaults", {
   data_units <- data.frame(
     PPTESTCD = c("CMAX", "AUCLST", "TMAX", "LAMZHL"),

@@ -1,0 +1,107 @@
+describe("apply_custom_units", {
+  base_result <- data.frame(
+    PPTESTCD = c("CMAX", "CMAX", "AUCLST", "AUCLST"),
+    PPORRES = c(10, 20, 100, 200),
+    PPSTRES = c(10, 20, 100, 200),
+    PPSTRESU = c("ng/mL", "ng/mL", "hr*ng/mL", "hr*ng/mL"),
+    PPORRESU = c("ng/mL", "ng/mL", "hr*ng/mL", "hr*ng/mL"),
+    PARAM = c("A", "B", "A", "B"),
+    stringsAsFactors = FALSE
+  )
+
+  it("applies conversion factor to matching rows", {
+    custom <- data.frame(
+      PPTESTCD = "CMAX",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001,
+      PARAM = "A",
+      stringsAsFactors = FALSE
+    )
+    result <- apply_custom_units(base_result, custom)
+    cmax_a <- result[result$PPTESTCD == "CMAX" & result$PARAM == "A", ]
+    expect_equal(cmax_a$PPSTRES, 10 * 0.001)
+    expect_equal(cmax_a$PPSTRESU, "ug/mL")
+    cmax_b <- result[result$PPTESTCD == "CMAX" & result$PARAM == "B", ]
+    expect_equal(cmax_b$PPSTRES, 20)
+    expect_equal(cmax_b$PPSTRESU, "")
+  })
+
+  it("leaves rows unchanged when no custom units match", {
+    custom <- data.frame(
+      PPTESTCD = "NONEXISTENT",
+      PPORRESU = "x",
+      PPSTRESU = "y",
+      conversion_factor = 99,
+      PARAM = "A",
+      stringsAsFactors = FALSE
+    )
+    result <- apply_custom_units(base_result, custom)
+    expect_equal(result$PPSTRES, base_result$PPORRES)
+    expect_true(all(result$PPSTRESU == ""))
+  })
+
+  it("sets PPSTRESU to empty string (not NA) for unmatched rows", {
+    custom <- data.frame(
+      PPTESTCD = "CMAX",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001,
+      PARAM = "A",
+      stringsAsFactors = FALSE
+    )
+    result <- apply_custom_units(base_result, custom)
+    expect_false(any(is.na(result$PPSTRESU)))
+  })
+
+  it("joins ratio rows by PPTESTCD only (ignoring groups)", {
+    custom <- data.frame(
+      PPTESTCD = c("CMAX", "MRCMAX"),
+      PPORRESU = c("ng/mL", "fraction"),
+      PPSTRESU = c("ug/mL", "%"),
+      conversion_factor = c(0.001, 100),
+      PARAM = c("A", NA_character_),
+      stringsAsFactors = FALSE
+    )
+    result_with_ratio <- rbind(
+      base_result,
+      data.frame(
+        PPTESTCD = "MRCMAX", PPORRES = 0.5, PPSTRES = 0.5,
+        PPSTRESU = "fraction", PPORRESU = "fraction", PARAM = "A",
+        stringsAsFactors = FALSE
+      )
+    )
+    result <- apply_custom_units(result_with_ratio, custom)
+    ratio_row <- result[result$PPTESTCD == "MRCMAX", ]
+    expect_equal(ratio_row$PPSTRES, 0.5 * 100)
+    expect_equal(ratio_row$PPSTRESU, "%")
+  })
+
+  it("does not produce conversion_factor column in output", {
+    custom <- data.frame(
+      PPTESTCD = "CMAX",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001,
+      PARAM = "A",
+      stringsAsFactors = FALSE
+    )
+    result <- apply_custom_units(base_result, custom)
+    expect_false("conversion_factor" %in% names(result))
+  })
+
+  it("handles custom_units with no group columns", {
+    custom <- data.frame(
+      PPTESTCD = "CMAX",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001,
+      stringsAsFactors = FALSE
+    )
+    result_no_groups <- base_result[, c("PPTESTCD", "PPORRES", "PPSTRES", "PPSTRESU", "PPORRESU")]
+    result <- apply_custom_units(result_no_groups, custom)
+    cmax_rows <- result[result$PPTESTCD == "CMAX", ]
+    expect_equal(cmax_rows$PPSTRES, c(10, 20) * 0.001)
+    expect_equal(cmax_rows$PPSTRESU, c("ug/mL", "ug/mL"))
+  })
+})

@@ -327,3 +327,88 @@ describe("calculate_ratios", {
     expect_false("PPSTRESU" %in% names(ratios_df))
   })
 })
+
+describe("derive_ratio_units", {
+  units_table <- data.frame(
+    PPTESTCD = c("auclast", "cmax", "half.life"),
+    PPORRESU = c("hr*ng/mL", "ng/mL", "hr"),
+    PPSTRESU = c("hr*ng/mL", "ng/mL", "hr"),
+    conversion_factor = c(1, 1, 1),
+    PARAM = c("A", "A", "A"),
+    stringsAsFactors = FALSE
+  )
+
+  it("returns NULL for empty ratio table", {
+    rt <- data.frame(
+      TestParameter = character(0),
+      RefParameter = character(0),
+      PPTESTCD = character(0),
+      stringsAsFactors = FALSE
+    )
+    expect_null(derive_ratio_units(rt, units_table))
+  })
+
+  it("returns 'fraction' when test and ref units are convertible", {
+    rt <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      PPTESTCD = "MRCMAX",
+      stringsAsFactors = FALSE
+    )
+    result <- derive_ratio_units(rt, units_table)
+    expect_equal(nrow(result), 1)
+    expect_equal(result$PPTESTCD, "MRCMAX")
+    expect_equal(result$PPORRESU, "fraction")
+    expect_equal(result$PPSTRESU, "fraction")
+    expect_equal(result$conversion_factor, 1)
+  })
+
+  it("returns compound unit when test and ref units are not convertible", {
+    rt <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "AUCLST",
+      PPTESTCD = "RENALCL",
+      stringsAsFactors = FALSE
+    )
+    result <- derive_ratio_units(rt, units_table)
+    expect_equal(result$PPTESTCD, "RENALCL")
+    # ng/mL and hr*ng/mL are not directly convertible
+    expect_equal(result$PPORRESU, compose_ratio_unit("ng/mL", "hr*ng/mL"))
+  })
+
+  it("returns NA unit when test parameter is not found", {
+    rt <- data.frame(
+      TestParameter = "NONEXISTENT",
+      RefParameter = "CMAX",
+      PPTESTCD = "RATIO1",
+      stringsAsFactors = FALSE
+    )
+    result <- derive_ratio_units(rt, units_table)
+    expect_true(is.na(result$PPORRESU))
+  })
+
+  it("adds group columns from units_table as NA", {
+    rt <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      PPTESTCD = "MRCMAX",
+      stringsAsFactors = FALSE
+    )
+    result <- derive_ratio_units(rt, units_table)
+    expect_true("PARAM" %in% names(result))
+    expect_true(is.na(result$PARAM))
+  })
+
+  it("handles multiple ratio rows", {
+    rt <- data.frame(
+      TestParameter = c("CMAX", "AUCLST"),
+      RefParameter = c("CMAX", "AUCLST"),
+      PPTESTCD = c("MRCMAX", "MRAUCLST"),
+      stringsAsFactors = FALSE
+    )
+    result <- derive_ratio_units(rt, units_table)
+    expect_equal(nrow(result), 2)
+    expect_equal(result$PPTESTCD, c("MRCMAX", "MRAUCLST"))
+    expect_equal(result$PPORRESU, c("fraction", "fraction"))
+  })
+})

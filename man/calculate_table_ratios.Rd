@@ -17,5 +17,5 @@ AdjustingFactor, TestGroups, RefGroups, PPTESTCD.}
 The updated PKNCAresult object with added rows in the \code{result} data.frame.
 }
 \description{
-This function takes a PKNCAresult object and a data.frame specifying ratio calculations.
+Takes a PKNCAresult object and a data.frame specifying ratio calculations.
 }
