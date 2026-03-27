@@ -2,6 +2,7 @@
 
 ## Features added
 
+* NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile with bidirectional cascading updates between Analyte and Specimen (#1114)
 * Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
 * Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
