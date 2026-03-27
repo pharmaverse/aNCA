@@ -1,6 +1,10 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
+<<<<<<< 1118-refactor/remove-ratio-table-arg
 Version: 0.1.0.9117
+=======
+Version: 0.1.0.9118
+>>>>>>> main
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
