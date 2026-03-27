@@ -232,12 +232,18 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
       } else {
         NA_character_
       },
-      ANL01FL = if ("is.excluded.hl" %in% names(.)) {
-        vals <- .[["is.excluded.hl"]]
-        ifelse(is.excluded.hl, NA_character_, "Y")
-      } else {
-        NULL
+      PKSUM1F = {
+        flag <- if ("PKSUM1F" %in% names(.)) {
+          PKSUM1F
+        } else {
+          rep("", nrow(.))
+        }
+        if ("is.excluded.hl" %in% names(.)) {
+          flag <- ifelse(is.excluded.hl, "Y", flag)
+        }
+        flag
       },
+      PKSUM1FN = ifelse(PKSUM1F == "Y", 1L, NA_integer_),
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT
@@ -345,7 +351,7 @@ get_subjid <- function(data) {
     data$SUBJID
   } else if ("USUBJID" %in% names(data)) {
     if ("STUDYID" %in% names(data)) {
-      stringr::str_remove(as.character(data$USUBJID), paste0(as.character(data$STUDYID), "\\W?"))
+      sub(paste0(as.character(data$STUDYID), "\\W?"), "", as.character(data$USUBJID))
     } else {
       gsub(find_common_prefix(data$USUBJID), "", data$USUBJID)
     }

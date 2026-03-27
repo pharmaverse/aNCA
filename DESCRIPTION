@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.1.0.9122
+Version: 0.1.0.9124
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -30,17 +30,15 @@ Imports:
     formatters,
     flextable,
     ggplot2,
+    glue,
     magrittr,
-    methods,
     officer,
     PKNCA (>= 0.12.1),
     plotly (>= 4.11.0),
     purrr,
     rlang,
     rlistings,
-    scales,
     stats,
-    stringr,
     tern,
     tidyr,
     units,
@@ -55,7 +53,6 @@ Suggests:
     covr,
     DT,
     ggh4x,
-    glue,
     haven,
     htmltools,
     htmlwidgets,
@@ -72,6 +69,7 @@ Suggests:
     reactable.extras,
     rmarkdown,
     sass,
+    scales,
     shiny,
     shinycssloaders,
     shinyjs,
