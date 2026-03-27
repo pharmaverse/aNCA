@@ -19,7 +19,6 @@ nca_results_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    units_table_ui(ns("units_table")),
     card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
 
     # Color legend for the results table
@@ -54,14 +53,6 @@ nca_results_ui <- function(id) {
 nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    units_table_server(
-      "units_table",
-      reactive({          #' Pass `pknca_data` to the units table only when the results
-        req(res_nca())    #' are available.
-        pknca_data()
-      })
-    )
 
     final_results <- reactive({
       req(res_nca())
