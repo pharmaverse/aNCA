@@ -125,9 +125,11 @@ tab_data_server <- function(id) {
     uploaded_data <- data_upload_server("raw_data")
 
     # Call the column mapping module
+    imported_mapping <- reactive(uploaded_data$settings_override()$mapping)
     column_mapping <- data_mapping_server(
       id = "column_mapping",
       adnca_data = uploaded_data$adnca_raw,
+      imported_mapping = imported_mapping,
       trigger = trigger_mapping_submit
     )
     #' Reactive value for the processed dataset
