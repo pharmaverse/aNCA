@@ -112,6 +112,9 @@
   `Parameter Selection`, `Slope Selector`, `Additional Analysis` and
   `Partial Interval calculations`
   ([\#975](https://github.com/pharmaverse/aNCA/issues/975))
+- SelectInputs updated using a new function to ensure all widgets
+  include variable labels.
+  ([\#899](https://github.com/pharmaverse/aNCA/issues/899))
 
 ### Bugs fixed
 
