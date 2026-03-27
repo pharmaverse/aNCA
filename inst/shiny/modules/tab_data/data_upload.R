@@ -319,9 +319,15 @@ data_upload_server <- function(id) {
     latest <- found_settings[[1]]
     versioned_attr <- attr(latest$content, "versioned")
 
-    if (!is.null(versioned_attr)) {
+    if (!is.null(versioned_attr) && length(versioned_attr$versions) > 1) {
       pending_versioned(versioned_attr)
       .show_version_modal(session, ns, versioned_attr$versions)
+    } else if (!is.null(versioned_attr) && length(versioned_attr$versions) == 1) {
+      content <- extract_version_settings(versioned_attr$versions[[1]])
+      settings_override(content)
+      session$userData$settings_versions(versioned_attr$versions)
+      log_success("Settings successfully loaded from ", latest$name)
+      showNotification("Settings successfully loaded.", type = "message")
     } else {
       settings_override(latest$content)
       log_success("Settings successfully loaded from ", latest$name)
