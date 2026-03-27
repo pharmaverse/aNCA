@@ -24,10 +24,10 @@ describe("apply_custom_units", {
     expect_equal(cmax_a$PPSTRESU, "ug/mL")
     cmax_b <- result[result$PPTESTCD == "CMAX" & result$PARAM == "B", ]
     expect_equal(cmax_b$PPSTRES, 20)
-    expect_equal(cmax_b$PPSTRESU, "")
+    expect_equal(cmax_b$PPSTRESU, "ng/mL")
   })
 
-  it("leaves rows unchanged when no custom units match", {
+  it("preserves original values when no custom units match", {
     custom <- data.frame(
       PPTESTCD = "NONEXISTENT",
       PPORRESU = "x",
@@ -37,11 +37,11 @@ describe("apply_custom_units", {
       stringsAsFactors = FALSE
     )
     result <- apply_custom_units(base_result, custom)
-    expect_equal(result$PPSTRES, base_result$PPORRES)
-    expect_true(all(result$PPSTRESU == ""))
+    expect_equal(result$PPSTRES, base_result$PPSTRES)
+    expect_equal(result$PPSTRESU, base_result$PPSTRESU)
   })
 
-  it("sets PPSTRESU to empty string (not NA) for unmatched rows", {
+  it("preserves original PPSTRESU (not NA) for unmatched rows", {
     custom <- data.frame(
       PPTESTCD = "CMAX",
       PPORRESU = "ng/mL",
@@ -52,6 +52,9 @@ describe("apply_custom_units", {
     )
     result <- apply_custom_units(base_result, custom)
     expect_false(any(is.na(result$PPSTRESU)))
+    # Unmatched rows keep their original PPSTRESU
+    auclst_rows <- result[result$PPTESTCD == "AUCLST", ]
+    expect_equal(auclst_rows$PPSTRESU, c("hr*ng/mL", "hr*ng/mL"))
   })
 
   it("joins ratio rows by PPTESTCD only (ignoring groups)", {

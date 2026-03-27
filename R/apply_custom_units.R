@@ -9,8 +9,8 @@
 #' @param custom_units Data frame of custom units (with PPTESTCD, PPSTRESU,
 #'   conversion_factor, and optional group columns). Rows with all-NA group
 #'   columns are treated as ratio parameters and joined by PPTESTCD only.
-#' @returns Data frame with PPSTRESU and PPSTRES applied, conversion_factor
-#'   removed. PPSTRESU is "" (not NA) for rows without custom units.
+#' @returns Data frame with PPSTRESU and PPSTRES updated for matched rows,
+#'   original values preserved for unmatched rows, conversion_factor removed.
 #' @importFrom dplyr select mutate left_join any_of all_of distinct
 #' @keywords internal
 apply_custom_units <- function(result, custom_units) {
@@ -34,6 +34,10 @@ apply_custom_units <- function(result, custom_units) {
   ratio_custom <- custom_units[is_ratio_row, , drop = FALSE] %>%
     select("PPTESTCD", "PPSTRESU", "conversion_factor") %>%
     distinct(across("PPTESTCD"), .keep_all = TRUE)
+
+  # Preserve original PPSTRESU/PPSTRES so unmatched rows keep their values.
+  result$.orig_ppstresu <- if ("PPSTRESU" %in% names(result)) result$PPSTRESU else ""
+  result$.orig_ppstres <- if ("PPSTRES" %in% names(result)) result$PPSTRES else result$PPORRES
 
   result <- result %>%
     select(-any_of(c("PPSTRESU", "PPSTRES"))) %>%
@@ -62,8 +66,8 @@ apply_custom_units <- function(result, custom_units) {
 
   result %>%
     mutate(
-      PPSTRES = ifelse(!is.na(conversion_factor), PPORRES * conversion_factor, PPORRES),
-      PPSTRESU = ifelse(is.na(PPSTRESU), "", PPSTRESU)
+      PPSTRES = ifelse(!is.na(conversion_factor), PPORRES * conversion_factor, .orig_ppstres),
+      PPSTRESU = ifelse(is.na(PPSTRESU), .orig_ppstresu, PPSTRESU)
     ) %>%
-    select(-"conversion_factor")
+    select(-"conversion_factor", -".orig_ppstresu", -".orig_ppstres")
 }
