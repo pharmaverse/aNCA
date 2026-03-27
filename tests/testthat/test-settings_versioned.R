@@ -12,7 +12,8 @@ describe("create_settings_version", {
     expect_equal(v$tab, "NCA")
     expect_true(nzchar(v$datetime))
     expect_true(nzchar(v$anca_version))
-    expect_equal(v$settings, payload)
+    expect_equal(v$method, payload$method)
+    expect_equal(v$analyte, payload$analyte)
   })
 
   it("uses empty strings as defaults", {
@@ -37,7 +38,7 @@ describe("write_versioned_settings and read_versioned_settings", {
     expect_equal(result$format, "versioned")
     expect_length(result$versions, 1)
     expect_equal(result$versions[[1]]$comment, "v1")
-    expect_equal(result$versions[[1]]$settings$method, "linear")
+    expect_equal(result$versions[[1]]$method, "linear")
   })
 
   it("round-trips multiple versions", {
@@ -80,7 +81,7 @@ describe("read_versioned_settings with legacy format", {
     result <- read_versioned_settings(tmp)
     expect_equal(result$format, "legacy")
     expect_length(result$versions, 1)
-    expect_equal(result$versions[[1]]$settings$method, "linear")
+    expect_equal(result$versions[[1]]$method, "linear")
   })
 
   it("errors on invalid YAML structure", {
@@ -198,9 +199,19 @@ describe("extract_version_settings", {
     expect_null(result$slope_rules)
   })
 
-  it("returns NULL for empty settings", {
-    version <- list(settings = NULL)
-    expect_null(extract_version_settings(version))
+  it("returns NULL for version with only metadata", {
+    version <- list(
+      comment = "no data",
+      datetime = "",
+      dataset = "",
+      anca_version = "",
+      tab = ""
+    )
+    expect_warning(
+      result <- extract_version_settings(version),
+      "empty settings content"
+    )
+    expect_null(result)
   })
 })
 
@@ -233,24 +244,13 @@ describe("read_settings with versioned format", {
 })
 
 describe("extract_version_settings edge cases", {
-  it("returns NULL and warns for version with empty settings", {
+  it("returns NULL and warns for version with no settings fields", {
     v <- list(
       comment = "empty",
       datetime = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-      settings = list()
-    )
-    expect_warning(
-      result <- extract_version_settings(v),
-      "empty settings content"
-    )
-    expect_null(result)
-  })
-
-  it("returns NULL and warns for version with NULL settings", {
-    v <- list(
-      comment = "null",
-      datetime = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-      settings = NULL
+      dataset = "",
+      anca_version = "",
+      tab = ""
     )
     expect_warning(
       result <- extract_version_settings(v),

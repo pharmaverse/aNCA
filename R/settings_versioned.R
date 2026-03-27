@@ -15,14 +15,15 @@ create_settings_version <- function(settings_data,
                                     comment = "",
                                     dataset = "",
                                     tab = "") {
-  list(
+  meta_list <- list(
     comment = comment,
     datetime = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
     dataset = dataset,
     anca_version = as.character(utils::packageVersion("aNCA")),
-    tab = tab,
-    settings = settings_data
+    tab = tab
   )
+
+  append(meta_list, settings_data)
 }
 
 #' Read a versioned settings YAML file
@@ -60,14 +61,14 @@ read_versioned_settings <- function(path) {
   } else if ("settings" %in% names(obj)) {
     # Legacy flat format — wrap as a single version
     parsed <- .parse_legacy_settings(obj)
-    version_entry <- list(
+    meta <- list(
       comment = "",
       datetime = "",
       dataset = "",
       anca_version = "",
-      tab = "",
-      settings = parsed
+      tab = ""
     )
+    version_entry <- append(meta, parsed)
     list(versions = list(version_entry), format = "legacy")
   } else {
     stop(
@@ -176,8 +177,10 @@ settings_version_summary <- function(versions) {
 #' @returns A list with the settings payload ready for use.
 #' @export
 extract_version_settings <- function(version) {
-  s <- version$settings
-  if (is.null(s) || length(s) == 0) {
+  meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
+  s <- version[setdiff(names(version), meta_keys)]
+
+  if (length(s) == 0) {
     warning("Version entry has empty settings content.")
     return(NULL)
   }
@@ -185,8 +188,8 @@ extract_version_settings <- function(version) {
   # Backward compat: old format nests NCA fields under s$settings;
   # new flat format has them directly on s alongside slope_rules/filters.
   if (is.null(s$settings)) {
-    meta_keys <- c("mapping", "slope_rules", "filters")
-    nca_fields <- s[setdiff(names(s), meta_keys)]
+    payload_meta <- c("mapping", "slope_rules", "filters")
+    nca_fields <- s[setdiff(names(s), payload_meta)]
     s <- list(
       settings = nca_fields,
       mapping = s$mapping,
@@ -210,14 +213,16 @@ extract_version_settings <- function(version) {
 #' @returns A normalised version entry list.
 #' @noRd
 .parse_version_entry <- function(entry) {
-  list(
+  meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
+  meta <- list(
     comment = entry$comment %||% "",
     datetime = entry$datetime %||% "",
     dataset = entry$dataset %||% "",
     anca_version = entry$anca_version %||% "",
-    tab = entry$tab %||% "",
-    settings = entry$settings %||% list()
+    tab = entry$tab %||% ""
   )
+  settings_fields <- entry[setdiff(names(entry), meta_keys)]
+  append(meta, settings_fields)
 }
 
 #' Convert legacy flat settings to the payload format used inside
