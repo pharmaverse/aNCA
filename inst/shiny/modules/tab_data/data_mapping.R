@@ -375,6 +375,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     # Check for blocking duplicates using annotate_duplicates()
     df_duplicates <- reactiveVal(NULL)
     resolved_time_duplicate_rows <- reactiveVal(NULL)
+    observe({
+      session$userData$time_duplicate_rows <- resolved_time_duplicate_rows()
+    })
 
     processed_data <- reactive({
       req(mapped_data())

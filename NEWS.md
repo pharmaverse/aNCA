@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
 * Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
 * Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
@@ -56,6 +57,7 @@ identify difference between missing and not requested (#934)
 * Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 * Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
 * Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
+* Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
 
 # aNCA 0.1.0
 
