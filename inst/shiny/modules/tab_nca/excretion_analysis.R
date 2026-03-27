@@ -91,7 +91,8 @@ excretion_server <- function(id, input_pknca_data) {
                      id = "end_time_col",
                      label = "Map End Time Column:",
                      metadata_type = "variable",
-                     pknca_data = NULL)
+                     pknca_data = NULL,
+                     multiple = FALSE)
 
       urine_params_to_select <- metadata_nca_parameters %>%
         filter(TYPE == "Urine")
