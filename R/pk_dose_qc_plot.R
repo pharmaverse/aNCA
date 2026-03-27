@@ -131,7 +131,11 @@ pk_dose_qc_plot <- function(data_conc,
 
   # Define colors: black for PK samples, hue palette for doses
   if (length(colour_levels) > 0) {
-    dose_colours <- scales::hue_pal()(length(colour_levels))
+    n_colours <- length(colour_levels)
+    dose_colours <- grDevices::hcl(
+      h = seq(15, 375, length.out = n_colours + 1)[seq_len(n_colours)],
+      c = 100, l = 65
+    )
   } else {
     dose_colours <- character()
   }
