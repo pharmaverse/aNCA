@@ -451,7 +451,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # On all changes, disable NCA button for given period of time to prevent the user from running
     # the NCA before settings are applied.
     observeEvent(settings(), {
-      runjs(str_glue(
+      runjs(glue::glue(
         "buttonTimeout(
           '#nca-run_nca',
           {settings_debounce + 100},
