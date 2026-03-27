@@ -210,5 +210,3 @@ extract_version_settings <- function(version) {
   settings_fields <- entry[setdiff(names(entry), meta_keys)]
   append(meta, settings_fields)
 }
-
-
