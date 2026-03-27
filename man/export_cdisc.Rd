@@ -8,9 +8,9 @@ export_cdisc(res_nca, grouping_vars = character(0))
 }
 \arguments{
 \item{res_nca}{Object with results of the NCA analysis. If
-\code{res_nca$result} contains a \code{.__excl__} column (logical), excluded rows
+\code{res_nca$result} contains a \code{.pp_excl} column (logical), excluded rows
 (\code{TRUE}) get \code{PPSUM1F = "Y"} in ADPP; included rows get \code{PPSUM1F = ""}.
-If \code{.__excl_reason__} (character) is also present, it populates \code{PPSUM1R}.}
+If \code{.pp_excl_reason} (character) is also present, it populates \code{PPSUM1R}.}
 
 \item{grouping_vars}{Character vector of non-standard grouping variable names to include
 as additional columns in ADNCA, ADPP, and PP outputs. Defaults to \code{character(0)}.}

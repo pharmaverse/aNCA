@@ -9,9 +9,9 @@
 #'                      on but now we avoid merge conflict)
 #'
 #' @param res_nca Object with results of the NCA analysis. If
-#'   `res_nca$result` contains a `.__excl__` column (logical), excluded rows
+#'   `res_nca$result` contains a `.pp_excl` column (logical), excluded rows
 #'   (`TRUE`) get `PPSUM1F = "Y"` in ADPP; included rows get `PPSUM1F = ""`.
-#'   If `.__excl_reason__` (character) is also present, it populates `PPSUM1R`.
+#'   If `.pp_excl_reason` (character) is also present, it populates `PPSUM1R`.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #'
@@ -165,7 +165,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
     # Select only columns needed for PP, ADPP, ADNCA (keep exclusion markers)
     select(any_of(c(
       metadata_nca_variables[["Variable"]], grouping_vars,
-      ".__excl__", ".__excl_reason__"
+      ".pp_excl", ".pp_excl_reason"
     ))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
@@ -196,7 +196,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
-  # Add labels to the columns (skip internal columns like .__excl__ not in metadata)
+  # Add labels to the columns (skip internal columns like .pp_excl not in metadata)
   labels_map <- metadata_nca_variables %>%
     filter(!duplicated(Variable)) %>%
     pull(Label, Variable)
@@ -218,7 +218,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
   adpp <- cdisc_info %>%
     select(any_of(c(
       CDISC_COLS$ADPP$Variable, grouping_vars,
-      ".__excl__", ".__excl_reason__"
+      ".pp_excl", ".pp_excl_reason"
     ))) %>%
     # Deselect permitted columns with only NAs
     select(
@@ -229,18 +229,18 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
       )
     ) %>%
     mutate(
-      PPSUM1F = if (".__excl__" %in% names(.)) {
-        ifelse(.__excl__, "Y", "")
+      PPSUM1F = if (".pp_excl" %in% names(.)) {
+        ifelse(.pp_excl, "Y", "")
       } else {
         ""
       },
-      PPSUM1R = if (".__excl_reason__" %in% names(.)) {
-        .__excl_reason__
+      PPSUM1R = if (".pp_excl_reason" %in% names(.)) {
+        .pp_excl_reason
       } else {
         NA_character_
       }
     ) %>%
-    select(-any_of(c(".__excl__", ".__excl_reason__")))
+    select(-any_of(c(".pp_excl", ".pp_excl_reason")))
 
   # Re-apply labels lost by mutate (mutate drops column attributes)
   attr(adpp[["PPSUM1F"]], "label") <- labels_map[["PPSUM1F"]]

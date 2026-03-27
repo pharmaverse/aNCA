@@ -1,10 +1,10 @@
 .onLoad <- function(libname, pkgname) {
   utils::globalVariables(c(
     ".",
-    ".__excl__",
-    ".__excl_reason__",
     ".facet_label_values",
     ".facet_n",
+    ".pp_excl",
+    ".pp_excl_reason",
     "facet_label",
     ":=",
     "ADOSEDUR",

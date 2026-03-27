@@ -226,22 +226,22 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       excl_indices <- excl_info$indices
       excl_reasons <- excl_info$reasons
 
-      # Tagged: .__excl__ and .__excl_reason__ markers for CDISC export
+      # Tagged: .pp_excl and .pp_excl_reason markers for CDISC export
       res_tagged <- res
       n <- nrow(res$result)
-      res_tagged$result$.__excl__ <- seq_len(n) %in% excl_indices
+      res_tagged$result$.pp_excl <- seq_len(n) %in% excl_indices
       reason_vec <- rep(NA_character_, n)
       if (length(excl_indices) > 0) {
         reason_vec[excl_indices] <- excl_reasons
       }
-      res_tagged$result$.__excl_reason__ <- reason_vec
+      res_tagged$result$.pp_excl_reason <- reason_vec
 
       # Filtered: derive from tagged to avoid a third copy of res$result
       res_filtered <- res_tagged
-      keep <- !res_tagged$result$.__excl__
+      keep <- !res_tagged$result$.pp_excl
       res_filtered$result <- res_tagged$result[keep, , drop = FALSE]
-      res_filtered$result$.__excl__ <- NULL
-      res_filtered$result$.__excl_reason__ <- NULL
+      res_filtered$result$.pp_excl <- NULL
+      res_filtered$result$.pp_excl_reason <- NULL
 
       list(tagged = res_tagged, filtered = res_filtered)
     })
