@@ -15,7 +15,7 @@ tab_explore_ui <- function(id) {
         sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
         fillable = TRUE,
         plotlyOutput(ns("individualplot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(
@@ -24,7 +24,7 @@ tab_explore_ui <- function(id) {
         sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
         fillable = TRUE,
         plotlyOutput(ns("mean_plot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(

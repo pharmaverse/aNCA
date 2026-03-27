@@ -18,6 +18,7 @@ nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
+    widths = c(2, 10),
     nav_panel(
       "Settings",
       fluidRow(units_table_ui(ns("units_table"))),
