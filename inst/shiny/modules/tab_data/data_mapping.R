@@ -161,7 +161,24 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
         skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
         next
       }
-      updateSelectizeInput(session, paste0("select_", var), selected = val)
+
+      # For allow_create_numeric variables with custom numeric values,
+      # the value must be added to choices or updateSelectizeInput ignores it.
+      custom_numeric <- if (is_numeric_ok) val[!val %in% c(column_names, predefined)] else character(0)
+      if (length(custom_numeric) > 0) {
+        updateSelectizeInput(
+          session, paste0("select_", var),
+          choices = list(
+            "Select Column" = "",
+            "Mapping Columns" = column_names,
+            "Mapping Values" = predefined,
+            "Custom Values" = custom_numeric
+          ),
+          selected = val
+        )
+      } else {
+        updateSelectizeInput(session, paste0("select_", var), selected = val)
+      }
     }
 
     if (length(skipped) > 0) {
