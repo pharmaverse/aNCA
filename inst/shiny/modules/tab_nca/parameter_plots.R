@@ -11,29 +11,11 @@ parameter_plots_ui <- function(id) {
   layout_sidebar(
     sidebar = sidebar(
       position = "right", open = TRUE,
-      pickerInput(
-        inputId = ns("selected_param_boxplot"),
-        label = "Choose the parameter to display:",
-        choices = NULL,
-        selected = NULL,
-        multiple = FALSE,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("params_to_display_ui_wrapper")
       ),
-      pickerInput(
-        inputId = ns("selected_xvars_boxplot"),
-        label = "Select X grouping variables",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("group_xvars_ui_wrapper")
       ),
-      pickerInput(
-        inputId = ns("selected_colorvars_boxplot"),
-        label = "Select coloring variables to differentiate boxplots",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("select_colorvars_ui_wrapper")
       ),
       pickerInput(
         inputId = ns("selected_filters_boxplot"),
@@ -78,28 +60,41 @@ parameter_plots_server <- function(id, res_nca) {
         names(res_nca()$data$dose$data)
       ))
 
-      updatePickerInput(
-        session,
-        "selected_param_boxplot",
-        choices = param_choices,
-        selected = default_selection
-      )
+      # Rendering parameters to display selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = param_choices,
+                     initial_selection = default_selection,
+                     selector_ui_wrapper = "params_to_display_ui_wrapper",
+                     id = "selected_param_boxplot",
+                     label = "Choose the parameter to display:",
+                     metadata_type = "parameter")
 
-      updatePickerInput(
-        session,
-        "selected_xvars_boxplot",
-        choices = conc_dose_cols,
-        selected = c(res_nca()$data$dose$columns$dose,
-                     res_nca()$data$conc$columns$groups$group_analyte)
-      )
+      # Rendering parameters to display selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = conc_dose_cols,
+                     initial_selection = c(res_nca()$data$dose$columns$dose,
+                                           res_nca()$data$conc$columns$groups$group_analyte),
+                     selector_ui_wrapper = "group_xvars_ui_wrapper",
+                     id = "selected_xvars_boxplot",
+                     label = "Select X grouping variables:",
+                     pknca_data = NULL,
+                     metadata_type = "variable")
 
-      updatePickerInput(
-        session,
-        "selected_colorvars_boxplot",
-        choices = conc_dose_cols,
-        selected = c(res_nca()$data$dose$columns$dose,
-                     res_nca()$data$conc$columns$groups$group_analyte)
-      )
+      # Rendering select color vars selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = conc_dose_cols,
+                     initial_selection = c(res_nca()$data$dose$columns$dose,
+                                           res_nca()$data$conc$columns$groups$group_analyte),
+                     selector_ui_wrapper = "select_colorvars_ui_wrapper",
+                     id = "selected_colorvars_boxplot",
+                     label = "Select coloring variables to differentiate boxplots:",
+                     metadata_type = "variable")
     })
 
     observeEvent(list(input$selected_xvars_boxplot, input$selected_colorvars_boxplot), {
@@ -119,9 +114,8 @@ parameter_plots_server <- function(id, res_nca) {
         setNames(all_vars)
 
       updatePickerInput(
-        session = session,
+        session,
         inputId = "selected_filters_boxplot",
-        label = "Select values to display for grouping",
         choices = xvar_options_list,
         selected = unlist(xvar_options_list)
       )
