@@ -219,6 +219,22 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # A guard flag prevents infinite observer loops.
     updating_filters <- reactiveVal(FALSE)
 
+    # settings_override is consumed once during the first cascade after
+    # settings upload. After that, pending_settings is set to NULL so
+    # subsequent user-driven changes are not overridden by stale values.
+    pending_settings <- reactiveVal(NULL)
+
+    observeEvent(settings_override(), {
+      pending_settings(settings_override())
+    })
+
+    # Helper: consume pending settings (returns them once, then clears)
+    .consume_settings <- function() {
+      s <- pending_settings()
+      pending_settings(NULL)
+      s
+    }
+
     # Helper: update profile choices based on current analyte + pcspec
     .update_profile <- function(settings = NULL) {
       filtered <- data() %>%
@@ -246,7 +262,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
-      settings <- settings_override()
+      settings <- .consume_settings()
 
       all_pcspec <- unique(data()$PCSPEC) %>% na.omit()
       available_pcspec <- data() %>%
@@ -280,7 +296,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
-      settings <- settings_override()
+      settings <- .consume_settings()
 
       all_analyte <- unique(data()$PARAM) %>% na.omit()
       available_analyte <- data() %>%
@@ -491,15 +507,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     .restore_non_filter_settings(
       settings, adnca_data, session, int_parameters, refresh_reactable
     )
-  }
 
-  if (!is.null(settings$analyte) && length(not_compatible) > 0) {
-    msg <- paste0(
-      paste0(not_compatible, collapse = ", "),
-      " settings not found in data. Reverting to defaults."
-    )
-    log_warn(msg)
-    showNotification(msg, type = "warning", duration = 10)
+    if (!is.null(settings$analyte) && length(not_compatible) > 0) {
+      msg <- paste0(
+        paste0(not_compatible, collapse = ", "),
+        " settings not found in data. Reverting to defaults."
+      )
+      log_warn(msg)
+      showNotification(msg, type = "warning", duration = 10)
+    }
   }
 
   list(selected = selected)
