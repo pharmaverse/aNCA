@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Column mapping is now included in settings YAML export and restored on
+  upload, with validation against available columns
+  ([\#1104](https://github.com/pharmaverse/aNCA/issues/1104))
 - Ratio calculations table is now included in settings YAML export and
   restored on upload, with validation against available parameters and
   groups ([\#1091](https://github.com/pharmaverse/aNCA/issues/1091))
