@@ -3,6 +3,7 @@
 ## Features added
 
 * Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUM1F/PPSUM1R flags (#1040)
+* Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
 * Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
 * Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
