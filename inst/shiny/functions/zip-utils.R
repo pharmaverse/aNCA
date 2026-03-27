@@ -455,6 +455,7 @@ prepare_export_files <- function(target_dir,
   payload <- c(
     settings_list,
     list(
+      mapping = session$userData$mapping,
       slope_rules = session$userData$slope_rules(),
       filters = session$userData$applied_filters
     )

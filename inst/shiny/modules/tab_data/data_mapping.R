@@ -135,6 +135,64 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   })
 }
 
+.process_imported_mapping <- function(mapping, adnca_data, session) {
+
+  if (!is.null(mapping)) {
+    column_names <- names(adnca_data)
+    skipped <- character(0)
+
+    for (var in MAPPING_INFO$Variable) {
+      if (!var %in% names(mapping) || var == "Metabolites") next
+      val <- mapping[[var]]
+
+      # Build the set of valid values: column names + predefined Values +
+      # numeric literals for allow_create_numeric variables.
+      var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
+      predefined <- strsplit(var_info$Values, ", ")[[1]]
+      valid_values <- c(column_names, predefined)
+
+      is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
+      invalid <- val[val != "" & !val %in% valid_values]
+      if (is_numeric_ok) {
+        invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
+      }
+
+      if (length(invalid) > 0) {
+        skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
+        next
+      }
+
+      # For allow_create_numeric variables with custom numeric values,
+      # the value must be added to choices or updateSelectizeInput ignores it.
+      custom_numeric <- if (is_numeric_ok) {
+        val[!val %in% c(column_names, predefined)]
+      } else {
+        character(0)
+      }
+      if (length(custom_numeric) > 0) {
+        updateSelectizeInput(
+          session, paste0("select_", var),
+          choices = list(
+            "Select Column" = "",
+            "Mapping Columns" = c(column_names, custom_numeric),
+            "Mapping Values" = predefined
+          ),
+          selected = val
+        )
+      } else {
+        updateSelectizeInput(session, paste0("select_", var), selected = val)
+      }
+    }
+
+    if (length(skipped) > 0) {
+      showNotification(
+        paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
+        type = "warning", duration = 10
+      )
+    }
+  }
+}
+
 #' Column Mapping Module
 #' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
@@ -201,7 +259,7 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, adnca_data, trigger) {
+data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -217,7 +275,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     })
 
     # Populate the static inputs with column names
-    observeEvent(adnca_data(), {
+    observeEvent(c(adnca_data(), imported_mapping()), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
 
@@ -230,13 +288,23 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       if (!"WTBL" %in% column_names) {
         updateSelectizeInput(session, "select_WTBLU", selected = "")
       }
+
+      mapping <- imported_mapping()
+      if (!is.null(mapping)) {
+        # process mapping using settings to override default selections
+        .process_imported_mapping(mapping, adnca_data(), session)
+      }
     })
     # Populate the dynamic input Metabolites
     observe({
       req(input$select_PARAM != "")
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
-      selected_metab <- if ("METABFL" %in% names(adnca_data())) {
+      # Use pending import if available, otherwise fall back to METABFL default
+      selected_metab <- if (!is.null(imported_mapping()$Metabolites)) {
+        imported <- imported_mapping()$Metabolites
+        imported
+      } else if ("METABFL" %in% names(adnca_data())) {
         unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
       } else {
         NULL
@@ -266,7 +334,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       mapping_list[names_to_keep]
     })
     observe({
-      session$userData$mapping <- mapping()
+      m <- mapping()
+      names(m) <- gsub("^select_", "", names(m))
+      session$userData$mapping <- m
     })
 
     mapped_data <- reactive({
@@ -274,7 +344,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       log_info("Processing data mapping...")
 
       mapping_ <- mapping()
-      names(mapping_) <- gsub("select_", "", names(mapping_))
+      names(mapping_) <- gsub("^select_", "", names(mapping_))
 
       tryCatch(
         withCallingHandlers(
@@ -418,7 +488,7 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     # Cleaned mapping with select_ prefix removed
     cleaned_mapping <- reactive({
       m <- mapping()
-      names(m) <- gsub("select_", "", names(m))
+      names(m) <- gsub("^select_", "", names(m))
       m
     })
 

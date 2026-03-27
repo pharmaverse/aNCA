@@ -185,10 +185,11 @@ extract_version_settings <- function(version) {
   # Backward compat: old format nests NCA fields under s$settings;
   # new flat format has them directly on s alongside slope_rules/filters.
   if (is.null(s$settings)) {
-    meta_keys <- c("slope_rules", "filters")
+    meta_keys <- c("mapping", "slope_rules", "filters")
     nca_fields <- s[setdiff(names(s), meta_keys)]
     s <- list(
       settings = nca_fields,
+      mapping = s$mapping,
       slope_rules = s$slope_rules,
       filters = s$filters
     )

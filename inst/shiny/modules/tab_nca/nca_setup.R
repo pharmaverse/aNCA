@@ -236,10 +236,10 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
             dplyr::select(-default)
         }
         export_settings$ratio_table <- ratio_table()
-
         payload <- c(
           export_settings,
           list(
+            mapping = session$userData$mapping,
             slope_rules = slope_rules(),
             filters = session$userData$applied_filters
           )
