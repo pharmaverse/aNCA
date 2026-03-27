@@ -18,12 +18,14 @@ nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
+    widths = c(2, 10),
     nav_panel(
       "Settings",
       fluidRow(
         downloadButton(
           ns("settings_download"),
-          label = "Download settings"
+          label = "Download settings",
+          class = "btn-primary"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
