@@ -136,7 +136,7 @@ get_dose_esc_results <- function(
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
   boxplot_parameter = "AUCIFO",
-  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM", "DOSEFRM"),
   labels_df = metadata_nca_variables
 ) {
   # Define column names
