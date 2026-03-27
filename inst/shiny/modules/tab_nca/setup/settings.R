@@ -625,9 +625,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     return(override_val)
   }
 
-  # Maintain Selection
-  if (length(intersect(current_val, available_choices)) > 0) {
-    return(current_val)
+  # Maintain Selection — keep only items that are still available
+  kept <- intersect(current_val, available_choices)
+  if (length(kept) > 0) {
+    return(kept)
   }
 
   # Fallback to Default Logic or First Choice
