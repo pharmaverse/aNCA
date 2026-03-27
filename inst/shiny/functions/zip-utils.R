@@ -452,10 +452,12 @@ prepare_export_files <- function(target_dir,
 
   settings_list$ratio_table <- session$userData$ratio_table()
 
-  payload <- list(
-    settings = settings_list,
-    slope_rules = session$userData$slope_rules(),
-    filters = session$userData$applied_filters
+  payload <- c(
+    settings_list,
+    list(
+      slope_rules = session$userData$slope_rules(),
+      filters = session$userData$applied_filters
+    )
   )
 
   dataset_name <- session$userData$dataset_filename %||% ""

@@ -182,6 +182,18 @@ extract_version_settings <- function(version) {
     return(NULL)
   }
 
+  # Backward compat: old format nests NCA fields under s$settings;
+  # new flat format has them directly on s alongside slope_rules/filters.
+  if (is.null(s$settings)) {
+    meta_keys <- c("slope_rules", "filters")
+    nca_fields <- s[setdiff(names(s), meta_keys)]
+    s <- list(
+      settings = nca_fields,
+      slope_rules = s$slope_rules,
+      filters = s$filters
+    )
+  }
+
   s$slope_rules <- .convert_list_to_df(s$slope_rules)
   s$settings$units <- .convert_list_to_df(s$settings$units)
   s$settings$int_parameters <- .convert_list_to_df(s$settings$int_parameters)
@@ -214,9 +226,11 @@ extract_version_settings <- function(version) {
 #' @returns A list matching the `settings` field of a version entry.
 #' @noRd
 .parse_legacy_settings <- function(obj) {
-  list(
-    settings = obj$settings,
-    slope_rules = obj$slope_rules,
-    filters = obj$filters
+  c(
+    obj$settings,
+    list(
+      slope_rules = obj$slope_rules,
+      filters = obj$filters
+    )
   )
 }

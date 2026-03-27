@@ -1,6 +1,6 @@
 describe("create_settings_version", {
   it("creates a version entry with metadata", {
-    payload <- list(settings = list(method = "linear"))
+    payload <- list(method = "linear", analyte = "DrugA")
     v <- create_settings_version(
       payload,
       comment = "test run",
@@ -25,7 +25,7 @@ describe("create_settings_version", {
 
 describe("write_versioned_settings and read_versioned_settings", {
   it("round-trips a single version", {
-    payload <- list(settings = list(method = "linear"), slope_rules = NULL)
+    payload <- list(method = "linear", slope_rules = NULL)
     v <- create_settings_version(payload, comment = "v1")
 
     tmp <- tempfile(fileext = ".yaml")
@@ -37,12 +37,12 @@ describe("write_versioned_settings and read_versioned_settings", {
     expect_equal(result$format, "versioned")
     expect_length(result$versions, 1)
     expect_equal(result$versions[[1]]$comment, "v1")
-    expect_equal(result$versions[[1]]$settings$settings$method, "linear")
+    expect_equal(result$versions[[1]]$settings$method, "linear")
   })
 
   it("round-trips multiple versions", {
-    v1 <- create_settings_version(list(settings = list(method = "linear")), comment = "first")
-    v2 <- create_settings_version(list(settings = list(method = "log")), comment = "second")
+    v1 <- create_settings_version(list(method = "linear"), comment = "first")
+    v2 <- create_settings_version(list(method = "log"), comment = "second")
 
     tmp <- tempfile(fileext = ".yaml")
     on.exit(unlink(tmp), add = TRUE)
@@ -80,7 +80,7 @@ describe("read_versioned_settings with legacy format", {
     result <- read_versioned_settings(tmp)
     expect_equal(result$format, "legacy")
     expect_length(result$versions, 1)
-    expect_equal(result$versions[[1]]$settings$settings$method, "linear")
+    expect_equal(result$versions[[1]]$settings$method, "linear")
   })
 
   it("errors on invalid YAML structure", {
@@ -153,17 +153,15 @@ describe("settings_version_summary", {
 })
 
 describe("extract_version_settings", {
-  it("post-processes settings payload", {
+  it("post-processes settings payload with flat format", {
     payload <- list(
-      settings = list(
-        method = "linear",
-        units = list(
-          list(PPTESTCD = "cmax", PPSTRESU = "ng/mL"),
-          list(PPTESTCD = "tmax", PPSTRESU = "h")
-        ),
-        int_parameters = list(
-          list(parameter = "AUCINT", start_auc = 0, end_auc = 24)
-        )
+      method = "linear",
+      units = list(
+        list(PPTESTCD = "cmax", PPSTRESU = "ng/mL"),
+        list(PPTESTCD = "tmax", PPSTRESU = "h")
+      ),
+      int_parameters = list(
+        list(parameter = "AUCINT", start_auc = 0, end_auc = 24)
       ),
       slope_rules = list(
         list(USUBJID = "S1", ATPTREF = "D1")
@@ -178,12 +176,26 @@ describe("extract_version_settings", {
 
     # slope_rules converted to data.frame
     expect_s3_class(result$slope_rules, "data.frame")
-    # units converted to data.frame
+    # NCA fields grouped under $settings
     expect_s3_class(result$settings$units, "data.frame")
-    # int_parameters converted to data.frame
     expect_s3_class(result$settings$int_parameters, "data.frame")
+    expect_equal(result$settings$method, "linear")
     # filter values unlisted
     expect_equal(result$filters[[1]]$value, c("S1", "S2"))
+  })
+
+  it("handles old nested format with settings.settings", {
+    # Old format: NCA fields nested under $settings
+    payload <- list(
+      settings = list(method = "linear", units = NULL),
+      slope_rules = NULL,
+      filters = NULL
+    )
+    version <- create_settings_version(payload)
+    result <- extract_version_settings(version)
+
+    expect_equal(result$settings$method, "linear")
+    expect_null(result$slope_rules)
   })
 
   it("returns NULL for empty settings", {
@@ -195,11 +207,11 @@ describe("extract_version_settings", {
 describe("read_settings with versioned format", {
   it("returns most recent version with versioned attribute", {
     v1 <- create_settings_version(
-      list(settings = list(method = "linear"), slope_rules = NULL, filters = NULL),
+      list(method = "linear", slope_rules = NULL, filters = NULL),
       comment = "old"
     )
     v2 <- create_settings_version(
-      list(settings = list(method = "log"), slope_rules = NULL, filters = NULL),
+      list(method = "log", slope_rules = NULL, filters = NULL),
       comment = "new"
     )
 
@@ -251,14 +263,14 @@ describe("extract_version_settings edge cases", {
 describe("read_versioned_settings edge cases", {
   it("sorts versions by timestamp descending", {
     old <- create_settings_version(
-      list(settings = list(method = "old"), slope_rules = NULL, filters = NULL),
+      list(method = "old", slope_rules = NULL, filters = NULL),
       comment = "first"
     )
     # Force an older timestamp
     old$datetime <- "2020-01-01 00:00:00"
 
     new <- create_settings_version(
-      list(settings = list(method = "new"), slope_rules = NULL, filters = NULL),
+      list(method = "new", slope_rules = NULL, filters = NULL),
       comment = "second"
     )
 
@@ -296,7 +308,7 @@ describe("read_settings format detection", {
 describe("settings_version_summary edge cases", {
   it("handles empty comment as empty string", {
     v <- create_settings_version(
-      list(settings = list(method = "linear"), slope_rules = NULL, filters = NULL),
+      list(method = "linear", slope_rules = NULL, filters = NULL),
       comment = ""
     )
     summary_df <- settings_version_summary(list(v))
