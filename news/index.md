@@ -4,6 +4,9 @@
 
 ### Features added
 
+- NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile
+  with bidirectional cascading updates between Analyte and Specimen
+  ([\#1114](https://github.com/pharmaverse/aNCA/issues/1114))
 - Column mapping is now included in settings YAML export and restored on
   upload, with validation against available columns
   ([\#1104](https://github.com/pharmaverse/aNCA/issues/1104))
