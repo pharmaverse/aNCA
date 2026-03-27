@@ -170,9 +170,8 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
           session, paste0("select_", var),
           choices = list(
             "Select Column" = "",
-            "Mapping Columns" = column_names,
-            "Mapping Values" = predefined,
-            "Custom Values" = custom_numeric
+            "Mapping Columns" = c(column_names, custom_numeric),
+            "Mapping Values" = predefined
           ),
           selected = val
         )
