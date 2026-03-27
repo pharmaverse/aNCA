@@ -227,6 +227,11 @@ h5 {
   text-align: center;
 }
 
+/* NCA Setup sidebar: fit nav pills to content height */
+#nca-nca_setup > .row > div.well {
+  height: min-content;
+}
+
 .tlg-module {
   margin-top: 1em;
 
