@@ -48,56 +48,13 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       }, error = function(e) FALSE)
     })
 
-    # Track whether exploration plots have been initialized
-    plots_initialized <- reactiveVal(FALSE)
-
-    observe({
-      results <- session$userData$results
-      if (!is.null(results$exploration) &&
-            length(results$exploration) > 0) {
-        plots_initialized(TRUE)
-      }
-    })
-
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
-      # If exploration plots haven't been initialized, cycle through sub-tabs
-      if (!plots_initialized()) {
-        shinyjs::runjs(
-          "
-          var mainTab = '#page a[data-value=\"exploration\"]';
-          var subTabs = '#explore-visuals a[data-value]';
-          var origTab = document.querySelector('#page .active a') ||
-                        document.querySelector('#page a[data-value=\"data\"]');
-          // Go to Exploration tab
-          var expl = document.querySelector(mainTab);
-          if (expl) expl.click();
-          // Cycle through Individual, Mean, QC sub-tabs (500ms each)
-          var tabs = document.querySelectorAll(subTabs);
-          tabs.forEach(function(tab, i) {
-            setTimeout(function() { tab.click(); }, (i + 1) * 500);
-          });
-          // Return to original tab after all sub-tabs visited
-          var totalDelay = (tabs.length + 1) * 500;
-          setTimeout(function() {
-            if (origTab) origTab.click();
-          }, totalDelay);
-          "
-        )
-        total_ms <- 2500
-        shinyjs::delay(total_ms, shinyjs::click("open_zip_modal"))
-        return()
-      }
-
-      # Before NCA: only exploration plots and extras (settings, session info)
-      if (isTRUE(nca_available())) {
-        tree_items <- TREE_LIST
-      } else {
-        tree_items <- list(
-          exploration = TREE_LIST$exploration,
-          extras = TREE_LIST$extras[c("settings_file", "session_info")]
-        )
-      }
+      # Build tree based on what's actually available
+      tree_items <- .available_tree_items(
+        nca_available = isTRUE(nca_available()),
+        exploration_names = names(session$userData$results$exploration)
+      )
       TREE_UI <- create_tree_from_list_names(tree_items)
       showModal(
         modalDialog(
@@ -220,6 +177,31 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       }
     )
   })
+}
+
+# Build the tree of available export items based on current app state.
+.available_tree_items <- function(nca_available, exploration_names) {
+  items <- list()
+
+  # Only show exploration plots that have been rendered
+  avail_plots <- intersect(
+    names(TREE_LIST$exploration),
+    exploration_names
+  )
+  if (length(avail_plots) > 0) {
+    items$exploration <- TREE_LIST$exploration[avail_plots]
+  }
+
+  if (nca_available) {
+    items$nca_results <- TREE_LIST$nca_results
+    items$CDISC <- TREE_LIST$CDISC
+    items$additional_analysis <- TREE_LIST$additional_analysis
+    items$extras <- TREE_LIST$extras
+  } else {
+    items$extras <- TREE_LIST$extras[c("settings_file", "session_info")]
+  }
+
+  items
 }
 
 # Define a list with the possible outputs to export as end objects.
