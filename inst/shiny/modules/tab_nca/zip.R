@@ -48,8 +48,42 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       }, error = function(e) FALSE)
     })
 
+    # Track whether exploration plots have been initialized
+    plots_initialized <- reactiveVal(FALSE)
+
+    observe({
+      results <- session$userData$results
+      if (!is.null(results$exploration) &&
+            length(results$exploration) > 0) {
+        plots_initialized(TRUE)
+      }
+    })
+
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
+      # If exploration plots haven't been initialized, visit the tab first
+      if (!plots_initialized()) {
+        shinyjs::runjs(
+          "
+          // Click the Exploration tab to trigger plot rendering
+          var explTab = document.querySelector(
+            '#page a[data-value=\"exploration\"]'
+          );
+          if (explTab) explTab.click();
+          // Switch back after a short delay to let plots render
+          setTimeout(function() {
+            var dataTab = document.querySelector(
+              '#page a[data-value=\"data\"]'
+            );
+            if (dataTab) dataTab.click();
+          }, 1500);
+          "
+        )
+        # Re-trigger the modal after plots have had time to render
+        shinyjs::delay(2000, shinyjs::click("open_zip_modal"))
+        return()
+      }
+
       # Before NCA: only exploration plots and extras (settings, session info)
       if (isTRUE(nca_available())) {
         tree_items <- TREE_LIST
@@ -150,7 +184,6 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
             prepare_export_files(
               target_dir = output_tmpdir,
               res_nca = nca_result,
-              adnca_data = adnca_data(),
               settings = settings,
               grouping_vars = grouping_vars(),
               input = input,
