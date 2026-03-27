@@ -57,21 +57,29 @@ units_table_server <- function(id, mydata) {
       ))
     })
 
-    # Define rows from units table not of interest for the user
+    # Define rows from units table not of interest for the user.
+    # Group filtering (e.g., by PCSPEC) is independent of parameter flags so
+    # that specimen types like URINE remain visible even when no excretion
+    # parameters are currently selected for that specimen.
     rows_to_hide_units_table <- reactive({
       group_cols <- intersect(
         names(PKNCA::getGroups(mydata()$conc)), names(mydata()$units)
       )
-      groups_to_keep <- select(mydata()$intervals, any_of(group_cols))
       params_to_keep <- names(purrr::keep(mydata()$intervals, ~ is.logical(.x) && any(.x)))
 
       rows_to_keep <- mydata()$units %>%
         mutate(nrow = row_number()) %>%
         filter(PPTESTCD %in% params_to_keep)
-      if (ncol(groups_to_keep) > 0) {
-        rows_to_keep <- inner_join(
-          rows_to_keep, unique(groups_to_keep),
-          by = intersect(names(rows_to_keep), names(groups_to_keep))
+
+      if (length(group_cols) > 0) {
+        # Keep rows whose group values appear anywhere in the intervals,
+        # regardless of which parameters are flagged TRUE.
+        all_interval_groups <- mydata()$intervals %>%
+          select(any_of(group_cols)) %>%
+          unique()
+        rows_to_keep <- semi_join(
+          rows_to_keep, all_interval_groups,
+          by = intersect(names(rows_to_keep), names(all_interval_groups))
         )
       }
 
