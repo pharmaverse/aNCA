@@ -13,7 +13,6 @@ nca_results_ui <- function(id) {
     "NCA Results",
     uiOutput(ns("select_params_ui_wrapper")
     ),
-    units_table_ui(ns("units_table")),
     card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
 
     # Color legend for the results table
@@ -48,14 +47,6 @@ nca_results_ui <- function(id) {
 nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    units_table_server(
-      "units_table",
-      reactive({          #' Pass `pknca_data` to the units table only when the results
-        req(res_nca())    #' are available.
-        pknca_data()
-      })
-    )
 
     final_results <- reactive({
       req(res_nca())
@@ -133,8 +124,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
       col_names <- names(final_results())
       # Extract base names before the "[", or leave as-is if no "["
-      col_base_names <- ifelse(str_detect(col_names, "\\["),
-                               str_remove(col_names, "\\[.*"),
+      col_base_names <- ifelse(grepl("\\[", col_names),
+                               sub("\\[.*", "", col_names),
                                col_names)
 
       final_results() %>%
