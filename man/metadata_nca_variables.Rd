@@ -5,7 +5,7 @@
 \alias{metadata_nca_variables}
 \title{metadata_nca_variables}
 \format{
-A data frame with 356 rows and 19 variables:
+A data frame with 359 rows and 19 variables:
 \describe{
 \item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADNCA, ADPP).}
 \item{Order}{Numeric. Variable order within its domain, based on Role, Core and Variable}
