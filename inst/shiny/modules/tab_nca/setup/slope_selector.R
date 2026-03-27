@@ -215,8 +215,14 @@ slope_selector_server <- function( # nolint
 
     observe({
       output$slope_plots_ui <- renderUI({
-        req(processed_pknca_data())
         new_pknca_data <- processed_pknca_data()
+
+        if (is.null(new_pknca_data)) {
+          return(tags$p(
+            class = "text-muted",
+            "Plot cannot be displayed: no data available."
+          ))
+        }
 
         main_intervals <- new_pknca_data$intervals %>%
           filter(type_interval == "main") %>%
