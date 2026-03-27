@@ -109,6 +109,7 @@ read_settings <- function(path, name) {
   obj$settings$units <- .convert_list_to_df(obj$settings$units)
   obj$settings$int_parameters <- .convert_list_to_df(obj$settings$int_parameters)
   obj$filters <- .convert_filter_values(obj$filters)
+  obj$settings$ratio_table <- .convert_list_to_df(obj$settings$ratio_table)
 
   obj
 }

@@ -138,6 +138,25 @@ describe("read_settings", {
     expect_null(res$settings$int_parameters)
   })
 
+  it("converts ratio_table to a data.frame when present", {
+    res <- read_settings(path)
+    expect_s3_class(res$settings$ratio_table, "data.frame")
+    expect_equal(nrow(res$settings$ratio_table), 2)
+    expect_named(res$settings$ratio_table, c(
+      "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+      "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+    ))
+    expect_equal(res$settings$ratio_table$PPTESTCD, c("MRCMAX", "FABS"))
+    expect_equal(res$settings$ratio_table$AdjustingFactor, c(1, 1))
+  })
+
+  it("returns NULL ratio_table when not in settings file", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
+    res <- read_settings(tmp_yaml)
+    expect_null(res$settings$ratio_table)
+  })
+
   it("keeps types_df as-is (only needed for R script generation)", {
     res <- read_settings(path)
     expect_type(res$settings$parameters$types_df, "list")
@@ -239,5 +258,115 @@ describe(".convert_filter_values", {
     result <- .convert_filter_values(input)
     expect_equal(result[[1]]$column, "X")
     expect_equal(result[[1]]$condition, "!=")
+  })
+})
+
+# Source the validation helper from the Shiny app code
+source(
+  system.file("shiny/modules/tab_nca/setup/ratio_calculations_table.R",
+              package = "aNCA"),
+  local = TRUE
+)
+
+describe(".validate_ratio_row", {
+  param_options <- c("CMAX", "AUCLAST", "AUCINF.OBS")
+  ref_options <- c("ANALYTE: DrugA", "ANALYTE: DrugB", "ROUTE: INTRAVASCULAR")
+  all_group_options <- c(ref_options, "(all other levels)")
+  valid_agg <- c("yes", "no", "if-needed")
+
+  valid_row <- data.frame(
+    TestParameter = "CMAX",
+    RefParameter = "CMAX",
+    RefGroups = "ANALYTE: DrugA",
+    TestGroups = "(all other levels)",
+    AggregateSubject = "no",
+    AdjustingFactor = 1,
+    PPTESTCD = "MRCMAX",
+    stringsAsFactors = FALSE
+  )
+
+  it("returns empty reasons for a valid row", {
+    reasons <- .validate_ratio_row(
+      valid_row, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 0)
+  })
+
+  it("flags invalid TestParameter", {
+    bad <- valid_row
+    bad$TestParameter <- "FAKE"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("TestParameter", reasons))
+  })
+
+  it("flags invalid RefParameter", {
+    bad <- valid_row
+    bad$RefParameter <- "FAKE"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("RefParameter", reasons))
+  })
+
+  it("flags invalid RefGroups", {
+    bad <- valid_row
+    bad$RefGroups <- "UNKNOWN: X"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("RefGroups", reasons))
+  })
+
+  it("accepts (all other levels) as TestGroups", {
+    reasons <- .validate_ratio_row(
+      valid_row, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 0)
+  })
+
+  it("flags invalid TestGroups", {
+    bad <- valid_row
+    bad$TestGroups <- "NONEXISTENT: X"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("TestGroups", reasons))
+  })
+
+  it("flags invalid AggregateSubject", {
+    bad <- valid_row
+    bad$AggregateSubject <- "invalid"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("AggregateSubject", reasons))
+  })
+
+  it("flags non-numeric AdjustingFactor", {
+    bad <- valid_row
+    bad$AdjustingFactor <- "abc"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 1)
+    expect_true(grepl("AdjustingFactor", reasons))
+  })
+
+  it("collects multiple reasons for a row with several issues", {
+    bad <- valid_row
+    bad$TestParameter <- "FAKE"
+    bad$RefGroups <- "UNKNOWN: X"
+    bad$AggregateSubject <- "invalid"
+    reasons <- .validate_ratio_row(
+      bad, param_options, ref_options, all_group_options, valid_agg
+    )
+    expect_length(reasons, 3)
   })
 })

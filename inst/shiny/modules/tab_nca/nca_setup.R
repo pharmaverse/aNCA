@@ -18,12 +18,14 @@ nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
+    widths = c(2, 10),
     nav_panel(
       "Settings",
       fluidRow(
         downloadButton(
           ns("settings_download"),
-          label = "Download settings"
+          label = "Download settings",
+          class = "btn-primary"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
@@ -48,6 +50,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     imported_settings <- reactive(settings_override()$settings)
     imported_slopes <- reactive(settings_override()$slope_rules)
     imported_params <- reactive(imported_settings()$parameters$selections)
+    imported_ratios <- reactive(imported_settings()$ratio_table)
     general_excl_override <- reactive(imported_settings()$general_exclusions)
 
     # Gather all settings from the appropriate module
@@ -152,7 +155,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data,
-      extra_group_vars = extra_group_vars
+      extra_group_vars = extra_group_vars,
+      imported_ratios = imported_ratios
     )
 
     # Automatically update the units table when settings are uploaded.
@@ -209,12 +213,13 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
             dplyr::filter(!default) %>%
             dplyr::select(-default)
         }
+        export_settings$ratio_table <- ratio_table()
         settings_to_save <- list(
+          mapping = session$userData$mapping,
           filters = session$userData$applied_filters,
           settings = export_settings,
           slope_rules = slope_rules()
         )
-        # write yaml file
         yaml::write_yaml(settings_to_save, file = con)
       }
     )

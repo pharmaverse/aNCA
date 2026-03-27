@@ -98,7 +98,11 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
         if (is.numeric(raw_adnca_data()[[col]]) && length(unique(raw_adnca_data()[[col]])) > 20) {
           list(type = "numeric")
         } else {
-          list(type = "text", choices = sort(unique(raw_adnca_data()[[col]])))
+          vals <- unique(raw_adnca_data()[[col]])
+          has_na <- any(is.na(vals))
+          choices <- sort(vals[!is.na(vals)])
+          if (has_na) choices <- c(choices, "(NA)")
+          list(type = "text", choices = choices)
         }
       }) %>%
         setNames(colnames(raw_adnca_data())) %>%
