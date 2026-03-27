@@ -158,8 +158,11 @@ parameter_exclusions_server <- function(id, res_nca) {
       lst <- exclusion_list()
       result_df <- res_nca()$result
 
+      group_cols <- unique(unlist(unname(
+        res_nca()$data$conc$columns$groups
+      )))
       display_cols <- c(
-        "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
+        group_cols, "ATPTREF",
         "PPTESTCD", "PPTEST", "PPORRES", "PPORRESU",
         "PPSTRESN", "PPSTRESU", "exclude"
       )
