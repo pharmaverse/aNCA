@@ -110,11 +110,13 @@ parameter_plots_server <- function(id, res_nca) {
         ))
       }
 
+      all_vars <- unique(c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot))
+
       xvar_options_list <- lapply(
-        c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot),
+        all_vars,
         function(id_var) paste(id_var, .get_conc_dose_vals(res_nca(), id_var), sep = ": ")
       ) %>%
-        setNames(c(input$selected_xvars_boxplot, input$selected_colorvars_boxplot))
+        setNames(all_vars)
 
       updatePickerInput(
         session = session,

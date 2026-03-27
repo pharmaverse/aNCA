@@ -7,7 +7,7 @@
 apply_mapping(
   dataset,
   mapping,
-  desired_order,
+  desired_order = MAPPING_DESIRED_ORDER,
   silent = TRUE,
   req_mappings = c("USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT", "PCSPEC", "ROUTE",
     "AVAL", "STUDYID", "ATPTREF", "AVALU", "RRLTU", "DOSEU", "PARAM")
@@ -19,7 +19,7 @@ apply_mapping(
 \item{mapping}{A named list of column mappings.}
 
 \item{desired_order}{A character vector specifying the desired column order
-in the output dataset.}
+in the output dataset. Defaults to \code{MAPPING_DESIRED_ORDER}.}
 
 \item{silent}{Boolean, whether to print message with applied mapping.
 Defaults to \code{TRUE}.}
