@@ -11,13 +11,18 @@
 #'   columns are treated as ratio parameters and joined by PPTESTCD only.
 #' @returns Data frame with PPSTRESU and PPSTRES applied, conversion_factor
 #'   removed. PPSTRESU is "" (not NA) for rows without custom units.
-#' @importFrom dplyr select mutate left_join any_of
+#' @importFrom dplyr select mutate left_join any_of all_of distinct
 #' @keywords internal
 apply_custom_units <- function(result, custom_units) {
   group_cols <- setdiff(
     names(custom_units),
     c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
   )
+
+  # Deduplicate custom_units up front to prevent left_join from producing
+  # multiple matches. Key = PPTESTCD + PPORRESU + group columns.
+  dedup_cols <- c("PPTESTCD", "PPORRESU", intersect(group_cols, names(custom_units)))
+  custom_units <- distinct(custom_units, across(all_of(dedup_cols)), .keep_all = TRUE)
   has_groups <- length(group_cols) > 0
   if (has_groups) {
     is_ratio_row <- rowSums(is.na(custom_units[, group_cols, drop = FALSE])) == length(group_cols)

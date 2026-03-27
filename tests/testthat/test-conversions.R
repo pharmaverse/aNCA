@@ -344,9 +344,9 @@ describe("compose_ratio_unit", {
     expect_no_error(units::set_units(1, result, mode = "standard"))
   })
 
-  it("falls back to plain slash for unparseable combinations", {
+  it("returns NA for unparseable combinations", {
     result <- compose_ratio_unit("fakeunit", "otherfake")
-    expect_equal(result, "fakeunit/otherfake")
+    expect_true(is.na(result))
   })
 
   it("handles identical numerator and denominator", {
