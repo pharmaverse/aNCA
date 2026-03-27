@@ -2,6 +2,10 @@
 
 ## Features added
 
+* Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
+* Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
+* Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
+* Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
 * Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). (#1027)
 * Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
@@ -32,6 +36,7 @@
 * Slope selector plots count with grouping options (#333)
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
+* Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
 * Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
 * SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
 
@@ -55,6 +60,7 @@ identify difference between missing and not requested (#934)
 * Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 * Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
 * Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
+* Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
 
 # aNCA 0.1.0
 
