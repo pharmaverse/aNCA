@@ -22,6 +22,8 @@
 #' )
 #' filtered_data <- apply_filters(data, filters)
 #'
+#' @importFrom dplyr filter between
+#' @importFrom rlang sym
 #' @export
 apply_filters <- function(data, filters) {
   for (filter in filters) {
@@ -81,10 +83,10 @@ apply_single_filter <- function(data, column, condition, value, include_na) {
   switch(
     condition,
     "==" = filter_eq(data, column, value, include_na),
-    ">" = dplyr::filter(data, !!sym(column) > value),
-    "<" = dplyr::filter(data, !!sym(column) < value),
-    ">=" = dplyr::filter(data, !!sym(column) >= value),
-    "<=" = dplyr::filter(data, !!sym(column) <= value),
+    ">" = filter(data, !!sym(column) > value),
+    "<" = filter(data, !!sym(column) < value),
+    ">=" = filter(data, !!sym(column) >= value),
+    "<=" = filter(data, !!sym(column) <= value),
     "!=" = filter_neq(data, column, value, include_na),
     "min-max" = filter_min_max(data, column, value)
   )
@@ -93,18 +95,18 @@ apply_single_filter <- function(data, column, condition, value, include_na) {
 #' @keywords internal
 filter_eq <- function(data, column, value, include_na) {
   if (include_na) {
-    dplyr::filter(data, !!sym(column) %in% value | is.na(!!sym(column)))
+    filter(data, !!sym(column) %in% value | is.na(!!sym(column)))
   } else {
-    dplyr::filter(data, !!sym(column) %in% value)
+    filter(data, !!sym(column) %in% value)
   }
 }
 
 #' @keywords internal
 filter_neq <- function(data, column, value, include_na) {
   if (include_na) {
-    dplyr::filter(data, !(!!sym(column) %in% value) | is.na(!!sym(column)))
+    filter(data, !(!!sym(column) %in% value) | is.na(!!sym(column)))
   } else {
-    dplyr::filter(data, !!sym(column) != value)
+    filter(data, !!sym(column) != value)
   }
 }
 
@@ -121,5 +123,5 @@ filter_min_max <- function(data, column, value) {
     return(data)
   }
 
-  dplyr::filter(data, dplyr::between(!!sym(column), min_max[1], min_max[2]))
+  filter(data, between(!!sym(column), min_max[1], min_max[2]))
 }
