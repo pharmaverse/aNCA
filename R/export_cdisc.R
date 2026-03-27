@@ -243,6 +243,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
         }
         flag
       },
+      PKSUM1FN = ifelse(PKSUM1F == "Y", 1L, NA_integer_),
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT
