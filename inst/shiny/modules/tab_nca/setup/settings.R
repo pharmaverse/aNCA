@@ -239,7 +239,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       )
     }
 
-    # When analyte changes: update pcspec choices, then profile
+    # When analyte changes: unselect unavailable pcspec items, then update profile
     observeEvent(c(input$select_analyte, data()), {
       req(data(), input$select_analyte)
       if (updating_filters()) return()
@@ -248,13 +248,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       settings <- settings_override()
 
-      filtered <- data() %>%
-        filter(PARAM %in% input$select_analyte, !is.na(PCSPEC))
-      pcspec_choices <- unique(filtered$PCSPEC)
+      all_pcspec <- unique(data()$PCSPEC) %>% na.omit()
+      available_pcspec <- data() %>%
+        filter(PARAM %in% input$select_analyte, !is.na(PCSPEC)) %>%
+        pull(PCSPEC) %>%
+        unique()
 
       target_pcspec <- .get_target_selection(
         current_val = isolate(input$select_pcspec),
-        available_choices = pcspec_choices,
+        available_choices = available_pcspec,
         override_val = settings$pcspec,
         default_logic = function(choices) {
           grep(
@@ -265,13 +267,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       )
       updatePickerInput(
         session, "select_pcspec",
-        choices = pcspec_choices, selected = target_pcspec
+        choices = all_pcspec, selected = target_pcspec
       )
 
       .update_profile(settings)
     })
 
-    # When pcspec changes: update analyte choices, then profile
+    # When pcspec changes: unselect unavailable analyte items, then update profile
     observeEvent(input$select_pcspec, {
       req(data(), input$select_pcspec)
       if (updating_filters()) return()
@@ -280,18 +282,20 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
       settings <- settings_override()
 
-      filtered <- data() %>%
-        filter(PCSPEC %in% input$select_pcspec, !is.na(PARAM))
-      analyte_choices <- unique(filtered$PARAM)
+      all_analyte <- unique(data()$PARAM) %>% na.omit()
+      available_analyte <- data() %>%
+        filter(PCSPEC %in% input$select_pcspec, !is.na(PARAM)) %>%
+        pull(PARAM) %>%
+        unique()
 
       target_analyte <- .get_target_selection(
         current_val = isolate(input$select_analyte),
-        available_choices = analyte_choices,
+        available_choices = available_analyte,
         override_val = settings$analyte
       )
       updatePickerInput(
         session, "select_analyte",
-        choices = analyte_choices, selected = target_analyte
+        choices = all_analyte, selected = target_analyte
       )
 
       .update_profile(settings)
