@@ -18,6 +18,7 @@ nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
+    widths = c(2, 10),
     nav_panel(
       "Settings",
       fluidRow(
@@ -25,7 +26,7 @@ nca_setup_ui <- function(id) {
           ns("open_save_settings_modal"),
           label = "Download settings",
           icon = icon("download"),
-          class = "btn btn-default"
+          class = "btn-primary"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
