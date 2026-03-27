@@ -363,8 +363,7 @@ div[data-value="Settings"] > div.row a {
 
 .slope-selector-module {
   padding: 1em;
-  height: calc(100vh - 150px);
-  max-height: calc(100vh - 150px);
+  min-height: calc(100vh - 150px);
   /* Style each group of widgets */
 }
 
@@ -419,7 +418,8 @@ div[data-value="Settings"] > div.row a {
   position: fixed;
   bottom: 0;
   width: 75%;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(1px);
   padding: 10px;
   z-index: 1000;
   border-top: 1px solid #dadada;
@@ -443,7 +443,7 @@ div[data-value="Settings"] > div.row a {
 
 .slope-selector-module .slope-plots-container {
   margin-top: 2em;
-  height: calc(100vh - 220px);
+  min-height: calc(100vh - 220px);
   margin-bottom: 2em;
 }
 
@@ -452,7 +452,7 @@ div[data-value="Settings"] > div.row a {
   margin-bottom: 2em;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(33em, 1fr));
-  height: calc(100vh - 220px);
+  min-height: calc(100vh - 220px);
   gap: 1rem;
 }
 

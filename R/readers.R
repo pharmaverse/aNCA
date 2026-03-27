@@ -105,17 +105,34 @@ read_settings <- function(path, name) {
          "Please ensure that the file is a list with element 'settings'.")
   }
 
-  if (!is.null(obj$slope_rules) && is.list(obj$slope_rules)) {
-    obj$slope_rules <- as.data.frame(bind_rows(obj$slope_rules))
-  }
-
-  if (!is.null(obj$settings$units) && is.list(obj$settings$units)) {
-    obj$settings$units <- bind_rows(obj$settings$units)
-  }
-
-  if (!is.null(obj$settings$int_parameters) && is.list(obj$settings$int_parameters)) {
-    obj$settings$int_parameters <- bind_rows(obj$settings$int_parameters)
-  }
+  obj$slope_rules <- .convert_list_to_df(obj$slope_rules)
+  obj$settings$units <- .convert_list_to_df(obj$settings$units)
+  obj$settings$int_parameters <- .convert_list_to_df(obj$settings$int_parameters)
+  obj$filters <- .convert_filter_values(obj$filters)
+  obj$settings$ratio_table <- .convert_list_to_df(obj$settings$ratio_table)
 
   obj
+}
+
+#' Convert a YAML list to a data.frame via bind_rows.
+#' Returns NULL if input is NULL or not a list.
+#' @param x A list or NULL.
+#' @returns A data.frame or NULL.
+#' @keywords internal
+#' @noRd
+.convert_list_to_df <- function(x) {
+  if (!is.null(x) && is.list(x)) as.data.frame(bind_rows(x)) else x
+}
+
+#' Convert filter values from YAML lists to vectors.
+#' @param filters A list of filter specifications or NULL.
+#' @returns A list with unlist-ed values, or NULL.
+#' @keywords internal
+#' @noRd
+.convert_filter_values <- function(filters) {
+  if (is.null(filters) || !is.list(filters)) return(filters)
+  lapply(filters, function(filt) {
+    filt$value <- unlist(filt$value)
+    filt
+  })
 }
