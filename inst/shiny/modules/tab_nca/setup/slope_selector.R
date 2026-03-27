@@ -140,11 +140,10 @@ slope_selector_server <- function( # nolint
       req(processed_pknca_data())
 
       new_pknca_data <- processed_pknca_data()
-      main_intervals <- new_pknca_data$intervals %>%
-        filter(type_interval == "main") %>%
+      hl_intervals <- new_pknca_data$intervals %>%
+        filter(type_interval == "main", half.life) %>%
         unique()
 
-      hl_intervals <- main_intervals %>% filter(half.life)
       if (nrow(hl_intervals) == 0) {
         plot_outputs(NULL)
         pknca_data(NULL)
@@ -238,8 +237,8 @@ slope_selector_server <- function( # nolint
           } else {
             return(tags$p(
               class = "text-muted",
-              "Lambda z has not been added to the selected parameters.",
-              "Add lambda z to use the slope selector."
+              "Lambda z half-life has not been added to the selected parameters.",
+              "Add LAMZHL to use the slope selector."
             ))
           }
         }
