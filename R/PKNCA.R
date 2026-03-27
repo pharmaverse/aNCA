@@ -82,6 +82,7 @@
 #' PKNCA_create_data_object(adnca_data)
 #'
 #' @importFrom dplyr filter select arrange across group_by mutate ungroup
+#' @importFrom glue glue
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units deparse_unit
 #' @importFrom stats as.formula
@@ -132,12 +133,12 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 
   conc_formula <-
     "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" %>% # nolint
-    glue::glue() %>%
+    glue() %>%
     as.formula()
 
   dose_formula <-
     "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
-    glue::glue() %>%
+    glue() %>%
     as.formula()
 
   # Create concentration data

@@ -124,8 +124,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
       col_names <- names(final_results())
       # Extract base names before the "[", or leave as-is if no "["
-      col_base_names <- ifelse(str_detect(col_names, "\\["),
-                               str_remove(col_names, "\\[.*"),
+      col_base_names <- ifelse(grepl("\\[", col_names),
+                               sub("\\[.*", "", col_names),
                                col_names)
 
       final_results() %>%
