@@ -39,10 +39,10 @@ tab_nca_ui <- function(id) {
     nav_panel(
       "Results", fluid = TRUE,
       div(
-        class = "excretion-section-container",
+        class = "nca-run-container",
         div(
           id = ns("nca_run_overlay"),
-          class = "excretion-overlay",
+          class = "nca-run-overlay",
           "Run NCA first"
         ),
         div(
