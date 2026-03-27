@@ -115,6 +115,9 @@
   `Parameter Selection`, `Slope Selector`, `Additional Analysis` and
   `Partial Interval calculations`
   ([\#975](https://github.com/pharmaverse/aNCA/issues/975))
+- Removed `methods`, `scales`, and `stringr` from package dependencies,
+  replacing all usages with base R equivalents
+  ([\#1108](https://github.com/pharmaverse/aNCA/issues/1108))
 - SelectInputs updated using a new function to ensure all widgets
   include variable labels.
   ([\#899](https://github.com/pharmaverse/aNCA/issues/899))
