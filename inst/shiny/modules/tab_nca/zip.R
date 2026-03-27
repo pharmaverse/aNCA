@@ -54,7 +54,10 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       if (isTRUE(nca_available())) {
         tree_items <- TREE_LIST
       } else {
-        tree_items <- TREE_LIST[c("exploration", "extras")]
+        tree_items <- list(
+          exploration = TREE_LIST$exploration,
+          extras = TREE_LIST$extras[c("settings_file", "session_info")]
+        )
       }
       TREE_UI <- create_tree_from_list_names(tree_items)
       showModal(
