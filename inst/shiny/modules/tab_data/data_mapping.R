@@ -144,8 +144,19 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
     for (var in MAPPING_INFO$Variable) {
       if (!var %in% names(mapping) || var == "Metabolites") next
       val <- mapping[[var]]
-      # Validate: mapping values should be columns in the data (except Metabolites)
-      invalid <- val[val != "" & !val %in% column_names]
+
+      # Build the set of valid values: column names + predefined Values +
+      # numeric literals for allow_create_numeric variables.
+      var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
+      predefined <- strsplit(var_info$Values, ", ")[[1]]
+      valid_values <- c(column_names, predefined)
+
+      is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
+      invalid <- val[val != "" & !val %in% valid_values]
+      if (is_numeric_ok) {
+        invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
+      }
+
       if (length(invalid) > 0) {
         skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
         next
