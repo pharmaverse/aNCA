@@ -11,6 +11,7 @@
 
 pk_dose_qc_plot_ui <- function(id) {
   ns <- NS(id)
+
   # The nav_panel function creates the tab
   layout_sidebar(
     fillable = TRUE,
@@ -24,20 +25,9 @@ pk_dose_qc_plot_ui <- function(id) {
         class = "btn btn-primary btn-sm",
         width = "100%"
       ),
-      pickerInput(
-        inputId = ns("group_var"),
-        label = "Choose the variables to group by:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("groupvar_ui_wrapper")
       ),
-      pickerInput(
-        inputId = ns("colour_var"),
-        label = "Choose the variables to colour by:",
-        choices = NULL,
-        selected = NULL,
-        options = list(`actions-box` = TRUE)
+      uiOutput(ns("colourvar_ui_wrapper")
       ),
       pickerInput(
         inputId = ns("pcspec"),
@@ -102,20 +92,30 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       )
 
       param_choices_colour <- c(dose_col, route_col)
-      updatePickerInput(
-        session,
-        "colour_var",
-        choices = param_choices_colour,
-        selected = param_choices_colour[1]
-      )
 
-      param_choices_group <- grouping_vars()
-      updatePickerInput(
-        session,
-        "group_var",
-        choices = param_choices_group,
-        selected = param_choices_group[1]
-      )
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = param_choices_colour,
+                     initial_selection = param_choices_colour[1],
+                     selector_ui_wrapper = "colourvar_ui_wrapper",
+                     id = "colour_var",
+                     label = "Choose the variables to colour by:",
+                     metadata_type = "variable",
+                     multiple = FALSE)
+
+      variable_choices_group <- grouping_vars()
+
+      # Rendering the group by selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = variable_choices_group,
+                     initial_selection = variable_choices_group[1],
+                     selector_ui_wrapper = "groupvar_ui_wrapper",
+                     id = "group_var",
+                     label = "Choose the variables to group by:",
+                     metadata_type = "variable")
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
       updatePickerInput(
