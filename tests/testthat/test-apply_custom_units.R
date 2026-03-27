@@ -148,4 +148,27 @@ describe("apply_custom_units", {
     # No row duplication
     expect_equal(nrow(ratio_row), 1)
   })
+
+  it("deduplicates ratio rows with different PPORRESU values", {
+    custom <- data.frame(
+      PPTESTCD = c("MRCMAX", "MRCMAX"),
+      PPORRESU = c("fraction", NA_character_),
+      PPSTRESU = c("%", "ratio"),
+      conversion_factor = c(100, 1),
+      PARAM = c(NA_character_, NA_character_),
+      stringsAsFactors = FALSE
+    )
+    result_with_ratio <- rbind(
+      base_result,
+      data.frame(
+        PPTESTCD = "MRCMAX", PPORRES = 0.5, PPSTRES = 0.5,
+        PPSTRESU = "fraction", PPORRESU = "fraction", PARAM = "A",
+        stringsAsFactors = FALSE
+      )
+    )
+    result <- apply_custom_units(result_with_ratio, custom)
+    ratio_row <- result[result$PPTESTCD == "MRCMAX", ]
+    # Deduplicated to one row per PPTESTCD, no row multiplication
+    expect_equal(nrow(ratio_row), 1)
+  })
 })

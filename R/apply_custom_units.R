@@ -19,19 +19,21 @@ apply_custom_units <- function(result, custom_units) {
     c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
   )
 
-  # Deduplicate custom_units up front to prevent left_join from producing
-  # multiple matches. Key = PPTESTCD + PPORRESU + group columns.
-  dedup_cols <- c("PPTESTCD", "PPORRESU", intersect(group_cols, names(custom_units)))
-  custom_units <- distinct(custom_units, across(all_of(dedup_cols)), .keep_all = TRUE)
   has_groups <- length(group_cols) > 0
   if (has_groups) {
     is_ratio_row <- rowSums(is.na(custom_units[, group_cols, drop = FALSE])) == length(group_cols)
   } else {
     is_ratio_row <- rep(FALSE, nrow(custom_units))
   }
-  pknca_custom <- custom_units[!is_ratio_row, , drop = FALSE]
+
+  # Deduplicate each subset on its actual join key to prevent left_join
+  # from producing multiple matches.
+  pknca_dedup_cols <- c("PPTESTCD", "PPORRESU", group_cols)
+  pknca_custom <- custom_units[!is_ratio_row, , drop = FALSE] %>%
+    distinct(across(all_of(pknca_dedup_cols)), .keep_all = TRUE)
   ratio_custom <- custom_units[is_ratio_row, , drop = FALSE] %>%
-    select("PPTESTCD", "PPSTRESU", "conversion_factor")
+    select("PPTESTCD", "PPSTRESU", "conversion_factor") %>%
+    distinct(across("PPTESTCD"), .keep_all = TRUE)
 
   result <- result %>%
     select(-any_of(c("PPSTRESU", "PPSTRES"))) %>%
