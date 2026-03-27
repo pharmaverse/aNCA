@@ -24,7 +24,8 @@ nca_setup_ui <- function(id) {
       fluidRow(
         downloadButton(
           ns("settings_download"),
-          label = "Download settings"
+          label = "Download settings",
+          class = "btn-primary"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
