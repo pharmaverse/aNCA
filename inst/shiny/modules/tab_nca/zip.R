@@ -61,26 +61,31 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
 
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
-      # If exploration plots haven't been initialized, visit the tab first
+      # If exploration plots haven't been initialized, cycle through sub-tabs
       if (!plots_initialized()) {
         shinyjs::runjs(
           "
-          // Click the Exploration tab to trigger plot rendering
-          var explTab = document.querySelector(
-            '#page a[data-value=\"exploration\"]'
-          );
-          if (explTab) explTab.click();
-          // Switch back after a short delay to let plots render
+          var mainTab = '#page a[data-value=\"exploration\"]';
+          var subTabs = '#explore-visuals a[data-value]';
+          var origTab = document.querySelector('#page .active a') ||
+                        document.querySelector('#page a[data-value=\"data\"]');
+          // Go to Exploration tab
+          var expl = document.querySelector(mainTab);
+          if (expl) expl.click();
+          // Cycle through Individual, Mean, QC sub-tabs (500ms each)
+          var tabs = document.querySelectorAll(subTabs);
+          tabs.forEach(function(tab, i) {
+            setTimeout(function() { tab.click(); }, (i + 1) * 500);
+          });
+          // Return to original tab after all sub-tabs visited
+          var totalDelay = (tabs.length + 1) * 500;
           setTimeout(function() {
-            var dataTab = document.querySelector(
-              '#page a[data-value=\"data\"]'
-            );
-            if (dataTab) dataTab.click();
-          }, 1500);
+            if (origTab) origTab.click();
+          }, totalDelay);
           "
         )
-        # Re-trigger the modal after plots have had time to render
-        shinyjs::delay(2000, shinyjs::click("open_zip_modal"))
+        total_ms <- 2500
+        shinyjs::delay(total_ms, shinyjs::click("open_zip_modal"))
         return()
       }
 
