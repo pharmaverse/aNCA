@@ -45,6 +45,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_filters.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_labels.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_mapping.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/apply_single_filter.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_unit_defaults.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratio_app.html</loc></url>
@@ -119,6 +120,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/rm_impute_obs_params.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/simplify_unit.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/strip_na_sentinel.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/update_main_intervals.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/update_pknca_with_rules.html</loc></url>
