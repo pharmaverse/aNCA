@@ -55,6 +55,8 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
         options = list(`actions-box` = TRUE)
       )
     },
+    uiOutput(ns("colorby_ui_wrapper")
+    ),
     pickerInput(
       inputId = ns("profiles"),
       label = "Choose the profile(s):",
@@ -63,24 +65,10 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    pickerInput(
-      inputId = ns("colorby"),
-      label = "Choose the variables to color by:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
-    ),
-    pickerInput(
-      inputId = ns("facetby"),
-      label = "Choose the variables to facet by:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("facetby_ui_wrapper")
     ),
     conditionalPanel(
-      condition = "input.facetby.length > 0",
+      condition = "input.facetby && input.facetby.length > 0",
       checkboxInput(ns("show_facet_n"), "Show number of subjects", value = FALSE),
       ns = ns
     ),
@@ -190,6 +178,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         selected = profile_choices
       )
 
+
+      # Get the grouping variables for colory and facetby
       full_grouping_vars <- unique(c(conc_groups, dose_groups,
                                      dose_col, grouping_vars(), "ATPTREF"))
 
@@ -207,7 +197,6 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
           choices = usubjid_choices,
           selected = usubjid_choices
         )
-
         default_color <- subject_col
         default_facet <- NULL
       } else {
@@ -228,19 +217,27 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         }
       }
 
-      updatePickerInput(
-        session,
-        "colorby",
-        choices = full_grouping_vars,
-        selected = default_color
-      )
+      # Rendering colorby selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = full_grouping_vars,
+                     initial_selection = default_color,
+                     selector_ui_wrapper = "colorby_ui_wrapper",
+                     id = "colorby",
+                     label = "Choose the variables to color by:",
+                     metadata_type = "variable")
 
-      updatePickerInput(
-        session,
-        "facetby",
-        choices = full_grouping_vars,
-        selected = default_facet
-      )
+      # Rendering the facetby selector with labels
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = full_grouping_vars,
+                     initial_selection = default_facet,
+                     selector_ui_wrapper = "facetby_ui_wrapper",
+                     id = "facetby",
+                     label = "Choose the variables to facet by:",
+                     metadata_type = "variable")
     })
 
     # Create a reactive value to store the filtering list

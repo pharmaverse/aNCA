@@ -11,13 +11,7 @@ nca_results_ui <- function(id) {
 
   nav_panel(
     "NCA Results",
-    pickerInput(
-      ns("params"),
-      "Select Parameters :",
-      choices = list("Run NCA first" = ""),
-      selected = list("Run NCA first" = ""),
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("select_params_ui_wrapper")
     ),
     units_table_ui(ns("units_table")),
     card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
@@ -113,15 +107,19 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         unname(formatters::var_labels(final_results())),
         unique(c(metadata_nca_parameters$PPTEST, ratio_table()$PPTESTCD))
       )
-      param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
+      param_inputnames <- metadata_nca_parameters$PPTESTCD[
+        match(param_pptest_cols, metadata_nca_parameters$PPTEST)
+      ]
 
-      updatePickerInput(
-        session = session,
-        inputId = "params",
-        label = "Select Parameters :",
-        choices = sort(param_inputnames),
-        selected =  param_inputnames
-      )
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = sort(param_inputnames),
+                     initial_selection = param_inputnames,
+                     selector_ui_wrapper = "select_params_ui_wrapper",
+                     id = "params",
+                     label = "Select Parameters:",
+                     metadata_type = "parameter")
     })
 
     output_results <- reactive({
