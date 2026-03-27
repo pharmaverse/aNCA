@@ -86,7 +86,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         by = intersect(names(results$result), names(results_to_join)),
         relationship = "many-to-many"
       ) %>%
-        filter(type_interval != "manual")
+        filter(type_interval != "manual") %>%
+        # Exclude flagged records from summary statistics
+        filter(is.na(exclude) | exclude == "")
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)

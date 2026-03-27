@@ -182,6 +182,8 @@ get_dose_esc_results <- function(
       sd_max = TRUE
     )
 
+    # TODO: Filter out excluded records (where `exclude` is populated) before
+    # calculating summary statistics, consistent with descriptive_statistics.R
     stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars

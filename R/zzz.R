@@ -124,6 +124,7 @@
     "end",
     "end_auc",
     "end_dose",
+    "exclude",
     "exclude_half.life",
     "facet_title",
     "format_fun",
