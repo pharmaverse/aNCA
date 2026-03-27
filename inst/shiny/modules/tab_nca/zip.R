@@ -145,9 +145,12 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
             output_tmpdir <- file.path(tempdir(), "output")
             unlink(output_tmpdir, recursive = TRUE)
 
+            nca_result <- tryCatch(res_nca(), error = function(e) NULL)
+
             prepare_export_files(
               target_dir = output_tmpdir,
-              res_nca = res_nca(),
+              res_nca = nca_result,
+              adnca_data = adnca_data(),
               settings = settings,
               grouping_vars = grouping_vars(),
               input = input,

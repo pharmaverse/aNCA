@@ -77,6 +77,60 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   allowed
 }
 
+# Generate default exploration plots when the user never visited the tab.
+# Uses USUBJID for individual color_by and priority-based defaults for mean.
+.default_exploration_plots <- function(pknca_data, selected_types) {
+  type_to_default <- c(
+    individual = "individualplot", mean = "meanplot", qc = "qcplot"
+  )
+  plots <- list()
+  subject_col <- pknca_data$conc$columns$subject
+
+  # Determine default color/facet for mean plot
+  conc_groups <- unlist(unname(pknca_data$conc$columns$groups))
+  dose_groups <- unlist(unname(pknca_data$dose$columns$groups))
+  dose_col <- pknca_data$dose$columns$dose
+  grouping_vars <- unique(c(conc_groups, dose_groups, dose_col, "ATPTREF"))
+  avail_cols <- names(pknca_data$conc$data)
+  grouping_vars <- intersect(grouping_vars, avail_cols)
+
+  color_priority <- c("TRT01A", "GROUP", "ACTARM", "COHORT", dose_col)
+  mean_color <- intersect(color_priority, grouping_vars)
+  mean_color <- if (length(mean_color) > 0) mean_color[1] else dose_col
+
+  facet_priority <- c("TRT01A", dose_col, "GROUP", "ACTARM", "COHORT")
+  mean_facet <- intersect(facet_priority, grouping_vars)
+  mean_facet <- if (length(mean_facet) > 0) mean_facet[1] else NULL
+
+  if ("individual" %in% selected_types) {
+    plots$individualplot <- tryCatch(
+      exploration_individualplot(
+        pknca_data = pknca_data,
+        color_by = subject_col,
+        ylog_scale = TRUE
+      ),
+      error = function(e) NULL
+    )
+  }
+
+  if ("mean" %in% selected_types) {
+    plots$meanplot <- tryCatch(
+      exploration_meanplot(
+        pknca_data = pknca_data,
+        color_by = mean_color,
+        facet_by = mean_facet,
+        ylog_scale = TRUE,
+        sd_max = TRUE
+      ),
+      error = function(e) NULL
+    )
+  }
+
+  # QC plot requires different function; skip for default generation
+  plots[vapply(plots, is.null, logical(1))] <- NULL
+  plots
+}
+
 # Check if an object is a saveable leaf (ggplot, data.frame, or plotly)
 .is_leaf <- function(x) {
   inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly")
@@ -313,6 +367,7 @@ get_tree_leaf_ids <- function(tree) {
 #' @param session Shiny session object.
 prepare_export_files <- function(target_dir,
                                  res_nca,
+                                 adnca_data = NULL,
                                  settings,
                                  grouping_vars,
                                  input,
@@ -340,6 +395,13 @@ prepare_export_files <- function(target_dir,
     results$exploration <- results$exploration[
       intersect(names(results$exploration), allowed)
     ]
+  }
+
+  # Generate default exploration plots if user never visited the Exploration tab
+  if (length(results$exploration) == 0 && !is.null(adnca_data)) {
+    results$exploration <- .default_exploration_plots(
+      adnca_data, selected_types
+    )
   }
 
   save_output(
