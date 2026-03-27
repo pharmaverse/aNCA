@@ -83,21 +83,12 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
 
-    # Initalise settings override if available
+    # Restore exclusions from uploaded settings
     observeEvent(general_exclusions_override(), {
       overrides <- general_exclusions_override()
-
       if (!is.null(overrides) && length(overrides) > 0) {
-        # Reconstruct list with new button IDs to match current session context
-        new_ids <- seq_along(overrides) + xbtn_counter()
-        rehydrated_list <- purrr::map2(overrides, new_ids, function(item, id) {
-          item$xbtn_id <- paste0("remove_exclusion_reason_", id)
-          item
-        })
-
-        # Update state
-        xbtn_counter(max(new_ids))
-        exclusion_list(rehydrated_list)
+        rehydrate_exclusions(overrides, exclusion_list, xbtn_counter,
+                             prefix = "remove_exclusion_reason_")
       }
     })
 
@@ -147,17 +138,8 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
 
 
     # Dynamically observe all remove buttons for exclusion reasons
-    observe({
-      lst <- exclusion_list()
-      lapply(lst, function(item) {
-        xbtn_id <- item$xbtn_id
-        observeEvent(input[[xbtn_id]], {
-          current <- exclusion_list()
-          # Remove the item with this xbtn_id
-          exclusion_list(Filter(function(x) x$xbtn_id != xbtn_id, current))
-        }, ignoreInit = TRUE, once = TRUE)
-      })
-    })
+    registered_xbtns <- reactiveVal(character(0))
+    observe_remove_buttons(exclusion_list, registered_xbtns, input)
 
     # Render the manual exclusions table (not shown if empty)
     output$exclusion_list_ui <- renderUI({
@@ -201,12 +183,7 @@ general_exclusions_server <- function(id, processed_pknca_data, general_exclusio
       )
     })
 
-    # Prepare exclusion list for return (without xbtn_id, for downstream use)
-    exclusion_list_for_return <- reactive({
-      lapply(exclusion_list(), function(x) x[setdiff(names(x), "xbtn_id")])
-    })
-
-    # Return the exclusion list as a reactive
-    exclusion_list_for_return
+    # Return the exclusion list without xbtn_id for downstream use
+    reactive(clean_exclusion_list(exclusion_list()))
   })
 }
