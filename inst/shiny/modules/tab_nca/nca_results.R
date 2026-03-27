@@ -14,8 +14,8 @@ nca_results_ui <- function(id) {
     pickerInput(
       ns("params"),
       "Select Parameters :",
-      choices = list("" = ""),
-      selected = list("" = ""),
+      choices = list("Run NCA first" = ""),
+      selected = list("Run NCA first" = ""),
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
