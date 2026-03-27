@@ -2,6 +2,7 @@
 
 ## Features added
 
+* NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile with bidirectional cascading updates between Analyte and Specimen (#1114)
 * Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
 * Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
@@ -38,6 +39,8 @@
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 * Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
 * Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
+* SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
+
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
