@@ -69,7 +69,7 @@ manual_slopes_table_server <- function(
       if (!is.null(manual_slopes_override())) {
         # Integrate slope rules to work with settings upload
         if (!is.data.frame(manual_slopes_override()) ||
-            nrow(manual_slopes_override()) == 0) return(NULL)
+              nrow(manual_slopes_override()) == 0) return(NULL)
         log_debug_list("Manual slopes override:", manual_slopes_override())
         # Identify columns to match (all except TYPE, RANGE, REASON)
         match_cols <- setdiff(names(manual_slopes_override()), c("TYPE", "RANGE", "REASON"))
