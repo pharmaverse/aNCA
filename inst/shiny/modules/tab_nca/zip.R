@@ -6,6 +6,8 @@
 #'
 #' @param id A character string used to uniquely identify the module.
 #' @param res_nca NCA results object (for server).
+#' @param adnca_data Reactive with mapped PKNCAdata. Used to enable the Save
+#'   button after data mapping, before NCA has been run.
 #' @param settings Settings object (for server).
 #' @param grouping_vars Grouping variables (for server).
 
@@ -45,7 +47,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       tryCatch({
         result <- res_nca()
         !is.null(result)
-      }, error = function(e) FALSE)
+      }, error = function(e) {
+        if (inherits(e, "shiny.silent.error")) FALSE else stop(e)
+      })
     })
 
     # Show ZIP export modal when button is clicked
