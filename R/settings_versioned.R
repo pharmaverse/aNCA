@@ -59,8 +59,7 @@ read_versioned_settings <- function(path) {
 
     list(versions = versions, format = "versioned")
   } else if ("settings" %in% names(obj)) {
-    # Legacy flat format — wrap as a single version
-    parsed <- .parse_legacy_settings(obj)
+    # Legacy flat format — wrap as a single version with empty metadata
     meta <- list(
       comment = "",
       datetime = "",
@@ -68,7 +67,7 @@ read_versioned_settings <- function(path) {
       anca_version = "",
       tab = ""
     )
-    version_entry <- append(meta, parsed)
+    version_entry <- append(meta, obj)
     list(versions = list(version_entry), format = "legacy")
   } else {
     stop(
@@ -180,22 +179,9 @@ extract_version_settings <- function(version) {
   meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
   s <- version[setdiff(names(version), meta_keys)]
 
-  if (length(s) == 0) {
+  if (length(s) == 0 || is.null(s$settings)) {
     warning("Version entry has empty settings content.")
     return(NULL)
-  }
-
-  # Backward compat: old format nests NCA fields under s$settings;
-  # new flat format has them directly on s alongside slope_rules/filters.
-  if (is.null(s$settings)) {
-    payload_meta <- c("mapping", "slope_rules", "filters")
-    nca_fields <- s[setdiff(names(s), payload_meta)]
-    s <- list(
-      settings = nca_fields,
-      mapping = s$mapping,
-      slope_rules = s$slope_rules,
-      filters = s$filters
-    )
   }
 
   s$slope_rules <- .convert_list_to_df(s$slope_rules)
@@ -225,18 +211,4 @@ extract_version_settings <- function(version) {
   append(meta, settings_fields)
 }
 
-#' Convert legacy flat settings to the payload format used inside
-#' version entries.
-#' @param obj The raw YAML list with top-level `settings`, `slope_rules`,
-#'   `filters`.
-#' @returns A list matching the `settings` field of a version entry.
-#' @noRd
-.parse_legacy_settings <- function(obj) {
-  c(
-    obj$settings,
-    list(
-      slope_rules = obj$slope_rules,
-      filters = obj$filters
-    )
-  )
-}
+
