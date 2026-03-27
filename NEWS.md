@@ -1,11 +1,5 @@
 # aNCA (development version)
 
-## UI improvements
-
-* NCA settings and results panel lists fixed at 200px nav width (#1133)
-* Results tab shows a grey "Run NCA first" overlay until NCA is run (#1133)
-* Added vertical spacing after each Exploration plot section (#1133)
-
 ## Features added
 
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
