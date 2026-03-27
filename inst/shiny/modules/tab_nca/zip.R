@@ -31,19 +31,32 @@ zip_ui <- function(id) {
   )
 }
 
-zip_server <- function(id, res_nca, settings, grouping_vars) {
+zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Enable/disable ZIP export button based on res_nca availability
+    # Enable Save button after mapping; full content after NCA
     observe({
-      req(res_nca())
+      req(adnca_data())
       shinyjs::enable("open_zip_modal")
+    })
+
+    nca_available <- reactive({
+      tryCatch({
+        result <- res_nca()
+        !is.null(result)
+      }, error = function(e) FALSE)
     })
 
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
-      TREE_UI <- create_tree_from_list_names(TREE_LIST)
+      # Before NCA: only exploration plots and extras (settings, session info)
+      if (isTRUE(nca_available())) {
+        tree_items <- TREE_LIST
+      } else {
+        tree_items <- TREE_LIST[c("exploration", "extras")]
+      }
+      TREE_UI <- create_tree_from_list_names(tree_items)
       showModal(
         modalDialog(
           title = NULL,

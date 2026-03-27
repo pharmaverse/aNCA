@@ -224,6 +224,7 @@ server <- function(input, output, session) {
   zip_server(
     "zip_modal",
     res_nca = tab_nca_outputs$res_nca,
+    adnca_data = tab_data_outputs$pknca_data,
     settings = session$userData$settings,
     grouping_vars = tab_data_outputs$extra_group_vars
   )
