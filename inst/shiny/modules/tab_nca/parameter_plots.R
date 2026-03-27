@@ -46,8 +46,15 @@ parameter_plots_server <- function(id, res_nca) {
 
     # Update picker inputs when boxplotdata is available
     observeEvent(res_nca(), {
-      # Update the selected_param_boxplot picker input
-      param_choices <- unique(res_nca()$result$PPTESTCD)
+      # Rename interval parameters to include the range suffix (e.g. AUCINT -> AUCINT_0-12)
+      # so each interval appears as a distinct choice, matching flexible_violinboxplot()
+      result_data <- res_nca()$result %>%
+        mutate(PPTESTCD = ifelse(
+          startsWith(PPTESTCD, "aucint"),
+          paste0(PPTESTCD, "_", start, "-", end),
+          PPTESTCD
+        ))
+      param_choices <- unique(result_data$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
         "CMAX"
