@@ -164,7 +164,11 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 
       # For allow_create_numeric variables with custom numeric values,
       # the value must be added to choices or updateSelectizeInput ignores it.
-      custom_numeric <- if (is_numeric_ok) val[!val %in% c(column_names, predefined)] else character(0)
+      custom_numeric <- if (is_numeric_ok) {
+        val[!val %in% c(column_names, predefined)]
+      } else {
+        character(0)
+      }
       if (length(custom_numeric) > 0) {
         updateSelectizeInput(
           session, paste0("select_", var),
