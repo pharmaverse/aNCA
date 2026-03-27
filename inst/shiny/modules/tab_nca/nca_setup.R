@@ -18,12 +18,14 @@ nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
+    widths = c(2, 10),
     nav_panel(
       "Settings",
       fluidRow(
         downloadButton(
           ns("settings_download"),
-          label = "Download settings"
+          label = "Download settings",
+          class = "btn-primary"
         )
       ),
       fluidRow(units_table_ui(ns("units_table"))),
@@ -213,6 +215,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         }
         export_settings$ratio_table <- ratio_table()
         settings_to_save <- list(
+          mapping = session$userData$mapping,
           filters = session$userData$applied_filters,
           settings = export_settings,
           slope_rules = slope_rules()
