@@ -136,11 +136,6 @@ slope_selector_server <- function( # nolint
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
 
-    # Track the slope selector status for the UI guard:
-    # "ok" = data and lambda z available, "no_lambda_z" = half.life not selected,
-    # "no_data" = no intervals at all (e.g. ATPTREF not selected)
-    slope_status <- reactiveVal("no_data")
-
     observeEvent(processed_pknca_data(), {
       req(processed_pknca_data())
 
@@ -149,20 +144,12 @@ slope_selector_server <- function( # nolint
         filter(type_interval == "main") %>%
         unique()
 
-      # Determine why there are no half.life intervals (if applicable)
       hl_intervals <- main_intervals %>% filter(half.life)
       if (nrow(hl_intervals) == 0) {
-        # Distinguish: no main intervals at all vs. half.life not selected
-        if (nrow(main_intervals) == 0) {
-          slope_status("no_data")
-        } else {
-          slope_status("no_lambda_z")
-        }
         plot_outputs(NULL)
         pknca_data(NULL)
         return()
       }
-      slope_status("ok")
       new_pknca_data$intervals <- hl_intervals
 
       changes <- detect_pknca_data_changes(
@@ -228,20 +215,27 @@ slope_selector_server <- function( # nolint
 
     observe({
       output$slope_plots_ui <- renderUI({
-        status <- slope_status()
-        if (status == "no_lambda_z") {
-          return(tags$p(
-            class = "text-muted",
-            "Lambda z has not been added to the selected parameters.",
-            "Add lambda z to use the slope selector."
-          ))
-        }
+        req(processed_pknca_data())
+        new_pknca_data <- processed_pknca_data()
 
-        if (status == "no_data") {
-          return(tags$p(
-            class = "text-muted",
-            "Plot cannot be displayed: no data available."
-          ))
+        main_intervals <- new_pknca_data$intervals %>%
+          filter(type_interval == "main") %>%
+          unique()
+
+        hl_intervals <- main_intervals %>% filter(half.life)
+        if (nrow(hl_intervals) == 0) {
+          if (nrow(main_intervals) == 0) {
+            return(tags$p(
+              class = "text-muted",
+              "Plot cannot be displayed: no data available."
+            ))
+          } else {
+            return(tags$p(
+              class = "text-muted",
+              "Lambda z has not been added to the selected parameters.",
+              "Add lambda z to use the slope selector."
+            ))
+          }
         }
 
         plots <- plot_outputs()
