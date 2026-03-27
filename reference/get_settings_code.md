@@ -11,8 +11,7 @@ get_settings_code(
   data_path,
   output_path = "settings_code.R",
   template_path = system.file("www/templates/script_template.R", package = "aNCA"),
-  mapping = default_mapping,
-  ratio_table = data.frame()
+  mapping = default_mapping
 )
 ```
 
@@ -38,10 +37,6 @@ get_settings_code(
 - mapping:
 
   Named list mapping variable names (default: `default_mapping`).
-
-- ratio_table:
-
-  Data frame containing ratio definitions (default: empty data frame).
 
 ## Value
 
