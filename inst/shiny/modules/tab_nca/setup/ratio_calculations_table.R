@@ -170,6 +170,13 @@ ratios_table_server <- function(
       ratio_df <- isolate(pending_ratios())
       pending_ratios(NULL)
 
+      # Empty ratio table from settings (YAML empty arrays become a list, not a data frame)
+      if (!is.data.frame(ratio_df)) {
+        ratio_df <- tryCatch(as.data.frame(ratio_df, stringsAsFactors = FALSE),
+                             error = function(e) NULL)
+      }
+      if (is.null(ratio_df) || nrow(ratio_df) == 0) return()
+
       required_cols <- c(
         "TestParameter", "RefParameter", "RefGroups", "TestGroups",
         "AggregateSubject", "AdjustingFactor", "PPTESTCD"
