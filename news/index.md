@@ -4,6 +4,9 @@
 
 ### Features added
 
+- General Exclusions: “Excl. TLG” checkbox per exclusion entry sets
+  PKSUM1F to “Y”, filtering those rows from TLGs
+  ([\#1018](https://github.com/pharmaverse/aNCA/issues/1018))
 - NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile
   with bidirectional cascading updates between Analyte and Specimen
   ([\#1114](https://github.com/pharmaverse/aNCA/issues/1114))

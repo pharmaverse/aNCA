@@ -20,12 +20,17 @@ add_exclusion_reasons(pknca_data, exclusion_list)
 
   A list of lists, each with elements:
 
-  - reason: character string with the exclusion reason (e.g.,
-    "Vomiting")
+  - reason: character string with the exclusion reason
 
   - rows: integer vector of row indices to apply the reason to
 
+  - exclude_nca: logical, if TRUE the rows are excluded from NCA
+    calculations (added to the exclude column)
+
+  - exclude_tlg: logical, if TRUE the rows are flagged with PKSUM1F =
+    "Y" so TLGs can filter them out
+
 ## Value
 
-The modified PKNCAdata object with updated exclusion reasons in the
-concentration object.
+The modified PKNCAdata object with updated exclusion reasons and PKSUM1F
+in the concentration object.

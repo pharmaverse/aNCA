@@ -151,7 +151,7 @@ adnca_data <- data.frame(
 PKNCA_create_data_object(adnca_data)
 #> Formula for concentration:
 #>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM
-#> <environment: 0x56132d311e78>
+#> <environment: 0x559a1df42920>
 #> Data are dense PK.
 #> With 1 subjects defined in the 'USUBJID' column.
 #> Nominal time column is: NFRLT

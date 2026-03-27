@@ -10,7 +10,7 @@ metadata_nca_variables
 
 ## Format
 
-A data frame with 361 rows and 14 variables:
+A data frame with 359 rows and 19 variables:
 
 - Dataset:
 
