@@ -55,7 +55,7 @@ pk_dose_qc_plot_ui <- function(id) {
       )
     ),
     plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
-    br()
+    br(), br()
   )
 }
 
