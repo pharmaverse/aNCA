@@ -84,7 +84,12 @@ flexible_violinboxplot <- function(res_nca,
 
   ylabel <- .build_ylabel(parameter, box_data$PPSTRESU[1])
 
-  # Make the plot — only included data drives box/violin statistics
+  shared_aes <- aes(
+    x = interaction(!!!syms(xvars), sep = "\n"),
+    y = PPSTRES,
+    color = interaction(!!!syms(colorvars))
+  )
+
   p <- ggplot(
     data = box_data %>% arrange(!!!syms(colorvars)),
     aes(
@@ -93,53 +98,10 @@ flexible_violinboxplot <- function(res_nca,
       color = interaction(!!!syms(colorvars)),
       text = tooltip_text
     )
-  )
-
-  #  Make boxplot or violin
-  if (box) {
-    p <- p + geom_boxplot(
-      aes(
-        x = interaction(!!!syms(xvars), sep = "\n"),
-        y = PPSTRES,
-        color = interaction(!!!syms(colorvars))
-      ),
-      inherit.aes = FALSE
-    )
-  } else {
-
-    p <- p + geom_violin(
-      aes(
-        x = interaction(!!!syms(xvars), sep = "\n"),
-        y = PPSTRES,
-        color = interaction(!!!syms(colorvars))
-      ),
-      inherit.aes = FALSE,
-      drop = FALSE
-    )
-  }
-
-  # Include points for included data
-  p <- p +
-    geom_point(position = position_jitterdodge(seed = seed))
-
-  # Overlay excluded records as crosses if requested
-  if (show_excluded && nrow(excluded_data) > 0) {
-    p <- p +
-      geom_point(
-        data = excluded_data %>% arrange(!!!syms(colorvars)),
-        aes(
-          x = interaction(!!!syms(xvars), sep = "\n"),
-          y = PPSTRES,
-          color = interaction(!!!syms(colorvars)),
-          text = tooltip_text
-        ),
-        shape = 4, size = 3,
-        position = position_jitterdodge(seed = seed),
-        inherit.aes = FALSE
-      )
-  }
-
-  p <- p +
+  ) +
+    .geom_distribution(box, shared_aes) +
+    geom_point(position = position_jitterdodge(seed = seed)) +
+    .geom_excluded(excluded_data, show_excluded, colorvars, xvars, seed) +
     labs(
       x = paste(xvars, collapse = ", "),
       y = ylabel,
@@ -151,14 +113,46 @@ flexible_violinboxplot <- function(res_nca,
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
 
-  # Make plotly with hover features
-  if (plotly) {
-    ggplotly(p, tooltip = "text")
+  if (plotly) ggplotly(p, tooltip = "text") else p
+}
+
+
+#' Add boxplot or violin geometry
+#' @param box Logical. TRUE for boxplot, FALSE for violin.
+#' @param shared_aes Shared aesthetic mapping for x, y, color.
+#' @returns A ggplot2 geom layer.
+#' @noRd
+.geom_distribution <- function(box, shared_aes) {
+  if (box) {
+    geom_boxplot(mapping = shared_aes, inherit.aes = FALSE)
   } else {
-    p
+    geom_violin(mapping = shared_aes, inherit.aes = FALSE, drop = FALSE)
   }
 }
 
+#' Overlay excluded records as cross-shaped points
+#' @param excluded_data Data frame of excluded records (with tooltip_text).
+#' @param show_excluded Logical toggle.
+#' @param colorvars Character vector of color variables.
+#' @param xvars Character vector of x-axis variables.
+#' @param seed Jitter seed.
+#' @returns A geom_point layer or NULL.
+#' @noRd
+.geom_excluded <- function(excluded_data, show_excluded, colorvars, xvars, seed) {
+  if (!show_excluded || nrow(excluded_data) == 0) return(NULL)
+  geom_point(
+    data = excluded_data %>% arrange(!!!syms(colorvars)),
+    aes(
+      x = interaction(!!!syms(xvars), sep = "\n"),
+      y = PPSTRES,
+      color = interaction(!!!syms(colorvars)),
+      text = tooltip_text
+    ),
+    shape = 4, size = 3,
+    position = position_jitterdodge(seed = seed),
+    inherit.aes = FALSE
+  )
+}
 
 #' Build y-axis label from parameter name and unit
 #' @param parameter Parameter name string.
