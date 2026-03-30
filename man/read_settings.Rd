@@ -4,13 +4,10 @@
 \alias{read_settings}
 \title{Helper Logic to parse and structure settings YAML}
 \usage{
-read_settings(path, name)
+read_settings(path)
 }
 \arguments{
 \item{path}{Character string with path to the settings YAML file.}
-
-\item{name}{Character string with the name of the settings YAML file
-(unused, kept for backward compatibility).}
 }
 \value{
 A list with parsed settings. For versioned files, the

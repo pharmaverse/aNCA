@@ -96,8 +96,6 @@ readers <- list(
 #' version selection.
 #'
 #' @param path Character string with path to the settings YAML file.
-#' @param name Character string with the name of the settings YAML file
-#'   (unused, kept for backward compatibility).
 #' @returns A list with parsed settings. For versioned files, the
 #'   attribute `"versioned"` contains the full
 #'   [read_versioned_settings()] result.
@@ -105,7 +103,7 @@ readers <- list(
 #' @importFrom yaml read_yaml
 #'
 #' @export
-read_settings <- function(path, name) {
+read_settings <- function(path) {
   obj <- yaml::read_yaml(path)
   versioned_attr <- NULL
 
