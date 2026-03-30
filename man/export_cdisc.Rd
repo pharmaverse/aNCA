@@ -4,13 +4,17 @@
 \alias{export_cdisc}
 \title{Export CDISC Data}
 \usage{
-export_cdisc(res_nca, grouping_vars = character(0))
+export_cdisc(res_nca, grouping_vars = character(0), flag_rules = NULL)
 }
 \arguments{
 \item{res_nca}{Object with results of the NCA analysis.}
 
 \item{grouping_vars}{Character vector of non-standard grouping variable names to include
 as additional columns in ADNCA, ADPP, and PP outputs. Defaults to \code{character(0)}.}
+
+\item{flag_rules}{Character vector of flag rule exclusion messages applied during NCA
+(e.g., \code{c("R2ADJ < 0.8", "AUCPEO > 20")}). Each entry generates a CRITy/CRITyFL
+column pair in ADPP, plus ANLSUMFL and ANLSUM columns. Defaults to \code{NULL} (no flags).}
 }
 \value{
 A list with two data frames:
