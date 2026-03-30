@@ -455,8 +455,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     observeEvent(input$open_zip_modal, {
       modal_shown(TRUE)
       tree_items <- .available_tree_items(
-        nca_available     = isTRUE(nca_available()),
-        exploration_names = names(session$userData$results$exploration)
+        nca_available       = isTRUE(nca_available()),
+        exploration_names   = names(session$userData$results$exploration),
+        additional_analysis = session$userData$results$additional_analysis
       )
       TREE_UI <- create_tree_from_list_names(tree_items)
       .show_export_modal(ns, TREE_UI, get_tree_leaf_ids(TREE_UI),
@@ -477,8 +478,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     observeEvent(input$confirm_export, {
       export_state$res_tree_texts <- input$res_tree
       tree_items_save <- .available_tree_items(
-        nca_available     = isTRUE(nca_available()),
-        exploration_names = names(session$userData$results$exploration)
+        nca_available       = isTRUE(nca_available()),
+        exploration_names   = names(session$userData$results$exploration),
+        additional_analysis = session$userData$results$additional_analysis
       )
       tree_ui_save <- create_tree_from_list_names(tree_items_save)
       export_state$res_tree      <- get_tree_ids_for_texts(tree_ui_save, input$res_tree)
@@ -538,8 +540,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     observeEvent(input$back_to_export, {
       modal_shown(TRUE)
       tree_items <- .available_tree_items(
-        nca_available     = isTRUE(nca_available()),
-        exploration_names = names(session$userData$results$exploration)
+        nca_available       = isTRUE(nca_available()),
+        exploration_names   = names(session$userData$results$exploration),
+        additional_analysis = session$userData$results$additional_analysis
       )
       TREE_UI <- create_tree_from_list_names(tree_items)
       saved_tree <- if (is.null(export_state$res_tree)) {
@@ -619,7 +622,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
 }
 
 # Build the tree of available export items based on current app state.
-.available_tree_items <- function(nca_available, exploration_names) {
+.available_tree_items <- function(nca_available, exploration_names, additional_analysis = NULL) {
   items <- list()
 
   # Only show exploration plots that have been rendered
@@ -634,7 +637,15 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
   if (nca_available) {
     items$nca_results       <- TREE_LIST$nca_results
     items$CDISC             <- TREE_LIST$CDISC
-    items$additional_analysis <- TREE_LIST$additional_analysis
+    avail_additional <- names(Filter(
+      function(x) is.data.frame(x) && nrow(x) > 0,
+      additional_analysis
+    ))
+    if (length(avail_additional) > 0) {
+      items$additional_analysis <- TREE_LIST$additional_analysis[
+        intersect(avail_additional, names(TREE_LIST$additional_analysis))
+      ]
+    }
     items$extras            <- TREE_LIST$extras
   } else {
     items$extras <- TREE_LIST$extras[c("settings_file", "session_info")]
