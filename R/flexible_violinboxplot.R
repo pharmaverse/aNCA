@@ -46,10 +46,10 @@ flexible_violinboxplot <- function(res_nca,
     keep = FALSE,
     suffix = c("", ".concdata")
   ) %>%
-    # Intervals should also be considered as differentiated options each
+    # Rename manual interval parameters to include the range suffix
     mutate(
       PPTESTCD = ifelse(
-        startsWith(PPTESTCD, "aucint"),
+        type_interval == "manual",
         paste0(PPTESTCD, "_", start, "-", end),
         PPTESTCD
       )
