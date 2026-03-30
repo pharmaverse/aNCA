@@ -368,14 +368,20 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     blq_imputation_rule = blq_imputation_rule
   )
 
-  # Apply custom units table
+  # Apply custom units table, skipping entries with NA conversion_factor
   if (!is.null(custom_units_table)) {
-    data$units <- rows_update(
-      data$units,
-      custom_units_table,
-      by = c("PPTESTCD", "PPORRESU"),
-      unmatched = "ignore"
-    )
+    if ("conversion_factor" %in% names(custom_units_table)) {
+      custom_units_table <- custom_units_table %>%
+        filter(!is.na(conversion_factor))
+    }
+    if (nrow(custom_units_table) > 0) {
+      data$units <- rows_update(
+        data$units,
+        custom_units_table,
+        by = c("PPTESTCD", "PPORRESU"),
+        unmatched = "ignore"
+      )
+    }
   }
 
   data
