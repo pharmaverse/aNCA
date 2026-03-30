@@ -76,7 +76,8 @@ parameter_plots_server <- function(id, res_nca) {
                      selector_ui_wrapper = "params_to_display_ui_wrapper",
                      id = "selected_param_boxplot",
                      label = "Choose the parameter to display:",
-                     metadata_type = "parameter")
+                     metadata_type = "parameter",
+                     multiple = FALSE)
 
       # Rendering parameters to display selector with labels
       selector_label(input = input,
