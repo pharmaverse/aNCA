@@ -113,7 +113,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         should_impute_c0 = settings()$data_imputation$impute_c0,
         hl_adj_rules = slope_rules(),
         exclusion_list = general_exclusions(),
-        keep_interval_cols = extra_group_vars()
+        keep_interval_cols = extra_group_vars(),
+        min_hl_points = settings()$min_hl_points
       )
 
       # Show bioavailability widget if it is possible to calculate

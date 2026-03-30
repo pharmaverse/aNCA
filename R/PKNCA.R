@@ -268,6 +268,8 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #' - rows: integer vector of row indices to apply the exclusion to
 #' @param keep_interval_cols Optional character vector of additional columns
 #' to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results
+#' @param min_hl_points Minimum number of points to use for half-life calculation.
+#' Must be >= 2. Default is 3 (PKNCA default).
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -286,7 +288,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     should_impute_c0 = TRUE,
     hl_adj_rules = NULL,
     exclusion_list = NULL,
-    keep_interval_cols = NULL) {
+    keep_interval_cols = NULL,
+    min_hl_points = 3) {
 
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
@@ -305,6 +308,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       group_vars(data$conc)
     ),
     min.hl.r.squared = 0.01,
+    min.hl.points = min_hl_points,
     allow_partial_missing_units = TRUE
   )
 
