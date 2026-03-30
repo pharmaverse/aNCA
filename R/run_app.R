@@ -57,7 +57,6 @@ check_app_dependencies <- function() {
     "shinyWidgets",
     "stats",
     "stringi",
-    "stringr",
     "tidyr",
     "tools",
     "utils",

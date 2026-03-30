@@ -6,6 +6,8 @@
 #'
 #' @param id A character string used to uniquely identify the module.
 #' @param res_nca NCA results object (for server).
+#' @param adnca_data Reactive with mapped PKNCAdata. Used to enable the Save
+#'   button after data mapping, before NCA has been run.
 #' @param settings Settings object (for server).
 #' @param grouping_vars Grouping variables (for server).
 
@@ -31,19 +33,33 @@ zip_ui <- function(id) {
   )
 }
 
-zip_server <- function(id, res_nca, settings, grouping_vars) {
+zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Enable/disable ZIP export button based on res_nca availability
+    # Enable Save button after mapping; full content after NCA
     observe({
-      req(res_nca())
+      req(adnca_data())
       shinyjs::enable("open_zip_modal")
+    })
+
+    nca_available <- reactive({
+      tryCatch({
+        result <- res_nca()
+        !is.null(result)
+      }, error = function(e) {
+        if (inherits(e, "shiny.silent.error")) FALSE else stop(e)
+      })
     })
 
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
-      TREE_UI <- create_tree_from_list_names(TREE_LIST)
+      # Build tree based on what's actually available
+      tree_items <- .available_tree_items(
+        nca_available = isTRUE(nca_available()),
+        exploration_names = names(session$userData$results$exploration)
+      )
+      TREE_UI <- create_tree_from_list_names(tree_items)
       showModal(
         modalDialog(
           title = NULL,
@@ -76,13 +92,19 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
                   style = "margin-bottom: 1em;"
                 ),
                 div(
-                  selectizeInput(
-                    ns("slide_formats"),
-                    "Slide decks:",
-                    choices = c("pptx", "qmd"),
-                    selected = c("pptx", "qmd"),
-                    multiple = TRUE
-                  ),
+                  {
+                    has_pptx <- requireNamespace("officer", quietly = TRUE) &&
+                      requireNamespace("flextable", quietly = TRUE)
+                    slide_choices <- if (has_pptx) c("pptx", "qmd") else "qmd"
+
+                    selectizeInput(
+                      ns("slide_formats"),
+                      "Slide decks:",
+                      choices = slide_choices,
+                      selected = slide_choices,
+                      multiple = TRUE
+                    )
+                  },
                   style = "margin-bottom: 1em;"
                 ),
                 div(
@@ -129,9 +151,11 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
             output_tmpdir <- file.path(tempdir(), "output")
             unlink(output_tmpdir, recursive = TRUE)
 
+            nca_result <- tryCatch(res_nca(), error = function(e) NULL)
+
             prepare_export_files(
               target_dir = output_tmpdir,
-              res_nca = res_nca(),
+              res_nca = nca_result,
               settings = settings,
               grouping_vars = grouping_vars(),
               input = input,
@@ -163,6 +187,31 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
       }
     )
   })
+}
+
+# Build the tree of available export items based on current app state.
+.available_tree_items <- function(nca_available, exploration_names) {
+  items <- list()
+
+  # Only show exploration plots that have been rendered
+  avail_plots <- intersect(
+    names(TREE_LIST$exploration),
+    exploration_names
+  )
+  if (length(avail_plots) > 0) {
+    items$exploration <- TREE_LIST$exploration[avail_plots]
+  }
+
+  if (nca_available) {
+    items$nca_results <- TREE_LIST$nca_results
+    items$CDISC <- TREE_LIST$CDISC
+    items$additional_analysis <- TREE_LIST$additional_analysis
+    items$extras <- TREE_LIST$extras
+  } else {
+    items$extras <- TREE_LIST$extras[c("settings_file", "session_info")]
+  }
+
+  items
 }
 
 # Define a list with the possible outputs to export as end objects.

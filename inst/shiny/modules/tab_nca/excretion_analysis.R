@@ -31,9 +31,9 @@ excretion_ui <- function(id) {
         card(
           card_body(
             selectInput(ns("matrix_select"), "Select Matrices:", choices = NULL, multiple = TRUE),
-            selectInput(ns("end_time_col"), "Map End Time Column:", choices = NULL),
+            uiOutput(ns("map_end_col_ui_wrapper")),
             checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = TRUE),
-            selectInput(ns("param_select"), "Select Parameters:", choices = NULL, multiple = TRUE),
+            uiOutput(ns("param_select_ui_wrapper")),
             checkboxGroupInput(
               ns("interval_types"),
               "Select Interval Types:",
@@ -80,12 +80,35 @@ excretion_server <- function(id, input_pknca_data) {
 
       updateSelectInput(session, "matrix_select", choices = pcspecs,
                         selected = if ("Urine" %in% pcspecs) "Urine" else NULL)
-      updateSelectInput(session, "end_time_col", choices = available_cols,
-                        selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
-      updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
-                          filter(TYPE == "Urine") %>%
-                          pull(PKNCA, PPTESTCD),
-                        selected = c("ae", "fe"))
+
+      # Rendering the map end time column selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = available_cols,
+                     initial_selection = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL,
+                     selector_ui_wrapper = "map_end_col_ui_wrapper",
+                     id = "end_time_col",
+                     label = "Map End Time Column:",
+                     metadata_type = "variable",
+                     pknca_data = NULL,
+                     multiple = FALSE)
+
+      urine_params_to_select <- metadata_nca_parameters %>%
+        filter(TYPE == "Urine")
+
+      parameters_to_select <- urine_params_to_select$PPTESTCD
+
+      # Rendering the parameters to select selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = parameters_to_select,
+                     initial_selection = c("RCAMINT", "FREXINT"),
+                     selector_ui_wrapper = "param_select_ui_wrapper",
+                     id = "param_select",
+                     label = "Select Parameters:",
+                     metadata_type = "parameter")
     })
 
     # Perform calculations
