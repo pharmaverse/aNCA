@@ -32,7 +32,6 @@ tlg_module_ui <- function(id, type, options) {
   layout_sidebar(
     sidebar = sidebar(
       position = "right",
-      width = 221,
       div(
         class = "tlg-options-container",
         dropdown(

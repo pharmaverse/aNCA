@@ -3,12 +3,23 @@
   --_sidebar-width: 150px !important;
 }
 
-.sidebar .sidebar-content {
+/* Left nav sidebar: no padding (nav pills handle their own spacing) */
+.bslib-page-sidebar > .bslib-sidebar-layout > .sidebar .sidebar-content {
   padding-left: 0 !important;
   padding-right: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
+}
+
+/* Right-side sidebars: width and padding */
+.sidebar-right {
+  --_sidebar-width: 221px !important;
+}
+
+.sidebar-right > .sidebar .sidebar-content {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
 }
 
 .sidebar .sidebar-content .row > :nth-child(2) {

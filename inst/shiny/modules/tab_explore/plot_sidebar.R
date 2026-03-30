@@ -11,7 +11,6 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
   sidebar(
     position = "right",
     open = TRUE,
-    width = 221,
     actionButton(
       ns("add_to_exports"),
       label = "Add to Exports",
