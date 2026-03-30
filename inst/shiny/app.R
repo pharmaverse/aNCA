@@ -238,7 +238,6 @@ server <- function(input, output, session) {
     settings = session$userData$settings,
     grouping_vars = tab_data_outputs$extra_group_vars
   )
-
 }
 
 shiny::shinyApp(ui, server)

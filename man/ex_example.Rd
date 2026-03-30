@@ -14,7 +14,7 @@ A data frame with 11 variables:
 \item{EXDOSE}{Numeric. Dose amount (mapped from DOSEA).}
 \item{EXDOSU}{Character. Dose units (mapped from DOSEU).}
 \item{EXROUTE}{Character. Route of administration (mapped from ROUTE).}
-\item{EXSTDTC}{Character. Dosing start datetime (ISO 8601), synthesised
+\item{EXSTDTC}{Character. Dosing start datetime (ISO 8601), synthesized
 from AFRLT - ARRLT using the subject's RFXSTDTC as reference origin.}
 \item{EXENDTC}{Character. Dosing end datetime (ISO 8601), computed as
 EXSTDTC + ADOSEDUR.}
