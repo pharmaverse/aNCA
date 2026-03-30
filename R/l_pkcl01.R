@@ -30,7 +30,7 @@
 #'   - `format_fun`: The formatting function to use ("round" or "signif").
 #'   - `digits`: The number of digits to use for numeric formatting.
 #'
-#' @examples
+#' @examplesIf requireNamespace("rlistings", quietly = TRUE)
 #'   # Create a sample dataframe 'data' with the required variables
 #'   set.seed(123)
 #'   data <- data.frame(
@@ -69,7 +69,7 @@
 #'                          )
 #'   print(listing_ex)
 #'
-#' @import dplyr formatters rlistings
+#' @import dplyr formatters
 #' @importFrom stats setNames
 #' @export
 #' @author Gerardo Rodriguez
@@ -84,6 +84,13 @@ l_pkcl01 <- function(
   subtitle = NULL,
   footnote = "*: Subjects excluded from the summary table and mean plots"
 ) {
+
+  if (!requireNamespace("rlistings", quietly = TRUE)) {
+    stop(
+      "Package 'rlistings' is required for concentration listings. ",
+      "Install it with install.packages('rlistings')"
+    )
+  }
 
   # If there are columns defined in the function that are not in the data, throw an error
   missing_cols <- setdiff(c(grouping_vars, displaying_vars), colnames(data))
@@ -137,7 +144,7 @@ l_pkcl01 <- function(
   formatting_vars_list <- formatting_vars_table %>%
     dplyr::rowwise() %>%
     group_map(~ {
-      fmt_config(na_str = .x$na_str, format = NULL, align = .x$align)
+      formatters::fmt_config(na_str = .x$na_str, format = NULL, align = .x$align)
     }) %>%
     setNames(nm = formatting_vars_table$var_name)
 
