@@ -544,6 +544,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
                                          int_parameters, refresh_reactable) {
   updateSelectInput(session, inputId = "method", selected = settings$method)
 
+  if (!is.null(settings$min_hl_points)) {
+    updateNumericInput(
+      session, inputId = "min_hl_points",
+      value = settings$min_hl_points
+    )
+  }
+
   dose_routes <- unique(adnca_data()$dose$data$std_route)
   if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
     updateSelectInput(
