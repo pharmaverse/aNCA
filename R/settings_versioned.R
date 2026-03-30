@@ -1,3 +1,6 @@
+# Metadata keys present in every version entry
+VERSION_META_KEYS <- c("comment", "datetime", "dataset", "anca_version", "tab")
+
 #' Create a versioned settings entry
 #'
 #' Wraps a settings payload with metadata (timestamp, comment, dataset name,
@@ -33,13 +36,17 @@ create_settings_version <- function(settings_data,
 #' (a list of version entries, most recent first).
 #'
 #' @param path Character string with path to the YAML file.
+#' @param obj Optional pre-parsed YAML list. When supplied, `path`
+#'   is ignored and no file I/O occurs.
 #'
 #' @returns A list with element `versions`.
 #'
 #' @importFrom yaml read_yaml
 #' @export
-read_versioned_settings <- function(path) {
-  obj <- yaml::read_yaml(path)
+read_versioned_settings <- function(path, obj = NULL) {
+  if (is.null(obj)) {
+    obj <- yaml::read_yaml(path)
+  }
 
   versions <- list()
   versions[[1]] <- .parse_version_entry(obj$current)
@@ -53,7 +60,7 @@ read_versioned_settings <- function(path) {
   ord <- order(timestamps, decreasing = TRUE)
   versions <- versions[ord]
 
-  list(versions = versions, format = "versioned")
+  list(versions = versions)
 }
 
 #' Write a versioned settings YAML file
@@ -152,7 +159,6 @@ settings_version_summary <- function(versions) {
 #' @returns A normalized version entry list.
 #' @noRd
 .parse_version_entry <- function(entry) {
-  meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
   meta <- list(
     comment = entry$comment %||% "",
     datetime = entry$datetime %||% "",
@@ -160,6 +166,6 @@ settings_version_summary <- function(versions) {
     anca_version = entry$anca_version %||% "",
     tab = entry$tab %||% ""
   )
-  settings_fields <- entry[setdiff(names(entry), meta_keys)]
+  settings_fields <- entry[setdiff(names(entry), VERSION_META_KEYS)]
   append(meta, settings_fields)
 }

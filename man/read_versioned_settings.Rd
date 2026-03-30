@@ -4,10 +4,13 @@
 \alias{read_versioned_settings}
 \title{Read a versioned settings YAML file}
 \usage{
-read_versioned_settings(path)
+read_versioned_settings(path, obj = NULL)
 }
 \arguments{
 \item{path}{Character string with path to the YAML file.}
+
+\item{obj}{Optional pre-parsed YAML list. When supplied, \code{path}
+is ignored and no file I/O occurs.}
 }
 \value{
 A list with element \code{versions}.

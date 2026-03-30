@@ -111,12 +111,10 @@ read_settings <- function(path, name) {
 
   if ("current" %in% names(obj) && is.list(obj$current) &&
         "datetime" %in% names(obj$current)) {
-    # Versioned format — extract version metadata, then pull out
-    # the settings payload from the most recent version
-    versioned_attr <- read_versioned_settings(path)
+    # Versioned format — pass already-parsed YAML to avoid reading twice
+    versioned_attr <- read_versioned_settings(obj = obj)
     version <- versioned_attr$versions[[1]]
-    meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
-    obj <- version[setdiff(names(version), meta_keys)]
+    obj <- version[setdiff(names(version), VERSION_META_KEYS)]
   }
 
   # Shared validation — works for both legacy and versioned

@@ -39,7 +39,6 @@ describe("write_versioned_settings and read_versioned_settings", {
     write_versioned_settings(list(v), tmp)
     result <- read_versioned_settings(tmp)
 
-    expect_equal(result$format, "versioned")
     expect_length(result$versions, 1)
     expect_equal(result$versions[[1]]$comment, "v1")
     expect_equal(result$versions[[1]]$settings$method, "linear")
@@ -59,7 +58,6 @@ describe("write_versioned_settings and read_versioned_settings", {
     write_versioned_settings(list(v2, v1), tmp)
     result <- read_versioned_settings(tmp)
 
-    expect_equal(result$format, "versioned")
     expect_length(result$versions, 2)
     expect_equal(result$versions[[1]]$comment, "second")
     expect_equal(result$versions[[2]]$comment, "first")
