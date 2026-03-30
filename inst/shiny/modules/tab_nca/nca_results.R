@@ -123,10 +123,15 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
-      param_cols <- unique(res_nca()$result$PPTESTCD)
+      # Include interval-suffixed names so they can be individually toggled
+      col_names_all <- names(final_results())
+      all_param_cols <- unique(c(
+        res_nca()$result$PPTESTCD,
+        sub("\\[.*", "", col_names_all[grepl("_\\d+.*-\\d+", col_names_all)])
+      ))
       input_params <- sub(":.*", "", input$params)
       #identify parameters to be removed from final results
-      params_rem_cols <- setdiff(param_cols, input_params)
+      params_rem_cols <- setdiff(all_param_cols, input_params)
 
       col_names <- names(final_results())
       # Extract base names before the "[", or leave as-is if no "["
