@@ -221,7 +221,9 @@ ratios_table_server <- function(
       ) %>%
         .generate_pptestcd_for_ratios(adnca_data = adnca_data())
 
+      # Ensure the new PPTESTCD is unique against existing rows
       updated <- rbind(ratio_table(), new_row)
+      updated$PPTESTCD <- make.unique(updated$PPTESTCD, sep = "")
       ratio_table(updated)
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
@@ -322,6 +324,20 @@ ratios_table_server <- function(
         observeEvent(input[[paste0("edit_", colname)]], {
           edit <- input[[paste0("edit_", colname)]]
           tbl <- ratio_table()
+
+          # Reject manual PPTESTCD edits that would create a duplicate name
+          if (colname == "PPTESTCD") {
+            existing <- tbl$PPTESTCD[-edit$row]
+            if (edit$value %in% existing) {
+              showNotification(
+                paste0("PPTESTCD '", edit$value, "' already exists. ",
+                       "Each ratio must have a unique name."),
+                type = "error", duration = 5
+              )
+              return()
+            }
+          }
+
           tbl[edit$row, edit$column] <- edit$value
 
           # If Parameter or Reference changed, update PPTESTCD for that row
