@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests
+  with user-facing notifications when missing
+  ([\#1106](https://github.com/pharmaverse/aNCA/issues/1106))
 - Save button is now enabled after data mapping with progressive
   content: exploration plots and settings before NCA, full export after
   NCA ([\#1136](https://github.com/pharmaverse/aNCA/issues/1136))
