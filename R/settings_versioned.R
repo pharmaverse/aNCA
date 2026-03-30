@@ -28,53 +28,32 @@ create_settings_version <- function(settings_data,
 
 #' Read a versioned settings YAML file
 #'
-#' Parses a YAML file that may contain either the legacy flat format
-#' (with a top-level `settings` key) or the versioned format (with
-#' `current` and optionally `previous` keys). Returns a normalized
-#' list with `versions` (a list of version entries, most recent first)
-#' and `format` (`"versioned"` or `"legacy"`).
+#' Parses a YAML file in the versioned format (with `current` and
+#' optionally `previous` keys). Returns a list with `versions`
+#' (a list of version entries, most recent first).
 #'
 #' @param path Character string with path to the YAML file.
 #'
-#' @returns A list with elements `versions` and `format`.
+#' @returns A list with element `versions`.
 #'
 #' @importFrom yaml read_yaml
 #' @export
 read_versioned_settings <- function(path) {
   obj <- yaml::read_yaml(path)
 
-  if ("current" %in% names(obj)) {
-    # Versioned format
-    versions <- list()
-    versions[[1]] <- .parse_version_entry(obj$current)
-    if (!is.null(obj$previous) && is.list(obj$previous)) {
-      for (entry in obj$previous) {
-        versions[[length(versions) + 1]] <- .parse_version_entry(entry)
-      }
+  versions <- list()
+  versions[[1]] <- .parse_version_entry(obj$current)
+  if (!is.null(obj$previous) && is.list(obj$previous)) {
+    for (entry in obj$previous) {
+      versions[[length(versions) + 1]] <- .parse_version_entry(entry)
     }
-    # Sort by timestamp descending (newest first) to handle manual edits
-    timestamps <- vapply(versions, function(v) v$datetime %||% "", character(1))
-    ord <- order(timestamps, decreasing = TRUE)
-    versions <- versions[ord]
-
-    list(versions = versions, format = "versioned")
-  } else if ("settings" %in% names(obj)) {
-    # Legacy flat format — wrap as a single version with empty metadata
-    meta <- list(
-      comment = "",
-      datetime = "",
-      dataset = "",
-      anca_version = "",
-      tab = ""
-    )
-    version_entry <- append(meta, obj)
-    list(versions = list(version_entry), format = "legacy")
-  } else {
-    stop(
-      "The file does not appear to be a valid settings YAML file. ",
-      "Expected top-level 'current' or 'settings' key."
-    )
   }
+  # Sort by timestamp descending (newest first) to handle manual edits
+  timestamps <- vapply(versions, function(v) v$datetime %||% "", character(1))
+  ord <- order(timestamps, decreasing = TRUE)
+  versions <- versions[ord]
+
+  list(versions = versions, format = "versioned")
 }
 
 #' Write a versioned settings YAML file

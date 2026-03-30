@@ -10,12 +10,10 @@ read_versioned_settings(path)
 \item{path}{Character string with path to the YAML file.}
 }
 \value{
-A list with elements \code{versions} and \code{format}.
+A list with element \code{versions}.
 }
 \description{
-Parses a YAML file that may contain either the legacy flat format
-(with a top-level \code{settings} key) or the versioned format (with
-\code{current} and optionally \code{previous} keys). Returns a normalized
-list with \code{versions} (a list of version entries, most recent first)
-and \code{format} (\code{"versioned"} or \code{"legacy"}).
+Parses a YAML file in the versioned format (with \code{current} and
+optionally \code{previous} keys). Returns a list with \code{versions}
+(a list of version entries, most recent first).
 }

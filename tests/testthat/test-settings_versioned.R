@@ -74,36 +74,6 @@ describe("write_versioned_settings and read_versioned_settings", {
   })
 })
 
-describe("read_versioned_settings with legacy format", {
-  it("wraps legacy settings as a single version", {
-    tmp <- tempfile(fileext = ".yaml")
-    on.exit(unlink(tmp), add = TRUE)
-
-    legacy <- list(
-      settings = list(method = "linear"),
-      slope_rules = NULL,
-      filters = NULL
-    )
-    yaml::write_yaml(legacy, tmp)
-
-    result <- read_versioned_settings(tmp)
-    expect_equal(result$format, "legacy")
-    expect_length(result$versions, 1)
-    expect_equal(result$versions[[1]]$settings$method, "linear")
-  })
-
-  it("errors on invalid YAML structure", {
-    tmp <- tempfile(fileext = ".yaml")
-    on.exit(unlink(tmp), add = TRUE)
-
-    yaml::write_yaml(list(foo = "bar"), tmp)
-    expect_error(
-      read_versioned_settings(tmp),
-      "does not appear to be a valid settings YAML"
-    )
-  })
-})
-
 describe("add_settings_version", {
   it("prepends a new version", {
     v1 <- create_settings_version(list(settings = list()), comment = "old")
@@ -214,12 +184,6 @@ describe("read_versioned_settings edge cases", {
     expect_equal(result$versions[[2]]$comment, "first")
   })
 
-  it("errors on YAML with no recognized format", {
-    tmp <- tempfile(fileext = ".yaml")
-    on.exit(unlink(tmp), add = TRUE)
-    yaml::write_yaml(list(unrelated = "data"), tmp)
-    expect_error(read_versioned_settings(tmp))
-  })
 })
 
 describe("read_settings format detection", {
