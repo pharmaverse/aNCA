@@ -8,6 +8,19 @@
 #' To read more check out documentation for each function of the module and the contributing
 #' guidelines.
 
+#' Filter out rows excluded from TLGs via PKSUM1F.
+#' Rows with PKSUM1F == "Y" are removed.
+#' @param data A data frame (typically conc$data).
+#' @return The filtered data frame.
+#' @noRd
+filter_tlg_excluded <- function(data) {
+  if ("PKSUM1F" %in% names(data)) {
+    data[data$PKSUM1F != "Y", , drop = FALSE]
+  } else {
+    data
+  }
+}
+
 #' Function generating UI for a TLG module.
 #'
 #' @param id      id of the module, preferably with randomly generated part to avoid conflicts
@@ -166,7 +179,8 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
-        do.call(render_list, purrr::list_modify(list(data = data()$conc$data), !!!list_options))
+        tlg_data <- filter_tlg_excluded(data()$conc$data)
+        do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")
