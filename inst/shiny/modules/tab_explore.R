@@ -132,10 +132,14 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       qc_counter(0L)
     })
 
-    # Save the default objects for the ZIP folder whenever they change
+    # Save each plot independently for the ZIP folder
     observe({
-      req(individualplot(), meanplot())
+      req(individualplot())
       session$userData$results$exploration$individualplot <- individualplot()
+    })
+
+    observe({
+      req(meanplot())
       session$userData$results$exploration$meanplot <- meanplot()
     })
 
