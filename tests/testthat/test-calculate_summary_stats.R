@@ -101,6 +101,35 @@ describe("calculate_summary_stats", {
     expect_equal(result, expected_result)
   })
 
+  it("handles interval parameters with range suffixes in PPTESTCD", {
+    # Simulates manual interval parameters renamed as AUCINT_0-12
+    test_data_intervals <- data.frame(
+      ATPTREF = c(1, 1, 1, 1, 1, 1),
+      PPTESTCD = c("CMAX", "CMAX", "AUCINT_0-12", "AUCINT_0-12", "AUCINT_0-24", "AUCINT_0-24"),
+      PPORRES = c(10, 20, 100, 200, 300, 400),
+      PPORRESU = c("ng/mL", "ng/mL", "hr*ng/mL", "hr*ng/mL", "hr*ng/mL", "hr*ng/mL"),
+      PPSTRES = c(10, 20, 100, 200, 300, 400),
+      PPSTRESU = c("ng/mL", "ng/mL", "hr*ng/mL", "hr*ng/mL", "hr*ng/mL", "hr*ng/mL")
+    )
+
+    result <- calculate_summary_stats(test_data_intervals)
+
+    # Both interval parameters should appear as separate columns
+    expect_true("AUCINT_0-12[hr*ng/mL]" %in% colnames(result))
+    expect_true("AUCINT_0-24[hr*ng/mL]" %in% colnames(result))
+    expect_true("CMAX[ng/mL]" %in% colnames(result))
+
+    # Verify the mean values are correct
+    expect_equal(
+      as.numeric(result %>% filter(Statistic == "Mean") %>% pull(`AUCINT_0-12[hr*ng/mL]`)),
+      150
+    )
+    expect_equal(
+      as.numeric(result %>% filter(Statistic == "Mean") %>% pull(`AUCINT_0-24[hr*ng/mL]`)),
+      350
+    )
+  })
+
   it("handles NA values in results for unit conversion", {
     test_data_na_conversion <- data.frame(
       ATPTREF = c(1, 1, 1),
