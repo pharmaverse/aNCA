@@ -233,8 +233,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         export_settings <- final_settings()
         if (!is.null(export_settings$units)) {
           export_settings$units <- export_settings$units %>%
-            dplyr::filter(!default) %>%
-            dplyr::select(-default)
+            filter(!default) %>%
+            select(-default)
         }
         export_settings$ratio_table <- ratio_table()
         payload <- list(
