@@ -31,6 +31,11 @@ parameter_plots_ui <- function(id) {
         value = TRUE,
         onLabel = "Boxplot",
         offLabel = "Violinplot"
+      ),
+      checkboxInput(
+        inputId = ns("show_excluded"),
+        label = "Show excluded points (\u2717)",
+        value = FALSE
       )
     ),
     plotlyOutput(ns("boxplot"))
@@ -138,6 +143,7 @@ parameter_plots_server <- function(id, res_nca) {
         varvalstofilter = input$selected_filters_boxplot,
         tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
         box = input$violinplot_toggle_switch,
+        show_excluded = input$show_excluded
       )
     })
 

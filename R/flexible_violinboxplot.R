@@ -21,6 +21,9 @@
 #'                            or ggplot otherwise (FALSE)
 #' @param seed                An integer value to set the seed for reproducibility of jittering.
 #' Default (NULL) will use the current R seed.
+#' @param show_excluded       Logical. If `TRUE`, excluded records (those with a populated
+#'                            `exclude` column) are overlaid as cross-shaped points. They are
+#'                            never included in box/violin statistics. Default is `FALSE`.
 #'
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
@@ -35,7 +38,8 @@ flexible_violinboxplot <- function(res_nca,
                                    labels_df = metadata_nca_variables,
                                    box = TRUE,
                                    plotly = TRUE,
-                                   seed = NULL) {
+                                   seed = NULL,
+                                   show_excluded = FALSE) {
 
   group_columns <- group_vars(res_nca$data$conc)
   boxplotdata <- left_join(
@@ -65,12 +69,20 @@ flexible_violinboxplot <- function(res_nca,
       PPTESTCD == parameter
     )
 
+  # Separate included and excluded records
+  is_excluded <- !is.na(box_data[["exclude"]]) & box_data[["exclude"]] != ""
+  excluded_data <- box_data[is_excluded, , drop = FALSE]
+  box_data <- box_data[!is_excluded, , drop = FALSE]
+
   # Check boxplot data validity; return a plot with an error message if invalid
   error_boxplot <- .check_boxplot_data(box_data, parameter)
   if (!is.null(error_boxplot)) return(error_boxplot)
 
   # --- Tooltip Construction ---
   box_data <- .handle_tooltips(box_data, tooltip_vars, labels_df)
+  if (show_excluded && nrow(excluded_data) > 0) {
+    excluded_data <- .handle_tooltips(excluded_data, tooltip_vars, labels_df)
+  }
 
   # ylabel of violin/boxplot
   ylabel <- {
@@ -84,7 +96,7 @@ flexible_violinboxplot <- function(res_nca,
     }
   }
 
-  # Make the plot
+  # Make the plot — only included data drives box/violin statistics
   p <- ggplot(
     data = box_data %>% arrange(!!!syms(colorvars)),
     aes(
@@ -118,9 +130,28 @@ flexible_violinboxplot <- function(res_nca,
     )
   }
 
-  # Include points, labels and theme
+  # Include points for included data
   p <- p +
-    geom_point(position = position_jitterdodge(seed = seed)) +
+    geom_point(position = position_jitterdodge(seed = seed))
+
+  # Overlay excluded records as crosses if requested
+  if (show_excluded && nrow(excluded_data) > 0) {
+    p <- p +
+      geom_point(
+        data = excluded_data %>% arrange(!!!syms(colorvars)),
+        aes(
+          x = interaction(!!!syms(xvars), sep = "\n"),
+          y = PPSTRES,
+          color = interaction(!!!syms(colorvars)),
+          text = tooltip_text
+        ),
+        shape = 4, size = 3,
+        position = position_jitterdodge(seed = seed),
+        inherit.aes = FALSE
+      )
+  }
+
+  p <- p +
     labs(
       x = paste(xvars, collapse = ", "),
       y = ylabel,
