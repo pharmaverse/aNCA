@@ -92,27 +92,19 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
                   style = "margin-bottom: 1em;"
                 ),
                 div(
-                  selectizeInput(
-                    ns("slide_formats"),
-                    "Slide decks:",
-                    choices = {
-                      slide_choices <- "qmd"
-                      if (requireNamespace("officer", quietly = TRUE) &&
-                            requireNamespace("flextable", quietly = TRUE)) {
-                        slide_choices <- c("pptx", slide_choices)
-                      }
-                      slide_choices
-                    },
-                    selected = {
-                      slide_sel <- "qmd"
-                      if (requireNamespace("officer", quietly = TRUE) &&
-                            requireNamespace("flextable", quietly = TRUE)) {
-                        slide_sel <- c("pptx", slide_sel)
-                      }
-                      slide_sel
-                    },
-                    multiple = TRUE
-                  ),
+                  {
+                    has_pptx <- requireNamespace("officer", quietly = TRUE) &&
+                      requireNamespace("flextable", quietly = TRUE)
+                    slide_choices <- if (has_pptx) c("pptx", "qmd") else "qmd"
+
+                    selectizeInput(
+                      ns("slide_formats"),
+                      "Slide decks:",
+                      choices = slide_choices,
+                      selected = slide_choices,
+                      multiple = TRUE
+                    )
+                  },
                   style = "margin-bottom: 1em;"
                 ),
                 div(
