@@ -63,6 +63,8 @@
     "PCTPTNUM",
     "PCTPTREF",
     "PKNCA",
+    "PKSUM1F",
+    "PKSUM1FN",
     "PPSUM1F",
     "PPSUM1R",
     "PPANMETH",
