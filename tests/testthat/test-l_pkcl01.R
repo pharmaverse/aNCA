@@ -25,6 +25,8 @@ attr(adnca[["USUBJID"]], "label") <- "Unique Subject ID"
 attr(adnca[["ATPTREF"]], "label") <- "Actual visit"
 
 describe("l_pkcl01", {
+  skip_if_not_installed("rlistings")
+
   it("creates listings for each unique combination of grouping variables", {
     # For 1 case
     listings_1l <- l_pkcl01(adnca, listgroup_vars = c("PCSPEC"),
