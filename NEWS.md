@@ -3,6 +3,7 @@
 ## Features added
 
 * Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (#893)
+* Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)
 * General Exclusions: "Excl. TLG" checkbox per exclusion entry sets PKSUM1F to "Y", filtering those rows from TLGs (#1018)
 * NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile with bidirectional cascading updates between Analyte and Specimen (#1114)
 * Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
