@@ -65,6 +65,25 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
     final_results <- reactive({
       req(res_nca())
+      res <- res_nca()
+
+      #' Apply units
+      if (!is.null(session$userData$units_table())) {
+        res$data$units <- session$userData$units_table()
+        res$result <- res$result %>%
+          select(-PPSTRESU, -PPSTRES) %>%
+          left_join(
+            session$userData$units_table() %>%
+              mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
+            by = intersect(names(.), names(session$userData$units_table()))
+          ) %>%
+          mutate(PPSTRES = ifelse(
+            !is.null(conversion_factor),
+            PPORRES * conversion_factor,
+            PPORRES
+          )) %>%
+          select(-conversion_factor)
+      }
 
       #' Transform results
       # Calculate bioavailability if available

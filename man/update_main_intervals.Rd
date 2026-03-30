@@ -6,8 +6,8 @@
 \usage{
 update_main_intervals(
   data,
-  parameter_selections = NULL,
-  int_parameters = NULL,
+  parameter_selections,
+  int_parameters,
   impute = TRUE,
   blq_imputation_rule = NULL
 )
