@@ -15,7 +15,7 @@ A list with elements \code{versions} and \code{format}.
 \description{
 Parses a YAML file that may contain either the legacy flat format
 (with a top-level \code{settings} key) or the versioned format (with
-\code{current} and optionally \code{previous} keys). Returns a normalised
+\code{current} and optionally \code{previous} keys). Returns a normalized
 list with \code{versions} (a list of version entries, most recent first)
 and \code{format} (\code{"versioned"} or \code{"legacy"}).
 }

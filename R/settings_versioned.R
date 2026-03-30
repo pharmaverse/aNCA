@@ -30,7 +30,7 @@ create_settings_version <- function(settings_data,
 #'
 #' Parses a YAML file that may contain either the legacy flat format
 #' (with a top-level `settings` key) or the versioned format (with
-#' `current` and optionally `previous` keys). Returns a normalised
+#' `current` and optionally `previous` keys). Returns a normalized
 #' list with `versions` (a list of version entries, most recent first)
 #' and `format` (`"versioned"` or `"legacy"`).
 #'
@@ -196,7 +196,7 @@ extract_version_settings <- function(version) {
 
 #' Parse a single version entry from YAML, filling in missing metadata.
 #' @param entry A list from YAML.
-#' @returns A normalised version entry list.
+#' @returns A normalized version entry list.
 #' @noRd
 .parse_version_entry <- function(entry) {
   meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
