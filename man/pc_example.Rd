@@ -15,9 +15,9 @@ and 11 variables:
 \item{PCSPEC}{Character. Specimen type (e.g., SERUM, URINE).}
 \item{PCSTRESN}{Numeric. Numeric concentration result (mapped from AVAL).}
 \item{PCSTRESU}{Character. Concentration units (mapped from AVALU).}
-\item{PCDTC}{Character. Sample collection datetime (ISO 8601), synthesized
+\item{PCDTC}{Character. Sample collection datetime (ISO 8601), synthesised
 from AFRLT using an arbitrary reference origin.}
-\item{PCRFTDTC}{Character. Reference dose datetime (ISO 8601), synthesized
+\item{PCRFTDTC}{Character. Reference dose datetime (ISO 8601), synthesised
 from AFRLT - ARRLT.}
 \item{PCELTM}{Character. Planned elapsed time from reference dose in
 ISO 8601 duration format (e.g., "PT0.5H"), derived from NFRLT.}
