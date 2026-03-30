@@ -5,6 +5,8 @@
 #'
 #' @param res_nca            A PKNCA results object containing the results and concentration data.
 #' @param parameter           A string specifying the parameter to be plotted.
+# TODO(mateusz): I have added the following three parameters as they were missing, this needs to
+#                be checked over.
 #' @param xvars               Variables for the x axis.
 #' @param colorvars           Variables for the color aesthetic.
 #' @param varvalstofilter     Character vector specifying which variable and value to pre-filter
