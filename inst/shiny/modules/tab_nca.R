@@ -62,7 +62,11 @@ tab_nca_ui <- function(id) {
               "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
             ),
             nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots"))),
+            nav_panel(
+              "Parameter Exclusions",
+              parameter_exclusions_ui(ns("parameter_exclusions"))
+            )
           )
         )
       )
@@ -218,6 +222,44 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       session$userData$final_units <- res_nca()$data$units
     })
 
+    # Parameter exclusions: users can exclude individual PK parameter rows
+    # from summary tables and mean plots. Excluded rows get PPSUM1F = "Y" in ADPP.
+    param_excl_rows <- parameter_exclusions_server(
+      "parameter_exclusions", res_nca
+    )
+
+    # Compute tagged and filtered views of res_nca in a single reactive
+    # to avoid duplicating the (potentially large) result object.
+    res_nca_excl <- reactive({
+      req(res_nca())
+      res <- res_nca()
+      excl_info <- param_excl_rows()
+      excl_indices <- excl_info$indices
+      excl_reasons <- excl_info$reasons
+
+      # Tagged: .pp_excl and .pp_excl_reason markers for CDISC export
+      res_tagged <- res
+      n <- nrow(res$result)
+      res_tagged$result$.pp_excl <- seq_len(n) %in% excl_indices
+      reason_vec <- rep(NA_character_, n)
+      if (length(excl_indices) > 0) {
+        reason_vec[excl_indices] <- excl_reasons
+      }
+      res_tagged$result$.pp_excl_reason <- reason_vec
+
+      # Filtered: derive from tagged to avoid a third copy of res$result
+      res_filtered <- res_tagged
+      keep <- !res_tagged$result$.pp_excl
+      res_filtered$result <- res_tagged$result[keep, , drop = FALSE]
+      res_filtered$result$.pp_excl <- NULL
+      res_filtered$result$.pp_excl_reason <- NULL
+
+      list(tagged = res_tagged, filtered = res_filtered)
+    })
+
+    res_nca_tagged <- reactive(res_nca_excl()$tagged)
+    res_nca_filtered <- reactive(res_nca_excl()$filtered)
+
     #' Show slopes results
     pivoted_slopes <- reactive({
       req(res_nca())
@@ -245,17 +287,17 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
     )
 
-    #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, extra_group_vars)
+    #' Descriptive statistics module (uses filtered results)
+    descriptive_statistics_server("descriptive_stats", res_nca_filtered, extra_group_vars)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca, extra_group_vars)
+    parameter_datasets_server("parameter_datasets", res_nca_tagged, extra_group_vars)
 
-    #' Parameter plots module
-    parameter_plots_server("parameter_plots", res_nca)
+    #' Parameter plots module (uses filtered results)
+    parameter_plots_server("parameter_plots", res_nca_filtered)
 
     # return results for use in other modules
     list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)

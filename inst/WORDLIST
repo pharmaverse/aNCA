@@ -68,6 +68,7 @@ PKNCAdose
 PKNCAresult
 PKNCAresults
 PKSUM
+PPSUM
 PPORRES
 PPSTRES
 PPSTRESU
@@ -120,6 +121,7 @@ XPT
 YAML
 aNCA's
 adnca
+amountu
 analysing
 analyte
 analytes
@@ -173,6 +175,7 @@ pre
 pred
 qmd
 rds
+readxl
 renderable
 reproducibility
 reupload
@@ -183,6 +186,7 @@ SelectInputs
 signif
 src
 standardizations
+subfolder
 synthesised
 th
 tibble
@@ -196,6 +200,8 @@ ug
 unmapped
 utilise
 visualizable
+writexl
+xlsx
 yaml
 µg
 Ĉlast
