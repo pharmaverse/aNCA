@@ -16,7 +16,7 @@
 apply_custom_units <- function(result, custom_units) {
   group_cols <- setdiff(
     names(custom_units),
-    c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+    c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor", "default")
   )
 
   has_groups <- length(group_cols) > 0
