@@ -82,17 +82,7 @@ flexible_violinboxplot <- function(res_nca,
     excluded_data <- .handle_tooltips(excluded_data, tooltip_vars, labels_df)
   }
 
-  # ylabel of violin/boxplot
-  ylabel <- {
-    if (box_data$PPSTRESU[1] == "unitless" ||
-          box_data$PPSTRESU[1] == "" ||
-          is.na(box_data$PPSTRESU[1]) ||
-          is.null(box_data$PPSTRESU)) {
-      parameter
-    } else {
-      paste(parameter, " [", box_data$PPSTRESU[1], "]")
-    }
-  }
+  ylabel <- .build_ylabel(parameter, box_data$PPSTRESU[1])
 
   # Make the plot — only included data drives box/violin statistics
   p <- ggplot(
@@ -169,6 +159,19 @@ flexible_violinboxplot <- function(res_nca,
   }
 }
 
+
+#' Build y-axis label from parameter name and unit
+#' @param parameter Parameter name string.
+#' @param unit Unit string (may be NA, NULL, empty, or "unitless").
+#' @returns Formatted y-axis label.
+#' @noRd
+.build_ylabel <- function(parameter, unit) {
+  if (is.null(unit) || is.na(unit) || unit == "" || unit == "unitless") {
+    parameter
+  } else {
+    paste(parameter, " [", unit, "]")
+  }
+}
 
 #' Helper function create text used to filter data frame
 #' @param boxplotdata Data frame to be filtered
