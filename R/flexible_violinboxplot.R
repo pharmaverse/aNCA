@@ -39,47 +39,16 @@ flexible_violinboxplot <- function(res_nca,
                                    seed = NULL,
                                    show_excluded = FALSE) {
 
-  group_columns <- group_vars(res_nca$data$conc)
-  boxplotdata <- left_join(
-    res_nca$result,
-    res_nca$data$conc$data %>%
-      distinct(across(all_of(group_columns)), .keep_all = TRUE),
-    by = group_columns,
-    keep = FALSE,
-    suffix = c("", ".concdata")
-  ) %>%
-    # Intervals should also be considered as differentiated options each
-    mutate(
-      PPTESTCD = ifelse(
-        startsWith(PPTESTCD, "aucint"),
-        paste0(PPTESTCD, "_", start, "-", end),
-        PPTESTCD
-      )
-    )
+  prepared <- .prepare_boxplot_data(res_nca, parameter, varvalstofilter)
 
-  # Create filter expression
-  filter_expr <- .create_filter_expr(boxplotdata, varvalstofilter)
-
-  # Filter data
-  box_data <- boxplotdata %>%
-    filter(
-      !!filter_expr,
-      PPTESTCD == parameter
-    )
-
-  # Separate included and excluded records
-  is_excluded <- !is.na(box_data[["exclude"]]) & box_data[["exclude"]] != ""
-  excluded_data <- box_data[is_excluded, , drop = FALSE]
-  box_data <- box_data[!is_excluded, , drop = FALSE]
-
-  # Check boxplot data validity; return a plot with an error message if invalid
-  error_boxplot <- .check_boxplot_data(box_data, parameter)
+  error_boxplot <- .check_boxplot_data(prepared$included, parameter)
   if (!is.null(error_boxplot)) return(error_boxplot)
 
-  # --- Tooltip Construction ---
-  box_data <- .handle_tooltips(box_data, tooltip_vars, labels_df)
-  if (show_excluded && nrow(excluded_data) > 0) {
-    excluded_data <- .handle_tooltips(excluded_data, tooltip_vars, labels_df)
+  box_data <- .handle_tooltips(prepared$included, tooltip_vars, labels_df)
+  excluded_data <- if (show_excluded && nrow(prepared$excluded) > 0) {
+    .handle_tooltips(prepared$excluded, tooltip_vars, labels_df)
+  } else {
+    prepared$excluded
   }
 
   ylabel <- .build_ylabel(parameter, box_data$PPSTRESU[1])
@@ -116,6 +85,45 @@ flexible_violinboxplot <- function(res_nca,
   if (plotly) ggplotly(p, tooltip = "text") else p
 }
 
+
+#' Prepare and split data for boxplot/violin
+#'
+#' Joins results with concentration data, filters by parameter, and splits
+#' into included and excluded records.
+#'
+#' @param res_nca PKNCA results object.
+#' @param parameter Parameter to filter on.
+#' @param varvalstofilter Filter values (passed to `.create_filter_expr`).
+#' @returns List with `included` and `excluded` data frames.
+#' @noRd
+.prepare_boxplot_data <- function(res_nca, parameter, varvalstofilter) {
+  group_columns <- group_vars(res_nca$data$conc)
+  boxplotdata <- left_join(
+    res_nca$result,
+    res_nca$data$conc$data %>%
+      distinct(across(all_of(group_columns)), .keep_all = TRUE),
+    by = group_columns,
+    keep = FALSE,
+    suffix = c("", ".concdata")
+  ) %>%
+    mutate(
+      PPTESTCD = ifelse(
+        startsWith(PPTESTCD, "aucint"),
+        paste0(PPTESTCD, "_", start, "-", end),
+        PPTESTCD
+      )
+    )
+
+  filter_expr <- .create_filter_expr(boxplotdata, varvalstofilter)
+  filtered <- boxplotdata %>%
+    filter(!!filter_expr, PPTESTCD == parameter)
+
+  is_excluded <- !is.na(filtered[["exclude"]]) & filtered[["exclude"]] != ""
+  list(
+    included = filtered[!is_excluded, , drop = FALSE],
+    excluded = filtered[is_excluded, , drop = FALSE]
+  )
+}
 
 #' Add boxplot or violin geometry
 #' @param box Logical. TRUE for boxplot, FALSE for violin.
