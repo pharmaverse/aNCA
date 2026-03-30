@@ -102,6 +102,12 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         match(param_pptest_cols, metadata_nca_parameters$PPTEST)
       ]
 
+      # Add manual interval parameters (e.g. AUCINT_0-12) to the selector
+      col_names <- names(final_results())
+      col_base_names <- sub("\\[.*", "", col_names)
+      interval_params <- col_base_names[grepl("_\\d+.*-\\d+", col_base_names)]
+      param_inputnames <- unique(c(param_inputnames, interval_params))
+
       selector_label(input = input,
                      output = output,
                      session = session,
