@@ -67,6 +67,7 @@ identify difference between missing and not requested (#934)
 * Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
 * Boxplot parameter selector now shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1146)
 * Manual interval parameters (e.g. `AUCINT_0-12`) now appear in the Descriptive Statistics tab instead of being filtered out (#1146)
+* Manual interval parameters now appear as individual entries in the NCA Results parameter selector, allowing them to be toggled independently (#1146)
 
 # aNCA 0.1.0
 
