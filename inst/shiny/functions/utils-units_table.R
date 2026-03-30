@@ -43,27 +43,38 @@
   group_cols <- intersect(
     names(PKNCA::getGroups(mydata$conc)), names(mydata$units)
   )
-  groups_to_keep <- select(mydata$intervals, any_of(group_cols))
-  params_to_keep <- names(purrr::keep(mydata$intervals, ~ is.logical(.x) && any(.x)))
 
-  rows_to_keep <- tbl %>%
-    mutate(nrow = row_number()) %>%
-    filter(PPTESTCD %in% params_to_keep | PPTESTCD %in% ratio_pptestcds)
-
-  if (ncol(groups_to_keep) > 0 && length(ratio_pptestcds) > 0) {
-    pknca_rows <- filter(rows_to_keep, !PPTESTCD %in% ratio_pptestcds)
-    ratio_rows <- filter(rows_to_keep, PPTESTCD %in% ratio_pptestcds)
-    pknca_rows <- inner_join(
-      pknca_rows, unique(groups_to_keep),
-      by = intersect(names(pknca_rows), names(groups_to_keep))
+  # Build a per-group set of active parameters by pivoting intervals so that
+  # only (group, parameter) pairs where the parameter is TRUE are kept.
+  param_cols <- names(purrr::keep(mydata$intervals, is.logical))
+  if (length(param_cols) > 0 && length(group_cols) > 0) {
+    active_params <- mydata$intervals %>%
+      select(any_of(group_cols), any_of(param_cols)) %>%
+      tidyr::pivot_longer(
+        cols = any_of(param_cols), names_to = "PPTESTCD", values_to = ".active"
+      ) %>%
+      filter(.active) %>%
+      select(-".active") %>%
+      distinct()
+  } else if (length(param_cols) > 0) {
+    active_params <- data.frame(
+      PPTESTCD = names(purrr::keep(mydata$intervals, ~ is.logical(.x) && any(.x))),
+      stringsAsFactors = FALSE
     )
-    rows_to_keep <- bind_rows(pknca_rows, ratio_rows)
-  } else if (ncol(groups_to_keep) > 0) {
-    rows_to_keep <- inner_join(
-      rows_to_keep, unique(groups_to_keep),
-      by = intersect(names(rows_to_keep), names(groups_to_keep))
-    )
+  } else {
+    active_params <- data.frame(PPTESTCD = character(), stringsAsFactors = FALSE)
   }
+
+  numbered_tbl <- tbl %>% mutate(nrow = row_number())
+
+  # Match PKNCA rows against active (group, parameter) pairs
+  join_cols <- intersect(names(numbered_tbl), names(active_params))
+  pknca_rows <- inner_join(numbered_tbl, unique(active_params), by = join_cols)
+
+  # Ratio rows are always visible
+  ratio_rows <- numbered_tbl %>% filter(PPTESTCD %in% ratio_pptestcds)
+
+  rows_to_keep <- bind_rows(pknca_rows, ratio_rows) %>% distinct(nrow)
 
   setdiff(seq_len(nrow(tbl)), rows_to_keep$nrow)
 }
