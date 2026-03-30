@@ -168,8 +168,8 @@ settings_version_summary <- function(versions) {
 
 #' Extract the settings payload from a version entry
 #'
-#' Applies the same post-processing as the legacy `read_settings()`
-#' (converting YAML lists to data.frames, etc.).
+#' Strips version metadata and delegates to the shared settings
+#' post-processing in `.process_settings_payload()`.
 #'
 #' @param version A single version entry.
 #'
@@ -178,20 +178,7 @@ settings_version_summary <- function(versions) {
 extract_version_settings <- function(version) {
   meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
   s <- version[setdiff(names(version), meta_keys)]
-
-  if (length(s) == 0 || is.null(s$settings)) {
-    stop(
-      "Invalid settings version entry: missing required 'settings' key. ",
-      "Please ensure each version contains a 'settings' list item."
-    )
-  }
-
-  s$slope_rules <- .convert_list_to_df(s$slope_rules)
-  s$settings$units <- .convert_list_to_df(s$settings$units)
-  s$settings$int_parameters <- .convert_list_to_df(s$settings$int_parameters)
-  s$filters <- .convert_filter_values(s$filters)
-
-  s
+  .process_settings_payload(s)
 }
 
 # Internal helpers --------------------------------------------------------

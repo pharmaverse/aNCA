@@ -206,7 +206,7 @@ describe("extract_version_settings", {
     )
     expect_error(
       extract_version_settings(version),
-      "missing required 'settings' key"
+      "does not appear to be a valid settings YAML file"
     )
   })
 })
@@ -248,7 +248,7 @@ describe("extract_version_settings edge cases", {
     )
     expect_error(
       extract_version_settings(v),
-      "missing required 'settings' key"
+      "does not appear to be a valid settings YAML file"
     )
   })
 
@@ -261,7 +261,7 @@ describe("extract_version_settings edge cases", {
     version <- create_settings_version(payload)
     expect_error(
       extract_version_settings(version),
-      "missing required 'settings' key"
+      "does not appear to be a valid settings YAML file"
     )
   })
 })

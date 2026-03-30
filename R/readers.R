@@ -107,17 +107,38 @@ readers <- list(
 #' @export
 read_settings <- function(path, name) {
   obj <- yaml::read_yaml(path)
+  versioned_attr <- NULL
 
   if ("current" %in% names(obj) && is.list(obj$current) &&
         "datetime" %in% names(obj$current)) {
-    # Versioned format — parse via read_versioned_settings, return
-    # the most recent version's settings as the top-level result
-    versioned <- read_versioned_settings(path)
-    result <- extract_version_settings(versioned$versions[[1]])
-    attr(result, "versioned") <- versioned
-    return(result)
+    # Versioned format — extract version metadata, then pull out
+    # the settings payload from the most recent version
+    versioned_attr <- read_versioned_settings(path)
+    version <- versioned_attr$versions[[1]]
+    meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
+    obj <- version[setdiff(names(version), meta_keys)]
   }
 
+  # Shared validation — works for both legacy and versioned
+  obj <- .process_settings_payload(obj)
+
+  if (!is.null(versioned_attr)) {
+    attr(obj, "versioned") <- versioned_attr
+  }
+
+  obj
+}
+
+#' Validate and post-process a settings payload.
+#'
+#' Checks that the `settings` key exists, then converts YAML lists
+#' to data.frames. Used by both `read_settings()` (legacy and versioned)
+#' and `extract_version_settings()`.
+#' @param obj A list with settings payload.
+#' @returns The processed list with data.frame conversions applied.
+#' @keywords internal
+#' @noRd
+.process_settings_payload <- function(obj) {
   if (!is.list(obj) || !"settings" %in% names(obj)) {
     stop(
       "The file does not appear to be a valid settings YAML file. ",
