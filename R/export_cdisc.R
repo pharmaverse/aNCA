@@ -162,7 +162,8 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
     mutate(PPSEQ = row_number())  %>%
     ungroup() %>%
 
-    # Select columns needed for PP, ADPP, ADNCA (keep "exclude" for ADPP flag derivation)
+    # Select only columns needed for PP, ADPP, ADNCA
+    # Keep "exclude" for ADPP flag derivation; it is dropped later
     select(any_of(c(metadata_nca_variables[["Variable"]], "exclude", grouping_vars))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
@@ -222,6 +223,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
           !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
       )
     ) %>%
+    # Add CRITy/CRITyFL flags and PPSUMFL/PPSUM based on flag rules
     .add_crit_flags(flag_rules) %>%
     select(-any_of("exclude"))
 
@@ -535,18 +537,27 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   }
 
   exclude_vals <- data[["exclude"]]
+  # Treat NA as no exclusion
   exclude_vals[is.na(exclude_vals)] <- ""
+
   all_satisfied <- rep(TRUE, nrow(data))
 
   for (i in seq_along(flag_rules)) {
     rule_msg <- flag_rules[i]
-    is_violated <- grepl(rule_msg, exclude_vals, fixed = TRUE)
+    crit_col <- paste0("CRIT", i)
+    critfl_col <- paste0("CRIT", i, "FL")
 
-    data[[paste0("CRIT", i)]] <- rule_msg
-    data[[paste0("CRIT", i, "FL")]] <- ifelse(is_violated, "N", "Y")
+    # CRITy: the criterion description (constant for all rows)
+    data[[crit_col]] <- rule_msg
+
+    # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
+    is_violated <- grepl(rule_msg, exclude_vals, fixed = TRUE)
+    data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
+
     all_satisfied <- all_satisfied & !is_violated
   }
 
+  # PPSUMFL: "Y" if all criteria are satisfied for this record
   data[["PPSUMFL"]] <- ifelse(all_satisfied, "Y", "N")
   data[["PPSUM"]] <- "Summary stats. Must satisfy all CRITy flags."
 

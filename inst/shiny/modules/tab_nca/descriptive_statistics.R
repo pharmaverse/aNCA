@@ -91,6 +91,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         by = intersect(names(results$result), names(results_to_join)),
         relationship = "many-to-many"
       ) %>%
+        # Exclude flagged records from summary statistics
         filter(is.na(exclude) | exclude == "") %>%
         # Rename manual interval parameters to include the interval range
         # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
