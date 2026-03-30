@@ -224,8 +224,9 @@ data_upload_server <- function(id) {
   }
 
   chosen <- versioned$versions[[selected_idx]]
+  meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
   content <- tryCatch(
-    extract_version_settings(chosen),
+    .process_settings_payload(chosen[setdiff(names(chosen), meta_keys)]),
     error = function(e) {
       showNotification(conditionMessage(e), type = "error")
       NULL
@@ -331,8 +332,10 @@ data_upload_server <- function(id) {
       pending_versioned(versioned_attr)
       .show_version_modal(session, ns, versioned_attr$versions)
     } else if (!is.null(versioned_attr) && length(versioned_attr$versions) == 1) {
+      v <- versioned_attr$versions[[1]]
+      meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
       content <- tryCatch(
-        extract_version_settings(versioned_attr$versions[[1]]),
+        .process_settings_payload(v[setdiff(names(v), meta_keys)]),
         error = function(e) {
           errors <<- append(errors, conditionMessage(e))
           NULL

@@ -166,21 +166,6 @@ settings_version_summary <- function(versions) {
   do.call(rbind, rows)
 }
 
-#' Extract the settings payload from a version entry
-#'
-#' Strips version metadata and delegates to the shared settings
-#' post-processing in `.process_settings_payload()`.
-#'
-#' @param version A single version entry.
-#'
-#' @returns A list with the settings payload ready for use.
-#' @export
-extract_version_settings <- function(version) {
-  meta_keys <- c("comment", "datetime", "dataset", "anca_version", "tab")
-  s <- version[setdiff(names(version), meta_keys)]
-  .process_settings_payload(s)
-}
-
 # Internal helpers --------------------------------------------------------
 
 #' Parse a single version entry from YAML, filling in missing metadata.

@@ -165,52 +165,6 @@ describe("settings_version_summary", {
   })
 })
 
-describe("extract_version_settings", {
-  it("post-processes settings payload", {
-    payload <- list(
-      settings = list(
-        method = "linear",
-        units = list(
-          list(PPTESTCD = "cmax", PPSTRESU = "ng/mL"),
-          list(PPTESTCD = "tmax", PPSTRESU = "h")
-        ),
-        int_parameters = list(
-          list(parameter = "AUCINT", start_auc = 0, end_auc = 24)
-        )
-      ),
-      slope_rules = list(
-        list(USUBJID = "S1", ATPTREF = "D1")
-      ),
-      filters = list(
-        list(column = "USUBJID", condition = "==", value = list("S1", "S2"))
-      )
-    )
-
-    version <- create_settings_version(payload)
-    result <- extract_version_settings(version)
-
-    expect_s3_class(result$slope_rules, "data.frame")
-    expect_s3_class(result$settings$units, "data.frame")
-    expect_s3_class(result$settings$int_parameters, "data.frame")
-    expect_equal(result$settings$method, "linear")
-    expect_equal(result$filters[[1]]$value, c("S1", "S2"))
-  })
-
-  it("errors for version with only metadata", {
-    version <- list(
-      comment = "no data",
-      datetime = "",
-      dataset = "",
-      anca_version = "",
-      tab = ""
-    )
-    expect_error(
-      extract_version_settings(version),
-      "does not appear to be a valid settings YAML file"
-    )
-  })
-})
-
 describe("read_settings with versioned format", {
   it("returns most recent version with versioned attribute", {
     v1 <- create_settings_version(
@@ -234,35 +188,6 @@ describe("read_settings with versioned format", {
     expect_false(is.null(va))
     expect_length(va$versions, 2)
     expect_equal(va$versions[[1]]$comment, "new")
-  })
-})
-
-describe("extract_version_settings edge cases", {
-  it("errors for version with no settings fields", {
-    v <- list(
-      comment = "empty",
-      datetime = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-      dataset = "",
-      anca_version = "",
-      tab = ""
-    )
-    expect_error(
-      extract_version_settings(v),
-      "does not appear to be a valid settings YAML file"
-    )
-  })
-
-  it("errors when 'settings' key is renamed", {
-    payload <- list(
-      blabla = list(method = "linear"),
-      slope_rules = NULL,
-      filters = NULL
-    )
-    version <- create_settings_version(payload)
-    expect_error(
-      extract_version_settings(version),
-      "does not appear to be a valid settings YAML file"
-    )
   })
 })
 

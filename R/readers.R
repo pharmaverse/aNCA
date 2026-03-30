@@ -133,7 +133,7 @@ read_settings <- function(path, name) {
 #'
 #' Checks that the `settings` key exists, then converts YAML lists
 #' to data.frames. Used by both `read_settings()` (legacy and versioned)
-#' and `extract_version_settings()`.
+#' and the version restore logic in `data_upload`.
 #' @param obj A list with settings payload.
 #' @returns The processed list with data.frame conversions applied.
 #' @keywords internal
