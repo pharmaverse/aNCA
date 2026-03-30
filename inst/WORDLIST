@@ -26,6 +26,7 @@ Clast
 Cmax
 Cond
 Customizable
+DM
 DOSEA
 DOSETRT
 DOSEU
@@ -38,6 +39,7 @@ ERTLST
 ERTMAX
 EV
 EVID
+EXSTDTC
 Extravascular
 Kezia
 Kobana
@@ -84,6 +86,7 @@ Pre
 QMD
 README
 RENALCL
+RFXSTDTC
 RRLTU
 RStudio
 RefGroups
@@ -134,8 +137,11 @@ customizable
 customizations
 dataformat
 dateTime
+datetime
+datetimes
 devtools
 df
+dm
 doi
 extravascular
 ggplot
@@ -156,6 +162,7 @@ nca
 ng
 oligo
 pak
+pc
 pcspec
 pharmacodynamics
 pharmacokinetic
@@ -180,6 +187,7 @@ signif
 src
 standardizations
 subfolder
+synthesised
 th
 tibble
 tidyverse
