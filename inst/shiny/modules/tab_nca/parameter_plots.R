@@ -47,11 +47,7 @@ parameter_plots_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # TAB: Parameter Box plots ----------------------------------------------------
-
-    # Update picker inputs when boxplotdata is available
     observeEvent(res_nca(), {
-      # Update the selected_param_boxplot picker input
       param_choices <- unique(res_nca()$result$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
@@ -65,7 +61,6 @@ parameter_plots_server <- function(id, res_nca) {
         names(res_nca()$data$dose$data)
       ))
 
-      # Rendering parameters to display selector with labels
       selector_label(input = input,
                      output = output,
                      session = session,
@@ -76,7 +71,6 @@ parameter_plots_server <- function(id, res_nca) {
                      label = "Choose the parameter to display:",
                      metadata_type = "parameter")
 
-      # Rendering parameters to display selector with labels
       selector_label(input = input,
                      output = output,
                      session = session,
@@ -89,7 +83,6 @@ parameter_plots_server <- function(id, res_nca) {
                      pknca_data = NULL,
                      metadata_type = "variable")
 
-      # Rendering select color vars selector with labels
       selector_label(input = input,
                      output = output,
                      session = session,
@@ -147,13 +140,11 @@ parameter_plots_server <- function(id, res_nca) {
       )
     })
 
-    # Save the boxplot for the zip folder
     observe({
       req(boxplot())
       session$userData$results$nca_results$boxplot <- boxplot()
     })
 
-    # Render the boxplot
     output$boxplot <- renderPlotly({
       boxplot()
     })
