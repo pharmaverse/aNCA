@@ -192,7 +192,12 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     slope_rules <- slope_selector_server(
       "slope_selector",
       processed_pknca_data,
-      imported_slopes
+      imported_slopes,
+      settings_inputs = list(
+        analyte = settings_output$analyte,
+        pcspec = settings_output$pcspec,
+        profile = settings_output$profile
+      )
     )
 
     list(

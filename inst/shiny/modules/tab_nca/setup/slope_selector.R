@@ -17,6 +17,8 @@
 #' @param id Character. Shiny module id.
 #' @param processed_pknca_data Reactive. PKNCAdata object for plotting and table context.
 #' @param manual_slopes_override Reactive. Optional custom settings override for the slopes table.
+#' @param settings_inputs Optional list with reactives `analyte`, `pcspec`, `profile`.
+#'   Used to detect when selections are empty and show an informative message.
 #' @return manual_slopes (data.frame of user slope inclusions/exclusions)
 #'
 #' @details
@@ -126,7 +128,7 @@ slope_selector_ui <- function(id) {
 }
 
 slope_selector_server <- function( # nolint
-  id, processed_pknca_data, manual_slopes_override
+  id, processed_pknca_data, manual_slopes_override, settings_inputs = NULL
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -212,8 +214,43 @@ slope_selector_server <- function( # nolint
       plots_per_page = reactive(input$plots_per_page)
     )
 
+    # Reset slope selector state when settings selections become empty.
+    # processed_pknca_data won't recompute (blocked by req in settings),
+    # so we observe the raw inputs directly.
+    if (!is.null(settings_inputs)) {
+      observe({
+        analyte <- settings_inputs$analyte()
+        pcspec <- settings_inputs$pcspec()
+        profile <- settings_inputs$profile()
+
+        if (is.null(analyte) || length(analyte) == 0 ||
+            is.null(pcspec) || length(pcspec) == 0 ||
+            is.null(profile) || length(profile) == 0) {
+          plot_outputs(NULL)
+          pknca_data(NULL)
+        }
+      })
+    }
+
     observe({
       output$slope_plots_ui <- renderUI({
+        # Show message when settings selections are empty
+        if (!is.null(settings_inputs)) {
+          analyte <- settings_inputs$analyte()
+          pcspec <- settings_inputs$pcspec()
+          profile <- settings_inputs$profile()
+
+          if (is.null(analyte) || length(analyte) == 0 ||
+              is.null(pcspec) || length(pcspec) == 0 ||
+              is.null(profile) || length(profile) == 0) {
+            return(tags$p(
+              class = "text-muted",
+              "Please select an analyte, specimen, and NCA profile in Settings",
+              "to display slope selector plots."
+            ))
+          }
+        }
+
         new_pknca_data <- processed_pknca_data()
 
         if (is.null(new_pknca_data)) {
