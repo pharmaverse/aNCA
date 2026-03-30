@@ -484,11 +484,7 @@ prepare_export_files <- function(target_dir,
     error = function(e) ""
   )
 
-  # Use comment from ZIP modal if available
-  save_comment <- tryCatch(
-    session$userData$settings_save_comment %||% "",
-    error = function(e) ""
-  )
+  save_comment <- session$userData$settings_save_comment %||% ""
 
   new_version <- create_settings_version(
     settings_data = payload,
