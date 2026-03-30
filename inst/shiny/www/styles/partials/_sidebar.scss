@@ -14,12 +14,24 @@
 
 /* Right-side sidebars: width and padding */
 .sidebar-right {
-  --_sidebar-width: 221px !important;
+  --_sidebar-width: 250px !important;
 }
 
 .sidebar-right > .sidebar .sidebar-content {
   padding-left: 0.75rem !important;
   padding-right: 0.75rem !important;
+  overflow-x: hidden !important;
+}
+
+/* Prevent dropdowns/inputs from overflowing the sidebar */
+.sidebar-right .shiny-input-container {
+  max-width: 100% !important;
+}
+
+.sidebar-right .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar .sidebar-content .row > :nth-child(2) {
