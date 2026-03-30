@@ -21,7 +21,7 @@ create_qmd_doc <- function(
 ) {
   yaml_header <- c(
     "---",
-    paste0("title: \"", title, "\""),
+    paste0("title: \"", gsub("[\r\n]+", " ", title), "\""),
     "format:",
     "  revealjs:",
     "    toc: true",
@@ -181,6 +181,10 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @noRd
 .add_qmd_ind_slides <- function(quarto_path, res_dose_slides, in_sections, use_plotly) {
   for (i in seq_along(res_dose_slides)) {
+    if (length(res_dose_slides[[i]]$ind_params) == 0 &&
+          length(res_dose_slides[[i]]$ind_plots) == 0) {
+      next
+    }
     .add_qmd_group_section_header(
       quarto_path, res_dose_slides, i, paste0("Group ", i, " (Individual)")
     )

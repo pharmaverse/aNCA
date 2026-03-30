@@ -116,6 +116,49 @@ describe("create_pptx_dose_slides", {
               length(officer::read_pptx(out_base)))      # fewer than all sections
   })
 
+  it("does not create an orphan header slide when group ind_params and ind_plots are both empty", {
+    # When the second group has empty ind_params (the bug scenario), the current code still
+    # adds the group header/covariate table slide via add_pptx_sl_table() before the
+    # purrr::reduce loop, leaving an orphan header with no per-subject slides following it.
+    # A correct implementation produces 2 fewer slides for the empty group
+    # (1 fewer header + 1 fewer subject) vs a group with one subject.
+    slides_g2_empty <- list(
+      list(
+        info = data.frame(group = "A"), group = "Parent",
+        statistics = data.frame(stat = "Mean", value = 1),
+        meanplot = ggplot2::ggplot(), linplot = ggplot2::ggplot(),
+        boxplot = list(),
+        ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
+        ind_plots  = list(SUBJ01 = ggplot2::ggplot())
+      ),
+      list(
+        info = data.frame(group = "B"), group = "Metabolite",
+        statistics = data.frame(stat = "Mean", value = 2),
+        meanplot = ggplot2::ggplot(), linplot = ggplot2::ggplot(),
+        boxplot = list(),
+        ind_params = list(),  # empty — no subjects for group 2
+        ind_plots  = list()
+      )
+    )
+    slides_g2_with_subj <- slides_g2_empty
+    slides_g2_with_subj[[2]]$ind_params <- list(SUBJ01 = data.frame(param = "CMAX", value = 2))
+    slides_g2_with_subj[[2]]$ind_plots  <- list(SUBJ01 = ggplot2::ggplot())
+
+    attr(slides_g2_empty,     "slide_sections") <- c("ind_plots", "ind_params", "meanplot")
+    attr(slides_g2_with_subj, "slide_sections") <- c("ind_plots", "ind_params", "meanplot")
+
+    out_empty <- tempfile(fileext = ".pptx")
+    out_subj  <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides_g2_empty,     out_empty, "NCA", template)
+    create_pptx_dose_slides(slides_g2_with_subj, out_subj,  "NCA", template)
+
+    n_empty <- length(officer::read_pptx(out_empty))
+    n_subj  <- length(officer::read_pptx(out_subj))
+    # Group 2 with one subject = 1 header slide + 1 per-subject slide = 2 more slides
+    # Currently FAILS (difference is 1) because the orphan header is still created
+    expect_equal(n_subj - n_empty, 2)
+  })
+
   it("omits additional analysis entry when its name is not in slide_sections", {
     slides_one <- base_slides
     attr(slides_one, "additional_analysis") <- list(

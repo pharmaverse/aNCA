@@ -85,6 +85,9 @@ add_pptx_sl_plot <- function(pptx, plot) {
   if (!in_sections("ind_plots") && !in_sections("ind_params")) {
     return(list(pptx = pptx, n_slides = 0))
   }
+  if (length(group_data$ind_params) == 0 && length(group_data$ind_plots) == 0) {
+    return(list(pptx = pptx, n_slides = 0))
+  }
   pptx <- add_pptx_sl_table(
     pptx, group_data$info,
     title = paste0("Group ", group_index, " (individual)"),

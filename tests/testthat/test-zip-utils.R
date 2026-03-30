@@ -121,4 +121,52 @@ describe("get_dose_esc_results", {
       logical(1)
     )))
   })
+
+  it("ind_params is non-empty for every group when group_by_vars includes the analyte column", {
+    # This mirrors the real app call in prepare_export_files() using the analyte
+    # grouping column. Previously, groups were derived from intervals (which lacks
+    # the analyte column), causing empty ind_params for metabolite groups.
+    group_by_vars <- setdiff(
+      dplyr::group_vars(FIXTURE_PKNCA_RES),
+      FIXTURE_PKNCA_RES$data$conc$columns$subject
+    )
+    res <- get_dose_esc_results(
+      o_nca              = FIXTURE_PKNCA_RES,
+      group_by_vars      = group_by_vars,
+      facet_vars         = "ATPTREF",
+      boxplot_parameters = character(0)
+    )
+    ind_params_lengths <- vapply(res, function(g) length(g$ind_params), integer(1))
+    expect_true(
+      all(ind_params_lengths > 0),
+      label = paste0(
+        "Groups with empty ind_params: ",
+        paste(names(ind_params_lengths)[ind_params_lengths == 0], collapse = ", ")
+      )
+    )
+  })
+
+  it("creates slides only for groups present in o_nca$result, not all conc data groups", {
+    # Simulates a specimen (URINE) present in conc data but not in NCA intervals.
+    # When groups are derived from conc$data, a spurious URINE group is created.
+    # When derived from result, only the 4 analyzed groups appear.
+    fixture_extra <- FIXTURE_PKNCA_RES
+    urine_rows <- FIXTURE_PKNCA_RES$data$conc$data[1:5, ]
+    urine_rows$PCSPEC <- "URINE"
+    fixture_extra$data$conc$data <- rbind(FIXTURE_PKNCA_RES$data$conc$data, urine_rows)
+
+    group_by_vars <- setdiff(
+      dplyr::group_vars(FIXTURE_PKNCA_RES),
+      FIXTURE_PKNCA_RES$data$conc$columns$subject
+    )
+    n_result_groups <- nrow(unique(FIXTURE_PKNCA_RES$result[, c(group_by_vars, "ATPTREF")]))
+
+    res <- get_dose_esc_results(
+      o_nca              = fixture_extra,
+      group_by_vars      = group_by_vars,
+      facet_vars         = "ATPTREF",
+      boxplot_parameters = character(0)
+    )
+    expect_equal(length(res), n_result_groups)
+  })
 })

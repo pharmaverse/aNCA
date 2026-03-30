@@ -291,4 +291,35 @@ describe("create_qmd_dose_slides", {
     n_info <- lengths(regmatches(content, gregexpr("res_dose_slides\\[\\[1\\]\\]\\$info", content)))
     expect_equal(n_info, 2L)
   })
+
+  it("does not create an orphan header when group ind_params and ind_plots are both empty", {
+    slides <- list(
+      list(
+        info = data.frame(group = "A"),
+        statistics = data.frame(stat = "Mean", value = 1),
+        meanplot = ggplot2::ggplot(),
+        linplot = ggplot2::ggplot(),
+        boxplot = list(),
+        ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
+        ind_plots  = list(SUBJ01 = ggplot2::ggplot())
+      ),
+      list(
+        info = data.frame(group = "B"),
+        statistics = data.frame(stat = "Mean", value = 2),
+        meanplot = ggplot2::ggplot(),
+        linplot = ggplot2::ggplot(),
+        boxplot = list(),
+        ind_params = list(),  # empty — no subjects for group 2
+        ind_plots  = list()
+      )
+    )
+    attr(slides, "slide_sections") <- c("ind_plots", "ind_params", "meanplot")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("Group 1 (Individual)", content, fixed = TRUE))
+    expect_false(grepl("Group 2 (Individual)", content, fixed = TRUE))
+  })
 })
