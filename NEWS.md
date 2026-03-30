@@ -45,7 +45,6 @@
   `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
 * Removed `methods`, `scales`, and `stringr` from package dependencies, replacing all usages with base R equivalents (#1108)
 * SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
-
 * Export modal now allows users to select which slide sections (mean plots, statistics,
   line plots, box plots, individual plots/parameters, additional analysis) to include in
   PPTX and HTML exports; box plot parameters are also configurable (#972)
