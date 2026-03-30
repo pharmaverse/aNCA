@@ -11,15 +11,8 @@ nca_results_ui <- function(id) {
 
   nav_panel(
     "NCA Results",
-    pickerInput(
-      ns("params"),
-      "Select Parameters :",
-      choices = list("Run NCA first" = ""),
-      selected = list("Run NCA first" = ""),
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("select_params_ui_wrapper")
     ),
-    units_table_ui(ns("units_table")),
     card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
 
     # Color legend for the results table
@@ -54,14 +47,6 @@ nca_results_ui <- function(id) {
 nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
-    units_table_server(
-      "units_table",
-      reactive({          #' Pass `pknca_data` to the units table only when the results
-        req(res_nca())    #' are available.
-        pknca_data()
-      })
-    )
 
     final_results <- reactive({
       req(res_nca())
@@ -113,15 +98,19 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         unname(formatters::var_labels(final_results())),
         unique(c(metadata_nca_parameters$PPTEST, ratio_table()$PPTESTCD))
       )
-      param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
+      param_inputnames <- metadata_nca_parameters$PPTESTCD[
+        match(param_pptest_cols, metadata_nca_parameters$PPTEST)
+      ]
 
-      updatePickerInput(
-        session = session,
-        inputId = "params",
-        label = "Select Parameters :",
-        choices = sort(param_inputnames),
-        selected =  param_inputnames
-      )
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = sort(param_inputnames),
+                     initial_selection = param_inputnames,
+                     selector_ui_wrapper = "select_params_ui_wrapper",
+                     id = "params",
+                     label = "Select Parameters:",
+                     metadata_type = "parameter")
     })
 
     output_results <- reactive({
@@ -135,8 +124,8 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
       col_names <- names(final_results())
       # Extract base names before the "[", or leave as-is if no "["
-      col_base_names <- ifelse(str_detect(col_names, "\\["),
-                               str_remove(col_names, "\\[.*"),
+      col_base_names <- ifelse(grepl("\\[", col_names),
+                               sub("\\[.*", "", col_names),
                                col_names)
 
       final_results() %>%

@@ -65,6 +65,7 @@ PKNCAdata
 PKNCAdose
 PKNCAresult
 PKNCAresults
+PKSUM
 PPORRES
 PPSTRES
 PPSTRESU
@@ -171,6 +172,7 @@ reupload
 roadmap
 rpptx
 runnable
+SelectInputs
 signif
 src
 standardizations

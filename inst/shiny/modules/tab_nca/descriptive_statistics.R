@@ -14,13 +14,7 @@ descriptive_statistics_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    pickerInput(
-      inputId = ns("select_display_parameters"),
-      label = "Parameter to display:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("param_to_display_ui_wrapper")
     ),
     pickerInput(
       inputId = ns("select_display_statistic"),
@@ -30,13 +24,7 @@ descriptive_statistics_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    pickerInput(
-      ns("summary_groupby"),
-      "Group by variables:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("groupby_ui_wrapper")
     ),
     card(reactable_ui(ns("descriptive_stats")), class = "border-0 shadow-none"),
     card(
@@ -48,6 +36,8 @@ descriptive_statistics_ui <- function(id) {
 # Server function for the summary statistics module
 descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
     # Update the input for the group by picker
     observeEvent(res_nca(), {
       req(res_nca())
@@ -61,9 +51,24 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
 
+      grouping_vars <- c(group_cols, classification_cols, subj_col)
+      initial_selection <-  c(group_cols, classification_cols)
+
+      # Rendering the group by selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = grouping_vars,
+                     initial_selection = initial_selection,
+                     selector_ui_wrapper = "groupby_ui_wrapper",
+                     id = "summary_groupby",
+                     label = "Group by variables:",
+                     metadata_type = "variable")
+
       updatePickerInput(session, "summary_groupby",
                         choices = unique(c(group_cols, classification_cols, subj_col)),
                         selected = unique(c(group_cols, classification_cols)))
+
     })
 
     # Reactive expression for summary table based on selected group and parameters
@@ -86,9 +91,15 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         by = intersect(names(results$result), names(results_to_join)),
         relationship = "many-to-many"
       ) %>%
-        filter(type_interval != "manual") %>%
         # Exclude flagged records from summary statistics
-        filter(is.na(exclude) | exclude == "")
+        filter(is.na(exclude) | exclude == "") %>%
+        # Rename manual interval parameters to include the interval range
+        # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
+        mutate(PPTESTCD = ifelse(
+          type_interval == "manual",
+          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
+          PPTESTCD
+        ))
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
@@ -96,22 +107,29 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
     summary_stats_filtered <- reactive({
       summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
+        select(any_of(c(input$summary_groupby, "Statistic", input$select_display_parameters))) %>%
         filter(Statistic %in% input$select_display_statistic)
     })
 
     observeEvent(res_nca(), {
       req(summary_stats())
 
-      # Update the select display parameters picker input
-      updatePickerInput(
-        session,
-        "select_display_parameters",
-        choices = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby)),
-        selected = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
-      )
+      # Get the statistics variables needed
+      params_needed <- setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
+      clean_params_needed <- gsub("\\[.*", "", params_needed)
 
-      # Update the select display parameters picker input
+      # Rendering the parameter to display variable
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = clean_params_needed,
+                     initial_selection = clean_params_needed,
+                     selector_ui_wrapper = "param_to_display_ui_wrapper",
+                     id = "select_display_parameters",
+                     label = "Parameter to display:",
+                     metadata_type = "parameter")
+
+      # Update the select display statistics picker input
       updatePickerInput(
         session,
         "select_display_statistic",

@@ -35,8 +35,8 @@ settings_ui <- function(id) {
           column(
             4,
             pickerInput(
-              ns("select_profile"),
-              "Choose the NCA Profile:",
+              ns("select_pcspec"),
+              "Choose the Specimen:",
               multiple = TRUE,
               choices = NULL,
               options = list(`actions-box` = TRUE)
@@ -45,8 +45,8 @@ settings_ui <- function(id) {
           column(
             4,
             pickerInput(
-              ns("select_pcspec"),
-              "Choose the Specimen:",
+              ns("select_profile"),
+              "Choose the NCA Profile:",
               multiple = TRUE,
               choices = NULL,
               options = list(`actions-box` = TRUE)
@@ -226,142 +226,123 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # File Upload Handling
     observeEvent(c(data(), settings_override()), {
       req(data())
-      # Initialize Analyte + Global Validation
       choices <- unique(data()$PARAM) %>% na.omit()
       settings <- settings_override()
 
-      # Defaults
-      selected <- choices
-      not_compatible <- c()
+      restore <- .restore_settings(
+        settings, choices, data(),
+        adnca_data, session, int_parameters,
+        refresh_reactable
+      )
 
-      # if settings exist, update analyte picker input and check compatibility
-      if (!is.null(settings)) {
-
-        if (!is.null(settings$analyte) && all(settings$analyte %in% choices)) {
-          selected <- settings$analyte
-        } else {
-          not_compatible <- c(not_compatible, "Analyte")
-        }
-
-        # We check raw data here just to see if the settings exist
-        if (!all(settings$profile %in% data()$ATPTREF)) {
-          not_compatible <- c(not_compatible, "Profile")
-        }
-        if (!all(settings$pcspec %in% data()$PCSPEC)) {
-          not_compatible <- c(not_compatible, "Dose Specimen")
-        }
-
-        # Additional settings (PCSPEC and ATPTREF handled later)
-        updateSelectInput(session, inputId = "method", selected = settings$method)
-
-        dose_routes <- unique(adnca_data()$dose$data$std_route)
-        if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
-          updateSelectInput(
-            session,
-            inputId = "bioavailability",
-            selected = settings$bioavailability
-          )
-        }
-
-        # Data imputation #
-        update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
-
-        # Partial AUCs #
-        if (!is.null(settings$int_parameters)) {
-          int_parameters(settings$int_parameters)
-          refresh_reactable(refresh_reactable() + 1)
-        }
-
-        # Flags #
-        .update_rule_input(
-          session,
-          "R2ADJ",
-          settings$flags$R2ADJ$is.checked,
-          settings$flags$R2ADJ$threshold
-        )
-
-        .update_rule_input(
-          session,
-          "R2",
-          settings$flags$R2$is.checked,
-          settings$flags$R2$threshold
-        )
-
-        .update_rule_input(
-          session,
-          "AUCPEO",
-          settings$flags$AUCPEO$is.checked,
-          settings$flags$AUCPEO$threshold
-        )
-
-        .update_rule_input(
-          session,
-          "AUCPEP",
-          settings$flags$AUCPEP$is.checked,
-          settings$flags$AUCPEP$threshold
-        )
-
-        .update_rule_input(
-          session,
-          "LAMZSPN",
-          settings$flags$LAMZSPN$is.checked,
-          settings$flags$LAMZSPN$threshold
-        )
-      }
-
-      if (!is.null(settings$analyte) && length(not_compatible) > 0) {
-        msg <- paste0(
-          paste0(not_compatible, collapse = ", "),
-          " settings not found in data. Reverting to defaults."
-        )
-        log_warn(msg)
-        showNotification(msg, type = "warning", duration = 10)
-      }
-
-      updatePickerInput(session, "select_analyte", choices = choices, selected = selected)
+      updatePickerInput(
+        session, "select_analyte",
+        choices = choices, selected = restore$selected
+      )
     })
 
-    # Update Downstream Inputs (Profile & Specimen)
-    # React to both analyte selection and data changes
-    observeEvent(c(input$select_analyte, data()), {
-      req(data(), input$select_analyte)
+    # Cascading filter logic for analyte, pcspec, and profile (atptref).
+    # Analyte and pcspec are bidirectional primary filters; profile is
+    # a dependent filter that never triggers updates on the others.
+    # A guard flag prevents infinite observer loops.
+    updating_filters <- reactiveVal(FALSE)
 
-      settings <- settings_override()
+    # settings_override is consumed once during the first cascade after
+    # settings upload. After that, pending_settings is set to NULL so
+    # subsequent user-driven changes are not overridden by stale values.
+    pending_settings <- reactiveVal(NULL)
 
-      # Filter data based on Analyte
-      filtered_data <- data() %>%
-        filter(PARAM %in% input$select_analyte, !is.na(PCSPEC), !is.na(ATPTREF))
+    observeEvent(settings_override(), {
+      pending_settings(settings_override())
+    })
 
-      profile_choices <- sort(unique(filtered_data$ATPTREF))
-      pcspec_choices <- unique(filtered_data$PCSPEC)
+    # Helper: consume pending settings (returns them once, then clears)
+    .consume_settings <- function() {
+      s <- pending_settings()
+      pending_settings(NULL)
+      s
+    }
 
+    # Helper: update profile choices based on current analyte + pcspec
+    .update_profile <- function(settings = NULL) {
+      filtered <- data() %>%
+        filter(
+          PARAM %in% input$select_analyte,
+          PCSPEC %in% input$select_pcspec,
+          !is.na(ATPTREF)
+        )
+      profile_choices <- sort(unique(filtered$ATPTREF))
       target_profile <- .get_target_selection(
         current_val = isolate(input$select_profile),
         available_choices = profile_choices,
         override_val = settings$profile
       )
+      updatePickerInput(
+        session, "select_profile",
+        choices = profile_choices, selected = target_profile
+      )
+    }
+
+    # When analyte changes: unselect unavailable pcspec items, then update profile
+    observeEvent(c(input$select_analyte, data()), {
+      req(data(), input$select_analyte)
+      if (updating_filters()) return()
+      updating_filters(TRUE)
+      on.exit(updating_filters(FALSE))
+
+      settings <- .consume_settings()
+
+      all_pcspec <- unique(data()$PCSPEC) %>% na.omit()
+      available_pcspec <- data() %>%
+        filter(PARAM %in% input$select_analyte, !is.na(PCSPEC)) %>%
+        pull(PCSPEC) %>%
+        unique()
 
       target_pcspec <- .get_target_selection(
         current_val = isolate(input$select_pcspec),
-        available_choices = pcspec_choices,
+        available_choices = available_pcspec,
         override_val = settings$pcspec,
         default_logic = function(choices) {
-          grep("^plasma$|^serum$", choices, value = TRUE, ignore.case = TRUE)
+          grep(
+            "^plasma$|^serum$", choices,
+            value = TRUE, ignore.case = TRUE
+          )
         }
       )
+      updatePickerInput(
+        session, "select_pcspec",
+        choices = all_pcspec, selected = target_pcspec
+      )
 
-      updatePickerInput(
-        session,
-        "select_profile",
-        choices = profile_choices,
-        selected = target_profile
+      .update_profile(settings)
+    })
+
+    # When pcspec changes: unselect unavailable analyte items, then update profile
+    observeEvent(input$select_pcspec, {
+      req(data(), input$select_pcspec)
+      if (updating_filters()) return()
+      updating_filters(TRUE)
+      on.exit(updating_filters(FALSE))
+
+      settings <- .consume_settings()
+
+      all_analyte <- unique(data()$PARAM) %>% na.omit()
+      available_analyte <- data() %>%
+        filter(PCSPEC %in% input$select_pcspec, !is.na(PARAM)) %>%
+        pull(PARAM) %>%
+        unique()
+
+      target_analyte <- .get_target_selection(
+        current_val = isolate(input$select_analyte),
+        available_choices = available_analyte,
+        override_val = settings$analyte
       )
       updatePickerInput(
-        session,
-        "select_pcspec",
-        choices = pcspec_choices,
-        selected = target_pcspec
+        session, "select_analyte",
+        choices = all_analyte, selected = target_analyte
       )
+
+      .update_profile(settings)
     })
 
     # Include keyboard limits for the settings GUI display
@@ -498,7 +479,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # On all changes, disable NCA button for given period of time to prevent the user from running
     # the NCA before settings are applied.
     observeEvent(settings(), {
-      runjs(str_glue(
+      runjs(glue::glue(
         "buttonTimeout(
           '#nca-run_nca',
           {settings_debounce + 100},
@@ -515,6 +496,91 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       profile = reactive(input$select_profile)
     )
   })
+}
+
+#' Apply uploaded settings to the NCA setup inputs.
+#'
+#' Validates compatibility, updates non-filter inputs (method, flags, etc.),
+#' and returns the selected analyte values. Filter cascade (pcspec, profile)
+#' is handled by the analyte observer.
+#'
+#' @param settings Settings list from upload or NULL.
+#' @param choices Available analyte choices from data.
+#' @param raw_data The raw data frame.
+#' @param adnca_data Reactive returning PKNCAdata object.
+#' @param session Shiny session.
+#' @param int_parameters ReactiveVal for partial AUC parameters.
+#' @param refresh_reactable ReactiveVal counter for table refresh.
+#' @returns List with `selected` (analyte selection to apply).
+.restore_settings <- function(settings, choices, raw_data,
+                              adnca_data, session, int_parameters,
+                              refresh_reactable) {
+  selected <- choices
+  not_compatible <- c()
+
+  if (!is.null(settings)) {
+    if (!is.null(settings$analyte) && all(settings$analyte %in% choices)) {
+      selected <- settings$analyte
+    } else {
+      not_compatible <- c(not_compatible, "Analyte")
+    }
+
+    if (!all(settings$profile %in% raw_data$ATPTREF)) {
+      not_compatible <- c(not_compatible, "Profile")
+    }
+    if (!all(settings$pcspec %in% raw_data$PCSPEC)) {
+      not_compatible <- c(not_compatible, "Dose Specimen")
+    }
+
+    .restore_non_filter_settings(
+      settings, adnca_data, session, int_parameters, refresh_reactable
+    )
+
+    if (!is.null(settings$analyte) && length(not_compatible) > 0) {
+      msg <- paste0(
+        paste0(not_compatible, collapse = ", "),
+        " settings not found in data. Reverting to defaults."
+      )
+      log_warn(msg)
+      showNotification(msg, type = "warning", duration = 10)
+    }
+  }
+
+  list(selected = selected)
+}
+
+#' Restore non-filter settings (method, bioavailability, flags, etc.)
+#' @param settings Settings list.
+#' @param adnca_data Reactive returning PKNCAdata object.
+#' @param session Shiny session.
+#' @param int_parameters ReactiveVal for partial AUC parameters.
+#' @param refresh_reactable ReactiveVal counter for table refresh.
+.restore_non_filter_settings <- function(settings, adnca_data, session,
+                                         int_parameters, refresh_reactable) {
+  updateSelectInput(session, inputId = "method", selected = settings$method)
+
+  dose_routes <- unique(adnca_data()$dose$data$std_route)
+  if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
+    updateSelectInput(
+      session, inputId = "bioavailability",
+      selected = settings$bioavailability
+    )
+  }
+
+  update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+
+  if (!is.null(settings$int_parameters)) {
+    int_parameters(settings$int_parameters)
+    refresh_reactable(refresh_reactable() + 1)
+  }
+
+  for (flag in c("R2ADJ", "R2", "AUCPEO", "AUCPEP", "LAMZSPN")) {
+    .update_rule_input(
+      session, flag,
+      settings$flags[[flag]]$is.checked,
+      settings$flags[[flag]]$threshold
+    )
+  }
 }
 
 #' Generates rule input widget with a checkbox and conditional numeric input for the value.
@@ -603,9 +669,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     return(override_val)
   }
 
-  # Maintain Selection
-  if (length(intersect(current_val, available_choices)) > 0) {
-    return(current_val)
+  # Maintain Selection — keep only items that are still available
+  kept <- intersect(current_val, available_choices)
+  if (length(kept) > 0) {
+    return(kept)
   }
 
   # Fallback to Default Logic or First Choice

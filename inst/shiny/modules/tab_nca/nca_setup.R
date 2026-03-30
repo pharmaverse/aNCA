@@ -18,14 +18,9 @@ nca_setup_ui <- function(id) {
   ns <- NS(id)
 
   navset_pill_list(
+    widths = c(2, 10),
     nav_panel(
       "Settings",
-      fluidRow(
-        downloadButton(
-          ns("settings_download"),
-          label = "Download settings"
-        )
-      ),
       fluidRow(units_table_ui(ns("units_table"))),
       settings_ui(ns("nca_settings")),
       accordion(
@@ -198,27 +193,6 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       "slope_selector",
       processed_pknca_data,
       imported_slopes
-    )
-
-    output$settings_download <- downloadHandler(
-      filename = function() {
-        paste0(session$userData$project_prefix("_"), "settings_", Sys.Date(), ".yaml")
-      },
-      content = function(con) {
-        export_settings <- final_settings()
-        if (!is.null(export_settings$units)) {
-          export_settings$units <- export_settings$units %>%
-            dplyr::filter(!default) %>%
-            dplyr::select(-default)
-        }
-        export_settings$ratio_table <- ratio_table()
-        settings_to_save <- list(
-          filters = session$userData$applied_filters,
-          settings = export_settings,
-          slope_rules = slope_rules()
-        )
-        yaml::write_yaml(settings_to_save, file = con)
-      }
     )
 
     list(
