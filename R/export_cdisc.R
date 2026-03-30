@@ -13,7 +13,7 @@
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #' @param flag_rules Character vector of flag rule exclusion messages applied during NCA
 #'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). Each entry generates a CRITy/CRITyFL
-#'   column pair in ADPP, plus PPSUMFL and ANLSUM columns. Defaults to `NULL` (no flags).
+#'   column pair in ADPP, plus PPSUMFL and PPSUM columns. Defaults to `NULL` (no flags).
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -223,7 +223,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
           !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
       )
     ) %>%
-    # Add CRITy/CRITyFL flags and PPSUMFL/ANLSUM based on flag rules
+    # Add CRITy/CRITyFL flags and PPSUMFL/PPSUM based on flag rules
     .add_crit_flags(flag_rules) %>%
     select(-any_of("exclude"))
 
@@ -518,7 +518,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     select(-!!sym(nca_excl_colname))
 }
 
-#' Add CRITy/CRITyFL and PPSUMFL/ANLSUM columns to ADPP
+#' Add CRITy/CRITyFL and PPSUMFL/PPSUM columns to ADPP
 #'
 #' For each flag rule message, creates a CRITy column (criterion description)
 #' and CRITyFL column ("Y" if satisfied, "N" if violated) by grepping the
@@ -528,7 +528,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #' @param flag_rules Character vector of exclusion messages applied during NCA
 #'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). If `NULL` or empty, returns
 #'   data unchanged.
-#' @returns The input data with CRITy, CRITyFL, PPSUMFL, and ANLSUM columns added.
+#' @returns The input data with CRITy, CRITyFL, PPSUMFL, and PPSUM columns added.
 #' @noRd
 #' @keywords internal
 .add_crit_flags <- function(data, flag_rules) {
@@ -559,7 +559,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 
   # PPSUMFL: "Y" if all criteria are satisfied for this record
   data[["PPSUMFL"]] <- ifelse(all_satisfied, "Y", "N")
-  data[["ANLSUM"]] <- "Summary stats. Must satisfy all CRITy flags."
+  data[["PPSUM"]] <- "Summary stats. Must satisfy all CRITy flags."
 
   data
 }
