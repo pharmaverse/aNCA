@@ -9,8 +9,7 @@ get_settings_code(
   data_path,
   output_path = "settings_code.R",
   template_path = system.file("www/templates/script_template.R", package = "aNCA"),
-  mapping = default_mapping,
-  ratio_table = data.frame()
+  mapping = default_mapping
 )
 }
 \arguments{
@@ -24,8 +23,6 @@ get_settings_code(
 installed from your aNCA package version.}
 
 \item{mapping}{Named list mapping variable names (default: \code{default_mapping}).}
-
-\item{ratio_table}{Data frame containing ratio definitions (default: empty data frame).}
 }
 \value{
 Invisibly returns the output_path.

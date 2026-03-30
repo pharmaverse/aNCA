@@ -13,8 +13,8 @@ adnca_data <- read_pk(data_path)
 
 ## Preprocess data & create PKNCA object ######################
 mapping <- settings_list$mapping
-names(mapping) <- gsub("select_", "", names(mapping))
 applied_filters <- settings_list$applied_filters
+time_duplicate_rows <- settings_list$time_duplicate_rows
 
 int_parameters <- settings_list$settings$int_parameters
 units_table <- settings_list$units_table
@@ -28,7 +28,8 @@ pknca_obj <- adnca_data %>%
   # Preprocess raw data and create the PKNCA object
   PKNCA_create_data_object(
     mapping = mapping,
-    applied_filters = applied_filters
+    applied_filters = applied_filters,
+    time_duplicate_rows = time_duplicate_rows
   ) %>%
 
   # Setup basic settings

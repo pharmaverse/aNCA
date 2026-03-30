@@ -345,7 +345,7 @@ get_subjid <- function(data) {
     data$SUBJID
   } else if ("USUBJID" %in% names(data)) {
     if ("STUDYID" %in% names(data)) {
-      stringr::str_remove(as.character(data$USUBJID), paste0(as.character(data$STUDYID), "\\W?"))
+      sub(paste0(as.character(data$STUDYID), "\\W?"), "", as.character(data$USUBJID))
     } else {
       gsub(find_common_prefix(data$USUBJID), "", data$USUBJID)
     }

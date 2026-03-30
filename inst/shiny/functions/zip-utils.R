@@ -136,7 +136,7 @@ get_dose_esc_results <- function(
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
   boxplot_parameter = "AUCIFO",
-  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM", "DOSEFRM"),
   labels_df = metadata_nca_variables
 ) {
   # Define column names
@@ -450,7 +450,10 @@ prepare_export_files <- function(target_dir,
       dplyr::select(-default)
   }
 
+  settings_list$ratio_table <- session$userData$ratio_table()
+
   settings_to_save <- list(
+    mapping = session$userData$mapping,
     filters = session$userData$applied_filters,
     settings = settings_list,
     slope_rules = session$userData$slope_rules()

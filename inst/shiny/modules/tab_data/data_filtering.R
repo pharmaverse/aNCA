@@ -98,7 +98,11 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
         if (is.numeric(raw_adnca_data()[[col]]) && length(unique(raw_adnca_data()[[col]])) > 20) {
           list(type = "numeric")
         } else {
-          list(type = "text", choices = sort(unique(raw_adnca_data()[[col]])))
+          vals <- unique(raw_adnca_data()[[col]])
+          has_na <- any(is.na(vals))
+          choices <- sort(vals[!is.na(vals)])
+          if (has_na) choices <- c(choices, "(NA)")
+          list(type = "text", choices = choices)
         }
       }) %>%
         setNames(colnames(raw_adnca_data())) %>%
@@ -200,7 +204,7 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
       if (length(applied_filters) == 0) return(raw_adnca_data())
 
       applied_filters %>%
-        sapply(\(filt) str_glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) %>% # nolint
+        sapply(\(filt) glue::glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) %>% # nolint
         paste0(collapse = "\n") %>%
         paste0("Submitting the following filters:\n", .) %>%
         log_info()
