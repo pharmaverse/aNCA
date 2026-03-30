@@ -10,7 +10,7 @@ parameter_plots_ui <- function(id) {
 
   layout_sidebar(
     sidebar = sidebar(
-      position = "right", open = TRUE,
+      position = "right", open = TRUE, width = 221,
       uiOutput(ns("params_to_display_ui_wrapper")
       ),
       uiOutput(ns("group_xvars_ui_wrapper")
