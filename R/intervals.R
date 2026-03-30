@@ -129,41 +129,19 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(type_interval = "main")
 }
 
-#' Update an intervals data frame with user-selected parameters by study type
+#' Derive study types from a PKNCAdata object
 #'
-#' @param data A PKNCAdata object containing intervals and dosing data.
-#' @param parameter_selections A named list of selected PKNCA parameters by study type.
-#' @param int_parameters A data frame containing partial AUC ranges.
-#' @param impute Logical indicating whether to impute start values for parameters.
-#' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
-#' imputation rule using PKNCA format. The list should either contain three elements named:
-#' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
-#' Each element can be a numeric value (substituting the BLQ value), or a string such as
-#' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
-#' which does not specify any BLQ imputation in any interval.
+#' Extracts concentration and dose data, merges dose duration if needed,
+#' and calls [detect_study_types()] to classify each group.
 #'
-#' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
-#' @importFrom dplyr group_by ungroup slice_max
-#' @importFrom purrr pmap
-#' @returns An updated PKNCAdata object with parameter intervals based on user selections.
-#' @export
-update_main_intervals <- function(
-  data,
-  parameter_selections = NULL,
-  int_parameters = NULL,
-  impute = TRUE,
-  blq_imputation_rule = NULL
-) {
-  if (is.null(parameter_selections)) parameter_selections <- list()
-  if (is.null(int_parameters)) {
-    int_parameters <- data.frame(
-      parameter = character(), start_auc = numeric(), end_auc = numeric()
-    )
-  }
-
-  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
-
-  # Derive study types from the PKNCAdata object
+#' @param data A PKNCAdata object.
+#'
+#' @returns A deduplicated data frame with grouping columns and a `type` column.
+#'
+#' @importFrom dplyr mutate left_join filter select slice_max distinct across all_of
+#' @noRd
+#' @keywords internal
+.derive_study_types <- function(data) {
   conc_data <- data$conc$data
   conc_groups <- group_vars(data$conc)
   dose_groups <- group_vars(data$dose)
@@ -172,12 +150,11 @@ update_main_intervals <- function(
     !is.null(col) && length(unique(conc_data[[col]])) > 1
   }, logical(1))]
 
-  if (!"METABFL" %in% names(conc_data)) {
-    conc_data$METABFL <- ""
-  }
+  # Blank METABFL unconditionally so metabolite-specific types are not
+  # assigned at the interval level.
+  conc_data$METABFL <- ""
 
   # Dose duration may live in dose data only; merge it for detect_study_types.
-  # Join by shared groups and keep only the latest dose before each conc sample.
   duration_col <- data$dose$columns$duration
   if (!is.null(duration_col) && !duration_col %in% names(conc_data)) {
     dose_data <- data$dose$data
@@ -209,19 +186,54 @@ update_main_intervals <- function(
     volume_column = data$conc$columns$volume
   )
 
-  # Determine the grouping columns from the study_types_df
-  grouping_cols <- setdiff(names(study_types_df), c("type"))
+  # Deduplicate by grouping columns to prevent interval row duplication
+  # when detect_study_types produces multiple types per group.
+  grouping_cols <- setdiff(names(study_types_df), "type")
+  study_types_df %>%
+    distinct(across(all_of(grouping_cols)), .keep_all = TRUE)
+}
+
+#' Update an intervals data frame with user-selected parameters by study type
+#'
+#' @param data A PKNCAdata object containing intervals and dosing data.
+#' @param parameter_selections A named list of selected PKNCA parameters by study type.
+#' @param int_parameters A data frame containing partial AUC ranges.
+#' @param impute Logical indicating whether to impute start values for parameters.
+#' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
+#' imputation rule using PKNCA format. The list should either contain three elements named:
+#' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
+#' Each element can be a numeric value (substituting the BLQ value), or a string such as
+#' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
+#' which does not specify any BLQ imputation in any interval.
+#'
+#' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
+#' @importFrom dplyr group_by ungroup slice_max distinct
+#' @importFrom purrr pmap
+#' @returns An updated PKNCAdata object with parameter intervals based on user selections.
+#' @export
+update_main_intervals <- function(
+  data,
+  parameter_selections = NULL,
+  int_parameters = NULL,
+  impute = TRUE,
+  blq_imputation_rule = NULL
+) {
+  if (is.null(parameter_selections)) parameter_selections <- list()
+  if (is.null(int_parameters)) {
+    int_parameters <- data.frame(
+      parameter = character(), start_auc = numeric(), end_auc = numeric()
+    )
+  }
+
+  all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
+
+  study_types_df <- .derive_study_types(data)
+
+  grouping_cols <- setdiff(names(study_types_df), "type")
   missing_columns <- setdiff(grouping_cols, colnames(data$intervals))
-  # check for grouping cols in intervals
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
-
-  # Deduplicate study_types_df by grouping_cols to prevent interval row
-  # duplication when detect_study_types produces multiple types per group
-  # (e.g., metabolite vs non-metabolite for the same USUBJID + ROUTE).
-  study_types_df <- study_types_df %>%
-    distinct(across(all_of(grouping_cols)), .keep_all = TRUE)
 
   # Add the 'type' column to the intervals data
   intervals_with_types <- data$intervals %>%
