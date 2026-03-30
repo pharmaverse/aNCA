@@ -1,5 +1,6 @@
 #' Run the Shiny app
 #' @param datapath Full path to a single `.csv` or `.rds` data file.
+#' @param settings Full path to a `.yaml` settings file.
 #' @param ... Arguments passed to `shiny::runApp()`
 #'
 #' @returns No return value, called for side effects to launch the Shiny application.
@@ -13,6 +14,10 @@
 #' If `datapath` is `NULL` (default), the app will launch without pre-loading any
 #' data, and a file must be uploaded manually within the app.
 #'
+#' If a `settings` path is provided, the app will load the settings file on
+#' startup and apply the saved configuration (analyte, method, units, etc.).
+#' The pre-loaded settings can be overwritten by uploading a new settings file.
+#'
 #' @examples
 #' \donttest{
 #'   # To actually launch the app, run interactively:
@@ -21,12 +26,21 @@
 #'   }
 #' }
 #' @export
-run_app <- function(datapath = NULL, ...) {
+run_app <- function(datapath = NULL, settings = NULL, ...) {
   # Increase max upload size to 30 MB
   options(shiny.maxRequestSize = 30 * 1024^2)
   if (!is.null(datapath)) {
     opt <- options(aNCA.datapath = datapath)
     on.exit(options(opt), add = TRUE)
+  }
+  if (!is.null(settings)) {
+    stopifnot(
+      "Settings file must have .yaml or .yml extension" =
+        tools::file_ext(settings) %in% c("yaml", "yml"),
+      "Settings file does not exist" = file.exists(settings)
+    )
+    opt_s <- options(aNCA.settings = settings)
+    on.exit(options(opt_s), add = TRUE)
   }
 
   check_app_dependencies()

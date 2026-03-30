@@ -50,6 +50,22 @@ data_upload_server <- function(id) {
 
     datapath <- getOption("aNCA.datapath", NULL)
 
+    # Pre-load settings from run_app(settings = ...) if provided
+    settings_path <- getOption("aNCA.settings", NULL)
+    if (!is.null(settings_path)) {
+      tryCatch({
+        content <- read_settings(settings_path)
+        settings_override(content)
+        log_info("Settings pre-loaded from: ", settings_path)
+      }, error = function(e) {
+        log_error("Failed to load settings: ", e$message)
+        showNotification(
+          paste("Failed to load settings file:", e$message),
+          type = "error"
+        )
+      })
+    }
+
     raw_data <- (
       reactive({
         # Reset errors at the start of the reactive

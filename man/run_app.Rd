@@ -4,10 +4,12 @@
 \alias{run_app}
 \title{Run the Shiny app}
 \usage{
-run_app(datapath = NULL, ...)
+run_app(datapath = NULL, settings = NULL, ...)
 }
 \arguments{
 \item{datapath}{Full path to a single \code{.csv} or \code{.rds} data file.}
+
+\item{settings}{Full path to a \code{.yaml} settings file.}
 
 \item{...}{Arguments passed to \code{shiny::runApp()}}
 }
@@ -26,6 +28,10 @@ the widget within the app, it will replace the initial data for the current sess
 
 If \code{datapath} is \code{NULL} (default), the app will launch without pre-loading any
 data, and a file must be uploaded manually within the app.
+
+If a \code{settings} path is provided, the app will load the settings file on
+startup and apply the saved configuration (analyte, method, units, etc.).
+The pre-loaded settings can be overwritten by uploading a new settings file.
 }
 \examples{
 \donttest{
