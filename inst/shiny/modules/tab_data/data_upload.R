@@ -368,10 +368,11 @@ data_upload_server <- function(id) {
 
   if (length(found_data) > 0) {
     tryCatch({
-      loaded_data <- found_data %>%
-        purrr::map("content") %>%
-        dplyr::bind_rows() %>%
-        dplyr::mutate(dplyr::across(dplyr::everything(), as.character))
+      combined <- do.call(rbind, purrr::map(found_data, "content"))
+      loaded_data <- as.data.frame(
+        lapply(combined, as.character),
+        stringsAsFactors = FALSE
+      )
 
       data_names <- purrr::map_chr(found_data, "name")
       session$userData$dataset_filename <- paste(
