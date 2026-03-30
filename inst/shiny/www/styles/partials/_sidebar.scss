@@ -17,6 +17,28 @@
   --_sidebar-width: 250px !important;
 }
 
+/* Drag handle for resizing right-side sidebars */
+.sidebar-right > .sidebar > .sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.sidebar-right > .sidebar > .sidebar-resize-handle:hover,
+.sidebar-right > .sidebar > .sidebar-resize-handle.dragging {
+  background: $anca-blue;
+}
+
+.sidebar-right > .sidebar {
+  position: relative;
+}
+
 .sidebar-right > .sidebar .sidebar-content {
   padding-left: 0.75rem !important;
   padding-right: 0.75rem !important;

@@ -83,8 +83,47 @@ const enableDragAndDropUpload = function(element_id) {
 }
 document.addEventListener('DOMContentLoaded', function () {
   enableDragAndDropUpload('data-raw_data-upload_container');
-
+  initSidebarResize();
 });
+
+/**
+ * Adds a drag handle to each right-side sidebar that lets users
+ * resize it by dragging the left edge. Updates the bslib grid's
+ * --_sidebar-width CSS variable so the layout reflows naturally.
+ */
+function initSidebarResize() {
+  document.querySelectorAll('.sidebar-right > .sidebar').forEach(function(sidebar) {
+    var handle = document.createElement('div');
+    handle.className = 'sidebar-resize-handle';
+    sidebar.prepend(handle);
+
+    var layout = sidebar.closest('.sidebar-right');
+
+    handle.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      handle.classList.add('dragging');
+      var startX = e.clientX;
+      var startWidth = sidebar.getBoundingClientRect().width;
+
+      function onMouseMove(e) {
+        // Right sidebar: dragging left increases width
+        var newWidth = startWidth + (startX - e.clientX);
+        if (newWidth >= 150 && newWidth <= 600) {
+          layout.style.setProperty('--_sidebar-width', newWidth + 'px', 'important');
+        }
+      }
+
+      function onMouseUp() {
+        handle.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  });
+}
 
 /**
  * Creates a custom observer that checks if particular element is visible in the viewport.
