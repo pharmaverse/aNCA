@@ -180,8 +180,10 @@ extract_version_settings <- function(version) {
   s <- version[setdiff(names(version), meta_keys)]
 
   if (length(s) == 0 || is.null(s$settings)) {
-    warning("Version entry has empty settings content.")
-    return(NULL)
+    stop(
+      "Invalid settings version entry: missing required 'settings' key. ",
+      "Please ensure each version contains a 'settings' list item."
+    )
   }
 
   s$slope_rules <- .convert_list_to_df(s$slope_rules)

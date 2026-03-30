@@ -196,7 +196,7 @@ describe("extract_version_settings", {
     expect_equal(result$filters[[1]]$value, c("S1", "S2"))
   })
 
-  it("returns NULL for version with only metadata", {
+  it("errors for version with only metadata", {
     version <- list(
       comment = "no data",
       datetime = "",
@@ -204,11 +204,10 @@ describe("extract_version_settings", {
       anca_version = "",
       tab = ""
     )
-    expect_warning(
-      result <- extract_version_settings(version),
-      "empty settings content"
+    expect_error(
+      extract_version_settings(version),
+      "missing required 'settings' key"
     )
-    expect_null(result)
   })
 })
 
@@ -239,7 +238,7 @@ describe("read_settings with versioned format", {
 })
 
 describe("extract_version_settings edge cases", {
-  it("returns NULL and warns for version with no settings fields", {
+  it("errors for version with no settings fields", {
     v <- list(
       comment = "empty",
       datetime = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
@@ -247,11 +246,23 @@ describe("extract_version_settings edge cases", {
       anca_version = "",
       tab = ""
     )
-    expect_warning(
-      result <- extract_version_settings(v),
-      "empty settings content"
+    expect_error(
+      extract_version_settings(v),
+      "missing required 'settings' key"
     )
-    expect_null(result)
+  })
+
+  it("errors when 'settings' key is renamed", {
+    payload <- list(
+      blabla = list(method = "linear"),
+      slope_rules = NULL,
+      filters = NULL
+    )
+    version <- create_settings_version(payload)
+    expect_error(
+      extract_version_settings(version),
+      "missing required 'settings' key"
+    )
   })
 })
 

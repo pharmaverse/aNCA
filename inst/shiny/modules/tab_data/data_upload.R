@@ -224,7 +224,15 @@ data_upload_server <- function(id) {
   }
 
   chosen <- versioned$versions[[selected_idx]]
-  content <- extract_version_settings(chosen)
+  content <- tryCatch(
+    extract_version_settings(chosen),
+    error = function(e) {
+      showNotification(conditionMessage(e), type = "error")
+      NULL
+    }
+  )
+  if (is.null(content)) return()
+
   settings_override(content)
 
   session$userData$settings_versions(versioned$versions)
@@ -323,11 +331,19 @@ data_upload_server <- function(id) {
       pending_versioned(versioned_attr)
       .show_version_modal(session, ns, versioned_attr$versions)
     } else if (!is.null(versioned_attr) && length(versioned_attr$versions) == 1) {
-      content <- extract_version_settings(versioned_attr$versions[[1]])
-      settings_override(content)
-      session$userData$settings_versions(versioned_attr$versions)
-      log_success("Settings successfully loaded from ", latest$name)
-      showNotification("Settings successfully loaded.", type = "message")
+      content <- tryCatch(
+        extract_version_settings(versioned_attr$versions[[1]]),
+        error = function(e) {
+          errors <<- append(errors, conditionMessage(e))
+          NULL
+        }
+      )
+      if (!is.null(content)) {
+        settings_override(content)
+        session$userData$settings_versions(versioned_attr$versions)
+        log_success("Settings successfully loaded from ", latest$name)
+        showNotification("Settings successfully loaded.", type = "message")
+      }
     } else {
       settings_override(latest$content)
       log_success("Settings successfully loaded from ", latest$name)
