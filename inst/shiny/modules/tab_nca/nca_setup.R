@@ -39,7 +39,6 @@ nca_setup_ui <- function(id) {
 
 nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
-
     imported_settings <- reactive(settings_override()$settings)
     imported_slopes <- reactive(settings_override()$slope_rules)
     imported_params <- reactive(imported_settings()$parameters$selections)
@@ -85,7 +84,6 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     )
 
     final_settings <- reactive({
-
       req(settings(), parameters_output$selections(), general_exclusions())
 
       current_settings <- settings()
@@ -99,8 +97,10 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
 
     # Update pknca data object and intervals using summary output
     processed_pknca_data <- reactive({
-      req(adnca_data(), settings(),
-          parameters_output$selections(), parameters_output$types_df())
+      req(
+        adnca_data(), settings(),
+        parameters_output$selections(), parameters_output$types_df()
+      )
 
       log_trace("Updating PKNCA::data object.")
 
@@ -186,6 +186,35 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
 
     # Parameter unit changes option: Opens a modal message with a units table to edit
     units_table_server("units_table", processed_pknca_data)
+
+    # Keep PKNCA_impute_method_blq in the global env in sync with the BLQ setting.
+    # Both PKNCA_calculate_nca() and the slope selector's pk.nca() calls rely on it.
+    observe({
+      blq_rule <- settings()$data_imputation$blq_imputation_rule
+      if (!is.null(blq_rule)) {
+        .assign_global(
+          "PKNCA_impute_method_blq", # nolint
+          function(conc, time, ...) { # nolint
+            d <- PKNCA::clean.conc.blq(
+              conc = conc,
+              time = time,
+              conc.blq = blq_rule,
+              conc.na = "drop"
+            )
+            d_na <- data.frame(
+              conc = rep(NA, sum(!time %in% d$time)),
+              time = time[!time %in% d$time]
+            )
+            rbind(d, d_na) %>%
+              dplyr::arrange(time)
+          }
+        )
+      } else {
+        if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
+          rm("PKNCA_impute_method_blq", envir = as.environment(1))
+        }
+      }
+    })
 
     # Collect all half life manual adjustments done in the `Slope Selector` section
     # and controls the half life plots that are displayed

@@ -277,7 +277,8 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #' @importFrom purrr pmap
 #'
 #' @export
-PKNCA_update_data_object <- function( # nolint: object_name_linter
+PKNCA_update_data_object <- function(
+    # nolint: object_name_linter
     adnca_data,
     method,
     selected_analytes,
@@ -287,7 +288,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     hl_adj_rules = NULL,
     exclusion_list = NULL,
     keep_interval_cols = NULL) {
-
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
@@ -393,8 +393,12 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 #' @export
 PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_name_linter
 
-  # Define BLQ imputation method in global environment for PKNCA to access
-  if (!is.null(blq_rule)) {
+  blq_already_defined <- exists(
+    "PKNCA_impute_method_blq",
+    envir = as.environment(1), inherits = FALSE
+  )
+
+  if (!is.null(blq_rule) && !blq_already_defined) {
     .assign_global(
       "PKNCA_impute_method_blq", # nolint
       function(conc, time, ...) { # nolint
@@ -420,17 +424,17 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
           arrange(time)
       }
     )
-  }
 
-  # Ensure removal of the global PKNCA_impute_method_blq once NCA is run to avoid side effects
-  on.exit(
-    {
-      if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
-        rm("PKNCA_impute_method_blq", envir = as.environment(1))
-      }
-    },
-    add = TRUE
-  )
+    # Only clean up if we created it ourselves (standalone / test usage)
+    on.exit(
+      {
+        if (exists("PKNCA_impute_method_blq", envir = as.environment(1), inherits = FALSE)) {
+          rm("PKNCA_impute_method_blq", envir = as.environment(1))
+        }
+      },
+      add = TRUE
+    )
+  }
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
@@ -814,7 +818,6 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @keywords internal
 #' @noRd
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
-
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
