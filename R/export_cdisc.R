@@ -9,6 +9,8 @@
 #'                      on but now we avoid merge conflict)
 #'
 #' @param res_nca Object with results of the NCA analysis.
+#' @param grouping_vars Character vector of non-standard grouping variable names to include
+#'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -19,8 +21,9 @@
 #'
 #'
 #' @import dplyr
+#' @importFrom formatters `var_labels<-`
 #' @export
-export_cdisc <- function(res_nca) {
+export_cdisc <- function(res_nca, grouping_vars = character(0)) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
     filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
@@ -158,7 +161,7 @@ export_cdisc <- function(res_nca) {
     ungroup() %>%
 
     # Select only columns needed for PP, ADPP, ADNCA
-    select(any_of(metadata_nca_variables[["Variable"]])) %>%
+    select(any_of(c(metadata_nca_variables[["Variable"]], grouping_vars))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
@@ -192,7 +195,8 @@ export_cdisc <- function(res_nca) {
   labels_map <- metadata_nca_variables %>%
     filter(!duplicated(Variable)) %>%
     pull(Label, Variable)
-  var_labels(cdisc_info) <- labels_map[names(cdisc_info)]
+  known_cols <- intersect(names(cdisc_info), names(labels_map))
+  var_labels(cdisc_info)[known_cols] <- labels_map[known_cols]
 
   # select pp columns
   pp <- cdisc_info %>%
@@ -207,7 +211,7 @@ export_cdisc <- function(res_nca) {
     )
 
   adpp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable))) %>%
+    select(any_of(c(CDISC_COLS$ADPP$Variable, grouping_vars))) %>%
     # Deselect permitted columns with only NAs
     select(
       -which(
@@ -229,12 +233,18 @@ export_cdisc <- function(res_nca) {
       } else {
         NA_character_
       },
-      ANL01FL = if ("is.excluded.hl" %in% names(.)) {
-        vals <- .[["is.excluded.hl"]]
-        ifelse(is.excluded.hl, NA_character_, "Y")
-      } else {
-        NULL
+      PKSUM1F = {
+        flag <- if ("PKSUM1F" %in% names(.)) {
+          PKSUM1F
+        } else {
+          rep("", nrow(.))
+        }
+        if ("is.excluded.hl" %in% names(.)) {
+          flag <- ifelse(is.excluded.hl, "Y", flag)
+        }
+        flag
       },
+      PKSUM1FN = ifelse(PKSUM1F == "Y", 1L, NA_integer_),
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT
@@ -270,7 +280,7 @@ export_cdisc <- function(res_nca) {
     ) %>%
 
     # Order columns using a standard, and then put the rest of the columns
-    select(any_of(c(CDISC_COLS$ADNCA$Variable, conc_nca_excl_col))) %>%
+    select(any_of(c(CDISC_COLS$ADNCA$Variable, conc_nca_excl_col, grouping_vars))) %>%
 
     # Create NCA exclusion flags using the PKNCA exclude column
     .create_nca_excl_columns(conc_nca_excl_col) %>%
@@ -342,7 +352,7 @@ get_subjid <- function(data) {
     data$SUBJID
   } else if ("USUBJID" %in% names(data)) {
     if ("STUDYID" %in% names(data)) {
-      stringr::str_remove(as.character(data$USUBJID), paste0(as.character(data$STUDYID), "\\W?"))
+      sub(paste0(as.character(data$STUDYID), "\\W?"), "", as.character(data$USUBJID))
     } else {
       gsub(find_common_prefix(data$USUBJID), "", data$USUBJID)
     }

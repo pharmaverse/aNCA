@@ -83,7 +83,6 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
 #' @returns A data.frame result object with the calculated ratios.
 #' @export
-#' @export
 calculate_ratios <- function(
     data,
     test_parameter,
@@ -95,7 +94,6 @@ calculate_ratios <- function(
     custom_pptestcd = NULL) {
   UseMethod("calculate_ratios", data)
 }
-#' @export
 
 #' @export
 calculate_ratios.data.frame <- function(
@@ -231,7 +229,6 @@ calculate_ratios.data.frame <- function(
     select(any_of(c(names(df_test), "PPANMETH"))) %>%
     unique()
 }
-#' @export
 
 #' @export
 calculate_ratios.PKNCAresults <- function(

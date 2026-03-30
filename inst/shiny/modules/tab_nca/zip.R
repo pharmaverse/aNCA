@@ -1,31 +1,35 @@
-##' NCA ZIP Export Module
-##'
-##' This module provides UI and server logic to export all relevant App results a ZIP file.
-##' Users can select which results to export and the output formats for graphics, tables and slides.
-##' This module indirectly uses the stored session$userData$results.
-##'
-##' @param id A character string used to uniquely identify the module.
-##' @param res_nca NCA results object (for server).
-##' @param settings Settings object (for server).
-##' @param grouping_vars Grouping variables (for server).
+#' NCA ZIP Export Module
+#'
+#' This module provides UI and server logic to export all relevant App results a ZIP file.
+#' Users can select which results to export and the output formats for graphics, tables and slides.
+#' This module indirectly uses the stored session$userData$results.
+#'
+#' @param id A character string used to uniquely identify the module.
+#' @param res_nca NCA results object (for server).
+#' @param adnca_data Reactive with mapped PKNCAdata. Used to enable the Save
+#'   button after data mapping, before NCA has been run.
+#' @param settings Settings object (for server).
+#' @param grouping_vars Grouping variables (for server).
 
 zip_ui <- function(id) {
   ns <- NS(id)
-  actionButton(
-    inputId = ns("open_zip_modal"),
-    label = "Save",
-    icon = icon("download"),
-    class = "btn btn-primary",
-    style = paste(
-      "margin-left: 10px;",
-      "padding: 8px 18px;",
-      "border-radius: 8px;",
-      "box-shadow: 0 2px 6px rgba(0,0,0,0.08);",
-      "font-weight: 500;",
-      "font-size: 1rem;"
-    ),
-    title = "Export all selected results as a ZIP archive",
-    disabled = TRUE
+  tagList(
+    actionButton(
+      inputId = ns("open_zip_modal"),
+      label = "Save",
+      icon = icon("download"),
+      class = "btn btn-primary",
+      style = paste(
+        "margin-left: 10px;",
+        "padding: 8px 18px;",
+        "border-radius: 8px;",
+        "box-shadow: 0 2px 6px rgba(0,0,0,0.08);",
+        "font-weight: 500;",
+        "font-size: 1rem;"
+      ),
+      title = "Export all selected results as a ZIP archive",
+      disabled = TRUE
+    )
   )
 }
 
@@ -298,6 +302,11 @@ zip_ui <- function(id) {
 # Show the "Export Results" modal dialog
 .show_export_modal <- function(ns, TREE_UI, selected_tree,
                                plot_formats, slide_formats, table_formats) {
+  slide_choices <- if (
+    requireNamespace("officer", quietly = TRUE) &&
+      requireNamespace("flextable", quietly = TRUE)
+  ) c("pptx", "qmd") else "qmd"
+
   showModal(
     modalDialog(
       title = "Export Results",
@@ -338,8 +347,8 @@ zip_ui <- function(id) {
               selectizeInput(
                 ns("slide_formats"),
                 "Slide decks:",
-                choices = c("pptx", "qmd"),
-                selected = slide_formats,
+                choices = slide_choices,
+                selected = intersect(slide_formats, slide_choices),
                 multiple = TRUE
               ),
               style = "margin-bottom: 1em;"
@@ -373,14 +382,23 @@ zip_ui <- function(id) {
   )
 }
 
-zip_server <- function(id, res_nca, settings, grouping_vars) {
+zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Enable/disable ZIP export button based on res_nca availability
+    # Enable Save button after mapping; full content available after NCA
     observe({
-      req(res_nca())
+      req(adnca_data())
       shinyjs::enable("open_zip_modal")
+    })
+
+    nca_available <- reactive({
+      tryCatch({
+        result <- res_nca()
+        !is.null(result)
+      }, error = function(e) {
+        if (inherits(e, "shiny.silent.error")) FALSE else stop(e)
+      })
     })
 
     export_validation <- reactive({
@@ -436,7 +454,11 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
     # Show ZIP export modal when button is clicked
     observeEvent(input$open_zip_modal, {
       modal_shown(TRUE)
-      TREE_UI <- create_tree_from_list_names(TREE_LIST)
+      tree_items <- .available_tree_items(
+        nca_available     = isTRUE(nca_available()),
+        exploration_names = names(session$userData$results$exploration)
+      )
+      TREE_UI <- create_tree_from_list_names(tree_items)
       .show_export_modal(ns, TREE_UI, get_tree_leaf_ids(TREE_UI),
                          c("png", "html"), c("pptx", "qmd"), c("rds", "xpt", "csv"))
     })
@@ -454,7 +476,11 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 
     observeEvent(input$confirm_export, {
       export_state$res_tree_texts <- input$res_tree
-      tree_ui_save <- create_tree_from_list_names(TREE_LIST)
+      tree_items_save <- .available_tree_items(
+        nca_available     = isTRUE(nca_available()),
+        exploration_names = names(session$userData$results$exploration)
+      )
+      tree_ui_save <- create_tree_from_list_names(tree_items_save)
       export_state$res_tree      <- get_tree_ids_for_texts(tree_ui_save, input$res_tree)
       export_state$plot_formats  <- input$plot_formats
       export_state$slide_formats <- input$slide_formats
@@ -511,7 +537,11 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
 
     observeEvent(input$back_to_export, {
       modal_shown(TRUE)
-      TREE_UI <- create_tree_from_list_names(TREE_LIST)
+      tree_items <- .available_tree_items(
+        nca_available     = isTRUE(nca_available()),
+        exploration_names = names(session$userData$results$exploration)
+      )
+      TREE_UI <- create_tree_from_list_names(tree_items)
       saved_tree <- if (is.null(export_state$res_tree)) {
         get_tree_leaf_ids(TREE_UI)
       } else {
@@ -588,6 +618,31 @@ zip_server <- function(id, res_nca, settings, grouping_vars) {
   })
 }
 
+# Build the tree of available export items based on current app state.
+.available_tree_items <- function(nca_available, exploration_names) {
+  items <- list()
+
+  # Only show exploration plots that have been rendered
+  avail_plots <- intersect(
+    names(TREE_LIST$exploration),
+    exploration_names
+  )
+  if (length(avail_plots) > 0) {
+    items$exploration <- TREE_LIST$exploration[avail_plots]
+  }
+
+  if (nca_available) {
+    items$nca_results       <- TREE_LIST$nca_results
+    items$CDISC             <- TREE_LIST$CDISC
+    items$additional_analysis <- TREE_LIST$additional_analysis
+    items$extras            <- TREE_LIST$extras
+  } else {
+    items$extras <- TREE_LIST$extras[c("settings_file", "session_info")]
+  }
+
+  items
+}
+
 DEFAULT_STATS_PARAMETERS <- c(
   "CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"
 )
@@ -616,7 +671,8 @@ TREE_LIST <- list(
   extras = list(
     results_slides = "",
     r_script = "",
-    settings_file = ""
+    settings_file = "",
+    session_info = ""
   )
 )
 

@@ -203,7 +203,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
 
       all_main_panels <- map(study_types_list(), function(study_type) {
         # Unique ID for each module
-        module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
+        module_id <- gsub("[^A-Za-z0-9]", "_", study_type)
 
         accordion_panel(
           title = study_type,
@@ -233,7 +233,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       # Loop and create servers
       map(current_types, function(study_type) {
         # Define module ID
-        module_id <- str_replace_all(study_type, "[^A-Za-z0-9]", "_")
+        module_id <- gsub("[^A-Za-z0-9]", "_", study_type)
 
         if (exists(module_id, envir = initialised_modules)) {
           # If it exists, exit this iteration
@@ -375,7 +375,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # On all changes, disable NCA button for given period of time to prevent the
     # user from running the NCA before settings are applied
     observeEvent(parameter_lists_by_type(), {
-      runjs(str_glue(
+      runjs(glue::glue(
         "buttonTimeout(
           '#nca-run_nca',
           {1000},
@@ -593,16 +593,16 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         selection_df$can_non_excretion
       }
 
-      if (stringr::str_detect(st_name, "Single")) {
+      if (grepl("Single", st_name)) {
         is_selected <- is_selected & selection_df$can_single_dose
       }
-      if (stringr::str_detect(st_name, "Multiple")) {
+      if (grepl("Multiple", st_name)) {
         is_selected <- is_selected & selection_df$can_multiple_dose
       }
-      if (stringr::str_detect(st_name, "Extravascular")) {
+      if (grepl("Extravascular", st_name)) {
         is_selected <- is_selected & selection_df$can_extravascular
       }
-      if (stringr::str_detect(st_name, "Metabolite")) {
+      if (grepl("Metabolite", st_name)) {
         is_selected <- is_selected & selection_df$can_metabolite
       }
 

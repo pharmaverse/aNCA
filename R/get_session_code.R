@@ -233,7 +233,6 @@ default_mapping <- list(
 #' installed from your aNCA package version.
 #' @param output_path Path to write the resulting script file.
 #' @param mapping Named list mapping variable names (default: \code{default_mapping}).
-#' @param ratio_table Data frame containing ratio definitions (default: empty data frame).
 #'
 #' @return Invisibly returns the output_path.
 #' @export
@@ -242,10 +241,9 @@ get_settings_code <- function(
   data_path,
   output_path = "settings_code.R",
   template_path = system.file("www/templates/script_template.R", package = "aNCA"),
-  # TODO: mapping & ratio_table should be included in the settings file as well
-  # so they keep working as expected also from the settings file
-  mapping = default_mapping,
-  ratio_table = data.frame()
+  # TODO: mapping should be included in the settings file as well
+  # so it keeps working as expected also from the settings file
+  mapping = default_mapping
 ) {
   settings <- read_settings(settings_file_path)
   session <- list(
@@ -253,7 +251,7 @@ get_settings_code <- function(
     slope_rules = settings[["slope_rules"]],
     data_path = data_path,
     mapping = mapping,
-    ratio_table = ratio_table
+    time_duplicate_rows = NULL
   )
   get_code(
     template_path = template_path,

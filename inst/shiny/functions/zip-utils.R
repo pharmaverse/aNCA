@@ -386,13 +386,33 @@ prepare_export_files <- function(target_dir,
 
   progress$inc(0.2)
 
-  if ("results_slides" %in% input$res_tree) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving slideshow...")
-    .export_slides(target_dir, res_nca, grouping_vars, input, session,
-                   slide_config = slide_config)
+  if (!is.null(res_nca)) {
+    if ("results_slides" %in% input$res_tree) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving slideshow...")
+      .export_slides(target_dir, res_nca, grouping_vars, input, session,
+                     slide_config = slide_config)
+    }
+    progress$inc(0.4)
+
+    # Export pre-specification files for selected CDISC datasets
+    selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
+    if (length(selected_cdisc) > 0) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving CDISC pre-specifications...")
+      .export_pre_specs(target_dir, selected_cdisc,
+                        cdisc_data = session$userData$results$CDISC)
+    }
+
+    if ("r_script" %in% input$res_tree) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving R script...")
+      saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
+      .export_script(target_dir, session)
+    }
+  } else {
+    progress$inc(0.4)
   }
-  progress$inc(0.4)
 
   if ("settings_file" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
@@ -401,21 +421,10 @@ prepare_export_files <- function(target_dir,
   }
   progress$inc(0.6)
 
-  # Export pre-specification files for selected CDISC datasets
-  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
-  if (length(selected_cdisc) > 0) {
+  if ("session_info" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
-                 detail = "Saving CDISC pre-specifications...")
-    .export_pre_specs(target_dir, selected_cdisc,
-                      cdisc_data = session$userData$results$CDISC)
-  }
-
-  saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
-
-  if ("r_script" %in% input$res_tree) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving R script...")
-    .export_script(target_dir, session)
+                 detail = "Saving session info...")
+    .export_session_info(target_dir)
   }
   progress$inc(0.8)
 
@@ -481,12 +490,26 @@ prepare_export_files <- function(target_dir,
     )
   }
   if ("pptx" %in% input$slide_formats) {
-    create_pptx_dose_slides(
-      res_dose_slides,
-      file.path(path, "results_slides.pptx"),
-      slide_title,
-      system.file("www/templates/template.pptx", package = "aNCA")
-    )
+    if (
+      !requireNamespace("officer", quietly = TRUE) ||
+        !requireNamespace("flextable", quietly = TRUE)
+    ) {
+      showNotification(
+        paste(
+          "The 'officer' and 'flextable' packages are required to export PowerPoint slides.",
+          "Install them with: install.packages(c('officer', 'flextable'))"
+        ),
+        type = "error",
+        duration = 10
+      )
+    } else {
+      create_pptx_dose_slides(
+        res_dose_slides,
+        file.path(path, "results_slides.pptx"),
+        slide_title,
+        system.file("www/templates/template.pptx", package = "aNCA")
+      )
+    }
   }
 }
 
@@ -504,7 +527,11 @@ prepare_export_files <- function(target_dir,
       dplyr::select(-default)
   }
 
+  settings_list$ratio_table <- session$userData$ratio_table()
+
   settings_to_save <- list(
+    mapping = session$userData$mapping,
+    filters = session$userData$applied_filters,
     settings = settings_list,
     slope_rules = session$userData$slope_rules()
   )
@@ -552,6 +579,41 @@ prepare_export_files <- function(target_dir,
   )
 }
 
+#' Helper to export session info for reproducibility
+#' @param target_dir Target directory to save the session info
+#' @keywords internal
+#' @noRd
+.export_session_info <- function(target_dir) {
+  si <- utils::sessionInfo()
+  lines <- c(
+    paste("R version:", si$R.version$version.string),
+    paste("Platform: ", si$platform),
+    paste("Running under:", si$running),
+    "",
+    "aNCA and attached packages:",
+    ""
+  )
+
+  # Collect attached packages (base + other) with versions, sorted alphabetically
+
+  attached <- c(
+    vapply(si$otherPkgs, function(p) paste0("  ", p$Package, " ", p$Version), ""),
+    vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
+  )
+  lines <- c(lines, sort(attached))
+
+  # Loaded-only (namespace) packages
+  if (length(si$loadedOnly) > 0) {
+    loaded <- vapply(
+      si$loadedOnly,
+      function(p) paste0("  ", p$Package, " ", p$Version), ""
+    )
+    lines <- c(lines, "", "Loaded via namespace (not attached):", "", sort(loaded))
+  }
+
+  writeLines(lines, file.path(target_dir, "session_info.txt"))
+}
+
 #' Clean Export Directory
 #' @param target_dir Target directory to clean
 #' @param input Shiny input object
@@ -583,6 +645,10 @@ prepare_export_files <- function(target_dir,
   # Preserve pre-specs only when at least one CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                   value = TRUE))
+  }
+  if ("session_info" %in% fnames) {
+    files_req <- c(files_req, grep("session_info\\.txt$", all_files,
                                    value = TRUE))
   }
   file.remove(all_files[!all_files %in% files_req])

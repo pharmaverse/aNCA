@@ -287,7 +287,7 @@ create_html_dose_slides <- function(res_dose_slides, path, title) {
     title = title,
     use_plotly = use_plotly
   )
-  if (requireNamespace("quarto", quietly = TRUE)) {
+  if (!requireNamespace("quarto", quietly = TRUE)) {
     stop(
       "HTML slides draft requires `quarto` package, please install it with ",
       "`install.packages('quarto')`"

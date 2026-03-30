@@ -38,21 +38,33 @@ tab_nca_ui <- function(id) {
     #' Results
     nav_panel(
       "Results", fluid = TRUE,
-      navset_pill_list(
-        nca_results_ui(ns("nca_results")),
-        nav_panel(
-          "Slopes Information",
-          navset_pill(
-            nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
-                                             class = "border-0 shadow-none")),
-            nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+      div(
+        class = "nca-run-container",
+        div(
+          id = ns("nca_run_overlay"),
+          class = "nca-run-overlay",
+          "Run NCA first"
+        ),
+        div(
+          style = "position: relative;",
+          navset_pill_list(
+            widths = c(2, 10),
+            nca_results_ui(ns("nca_results")),
+            nav_panel(
+              "Slopes Information",
+              navset_pill(
+                nav_panel("Slopes Results", card(reactable_ui(ns("slope_results")),
+                                                 class = "border-0 shadow-none")),
+                nav_panel("Manual Adjustments", reactable_ui(ns("manual_slopes"))),
+              )
+            ),
+            nav_panel(
+              "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
+            ),
+            nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
+            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
           )
-        ),
-        nav_panel(
-          "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
-        ),
-        nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-        nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+        )
       )
     ),
     #' Additional analysis
@@ -164,11 +176,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
             remove_pp_not_requested()
         },
         warning = function(w) {
-          log_warn("Warning during NCA calculation: {conditionMessage(w)}")
-          pknca_warn_env$warnings <- append(
-            pknca_warn_env$warnings,
-            .parse_pknca_warning(w)
-          )
+          parsed <- .parse_pknca_warning(w)
+          if (!is.null(parsed)) {
+            log_warn("Warning during NCA calculation: {conditionMessage(w)}")
+            pknca_warn_env$warnings <- append(pknca_warn_env$warnings, parsed)
+          }
+          invokeRestart("muffleWarning")
         })
 
         # Display unique warnings thrown by PKNCA run.
@@ -191,6 +204,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         # Delay the removal of loading modal to give it enough time to render
         later::later(~shiny::removeModal(session = session), delay = 0.5)
       })
+    }) %>%
+      bindEvent(input$run_nca)
+
+    # Hide "Run NCA first" overlay when Run NCA is clicked
+    observe({
+      shinyjs::hide(id = "nca_run_overlay")
     }) %>%
       bindEvent(input$run_nca)
 
@@ -233,7 +252,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca)
+    parameter_datasets_server("parameter_datasets", res_nca, extra_group_vars)
 
     #' Parameter plots module
     parameter_plots_server("parameter_plots", res_nca)

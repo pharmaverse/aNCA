@@ -15,7 +15,7 @@ tab_explore_ui <- function(id) {
         sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
         fillable = TRUE,
         plotlyOutput(ns("individualplot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(
@@ -24,7 +24,7 @@ tab_explore_ui <- function(id) {
         sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
         fillable = TRUE,
         plotlyOutput(ns("mean_plot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(
@@ -86,7 +86,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         threshold_value = individual_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
         use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
-        palette = individual_inputs()$palette
+        palette = individual_inputs()$palette,
+        line_type = individual_inputs()$y_axis_values
       )
     })
 
@@ -117,7 +118,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         y_limits = mean_inputs()$y_limits,
         threshold_value = mean_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
-        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
+        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
+        line_type = mean_inputs()$y_axis_values
       )
     })
 
@@ -130,10 +132,14 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       qc_counter(0L)
     })
 
-    # Save the default objects for the ZIP folder whenever they change
+    # Save each plot independently for the ZIP folder
     observe({
-      req(individualplot(), meanplot())
+      req(individualplot())
       session$userData$results$exploration$individualplot <- individualplot()
+    })
+
+    observe({
+      req(meanplot())
       session$userData$results$exploration$meanplot <- meanplot()
     })
 

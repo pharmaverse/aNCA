@@ -5,24 +5,23 @@
 #' @param path File path to save the presentation
 #' @param title Title for the presentation
 #' @param template Path to PowerPoint template file
-#' @importFrom officer read_pptx add_slide ph_with ph_location_type
 #' @return rpptx object
+#' @keywords internal
 create_pptx_doc <- function(path, title, template) {
-  pptx <- read_pptx(template)
+  pptx <- officer::read_pptx(template)
   add_pptx_sl_title(pptx, title)
 }
 
 #' Add a title slide to the rpptx document
 #' @param pptx rpptx object
 #' @param title Title text
-#' @importFrom officer add_slide ph_with ph_location_type
 #' @return rpptx object with title slide added
 #' @keywords internal
 add_pptx_sl_title <- function(pptx, title) {
-  add_slide(pptx, layout = "Title Slide", master = "Office Theme") %>%
-    ph_with(
+  officer::add_slide(pptx, layout = "Title Slide", master = "Office Theme") %>%
+    officer::ph_with(
       value = title,
-      location = ph_location_type(type = "ctrTitle")
+      location = officer::ph_location_type(type = "ctrTitle")
     )
 }
 
@@ -30,15 +29,11 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @param pptx rpptx object
 #' @param df Data frame to show as table
 #' @param plot ggplot object to show as plot
-#' @importFrom officer add_slide ph_with ph_location_type
-#' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
-  slide <- add_slide(pptx, layout = "Content with Caption")
-  if (!is.null(plot)) {
-    slide <- ph_with(slide, value = plot, location = "Content Placeholder 1")
-  }
-  ph_with(slide, value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+  officer::add_slide(pptx, layout = "Content with Caption") %>%
+    officer::ph_with(value = plot, location = "Content Placeholder 1") %>%
+    officer::ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
 }
 
 #' Add a slide with a table only
@@ -47,38 +42,35 @@ add_pptx_sl_plottable <- function(pptx, df, plot) {
 #' @param title Title text for the slide
 #' @param subtitle Subtitle text for the slide
 #' @param footer Footer text for the slide
-#' @importFrom officer add_slide ph_with fpar ftext fp_par fp_text
-#' @importFrom flextable flextable
 #' @return rpptx object with slide added
 add_pptx_sl_table <- function(pptx, df, title = "",
                               subtitle = "",
                               footer = "Click here for individual results") {
 
-  title_formatted <- fpar(
-    ftext(title),
+  title_formatted <- officer::fpar(
+    officer::ftext(title),
     "\n",
-    ftext(subtitle, prop = fp_text(font.size = 12)),
-    fp_p = fp_par(text.align = "center", line_spacing = 1)
+    officer::ftext(subtitle, prop = officer::fp_text(font.size = 12)),
+    fp_p = officer::fp_par(text.align = "center", line_spacing = 1)
   )
 
   # Set flextable to autofit and center for better appearance
   ft <- flextable::flextable(df) %>%
     flextable::autofit()
 
-  add_slide(pptx, layout = "Title Only") %>%
-    ph_with(value = ft, location = "Table Placeholder 1") %>%
-    ph_with(value = title_formatted, location = "Title 1") %>%
-    ph_with(value = footer, location = "Footer Placeholder 3")
+  officer::add_slide(pptx, layout = "Title Only") %>%
+    officer::ph_with(value = ft, location = "Table Placeholder 1") %>%
+    officer::ph_with(value = title_formatted, location = "Title 1") %>%
+    officer::ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
 #' Add a slide with a plot only
 #' @param pptx rpptx object
 #' @param plot ggplot object to show as plot
-#' @importFrom officer add_slide ph_with
 #' @return rpptx object with slide added
 add_pptx_sl_plot <- function(pptx, plot) {
-  add_slide(pptx, layout = "Picture with Caption") %>%
-    ph_with(value = plot, location = "Picture Placeholder 2")
+  officer::add_slide(pptx, layout = "Picture with Caption") %>%
+    officer::ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
 #' Add individual-subject slides for one dose group to a pptx object
@@ -188,7 +180,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 .add_pptx_group_summary <- function(pptx, group_data, i, in_sections, lst_group_slide) {
   pptx <- add_pptx_sl_table(pptx, group_data$info, paste0("Group ", i, " Summary"),
                             subtitle = paste(group_data$group)) %>%
-    ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1))
+    officer::ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1))
   pptx <- .add_pptx_main_summary_slide(pptx, group_data, i, in_sections)
   pptx <- pptx %>% {
     if (in_sections("linplot")) add_pptx_sl_plot(., group_data$linplot) else .
@@ -235,10 +227,18 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param path File path to save the presentation
 #' @param title Title for the presentation
 #' @param template Path to PowerPoint template file
-#' @importFrom officer read_pptx add_slide ph_with ph_location_type ph_slidelink move_slide
 #' @return TRUE (invisible). Writes the PowerPoint file to the specified path
 create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
-  slide_sections <- attr(res_dose_slides, "slide_sections")
+  for (pkg in c("officer", "flextable")) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop(
+        "Package '", pkg, "' is required for PowerPoint export. ",
+        "Install it with install.packages('", pkg, "')"
+      )
+    }
+  }
+
+  slide_sections     <- attr(res_dose_slides, "slide_sections")
   additional_analysis <- attr(res_dose_slides, "additional_analysis")
 
   in_sections <- function(id) is.null(slide_sections) || id %in% slide_sections
@@ -250,21 +250,21 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   for (i in seq_along(res_dose_slides)) {
     result <- .process_pptx_group_slides(pptx, res_dose_slides[[i]], i, in_sections,
                                          lst_group_slide, group_slides)
-    pptx <- result$pptx
+    pptx           <- result$pptx
     lst_group_slide <- result$lst_group_slide
-    group_slides <- result$group_slides
+    group_slides    <- result$group_slides
   }
 
   if (length(group_slides) > 0) {
     group_slides_rev <- rev(group_slides) + (seq_along(group_slides) - 1)
     pptx <- purrr::reduce(
       group_slides_rev,
-      function(pptx, slide_index) move_slide(pptx, index = slide_index, to = 2),
+      function(pptx, slide_index) officer::move_slide(pptx, index = slide_index, to = 2),
       .init = pptx
     )
   }
   pptx <- add_pptx_sl_title(pptx, "Extra Figures")
-  pptx <- move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
+  pptx <- officer::move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
 
   # Add additional analysis slides generically
   non_empty <- .filter_additional_analysis(additional_analysis, slide_sections)
