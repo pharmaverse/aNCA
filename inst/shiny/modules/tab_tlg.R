@@ -280,7 +280,20 @@ tab_tlg_server <- function(id, data) {
           g_def <- .TLG_DEFINITIONS[[g_id]]
           module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
-          if (exists(g_def$fun)) {
+          if (!requireNamespace("rlistings", quietly = TRUE)) {
+            showNotification(
+              paste(
+                "The 'rlistings' package is required to render listings.",
+                "Install it with: install.packages('rlistings')"
+              ),
+              type = "error",
+              duration = 10
+            )
+            tags$div(
+              class = "alert alert-warning",
+              "Package 'rlistings' is not installed. Install it to view listings."
+            )
+          } else if (exists(g_def$fun)) {
             tlg_module_server(module_id, data, "listing", get(g_def$fun), g_def$options)
             tlg_module_ui(session$ns(module_id), "listing", g_def$options)
           } else {

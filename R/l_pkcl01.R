@@ -69,7 +69,7 @@
 #'                          )
 #'   print(listing_ex)
 #'
-#' @import dplyr formatters rlistings
+#' @import dplyr formatters
 #' @importFrom stats setNames
 #' @export
 #' @author Gerardo Rodriguez
@@ -84,6 +84,13 @@ l_pkcl01 <- function(
   subtitle = NULL,
   footnote = "*: Subjects excluded from the summary table and mean plots"
 ) {
+
+  if (!requireNamespace("rlistings", quietly = TRUE)) {
+    stop(
+      "Package 'rlistings' is required for concentration listings. ",
+      "Install it with install.packages('rlistings')"
+    )
+  }
 
   # If there are columns defined in the function that are not in the data, throw an error
   missing_cols <- setdiff(c(grouping_vars, displaying_vars), colnames(data))
