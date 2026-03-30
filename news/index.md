@@ -184,6 +184,12 @@
   ([\#1060](https://github.com/pharmaverse/aNCA/issues/1060))
 - Filtering will now correctly also affect all the input widgets in NCA
   setup ([\#1092](https://github.com/pharmaverse/aNCA/issues/1092))
+- Boxplot parameter selector and excretion end time column selector now
+  restrict to single selection, preventing errors when downstream code
+  expects a single value. Boxplot selector also shows each manual
+  interval parameter with its range suffix (e.g. `AUCINT_0-12`,
+  `CAVGINT_0-24`) instead of collapsing them into a single entry
+  ([\#1148](https://github.com/pharmaverse/aNCA/issues/1148))
 
 ## aNCA 0.1.0
 
