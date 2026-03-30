@@ -62,7 +62,6 @@ parameter_datasets_server <- function(id, res_nca, grouping_vars = reactive(char
     return(NULL)
   }
 
-  # Comparison operators per flag parameter (same order as in settings)
   flag_operators <- c(
     R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < "
   )
