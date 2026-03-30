@@ -1,5 +1,6 @@
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
+/* Left nav sidebar only (Data / Exploration / NCA / TLG / About) */
+.bslib-page-sidebar > .bslib-sidebar-layout {
+  --_sidebar-width: 136px !important;
 }
 
 .sidebar .sidebar-content {
