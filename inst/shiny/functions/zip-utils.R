@@ -352,12 +352,33 @@ prepare_export_files <- function(target_dir,
 
   progress$inc(0.2)
 
-  if ("results_slides" %in% input$res_tree) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving slideshow...")
-    .export_slides(target_dir, res_nca, grouping_vars, input, session)
+  # NCA-dependent exports: only run when results are available
+  if (!is.null(res_nca)) {
+    if ("results_slides" %in% input$res_tree) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving slideshow...")
+      .export_slides(target_dir, res_nca, grouping_vars, input, session)
+    }
+    progress$inc(0.4)
+
+    # Export pre-specification files for selected CDISC datasets
+    selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
+    if (length(selected_cdisc) > 0) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving CDISC pre-specifications...")
+      .export_pre_specs(target_dir, selected_cdisc,
+                        cdisc_data = session$userData$results$CDISC)
+    }
+
+    if ("r_script" %in% input$res_tree) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving R script...")
+      saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
+      .export_script(target_dir, session)
+    }
+  } else {
+    progress$inc(0.4)
   }
-  progress$inc(0.4)
 
   if ("settings_file" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
@@ -365,23 +386,6 @@ prepare_export_files <- function(target_dir,
     .export_settings(target_dir, session)
   }
   progress$inc(0.6)
-
-  # Export pre-specification files for selected CDISC datasets
-  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
-  if (length(selected_cdisc) > 0) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving CDISC pre-specifications...")
-    .export_pre_specs(target_dir, selected_cdisc,
-                      cdisc_data = session$userData$results$CDISC)
-  }
-
-  saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
-
-  if ("r_script" %in% input$res_tree) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving R script...")
-    .export_script(target_dir, session)
-  }
 
   if ("session_info" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
@@ -450,7 +454,10 @@ prepare_export_files <- function(target_dir,
       dplyr::select(-default)
   }
 
+  settings_list$ratio_table <- session$userData$ratio_table()
+
   settings_to_save <- list(
+    mapping = session$userData$mapping,
     filters = session$userData$applied_filters,
     settings = settings_list,
     slope_rules = session$userData$slope_rules()

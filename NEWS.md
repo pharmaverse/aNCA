@@ -2,6 +2,11 @@
 
 ## Features added
 
+* Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)
+* General Exclusions: "Excl. TLG" checkbox per exclusion entry sets PKSUM1F to "Y", filtering those rows from TLGs (#1018)
+* NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile with bidirectional cascading updates between Analyte and Specimen (#1114)
+* Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
+* Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
 * Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
 * Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
 * Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
@@ -36,6 +41,9 @@
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 * Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
 * Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
+* Removed `methods`, `scales`, and `stringr` from package dependencies, replacing all usages with base R equivalents (#1108)
+* SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
+
 
 ## Bugs fixed
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
@@ -56,6 +64,8 @@ identify difference between missing and not requested (#934)
 * Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
 * Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
 * Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
+* Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
+* Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1148)
 
 # aNCA 0.1.0
 

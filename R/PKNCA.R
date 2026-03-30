@@ -82,6 +82,7 @@
 #' PKNCA_create_data_object(adnca_data)
 #'
 #' @importFrom dplyr filter select arrange across group_by mutate ungroup
+#' @importFrom glue glue
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units deparse_unit
 #' @importFrom stats as.formula
@@ -132,12 +133,12 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 
   conc_formula <-
     "{conc_column} ~ {time_column} | {studyid_column} + {matrix_column} + {drug_column} + {usubjid_column} / {analyte_column}" %>% # nolint
-    glue::glue() %>%
+    glue() %>%
     as.formula()
 
   dose_formula <-
     "DOSEA ~ {time_column} | {studyid_column} + {drug_column} + {usubjid_column}" %>% # nolint
-    glue::glue() %>%
+    glue() %>%
     as.formula()
 
   # Create concentration data
@@ -912,18 +913,33 @@ remove_pp_not_requested <- function(pknca_res) {
 #'
 #' @param pknca_data A PKNCAdata object.
 #' @param exclusion_list A list of lists, each with elements:
-#'   - reason: character string with the exclusion reason (e.g., "Vomiting")
+#'   - reason: character string with the exclusion reason
 #'   - rows: integer vector of row indices to apply the reason to
+#'   - exclude_nca: logical, if TRUE the rows are excluded from NCA
+#'     calculations (added to the exclude column)
+#'   - exclude_tlg: logical, if TRUE the rows are flagged with
+#'     PKSUM1F = "Y" so TLGs can filter them out
 #'
-#' @return The modified PKNCAdata object with updated exclusion reasons in the concentration object.
+#' @return The modified PKNCAdata object with updated exclusion
+#'   reasons and PKSUM1F in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
+  if (is.null(exclusion_list) || length(exclusion_list) == 0) {
+    return(pknca_data)
+  }
+
   exclude_col <- pknca_data$conc$columns[["exclude"]]
   if (is.null(exclude_col)) {
     pknca_data$conc$data$exclude <- rep("", nrow(pknca_data$conc$data))
     pknca_data$conc$columns[["exclude"]] <- "exclude"
     exclude_col <- "exclude"
   }
+
+  # Initialise PKSUM1F if not present
+  if (!"PKSUM1F" %in% names(pknca_data$conc$data)) {
+    pknca_data$conc$data$PKSUM1F <- ""
+  }
+
   for (excl in exclusion_list) {
     reason <- excl$reason
     rows <- excl$rows
@@ -932,12 +948,22 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
         "Row indices in exclusion_list are out of bounds",
         " for the exclusion: ", reason
       )
-    } else {
+    }
+    # NCA exclusion: add reason to exclude column
+    # Default TRUE for backward compatibility with older settings
+    if (isTRUE(excl$exclude_nca %||% TRUE)) {
       pknca_data$conc$data[[exclude_col]][rows] <- ifelse(
         pknca_data$conc$data[[exclude_col]][rows] == "",
         reason,
-        paste0(pknca_data$conc$data[[exclude_col]][rows], "; ", reason)
+        paste0(
+          pknca_data$conc$data[[exclude_col]][rows],
+          "; ", reason
+        )
       )
+    }
+    # TLG exclusion: flag rows for PK summary exclusion
+    if (isTRUE(excl$exclude_tlg)) {
+      pknca_data$conc$data$PKSUM1F[rows] <- "Y"
     }
   }
   pknca_data

@@ -15,7 +15,7 @@ tab_explore_ui <- function(id) {
         sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
         fillable = TRUE,
         plotlyOutput(ns("individualplot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(
@@ -24,7 +24,7 @@ tab_explore_ui <- function(id) {
         sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
         fillable = TRUE,
         plotlyOutput(ns("mean_plot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(
@@ -132,10 +132,14 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       qc_counter(0L)
     })
 
-    # Save the default objects for the ZIP folder whenever they change
+    # Save each plot independently for the ZIP folder
     observe({
-      req(individualplot(), meanplot())
+      req(individualplot())
       session$userData$results$exploration$individualplot <- individualplot()
+    })
+
+    observe({
+      req(meanplot())
       session$userData$results$exploration$meanplot <- meanplot()
     })
 

@@ -62,6 +62,8 @@
     "PCTPTNUM",
     "PCTPTREF",
     "PKNCA",
+    "PKSUM1F",
+    "PKSUM1FN",
     "PPANMETH",
     "PPORRES",
     "PPORRESU",
