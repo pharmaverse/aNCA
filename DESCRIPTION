@@ -36,7 +36,6 @@ Imports:
     plotly (>= 4.11.0),
     purrr,
     rlang,
-    rlistings,
     stats,
     tern,
     tidyr,
