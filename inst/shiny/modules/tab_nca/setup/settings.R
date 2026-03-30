@@ -65,6 +65,17 @@ settings_ui <- function(id) {
             )
           ),
           column(
+            4,
+            numericInput(
+              ns("min_hl_points"),
+              "Min. Points for Half-life:",
+              value = 3,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          ),
+          column(
             4, # pickerinput only enabled when IV and EX data present
             shinyjs::hidden(
               div(
@@ -324,6 +335,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEO_threshold", max = 100, min = 0, lab = "AUCPEO")
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
+    limit_input_value(input, session, "min_hl_points", max = 10, min = 2, lab = "Min. HL Points")
 
     # Reactive value to store the partial intervals data table
     # Define the parameters that can be used for partial area calculations
@@ -412,6 +424,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         profile = input$select_profile,
         pcspec = input$select_pcspec,
         method = input$method,
+        min_hl_points = input$min_hl_points,
         bioavailability = input$bioavailability,
         data_imputation = list(
           impute_c0 = data_imputation$should_impute_c0(),
