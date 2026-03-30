@@ -125,6 +125,9 @@
 - [`detect_study_types()`](https://pharmaverse.github.io/aNCA/reference/detect_study_types.md)
   : Detect study types
 
+- [`dm_example`](https://pharmaverse.github.io/aNCA/reference/dm_example.md)
+  : dm_example
+
 - [`dose_profile_duplicates()`](https://pharmaverse.github.io/aNCA/reference/dose_profile_duplicates.md)
   : Create duplicates in concentration data with Pre-dose and Last
   Values for Dosing Cycles
@@ -142,6 +145,9 @@
 
 - [`.handle_tooltips()`](https://pharmaverse.github.io/aNCA/reference/dot-handle_tooltips.md)
   : Tooltip construction helper
+
+- [`ex_example`](https://pharmaverse.github.io/aNCA/reference/ex_example.md)
+  : ex_example
 
 - [`exploration_individualplot()`](https://pharmaverse.github.io/aNCA/reference/exploration_individualplot.md)
   : Create an Individual PK Line Plot
@@ -255,6 +261,9 @@
 
 - [`parse_annotation()`](https://pharmaverse.github.io/aNCA/reference/parse_annotation.md)
   : Generate an Empty Plotly Object
+
+- [`pc_example`](https://pharmaverse.github.io/aNCA/reference/pc_example.md)
+  : pc_example
 
 - [`pivot_wider_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/pivot_wider_pknca_results.md)
   : Reshape PKNCA Results
