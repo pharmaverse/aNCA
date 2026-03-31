@@ -310,16 +310,62 @@ div[data-value="Settings"] > div.row a {
   padding: 0;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
+/* Left nav sidebar only (Data / Exploration / NCA / TLG / About) */
+.bslib-page-sidebar > .bslib-sidebar-layout {
+  --_sidebar-width: 150px !important;
 }
 
-.sidebar .sidebar-content {
+/* Left nav sidebar: no padding (nav pills handle their own spacing) */
+.bslib-page-sidebar > .bslib-sidebar-layout > .sidebar .sidebar-content {
   padding-left: 0 !important;
   padding-right: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
+}
+
+/* Right-side sidebars: width and padding */
+.sidebar-right {
+  --_sidebar-width: 250px !important;
+}
+
+/* Drag handle for resizing right-side sidebars */
+.sidebar-right > .sidebar > .sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.sidebar-right > .sidebar > .sidebar-resize-handle:hover,
+.sidebar-right > .sidebar > .sidebar-resize-handle.dragging {
+  background: #007bc2;
+}
+
+.sidebar-right > .sidebar {
+  position: relative;
+}
+
+.sidebar-right > .sidebar .sidebar-content {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  overflow-x: hidden !important;
+}
+
+/* Prevent dropdowns/inputs from overflowing the sidebar */
+.sidebar-right .shiny-input-container {
+  max-width: 100% !important;
+}
+
+.sidebar-right .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar .sidebar-content .row > :nth-child(2) {
@@ -655,62 +701,6 @@ div[data-value="Settings"] > div.row a {
   background-color: #E7ECFA;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
-}
-
-.sidebar .sidebar-content {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100% !important;
-}
-
-.sidebar .sidebar-content .row > :nth-child(2) {
-  display: none;
-}
-
-.sidebar .sidebar-content .row {
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.sidebar .sidebar-content .row > :first-child {
-  width: 100%;
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul {
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li:last-child {
-  margin-top: auto;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a {
-  padding-left: 30px;
-  padding-right: 30px;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #E7ECFA;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
-  color: #c0c0c0;
-}
-
 .stepper-wrapper {
   max-width: 100%;
   margin-bottom: 40px;
@@ -911,24 +901,4 @@ h4.modal-title:has(#loading-title) {
 .ratio-pair-row .ratio-remove-btn-wrapper .btn:hover {
   background-color: #9b9b9b;
   border-color: #9b9b9b;
-}
-
-/* NCA setup: fix pill-list nav column to 200px */
-.page-container .row:has(> [class*="col-sm"] > .nav-pills) {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-}
-
-.page-container .row > [class*="col-sm"]:has(.nav-pills) {
-  width: 200px !important;
-  min-width: 200px !important;
-  max-width: 200px !important;
-  flex: 0 0 200px !important;
-  padding-right: 0 !important;
-}
-
-.page-container .row > [class*="col-sm"]:has(.nav-pills) ~ [class*="col-sm"] {
-  flex: 1 1 auto !important;
-  width: calc(100% - 200px) !important;
-  max-width: calc(100% - 200px) !important;
 }
