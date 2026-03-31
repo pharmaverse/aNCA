@@ -51,8 +51,15 @@ parameter_plots_server <- function(id, res_nca) {
 
     # Update picker inputs when boxplotdata is available
     observeEvent(res_nca(), {
-      # Update the selected_param_boxplot picker input
-      param_choices <- unique(res_nca()$result$PPTESTCD)
+      # Rename manual interval parameters to include the range suffix
+      # (e.g. AUCINT -> AUCINT_0-12) so each interval appears as a distinct choice
+      result_data <- res_nca()$result %>%
+        mutate(PPTESTCD = ifelse(
+          type_interval == "manual",
+          paste0(PPTESTCD, "_", start, "-", end),
+          PPTESTCD
+        ))
+      param_choices <- unique(result_data$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
         "CMAX"
@@ -74,7 +81,8 @@ parameter_plots_server <- function(id, res_nca) {
                      selector_ui_wrapper = "params_to_display_ui_wrapper",
                      id = "selected_param_boxplot",
                      label = "Choose the parameter to display:",
-                     metadata_type = "parameter")
+                     metadata_type = "parameter",
+                     multiple = FALSE)
 
       # Rendering parameters to display selector with labels
       selector_label(input = input,

@@ -433,12 +433,26 @@ prepare_export_files <- function(target_dir,
     )
   }
   if ("pptx" %in% input$slide_formats) {
-    create_pptx_dose_slides(
-      res_dose_slides,
-      file.path(path, "results_slides.pptx"),
-      slide_title,
-      system.file("www/templates/template.pptx", package = "aNCA")
-    )
+    if (
+      !requireNamespace("officer", quietly = TRUE) ||
+        !requireNamespace("flextable", quietly = TRUE)
+    ) {
+      showNotification(
+        paste(
+          "The 'officer' and 'flextable' packages are required to export PowerPoint slides.",
+          "Install them with: install.packages(c('officer', 'flextable'))"
+        ),
+        type = "error",
+        duration = 10
+      )
+    } else {
+      create_pptx_dose_slides(
+        res_dose_slides,
+        file.path(path, "results_slides.pptx"),
+        slide_title,
+        system.file("www/templates/template.pptx", package = "aNCA")
+      )
+    }
   }
 }
 
