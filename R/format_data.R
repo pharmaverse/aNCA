@@ -123,13 +123,15 @@ format_pkncaconc_data <- function(ADNCA,
         "extravascular"
       )
     ) %>%
-    arrange(!!!syms(group_columns), dose_time) %>%
+    # Arrange by dose-level groups + dose_time so diff(dose_time) is monotonic
+    arrange(!!!syms(dose_group_columns), dose_time) %>%
     # Use dose-level grouping so DOSNOA is consistent across specimen types
     group_by(!!!syms(dose_group_columns)) %>%
     mutate(
       DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
     ) %>%
     ungroup() %>%
+    arrange(!!!syms(group_columns), dose_time) %>%
     select(-dose_time)
 }
 
