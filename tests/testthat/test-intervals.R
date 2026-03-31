@@ -22,7 +22,8 @@ describe("format_pkncadata_intervals", {
       "STUDYID", "USUBJID", "PCSPEC",
       "DOSETRT", "PARAM"
     ),
-    time_column = "AFRLT"
+    time_column = "AFRLT",
+    dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")
   )
 
   df_dose <- format_pkncadose_data(df_conc,

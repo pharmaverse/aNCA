@@ -21,7 +21,8 @@ describe("format_pkncaconc_data", {
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DOSETRT", "PARAM"),
                                      time_column = "AFRLT",
-                                     rrlt_column = "ARRLT")
+                                     rrlt_column = "ARRLT",
+                                     dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
 
     expect_s3_class(df_conc, "data.frame")
     expect_setequal(
@@ -69,7 +70,8 @@ describe("format_pkncaconc_data", {
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DOSETRT", "PARAM"),
                                      time_column = "AFRLT",
-                                     rrlt_column = "ARRLT")
+                                     rrlt_column = "ARRLT",
+                                     dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
 
     expect_true(all(df_conc$EVID == 0))
   })
@@ -81,7 +83,8 @@ describe("format_pkncaconc_data", {
     result <- format_pkncaconc_data(
       data_with_paramcd,
       group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT", "PARAM"),
-      time_column = "AFRLT"
+      time_column = "AFRLT",
+      dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")
     )
     expect_true(all(!grepl("DOSE", result$PARAMCD, ignore.case = TRUE)))
   })
@@ -91,7 +94,8 @@ describe("format_pkncaconc_data", {
     expect_error(format_pkncaconc_data(empty_adnca,
                                        group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                          "DOSETRT", "PARAM"),
-                                       time_column = "AFRLT"),
+                                       time_column = "AFRLT",
+                                       dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")),
                  regexp = "Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   })
 
@@ -101,7 +105,8 @@ describe("format_pkncaconc_data", {
       format_pkncaconc_data(
         incomplete_adnca,
         group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT", "PARAM"),
-        time_column = "AFRLT"
+        time_column = "AFRLT",
+        dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")
       ),
       regexp = "Missing required columns: PARAM"
     )
@@ -123,7 +128,8 @@ describe("format_pkncaconc_data", {
                                                        "DOSETRT", "PARAM"),
                                      time_end_column = "AEFRLT",
                                      time_column = "AFRLT",
-                                     rrlt_column = "ARRLT")
+                                     rrlt_column = "ARRLT",
+                                     dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
 
     # CONCDUR is created correctly based on the time end column
     expect_equal(df_conc$CONCDUR, ifelse(df_conc$USUBJID %in% subj1, 0.5, 0))
@@ -156,7 +162,8 @@ describe("format_pkncaconc_data", {
     res <- format_pkncaconc_data(
       test_df,
       group_columns = "USUBJID",
-      nca_exclude_reason_columns = c("NCA1XRS", "NCA2XRS")
+      nca_exclude_reason_columns = c("NCA1XRS", "NCA2XRS"),
+      dose_group_columns = "USUBJID"
     )
 
     expect_equal(res$nca_exclude, exp_nca_exclude)
@@ -167,7 +174,8 @@ describe("format_pkncaconc_data", {
     df_conc <- format_pkncaconc_data(multi_analyte_adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DOSETRT", "PARAM"),
-                                     time_column = "AFRLT")
+                                     time_column = "AFRLT",
+                                     dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
     expect_equal(nrow(df_conc), 20)
     expect_equal(length(unique(df_conc$PARAM)), 2)
   })
@@ -176,7 +184,8 @@ describe("format_pkncaconc_data", {
 describe("format_pkncadose_data", {
   df_conc <- format_pkncaconc_data(ADNCA,
                                    group_columns = c("STUDYID", "USUBJID", "PCSPEC",
-                                                     "DOSETRT", "PARAM"))
+                                                     "DOSETRT", "PARAM"),
+                                   dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
 
   it("generates with no errors", {
     df_dose <- format_pkncadose_data(df_conc,
@@ -237,7 +246,8 @@ describe("format_pkncadose_data", {
     df_conc <- format_pkncaconc_data(negative_time_adnca,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DOSETRT", "PARAM"),
-                                     time_column = "AFRLT")
+                                     time_column = "AFRLT",
+                                     dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
     df_dose <- format_pkncadose_data(df_conc,
                                      group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                                        "DOSETRT", "PARAM"))
