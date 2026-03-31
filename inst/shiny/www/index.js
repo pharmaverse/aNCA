@@ -83,8 +83,67 @@ const enableDragAndDropUpload = function(element_id) {
 }
 document.addEventListener('DOMContentLoaded', function () {
   enableDragAndDropUpload('data-raw_data-upload_container');
-
+  initSidebarResize();
 });
+
+/**
+ * Attaches a drag handle to a single sidebar element for resizing.
+ * Updates the bslib grid's --_sidebar-width CSS variable on drag.
+ */
+function attachResizeHandle(sidebar) {
+  if (sidebar.querySelector('.sidebar-resize-handle')) return;
+
+  var handle = document.createElement('div');
+  handle.className = 'sidebar-resize-handle';
+  sidebar.prepend(handle);
+
+  var layout = sidebar.closest('.sidebar-right');
+
+  handle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    handle.classList.add('dragging');
+    var startX = e.clientX;
+    var startWidth = sidebar.getBoundingClientRect().width;
+
+    function onMouseMove(e) {
+      var newWidth = startWidth + (startX - e.clientX);
+      if (newWidth >= 150 && newWidth <= 600) {
+        layout.style.setProperty('--_sidebar-width', newWidth + 'px', 'important');
+      }
+    }
+
+    function onMouseUp() {
+      handle.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+}
+
+/**
+ * Initializes drag-to-resize on all right-side sidebars, including
+ * those rendered dynamically by Shiny (e.g., TLG tab content).
+ */
+function initSidebarResize() {
+  document.querySelectorAll('.sidebar-right > .sidebar').forEach(attachResizeHandle);
+
+  new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      m.addedNodes.forEach(function(node) {
+        if (node.nodeType !== 1) return;
+        if (node.matches && node.matches('.sidebar-right > .sidebar')) {
+          attachResizeHandle(node);
+        }
+        if (node.querySelectorAll) {
+          node.querySelectorAll('.sidebar-right > .sidebar').forEach(attachResizeHandle);
+        }
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
+}
 
 /**
  * Creates a custom observer that checks if particular element is visible in the viewport.
