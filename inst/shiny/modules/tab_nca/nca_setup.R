@@ -100,7 +100,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     # Update pknca data object and intervals using summary output
     processed_pknca_data <- reactive({
       req(adnca_data(), settings(),
-          parameters_output$selections(), parameters_output$types_df())
+          parameters_output$selections(), parameters_output$types_df(),
+          nrow(parameters_output$types_df()) > 0)
 
       log_trace("Updating PKNCA::data object.")
 
