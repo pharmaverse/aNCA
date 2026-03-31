@@ -119,7 +119,11 @@ format_pkncaconc_data <- function(ADNCA,
       )
     ) %>%
     arrange(!!!syms(group_columns), dose_time) %>%
-    group_by(!!!syms(group_columns)) %>%
+    # Compute DOSNOA at dose level (excluding specimen/analyte) so that dose
+    # numbering is consistent across PCSPEC. Otherwise URINE-only Day 10 data
+    # gets DOSNOA=1 while PLASMA Day 10 gets DOSNOA=2, causing mismatches in
+    # downstream merges (e.g. create_start_impute).
+    group_by(!!!syms(setdiff(group_columns, c("PCSPEC", "PARAM")))) %>%
     mutate(
       DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
     ) %>%
