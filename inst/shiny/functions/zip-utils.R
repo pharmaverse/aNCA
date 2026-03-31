@@ -415,6 +415,14 @@ prepare_export_files <- function(target_dir,
     stats_parameters = c("CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"),
     info_vars = grouping_vars
   )
+  additional_analysis <- session$userData$results$additional_analysis
+  if (is.null(additional_analysis)) {
+    additional_analysis <- list()
+  }
+  attr(res_dose_slides, "additional_analysis") <- list(
+    matrix_ratios = additional_analysis$matrix_ratios,
+    excretion_summary = additional_analysis$excretion_results
+  )
 
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
