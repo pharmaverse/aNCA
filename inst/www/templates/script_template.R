@@ -19,7 +19,6 @@ time_duplicate_rows <- settings_list$time_duplicate_rows
 int_parameters <- settings_list$settings$int_parameters
 units_table <- settings_list$units_table
 parameters_selected_per_study <- settings_list$settings$parameters$selections
-study_types_df <- settings_list$settings$parameters$types_df
 extra_vars_to_keep <-  settings_list$extra_vars_to_keep
 slope_rules <- settings_list$slope_rules
 
@@ -32,39 +31,21 @@ pknca_obj <- adnca_data %>%
     time_duplicate_rows = time_duplicate_rows
   ) %>%
 
-  # Setup basic settings
+  # Setup NCA settings, intervals, parameter selections, and units
   PKNCA_update_data_object(
     method = settings_list$settings$method,
     selected_analytes = settings_list$settings$analyte,
     selected_profile = settings_list$settings$profile,
     selected_pcspec = settings_list$settings$pcspec,
-    should_impute_c0 = settings_list$settings$data_imputation$impute_c0,
+    start_impute = settings_list$settings$data_imputation$impute_c0,
     exclusion_list = settings_list$settings$general_exclusions,
     hl_adj_rules = slope_rules,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE")),
-    min_hl_points = settings_list$settings$min_hl_points %||% 3
-  ) %>%
-
-  update_main_intervals(
-    int_parameters = int_parameters,
+    min_hl_points = settings_list$settings$min_hl_points %||% 3,
     parameter_selections = parameters_selected_per_study,
-    study_types_df =  study_types_df,
-    impute = settings_list$settings$data_imputation$impute_c0
-  ) %>%
-
-  # Define the desired units for the parameters (PPSTRESU)
-  {
-    pknca_obj <- .
-    if (!is.null(units_table)) {
-      pknca_obj[["units"]] <- dplyr::rows_update(
-        pknca_obj[["units"]],
-        units_table,
-        by = c("PPTESTCD", "PPORRESU"),
-        unmatched = "ignore"
-      )
-    }
-    pknca_obj
-  }
+    int_parameters = int_parameters,
+    custom_units_table = units_table
+  )
 
 ## Run NCA calculations ########################################
 flag_rules <- settings_list$settings$flags
