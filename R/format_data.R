@@ -114,7 +114,7 @@ format_pkncaconc_data <- function(ADNCA,
     "(INFUS|DRIP|IV|INTRAVEN|IVADMIN|BOLUS|INTRAVASCULAR|INTRA-?ARTERIAL|",
     "INTRACARDIAC|INTRACORONARY)"
   )
-  ADNCA %>%
+  ADNCA <- ADNCA %>%
     mutate( #round to prevent floating point precision issues
       dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
       std_route =  ifelse(
@@ -122,15 +122,20 @@ format_pkncaconc_data <- function(ADNCA,
         "intravascular",
         "extravascular"
       )
-    ) %>%
-    # Arrange by dose-level groups + dose_time so diff(dose_time) is monotonic
+    )
+
+  # Compute DOSNOA from unique dose times per dose group, then join back.
+  # This avoids diff() sensitivity to sort order when multiple PARAM/PCSPEC
+  # share the same dose times.
+  dose_numbering <- ADNCA %>%
+    distinct(!!!syms(dose_group_columns), dose_time) %>%
     arrange(!!!syms(dose_group_columns), dose_time) %>%
-    # Use dose-level grouping so DOSNOA is consistent across specimen types
     group_by(!!!syms(dose_group_columns)) %>%
-    mutate(
-      DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
-    ) %>%
-    ungroup() %>%
+    mutate(DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))) %>%
+    ungroup()
+
+  ADNCA %>%
+    left_join(dose_numbering, by = c(dose_group_columns, "dose_time")) %>%
     arrange(!!!syms(group_columns), dose_time) %>%
     select(-dose_time)
 }
