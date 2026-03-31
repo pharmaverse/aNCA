@@ -63,69 +63,58 @@ create_start_impute <- function(pknca_data) {
     ) %>%
     unique()
 
-  # Track which intervals had matching concentration data
-  original_intervals <- pknca_data$intervals %>%
-    mutate(INT_ROWID = row_number())
-  matched_rowids <- unique(mydata_with_int$INT_ROWID)
-
-  # Process imputation only for intervals with matching concentration data
-  if (nrow(mydata_with_int) > 0) {
-    imputed_intervals <- mydata_with_int %>%
-      # Consider by interval (calculation) and concentration group (parameter, specimen)
-      group_by(INT_ROWID, "TIME_DOSE", !!!syms(intersect(conc_group_columns, names(.)))) %>%
-      arrange(across(any_of(c("INT_ROWID", group_columns, time_column, "TIME_DOSE")))) %>%
-      # In case the intervals were defined ambiguously to generate multiple results
-      # force them to now be specific so start_impute is also interval specific
-      slice_max(TIME_DOSE) %>%
-      mutate(
-        is.first.dose = DOSNOA == 1,
-        is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
-        is.metabolite = if (metabfl_column %in% names(.)) !!sym(metabfl_column) == "Y" else FALSE,
-        is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
-                                                    time = !!sym(time_column),
-                                                    time.dose = start[1],
-                                                    method = "logslope"))
-      ) %>%
-      arrange(
-        (!!sym(time_column) - start) < 0,
-        (!!sym(time_column) - start)
-      ) %>%
-      slice(1) %>%
-      ungroup() %>%
-      rowwise() %>%
-      mutate(
-        impute = case_when(
-          # Start concentration already present: No imputation (NA)
-          !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ NA_character_,
-
-          # 1st dose with not IV bolus or metabolite : Start concentration is 0
-          is.first.dose & (!is.ivbolus | is.metabolite) ~ "start_conc0",
-
-          # Posterior doses not IV bolus or metabolite : Start concentration shifts to predose
-          !is.first.dose & (!is.ivbolus | is.metabolite) ~ "start_predose",
-
-          # IV bolus with analyte = drug : Start concentration is log-backextrapolated (if possible)
-          is.ivbolus & !is.metabolite & is.possible.c0.logslope ~ "start_logslope",
-
-          # IV bolus with analyte = drug and not possible logslope: Start concentration is 1st conc
-          is.ivbolus & !is.metabolite ~ "start_c1"
-        )
-      ) %>%
-      ungroup() %>%
-      # Select only the columns of interest
-      select(any_of(c("start", "end", group_vars(pknca_data), "impute", names(pknca_data$intervals))))
-  } else {
-    imputed_intervals <- original_intervals[0, ] %>%
-      mutate(impute = NA_character_)
+  # If no concentration data matched the intervals (e.g. excretion/urine data),
+  # keep the original intervals with no imputation rather than wiping them out.
+  if (nrow(mydata_with_int) == 0) {
+    pknca_data$intervals$impute <- NA_character_
+    return(pknca_data)
   }
 
-  # Preserve intervals that had no matching concentration data (e.g. excretion/urine)
-  unmatched_intervals <- original_intervals %>%
-    filter(!INT_ROWID %in% matched_rowids) %>%
-    mutate(impute = NA_character_) %>%
-    select(-INT_ROWID)
+  # Process imputation strategy based on each interval
+  pknca_data$intervals <- mydata_with_int %>%
+    # Consider by interval (calculation) and concentration group (parameter, specimen)
+    group_by(INT_ROWID, "TIME_DOSE", !!!syms(intersect(conc_group_columns, names(.)))) %>%
+    arrange(across(any_of(c("INT_ROWID", group_columns, time_column, "TIME_DOSE")))) %>%
+    # In case the intervals were defined ambiguously to generate multiple results
+    # force them to now be specific so start_impute is also interval specific
+    slice_max(TIME_DOSE) %>%
+    mutate(
+      is.first.dose = DOSNOA == 1,
+      is.ivbolus = tolower(!!sym(route_column)) == "intravascular" & !!sym(duration_column) == 0,
+      is.metabolite = if (metabfl_column %in% names(.)) !!sym(metabfl_column) == "Y" else FALSE,
+      is.possible.c0.logslope = !is.na(pk.calc.c0(conc = !!sym(conc_column),
+                                                  time = !!sym(time_column),
+                                                  time.dose = start[1],
+                                                  method = "logslope"))
+    ) %>%
+    arrange(
+      (!!sym(time_column) - start) < 0,
+      (!!sym(time_column) - start)
+    ) %>%
+    slice(1) %>%
+    ungroup() %>%
+    rowwise() %>%
+    mutate(
+      impute = case_when(
+        # Start concentration already present: No imputation (NA)
+        !!sym(time_column) == start & !is.na(!!sym(conc_column)) ~ NA_character_,
 
-  pknca_data$intervals <- bind_rows(imputed_intervals, unmatched_intervals)
+        # 1st dose with not IV bolus or metabolite : Start concentration is 0
+        is.first.dose & (!is.ivbolus | is.metabolite) ~ "start_conc0",
+
+        # Posterior doses not IV bolus or metabolite : Start concentration shifts to predose
+        !is.first.dose & (!is.ivbolus | is.metabolite) ~ "start_predose",
+
+        # IV bolus with analyte = drug : Start concentration is log-backextrapolated (if possible)
+        is.ivbolus & !is.metabolite & is.possible.c0.logslope ~ "start_logslope",
+
+        # IV bolus with analyte = drug and not possible logslope: Start concentration is 1st conc
+        is.ivbolus & !is.metabolite ~ "start_c1"
+      )
+    ) %>%
+    ungroup() %>%
+    # Select only the columns of interest
+    select(any_of(c("start", "end", group_vars(pknca_data), "impute", names(pknca_data$intervals))))
 
   pknca_data
 

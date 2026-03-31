@@ -209,20 +209,11 @@ update_main_intervals <- function(
   ) %>%
     unique()
 
-  data$impute <- NA_character_
+  data$impute <- NA
 
   # Impute start values if requested
   if (impute) {
     data <- create_start_impute(data)
-  }
-
-  # Ensure impute column exists and is always character.
-  # case_when returns logical(0) on zero-row data frames, causing type
-  # mismatches in downstream anti_join operations (e.g. slope selector).
-  if (!"impute" %in% names(data$intervals)) {
-    data$intervals$impute <- NA_character_
-  } else if (!is.character(data$intervals$impute)) {
-    data$intervals$impute <- as.character(data$intervals$impute)
   }
 
   ############################################
