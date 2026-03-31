@@ -38,7 +38,7 @@ detect_pknca_data_changes <- function(old, new, reason_col = "REASON") {
         old$conc$data[[incl_hl_col]],
         new$conc$data[[incl_hl_col]]
       ),
-    in_options = !identical(old$options, new$options),
+    in_options = !identical(old$options$min.hl.points, new$options$min.hl.points),
     in_selected_intervals = !identical(new$intervals, old$intervals)
   )
 }

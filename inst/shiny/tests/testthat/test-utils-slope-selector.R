@@ -156,7 +156,7 @@ describe("detect_pknca_data_changes", {
     expect_true(res$in_selected_intervals)
   })
 
-  it("detects change in options", {
+  it("detects change in min.hl.points option", {
     changed_opts <- old_data
     changed_opts$options <- c(old_data$options, list(min.hl.points = 5))
     res <- detect_pknca_data_changes(old_data, changed_opts)
@@ -164,6 +164,13 @@ describe("detect_pknca_data_changes", {
     expect_false(res$in_hl_adj)
     expect_false(res$in_selected_intervals)
     expect_true(res$in_options)
+  })
+
+  it("ignores changes in other options", {
+    changed_opts <- old_data
+    changed_opts$options <- c(old_data$options, list(auc.method = "linear"))
+    res <- detect_pknca_data_changes(old_data, changed_opts)
+    expect_false(res$in_options)
   })
 
   it("detects no options change when options are identical", {
