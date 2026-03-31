@@ -24,6 +24,7 @@
 #'
 #'
 #' @import dplyr
+#' @importFrom formatters `var_labels<-`
 #' @export
 export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NULL) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object

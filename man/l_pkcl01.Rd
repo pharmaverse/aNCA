@@ -61,6 +61,7 @@ The \code{formatting_vars_table} should be a data frame with the following colum
 }
 }
 \examples{
+\dontshow{if (requireNamespace("rlistings", quietly = TRUE)) withAutoprint(\{ # examplesIf}
   # Create a sample dataframe 'data' with the required variables
   set.seed(123)
   data <- data.frame(
@@ -98,7 +99,7 @@ The \code{formatting_vars_table} should be a data frame with the following colum
                          subtitle = "Subjects with !PARAM: $PARAM (!PCSPEC: $PCSPEC)"
                          )
   print(listing_ex)
-
+\dontshow{\}) # examplesIf}
 }
 \author{
 Gerardo Rodriguez

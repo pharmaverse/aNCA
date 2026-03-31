@@ -93,11 +93,11 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       ) %>%
         # Exclude flagged records from summary statistics
         filter(is.na(exclude) | exclude == "") %>%
-        # Rename manual interval parameters to include the interval range
+        # Rename manual interval parameters to include the range suffix
         # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
         mutate(PPTESTCD = ifelse(
           type_interval == "manual",
-          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
+          paste0(PPTESTCD, "_", start, "-", end),
           PPTESTCD
         ))
 
