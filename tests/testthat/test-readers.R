@@ -105,7 +105,7 @@ describe("read_settings", {
 
   it("successfully reads a valid settings YAML", {
 
-    res <- read_settings(path, "test-settings.yaml")
+    res <- read_settings(path)
 
     expect_type(res, "list")
     expect_equal(names(res), c("settings", "slope_rules"))
@@ -181,7 +181,7 @@ describe("read_settings", {
     # Minimal valid settings file (missing units, slope_rules, etc.)
     yaml::write_yaml(list(settings = list(other_param = "test")), tmp_yaml)
 
-    res <- read_settings(tmp_yaml, "minimal_settings.yaml")
+    res <- read_settings(tmp_yaml)
 
     expect_equal(res$settings$other_param, "test")
     # Ensure it didn't crash on the NULL checks for missing keys

@@ -115,7 +115,19 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
                     selected = c("rds", "xpt", "csv"),
                     multiple = TRUE
                   ),
-                  style = "margin-bottom: 2em;"
+                  style = "margin-bottom: 1em;"
+                ),
+                shinyjs::hidden(
+                  div(
+                    id = ns("settings_comment_container"),
+                    tags$br(),
+                    h4("Comment ", tags$small("(optional)")),
+                    textInput(
+                      ns("settings_comment"),
+                      label = NULL,
+                      placeholder = "e.g. final NCA, first draft"
+                    )
+                  )
                 )
               )
             ),
@@ -131,6 +143,16 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       )
     })
 
+    # Show/hide settings comment based on settings_file selection
+    observe({
+      selected <- input$res_tree
+      if ("settings_file" %in% selected) {
+        shinyjs::show("settings_comment_container")
+      } else {
+        shinyjs::hide("settings_comment_container")
+      }
+    })
+
     output$download_zip <- downloadHandler(
       filename = function() {
         project <- session$userData$project_name()
@@ -144,6 +166,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       content = function(fname) {
         tryCatch(
           {
+            # Store settings comment for versioned export
+            session$userData$settings_save_comment <- input$settings_comment
+
             progress <- shiny::Progress$new(min = 0, max = 1)
             progress$set(message = "Creating exports...")
             progress$inc(0.1)
