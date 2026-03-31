@@ -8,9 +8,8 @@ type
 ``` r
 update_main_intervals(
   data,
-  parameter_selections,
-  study_types_df,
-  int_parameters,
+  parameter_selections = NULL,
+  int_parameters = NULL,
   impute = TRUE,
   blq_imputation_rule = NULL
 )
@@ -25,10 +24,6 @@ update_main_intervals(
 - parameter_selections:
 
   A named list of selected PKNCA parameters by study type.
-
-- study_types_df:
-
-  A data frame mapping analysis profiles to their study type.
 
 - int_parameters:
 

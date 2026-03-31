@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9128</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9129</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,9 +66,8 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">update_main_intervals</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
-<span>  <span class="va">parameter_selections</span>,</span>
-<span>  <span class="va">study_types_df</span>,</span>
-<span>  <span class="va">int_parameters</span>,</span>
+<span>  parameter_selections <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  int_parameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  impute <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  blq_imputation_rule <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -84,10 +83,6 @@
 
 <dt id="arg-parameter-selections">parameter_selections<a class="anchor" aria-label="anchor" href="#arg-parameter-selections"></a></dt>
 <dd><p>A named list of selected PKNCA parameters by study type.</p></dd>
-
-
-<dt id="arg-study-types-df">study_types_df<a class="anchor" aria-label="anchor" href="#arg-study-types-df"></a></dt>
-<dd><p>A data frame mapping analysis profiles to their study type.</p></dd>
 
 
 <dt id="arg-int-parameters">int_parameters<a class="anchor" aria-label="anchor" href="#arg-int-parameters"></a></dt>

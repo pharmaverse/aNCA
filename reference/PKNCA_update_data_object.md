@@ -12,10 +12,14 @@ PKNCA_update_data_object(
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  should_impute_c0 = TRUE,
+  start_impute = TRUE,
   hl_adj_rules = NULL,
   exclusion_list = NULL,
-  keep_interval_cols = NULL
+  keep_interval_cols = NULL,
+  parameter_selections = NULL,
+  int_parameters = NULL,
+  blq_imputation_rule = NULL,
+  custom_units_table = NULL
 )
 ```
 
@@ -41,9 +45,12 @@ PKNCA_update_data_object(
 
   User selected specimen
 
-- should_impute_c0:
+- start_impute:
 
-  Logical indicating whether to impute start concentration values
+  Logical indicating whether to impute start concentration values. Also
+  forwarded to
+  [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)
+  when `parameter_selections` is provided.
 
 - hl_adj_rules:
 
@@ -67,6 +74,29 @@ PKNCA_update_data_object(
   intervals data frame and when the NCA is run (pk.nca) also in the
   results
 
+- parameter_selections:
+
+  Optional named list of selected PKNCA parameters by study type
+  (forwarded to
+  [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)).
+
+- int_parameters:
+
+  Optional data frame containing partial AUC ranges (forwarded to
+  [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)).
+
+- blq_imputation_rule:
+
+  Optional list defining the BLQ imputation rule (forwarded to
+  [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)).
+
+- custom_units_table:
+
+  Optional data frame with PPSTRESU overrides. When provided, applied
+  via
+  [`dplyr::rows_update()`](https://dplyr.tidyverse.org/reference/rows.html)
+  on the PKNCAdata units table.
+
 ## Value
 
 A fully configured `PKNCAdata` object.
@@ -86,6 +116,12 @@ Step 4: Apply filtering based on user selections and partial aucs
 Step 5: Impute start values if requested
 
 Step 6: Indicate points excluded / selected manually for half-life
+
+Step 7 (optional): Update intervals with parameter selections per study
+type and partial AUC ranges via
+[`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md).
+
+Step 8 (optional): Apply custom units table for PPSTRESU overrides.
 
 Note\*: The function assumes that the `adnca_data` object has been
 created using the
