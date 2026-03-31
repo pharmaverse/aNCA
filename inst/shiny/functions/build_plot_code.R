@@ -40,12 +40,12 @@ build_plot_code <- function(plot_type, inputs, pknca_data) {
   if (!is.null(fl) && length(fl) > 0) {
     filter_lines <- vapply(names(fl), function(col) {
       vals <- fmt_chr(fl[[col]])
-      paste0('    ', col, ' = ', vals)
+      paste0('  ', col, ' = ', vals)
     }, character(1))
     filter_code <- paste0(
       "filtering_list <- list(\n",
       paste(filter_lines, collapse = ",\n"),
-      "\n  )"
+      "\n)"
     )
   } else {
     filter_code <- "filtering_list <- NULL"
@@ -58,45 +58,45 @@ build_plot_code <- function(plot_type, inputs, pknca_data) {
   if (plot_type == "individual") {
     plot_call <- paste0(
       'p <- aNCA::exploration_individualplot(\n',
-      '    pknca_data = pknca_data,\n',
-      '    color_by = ', fmt_chr(inputs$color_by), ',\n',
-      '    facet_by = ', fmt_chr(inputs$facet_by), ',\n',
-      '    show_facet_n = ', fmt_lgl(inputs$show_facet_n), ',\n',
-      '    ylog_scale = ', fmt_lgl(inputs$ylog_scale), ',\n',
-      '    show_legend = ', fmt_lgl(inputs$show_legend), ',\n',
-      '    show_dose = ', fmt_lgl(inputs$show_dose), ',\n',
-      '    threshold_value = ', threshold_code, ',\n',
-      '    x_limits = ', fmt_num(inputs$x_limits), ',\n',
-      '    y_limits = ', fmt_num(inputs$y_limits), ',\n',
-      '    filtering_list = filtering_list,\n',
-      '    use_time_since_last_dose = ',
+      '  pknca_data = pknca_data,\n',
+      '  color_by = ', fmt_chr(inputs$color_by), ',\n',
+      '  facet_by = ', fmt_chr(inputs$facet_by), ',\n',
+      '  show_facet_n = ', fmt_lgl(inputs$show_facet_n), ',\n',
+      '  ylog_scale = ', fmt_lgl(inputs$ylog_scale), ',\n',
+      '  show_legend = ', fmt_lgl(inputs$show_legend), ',\n',
+      '  show_dose = ', fmt_lgl(inputs$show_dose), ',\n',
+      '  threshold_value = ', threshold_code, ',\n',
+      '  x_limits = ', fmt_num(inputs$x_limits), ',\n',
+      '  y_limits = ', fmt_num(inputs$y_limits), ',\n',
+      '  filtering_list = filtering_list,\n',
+      '  use_time_since_last_dose = ',
       fmt_lgl(inputs$use_time_since_last_dose), ',\n',
-      '    palette = ', fmt_chr(inputs$palette), ',\n',
-      '    line_type = ', fmt_chr(inputs$y_axis_values), '\n',
-      '  )'
+      '  palette = ', fmt_chr(inputs$palette), ',\n',
+      '  line_type = ', fmt_chr(inputs$y_axis_values), '\n',
+      ')'
     )
   } else {
     plot_call <- paste0(
       'p <- aNCA::exploration_meanplot(\n',
-      '    pknca_data = pknca_data,\n',
-      '    color_by = ', fmt_chr(inputs$color_by), ',\n',
-      '    facet_by = ', fmt_chr(inputs$facet_by), ',\n',
-      '    show_facet_n = ', fmt_lgl(inputs$show_facet_n), ',\n',
-      '    ylog_scale = ', fmt_lgl(inputs$ylog_scale), ',\n',
-      '    show_legend = ', fmt_lgl(inputs$show_legend), ',\n',
-      '    show_dose = ', fmt_lgl(inputs$show_dose), ',\n',
-      '    threshold_value = ', threshold_code, ',\n',
-      '    x_limits = ', fmt_num(inputs$x_limits), ',\n',
-      '    y_limits = ', fmt_num(inputs$y_limits), ',\n',
-      '    sd_min = ', fmt_lgl(inputs$sd_min), ',\n',
-      '    sd_max = ', fmt_lgl(inputs$sd_max), ',\n',
-      '    ci = ', fmt_lgl(inputs$ci), ',\n',
-      '    filtering_list = filtering_list,\n',
-      '    use_time_since_last_dose = ',
+      '  pknca_data = pknca_data,\n',
+      '  color_by = ', fmt_chr(inputs$color_by), ',\n',
+      '  facet_by = ', fmt_chr(inputs$facet_by), ',\n',
+      '  show_facet_n = ', fmt_lgl(inputs$show_facet_n), ',\n',
+      '  ylog_scale = ', fmt_lgl(inputs$ylog_scale), ',\n',
+      '  show_legend = ', fmt_lgl(inputs$show_legend), ',\n',
+      '  show_dose = ', fmt_lgl(inputs$show_dose), ',\n',
+      '  threshold_value = ', threshold_code, ',\n',
+      '  x_limits = ', fmt_num(inputs$x_limits), ',\n',
+      '  y_limits = ', fmt_num(inputs$y_limits), ',\n',
+      '  sd_min = ', fmt_lgl(inputs$sd_min), ',\n',
+      '  sd_max = ', fmt_lgl(inputs$sd_max), ',\n',
+      '  ci = ', fmt_lgl(inputs$ci), ',\n',
+      '  filtering_list = filtering_list,\n',
+      '  use_time_since_last_dose = ',
       fmt_lgl(inputs$use_time_since_last_dose), ',\n',
-      '    palette = ', fmt_chr(inputs$palette), ',\n',
-      '    line_type = ', fmt_chr(inputs$y_axis_values), '\n',
-      '  )'
+      '  palette = ', fmt_chr(inputs$palette), ',\n',
+      '  line_type = ', fmt_chr(inputs$y_axis_values), '\n',
+      ')'
     )
   }
 
@@ -109,16 +109,16 @@ build_plot_code <- function(plot_type, inputs, pknca_data) {
     '# pknca_data <- <your PKNCAdata object>\n',
     '\n',
     '# Filtering\n',
-    '  ', filter_code, '\n',
+    filter_code, '\n',
     '\n',
     '# Generate plot\n',
-    '  ', plot_call, '\n',
+    plot_call, '\n',
     '\n',
     '# Export as PNG\n',
-    '  ggplot2::ggsave("plot.png", plot = p, width = 10, height = 6, dpi = 300)\n',
+    'ggplot2::ggsave("plot.png", plot = p, width = 10, height = 6, dpi = 300)\n',
     '\n',
     '# Export as interactive HTML\n',
-    '  p_interactive <- plotly::ggplotly(p)\n',
-    '  htmlwidgets::saveWidget(p_interactive, "plot.html", selfcontained = TRUE)\n'
+    'p_interactive <- plotly::ggplotly(p)\n',
+    'htmlwidgets::saveWidget(p_interactive, "plot.html", selfcontained = TRUE)\n'
   )
 }

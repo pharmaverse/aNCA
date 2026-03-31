@@ -22,7 +22,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       ns("copy_plot_code"),
       label = "Copy Plot Code",
       icon = icon("code"),
-      class = "btn btn-outline-secondary btn-sm",
+      class = "btn btn-primary btn-sm",
       width = "100%"
     ),
     selectInput(

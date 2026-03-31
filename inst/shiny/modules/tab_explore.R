@@ -162,7 +162,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         title = "Plot Code",
         tags$pre(
           id = ns("code_block"),
-          style = "white-space: pre-wrap; word-wrap: break-word; max-height: 60vh; overflow-y: auto;",
+          style = paste(
+            "white-space: pre-wrap; word-wrap: break-word;",
+            "max-height: 60vh; overflow-y: auto; text-align: left;"
+          ),
           code_text
         ),
         footer = tagList(
