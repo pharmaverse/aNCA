@@ -146,10 +146,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   conc_groups <- group_vars(data$conc)
   dose_groups <- group_vars(data$dose)
   # Use union of conc and dose groups (to include PCSPEC for excretion detection)
-  # but exclude the analyte column — study type is a property of the dosing
-  # regimen and specimen, not the analyte.
-  analyte_col <- data$conc$columns$groups$group_analyte
-  groups <- setdiff(unique(c(conc_groups, dose_groups)), analyte_col)
+  groups <- unique(c(conc_groups, dose_groups))
   groups <- groups[vapply(groups, function(col) {
     !is.null(col) && length(unique(conc_data[[col]])) > 1
   }, logical(1))]
