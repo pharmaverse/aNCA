@@ -30,8 +30,8 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Open the modal when "View Exports" is clicked
-    observeEvent(input$view_exports, {
+    # Reusable function to show the Saved Outputs modal
+    show_modal <- function() {
       showModal(modalDialog(
         title = "Saved Outputs",
         uiOutput(ns("saved_outputs_table")),
@@ -39,6 +39,11 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
         easyClose = TRUE,
         footer = modalButton("Close")
       ))
+    }
+
+    # Open the modal when "View Exports" is clicked
+    observeEvent(input$view_exports, {
+      show_modal()
     })
 
     # Render the reactable inside the modal
@@ -128,7 +133,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
         remove_id <- paste0("remove_", plot_name)
 
         observeEvent(input[[open_id]], {
-          on_open(plot_name)
+          on_open(plot_name, reopen = show_modal)
         }, ignoreInit = TRUE, once = FALSE)
 
         observeEvent(input[[remove_id]], {

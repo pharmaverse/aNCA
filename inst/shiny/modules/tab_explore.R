@@ -183,20 +183,34 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # --- Saved Outputs table ---
 
     # Shared callbacks for all three saved_outputs_server instances
-    .on_open <- function(plot_name) {
+    # Store the reopen function so the Back button observer can call it
+    .reopen_saved_outputs <- reactiveVal(NULL)
+
+    .on_open <- function(plot_name, reopen = NULL) {
       plot_obj <- session$userData$results$exploration[[plot_name]]
       req(plot_obj)
+      if (!is.null(reopen)) .reopen_saved_outputs(reopen)
       showModal(modalDialog(
         title = plot_name,
         plotlyOutput(ns("saved_plot_preview"), height = "500px"),
         size = "l",
         easyClose = TRUE,
-        footer = modalButton("Close")
+        footer = actionButton(
+          ns("back_to_saved_outputs"), "Back",
+          class = "btn btn-primary",
+          icon = icon("arrow-left")
+        )
       ))
       output$saved_plot_preview <- renderPlotly({
         ggplotly(plot_obj)
       })
     }
+
+    # Back button returns to the Saved Outputs modal
+    observeEvent(input$back_to_saved_outputs, {
+      reopen_fn <- .reopen_saved_outputs()
+      if (is.function(reopen_fn)) reopen_fn()
+    }, ignoreInit = TRUE)
 
     .on_remove <- function(plot_name) {
       session$userData$results$exploration[[plot_name]] <- NULL
