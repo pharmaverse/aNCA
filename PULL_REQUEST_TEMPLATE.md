@@ -34,6 +34,8 @@ R script works with the new implementation (if applicable)
 
 Settings upload works with the new implementation (if applicable)
 
+If any `.scss` change was done, run `data-raw/compile_css.R`
+
 ## Notes to reviewer
 
 Anything that the reviewer should know before tacking the pull request?
