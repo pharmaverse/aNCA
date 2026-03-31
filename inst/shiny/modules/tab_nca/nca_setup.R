@@ -120,7 +120,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       )
 
       # Wait for intervals and study types to settle during reactive transitions
-      req(nrow(base_pknca_data$intervals) > 0,
+      req(nrow(final_data$intervals) > 0,
           nrow(parameters_output$types_df()) > 0)
 
       # Show bioavailability widget if it is possible to calculate
