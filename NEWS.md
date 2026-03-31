@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (#1156)
 * Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
 * Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)
 * General Exclusions: "Excl. TLG" checkbox per exclusion entry sets PKSUM1F to "Y", filtering those rows from TLGs (#1018)
