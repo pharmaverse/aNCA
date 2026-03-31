@@ -12,6 +12,9 @@
 #'   calculate `CONCDUR`.
 #' @param nca_exclude_reason_columns A character vector specifying the columns to indicate reasons
 #'   for excluding records from NCA analysis.
+#' @param dose_group_columns Optional character vector of columns to group by when computing
+#'   DOSNOA. Defaults to `group_columns`. Use dose-level grouping (without specimen/analyte
+#'   columns) to ensure consistent dose numbering across specimen types.
 #'
 #' @returns A data frame containing the filtered and processed concentration data. The following new
 #'   columns are created:
@@ -53,7 +56,8 @@ format_pkncaconc_data <- function(ADNCA,
                                   rrlt_column = "ARRLT",
                                   route_column = "ROUTE",
                                   time_end_column = NULL,
-                                  nca_exclude_reason_columns = NULL) {
+                                  nca_exclude_reason_columns = NULL,
+                                  dose_group_columns = NULL) {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -119,11 +123,11 @@ format_pkncaconc_data <- function(ADNCA,
       )
     ) %>%
     arrange(!!!syms(group_columns), dose_time) %>%
-    # Compute DOSNOA at dose level (excluding specimen/analyte) so that dose
-    # numbering is consistent across PCSPEC. Otherwise URINE-only Day 10 data
-    # gets DOSNOA=1 while PLASMA Day 10 gets DOSNOA=2, causing mismatches in
-    # downstream merges (e.g. create_start_impute).
-    group_by(!!!syms(setdiff(group_columns, c("PCSPEC", "PARAM")))) %>%
+    # Compute DOSNOA at dose level so that dose numbering is consistent
+    # across specimen types (e.g. URINE Day 10 gets the same DOSNOA as
+    # PLASMA Day 10). Uses dose_group_columns when provided, otherwise
+    # falls back to group_columns.
+    group_by(!!!syms(dose_group_columns %||% group_columns)) %>%
     mutate(
       DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
     ) %>%
