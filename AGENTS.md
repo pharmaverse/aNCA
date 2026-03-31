@@ -1,31 +1,52 @@
 # aNCA Development Guidelines
 
-## Quick Reference
+This is the single source of truth for all AI coding agents (GitHub Copilot, Ona, etc.) working on the aNCA project. All other agent configuration files reference this document.
 
-Repository structure:
+## Repository Structure
+
 - `R/` — Package R functions (exported)
 - `inst/shiny/` — Shiny application code
+- `inst/shiny/functions/` — Shared Shiny helper functions (app-only)
+- `inst/shiny/www/styles/` — SCSS source files for styling
 - `tests/testthat/` — Unit tests
 - `man/` — Documentation (auto-generated, do not edit)
 - `data/` — Package data
+- `data-raw/` — Developer-time scripts (e.g., CSS compilation)
 
-Key constraints:
-- No `library()` or `require()` in package code
-- Use `pkg::function()` syntax for external functions
-- All exported functions must have roxygen2 docs (`@param`, `@returns`, `@export`)
-- Run `devtools::document()` after modifying roxygen comments
-- Run tests before committing: `devtools::test()`
+## Code Principles
 
-## Agent Configuration
+### Simplicity
 
-This repository uses the standard GitHub Copilot agent configuration:
+- Avoid deep nesting and unnecessary abstraction.
+- Write the minimum code required to solve the issue.
+- If something can be refactored to be simpler, do it.
 
-- `.github/copilot-instructions.md` — Repository-wide Copilot instructions
-- `.github/instructions/` — Path-specific coding conventions (R, Shiny, tests)
-- `.github/agents/` — Custom agent profiles (developer, PR reviewer)
-- `.github/skills/` — Reusable agent workflows (PR review cycle, etc.)
+### Reuse existing code
+
+- Before writing new code, search the codebase for existing functions or patterns that already solve the problem.
+- Check all files in `R/` and `inst/shiny/functions/` for existing helpers — not just `utils.R` files.
+- Reuse or slightly refactor existing code rather than duplicating logic.
+- Only write new code when nothing in the repo can be modified or reused.
+- When a helper is used across multiple files, extract it into a dedicated utils file named by domain (e.g., `utils-slope_selector.R`, `utils-exclusions.R`).
+
+## Where to put functions
+
+- **`R/`** — Functions that can be used outside the Shiny app (package API, exported or internal).
+- **`inst/shiny/functions/`** — Functions that are Shiny-specific and only used within the application.
+
+Helper functions live alongside the code they support in both directories. When a helper is shared across multiple files, extract it into a domain-specific utils file (e.g., `utils-slope_selector.R`, `utils-exclusions.R`).
+
+Before writing new code, check all files in both `R/` and `inst/shiny/functions/` for existing helpers.
 
 ## R Package Code (`R/`)
+
+### Key constraints
+
+- No `library()` or `require()` in package code
+- Use `pkg::function()` syntax for all external calls
+- All exported functions must have roxygen2 docs (`@param`, `@returns`, `@export`)
+- Run `devtools::document()` after modifying roxygen comments
+- Run `devtools::test()` before committing
 
 ### File naming
 
@@ -91,11 +112,19 @@ utils::globalVariables(c("DOSEA", "TRT01A", "GROUP"))
 - Default facet_by priority: `TRT01A > DOSEA > GROUP > ACTARM > COHORT`
 - Auto-mapping includes: `COHORT`, `PART`, `PERIOD`
 
-### CSS caveat
+### CSS / SCSS workflow
 
-`inst/shiny/www/main.css` has `--_sidebar-width: 170px !important`
+Styles are authored in SCSS partials under `inst/shiny/www/styles/` and compiled into `inst/shiny/www/main.css`.
 
-To change sidebar width, modify the CSS variable, not the R parameter.
+- **Entry point:** `styles/main.scss` imports all partials.
+- **Partials:** `styles/partials/_base.scss`, `_sidebar.scss`, `_excretion.scss`, etc.
+- **Color variables:** `styles/modules/_colors.scss`.
+
+**For agents:** Edit the relevant `.scss` partial **and** apply the same change to `inst/shiny/www/main.css`. Agents cannot run the compile script, so both files must be updated manually to stay in sync.
+
+**For developers:** Edit `.scss` files, then run `Rscript data-raw/compile_css.R` to recompile `main.css`.
+
+**Sidebar width:** `main.css` sets `--_sidebar-width: 170px !important`. To change it, modify the value in `styles/partials/_sidebar.scss` (and `main.css`).
 
 ## Testing
 
@@ -175,3 +204,15 @@ Before committing:
 - Do not push without running `devtools::document()` first
 - Do not skip tests or lintr checks
 - Do not assume R is available in dev container (it may not be)
+- Do not edit `main.css` without updating the corresponding `.scss` source
+- Do not duplicate existing code — reuse or refactor
+
+## Agent Configuration
+
+This repository uses the following agent configuration:
+
+- `AGENTS.md` — This file. Single source of truth.
+- `.github/copilot-instructions.md` — Copilot entry point (references this file).
+- `.github/instructions/` — Path-specific notes for Copilot.
+- `.github/agents/` — Role-specific agent profiles.
+- `.github/skills/` — Reusable agent workflows.
