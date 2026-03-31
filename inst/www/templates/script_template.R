@@ -98,8 +98,20 @@ pknca_res <- pknca_obj %>%
   remove_pp_not_requested()
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
+
+# Build flag rule exclusion messages for ADPP CRITy/CRITyFL/PPSUMFL columns
+flag_operators <- c(R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < ")
+checked_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
+flag_rule_msgs <- if (length(checked_flags) > 0) {
+  vapply(names(checked_flags), function(nm) {
+    paste0(nm, flag_operators[nm], checked_flags[[nm]]$threshold)
+  }, character(1), USE.NAMES = FALSE)
+} else {
+  NULL
+}
+
 cdisc_datasets <- pknca_res %>%
-  export_cdisc(grouping_vars = extra_vars_to_keep)
+  export_cdisc(grouping_vars = extra_vars_to_keep, flag_rules = flag_rule_msgs)
 
 pivoted_results <- pivot_wider_pknca_results(
   myres = pknca_res,
