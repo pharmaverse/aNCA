@@ -155,6 +155,55 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
     })
 
+    # --- Copy Plot Code handlers ---
+
+    .show_code_modal <- function(code_text) {
+      showModal(modalDialog(
+        title = "Plot Code",
+        tags$pre(
+          id = ns("code_block"),
+          style = "white-space: pre-wrap; word-wrap: break-word; max-height: 60vh; overflow-y: auto;",
+          code_text
+        ),
+        footer = tagList(
+          modalButton("Close"),
+          actionButton(ns("clipboard_copy"), "Copy to Clipboard",
+                       icon = icon("clipboard"),
+                       class = "btn btn-primary")
+        ),
+        size = "l",
+        easyClose = TRUE
+      ))
+    }
+
+    observeEvent(individual_sidebar$copy_plot_code(), {
+      req(pknca_data(), individual_inputs())
+      code <- build_plot_code("individual", individual_inputs(), pknca_data())
+      .show_code_modal(code)
+    })
+
+    observeEvent(mean_sidebar$copy_plot_code(), {
+      req(pknca_data(), mean_inputs())
+      code <- build_plot_code("mean", mean_inputs(), pknca_data())
+      .show_code_modal(code)
+    })
+
+    observeEvent(input$clipboard_copy, {
+      code_id <- ns("code_block")
+      shinyjs::runjs(paste0(
+        "var codeEl = document.getElementById('", code_id, "');",
+        "if (codeEl) {",
+        "  navigator.clipboard.writeText(codeEl.textContent).then(function() {",
+        "    Shiny.setInputValue('", ns("clipboard_done"), "', Math.random());",
+        "  });",
+        "}"
+      ))
+    })
+
+    observeEvent(input$clipboard_done, {
+      showNotification("Code copied to clipboard", type = "message", duration = 3)
+    })
+
     # --- Add to Exports handlers ---
 
     # Track which plot type triggered the modal

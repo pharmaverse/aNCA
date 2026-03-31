@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Exploration plots: "Copy Plot Code" button in the right sidebar opens a modal with reproducible R code for the current plot, including PNG and HTML export. Code reflects active sidebar settings (filters, color, facet, scale, etc.) (#1138)
 * NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile with bidirectional cascading updates between Analyte and Specimen (#1114)
 * Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
 * Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
