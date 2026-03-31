@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9130</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9131</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,6 +125,7 @@
 <li>Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (<a href="https://github.com/pharmaverse/aNCA/issues/1008" class="external-link">#1008</a>)</li>
 <li>Prevent a crash when selecting already defined identity variables (i.e, <code>DOSETRT</code>) for the <code>Additional Grouping Variables</code> in the <code>Mapping Tab</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1060" class="external-link">#1060</a>)</li>
 <li>Filtering will now correctly also affect all the input widgets in NCA setup (<a href="https://github.com/pharmaverse/aNCA/issues/1092" class="external-link">#1092</a>)</li>
+<li>All Results input widgets now shows each manual interval parameter with its range suffix (e.g. <code>AUCINT_0-12</code>, <code>CAVGINT_0-24</code>) instead of collapsing them into a single entry (<a href="https://github.com/pharmaverse/aNCA/issues/1146" class="external-link">#1146</a>)</li>
 <li>Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. <code>AUCINT_0-12</code>, <code>CAVGINT_0-24</code>) instead of collapsing them into a single entry (<a href="https://github.com/pharmaverse/aNCA/issues/1148" class="external-link">#1148</a>)</li>
 </ul></div>
 </div>
