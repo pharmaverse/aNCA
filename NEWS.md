@@ -47,6 +47,7 @@
 
 
 ## Bugs fixed
+* SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
