@@ -326,7 +326,7 @@ div[data-value="Settings"] > div.row a {
 
 /* Right-side sidebars: width and padding */
 .sidebar-right {
-  --_sidebar-width: 250px !important;
+  --_sidebar-width: 250px;
 }
 
 /* Drag handle for resizing right-side sidebars */
