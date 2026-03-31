@@ -39,6 +39,7 @@ A data frame with 76 rows and 32 variables:
 \item{NERRLT}{Numeric. Nominal relative time to reference dose (alternative column).}
 \item{AEFRLT}{Numeric. Actual relative time to first dose (alternative column).}
 \item{AERRLT}{Numeric. Actual relative time to reference dose (alternative column).}
+\item{DOSFRM}{Character. Dose formulation (e.g., "TABLET").}
 }
 }
 \source{
