@@ -106,6 +106,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       col_names <- names(final_results())
       col_base_names <- sub("\\[.*", "", col_names)
       interval_params <- col_base_names[grepl("_\\d+.*-\\d+", col_base_names)]
+      # Remove bare base names (e.g. "AUCINT") that only exist as manual intervals —
+      # they have no standalone meaning and would appear as empty entries
+      interval_base_names <- unique(sub("_\\d+.*", "", interval_params))
+      param_inputnames <- setdiff(param_inputnames, interval_base_names)
       param_inputnames <- unique(c(param_inputnames, interval_params))
 
       selector_label(input = input,
