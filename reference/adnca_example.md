@@ -144,6 +144,10 @@ A data frame with 76 rows and 32 variables:
 
   Numeric. Actual relative time to reference dose (alternative column).
 
+- DOSFRM:
+
+  Character. Dose formulation (e.g., "TABLET").
+
 ## Source
 
 Example data created for package demonstration and testing purposes.
