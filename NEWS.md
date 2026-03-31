@@ -2,6 +2,7 @@
 
 ## Features added
 
+* Exploration sidebars now show a "Saved Outputs" table below the "Add to Exports" button, listing all saved plots with name, type, timestamp, an Open link (plotly preview modal), and a Remove button (#1137)
 * Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (#1156)
 * Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
 * Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)

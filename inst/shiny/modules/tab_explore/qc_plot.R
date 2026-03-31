@@ -9,7 +9,7 @@
 #'
 #' @returns A UI element representing the QC plot tab.
 
-pk_dose_qc_plot_ui <- function(id) {
+pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
   ns <- NS(id)
 
   # The nav_panel function creates the tab
@@ -25,6 +25,7 @@ pk_dose_qc_plot_ui <- function(id) {
         class = "btn btn-primary btn-sm",
         width = "100%"
       ),
+      extra_ui,
       uiOutput(ns("groupvar_ui_wrapper")
       ),
       uiOutput(ns("colourvar_ui_wrapper")
