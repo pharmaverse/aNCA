@@ -318,7 +318,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         qc = "QC"
       )
       meta <- saved_plots_metadata()
-      ts <- format(Sys.time(), "%H:%M:%S")
+      ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
       if (is_overwrite) {
         meta$timestamp[meta$name == plot_name] <- ts
         meta$type[meta$name == plot_name] <- type_label

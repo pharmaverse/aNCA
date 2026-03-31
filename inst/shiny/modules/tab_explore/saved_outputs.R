@@ -11,7 +11,7 @@ saved_outputs_ui <- function(id) {
     ns("view_exports"),
     label = "View Exports",
     icon = icon("eye"),
-    class = "btn btn-outline-secondary btn-sm",
+    class = "btn btn-primary btn-sm",
     width = "100%"
   )
 }
@@ -57,7 +57,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
       df <- data.frame(
         Name = meta$name,
         Type = meta$type,
-        Time = meta$timestamp,
+        DateTime = meta$timestamp,
         open_id = paste0("open_", meta$name),
         remove_id = paste0("remove_", meta$name),
         stringsAsFactors = FALSE
@@ -75,9 +75,9 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
             headerStyle = list(background = "#e9e9e9")
           ),
           columns = list(
-            Name = reactable::colDef(name = "Name"),
-            Type = reactable::colDef(name = "Type", width = 100),
-            Time = reactable::colDef(name = "Time", width = 90),
+            Name = reactable::colDef(name = "Name", width = 200),
+            Type = reactable::colDef(name = "Type", width = 200),
+            DateTime = reactable::colDef(name = "DateTime", width = 200),
             open_id = reactable::colDef(
               name = "",
               width = 70,
