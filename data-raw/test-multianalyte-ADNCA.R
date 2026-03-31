@@ -6,4 +6,4 @@ multian_test <- read.csv("data-raw/adnca_example.csv", na.strings = c("", "NA"))
     AVALU = ifelse(PARAM == "Metab-DrugA" & AVALU == "ug/mL", "mg/mL", AVALU),
     AVAL = ifelse(PARAM == "Metab-DrugA" & AVALU == "ug/mL", AVAL / 1000, AVAL)
   )
-write.csv(multian_test, "tests/testthat/data/multian_test.csv", row.names = FALSE)
+write.csv(multian_test, "tests/testthat/data/test-multianalyte-ADNCA.csv", row.names = FALSE)
