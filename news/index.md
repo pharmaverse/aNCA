@@ -4,6 +4,11 @@
 
 ### Features added
 
+- Settings version control: single YAML file stores multiple versions
+  with metadata (timestamp, comment, dataset, aNCA version, active tab).
+  Save button in header, version selection modal on upload, version
+  delete support
+  ([\#1103](https://github.com/pharmaverse/aNCA/issues/1103))
 - Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be
   resized by dragging the left edge. Default width increased to 250px,
   left nav sidebar reduced to 150px

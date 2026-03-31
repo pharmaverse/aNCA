@@ -63,6 +63,9 @@
 - [`add_qmd_table()`](https://pharmaverse.github.io/aNCA/reference/add_qmd_table.md)
   : Helper to create a Quarto code chunk for a table
 
+- [`add_settings_version()`](https://pharmaverse.github.io/aNCA/reference/add_settings_version.md)
+  : Add a new version to an existing versioned settings list
+
 - [`adjust_class_and_length()`](https://pharmaverse.github.io/aNCA/reference/adjust_class_and_length.md)
   : Helper: adjust class and length (optional) for a data.frame based on
   metadata_nca_variables
@@ -119,8 +122,14 @@
 - [`create_qmd_dose_slides()`](https://pharmaverse.github.io/aNCA/reference/create_qmd_dose_slides.md)
   : Create all slides for dose escalation results in a Quarto document
 
+- [`create_settings_version()`](https://pharmaverse.github.io/aNCA/reference/create_settings_version.md)
+  : Create a versioned settings entry
+
 - [`create_start_impute()`](https://pharmaverse.github.io/aNCA/reference/create_start_impute.md)
   : Create C0 Impute Column
+
+- [`delete_settings_version()`](https://pharmaverse.github.io/aNCA/reference/delete_settings_version.md)
+  : Delete a version from a versioned settings list
 
 - [`detect_study_types()`](https://pharmaverse.github.io/aNCA/reference/detect_study_types.md)
   : Detect study types
@@ -305,6 +314,9 @@
 - [`read_settings()`](https://pharmaverse.github.io/aNCA/reference/read_settings.md)
   : Helper Logic to parse and structure settings YAML
 
+- [`read_versioned_settings()`](https://pharmaverse.github.io/aNCA/reference/read_versioned_settings.md)
+  : Read a versioned settings YAML file
+
 - [`remove_pp_not_requested()`](https://pharmaverse.github.io/aNCA/reference/remove_pp_not_requested.md)
   : Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 
@@ -313,6 +325,9 @@
 
 - [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
   : Run the Shiny app
+
+- [`settings_version_summary()`](https://pharmaverse.github.io/aNCA/reference/settings_version_summary.md)
+  : Build a summary table of version entries
 
 - [`simplify_unit()`](https://pharmaverse.github.io/aNCA/reference/simplify_unit.md)
   : Simplify compound unit expressions
@@ -329,3 +344,6 @@
 
 - [`validate_pk()`](https://pharmaverse.github.io/aNCA/reference/validate_pk.md)
   : Validates data table with raw pk data.
+
+- [`write_versioned_settings()`](https://pharmaverse.github.io/aNCA/reference/write_versioned_settings.md)
+  : Write a versioned settings YAML file

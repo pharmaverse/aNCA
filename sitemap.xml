@@ -39,6 +39,7 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_sl_plot.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_sl_plottabletable.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_qmd_table.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/add_settings_version.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/adjust_class_and_length.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/adnca_example.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/annotate_duplicates.html</loc></url>
@@ -61,7 +62,9 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_pptx_dose_slides.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_qmd_doc.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_qmd_dose_slides.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/create_settings_version.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/create_start_impute.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/delete_settings_version.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/detect_study_types.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dm_example.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/dose_profile_duplicates.html</loc></url>
@@ -118,15 +121,18 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_settings.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/read_versioned_settings.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_impute_method.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/remove_pp_not_requested.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/rm_impute_obs_params.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/run_app.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/settings_version_summary.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/simplify_unit.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/strip_na_sentinel.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/translate_terms.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/update_main_intervals.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/update_pknca_with_rules.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/validate_pk.html</loc></url>
+<url><loc>https://pharmaverse.github.io/aNCA/reference/write_versioned_settings.html</loc></url>
 </urlset>
 
