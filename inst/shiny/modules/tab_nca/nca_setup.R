@@ -100,38 +100,31 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     # Update pknca data object and intervals using summary output
     processed_pknca_data <- reactive({
       req(adnca_data(), settings(),
-          parameters_output$selections(), parameters_output$types_df())
+          parameters_output$selections())
 
       log_trace("Updating PKNCA::data object.")
 
-      base_pknca_data <- PKNCA_update_data_object(
+      final_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        should_impute_c0 = settings()$data_imputation$impute_c0,
+        start_impute = settings()$data_imputation$impute_c0,
         hl_adj_rules = slope_rules(),
         exclusion_list = general_exclusions(),
-        keep_interval_cols = extra_group_vars()
+        keep_interval_cols = extra_group_vars(),
+        parameter_selections = parameters_output$selections(),
+        int_parameters = settings()$int_parameters,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
       # Show bioavailability widget if it is possible to calculate
-      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+      if (final_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")
       } else {
         shinyjs::hide(selector = ".bioavailability-picker")
       }
-
-      # Call the updated function with the direct inputs
-      final_data <- update_main_intervals(
-        data = base_pknca_data,
-        parameter_selections = parameters_output$selections(),
-        study_types_df = parameters_output$types_df(),
-        int_parameters = settings()$int_parameters,
-        impute = settings()$data_imputation$impute_c0,
-        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
-      )
 
       if (nrow(final_data$intervals) == 0) {
         showNotification(
