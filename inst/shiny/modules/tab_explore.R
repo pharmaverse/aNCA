@@ -206,7 +206,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       })
     }
 
-    # Back button returns to the Saved Outputs modal
+    # Back button returns to the Saved Outputs modal.
+    # Uses the parent module ns — safe because tab_explore_server is
+    # instantiated once in app.R.
     observeEvent(input$back_to_saved_outputs, {
       reopen_fn <- .reopen_saved_outputs()
       if (is.function(reopen_fn)) reopen_fn()
@@ -228,7 +230,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       log_info("Removed exploration plot: {plot_name}")
     }
 
-    # Wire saved outputs server for each sidebar
+    # Wire saved outputs server for each sidebar.
+    # Each instance has its own namespace so button IDs and input values
+    # (open_plot, remove_plot) don't collide across tabs.
     saved_outputs_server("saved_outputs_indiv", saved_plots_metadata,
                          on_remove = .on_remove, on_open = .on_open)
     saved_outputs_server("saved_outputs_mean", saved_plots_metadata,

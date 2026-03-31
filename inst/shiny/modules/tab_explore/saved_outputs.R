@@ -20,12 +20,15 @@ saved_outputs_ui <- function(id) {
 #'
 #' Opens a modal with a reactable listing saved exploration plots.
 #' Each row has an Open link (plotly preview) and a Remove button.
+#' Button clicks use `Shiny.setInputValue` via JS to avoid observer
+#' accumulation — a single `observeEvent` per action type handles all rows.
 #'
 #' @param id Module namespace ID.
 #' @param saved_plots_metadata A reactive returning a data.frame with columns:
 #'   name, type, timestamp (character).
 #' @param on_remove A callback function(plot_name) called when the user removes a plot.
-#' @param on_open A callback function(plot_name) called when the user opens a plot.
+#' @param on_open A callback function(plot_name, reopen) called when the user
+#'   opens a plot. `reopen` is a function that re-opens this modal.
 saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -46,7 +49,9 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
       show_modal()
     })
 
-    # Render the reactable inside the modal
+    # Render the reactable inside the modal.
+    # Buttons use onclick JS to set namespaced Shiny inputs with a timestamp,
+    # so each click is treated as a new event without creating new observers.
     output$saved_outputs_table <- renderUI({
       meta <- saved_plots_metadata()
       if (is.null(meta) || nrow(meta) == 0) {
@@ -58,15 +63,18 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
         ))
       }
 
-      # Build a data.frame with button IDs for Open and Remove
+      # Build a data.frame with plot names for Open and Remove columns
       df <- data.frame(
         Name = meta$name,
         Type = meta$type,
         DateTime = meta$timestamp,
-        open_id = paste0("open_", meta$name),
-        remove_id = paste0("remove_", meta$name),
+        open_name = meta$name,
+        remove_name = meta$name,
         stringsAsFactors = FALSE
       )
+
+      open_input_id <- ns("open_plot")
+      remove_input_id <- ns("remove_plot")
 
       tagList(
         reactable::reactable(
@@ -83,63 +91,62 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
             Name = reactable::colDef(name = "Name", width = 200),
             Type = reactable::colDef(name = "Type", width = 200),
             DateTime = reactable::colDef(name = "DateTime", width = 200),
-            open_id = reactable::colDef(
+            open_name = reactable::colDef(
               name = "",
               width = 70,
               sortable = FALSE,
               cell = function(value) {
-                as.character(
-                  actionButton(
-                    ns(value),
-                    label = "Open",
-                    class = "btn btn-link btn-sm",
-                    style = "padding: 2px 6px;"
-                  )
+                js <- sprintf(
+                  paste0(
+                    "Shiny.setInputValue('%s',",
+                    " {name:'%s', ts:Date.now()});"
+                  ),
+                  open_input_id, value
                 )
+                as.character(tags$a(
+                  "Open", href = "#",
+                  onclick = paste0(js, "return false;"),
+                  style = "cursor:pointer;"
+                ))
               },
               html = TRUE
             ),
-            remove_id = reactable::colDef(
+            remove_name = reactable::colDef(
               name = "",
               width = 50,
               sortable = FALSE,
               cell = function(value) {
-                as.character(
-                  actionButton(
-                    ns(value),
-                    label = NULL,
-                    icon = shiny::icon("times"),
-                    class = "btn btn-link btn-sm",
-                    style = "padding: 2px 6px; color: #dc3545;"
-                  )
+                js <- sprintf(
+                  paste0(
+                    "Shiny.setInputValue('%s',",
+                    " {name:'%s', ts:Date.now()});"
+                  ),
+                  remove_input_id, value
                 )
+                as.character(tags$a(
+                  href = "#",
+                  onclick = paste0(js, "return false;"),
+                  style = "cursor:pointer; color:#dc3545;",
+                  as.character(icon("times"))
+                ))
               },
               html = TRUE
             )
           )
-        ),
-        # Bind dynamically rendered buttons
-        tags$script("setTimeout(function(){ Shiny.bindAll(); }, 100);")
+        )
       )
     })
 
-    # Observe Open and Remove clicks for each plot in the current metadata
-    observe({
-      meta <- saved_plots_metadata()
-      req(meta, nrow(meta) > 0)
+    # Single observer for Open — input$open_plot is set via JS with {name, ts}
+    observeEvent(input$open_plot, {
+      req(input$open_plot$name)
+      on_open(input$open_plot$name, reopen = show_modal)
+    }, ignoreInit = TRUE)
 
-      lapply(meta$name, function(plot_name) {
-        open_id <- paste0("open_", plot_name)
-        remove_id <- paste0("remove_", plot_name)
-
-        observeEvent(input[[open_id]], {
-          on_open(plot_name, reopen = show_modal)
-        }, ignoreInit = TRUE, once = FALSE)
-
-        observeEvent(input[[remove_id]], {
-          on_remove(plot_name)
-        }, ignoreInit = TRUE, once = FALSE)
-      })
-    })
+    # Single observer for Remove — input$remove_plot is set via JS with {name, ts}
+    observeEvent(input$remove_plot, {
+      req(input$remove_plot$name)
+      on_remove(input$remove_plot$name)
+    }, ignoreInit = TRUE)
   })
 }

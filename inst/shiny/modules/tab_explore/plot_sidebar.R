@@ -20,7 +20,6 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
       class = "btn btn-primary btn-sm",
       width = "100%"
     ),
-    extra_ui,
     selectInput(
       ns("palette"),
       "Select Color Theme:",
@@ -120,7 +119,8 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
         checkboxInput(ns("ci"), label = "Show 95% CI", value = FALSE),
         helpText("Mean values are not displayed if n < 3 for a time point.")
       )
-    }
+    },
+    extra_ui
   )
 }
 

@@ -6,6 +6,7 @@
 #' variables. It also defines the output area for the interactive plot.
 #'
 #' @param id A character string giving the namespace for the module.
+#' @param extra_ui Optional UI elements appended at the bottom of the sidebar.
 #'
 #' @returns A UI element representing the QC plot tab.
 
@@ -25,7 +26,6 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         class = "btn btn-primary btn-sm",
         width = "100%"
       ),
-      extra_ui,
       uiOutput(ns("groupvar_ui_wrapper")
       ),
       uiOutput(ns("colourvar_ui_wrapper")
@@ -53,7 +53,8 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         selected = NULL,
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
-      )
+      ),
+      extra_ui
     ),
     plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
     br(), br()
