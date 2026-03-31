@@ -112,8 +112,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
 
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
-      req(processed_pknca_data(),
-          nrow(processed_pknca_data()$intervals) > 0)
+      req(processed_pknca_data())
 
       if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
                                                               is.logical)]))) {
