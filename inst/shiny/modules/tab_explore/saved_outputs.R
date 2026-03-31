@@ -1,3 +1,51 @@
+# --- Pure helper functions for metadata management ---
+
+#' Create an empty saved-plots metadata data.frame
+#'
+#' @return A zero-row data.frame with columns: name, type, timestamp.
+empty_saved_plots_metadata <- function() {
+  data.frame(
+    name = character(0), type = character(0),
+    timestamp = character(0), stringsAsFactors = FALSE
+  )
+}
+
+#' Add or update a row in saved-plots metadata
+#'
+#' If `plot_name` already exists, its timestamp and type are updated.
+#' Otherwise a new row is appended.
+#'
+#' @param meta A data.frame as returned by `empty_saved_plots_metadata()`.
+#' @param plot_name Character; the plot name.
+#' @param type_label Character; display label ("Individual", "Mean", "QC").
+#' @param timestamp Character; formatted timestamp string.
+#'
+#' @return Updated data.frame.
+upsert_saved_plot <- function(meta, plot_name, type_label, timestamp) {
+  if (plot_name %in% meta$name) {
+    meta$timestamp[meta$name == plot_name] <- timestamp
+    meta$type[meta$name == plot_name] <- type_label
+  } else {
+    meta <- rbind(meta, data.frame(
+      name = plot_name, type = type_label, timestamp = timestamp,
+      stringsAsFactors = FALSE
+    ))
+  }
+  meta
+}
+
+#' Remove a plot from saved-plots metadata
+#'
+#' @param meta A data.frame as returned by `empty_saved_plots_metadata()`.
+#' @param plot_name Character; the plot name to remove.
+#'
+#' @return Updated data.frame with the row removed.
+remove_saved_plot <- function(meta, plot_name) {
+  meta[meta$name != plot_name, , drop = FALSE]
+}
+
+# --- Shiny module ---
+
 #' Saved Outputs Button UI
 #'
 #' Renders a "View Exports" button below "Add to Exports".
@@ -76,6 +124,9 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
       open_input_id <- ns("open_plot")
       remove_input_id <- ns("remove_plot")
 
+      # Escape single quotes in plot names to prevent JS injection
+      escape_js <- function(x) gsub("'", "\\\\'", x)
+
       tagList(
         reactable::reactable(
           df,
@@ -101,7 +152,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
                     "Shiny.setInputValue('%s',",
                     " {name:'%s', ts:Date.now()});"
                   ),
-                  open_input_id, value
+                  open_input_id, escape_js(value)
                 )
                 as.character(tags$a(
                   "Open", href = "#",
@@ -121,7 +172,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
                     "Shiny.setInputValue('%s',",
                     " {name:'%s', ts:Date.now()});"
                   ),
-                  remove_input_id, value
+                  remove_input_id, escape_js(value)
                 )
                 as.character(tags$a(
                   href = "#",

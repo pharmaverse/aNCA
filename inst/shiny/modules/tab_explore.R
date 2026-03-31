@@ -64,10 +64,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     session$userData$exploration_custom_names <- reactiveVal(character(0))
 
     # Metadata for saved outputs table (data.frame: name, type, timestamp)
-    saved_plots_metadata <- reactiveVal(
-      data.frame(name = character(0), type = character(0),
-                 timestamp = character(0), stringsAsFactors = FALSE)
-    )
+    saved_plots_metadata <- reactiveVal(empty_saved_plots_metadata())
 
     # Initiate the sidebar server modules
     individual_sidebar <- plot_sidebar_server(
@@ -144,10 +141,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     observeEvent(pknca_data(), {
       session$userData$results$exploration <- list()
       session$userData$exploration_custom_names(character(0))
-      saved_plots_metadata(
-        data.frame(name = character(0), type = character(0),
-                   timestamp = character(0), stringsAsFactors = FALSE)
-      )
+      saved_plots_metadata(empty_saved_plots_metadata())
       indiv_counter(0L)
       mean_counter(0L)
       qc_counter(0L)
@@ -220,8 +214,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       existing <- existing[names(existing) != plot_name]
       session$userData$exploration_custom_names(existing)
 
-      meta <- saved_plots_metadata()
-      saved_plots_metadata(meta[meta$name != plot_name, , drop = FALSE])
+      saved_plots_metadata(remove_saved_plot(saved_plots_metadata(), plot_name))
 
       showNotification(
         paste0("Plot '", plot_name, "' removed from exports"),
@@ -335,18 +328,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         mean = "Mean",
         qc = "QC"
       )
-      meta <- saved_plots_metadata()
       ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-      if (is_overwrite) {
-        meta$timestamp[meta$name == plot_name] <- ts
-        meta$type[meta$name == plot_name] <- type_label
-      } else {
-        meta <- rbind(meta, data.frame(
-          name = plot_name, type = type_label, timestamp = ts,
-          stringsAsFactors = FALSE
-        ))
-      }
-      saved_plots_metadata(meta)
+      saved_plots_metadata(
+        upsert_saved_plot(saved_plots_metadata(), plot_name, type_label, ts)
+      )
 
       removeModal()
 
