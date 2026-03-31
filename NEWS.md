@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Fixed `PKNCA_update_data_object` custom units table join using hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys, which failed when the units table included group columns like `PARAM` or `PCSPEC` (#1159)
+
 ## Features added
 
 * Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
