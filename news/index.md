@@ -4,6 +4,10 @@
 
 ### Features added
 
+- Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be
+  resized by dragging the left edge. Default width increased to 250px,
+  left nav sidebar reduced to 150px
+  ([\#1156](https://github.com/pharmaverse/aNCA/issues/1156))
 - Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests
   with user-facing notifications when missing
   ([\#1106](https://github.com/pharmaverse/aNCA/issues/1106))
