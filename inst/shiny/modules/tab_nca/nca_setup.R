@@ -116,6 +116,11 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         keep_interval_cols = extra_group_vars()
       )
 
+      # During reactive transitions (e.g. PCSPEC change), base intervals or
+      # study types may be transiently empty. Wait for them to settle.
+      req(nrow(base_pknca_data$intervals) > 0,
+          nrow(parameters_output$types_df()) > 0)
+
       # Show bioavailability widget if it is possible to calculate
       if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")
