@@ -131,6 +131,7 @@ describe("detect_pknca_data_changes", {
     res <- detect_pknca_data_changes(old_data, old_data)
     expect_false(res$in_data)
     expect_false(res$in_hl_adj)
+    expect_false(res$in_options)
     expect_false(res$in_selected_intervals)
   })
 
@@ -153,6 +154,21 @@ describe("detect_pknca_data_changes", {
     changed_int$intervals <- data.frame(ID = 1:4)
     res <- detect_pknca_data_changes(old_data, changed_int)
     expect_true(res$in_selected_intervals)
+  })
+
+  it("detects change in options", {
+    changed_opts <- old_data
+    changed_opts$options <- c(old_data$options, list(min.hl.points = 5))
+    res <- detect_pknca_data_changes(old_data, changed_opts)
+    expect_false(res$in_data)
+    expect_false(res$in_hl_adj)
+    expect_false(res$in_selected_intervals)
+    expect_true(res$in_options)
+  })
+
+  it("detects no options change when options are identical", {
+    res <- detect_pknca_data_changes(old_data, old_data)
+    expect_false(res$in_options)
   })
 })
 
