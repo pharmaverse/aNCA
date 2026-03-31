@@ -116,8 +116,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         keep_interval_cols = extra_group_vars()
       )
 
-      # During reactive transitions (e.g. PCSPEC change), base intervals or
-      # study types may be transiently empty. Wait for them to settle.
+      # Wait for intervals and study types to settle during reactive transitions
       req(nrow(base_pknca_data$intervals) > 0,
           nrow(parameters_output$types_df()) > 0)
 

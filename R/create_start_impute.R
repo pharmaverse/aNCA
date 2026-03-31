@@ -63,13 +63,6 @@ create_start_impute <- function(pknca_data) {
     ) %>%
     unique()
 
-  # If no concentration data matched the intervals (e.g. excretion/urine data),
-  # keep the original intervals with no imputation rather than wiping them out.
-  if (nrow(mydata_with_int) == 0) {
-    pknca_data$intervals$impute <- NA_character_
-    return(pknca_data)
-  }
-
   # Process imputation strategy based on each interval
   pknca_data$intervals <- mydata_with_int %>%
     # Consider by interval (calculation) and concentration group (parameter, specimen)

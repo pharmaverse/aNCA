@@ -124,9 +124,7 @@ format_pkncaconc_data <- function(ADNCA,
       )
     ) %>%
     arrange(!!!syms(group_columns), dose_time) %>%
-    # Compute DOSNOA at dose level so that dose numbering is consistent
-    # across specimen types (e.g. URINE Day 10 gets the same DOSNOA as
-    # PLASMA Day 10).
+    # Use dose-level grouping so DOSNOA is consistent across specimen types
     group_by(!!!syms(dose_group_columns)) %>%
     mutate(
       DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
