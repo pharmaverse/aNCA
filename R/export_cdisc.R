@@ -541,8 +541,6 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   # Treat NA as no exclusion
   exclude_vals[is.na(exclude_vals)] <- ""
 
-  all_satisfied <- rep(TRUE, nrow(data))
-
   for (i in seq_along(flag_rules)) {
     rule_msg <- flag_rules[i]
     crit_col <- paste0("CRIT", i)
@@ -558,14 +556,12 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
       rule_msg %in% parts
     }, logical(1))
     data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
-
-    all_satisfied <- all_satisfied & !is_violated
   }
 
-  # PPSUMFL: "Y" if all criteria are satisfied for this record
-  data[["PPSUMFL"]] <- ifelse(all_satisfied, "Y", "N")
-  # PPSUM: the full exclusion reasons for flagged records, empty for clean ones
-  data[["PPSUM"]] <- ifelse(all_satisfied, "", exclude_vals)
+  # PPSUMFL/PPSUM: derived directly from whether exclude is populated
+  has_exclusions <- exclude_vals != ""
+  data[["PPSUMFL"]] <- ifelse(has_exclusions, "N", "Y")
+  data[["PPSUM"]] <- exclude_vals
 
   data
 }
