@@ -552,7 +552,11 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     data[[crit_col]] <- rule_msg
 
     # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
-    is_violated <- grepl(rule_msg, exclude_vals, fixed = TRUE)
+    # Split on "; " (PKNCA separator) and do exact element matching to avoid
+    # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
+    is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
+      rule_msg %in% parts
+    }, logical(1))
     data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
 
     all_satisfied <- all_satisfied & !is_violated
