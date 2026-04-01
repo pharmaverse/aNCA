@@ -156,7 +156,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
                 "text-decoration: none;"
               ),
               title = "Remove from exports",
-              as.character(icon("times"))
+              icon("times")
             )
           ),
           plotlyOutput(output_id, height = "400px")

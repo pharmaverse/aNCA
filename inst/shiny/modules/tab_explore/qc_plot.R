@@ -26,6 +26,7 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         class = "btn btn-primary btn-sm",
         width = "100%"
       ),
+      extra_ui,
       uiOutput(ns("groupvar_ui_wrapper")
       ),
       uiOutput(ns("colourvar_ui_wrapper")
@@ -53,8 +54,7 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         selected = NULL,
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
-      ),
-      extra_ui
+      )
     ),
     plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
     br(), br()
