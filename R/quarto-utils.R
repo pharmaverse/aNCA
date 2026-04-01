@@ -21,9 +21,14 @@ create_qmd_doc <- function(
 ) {
   yaml_header <- c(
     "---",
-    paste0("title: \"", title, "\""),
-    "format: revealjs",
-    if (!is.null(template)) paste0("reference-doc: ", template) else NULL,
+    paste0("title: \"", gsub("[\r\n]+", " ", title), "\""),
+    "format:",
+    "  revealjs:",
+    "    toc: true",
+    "    toc-depth: 1",
+    "    theme: default",
+    "    scrollable: true",
+    "    smaller: true",
     "execute:",
     "  echo: false",
     "  warning: false",
@@ -54,21 +59,18 @@ create_qmd_doc <- function(
 #' @param use_plotly Logical, whether to convert plot to plotly.
 #' @returns Invisibly returns TRUE if the slide was added.
 add_qmd_sl_plottabletable <- function(quarto_path, df1, df2, plot, use_plotly = FALSE) {
+  has_tables <- !is.null(df1) || !is.null(df2)
   slide_content <- c(
     "\n---",
-    add_qmd_plot(plot, use_plotly),
-    "::: columns",
-    "",
-    "::: column",
-    add_qmd_table(df1),
-    ":::",
-    "",
-    "::: column",
-    add_qmd_table(df2),
-    ":::",
-    "",
-    ":::",
-    ""
+    if (!is.null(plot)) add_qmd_plot(plot, use_plotly),
+    if (has_tables) c(
+      "::: columns",
+      "",
+      if (!is.null(df1)) c("::: column", add_qmd_table(df1), ":::", ""),
+      if (!is.null(df2)) c("::: column", add_qmd_table(df2), ":::", ""),
+      ":::",
+      ""
+    )
   )
   write(slide_content, file = quarto_path, append = TRUE)
   invisible(TRUE)
@@ -93,6 +95,145 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
   invisible(TRUE)
 }
 
+#' Write a section header slide with the group info table to a qmd file
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param res_dose_slides List of results for each dose group.
+#' @param i Integer index of the dose group.
+#' @param label Character string used as the # heading text.
+#' @keywords internal
+#' @noRd
+.add_qmd_group_section_header <- function(quarto_path, res_dose_slides, i, label) {
+  write(
+    c(
+      paste0("\n# ", label),
+      "",
+      add_qmd_table(paste0("res_dose_slides[[", i, "]]$info")),
+      ""
+    ),
+    file = quarto_path, append = TRUE
+  )
+}
+
+#' Append boxplot slides for one dose group to a qmd file
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param boxplots_i Named list of boxplot objects for group i.
+#' @param i Integer index of the dose group.
+#' @param use_plotly Logical, whether to convert plots to plotly.
+#' @keywords internal
+#' @noRd
+.add_qmd_boxplot_slides <- function(quarto_path, boxplots_i, i, use_plotly) {
+  for (bp_name in names(boxplots_i)) {
+    if (!is.null(boxplots_i[[bp_name]])) {
+      add_qmd_sl_plot(
+        quarto_path,
+        paste0("res_dose_slides[[", i, "]]$boxplot$", bp_name),
+        use_plotly
+      )
+    }
+  }
+}
+
+#' Append meanplot/statistics/linplot/boxplot slides for all dose groups to a qmd file
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param res_dose_slides List of results for each dose group.
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @param use_plotly Logical, whether to convert plots to plotly.
+#' @keywords internal
+#' @noRd
+.add_qmd_summary_slides <- function(quarto_path, res_dose_slides, in_sections, use_plotly) {
+  for (i in seq_along(res_dose_slides)) {
+    .add_qmd_group_section_header(quarto_path, res_dose_slides, i, paste0("Group ", i))
+    if (in_sections("meanplot") || in_sections("statistics")) {
+      add_qmd_sl_plottabletable(
+        quarto_path = quarto_path,
+        df1 = if (in_sections("statistics")) {
+          paste0("res_dose_slides[[", i, "]]$statistics")
+        } else {
+          NULL
+        },
+        df2 = NULL,
+        plot = if (in_sections("meanplot")) {
+          paste0("res_dose_slides[[", i, "]]$meanplot")
+        } else {
+          NULL
+        },
+        use_plotly = use_plotly
+      )
+    }
+    if (in_sections("linplot")) {
+      add_qmd_sl_plot(quarto_path = quarto_path,
+                      plot = paste0("res_dose_slides[[", i, "]]$linplot"),
+                      use_plotly = use_plotly)
+    }
+    boxplots_i <- res_dose_slides[[i]]$boxplot
+    if (in_sections("boxplot") && is.list(boxplots_i)) {
+      .add_qmd_boxplot_slides(quarto_path, boxplots_i, i, use_plotly)
+    }
+  }
+}
+
+#' Append individual-subject slides for all dose groups to a qmd file
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param res_dose_slides List of results for each dose group.
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @param use_plotly Logical, whether to convert plots to plotly.
+#' @keywords internal
+#' @noRd
+.add_qmd_ind_slides <- function(quarto_path, res_dose_slides, in_sections, use_plotly) {
+  for (i in seq_along(res_dose_slides)) {
+    if (length(res_dose_slides[[i]]$ind_params) == 0 &&
+          length(res_dose_slides[[i]]$ind_plots) == 0) {
+      next
+    }
+    .add_qmd_group_section_header(
+      quarto_path, res_dose_slides, i, paste0("Group ", i, " (Individual)")
+    )
+    for (subj in names(res_dose_slides[[i]]$ind_params)) {
+      add_qmd_sl_plottabletable(
+        quarto_path = quarto_path,
+        df1 = if (in_sections("ind_params")) {
+          paste0("res_dose_slides[[", i, "]]$ind_params[['", subj, "']]")
+        } else {
+          NULL
+        },
+        df2 = NULL,
+        plot = if (in_sections("ind_plots")) {
+          paste0("res_dose_slides[[", i, "]]$ind_plots[['", subj, "']]")
+        } else {
+          NULL
+        },
+        use_plotly = use_plotly
+      )
+    }
+  }
+}
+
+#' Append additional analysis slides to a qmd file
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param additional_analysis Named list of data frames.
+#' @param slide_sections Character vector of selected section IDs, or NULL for all.
+#' @keywords internal
+#' @noRd
+.add_qmd_additional_analysis <- function(quarto_path, additional_analysis, slide_sections) {
+  if (is.null(additional_analysis)) return(invisible(NULL))
+  keep <- vapply(additional_analysis, function(x) is.data.frame(x) && nrow(x) > 0, logical(1))
+  analysis_to_show <- additional_analysis[keep]
+  if (!is.null(slide_sections)) {
+    analysis_to_show <- analysis_to_show[names(analysis_to_show) %in% slide_sections]
+  }
+  if (length(analysis_to_show) == 0) return(invisible(NULL))
+  write("\n# Additional Analysis Figures", file = quarto_path, append = TRUE)
+  for (name in names(analysis_to_show)) {
+    slide_title <- tools::toTitleCase(gsub("_", " ", name))
+    write(
+      c("\n---", "", paste0("## ", slide_title),
+        add_qmd_table(paste0("additional_analysis[['", name, "']]")), ""),
+      file = quarto_path,
+      append = TRUE
+    )
+  }
+}
+
 #' Create all slides for dose escalation results in a Quarto document
 #'
 #' Used internally to generate main and individual slides for each dose group.
@@ -103,44 +244,31 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @returns Invisibly returns TRUE if slides were created.
 create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plotly = TRUE) {
-  # Save an accessible object with all results
+  # Read optional filtering attributes
+  slide_sections <- attr(res_dose_slides, "slide_sections")
+  additional_analysis <- attr(res_dose_slides, "additional_analysis")
+
+  # Helper: TRUE when id is selected (NULL slide_sections means all selected)
+  in_sections <- function(id) is.null(slide_sections) || id %in% slide_sections
+
+  # Save accessible objects with all results
   rda_path <- paste0(dirname(quarto_path), "/results_slides_outputs.rda")
-  save(list = as.character(quote(res_dose_slides)), file = rda_path)
+  save(list = c("res_dose_slides", "additional_analysis"), file = rda_path)
 
   # Generate the main quarto document
   create_qmd_doc(quarto_path = quarto_path, title = title, rda_path = basename(rda_path))
-  for (i in seq_along(res_dose_slides)) {
-    add_qmd_sl_plottabletable(
-      quarto_path = quarto_path,
-      df1 = paste0("res_dose_slides[[", i, "]]$info"),
-      df2 = paste0("res_dose_slides[[", i, "]]$statistics"),
-      plot = paste0("res_dose_slides[[", i, "]]$meanplot"),
-      use_plotly = use_plotly
-    )
-    add_qmd_sl_plot(
-      quarto_path = quarto_path,
-      plot = paste0("res_dose_slides[[", i, "]]$linplot"),
-      use_plotly = use_plotly
-    )
-    add_qmd_sl_plot(
-      quarto_path = quarto_path,
-      plot = paste0("res_dose_slides[[", i, "]]$boxplot"),
-      use_plotly = use_plotly
-    )
-  }
 
-  # Add the individual information slides
-  for (i in seq_along(res_dose_slides)) {
-    for (subj in names(res_dose_slides[[i]]$ind_params)) {
-      add_qmd_sl_plottabletable(
-        quarto_path = quarto_path,
-        df1 = paste0("res_dose_slides[[", i, "]]$info"),
-        df2 = paste0("res_dose_slides[[", i, "]]$ind_params[['", subj, "']]"),
-        plot = paste0("res_dose_slides[[", i, "]]$ind_plots[['", subj, "']]"),
-        use_plotly = use_plotly
-      )
-    }
-  }
+  # Mean plot + statistics block
+  has_summary <- in_sections("meanplot") || in_sections("statistics") ||
+    in_sections("linplot") || in_sections("boxplot")
+  has_individual <- in_sections("ind_plots") || in_sections("ind_params")
+
+  if (has_summary) .add_qmd_summary_slides(quarto_path, res_dose_slides, in_sections, use_plotly)
+  if (has_summary && has_individual) write("\n# Extra Figures", file = quarto_path, append = TRUE)
+  if (has_individual) .add_qmd_ind_slides(quarto_path, res_dose_slides, in_sections, use_plotly)
+
+  # Additional analysis section
+  .add_qmd_additional_analysis(quarto_path, additional_analysis, slide_sections)
 }
 
 #' Render dose escalation results to HTML via Quarto

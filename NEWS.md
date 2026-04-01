@@ -44,10 +44,13 @@
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 * Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
-* Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
+* Help buttons have been included/updated for most App sections: `Parameter Selection`,
+  `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
 * Removed `methods`, `scales`, and `stringr` from package dependencies, replacing all usages with base R equivalents (#1108)
 * SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
-
+* Export modal now allows users to select which slide sections (mean plots, statistics,
+  line plots, box plots, individual plots/parameters, additional analysis) to include in
+  PPTX and HTML exports; box plot parameters are also configurable (#972)
 
 ## Bugs fixed
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
