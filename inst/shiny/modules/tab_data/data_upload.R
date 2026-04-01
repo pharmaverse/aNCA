@@ -59,8 +59,23 @@ data_upload_server <- function(id) {
       tryCatch({
         content <- read_settings(settings_path, version = settings_ver)
         settings_override(content)
-        log_info("Settings pre-loaded from: ", settings_path)
-        showNotification("Settings successfully loaded.", type = "message")
+        versioned_attr <- attr(content, "versioned")
+        if (!is.null(versioned_attr)) {
+          chosen <- .select_version(versioned_attr$versions, settings_ver)
+          comment_label <- if (nzchar(chosen$comment)) {
+            chosen$comment
+          } else {
+            chosen$datetime
+          }
+          log_success("Settings restored from version: ", comment_label)
+          showNotification(
+            paste0("Settings restored (", comment_label, ")."),
+            type = "message"
+          )
+        } else {
+          log_success("Settings successfully loaded from: ", settings_path)
+          showNotification("Settings successfully loaded.", type = "message")
+        }
       }, error = function(e) {
         log_error("Failed to load settings: ", e$message)
         showNotification(
