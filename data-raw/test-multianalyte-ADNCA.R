@@ -1,3 +1,5 @@
+library(dplyr)
+
 # Build adnca_example dataset from CSV
 multian_test <- read.csv("data-raw/adnca_example.csv", na.strings = c("", "NA")) %>%
   mutate(DOSFRM = ifelse(ROUTE == "ORAL", "TABLET", "INJECTION, SOLUTION")) %>%
