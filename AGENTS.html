@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9134</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9135</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,25 +59,61 @@
 
 <div id="anca-development-guidelines" class="section level1">
 
+<p>This is the single source of truth for all AI coding agents (GitHub Copilot, Ona, etc.) working on the aNCA project. All other agent configuration files reference this document.</p>
 <div class="section level2">
-<h2 id="quick-reference">Quick Reference<a class="anchor" aria-label="anchor" href="#quick-reference"></a></h2>
-<p>Repository structure: - <code>R/</code> — Package R functions (exported) - <code>inst/shiny/</code> — Shiny application code - <code>tests/testthat/</code> — Unit tests - <code>man/</code> — Documentation (auto-generated, do not edit) - <code>data/</code> — Package data</p>
-<p>Key constraints: - No <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> or <code><a href="https://rdrr.io/r/base/library.html" class="external-link">require()</a></code> in package code - Use <code>pkg::function()</code> syntax for external functions - All exported functions must have roxygen2 docs (<code>@param</code>, <code>@returns</code>, <code>@export</code>) - Run <code>devtools::document()</code> after modifying roxygen comments - Run tests before committing: <code>devtools::test()</code></p>
-</div>
-<div class="section level2">
-<h2 id="agent-configuration">Agent Configuration<a class="anchor" aria-label="anchor" href="#agent-configuration"></a></h2>
-<p>This repository uses the standard GitHub Copilot agent configuration:</p>
+<h2 id="repository-structure">Repository Structure<a class="anchor" aria-label="anchor" href="#repository-structure"></a></h2>
 <ul><li>
-<code>.github/copilot-instructions.md</code> — Repository-wide Copilot instructions</li>
+<code>R/</code> — Package R functions (exported)</li>
 <li>
-<code>.github/instructions/</code> — Path-specific coding conventions (R, Shiny, tests)</li>
+<code>inst/shiny/</code> — Shiny application code</li>
 <li>
-<code>.github/agents/</code> — Custom agent profiles (developer, PR reviewer)</li>
+<code>inst/shiny/functions/</code> — Shared Shiny helper functions (app-only)</li>
 <li>
-<code>.github/skills/</code> — Reusable agent workflows (PR review cycle, etc.)</li>
+<code>inst/shiny/www/styles/</code> — SCSS source files for styling</li>
+<li>
+<code>tests/testthat/</code> — Unit tests</li>
+<li>
+<code>man/</code> — Documentation (auto-generated, do not edit)</li>
+<li>
+<code>data/</code> — Package data</li>
+<li>
+<code>data-raw/</code> — Developer-time scripts (e.g., CSS compilation)</li>
 </ul></div>
 <div class="section level2">
+<h2 id="code-principles">Code Principles<a class="anchor" aria-label="anchor" href="#code-principles"></a></h2>
+<div class="section level3">
+<h3 id="simplicity">Simplicity<a class="anchor" aria-label="anchor" href="#simplicity"></a></h3>
+<ul><li>Avoid deep nesting and unnecessary abstraction.</li>
+<li>Write the minimum code required to solve the issue.</li>
+<li>If something can be refactored to be simpler, do it.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="reuse-existing-code">Reuse existing code<a class="anchor" aria-label="anchor" href="#reuse-existing-code"></a></h3>
+<ul><li>Before writing new code, search the codebase for existing functions or patterns that already solve the problem.</li>
+<li>Check all files in <code>R/</code> and <code>inst/shiny/functions/</code> for existing helpers — not just <code>utils.R</code> files.</li>
+<li>Reuse or slightly refactor existing code rather than duplicating logic.</li>
+<li>Only write new code when nothing in the repo can be modified or reused.</li>
+<li>When a helper is used across multiple files, extract it into a dedicated utils file named by domain (e.g., <code>utils-slope_selector.R</code>, <code>utils-exclusions.R</code>).</li>
+</ul></div>
+</div>
+<div class="section level2">
+<h2 id="where-to-put-functions">Where to put functions<a class="anchor" aria-label="anchor" href="#where-to-put-functions"></a></h2>
+<ul><li>
+<strong><code>R/</code></strong> — Functions that can be used outside the Shiny app (package API, exported or internal).</li>
+<li>
+<strong><code>inst/shiny/functions/</code></strong> — Functions that are Shiny-specific and only used within the application.</li>
+</ul><p>Helper functions live alongside the code they support in both directories. When a helper is shared across multiple files, extract it into a domain-specific utils file (e.g., <code>utils-slope_selector.R</code>, <code>utils-exclusions.R</code>).</p>
+<p>Before writing new code, check all files in both <code>R/</code> and <code>inst/shiny/functions/</code> for existing helpers.</p>
+</div>
+<div class="section level2">
 <h2 id="r-package-code-r">R Package Code (<code>R/</code>)<a class="anchor" aria-label="anchor" href="#r-package-code-r"></a></h2>
+<div class="section level3">
+<h3 id="key-constraints">Key constraints<a class="anchor" aria-label="anchor" href="#key-constraints"></a></h3>
+<ul><li>No <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> or <code><a href="https://rdrr.io/r/base/library.html" class="external-link">require()</a></code> in package code</li>
+<li>All exported functions must have roxygen2 docs (<code>@param</code>, <code>@returns</code>, <code>@export</code>)</li>
+<li>Run <code>devtools::document()</code> after modifying roxygen comments</li>
+<li>Run <code>devtools::test()</code> before committing</li>
+</ul></div>
 <div class="section level3">
 <h3 id="file-naming">File naming<a class="anchor" aria-label="anchor" href="#file-naming"></a></h3>
 <ul><li>One main function per file: <code>R/my_function.R</code>
@@ -88,12 +124,19 @@
 </ul></div>
 <div class="section level3">
 <h3 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a></h3>
-<ul><li>Check <code>DESCRIPTION</code> Imports before using any package</li>
+<ul><li>Check <code>DESCRIPTION</code> Imports/Suggests before using any package</li>
+<li>Avoid adding new dependencies when possible — prefer reusing packages already in Imports</li>
 <li>For new dependencies: <code>usethis::use_package("pkg")</code>
 </li>
-<li>Use explicit namespaces in code: <code>dplyr::filter(x &gt; 0)</code> not <code>filter(x &gt; 0)</code>
-</li>
 </ul></div>
+<div class="section level3">
+<h3 id="using-external-functions">Using external functions<a class="anchor" aria-label="anchor" href="#using-external-functions"></a></h3>
+<ul><li>
+<strong>Imports packages</strong> (listed in <code>DESCRIPTION</code> Imports): use <code>@importFrom pkg fun</code> in the function’s roxygen docstring and call <code>fun()</code> directly in code. Do not use <code>pkg::fun()</code> for Imports packages.</li>
+<li>
+<strong>Suggests packages</strong> (listed in <code>DESCRIPTION</code> Suggests): use <code>pkg::fun()</code> inline. Do not use <code>@importFrom</code> for Suggests packages.</li>
+</ul><p>When adding or changing <code>@importFrom</code> tags, agents must also manually update <code>NAMESPACE</code> (add/remove the corresponding <code>importFrom()</code> directive) and verify the package is listed in <code>DESCRIPTION</code> Imports. Developers can run <code>devtools::document()</code> to do this automatically.</p>
+</div>
 <div class="section level3">
 <h3 id="documentation-roxygen2">Documentation (roxygen2)<a class="anchor" aria-label="anchor" href="#documentation-roxygen2"></a></h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -155,9 +198,17 @@
 </li>
 </ul></div>
 <div class="section level3">
-<h3 id="css-caveat">CSS caveat<a class="anchor" aria-label="anchor" href="#css-caveat"></a></h3>
-<p><code>inst/shiny/www/main.css</code> has <code>--_sidebar-width: 170px !important</code></p>
-<p>To change sidebar width, modify the CSS variable, not the R parameter.</p>
+<h3 id="css--scss-workflow">CSS / SCSS workflow<a class="anchor" aria-label="anchor" href="#css--scss-workflow"></a></h3>
+<p>Styles are authored in SCSS partials under <code>inst/shiny/www/styles/</code> and compiled into <code>inst/shiny/www/main.css</code>.</p>
+<ul><li>
+<strong>Entry point:</strong> <code>styles/main.scss</code> imports all partials.</li>
+<li>
+<strong>Partials:</strong> <code>styles/partials/_base.scss</code>, <code>_sidebar.scss</code>, <code>_excretion.scss</code>, etc.</li>
+<li>
+<strong>Color variables:</strong> <code>styles/modules/_colors.scss</code>.</li>
+</ul><p><strong>For agents:</strong> Edit the relevant <code>.scss</code> partial <strong>and</strong> apply the same change to <code>inst/shiny/www/main.css</code>. Agents cannot run the compile script, so both files must be updated manually to stay in sync.</p>
+<p><strong>For developers:</strong> Edit <code>.scss</code> files, then run <code>Rscript data-raw/compile_css.R</code> to recompile <code>main.css</code>.</p>
+<p><strong>Sidebar width:</strong> <code>main.css</code> sets <code>--_sidebar-width: 170px !important</code>. To change it, modify the value in <code>styles/partials/_sidebar.scss</code> (and <code>main.css</code>).</p>
 </div>
 </div>
 <div class="section level2">
@@ -218,13 +269,17 @@
 <p>Before committing: - <code>devtools::document()</code> — regenerate man pages and NAMESPACE - <code><a href="https://lintr.r-lib.org/reference/lint.html" class="external-link">lintr::lint_package()</a></code> — check code style - <code>devtools::test()</code> — run tests - <code>devtools::check()</code> — full package check</p>
 </div>
 <div class="section level2">
+<h2 id="issues">Issues<a class="anchor" aria-label="anchor" href="#issues"></a></h2>
+<p>When creating issues, use the templates in <code>.github/ISSUE_TEMPLATE/</code>: - <strong>Bug report</strong> (<code>BUG_REPORT.md</code>) — for reporting issues with existing features - <strong>Enhancement suggestion</strong> (<code>ENHANCEMENT_SUGGESTION.md</code>) — for requesting new features</p>
+</div>
+<div class="section level2">
 <h2 id="pr-workflow">PR Workflow<a class="anchor" aria-label="anchor" href="#pr-workflow"></a></h2>
 <ul><li>
 <strong>Branch name</strong>: <code>&lt;issue-number&gt;-&lt;type&gt;/&lt;short-description&gt;</code> (e.g., <code>123-bug/data-upload-fails</code>)</li>
 <li>
 <strong>Before submitting</strong>: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes</li>
 <li>
-<strong>PR template</strong>: Link issue with <code>Closes #&lt;number&gt;</code>, describe changes, complete checklist</li>
+<strong>PR template</strong>: Use <code>.github/PULL_REQUEST_TEMPLATE.md</code>. Link issue with <code>Closes #&lt;number&gt;</code>, describe changes, complete the contributor checklist</li>
 <li>
 <strong>Reviewers</strong>: Add at least 2 core team members (from DESCRIPTION)</li>
 <li>
@@ -238,6 +293,22 @@
 <li>Do not push without running <code>devtools::document()</code> first</li>
 <li>Do not skip tests or lintr checks</li>
 <li>Do not assume R is available in dev container (it may not be)</li>
+<li>Do not edit <code>main.css</code> without updating the corresponding <code>.scss</code> source</li>
+<li>Do not duplicate existing code — reuse or refactor</li>
+</ul></div>
+<div class="section level2">
+<h2 id="agent-configuration">Agent Configuration<a class="anchor" aria-label="anchor" href="#agent-configuration"></a></h2>
+<p>This repository uses the following agent configuration:</p>
+<ul><li>
+<code>AGENTS.md</code> — This file. Single source of truth.</li>
+<li>
+<code>.github/copilot-instructions.md</code> — Copilot entry point (references this file).</li>
+<li>
+<code>.github/instructions/</code> — Path-specific notes for Copilot.</li>
+<li>
+<code>.github/agents/</code> — Role-specific agent profiles.</li>
+<li>
+<code>.github/skills/</code> — Reusable agent workflows.</li>
 </ul></div>
 </div>
 

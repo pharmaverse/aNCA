@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9134</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9135</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,68 +59,27 @@
 
 <div id="anca--copilot-instructions" class="section level1">
 
-<p>This is an R package for automated Non-Compartmental Analysis (NCA) with a Shiny app interface.</p>
+<p>R package for automated Non-Compartmental Analysis (NCA) with a Shiny app interface.</p>
+<p><strong>Read <code>AGENTS.md</code> at the repository root for the full development guidelines.</strong> It is the single source of truth for all conventions, code principles, and anti-patterns.</p>
 <div class="section level2">
-<h2 id="repository-structure">Repository Structure<a class="anchor" aria-label="anchor" href="#repository-structure"></a></h2>
-<ul><li>
-<code>R/</code> — Package R functions (exported)</li>
-<li>
-<code>inst/shiny/</code> — Shiny application code</li>
-<li>
-<code>tests/testthat/</code> — Unit tests</li>
-<li>
-<code>man/</code> — Documentation (auto-generated, do not edit)</li>
-<li>
-<code>data/</code> — Package data</li>
-</ul></div>
-<div class="section level2">
-<h2 id="key-constraints">Key Constraints<a class="anchor" aria-label="anchor" href="#key-constraints"></a></h2>
+<h2 id="quick-reminders">Quick Reminders<a class="anchor" aria-label="anchor" href="#quick-reminders"></a></h2>
 <ul><li>No <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> or <code><a href="https://rdrr.io/r/base/library.html" class="external-link">require()</a></code> in package code under <code>R/</code>
 </li>
-<li>Use <code>pkg::function()</code> syntax for all external function calls</li>
+<li>Imports packages: use <code>@importFrom</code> in roxygen, call directly. Suggests packages: use <code>pkg::fun()</code> inline</li>
 <li>All exported functions must have roxygen2 docs (<code>@param</code>, <code>@returns</code>, <code>@export</code>)</li>
-<li>Run <code>devtools::document()</code> after modifying roxygen comments</li>
-<li>Run <code>devtools::test()</code> before committing</li>
+<li>Test files match source: <code>R/foo.R</code> → <code>tests/testthat/test-foo.R</code>
+</li>
+<li>Edit both <code>.scss</code> source and <code>main.css</code> for styling changes (see AGENTS.md for details)</li>
+<li>Search for existing code before writing new code</li>
+<li>Keep code simple — avoid unnecessary nesting</li>
 </ul></div>
 <div class="section level2">
-<h2 id="dependencies">Dependencies<a class="anchor" aria-label="anchor" href="#dependencies"></a></h2>
-<ul><li>Check <code>DESCRIPTION</code> Imports before using any package</li>
-<li>For new dependencies: <code>usethis::use_package("pkg")</code>
-</li>
-<li>Use explicit namespaces: <code>dplyr::filter(x &gt; 0)</code> not <code>filter(x &gt; 0)</code>
-</li>
-</ul></div>
-<div class="section level2">
-<h2 id="testing">Testing<a class="anchor" aria-label="anchor" href="#testing"></a></h2>
-<ul><li>Test file names match source: <code>R/foo.R</code> → <code>tests/testthat/test-foo.R</code>
-</li>
-<li>Use <code>describe</code> and <code>it</code> functions</li>
-<li>Include value-level assertions, not just structure checks</li>
-<li>Use test data from <code>tests/testthat/setup.R</code> where appropriate</li>
-</ul></div>
-<div class="section level2">
-<h2 id="anti-patterns">Anti-patterns<a class="anchor" aria-label="anchor" href="#anti-patterns"></a></h2>
-<ul><li>Do not edit <code>man/</code> or <code>NAMESPACE</code> files manually</li>
-<li>Do not add unused <code>globalVariables</code> to <code>R/zzz.R</code>
-</li>
-<li>Do not push without running <code>devtools::document()</code> first</li>
-<li>Do not skip tests or lintr checks</li>
-</ul></div>
-<div class="section level2">
-<h2 id="pr-workflow">PR Workflow<a class="anchor" aria-label="anchor" href="#pr-workflow"></a></h2>
-<ul><li>Branch name: <code>&lt;issue-number&gt;-&lt;type&gt;/&lt;short-description&gt;</code>
-</li>
-<li>Before submitting: bump version, update NEWS.md</li>
-<li>Link issue with <code>Closes #&lt;number&gt;</code> in PR description</li>
-<li>Add at least 2 core team reviewers (from DESCRIPTION)</li>
-</ul></div>
-<div class="section level2">
-<h2 id="ci-checks">CI Checks<a class="anchor" aria-label="anchor" href="#ci-checks"></a></h2>
-<p>All PRs must pass: lintr, unit tests, test coverage, man page generation, and spell check.</p>
+<h2 id="path-specific-instructions">Path-Specific Instructions<a class="anchor" aria-label="anchor" href="#path-specific-instructions"></a></h2>
+<p>See <code>.github/instructions/</code> for path-scoped conventions applied automatically by Copilot.</p>
 </div>
 <div class="section level2">
-<h2 id="additional-context">Additional Context<a class="anchor" aria-label="anchor" href="#additional-context"></a></h2>
-<p>See <code>AGENTS.md</code> for full development guidelines. See <code>.github/instructions/</code> for path-specific coding conventions. See <code>.github/skills/</code> for reusable agent workflows.</p>
+<h2 id="agent-profiles">Agent Profiles<a class="anchor" aria-label="anchor" href="#agent-profiles"></a></h2>
+<p>See <code>.github/agents/</code> for role-specific agent behavior.</p>
 </div>
 </div>
 
