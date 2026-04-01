@@ -190,26 +190,15 @@ describe("update_main_intervals", {
     filter(type_interval == "main") %>%
     select(-impute)
 
-  # create study types df
-  study_types_df <- tribble(
-    ~STUDYID, ~DOSETRT, ~USUBJID, ~PCSPEC, ~ROUTE, ~type,
-    "S1", "A", 1, "SERUM", "extravascular", "Single Extravascular Dose",
-    "S1", "A", 2, "SERUM", "extravascular", "Multiple Extravascular Doses",
-    "S1", "A", 3, "SERUM", "intravascular", "Multiple IV Doses",
-    "S1", "A", 4, "SERUM", "intravascular", "Single IV Dose",
-    "S1", "A", 5, "SERUM", "intravascular", "Single IV Dose",
-    "S1", "A", 6, "SERUM", "intravascular", "Single IV Dose",
-    "S1", "A", 7, "SERUM", "intravascular", "Single IV Dose",
-    "S1", "A", 8, "SERUM", "extravascular", "Single Extravascular Dose",
-    "S1", "A", 8, "SERUM", "intravascular", "Multiple IV Doses"
-  )
-
-  # Create parameter list for each study type (one different per type)
+  # Parameter list keyed by auto-detected study type names from detect_study_types().
+  # Fixture data produces these types based on ROUTE, ADOSEDUR, DOSNOA, and METABFL.
   parameters <- list(
-    `Single Extravascular Dose`    = c("cmax", "tmax", "auclast"),
-    `Multiple Extravascular Doses` = c("cmax", "tmax", "half.life"),
-    `Multiple IV Doses`            = c("cmax", "auclast", "half.life"),
-    `Single IV Dose`               = c("tmax", "auclast", "half.life")
+    `Single Extravascular`          = c("cmax", "tmax", "auclast"),
+    `Multiple Extravascular`        = c("cmax", "tmax", "half.life"),
+    `Multiple IV Bolus`             = c("cmax", "auclast", "half.life"),
+    `Single IV Bolus`               = c("tmax", "auclast", "half.life"),
+    `Single IV Infusion`            = c("tmax", "auclast", "half.life"),
+    `Single IV Bolus (Metabolite)`  = c("tmax", "auclast", "half.life")
   )
 
   int_parameters <- tibble(
@@ -219,22 +208,22 @@ describe("update_main_intervals", {
   )
 
   it("correctly updates parameter flags based on study type", {
-    result <- update_main_intervals(data, parameters, study_types_df,
+    result <- update_main_intervals(data, parameters,
       int_parameters,
       impute = FALSE
     )
 
-    # Check a specific profile: USUBJID 1 is 'Single Extravascular Dose'
+    # Check a specific profile: USUBJID 1 is 'Single Extravascular'
     profile_1 <- result$intervals %>% filter(USUBJID == 1)
-    expected_true <- parameters$`Single Extravascular Dose`
+    expected_true <- parameters$`Single Extravascular`
     expected_false <- setdiff(all_pknca_params, expected_true)
 
     expect_true(all(profile_1[expected_true] == TRUE))
     expect_true(all(profile_1[expected_false] == FALSE))
 
-    # Check another profile: USUBJID 3 is 'Multiple IV Doses'
+    # Check another profile: USUBJID 3 is 'Multiple IV Bolus'
     profile_3 <- result$intervals %>% filter(USUBJID == 3)
-    expected_true_3 <- parameters$`Multiple IV Doses`
+    expected_true_3 <- parameters$`Multiple IV Bolus`
     expected_false_3 <- setdiff(all_pknca_params, expected_true_3)
 
     expect_true(all(profile_3[expected_true_3] == TRUE))
@@ -250,7 +239,6 @@ describe("update_main_intervals", {
     result <- update_main_intervals(
       data,
       parameters,
-      study_types_df,
       int_parameters,
       impute = FALSE
     )
@@ -269,7 +257,6 @@ describe("update_main_intervals", {
     result <- update_main_intervals(
       data,
       parameters,
-      study_types_df,
       int_parameters,
       impute = FALSE
     )
@@ -278,14 +265,14 @@ describe("update_main_intervals", {
   })
 
   it("imputes c0 when requested", {
-    result <- update_main_intervals(data, parameters, study_types_df, int_parameters, impute = TRUE)
+    result <- update_main_intervals(data, parameters, int_parameters, impute = TRUE)
     expect_true("impute" %in% names(result))
     expect_false(all(is.na(result$intervals$impute)))
   })
 
   it("handles empty parameter selections and empty AUC data", {
     # Test with empty parameter list
-    result_no_params <- update_main_intervals(data, list(), study_types_df,
+    result_no_params <- update_main_intervals(data, list(),
       int_parameters,
       impute = FALSE
     )
@@ -293,7 +280,7 @@ describe("update_main_intervals", {
     expect_true(all(param_flags == FALSE))
 
     # Test with empty int_parameters
-    result_no_auc <- update_main_intervals(data, parameters, study_types_df,
+    result_no_auc <- update_main_intervals(data, parameters,
       int_parameters,
       impute = FALSE
     )
@@ -308,7 +295,7 @@ describe("update_main_intervals", {
     ) # Only first row is valid
 
     original_rows <- nrow(data$intervals)
-    result <- update_main_intervals(data, parameters, study_types_df,
+    result <- update_main_intervals(data, parameters,
       invalid_int_parameters,
       impute = FALSE
     )
@@ -318,15 +305,15 @@ describe("update_main_intervals", {
   })
 
   it("handles missing columns correctly", {
-    # remove PCSPEC column from intervals
-    data$intervals$PCSPEC <- NULL
+    # remove USUBJID column from intervals (required for study type join)
+    data$intervals$USUBJID <- NULL
 
     expect_error(
-      update_main_intervals(data, parameters, study_types_df,
+      update_main_intervals(data, parameters,
         int_parameters,
         impute = FALSE
       ),
-      "Missing required columns: PCSPEC"
+      "Missing required columns: USUBJID"
     )
   })
 
@@ -339,11 +326,9 @@ describe("update_main_intervals", {
       filter(USUBJID == subj1)
     data$intervals <- data$intervals %>%
       filter(USUBJID == subj1)
-    study_types_df <- study_types_df %>%
-      filter(USUBJID == subj1)
 
     # For clarity, define subject and parameters
-    param_list <- list(`Single Extravascular Dose` = c("tmax", "auclast"))
+    param_list <- list(`Single Extravascular` = c("tmax", "auclast"))
     auc_empty <- tibble(parameter = "AUCINT", start_auc = NA_real_, end_auc = NA_real_)
 
     # --- Helper: Extract results for subject 1 ---
@@ -355,14 +340,14 @@ describe("update_main_intervals", {
 
     # --- 1. No BLQ imputation ---
     no_blq <- update_main_intervals(
-      data, param_list, study_types_df, auc_empty, blq_imputation_rule = NULL
+      data, param_list, auc_empty, blq_imputation_rule = NULL
     )
     res_no_blq <- get_results(no_blq, NULL)
 
     # --- 2. All BLQ points kept (should match no imputation) ---
     blq_keep <- list(first = "keep", middle = "keep", last = "keep")
     all_keep <- update_main_intervals(
-      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_keep
+      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_keep
     )
     res_all_keep <- get_results(all_keep, blq_keep)
     expect_equal(res_no_blq, res_all_keep)
@@ -373,13 +358,13 @@ describe("update_main_intervals", {
     blq_both <- list(before.tmax = 100, after.tmax = 100)
 
     res_before <- get_results(update_main_intervals(
-      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_before
+      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_before
     ), blq_before)
     res_after <- get_results(update_main_intervals(
-      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_after
+      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_after
     ), blq_after)
     res_both <- get_results(update_main_intervals(
-      data, param_list, study_types_df, auc_empty, impute = TRUE, blq_imputation_rule = blq_both
+      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_both
     ), blq_both)
 
     # --- 4. Check that BLQ imputation affects only non-observational parameters ---
