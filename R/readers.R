@@ -97,10 +97,11 @@ readers <- list(
 #' version selection.
 #'
 #' @param path Character string with path to the settings YAML file.
-#' @param version Optional version selector for versioned settings files.
+#' @param version Version selector for versioned settings files.
 #'   Either an integer index (1 = most recent, 2 = second, etc.) or a
 #'   character string matched against the version `comment` field.
-#'   Ignored for non-versioned (legacy) settings files.
+#'   Defaults to `1L` (most recent). Ignored for non-versioned (legacy)
+#'   settings files.
 #' @returns A list with parsed settings. For versioned files, the
 #'   attribute `"versioned"` contains the full
 #'   [read_versioned_settings()] result.
@@ -108,7 +109,7 @@ readers <- list(
 #' @importFrom yaml read_yaml
 #'
 #' @export
-read_settings <- function(path, version = NULL) {
+read_settings <- function(path, version = 1L) {
   obj <- yaml::read_yaml(path)
   versioned_attr <- NULL
 
@@ -159,12 +160,12 @@ read_settings <- function(path, version = NULL) {
 #'
 #' @param versions List of version entries (sorted newest first, as
 #'   returned by [read_versioned_settings()]).
-#' @param version `NULL` (return first/most recent), an integer index,
-#'   or a character string to match against the `comment` field.
+#' @param version An integer index (default `1L` = most recent) or a
+#'   character string to match against the `comment` field.
 #' @returns A single version entry list.
 #' @noRd
-.select_version <- function(versions, version = NULL) {
-  if (is.null(version)) {
+.select_version <- function(versions, version = 1L) {
+  if (is.null(version) || (is.numeric(version) && version == 1L)) {
     return(versions[[1]])
   }
 
@@ -172,7 +173,7 @@ read_settings <- function(path, version = NULL) {
     idx <- as.integer(version)
     if (idx < 1 || idx > length(versions)) {
       stop(
-        "settings_version index ", idx, " is out of range. ",
+        "version index ", idx, " is out of range. ",
         "The file contains ", length(versions), " version(s)."
       )
     }
@@ -201,7 +202,7 @@ read_settings <- function(path, version = NULL) {
       warning(
         "Multiple versions with comment \"", version, "\" found. ",
         "Using the most recent (index ", match_idx[1], "). ",
-        "Use settings_version = <index> to pick a specific one:\n",
+        "Use version = <index> to pick a specific one:\n",
         paste(dup_info, collapse = "\n")
       )
     }

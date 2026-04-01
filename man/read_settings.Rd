@@ -4,15 +4,16 @@
 \alias{read_settings}
 \title{Helper Logic to parse and structure settings YAML}
 \usage{
-read_settings(path, version = NULL)
+read_settings(path, version = 1L)
 }
 \arguments{
 \item{path}{Character string with path to the settings YAML file.}
 
-\item{version}{Optional version selector for versioned settings files.
+\item{version}{Version selector for versioned settings files.
 Either an integer index (1 = most recent, 2 = second, etc.) or a
 character string matched against the version \code{comment} field.
-Ignored for non-versioned (legacy) settings files.}
+Defaults to \code{1L} (most recent). Ignored for non-versioned (legacy)
+settings files.}
 }
 \value{
 A list with parsed settings. For versioned files, the

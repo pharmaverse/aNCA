@@ -44,19 +44,24 @@ run_app <- function(datapath = NULL, settings = NULL,
   # Increase max upload size to 30 MB
   options(shiny.maxRequestSize = 30 * 1024^2)
   if (!is.null(datapath)) {
+    stopifnot(
+      "Data file does not exist" = file.exists(datapath),
+      "Data file must have .csv or .rds extension" =
+        tools::file_ext(datapath) %in% c("csv", "rds")
+    )
     opt <- options(aNCA.datapath = datapath)
     on.exit(options(opt), add = TRUE)
   }
+  stopifnot(
+    "settings_version must be a single integer or character string" =
+      (is.numeric(settings_version) || is.character(settings_version)) &&
+      length(settings_version) == 1
+  )
   if (!is.null(settings)) {
     stopifnot(
+      "Settings file does not exist" = file.exists(settings),
       "Settings file must have .yaml or .yml extension" =
-        tools::file_ext(settings) %in% c("yaml", "yml"),
-      "Settings file does not exist" = file.exists(settings)
-    )
-    stopifnot(
-      "settings_version must be a single integer or character string" =
-        (is.numeric(settings_version) || is.character(settings_version)) &&
-        length(settings_version) == 1
+        tools::file_ext(settings) %in% c("yaml", "yml")
     )
     opt_s <- options(
       aNCA.settings = settings,
