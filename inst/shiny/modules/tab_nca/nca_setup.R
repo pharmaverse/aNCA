@@ -123,6 +123,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         hl_adj_rules = slope_rules(),
         exclusion_list = general_exclusions(),
         keep_interval_cols = extra_group_vars(),
+        min_hl_points = settings()$min_hl_points,
         parameter_selections = parameters_output$selections(),
         int_parameters = settings()$int_parameters,
         blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
