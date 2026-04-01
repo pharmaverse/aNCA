@@ -4,17 +4,17 @@
 \alias{run_app}
 \title{Run the Shiny app}
 \usage{
-run_app(datapath = NULL, settings = NULL, settings_version = NULL, ...)
+run_app(datapath = NULL, settings = NULL, settings_version = 1L, ...)
 }
 \arguments{
 \item{datapath}{Full path to a single \code{.csv} or \code{.rds} data file.}
 
 \item{settings}{Full path to a \code{.yaml} settings file.}
 
-\item{settings_version}{Optional version selector for versioned settings
-files. Either an integer index (1 = most recent, 2 = second, etc.) or a
-character string matched against the version \code{comment} field. Ignored for
-non-versioned (legacy) settings files.}
+\item{settings_version}{Version selector for versioned settings files.
+Either an integer index (1 = most recent, 2 = second, etc.) or a
+character string matched against the version \code{comment} field.
+Defaults to \code{1L} (most recent). Ignored for non-versioned files.}
 
 \item{...}{Arguments passed to \code{shiny::runApp()}}
 }
