@@ -7,7 +7,7 @@ R package for automated Non-Compartmental Analysis (NCA) with a Shiny app interf
 ## Quick Reminders
 
 - No `library()` or `require()` in package code under `R/`
-- Use `pkg::function()` syntax for all external function calls
+- Imports packages: use `@importFrom` in roxygen, call directly. Suggests packages: use `pkg::fun()` inline
 - All exported functions must have roxygen2 docs (`@param`, `@returns`, `@export`)
 - Test files match source: `R/foo.R` → `tests/testthat/test-foo.R`
 - Edit both `.scss` source and `main.css` for styling changes (see AGENTS.md for details)

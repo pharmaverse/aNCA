@@ -43,7 +43,6 @@ Before writing new code, check all files in both `R/` and `inst/shiny/functions/
 ### Key constraints
 
 - No `library()` or `require()` in package code
-- Use `pkg::function()` syntax for all external calls
 - All exported functions must have roxygen2 docs (`@param`, `@returns`, `@export`)
 - Run `devtools::document()` after modifying roxygen comments
 - Run `devtools::test()` before committing
@@ -56,9 +55,16 @@ Before writing new code, check all files in both `R/` and `inst/shiny/functions/
 
 ### Dependencies
 
-- Check `DESCRIPTION` Imports before using any package
+- Check `DESCRIPTION` Imports/Suggests before using any package
+- Avoid adding new dependencies when possible — prefer reusing packages already in Imports
 - For new dependencies: `usethis::use_package("pkg")`
-- Use explicit namespaces in code: `dplyr::filter(x > 0)` not `filter(x > 0)`
+
+### Using external functions
+
+- **Imports packages** (listed in `DESCRIPTION` Imports): use `@importFrom pkg fun` in the function's roxygen docstring and call `fun()` directly in code. Do not use `pkg::fun()` for Imports packages.
+- **Suggests packages** (listed in `DESCRIPTION` Suggests): use `pkg::fun()` inline. Do not use `@importFrom` for Suggests packages.
+
+When adding or changing `@importFrom` tags, agents must also manually update `NAMESPACE` (add/remove the corresponding `importFrom()` directive) and verify the package is listed in `DESCRIPTION` Imports. Developers can run `devtools::document()` to do this automatically.
 
 ### Documentation (roxygen2)
 

@@ -19,7 +19,8 @@ You are a PR reviewer for the aNCA project.
 ## What to Check
 
 - All exported functions have roxygen2 docs (`@param`, `@returns`, `@export`)
-- External calls use `pkg::function()` syntax (no `library()` or `require()`)
+- Imports packages use `@importFrom` in roxygen (not `pkg::fun()` inline). Suggests packages use `pkg::fun()` inline
+- No `library()` or `require()` in package code
 - New logic has corresponding tests in `tests/testthat/`
 - NSE column references are declared in `R/zzz.R` (alphabetically sorted)
 - `NEWS.md` is updated for user-facing changes
