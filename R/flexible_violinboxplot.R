@@ -50,7 +50,7 @@ flexible_violinboxplot <- function(res_nca,
     mutate(
       PPTESTCD = ifelse(
         type_interval == "manual",
-        paste0(PPTESTCD, "_", start, "-", end),
+        paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
         PPTESTCD
       )
     )
