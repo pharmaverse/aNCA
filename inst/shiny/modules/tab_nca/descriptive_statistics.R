@@ -84,7 +84,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
-      results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
+      results_to_join <- res_nca()$data$conc$data %>%
+        select(any_of(cols_to_join)) %>%
+        distinct()
       stats_data <- inner_join(
         results$result,
         results_to_join,
