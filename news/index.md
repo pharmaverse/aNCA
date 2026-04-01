@@ -4,6 +4,10 @@
 
 ### Features added
 
+- Added “Min. Points for Half-life” setting in NCA \> Settings \>
+  General Settings, allowing users to configure PKNCA’s `min.hl.points`
+  option (range 2–10, default 3)
+  ([\#1155](https://github.com/pharmaverse/aNCA/issues/1155))
 - Settings version control: single YAML file stores multiple versions
   with metadata (timestamp, comment, dataset, aNCA version, active tab).
   Save button in header, version selection modal on upload, version

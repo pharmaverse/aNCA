@@ -16,6 +16,7 @@ PKNCA_update_data_object(
   hl_adj_rules = NULL,
   exclusion_list = NULL,
   keep_interval_cols = NULL,
+  min_hl_points = 3,
   parameter_selections = NULL,
   int_parameters = NULL,
   blq_imputation_rule = NULL,
@@ -73,6 +74,11 @@ PKNCA_update_data_object(
   Optional character vector of additional columns to keep in the
   intervals data frame and when the NCA is run (pk.nca) also in the
   results
+
+- min_hl_points:
+
+  Minimum number of points to use for half-life calculation. Must be
+  \>= 2. Default is 3 (PKNCA default).
 
 - parameter_selections:
 

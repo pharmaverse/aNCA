@@ -9,7 +9,7 @@ based on user selections for method, analyte, dose, specimen, and parameters."><
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9133</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9134</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,6 +77,7 @@ based on user selections for method, analyte, dose, specimen, and parameters.</p
 <span>  hl_adj_rules <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exclusion_list <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  keep_interval_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_hl_points <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  parameter_selections <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  int_parameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  blq_imputation_rule <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -129,6 +130,11 @@ concentration data. Each item in the list should have:</p><ul><li><p>reason: cha
 <dt id="arg-keep-interval-cols">keep_interval_cols<a class="anchor" aria-label="anchor" href="#arg-keep-interval-cols"></a></dt>
 <dd><p>Optional character vector of additional columns
 to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results</p></dd>
+
+
+<dt id="arg-min-hl-points">min_hl_points<a class="anchor" aria-label="anchor" href="#arg-min-hl-points"></a></dt>
+<dd><p>Minimum number of points to use for half-life calculation.
+Must be &gt;= 2. Default is 3 (PKNCA default).</p></dd>
 
 
 <dt id="arg-parameter-selections">parameter_selections<a class="anchor" aria-label="anchor" href="#arg-parameter-selections"></a></dt>
