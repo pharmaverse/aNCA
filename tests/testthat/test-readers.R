@@ -219,28 +219,47 @@ describe("read_settings", {
     expect_null(res$filters)
   })
 
-  it("reads versioned settings and returns current by default", {
-    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+  # -- Helpers for versioned settings fixtures --
+  write_two_version_yaml <- function(path,
+                                     comment1 = "latest run",
+                                     comment2 = "NCA draft",
+                                     method1 = "linear",
+                                     method2 = "log-linear") {
     yaml::write_yaml(list(
       current = list(
-        comment = "latest run",
+        comment = comment1,
         datetime = "2026-03-26T10:00:00",
         dataset = "data.csv",
         anca_version = "0.1.0",
         tab = "NCA",
-        settings = list(method = "linear")
+        settings = list(method = method1)
       ),
-      previous = list(
-        list(
-          comment = "NCA draft",
-          datetime = "2026-03-20T09:00:00",
-          dataset = "data.csv",
-          anca_version = "0.1.0",
-          tab = "NCA",
-          settings = list(method = "log-linear")
-        )
+      previous = list(list(
+        comment = comment2,
+        datetime = "2026-03-20T09:00:00",
+        dataset = "data.csv",
+        anca_version = "0.1.0",
+        tab = "NCA",
+        settings = list(method = method2)
+      ))
+    ), path)
+  }
+
+  write_single_version_yaml <- function(path,
+                                        comment = "v1",
+                                        method = "linear") {
+    yaml::write_yaml(list(
+      current = list(
+        comment = comment,
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = method)
       )
-    ), tmp_yaml)
+    ), path)
+  }
+
+  it("reads versioned settings and returns current by default", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    write_two_version_yaml(tmp_yaml)
 
     res <- read_settings(tmp_yaml)
     expect_equal(res$settings$method, "linear")
@@ -248,26 +267,7 @@ describe("read_settings", {
 
   it("selects a versioned settings entry by index", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "latest run",
-        datetime = "2026-03-26T10:00:00",
-        dataset = "data.csv",
-        anca_version = "0.1.0",
-        tab = "NCA",
-        settings = list(method = "linear")
-      ),
-      previous = list(
-        list(
-          comment = "NCA draft",
-          datetime = "2026-03-20T09:00:00",
-          dataset = "data.csv",
-          anca_version = "0.1.0",
-          tab = "NCA",
-          settings = list(method = "log-linear")
-        )
-      )
-    ), tmp_yaml)
+    write_two_version_yaml(tmp_yaml)
 
     res <- read_settings(tmp_yaml, version = 2)
     expect_equal(res$settings$method, "log-linear")
@@ -275,56 +275,24 @@ describe("read_settings", {
 
   it("selects a versioned settings entry by comment", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "latest run",
-        datetime = "2026-03-26T10:00:00",
-        dataset = "data.csv",
-        anca_version = "0.1.0",
-        tab = "NCA",
-        settings = list(method = "linear")
-      ),
-      previous = list(
-        list(
-          comment = "NCA draft",
-          datetime = "2026-03-20T09:00:00",
-          dataset = "data.csv",
-          anca_version = "0.1.0",
-          tab = "NCA",
-          settings = list(method = "log-linear")
-        )
-      )
-    ), tmp_yaml)
+    write_two_version_yaml(tmp_yaml)
 
     res <- read_settings(tmp_yaml, version = "NCA draft")
     expect_equal(res$settings$method, "log-linear")
   })
 
-  it("errors on out-of-range version index", {
+  it("errors on out-of-range version indices (0, negative, too large)", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "only version",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      )
-    ), tmp_yaml)
+    write_single_version_yaml(tmp_yaml)
 
-    expect_error(
-      read_settings(tmp_yaml, version = 5),
-      "out of range"
-    )
+    expect_error(read_settings(tmp_yaml, version = 5), "out of range")
+    expect_error(read_settings(tmp_yaml, version = 0), "out of range")
+    expect_error(read_settings(tmp_yaml, version = -1), "out of range")
   })
 
   it("errors when version comment is not found", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "only version",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      )
-    ), tmp_yaml)
+    write_single_version_yaml(tmp_yaml)
 
     expect_error(
       read_settings(tmp_yaml, version = "nonexistent"),
@@ -334,60 +302,26 @@ describe("read_settings", {
 
   it("warns and picks most recent when duplicate comments exist", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "NCA draft",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      ),
-      previous = list(
-        list(
-          comment = "NCA draft",
-          datetime = "2026-03-20T09:00:00",
-          settings = list(method = "log-linear")
-        )
-      )
-    ), tmp_yaml)
+    write_two_version_yaml(tmp_yaml, comment1 = "NCA draft", comment2 = "NCA draft")
 
     expect_warning(
       res <- read_settings(tmp_yaml, version = "NCA draft"),
       "Multiple versions with comment"
     )
-    # Should pick the most recent (index 1)
     expect_equal(res$settings$method, "linear")
   })
 
   it("can disambiguate duplicate comments by index", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "NCA draft",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      ),
-      previous = list(
-        list(
-          comment = "NCA draft",
-          datetime = "2026-03-20T09:00:00",
-          settings = list(method = "log-linear")
-        )
-      )
-    ), tmp_yaml)
+    write_two_version_yaml(tmp_yaml, comment1 = "NCA draft", comment2 = "NCA draft")
 
-    # No warning when using index
     res <- read_settings(tmp_yaml, version = 2)
     expect_equal(res$settings$method, "log-linear")
   })
 
   it("works with versioned file containing only current (no previous)", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "only version",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      )
-    ), tmp_yaml)
+    write_single_version_yaml(tmp_yaml, comment = "only version")
 
     res <- read_settings(tmp_yaml)
     expect_equal(res$settings$method, "linear")
@@ -395,20 +329,7 @@ describe("read_settings", {
 
   it("attaches versioned attribute to result", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "v2",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      ),
-      previous = list(
-        list(
-          comment = "v1",
-          datetime = "2026-03-20T09:00:00",
-          settings = list(method = "log-linear")
-        )
-      )
-    ), tmp_yaml)
+    write_two_version_yaml(tmp_yaml, comment1 = "v2", comment2 = "v1")
 
     res <- read_settings(tmp_yaml)
     versioned <- attr(res, "versioned")
@@ -420,42 +341,9 @@ describe("read_settings", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
     yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
 
-    # version param should be silently ignored
     res <- read_settings(tmp_yaml, version = 2)
     expect_equal(res$settings$method, "linear")
     expect_null(attr(res, "versioned"))
-  })
-
-  it("errors on version index 0", {
-    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "v1",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      )
-    ), tmp_yaml)
-
-    expect_error(
-      read_settings(tmp_yaml, version = 0),
-      "out of range"
-    )
-  })
-
-  it("errors on negative version index", {
-    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "v1",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      )
-    ), tmp_yaml)
-
-    expect_error(
-      read_settings(tmp_yaml, version = -1),
-      "out of range"
-    )
   })
 
   it("selects middle version from three versions", {
@@ -489,20 +377,7 @@ describe("read_settings", {
 
   it("matches empty string comment", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      ),
-      previous = list(
-        list(
-          comment = "named version",
-          datetime = "2026-03-20T09:00:00",
-          settings = list(method = "log-linear")
-        )
-      )
-    ), tmp_yaml)
+    write_two_version_yaml(tmp_yaml, comment1 = "", comment2 = "named version")
 
     res <- read_settings(tmp_yaml, version = "")
     expect_equal(res$settings$method, "linear")
@@ -510,13 +385,7 @@ describe("read_settings", {
 
   it("errors on invalid version type (logical)", {
     tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
-    yaml::write_yaml(list(
-      current = list(
-        comment = "v1",
-        datetime = "2026-03-26T10:00:00",
-        settings = list(method = "linear")
-      )
-    ), tmp_yaml)
+    write_single_version_yaml(tmp_yaml)
 
     expect_error(
       read_settings(tmp_yaml, version = TRUE),
