@@ -104,8 +104,14 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     })
 
     summary_stats_filtered <- reactive({
+      # Map clean parameter names (e.g. "CMAX") back to actual column names
+      # that include units (e.g. "CMAX[ng/mL]")
+      all_cols <- colnames(summary_stats())
+      selected_params <- input$select_display_parameters
+      matched_cols <- all_cols[gsub("\\[.*", "", all_cols) %in% selected_params]
+
       summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic", input$select_display_parameters))) %>%
+        select(any_of(c(input$summary_groupby, "Statistic", matched_cols))) %>%
         filter(Statistic %in% input$select_display_statistic)
     })
 
