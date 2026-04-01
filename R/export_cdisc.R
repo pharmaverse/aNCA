@@ -560,7 +560,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 
   # PPSUMFL/PPSUMRSN: derived directly from whether exclude is populated
   has_exclusions <- exclude_vals != ""
-  data[["PPSUMFL"]] <- ifelse(has_exclusions, "Y", "N")
+  data[["PPSUMFL"]] <- ifelse(has_exclusions, "Y", "")
   data[["PPSUMRSN"]] <- exclude_vals
 
   data
