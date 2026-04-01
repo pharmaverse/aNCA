@@ -32,11 +32,22 @@
 #' ```
 #'
 #' @examples
-#' \donttest{
-#'   # To actually launch the app, run interactively:
-#'   if (interactive()) {
-#'     run_app()
-#'   }
+#' \dontrun{
+#'   # Launch the app without pre-loaded data or settings:
+#'   run_app()
+#'
+#'   # Pre-load a settings file (use the full path to your YAML file):
+#'   run_app(settings = system.file("www/templates/clinical_template.yaml", package = "aNCA"))
+#'
+#'   # Pre-load both data and settings:
+#'   run_app(
+#'     datapath = "/path/to/adpc.csv",
+#'     settings = "/path/to/settings.yaml"
+#'   )
+#'
+#'   # Load a specific version from a versioned settings file:
+#'   run_app(settings = "/path/to/settings.yaml", settings_version = 2)
+#'   run_app(settings = "/path/to/settings.yaml", settings_version = "NCA draft")
 #' }
 #' @export
 run_app <- function(datapath = NULL, settings = NULL,
