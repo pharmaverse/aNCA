@@ -168,48 +168,59 @@ read_settings <- function(path, version = 1L) {
   if (is.null(version) || (is.numeric(version) && version == 1L)) {
     return(versions[[1]])
   }
-
   if (is.numeric(version)) {
-    idx <- as.integer(version)
-    if (idx < 1 || idx > length(versions)) {
-      stop(
-        "version index ", idx, " is out of range. ",
-        "The file contains ", length(versions), " version(s)."
-      )
-    }
-    return(versions[[idx]])
+    .select_version_by_index(versions, as.integer(version))
+  } else if (is.character(version)) {
+    .select_version_by_comment(versions, version)
+  } else {
+    stop("version must be NULL, an integer, or a character string.")
   }
+}
 
-  if (is.character(version)) {
-    comments <- vapply(
-      versions,
-      function(v) if (is.null(v$comment)) "" else v$comment,
-      character(1)
+#' @noRd
+.select_version_by_index <- function(versions, idx) {
+  if (idx < 1 || idx > length(versions)) {
+    stop(
+      "version index ", idx, " is out of range. ",
+      "The file contains ", length(versions), " version(s)."
     )
-    match_idx <- which(comments == version)
-    if (length(match_idx) == 0) {
-      stop(
-        "No version with comment \"", version, "\" found. ",
-        "Available comments: ",
-        paste0("\"", comments[nzchar(comments)], "\"", collapse = ", ")
-      )
-    }
-    if (length(match_idx) > 1) {
-      dup_info <- vapply(match_idx, function(i) {
-        dt <- versions[[i]]$datetime
-        paste0("  index ", i, " (", if (is.null(dt)) "no date" else dt, ")")
-      }, character(1))
-      warning(
-        "Multiple versions with comment \"", version, "\" found. ",
-        "Using the most recent (index ", match_idx[1], "). ",
-        "Use version = <index> to pick a specific one:\n",
-        paste(dup_info, collapse = "\n")
-      )
-    }
-    return(versions[[match_idx[1]]])
   }
+  versions[[idx]]
+}
 
-  stop("version must be NULL, an integer, or a character string.")
+#' @noRd
+.select_version_by_comment <- function(versions, comment) {
+  comments <- vapply(
+    versions,
+    function(v) if (is.null(v$comment)) "" else v$comment,
+    character(1)
+  )
+  match_idx <- which(comments == comment)
+  if (length(match_idx) == 0) {
+    stop(
+      "No version with comment \"", comment, "\" found. ",
+      "Available comments: ",
+      paste0("\"", comments[nzchar(comments)], "\"", collapse = ", ")
+    )
+  }
+  if (length(match_idx) > 1) {
+    .warn_duplicate_comments(versions, match_idx, comment)
+  }
+  versions[[match_idx[1]]]
+}
+
+#' @noRd
+.warn_duplicate_comments <- function(versions, match_idx, comment) {
+  dup_info <- vapply(match_idx, function(i) {
+    dt <- versions[[i]]$datetime
+    paste0("  index ", i, " (", if (is.null(dt)) "no date" else dt, ")")
+  }, character(1))
+  warning(
+    "Multiple versions with comment \"", comment, "\" found. ",
+    "Using the most recent (index ", match_idx[1], "). ",
+    "Use version = <index> to pick a specific one:\n",
+    paste(dup_info, collapse = "\n")
+  )
 }
 
 #' Convert a YAML list to a data.frame via bind_rows.

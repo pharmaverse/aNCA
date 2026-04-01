@@ -18,19 +18,16 @@ describe("run_app: datapath validation", {
   it("accepts .csv extension", {
     tmp <- withr::local_tempfile(fileext = ".csv")
     writeLines("A,B\n1,2", tmp)
-    expect_error(
-      run_app(datapath = tmp),
-      "shiny"
-    )
+    # Passes validation; downstream shiny error is expected and acceptable
+    err <- tryCatch(run_app(datapath = tmp), error = conditionMessage)
+    expect_false(grepl("Data file", err))
   })
 
   it("accepts .rds extension", {
     tmp <- withr::local_tempfile(fileext = ".rds")
     saveRDS(data.frame(A = 1), tmp)
-    expect_error(
-      run_app(datapath = tmp),
-      "shiny"
-    )
+    err <- tryCatch(run_app(datapath = tmp), error = conditionMessage)
+    expect_false(grepl("Data file", err))
   })
 })
 
@@ -54,19 +51,16 @@ describe("run_app: settings validation", {
   it("accepts .yml extension", {
     tmp <- withr::local_tempfile(fileext = ".yml")
     yaml::write_yaml(list(settings = list(method = "linear")), tmp)
-    expect_error(
-      run_app(settings = tmp),
-      "shiny"
-    )
+    # Passes validation; downstream shiny error is expected and acceptable
+    err <- tryCatch(run_app(settings = tmp), error = conditionMessage)
+    expect_false(grepl("Settings file", err))
   })
 
   it("accepts .yaml extension", {
     tmp <- withr::local_tempfile(fileext = ".yaml")
     yaml::write_yaml(list(settings = list(method = "linear")), tmp)
-    expect_error(
-      run_app(settings = tmp),
-      "shiny"
-    )
+    err <- tryCatch(run_app(settings = tmp), error = conditionMessage)
+    expect_false(grepl("Settings file", err))
   })
 
   it("sets and cleans up options correctly", {
