@@ -4,16 +4,20 @@
 \alias{read_settings}
 \title{Helper Logic to parse and structure settings YAML}
 \usage{
-read_settings(path, name)
+read_settings(path)
 }
 \arguments{
 \item{path}{Character string with path to the settings YAML file.}
-
-\item{name}{Character string with the name of the settings YAML file.}
 }
 \value{
-A list with parsed settings or NULL if not a valid settings file.
+A list with parsed settings. For versioned files, the
+attribute \code{"versioned"} contains the full
+\code{\link[=read_versioned_settings]{read_versioned_settings()}} result.
 }
 \description{
-Helper Logic to parse and structure settings YAML
+Supports both the legacy flat format (top-level \code{settings} key) and
+the versioned format (top-level \code{current} key). For versioned files
+the most recent version is returned by default. The full versioned
+object is attached as attribute \code{"versioned"} so callers can offer
+version selection.
 }
