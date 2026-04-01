@@ -159,7 +159,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
               icon("times")
             )
           ),
-          plotlyOutput(output_id, height = "1000px")
+          plotlyOutput(output_id, width = "800px", height = "800px")
         )
       })
 
