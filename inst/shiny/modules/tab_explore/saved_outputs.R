@@ -163,7 +163,10 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
         )
       })
 
-      do.call(tagList, plot_cards)
+      tags$div(
+        style = "display: flex; flex-direction: column;",
+        plot_cards
+      )
     })
 
     observeEvent(input$remove_plot, {
