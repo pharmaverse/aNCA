@@ -1,5 +1,11 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Fixed crash when switching PCSPEC (e.g. Plasma → Urine) caused by `impute` column type mismatch in `anti_join` within the slope selector (#1116)
+* Fixed `create_start_impute` dropping excretion/urine intervals when the conc × dose merge produced no matching rows (#1116)
+* Fixed `DOSNOA` computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1` instead of `DOSNOA=2`, leading to incorrect dose time matching (#1116)
+
 ## Features added
 
 * Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
