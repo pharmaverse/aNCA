@@ -14,7 +14,7 @@ as additional columns in ADNCA, ADPP, and PP outputs. Defaults to \code{characte
 
 \item{flag_rules}{Character vector of flag rule exclusion messages applied during NCA
 (e.g., \code{c("R2ADJ < 0.8", "AUCPEO > 20")}). Each entry generates a CRITy/CRITyFL
-column pair in ADPP, plus PPSUMFL and PPSUM columns. Defaults to \code{NULL} (no flags).}
+column pair in ADPP, plus PPSUMFL and PPSUMRSN columns. Defaults to \code{NULL} (no flags).}
 }
 \value{
 A list with two data frames:
