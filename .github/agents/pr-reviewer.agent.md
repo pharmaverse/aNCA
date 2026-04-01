@@ -38,3 +38,8 @@ You are a PR reviewer for the aNCA project.
 ## Output Format
 
 List findings with severity, file path, and actionable description. Do not post comments on the PR unless explicitly asked.
+
+## References
+
+- `AGENTS.md` — Full development guidelines
+- `.github/PULL_REQUEST_TEMPLATE.md` — PR checklist

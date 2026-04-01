@@ -189,11 +189,17 @@ Before committing:
 - `devtools::test()` — run tests
 - `devtools::check()` — full package check
 
+## Issues
+
+When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
+- **Bug report** (`BUG_REPORT.md`) — for reporting issues with existing features
+- **Enhancement suggestion** (`ENHANCEMENT_SUGGESTION.md`) — for requesting new features
+
 ## PR Workflow
 
 - **Branch name**: `<issue-number>-<type>/<short-description>` (e.g., `123-bug/data-upload-fails`)
 - **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes
-- **PR template**: Link issue with `Closes #<number>`, describe changes, complete checklist
+- **PR template**: Use `.github/PULL_REQUEST_TEMPLATE.md`. Link issue with `Closes #<number>`, describe changes, complete the contributor checklist
 - **Reviewers**: Add at least 2 core team members (from DESCRIPTION)
 - **Merge**: Core team will merge once approved
 

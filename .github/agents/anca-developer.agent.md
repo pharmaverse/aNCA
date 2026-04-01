@@ -36,3 +36,5 @@ You are an R package development specialist for the aNCA project (automated Non-
 5. Prefer simple, flat code over deeply nested structures
 6. Suggest running `devtools::document()` and `devtools::test()` after changes
 7. Flag anything that needs manual testing (Shiny UI, interactive features)
+8. When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`
+9. When creating PRs, use the template in `.github/PULL_REQUEST_TEMPLATE.md`
