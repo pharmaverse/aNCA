@@ -428,7 +428,7 @@ process_data_mean <- function(pknca_data,
 .prepare_line_type_data <- function(line_type, process_fn, ...) {
   if (line_type == "both") {
     dn_data <- process_fn(..., dose_normalize = TRUE)
-    dn_data$line_type_label <- "Dose-normalised"
+    dn_data$line_type_label <- "Dose-normalized"
     nn_data <- process_fn(..., dose_normalize = FALSE)
     nn_data$line_type_label <- ""
     list(data = bind_rows(dn_data, nn_data), linetype_by = "line_type_label")

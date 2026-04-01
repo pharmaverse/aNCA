@@ -21,6 +21,14 @@ nca_setup_ui <- function(id) {
     widths = c(2, 10),
     nav_panel(
       "Settings",
+      fluidRow(
+        actionButton(
+          ns("open_save_settings_modal"),
+          label = "Download settings",
+          icon = icon("download"),
+          class = "btn-primary"
+        )
+      ),
       fluidRow(units_table_ui(ns("units_table"))),
       settings_ui(ns("nca_settings")),
       accordion(
@@ -39,6 +47,7 @@ nca_setup_ui <- function(id) {
 
 nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
     imported_settings <- reactive(settings_override()$settings)
     imported_slopes <- reactive(settings_override()$slope_rules)
@@ -187,6 +196,74 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       "slope_selector",
       processed_pknca_data,
       imported_slopes
+    )
+
+    # Open comment modal before downloading settings
+    observeEvent(input$open_save_settings_modal, {
+      showModal(modalDialog(
+        title = "Save Settings",
+        textInput(
+          ns("settings_save_comment"),
+          label = "Comment (optional)",
+          placeholder = "e.g. final NCA, first draft"
+        ),
+        footer = tagList(
+          downloadButton(ns("settings_download"), "Save", class = "btn-primary"),
+          modalButton("Cancel")
+        ),
+        easyClose = TRUE,
+        size = "m"
+      ))
+    })
+
+    output$settings_download <- downloadHandler(
+      filename = function() {
+        paste0(
+          session$userData$project_prefix("_"),
+          "settings_", Sys.Date(), ".yaml"
+        )
+      },
+      content = function(con) {
+        export_settings <- final_settings()
+        if (!is.null(export_settings$units)) {
+          export_settings$units <- export_settings$units %>%
+            filter(!default) %>%
+            select(-default)
+        }
+        export_settings$ratio_table <- ratio_table()
+        payload <- list(
+          settings = export_settings,
+          mapping = session$userData$mapping,
+          slope_rules = slope_rules(),
+          filters = session$userData$applied_filters
+        )
+
+        dataset_name <- session$userData$dataset_filename %||% ""
+
+        active_tab <- tryCatch(
+          session$userData$active_tab(),
+          error = function(e) ""
+        )
+
+        new_version <- create_settings_version(
+          settings_data = payload,
+          comment = input$settings_save_comment %||% "",
+          dataset = dataset_name,
+          tab = active_tab
+        )
+
+        existing <- tryCatch(
+          session$userData$settings_versions(),
+          error = function(e) list()
+        )
+        if (is.null(existing)) existing <- list()
+
+        versions <- add_settings_version(existing, new_version)
+        session$userData$settings_versions(versions)
+
+        write_versioned_settings(versions, con)
+        removeModal()
+      }
     )
 
     list(
