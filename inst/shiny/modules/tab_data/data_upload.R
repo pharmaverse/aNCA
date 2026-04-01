@@ -60,6 +60,7 @@ data_upload_server <- function(id) {
         content <- read_settings(settings_path, version = settings_ver)
         settings_override(content)
         log_info("Settings pre-loaded from: ", settings_path)
+        showNotification("Settings successfully loaded.", type = "message")
       }, error = function(e) {
         log_error("Failed to load settings: ", e$message)
         showNotification(
