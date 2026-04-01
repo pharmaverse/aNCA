@@ -166,7 +166,7 @@ g_lineplot <- function(data,
     )
 
   # When linetype_by is present ("both" mode), append non-empty labels
-  # to color_var so the color legend distinguishes default from dose-normalised
+  # to color_var so the color legend distinguishes default from dose-normalized
   if (!is.null(linetype_by) && linetype_by %in% names(plot_data)) {
     base_levels <- levels(plot_data$color_var)
     dn_label <- setdiff(unique(plot_data[[linetype_by]]), "")
@@ -178,7 +178,7 @@ g_lineplot <- function(data,
           as.character(color_var)
         )
       )
-    # Order legend: default entries first, then dose-normalised
+    # Order legend: default entries first, then dose-normalized
     ordered_levels <- c(
       base_levels,
       paste0(base_levels, " (", dn_label, ")")

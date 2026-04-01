@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
+* Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (#1103)
 * Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (#1156)
 * Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
 * Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)
@@ -48,6 +50,7 @@
 
 
 ## Bugs fixed
+* SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)

@@ -1,0 +1,171 @@
+# Metadata keys present in every version entry
+VERSION_META_KEYS <- c("comment", "datetime", "dataset", "anca_version", "tab")
+
+#' Create a versioned settings entry
+#'
+#' Wraps a settings payload with metadata (timestamp, comment, dataset name,
+#' aNCA version, active tab) for storage in a versioned settings YAML file.
+#'
+#' @param settings_data List with the settings payload (mapping, parameters,
+#'   NCA setup, filters, slope_rules, etc.).
+#' @param comment Optional character string with a user comment.
+#' @param dataset Optional character string identifying the dataset used.
+#' @param tab Optional character string with the active app tab.
+#'
+#' @returns A named list representing one version entry.
+#' @export
+create_settings_version <- function(settings_data,
+                                    comment = "",
+                                    dataset = "",
+                                    tab = "") {
+  meta_list <- list(
+    comment = comment,
+    datetime = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+    dataset = dataset,
+    anca_version = as.character(utils::packageVersion("aNCA")),
+    tab = tab
+  )
+
+  append(meta_list, settings_data)
+}
+
+#' Read a versioned settings YAML file
+#'
+#' Parses a YAML file in the versioned format (with `current` and
+#' optionally `previous` keys). Returns a list with `versions`
+#' (a list of version entries, most recent first).
+#'
+#' @param path Character string with path to the YAML file.
+#' @param obj Optional pre-parsed YAML list. When supplied, `path`
+#'   is ignored and no file I/O occurs.
+#'
+#' @returns A list with element `versions`.
+#'
+#' @importFrom yaml read_yaml
+#' @export
+read_versioned_settings <- function(path, obj = NULL) {
+  if (is.null(obj)) {
+    obj <- yaml::read_yaml(path)
+  }
+
+  versions <- list()
+  versions[[1]] <- .parse_version_entry(obj$current)
+  if (!is.null(obj$previous) && is.list(obj$previous)) {
+    for (entry in obj$previous) {
+      versions[[length(versions) + 1]] <- .parse_version_entry(entry)
+    }
+  }
+  # Sort by timestamp descending (newest first) to handle manual edits
+  timestamps <- vapply(versions, function(v) v$datetime %||% "", character(1))
+  ord <- order(timestamps, decreasing = TRUE)
+  versions <- versions[ord]
+
+  list(versions = versions)
+}
+
+#' Write a versioned settings YAML file
+#'
+#' Writes a list of version entries to a YAML file in the versioned
+#' format. The first entry becomes `current`, the rest go under
+#' `previous`.
+#'
+#' @param versions A list of version entries (as returned by
+#'   [create_settings_version()]).
+#' @param path Character string with the output file path.
+#'
+#' @returns Invisibly returns `path`.
+#'
+#' @importFrom yaml write_yaml
+#' @export
+write_versioned_settings <- function(versions, path) {
+  if (length(versions) == 0) {
+    stop("At least one version entry is required.")
+  }
+
+  out <- list(current = versions[[1]])
+  if (length(versions) > 1) {
+    out$previous <- versions[2:length(versions)]
+  }
+
+  yaml::write_yaml(out, path)
+  invisible(path)
+}
+
+#' Add a new version to an existing versioned settings list
+#'
+#' Prepends a new version entry so it becomes the current version.
+#' The previous current entry moves to the `previous` list.
+#'
+#' @param versions Existing list of version entries.
+#' @param new_version A single version entry (from
+#'   [create_settings_version()]).
+#'
+#' @returns Updated list of version entries with the new entry first.
+#' @export
+add_settings_version <- function(versions, new_version) {
+  c(list(new_version), versions)
+}
+
+#' Delete a version from a versioned settings list
+#'
+#' Removes the version at the given index. Cannot delete the last
+#' remaining version.
+#'
+#' @param versions List of version entries.
+#' @param index Integer index of the version to remove.
+#'
+#' @returns Updated list of version entries.
+#' @export
+delete_settings_version <- function(versions, index) {
+  if (length(versions) <= 1) {
+    stop("Cannot delete the last remaining version.")
+  }
+  if (index < 1 || index > length(versions)) {
+    stop("Index out of bounds: ", index)
+  }
+  versions[-index]
+}
+
+#' Build a summary table of version entries
+#'
+#' Creates a data.frame with one row per version, suitable for
+#' display in a modal.
+#'
+#' @param versions List of version entries.
+#'
+#' @returns A data.frame with columns: `index`, `comment`, `datetime`,
+#'   `dataset`, `anca_version`, `tab`.
+#' @export
+settings_version_summary <- function(versions) {
+  rows <- lapply(seq_along(versions), function(i) {
+    v <- versions[[i]]
+    data.frame(
+      index = i,
+      comment = v$comment %||% "",
+      datetime = v$datetime %||% "",
+      dataset = v$dataset %||% "",
+      anca_version = v$anca_version %||% "",
+      tab = v$tab %||% "",
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, rows)
+}
+
+# Internal helpers --------------------------------------------------------
+
+#' Parse a single version entry from YAML, filling in missing metadata.
+#' @param entry A list from YAML.
+#' @returns A normalized version entry list.
+#' @noRd
+.parse_version_entry <- function(entry) {
+  meta <- list(
+    comment = entry$comment %||% "",
+    datetime = entry$datetime %||% "",
+    dataset = entry$dataset %||% "",
+    anca_version = entry$anca_version %||% "",
+    tab = entry$tab %||% ""
+  )
+  settings_fields <- entry[setdiff(names(entry), VERSION_META_KEYS)]
+  append(meta, settings_fields)
+}

@@ -274,6 +274,8 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #' - rows: integer vector of row indices to apply the exclusion to
 #' @param keep_interval_cols Optional character vector of additional columns
 #' to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results
+#' @param min_hl_points Minimum number of points to use for half-life calculation.
+#' Must be >= 2. Default is 3 (PKNCA default).
 #' @param parameter_selections Optional named list of selected PKNCA parameters
 #' by study type (forwarded to [update_main_intervals()]).
 #' @param int_parameters Optional data frame containing partial AUC ranges
@@ -301,6 +303,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     hl_adj_rules = NULL,
     exclusion_list = NULL,
     keep_interval_cols = NULL,
+    min_hl_points = 3,
     parameter_selections = NULL,
     int_parameters = NULL,
     blq_imputation_rule = NULL,
@@ -323,6 +326,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       group_vars(data$conc)
     ),
     min.hl.r.squared = 0.01,
+    min.hl.points = min_hl_points,
     allow_partial_missing_units = TRUE
   )
 
