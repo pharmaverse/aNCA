@@ -51,7 +51,7 @@ parameter_plots_server <- function(id, res_nca) {
       result_data <- res_nca()$result %>%
         mutate(PPTESTCD = ifelse(
           type_interval == "manual",
-          paste0(PPTESTCD, "_", start, "-", end),
+          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
           PPTESTCD
         ))
       param_choices <- unique(result_data$PPTESTCD)
