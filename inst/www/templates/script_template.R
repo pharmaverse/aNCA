@@ -98,6 +98,15 @@ pknca_res <- pknca_obj %>%
   # Filter only parameters that have been requested
   remove_pp_not_requested()
 
+# Apply custom unit conversions (including ratio parameters)
+if (!is.null(units_table)) {
+  pknca_res$result <- apply_custom_units(
+    pknca_res$result,
+    units_table %>%
+      mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+  )
+}
+
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 cdisc_datasets <- pknca_res %>%
   export_cdisc(grouping_vars = extra_vars_to_keep)
