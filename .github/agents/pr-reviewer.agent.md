@@ -25,7 +25,7 @@ You are a PR reviewer for the aNCA project.
 - `NEWS.md` is updated for user-facing changes
 - Package version is bumped in `DESCRIPTION`
 - No manual edits to `man/` or `NAMESPACE`
-- New code does not duplicate existing functions or patterns — flag opportunities to reuse or refactor existing code
+- New code does not duplicate existing functions, tests or patterns — flag opportunities to reuse or refactor existing code
 - Code avoids unnecessary nesting and complexity — flag overly complex implementations that could be simplified
 - CSS changes are applied to both `.scss` source files and `main.css`
 
