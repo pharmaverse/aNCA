@@ -218,6 +218,166 @@ describe("read_settings", {
 
     expect_null(res$filters)
   })
+
+  it("reads versioned settings and returns current by default", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "latest run",
+        datetime = "2026-03-26T10:00:00",
+        dataset = "data.csv",
+        anca_version = "0.1.0",
+        tab = "NCA",
+        settings = list(method = "linear")
+      ),
+      previous = list(
+        list(
+          comment = "NCA draft",
+          datetime = "2026-03-20T09:00:00",
+          dataset = "data.csv",
+          anca_version = "0.1.0",
+          tab = "NCA",
+          settings = list(method = "log-linear")
+        )
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+    expect_equal(res$settings$method, "linear")
+  })
+
+  it("selects a versioned settings entry by index", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "latest run",
+        datetime = "2026-03-26T10:00:00",
+        dataset = "data.csv",
+        anca_version = "0.1.0",
+        tab = "NCA",
+        settings = list(method = "linear")
+      ),
+      previous = list(
+        list(
+          comment = "NCA draft",
+          datetime = "2026-03-20T09:00:00",
+          dataset = "data.csv",
+          anca_version = "0.1.0",
+          tab = "NCA",
+          settings = list(method = "log-linear")
+        )
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml, version = 2)
+    expect_equal(res$settings$method, "log-linear")
+  })
+
+  it("selects a versioned settings entry by comment", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "latest run",
+        datetime = "2026-03-26T10:00:00",
+        dataset = "data.csv",
+        anca_version = "0.1.0",
+        tab = "NCA",
+        settings = list(method = "linear")
+      ),
+      previous = list(
+        list(
+          comment = "NCA draft",
+          datetime = "2026-03-20T09:00:00",
+          dataset = "data.csv",
+          anca_version = "0.1.0",
+          tab = "NCA",
+          settings = list(method = "log-linear")
+        )
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml, version = "NCA draft")
+    expect_equal(res$settings$method, "log-linear")
+  })
+
+  it("errors on out-of-range version index", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "only version",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      )
+    ), tmp_yaml)
+
+    expect_error(
+      read_settings(tmp_yaml, version = 5),
+      "out of range"
+    )
+  })
+
+  it("errors when version comment is not found", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "only version",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      )
+    ), tmp_yaml)
+
+    expect_error(
+      read_settings(tmp_yaml, version = "nonexistent"),
+      "No version with comment"
+    )
+  })
+
+  it("warns and picks most recent when duplicate comments exist", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "NCA draft",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      ),
+      previous = list(
+        list(
+          comment = "NCA draft",
+          datetime = "2026-03-20T09:00:00",
+          settings = list(method = "log-linear")
+        )
+      )
+    ), tmp_yaml)
+
+    expect_warning(
+      res <- read_settings(tmp_yaml, version = "NCA draft"),
+      "Multiple versions with comment"
+    )
+    # Should pick the most recent (index 1)
+    expect_equal(res$settings$method, "linear")
+  })
+
+  it("can disambiguate duplicate comments by index", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "NCA draft",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      ),
+      previous = list(
+        list(
+          comment = "NCA draft",
+          datetime = "2026-03-20T09:00:00",
+          settings = list(method = "log-linear")
+        )
+      )
+    ), tmp_yaml)
+
+    # No warning when using index
+    res <- read_settings(tmp_yaml, version = 2)
+    expect_equal(res$settings$method, "log-linear")
+  })
 })
 
 describe(".convert_list_to_df", {

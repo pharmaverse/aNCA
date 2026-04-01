@@ -91,11 +91,16 @@ readers <- list(
 #'
 #' Supports both the legacy flat format (top-level `settings` key) and
 #' the versioned format (top-level `current` key). For versioned files
-#' the most recent version is returned by default. The full versioned
+#' the most recent version is returned by default. Use `version` to
+#' select a specific version by index or comment. The full versioned
 #' object is attached as attribute `"versioned"` so callers can offer
 #' version selection.
 #'
 #' @param path Character string with path to the settings YAML file.
+#' @param version Optional version selector for versioned settings files.
+#'   Either an integer index (1 = most recent, 2 = second, etc.) or a
+#'   character string matched against the version `comment` field.
+#'   Ignored for non-versioned (legacy) settings files.
 #' @returns A list with parsed settings. For versioned files, the
 #'   attribute `"versioned"` contains the full
 #'   [read_versioned_settings()] result.
@@ -103,16 +108,15 @@ readers <- list(
 #' @importFrom yaml read_yaml
 #'
 #' @export
-read_settings <- function(path) {
+read_settings <- function(path, version = NULL) {
   obj <- yaml::read_yaml(path)
   versioned_attr <- NULL
 
   if ("current" %in% names(obj) && is.list(obj$current) &&
         "datetime" %in% names(obj$current)) {
-    # Versioned format — pass already-parsed YAML to avoid reading twice
     versioned_attr <- read_versioned_settings(obj = obj)
-    version <- versioned_attr$versions[[1]]
-    obj <- version[setdiff(names(version), VERSION_META_KEYS)]
+    chosen <- .select_version(versioned_attr$versions, version)
+    obj <- chosen[setdiff(names(chosen), VERSION_META_KEYS)]
   }
 
   # Shared validation — works for both legacy and versioned
@@ -149,6 +153,62 @@ read_settings <- function(path) {
   obj$settings$ratio_table <- .convert_list_to_df(obj$settings$ratio_table)
 
   obj
+}
+
+#' Select a version from a sorted list of version entries.
+#'
+#' @param versions List of version entries (sorted newest first, as
+#'   returned by [read_versioned_settings()]).
+#' @param version `NULL` (return first/most recent), an integer index,
+#'   or a character string to match against the `comment` field.
+#' @returns A single version entry list.
+#' @noRd
+.select_version <- function(versions, version = NULL) {
+  if (is.null(version)) {
+    return(versions[[1]])
+  }
+
+  if (is.numeric(version)) {
+    idx <- as.integer(version)
+    if (idx < 1 || idx > length(versions)) {
+      stop(
+        "settings_version index ", idx, " is out of range. ",
+        "The file contains ", length(versions), " version(s)."
+      )
+    }
+    return(versions[[idx]])
+  }
+
+  if (is.character(version)) {
+    comments <- vapply(
+      versions,
+      function(v) if (is.null(v$comment)) "" else v$comment,
+      character(1)
+    )
+    match_idx <- which(comments == version)
+    if (length(match_idx) == 0) {
+      stop(
+        "No version with comment \"", version, "\" found. ",
+        "Available comments: ",
+        paste0("\"", comments[nzchar(comments)], "\"", collapse = ", ")
+      )
+    }
+    if (length(match_idx) > 1) {
+      dup_info <- vapply(match_idx, function(i) {
+        dt <- versions[[i]]$datetime
+        paste0("  index ", i, " (", if (is.null(dt)) "no date" else dt, ")")
+      }, character(1))
+      warning(
+        "Multiple versions with comment \"", version, "\" found. ",
+        "Using the most recent (index ", match_idx[1], "). ",
+        "Use settings_version = <index> to pick a specific one:\n",
+        paste(dup_info, collapse = "\n")
+      )
+    }
+    return(versions[[match_idx[1]]])
+  }
+
+  stop("version must be NULL, an integer, or a character string.")
 }
 
 #' Convert a YAML list to a data.frame via bind_rows.

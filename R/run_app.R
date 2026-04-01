@@ -1,6 +1,10 @@
 #' Run the Shiny app
 #' @param datapath Full path to a single `.csv` or `.rds` data file.
 #' @param settings Full path to a `.yaml` settings file.
+#' @param settings_version Optional version selector for versioned settings
+#'   files. Either an integer index (1 = most recent, 2 = second, etc.) or a
+#'   character string matched against the version `comment` field. Ignored for
+#'   non-versioned (legacy) settings files.
 #' @param ... Arguments passed to `shiny::runApp()`
 #'
 #' @returns No return value, called for side effects to launch the Shiny application.
@@ -18,6 +22,15 @@
 #' startup and apply the saved configuration (analyte, method, units, etc.).
 #' The pre-loaded settings can be overwritten by uploading a new settings file.
 #'
+#' For versioned settings files (containing `current` and `previous` entries),
+#' the most recent version is loaded by default. Use `settings_version` to
+#' select a different version by index or comment:
+#'
+#' ```
+#' run_app(settings = "settings.yaml", settings_version = 2)
+#' run_app(settings = "settings.yaml", settings_version = "NCA draft")
+#' ```
+#'
 #' @examples
 #' \donttest{
 #'   # To actually launch the app, run interactively:
@@ -26,7 +39,8 @@
 #'   }
 #' }
 #' @export
-run_app <- function(datapath = NULL, settings = NULL, ...) {
+run_app <- function(datapath = NULL, settings = NULL,
+                    settings_version = NULL, ...) {
   # Increase max upload size to 30 MB
   options(shiny.maxRequestSize = 30 * 1024^2)
   if (!is.null(datapath)) {
@@ -39,7 +53,17 @@ run_app <- function(datapath = NULL, settings = NULL, ...) {
         tools::file_ext(settings) %in% c("yaml", "yml"),
       "Settings file does not exist" = file.exists(settings)
     )
-    opt_s <- options(aNCA.settings = settings)
+    if (!is.null(settings_version)) {
+      stopifnot(
+        "settings_version must be a single integer or character string" =
+          (is.numeric(settings_version) || is.character(settings_version)) &&
+          length(settings_version) == 1
+      )
+    }
+    opt_s <- options(
+      aNCA.settings = settings,
+      aNCA.settings_version = settings_version
+    )
     on.exit(options(opt_s), add = TRUE)
   }
 

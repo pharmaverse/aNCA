@@ -55,8 +55,9 @@ data_upload_server <- function(id) {
     # Pre-load settings from run_app(settings = ...) if provided
     settings_path <- getOption("aNCA.settings", NULL)
     if (!is.null(settings_path)) {
+      settings_ver <- getOption("aNCA.settings_version", NULL)
       tryCatch({
-        content <- read_settings(settings_path)
+        content <- read_settings(settings_path, version = settings_ver)
         settings_override(content)
         log_info("Settings pre-loaded from: ", settings_path)
       }, error = function(e) {

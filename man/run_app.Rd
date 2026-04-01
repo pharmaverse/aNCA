@@ -4,12 +4,17 @@
 \alias{run_app}
 \title{Run the Shiny app}
 \usage{
-run_app(datapath = NULL, settings = NULL, ...)
+run_app(datapath = NULL, settings = NULL, settings_version = NULL, ...)
 }
 \arguments{
 \item{datapath}{Full path to a single \code{.csv} or \code{.rds} data file.}
 
 \item{settings}{Full path to a \code{.yaml} settings file.}
+
+\item{settings_version}{Optional version selector for versioned settings
+files. Either an integer index (1 = most recent, 2 = second, etc.) or a
+character string matched against the version \code{comment} field. Ignored for
+non-versioned (legacy) settings files.}
 
 \item{...}{Arguments passed to \code{shiny::runApp()}}
 }
@@ -32,6 +37,14 @@ data, and a file must be uploaded manually within the app.
 If a \code{settings} path is provided, the app will load the settings file on
 startup and apply the saved configuration (analyte, method, units, etc.).
 The pre-loaded settings can be overwritten by uploading a new settings file.
+
+For versioned settings files (containing \code{current} and \code{previous} entries),
+the most recent version is loaded by default. Use \code{settings_version} to
+select a different version by index or comment:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{run_app(settings = "settings.yaml", settings_version = 2)
+run_app(settings = "settings.yaml", settings_version = "NCA draft")
+}\if{html}{\out{</div>}}
 }
 \examples{
 \donttest{
