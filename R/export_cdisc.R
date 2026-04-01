@@ -564,7 +564,8 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 
   # PPSUMFL: "Y" if all criteria are satisfied for this record
   data[["PPSUMFL"]] <- ifelse(all_satisfied, "Y", "N")
-  data[["PPSUM"]] <- "Summary stats. Must satisfy all CRITy flags."
+  # PPSUM: the full exclusion reasons for flagged records, empty for clean ones
+  data[["PPSUM"]] <- ifelse(all_satisfied, "", exclude_vals)
 
   data
 }
