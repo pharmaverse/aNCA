@@ -174,39 +174,11 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
     })
 
-    # --- Saved Outputs table ---
+    # --- Saved Outputs gallery ---
 
-    # Shared callbacks for all three saved_outputs_server instances
-    # Store the reopen function so the Back button observer can call it
-    .reopen_saved_outputs <- reactiveVal(NULL)
-
-    .on_open <- function(plot_name, reopen = NULL) {
-      plot_obj <- session$userData$results$exploration[[plot_name]]
-      req(plot_obj)
-      if (!is.null(reopen)) .reopen_saved_outputs(reopen)
-      showModal(modalDialog(
-        title = plot_name,
-        plotlyOutput(ns("saved_plot_preview"), height = "500px"),
-        size = "l",
-        easyClose = TRUE,
-        footer = actionButton(
-          ns("back_to_saved_outputs"), "Back",
-          class = "btn btn-primary",
-          icon = icon("arrow-left")
-        )
-      ))
-      output$saved_plot_preview <- renderPlotly({
-        ggplotly(plot_obj)
-      })
+    .get_plot_obj <- function(plot_name) {
+      session$userData$results$exploration[[plot_name]]
     }
-
-    # Back button returns to the Saved Outputs modal.
-    # Uses the parent module ns — safe because tab_explore_server is
-    # instantiated once in app.R.
-    observeEvent(input$back_to_saved_outputs, {
-      reopen_fn <- .reopen_saved_outputs()
-      if (is.function(reopen_fn)) reopen_fn()
-    }, ignoreInit = TRUE)
 
     .on_remove <- function(plot_name) {
       session$userData$results$exploration[[plot_name]] <- NULL
@@ -224,14 +196,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     }
 
     # Wire saved outputs server for each sidebar.
-    # Each instance has its own namespace so button IDs and input values
-    # (open_plot, remove_plot) don't collide across tabs.
+    # Each instance has its own namespace so button IDs don't collide.
     saved_outputs_server("saved_outputs_indiv", saved_plots_metadata,
-                         on_remove = .on_remove, on_open = .on_open)
+                         get_plot_obj = .get_plot_obj, on_remove = .on_remove)
     saved_outputs_server("saved_outputs_mean", saved_plots_metadata,
-                         on_remove = .on_remove, on_open = .on_open)
+                         get_plot_obj = .get_plot_obj, on_remove = .on_remove)
     saved_outputs_server("saved_outputs_qc", saved_plots_metadata,
-                         on_remove = .on_remove, on_open = .on_open)
+                         get_plot_obj = .get_plot_obj, on_remove = .on_remove)
 
     # --- Add to Exports handlers ---
 

@@ -66,41 +66,41 @@ saved_outputs_ui <- function(id) {
 
 #' Saved Outputs Server
 #'
-#' Opens a modal with a reactable listing saved exploration plots.
-#' Each row has an Open link (plotly preview) and a Remove button.
-#' Button clicks use `Shiny.setInputValue` via JS to avoid observer
-#' accumulation — a single `observeEvent` per action type handles all rows.
+#' Opens a single modal displaying all saved exploration plots vertically.
+#' Each plot is rendered inline with a header (name, type, timestamp) and
+#' a remove button. The user scrolls to compare plots at a glance.
 #'
 #' @param id Module namespace ID.
 #' @param saved_plots_metadata A reactive returning a data.frame with columns:
 #'   name, type, timestamp (character).
-#' @param on_remove A callback function(plot_name) called when the user removes a plot.
-#' @param on_open A callback function(plot_name, reopen) called when the user
-#'   opens a plot. `reopen` is a function that re-opens this modal.
-saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
+#' @param get_plot_obj A function(plot_name) that returns the ggplot object
+#'   for the given plot name, or NULL if not found.
+#' @param on_remove A callback function(plot_name) called when the user
+#'   removes a plot.
+saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
+                                 on_remove) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Reusable function to show the Saved Outputs modal
     show_modal <- function() {
       showModal(modalDialog(
         title = "Saved Outputs",
-        uiOutput(ns("saved_outputs_table")),
+        uiOutput(ns("saved_outputs_gallery")),
         size = "l",
         easyClose = TRUE,
         footer = modalButton("Close")
       ))
     }
 
-    # Open the modal when "View Exports" is clicked
     observeEvent(input$view_exports, {
       show_modal()
     })
 
-    # Render the reactable inside the modal.
-    # Buttons use onclick JS to set namespaced Shiny inputs with a timestamp,
-    # so each click is treated as a new event without creating new observers.
-    output$saved_outputs_table <- renderUI({
+    # Render a vertical gallery of all saved plots inside the modal.
+    # Each plot gets its own plotlyOutput and a header with metadata.
+    # Remove buttons use Shiny.setInputValue via JS onclick to avoid
+    # observer accumulation.
+    output$saved_outputs_gallery <- renderUI({
       meta <- saved_plots_metadata()
       if (is.null(meta) || nrow(meta) == 0) {
         return(tags$p(
@@ -111,90 +111,61 @@ saved_outputs_server <- function(id, saved_plots_metadata, on_remove, on_open) {
         ))
       }
 
-      # Build a data.frame with plot names for Open and Remove columns
-      df <- data.frame(
-        Name = meta$name,
-        Type = meta$type,
-        DateTime = meta$timestamp,
-        open_name = meta$name,
-        remove_name = meta$name,
-        stringsAsFactors = FALSE
-      )
-
-      open_input_id <- ns("open_plot")
       remove_input_id <- ns("remove_plot")
-
-      # Escape single quotes in plot names to prevent JS injection
       escape_js <- function(x) gsub("'", "\\\\'", x)
 
-      tagList(
-        reactable::reactable(
-          df,
-          compact = TRUE,
-          bordered = TRUE,
-          highlight = TRUE,
-          pagination = FALSE,
-          defaultPageSize = nrow(df),
-          theme = reactable::reactableTheme(
-            headerStyle = list(background = "#e9e9e9")
-          ),
-          columns = list(
-            Name = reactable::colDef(name = "Name", width = 200),
-            Type = reactable::colDef(name = "Type", width = 200),
-            DateTime = reactable::colDef(name = "DateTime", width = 200),
-            open_name = reactable::colDef(
-              name = "",
-              width = 70,
-              sortable = FALSE,
-              cell = function(value) {
-                js <- sprintf(
-                  paste0(
-                    "Shiny.setInputValue('%s',",
-                    " {name:'%s', ts:Date.now()});"
-                  ),
-                  open_input_id, escape_js(value)
-                )
-                as.character(tags$a(
-                  "Open", href = "#",
-                  onclick = paste0(js, "return false;"),
-                  style = "cursor:pointer;"
-                ))
-              },
-              html = TRUE
-            ),
-            remove_name = reactable::colDef(
-              name = "",
-              width = 50,
-              sortable = FALSE,
-              cell = function(value) {
-                js <- sprintf(
-                  paste0(
-                    "Shiny.setInputValue('%s',",
-                    " {name:'%s', ts:Date.now()});"
-                  ),
-                  remove_input_id, escape_js(value)
-                )
-                as.character(tags$a(
-                  href = "#",
-                  onclick = paste0(js, "return false;"),
-                  style = "cursor:pointer; color:#dc3545;",
-                  as.character(icon("times"))
-                ))
-              },
-              html = TRUE
-            )
-          )
+      plot_cards <- lapply(seq_len(nrow(meta)), function(i) {
+        plot_name <- meta$name[i]
+        plot_type <- meta$type[i]
+        plot_ts <- meta$timestamp[i]
+        output_id <- ns(paste0("gallery_plot_", i))
+
+        remove_js <- sprintf(
+          "Shiny.setInputValue('%s', {name:'%s', ts:Date.now()});",
+          remove_input_id, escape_js(plot_name)
         )
-      )
+
+        output[[paste0("gallery_plot_", i)]] <- renderPlotly({
+          plot_obj <- get_plot_obj(plot_name)
+          req(plot_obj)
+          ggplotly(plot_obj)
+        })
+
+        tags$div(
+          style = paste0(
+            "border: 1px solid #dee2e6; border-radius: 6px; ",
+            "padding: 12px; margin-bottom: 16px; background: #fff;"
+          ),
+          tags$div(
+            style = paste0(
+              "display: flex; justify-content: space-between; ",
+              "align-items: center; margin-bottom: 8px;"
+            ),
+            tags$div(
+              tags$strong(plot_name, style = "font-size: 1.1em;"),
+              tags$span(
+                paste0(" \u2014 ", plot_type, " \u00b7 ", plot_ts),
+                style = "color: #666; font-size: 0.9em;"
+              )
+            ),
+            tags$a(
+              href = "#",
+              onclick = paste0(remove_js, "return false;"),
+              style = paste0(
+                "color: #dc3545; font-size: 1.2em; ",
+                "text-decoration: none;"
+              ),
+              title = "Remove from exports",
+              as.character(icon("times"))
+            )
+          ),
+          plotlyOutput(output_id, height = "400px")
+        )
+      })
+
+      do.call(tagList, plot_cards)
     })
 
-    # Single observer for Open — input$open_plot is set via JS with {name, ts}
-    observeEvent(input$open_plot, {
-      req(input$open_plot$name)
-      on_open(input$open_plot$name, reopen = show_modal)
-    }, ignoreInit = TRUE)
-
-    # Single observer for Remove — input$remove_plot is set via JS with {name, ts}
     observeEvent(input$remove_plot, {
       req(input$remove_plot$name)
       on_remove(input$remove_plot$name)

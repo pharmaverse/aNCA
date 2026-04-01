@@ -2,7 +2,7 @@
 
 ## Features added
 
-* Exploration sidebars now show a "Saved Outputs" table below the "Add to Exports" button, listing all saved plots with name, type, timestamp, an Open link (plotly preview modal), and a Remove button (#1137)
+* Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
 * Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (#1103)
 * Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (#1156)
 * Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
