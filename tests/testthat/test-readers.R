@@ -378,6 +378,151 @@ describe("read_settings", {
     res <- read_settings(tmp_yaml, version = 2)
     expect_equal(res$settings$method, "log-linear")
   })
+
+  it("works with versioned file containing only current (no previous)", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "only version",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+    expect_equal(res$settings$method, "linear")
+  })
+
+  it("attaches versioned attribute to result", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "v2",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      ),
+      previous = list(
+        list(
+          comment = "v1",
+          datetime = "2026-03-20T09:00:00",
+          settings = list(method = "log-linear")
+        )
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+    versioned <- attr(res, "versioned")
+    expect_false(is.null(versioned))
+    expect_equal(length(versioned$versions), 2)
+  })
+
+  it("ignores version param for legacy (non-versioned) files", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
+
+    # version param should be silently ignored
+    res <- read_settings(tmp_yaml, version = 2)
+    expect_equal(res$settings$method, "linear")
+    expect_null(attr(res, "versioned"))
+  })
+
+  it("errors on version index 0", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "v1",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      )
+    ), tmp_yaml)
+
+    expect_error(
+      read_settings(tmp_yaml, version = 0),
+      "out of range"
+    )
+  })
+
+  it("errors on negative version index", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "v1",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      )
+    ), tmp_yaml)
+
+    expect_error(
+      read_settings(tmp_yaml, version = -1),
+      "out of range"
+    )
+  })
+
+  it("selects middle version from three versions", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "v3",
+        datetime = "2026-03-30T10:00:00",
+        settings = list(method = "method_c")
+      ),
+      previous = list(
+        list(
+          comment = "v2",
+          datetime = "2026-03-25T10:00:00",
+          settings = list(method = "method_b")
+        ),
+        list(
+          comment = "v1",
+          datetime = "2026-03-20T10:00:00",
+          settings = list(method = "method_a")
+        )
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml, version = 2)
+    expect_equal(res$settings$method, "method_b")
+
+    res3 <- read_settings(tmp_yaml, version = 3)
+    expect_equal(res3$settings$method, "method_a")
+  })
+
+  it("matches empty string comment", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      ),
+      previous = list(
+        list(
+          comment = "named version",
+          datetime = "2026-03-20T09:00:00",
+          settings = list(method = "log-linear")
+        )
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml, version = "")
+    expect_equal(res$settings$method, "linear")
+  })
+
+  it("errors on invalid version type (logical)", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      current = list(
+        comment = "v1",
+        datetime = "2026-03-26T10:00:00",
+        settings = list(method = "linear")
+      )
+    ), tmp_yaml)
+
+    expect_error(
+      read_settings(tmp_yaml, version = TRUE),
+      "version must be NULL, an integer, or a character string"
+    )
+  })
 })
 
 describe(".convert_list_to_df", {
