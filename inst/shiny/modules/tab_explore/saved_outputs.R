@@ -96,10 +96,58 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
       show_modal()
     })
 
-    # Render a vertical gallery of all saved plots inside the modal.
-    # Each plot gets its own plotlyOutput and a header with metadata.
-    # Remove buttons use Shiny.setInputValue via JS onclick to avoid
-    # observer accumulation.
+    # Track which output IDs have been registered to avoid re-registration
+    # and to clean up orphaned outputs when plots are removed.
+    registered_ids <- reactiveVal(character(0))
+
+    escape_js <- function(x) {
+      x <- gsub("\\\\", "\\\\\\\\", x)
+      gsub("'", "\\\\'", x)
+    }
+
+    safe_output_key <- function(plot_name) {
+      paste0("gallery_plot_", gsub("[^a-zA-Z0-9_]", "_", plot_name))
+    }
+
+    # Register / deregister renderPlotly outputs outside renderUI so they
+    # persist across re-renders and orphaned entries are cleaned up.
+    observe({
+      meta <- saved_plots_metadata()
+      current_names <- if (is.null(meta) || nrow(meta) == 0) {
+        character(0)
+      } else {
+        meta$name
+      }
+
+      current_keys <- vapply(current_names, safe_output_key, character(1),
+                             USE.NAMES = FALSE)
+      prev_keys <- registered_ids()
+
+      # Register new outputs
+      new_keys <- setdiff(current_keys, prev_keys)
+      for (key in new_keys) {
+        plot_name <- current_names[current_keys == key]
+        local({
+          local_name <- plot_name
+          output[[key]] <- renderPlotly({
+            plot_obj <- get_plot_obj(local_name)
+            req(plot_obj)
+            ggplotly(plot_obj)
+          })
+        })
+      }
+
+      # Nullify removed outputs
+      removed_keys <- setdiff(prev_keys, current_keys)
+      for (key in removed_keys) {
+        output[[key]] <- NULL
+      }
+
+      registered_ids(current_keys)
+    })
+
+    # Render the gallery HTML. plotlyOutput placeholders reference outputs
+    # registered by the observer above.
     output$saved_outputs_gallery <- renderUI({
       meta <- saved_plots_metadata()
       if (is.null(meta) || nrow(meta) == 0) {
@@ -112,24 +160,17 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
       }
 
       remove_input_id <- ns("remove_plot")
-      escape_js <- function(x) gsub("'", "\\\\'", x)
 
       plot_cards <- lapply(seq_len(nrow(meta)), function(i) {
         plot_name <- meta$name[i]
         plot_type <- meta$type[i]
         plot_ts <- meta$timestamp[i]
-        output_id <- ns(paste0("gallery_plot_", i))
+        output_id <- ns(safe_output_key(plot_name))
 
         remove_js <- sprintf(
           "Shiny.setInputValue('%s', {name:'%s', ts:Date.now()});",
           remove_input_id, escape_js(plot_name)
         )
-
-        output[[paste0("gallery_plot_", i)]] <- renderPlotly({
-          plot_obj <- get_plot_obj(plot_name)
-          req(plot_obj)
-          ggplotly(plot_obj)
-        })
 
         tags$div(
           style = paste0(
@@ -159,7 +200,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
               icon("times")
             )
           ),
-          plotlyOutput(output_id, width = "800px", height = "800px")
+          plotlyOutput(output_id, width = "100%", height = "500px")
         )
       })
 
