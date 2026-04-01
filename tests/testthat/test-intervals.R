@@ -183,13 +183,19 @@ describe("update_main_intervals", {
   )
   # setup data using FIXTURES
   data <- FIXTURE_PKNCA_DATA
+  # Cross intervals with per-subject PARAM values from conc data so that
+  # .derive_study_types can match on PARAM (included via union of groups).
+  subject_params <- data$conc$data %>%
+    select(USUBJID, PARAM) %>%
+    distinct()
   data$intervals <- data$intervals %>%
     mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params),
       PCSPEC = "SERUM",
       STUDYID = "S1"
     ) %>%
     filter(type_interval == "main") %>%
-    select(-impute)
+    select(-impute) %>%
+    left_join(subject_params, by = "USUBJID", relationship = "many-to-many")
 
   # Parameter list keyed by auto-detected study type names from detect_study_types().
   # Fixture data produces these types based on ROUTE, ADOSEDUR, DOSNOA, and METABFL.
