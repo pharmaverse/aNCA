@@ -88,21 +88,58 @@ readers <- list(
 )
 
 #' Helper Logic to parse and structure settings YAML
-#' @param path Character string with path to the settings YAML file.
-#' @param name Character string with the name of the settings YAML file.
-#' @returns A list with parsed settings or NULL if not a valid settings file.
 #'
-#' @importFrom tools file_ext
+#' Supports both the legacy flat format (top-level `settings` key) and
+#' the versioned format (top-level `current` key). For versioned files
+#' the most recent version is returned by default. The full versioned
+#' object is attached as attribute `"versioned"` so callers can offer
+#' version selection.
+#'
+#' @param path Character string with path to the settings YAML file.
+#' @returns A list with parsed settings. For versioned files, the
+#'   attribute `"versioned"` contains the full
+#'   [read_versioned_settings()] result.
+#'
 #' @importFrom yaml read_yaml
 #'
 #' @export
-read_settings <- function(path, name) {
-
+read_settings <- function(path) {
   obj <- yaml::read_yaml(path)
+  versioned_attr <- NULL
 
+  if ("current" %in% names(obj) && is.list(obj$current) &&
+        "datetime" %in% names(obj$current)) {
+    # Versioned format — pass already-parsed YAML to avoid reading twice
+    versioned_attr <- read_versioned_settings(obj = obj)
+    version <- versioned_attr$versions[[1]]
+    obj <- version[setdiff(names(version), VERSION_META_KEYS)]
+  }
+
+  # Shared validation — works for both legacy and versioned
+  obj <- .process_settings_payload(obj)
+
+  if (!is.null(versioned_attr)) {
+    attr(obj, "versioned") <- versioned_attr
+  }
+
+  obj
+}
+
+#' Validate and post-process a settings payload.
+#'
+#' Checks that the `settings` key exists, then converts YAML lists
+#' to data.frames. Used by both `read_settings()` (legacy and versioned)
+#' and the version restore logic in `data_upload`.
+#' @param obj A list with settings payload.
+#' @returns The processed list with data.frame conversions applied.
+#' @keywords internal
+#' @noRd
+.process_settings_payload <- function(obj) {
   if (!is.list(obj) || !"settings" %in% names(obj)) {
-    stop("The file does not appear to be a valid settings YAML file.",
-         "Please ensure that the file is a list with element 'settings'.")
+    stop(
+      "The file does not appear to be a valid settings YAML file. ",
+      "Please ensure that the file is a list with element 'settings'."
+    )
   }
 
   obj$slope_rules <- .convert_list_to_df(obj$slope_rules)

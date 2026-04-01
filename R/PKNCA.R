@@ -250,6 +250,11 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #'
 #' Step 6: Indicate points excluded / selected manually for half-life
 #'
+#' Step 7 (optional): Update intervals with parameter selections per study type
+#' and partial AUC ranges via [update_main_intervals()].
+#'
+#' Step 8 (optional): Apply custom units table for PPSTRESU overrides.
+#'
 #' Note*: The function assumes that the `adnca_data` object has been
 #' created using the `PKNCA_create_data_object()` function.
 #'
@@ -261,17 +266,28 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #' @param hl_adj_rules A data frame containing half-life adjustment rules. It must
 #' contain group columns and rule specification columns;
 #' TYPE: (Inclusion, Exclusion), RANGE: (start-end).
-#' @param should_impute_c0 Logical indicating whether to impute start concentration values
+#' @param start_impute Logical indicating whether to impute start concentration values.
+#' Also forwarded to [update_main_intervals()] when `parameter_selections` is provided.
 #' @param exclusion_list List of exclusion reasons and row indices to apply to the
 #' concentration data. Each item in the list should have:
 #' - reason: character string with the exclusion reason (e.g., "Vomiting")
 #' - rows: integer vector of row indices to apply the exclusion to
 #' @param keep_interval_cols Optional character vector of additional columns
 #' to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results
+#' @param min_hl_points Minimum number of points to use for half-life calculation.
+#' Must be >= 2. Default is 3 (PKNCA default).
+#' @param parameter_selections Optional named list of selected PKNCA parameters
+#' by study type (forwarded to [update_main_intervals()]).
+#' @param int_parameters Optional data frame containing partial AUC ranges
+#' (forwarded to [update_main_intervals()]).
+#' @param blq_imputation_rule Optional list defining the BLQ imputation rule
+#' (forwarded to [update_main_intervals()]).
+#' @param custom_units_table Optional data frame with PPSTRESU overrides.
+#' When provided, applied via [dplyr::rows_update()] on the PKNCAdata units table.
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
-#' @importFrom dplyr filter mutate select
+#' @importFrom dplyr filter mutate select rows_update
 #' @importFrom tidyr crossing
 #' @importFrom rlang sym
 #' @importFrom purrr pmap
@@ -283,10 +299,15 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     selected_analytes,
     selected_profile,
     selected_pcspec,
-    should_impute_c0 = TRUE,
+    start_impute = TRUE,
     hl_adj_rules = NULL,
     exclusion_list = NULL,
-    keep_interval_cols = NULL) {
+    keep_interval_cols = NULL,
+    min_hl_points = 3,
+    parameter_selections = NULL,
+    int_parameters = NULL,
+    blq_imputation_rule = NULL,
+    custom_units_table = NULL) {
 
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
@@ -305,6 +326,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       group_vars(data$conc)
     ),
     min.hl.r.squared = 0.01,
+    min.hl.points = min_hl_points,
     allow_partial_missing_units = TRUE
   )
 
@@ -316,7 +338,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   data$intervals <- format_pkncadata_intervals(
     pknca_conc = data$conc,
     pknca_dose = data$dose,
-    start_from_last_dose = should_impute_c0,
+    start_from_last_dose = start_impute,
     keep_interval_cols = keep_interval_cols
   ) %>%
     # Join route information
@@ -341,6 +363,26 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   if (!is.null(hl_adj_rules)) {
     data <- update_pknca_with_rules(data, hl_adj_rules)
   }
+
+  # Update intervals with parameter selections and partial AUCs
+  data <- update_main_intervals(
+    data = data,
+    parameter_selections = parameter_selections,
+    int_parameters = int_parameters,
+    impute = start_impute,
+    blq_imputation_rule = blq_imputation_rule
+  )
+
+  # Apply custom units table
+  if (!is.null(custom_units_table)) {
+    data$units <- rows_update(
+      data$units,
+      custom_units_table,
+      by = c("PPTESTCD", "PPORRESU"),
+      unmatched = "ignore"
+    )
+  }
+
   data
 }
 

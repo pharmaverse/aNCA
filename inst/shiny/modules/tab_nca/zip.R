@@ -432,6 +432,16 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       )
     })
 
+    # Show/hide settings comment based on settings_file selection
+    observe({
+      selected <- input$res_tree
+      if ("settings_file" %in% selected) {
+        shinyjs::show("settings_comment_container")
+      } else {
+        shinyjs::hide("settings_comment_container")
+      }
+    })
+
     output$slide_validation_ui <- renderUI({
       .render_validation_msgs(slide_validation())
     })

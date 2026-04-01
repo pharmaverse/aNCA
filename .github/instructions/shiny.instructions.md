@@ -4,33 +4,12 @@ applyTo: "inst/shiny/**"
 
 # Shiny App Code
 
-## Module communication
+See `AGENTS.md` section "Shiny App Code" for full conventions including module communication, export/ZIP workflow, exploration plots, and CSS/SCSS workflow.
 
-- `session$userData$results` — computed results (CDISC datasets, NCA results)
-- `session$userData$project_name()` — reactive, auto-populated from STUDYID
-- `session$userData$slope_rules()` — reactive (non-nested)
+## Path-specific reminders
+
+- Check all files in `inst/shiny/functions/` and `R/` for existing helpers before writing new code
 - Data flows: `data_upload_server` → `adnca_raw` → `tab_data_server` → `tab_nca_server`
-
-## Export / ZIP (`tab_nca/zip.R`)
-
-- `TREE_LIST` defines export structure
-- `input$res_tree` returns selected items as text names
-- Zip filename: `ProjectName.zip` or fallback `NCA_STUDYID.zip`
-- Pre-Specs sheets auto-generated from CDISC data, filtered to exported variables
-
-## Exploration plots
-
-- Default color_by priority: `DOSEA > TRT01A > GROUP > ACTARM > COHORT`
-- Default facet_by priority: `TRT01A > DOSEA > GROUP > ACTARM > COHORT`
-- Auto-mapping includes: `COHORT`, `PART`, `PERIOD`
-
-## CSS caveat
-
-`inst/shiny/www/main.css` has `--_sidebar-width: 170px !important`
-
-To change sidebar width, modify the CSS variable, not the R parameter.
-
-## Anti-patterns
-
+- For styling changes, edit both the `.scss` partial and `inst/shiny/www/main.css`
 - Do not add `globalVariables` here; place them only in `R/zzz.R`
-- Agents cannot run or visually debug the Shiny app; test UI changes manually
+- Agents cannot run or visually debug the Shiny app; flag UI changes for manual testing

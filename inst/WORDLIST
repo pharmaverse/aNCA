@@ -97,6 +97,7 @@ SDTM
 SDTMIG
 SMS
 STUDYID
+SelectInputs
 TLG
 TLGs
 TMAX
@@ -161,6 +162,7 @@ macroparameters
 md
 meanplot
 multidose
+nav
 nca
 ng
 oligo
@@ -177,6 +179,7 @@ pptest
 pptx
 pre
 pred
+px
 qmd
 rds
 renderable
@@ -185,7 +188,6 @@ reproducibility
 roadmap
 rpptx
 runnable
-SelectInputs
 signif
 src
 subfolder

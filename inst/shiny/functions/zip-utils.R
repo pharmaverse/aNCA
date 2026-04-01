@@ -529,15 +529,39 @@ prepare_export_files <- function(target_dir,
 
   settings_list$ratio_table <- session$userData$ratio_table()
 
-  settings_to_save <- list(
-    mapping = session$userData$mapping,
-    filters = session$userData$applied_filters,
+  payload <- list(
     settings = settings_list,
-    slope_rules = session$userData$slope_rules()
+    mapping = session$userData$mapping,
+    slope_rules = session$userData$slope_rules(),
+    filters = session$userData$applied_filters
   )
-  yaml::write_yaml(
-    settings_to_save, file.path(target_dir, "settings.yaml")
+
+  dataset_name <- session$userData$dataset_filename %||% ""
+
+  active_tab <- tryCatch(
+    session$userData$active_tab(),
+    error = function(e) ""
   )
+
+  save_comment <- session$userData$settings_save_comment %||% ""
+
+  new_version <- create_settings_version(
+    settings_data = payload,
+    comment = save_comment,
+    dataset = dataset_name,
+    tab = active_tab
+  )
+
+  existing <- tryCatch(
+    session$userData$settings_versions(),
+    error = function(e) list()
+  )
+  if (is.null(existing)) existing <- list()
+
+  versions <- add_settings_version(existing, new_version)
+  session$userData$settings_versions(versions)
+
+  write_versioned_settings(versions, file.path(target_dir, "settings.yaml"))
 }
 
 #' Helper to export a single pre-specification xlsx file for CDISC datasets.
