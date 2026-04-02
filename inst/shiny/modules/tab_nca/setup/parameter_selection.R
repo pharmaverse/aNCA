@@ -502,6 +502,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     factor(params_meta$TYPE, levels = unique(params_meta$TYPE))
   )
 
+  # Reorder params_meta to match column order (grouped by TYPE)
+  params_ordered <- do.call(rbind, type_groups)
+  rownames(params_ordered) <- NULL
+
   # Two header rows: TYPE group spans + individual param columns
 
   group_header_cells <- list(tags$th(
@@ -534,13 +538,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
   }
 
   # Body rows — one per study type
+  # Iterate params_ordered so cells match the column header order.
 
   body_rows <- lapply(study_types, function(st) {
     cells <- list(tags$td(
       class = "param-matrix-row-header", st
     ))
-    for (i in seq_len(nrow(params_meta))) {
-      pknca_code <- params_meta$PKNCA[i]
+    for (i in seq_len(nrow(params_ordered))) {
+      pknca_code <- params_ordered$PKNCA[i]
       is_checked <- isTRUE(state[[st]][state$PKNCA == pknca_code])
       cb_id <- paste0(
         "cb__",
