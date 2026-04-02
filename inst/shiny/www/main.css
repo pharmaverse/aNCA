@@ -654,6 +654,38 @@ div[data-value="Settings"] > div.row a {
   color: #ffffff;
 }
 
+.auto-analysis-container {
+  margin-top: 1rem;
+  width: 50%;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-auto-analysis {
+  background: linear-gradient(135deg, #0d6efd, #6610f2);
+  color: #ffffff;
+  border: none;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-auto-analysis:hover {
+  background: linear-gradient(135deg, #0b5ed7, #520dc2);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-auto-analysis:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(13, 110, 253, 0.3);
+}
+
 .data-filtering-container {
   display: flex;
   gap: 2rem;

@@ -81,6 +81,9 @@ tab_data_server <- function(id) {
     steps <- c("upload", "mapping", "filtering", "preview")
     step_labels <- c("Upload", "Mapping", "Filtering", "Preview")
     data_step <- reactiveVal("upload")
+
+    # Auto-analysis reactive flag (initialized in app.R server)
+    auto_analysis_active <- reactiveVal(FALSE)
     observe({
       current <- data_step()
       if (current == steps[1]) {
@@ -227,6 +230,49 @@ tab_data_server <- function(id) {
       })
     }) %>%
       bindEvent(processed_data())
+
+    # --- Auto-analysis orchestration ---
+    # Step 1: When auto-analysis is triggered, submit the mapping
+    observeEvent(session$userData$auto_analysis_triggered(), {
+      req(isTRUE(session$userData$auto_analysis_triggered()))
+      session$userData$auto_analysis_triggered(FALSE)
+      log_info("Auto-analysis: starting pipeline.")
+      auto_analysis_active(TRUE)
+      session$userData$auto_save_pending(TRUE)
+      loading_popup("Running auto-analysis...")
+
+      # Move to mapping step and submit
+      data_step("mapping")
+      updateTabsetPanel(session, "data_navset", selected = "Mapping")
+      trigger_mapping_submit(trigger_mapping_submit() + 1)
+    })
+
+    # Step 2: After mapping produces data, auto-submit filters
+    observeEvent(adnca_mapped(), {
+      if (!isTRUE(auto_analysis_active())) return()
+      req(adnca_mapped())
+      log_info("Auto-analysis: mapping complete, submitting filters.")
+      # The filtering step is entered automatically by the existing observeEvent(adnca_mapped())
+      # We just need to click the submit button after a short delay to let the UI settle
+      later::later(function() {
+        shinyjs::click("data_filtering-submit_filters")
+      }, delay = 0.5)
+    })
+
+    # Step 3: After pknca_data is created, navigate to NCA and trigger run
+    observeEvent(pknca_data(), {
+      if (!isTRUE(auto_analysis_active())) return()
+      req(pknca_data())
+      log_info("Auto-analysis: data processing complete, triggering NCA.")
+      auto_analysis_active(FALSE)
+      removeModal()
+
+      # Navigate to NCA tab
+      shinyjs::runjs("document.querySelector(`a[data-value='nca']`).click();")
+
+      # Signal NCA module to auto-run
+      session$userData$auto_run_nca(TRUE)
+    })
 
     list(
       pknca_data = pknca_data,

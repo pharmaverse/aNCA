@@ -110,6 +110,17 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
                      reactive(slope_rules()),
                      columns = NULL)
 
+    # Auto-analysis: trigger NCA run when signaled by the data module
+    observeEvent(session$userData$auto_run_nca(), {
+      req(isTRUE(session$userData$auto_run_nca()))
+      session$userData$auto_run_nca(FALSE)
+      log_info("Auto-analysis: triggering NCA run.")
+      # Delay to allow the NCA setup reactives to settle
+      later::later(function() {
+        shinyjs::click("run_nca")
+      }, delay = 1)
+    })
+
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())

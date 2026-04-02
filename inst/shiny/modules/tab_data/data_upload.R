@@ -24,7 +24,16 @@ data_upload_ui <- function(id) {
         placeholder = paste(names(aNCA:::readers), collapse = ", "),
         buttonLabel = list(icon("folder"), "Upload File...")
       ),
-      uiOutput(ns("file_loading_message"))
+      uiOutput(ns("file_loading_message")),
+      div(
+        class = "auto-analysis-container",
+        actionButton(
+          ns("run_auto_analysis"),
+          label = tagList(icon("bolt"), "Run auto-analysis"),
+          class = "btn btn-auto-analysis",
+          title = "Automatically run mapping, NCA, and export without manual steps"
+        )
+      )
     ),
     card(reactable_ui(ns("data_display")), class = "border-0 shadow-none")
   )
@@ -103,6 +112,12 @@ data_upload_server <- function(id) {
 
     observeEvent(input$version_delete_btn, {
       .handle_version_delete(pending_versioned, .get_selected_version)
+    })
+
+    # Auto-analysis trigger: set flag on session$userData so parent modules can react
+    observeEvent(input$run_auto_analysis, {
+      log_info("Auto-analysis triggered by user.")
+      session$userData$auto_analysis_triggered(TRUE)
     })
 
     list(
