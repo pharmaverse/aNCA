@@ -160,6 +160,12 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
         use_plotly = use_plotly
       )
     }
+    if (in_sections("analyte_comparison") &&
+        !is.null(res_dose_slides[[i]]$analyte_comparison)) {
+      add_qmd_sl_plot(quarto_path = quarto_path,
+                      plot = paste0("res_dose_slides[[", i, "]]$analyte_comparison"),
+                      use_plotly = use_plotly)
+    }
     if (in_sections("linplot")) {
       add_qmd_sl_plot(quarto_path = quarto_path,
                       plot = paste0("res_dose_slides[[", i, "]]$linplot"),
@@ -260,7 +266,7 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
 
   # Mean plot + statistics block
   has_summary <- in_sections("meanplot") || in_sections("statistics") ||
-    in_sections("linplot") || in_sections("boxplot")
+    in_sections("analyte_comparison") || in_sections("linplot") || in_sections("boxplot")
   has_individual <- in_sections("ind_plots") || in_sections("ind_params")
 
   if (has_summary) .add_qmd_summary_slides(quarto_path, res_dose_slides, in_sections, use_plotly)
