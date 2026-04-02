@@ -7,6 +7,7 @@ describe("create_pptx_dose_slides", {
       group = "A",
       statistics = data.frame(stat = "Mean", value = 1),
       meanplot = ggplot2::ggplot(),
+      analyte_comparison = ggplot2::ggplot(),
       linplot = ggplot2::ggplot(),
       boxplot = list(AUCIFO = ggplot2::ggplot()),
       ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
@@ -186,5 +187,60 @@ describe("create_pptx_dose_slides", {
     create_pptx_dose_slides(slides_both, out_both, "NCA", template)
 
     expect_lt(length(officer::read_pptx(out_one)), length(officer::read_pptx(out_both)))
+  })
+
+  it("includes analyte comparison slide when analyte_comparison is in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c(
+      "meanplot", "analyte_comparison", "statistics", "ind_plots", "ind_params"
+    )
+    out_with <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides, out_with, "NCA", template)
+
+    slides_without <- base_slides
+    attr(slides_without, "slide_sections") <- c(
+      "meanplot", "statistics", "ind_plots", "ind_params"
+    )
+    out_without <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides_without, out_without, "NCA", template)
+
+    expect_gt(length(officer::read_pptx(out_with)), length(officer::read_pptx(out_without)))
+  })
+
+  it("omits analyte comparison slide when analyte_comparison is not in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params")
+    out <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides, out, "NCA", template)
+
+    slides_with <- base_slides
+    attr(slides_with, "slide_sections") <- c(
+      "meanplot", "analyte_comparison", "statistics", "ind_plots", "ind_params"
+    )
+    out_with <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides_with, out_with, "NCA", template)
+
+    expect_lt(length(officer::read_pptx(out)), length(officer::read_pptx(out_with)))
+  })
+
+  it("includes analyte comparison slide when slide_sections is NULL (all selected)", {
+    out <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(base_slides, out, "NCA", template)
+
+    slides_no_ac <- base_slides
+    slides_no_ac[[1]]$analyte_comparison <- NULL
+    out_no_ac <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides_no_ac, out_no_ac, "NCA", template)
+
+    expect_gt(length(officer::read_pptx(out)), length(officer::read_pptx(out_no_ac)))
+  })
+
+  it("creates summary section when only analyte_comparison is selected", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("analyte_comparison")
+    out <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides, out, "NCA", template)
+    # Title slide + group info + analyte comparison + Extra Figures title = at least 4
+    expect_gte(length(officer::read_pptx(out)), 4)
   })
 })

@@ -4,6 +4,7 @@ describe("create_qmd_dose_slides", {
       info = data.frame(group = "A"),
       statistics = data.frame(stat = "Mean", value = 1),
       meanplot = ggplot2::ggplot(),
+      analyte_comparison = ggplot2::ggplot(),
       linplot = ggplot2::ggplot(),
       boxplot = list(AUCIFO = ggplot2::ggplot()),
       ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
@@ -321,5 +322,48 @@ describe("create_qmd_dose_slides", {
 
     expect_true(grepl("Group 1 (Individual)", content, fixed = TRUE))
     expect_false(grepl("Group 2 (Individual)", content, fixed = TRUE))
+  })
+
+  it("includes analyte_comparison expression when analyte_comparison is in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "analyte_comparison", "statistics")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("analyte_comparison", content, fixed = TRUE))
+  })
+
+  it("omits analyte_comparison expression when analyte_comparison is not in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics", "ind_plots", "ind_params")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_false(grepl("analyte_comparison", content, fixed = TRUE))
+  })
+
+  it("includes analyte_comparison when slide_sections is NULL (all selected)", {
+    out_file <- tempfile(fileext = ".qmd")
+    create_qmd_dose_slides(base_slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("analyte_comparison", content, fixed = TRUE))
+  })
+
+  it("creates summary section when only analyte_comparison is selected", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("analyte_comparison")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+
+    expect_true(grepl("analyte_comparison", content, fixed = TRUE))
+    expect_true(grepl("# Group 1", content, fixed = TRUE))
+    expect_false(grepl("meanplot", content, fixed = TRUE))
   })
 })
