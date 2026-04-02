@@ -9,7 +9,8 @@
 #'   concentration data with NCA results, even when they have only one
 #'   unique level.  Columns not present in the data are silently ignored.
 #' @returns A list with plotly objects and data
-#' @importFrom dplyr filter select mutate group_by ungroup group_split %>% any_of across all_of if_any
+#' @importFrom dplyr filter select mutate group_by ungroup group_split
+#' @importFrom dplyr %>% any_of across all_of if_any
 #' @importFrom stats lm predict as.formula
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
 #' @importFrom PKNCA pk.nca get.parameter.deps
