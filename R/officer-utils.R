@@ -185,13 +185,19 @@ add_pptx_sl_plot <- function(pptx, plot) {
                             subtitle = paste(group_data$group)) %>%
     officer::ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1))
   pptx <- .add_pptx_main_summary_slide(pptx, group_data, i, in_sections)
+  # Analyte comparison slide (mean plot faceted by DOSETRT × PARAM)
+  has_analyte_cmp <- in_sections("analyte_comparison") && !is.null(group_data$analyte_comparison)
+  if (has_analyte_cmp) {
+    pptx <- add_pptx_sl_plot(pptx, group_data$analyte_comparison)
+  }
   pptx <- pptx %>% {
     if (in_sections("linplot")) add_pptx_sl_plot(., group_data$linplot) else .
   }
   bp_result <- .add_pptx_boxplot_slides(pptx, group_data, in_sections)
   pptx <- bp_result$pptx
   n_main_slides <- as.integer(in_sections("meanplot") || in_sections("statistics"))
-  n_summary_slides <- 1L + n_main_slides + as.integer(in_sections("linplot")) + bp_result$n_slides
+  n_summary_slides <- 1L + n_main_slides + as.integer(has_analyte_cmp) +
+    as.integer(in_sections("linplot")) + bp_result$n_slides
   list(pptx = pptx, n_summary_slides = n_summary_slides)
 }
 
@@ -211,7 +217,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
   pptx <- ind_result$pptx
   n_ind_slides <- ind_result$n_slides
   has_summary <- in_sections("meanplot") || in_sections("statistics") ||
-    in_sections("linplot") || in_sections("boxplot")
+    in_sections("analyte_comparison") || in_sections("linplot") || in_sections("boxplot")
   if (has_summary) {
     summary_result <- .add_pptx_group_summary(pptx, group_data, i, in_sections, lst_group_slide)
     pptx <- summary_result$pptx
