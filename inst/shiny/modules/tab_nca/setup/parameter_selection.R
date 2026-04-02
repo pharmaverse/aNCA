@@ -73,10 +73,25 @@ parameter_selection_ui <- function(id) {
     card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
 
     br(),
-    p(
-      "Select the parameters to calculate for each study type. ",
-      "Hover column headers for full parameter names. ",
-      "Selections can be overridden by uploading a settings file."
+    fluidRow(
+      column(
+        width = 10,
+        p(
+          "Select the parameters to calculate for each study type. ",
+          "Hover column headers for full parameter names. ",
+          "Selections can be overridden by uploading a settings file."
+        )
+      ),
+      column(
+        width = 2,
+        actionButton(
+          ns("clear_all"),
+          label = "Clear all",
+          icon = icon("eraser"),
+          class = "btn-sm btn-outline-danger",
+          style = "margin-top: 0.5em;"
+        )
+      )
     ),
 
     div(
@@ -183,120 +198,34 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         select(-starts_with("can_"))
     })
 
-    # Sync the base state to the live state
+    # Sync the base state to the live state and update checkboxes via JS
+    # so the table does not re-render on override/data changes.
     observeEvent(base_selections(), {
-      selections_state(base_selections())
+      new_state <- base_selections()
+      selections_state(new_state)
+      .sync_checkboxes_js(session, new_state, unique(study_types_df()$type))
     })
 
     # Get a simple reactive list of study type names
     study_types_list <- reactive(unique(study_types_df()$type))
 
     # --- Matrix UI rendering ---
+    # Only re-renders when the table structure changes (study types list),
+    # not on individual checkbox clicks.
     output$param_matrix_ui <- renderUI({
-      req(selections_state(), study_types_list())
-
-      state <- selections_state()
+      req(study_types_list())
+      # Read selections once for initial render; further clicks are
+      # handled without re-rendering.
+      state <- isolate(selections_state())
+      req(state)
       study_types <- study_types_list()
 
-      # Build parameter metadata ordered by sort_order, grouped by TYPE
-      params_meta <- state %>%
-        select(PKNCA, PPTESTCD, PPTEST, TYPE, sort_order) %>%
-        distinct(PKNCA, .keep_all = TRUE) %>%
-        arrange(sort_order)
-
-      type_groups <- split(
-        params_meta,
-        factor(params_meta$TYPE, levels = unique(params_meta$TYPE))
-      )
-
-      # Build the table header: two rows — group headers and param headers
-      group_header_cells <- list(tags$th(
-        class = "param-matrix-corner",
-        ""
-      ))
-      param_header_cells <- list(tags$th(
-        class = "param-matrix-row-header",
-        "Study Type"
-      ))
-
-      for (type_name in names(type_groups)) {
-        grp <- type_groups[[type_name]]
-        group_header_cells <- c(group_header_cells, list(
-          tags$th(
-            class = "param-matrix-group-header",
-            colspan = nrow(grp),
-            type_name
-          )
-        ))
-        for (i in seq_len(nrow(grp))) {
-          param_header_cells <- c(param_header_cells, list(
-            tags$th(
-              class = "param-matrix-col-header",
-              title = grp$PPTEST[i],
-              `data-pknca` = grp$PKNCA[i],
-              grp$PPTESTCD[i]
-            )
-          ))
-        }
-      }
-
-      # Build body rows — one per study type
-      body_rows <- lapply(study_types, function(st) {
-        cells <- list(tags$td(
-          class = "param-matrix-row-header",
-          st
-        ))
-        for (i in seq_len(nrow(params_meta))) {
-          pknca_code <- params_meta$PKNCA[i]
-          is_checked <- isTRUE(state[[st]][state$PKNCA == pknca_code])
-          cb_id <- paste0(
-            "cb__",
-            gsub("[^A-Za-z0-9]", "_", st),
-            "__",
-            gsub("[^A-Za-z0-9]", "_", pknca_code)
-          )
-          cells <- c(cells, list(
-            tags$td(
-              class = paste0(
-                "param-matrix-cell",
-                if (is_checked) " checked" else ""
-              ),
-              tags$input(
-                type = "checkbox",
-                class = "param-matrix-checkbox",
-                id = ns(cb_id),
-                checked = if (is_checked) NA else NULL,
-                `data-study-type` = st,
-                `data-pknca` = pknca_code,
-                onclick = paste0(
-                  "Shiny.setInputValue('", ns("matrix_click"), "',",
-                  "{study_type: this.dataset.studyType,",
-                  " param: this.dataset.pknca,",
-                  " checked: this.checked,",
-                  " ts: Date.now()});"
-                )
-              )
-            )
-          ))
-        }
-        tags$tr(cells)
-      })
-
-      # Assemble the table
-      tags$div(
-        class = "param-matrix-container",
-        tags$table(
-          class = "param-matrix-table",
-          tags$thead(
-            tags$tr(group_header_cells),
-            tags$tr(param_header_cells)
-          ),
-          tags$tbody(body_rows)
-        )
-      )
+      .build_matrix_html(state, study_types, ns)
     })
 
     # --- Handle checkbox clicks ---
+    # Updates internal state only; the checkbox is already toggled in the
+    # browser so no re-render is needed.
     observeEvent(input$matrix_click, {
       click <- input$matrix_click
       req(click$study_type, click$param)
@@ -310,6 +239,18 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         state[[st]][row_idx] <- isTRUE(click$checked)
         selections_state(state)
       }
+    })
+
+    # --- Clear all selections ---
+    observeEvent(input$clear_all, {
+      state <- selections_state()
+      req(state)
+      study_type_names <- study_types_list()
+      for (st in study_type_names) {
+        state[[st]] <- FALSE
+      }
+      selections_state(state)
+      .sync_checkboxes_js(session, state, study_type_names)
     })
 
     # Reactable for summary of study types
@@ -540,4 +481,149 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     }
   }
   selection_df
+}
+
+#' Build the parameter matrix HTML table.
+#'
+#' Pure function that generates the HTML `<table>` with checkboxes.
+#' Extracted so `renderUI` stays concise.
+#'
+#' @param state The current selections_state data frame.
+#' @param study_types Character vector of study type names.
+#' @param ns The module namespace function.
+#' @return A `tags$div` containing the matrix table.
+#' @noRd
+.build_matrix_html <- function(state, study_types, ns) {
+  params_meta <- state %>%
+    select(PKNCA, PPTESTCD, PPTEST, TYPE, sort_order) %>%
+    distinct(PKNCA, .keep_all = TRUE) %>%
+    arrange(sort_order)
+
+  type_groups <- split(
+    params_meta,
+    factor(params_meta$TYPE, levels = unique(params_meta$TYPE))
+  )
+
+  # Two header rows: TYPE group spans + individual param columns
+
+  group_header_cells <- list(tags$th(
+    class = "param-matrix-corner", ""
+  ))
+  param_header_cells <- list(tags$th(
+    class = "param-matrix-row-header", "Study Type"
+  ))
+
+  for (type_name in names(type_groups)) {
+    grp <- type_groups[[type_name]]
+    group_header_cells <- c(group_header_cells, list(
+      tags$th(
+        class = "param-matrix-group-header",
+        colspan = nrow(grp),
+        type_name
+      )
+    ))
+    for (i in seq_len(nrow(grp))) {
+      param_header_cells <- c(param_header_cells, list(
+        tags$th(
+          class = "param-matrix-col-header",
+          title = grp$PPTEST[i],
+          `data-pknca` = grp$PKNCA[i],
+          grp$PPTESTCD[i]
+        )
+      ))
+    }
+  }
+
+  # Body rows — one per study type
+
+  body_rows <- lapply(study_types, function(st) {
+    cells <- list(tags$td(
+      class = "param-matrix-row-header", st
+    ))
+    for (i in seq_len(nrow(params_meta))) {
+      pknca_code <- params_meta$PKNCA[i]
+      is_checked <- isTRUE(state[[st]][state$PKNCA == pknca_code])
+      cb_id <- paste0(
+        "cb__",
+        gsub("[^A-Za-z0-9]", "_", st),
+        "__",
+        gsub("[^A-Za-z0-9]", "_", pknca_code)
+      )
+      cells <- c(cells, list(
+        tags$td(
+          class = paste0(
+            "param-matrix-cell",
+            if (is_checked) " checked" else ""
+          ),
+          tags$input(
+            type = "checkbox",
+            class = "param-matrix-checkbox",
+            id = ns(cb_id),
+            checked = if (is_checked) NA else NULL,
+            `data-study-type` = st,
+            `data-pknca` = pknca_code,
+            onclick = paste0(
+              "Shiny.setInputValue('", ns("matrix_click"), "',",
+              "{study_type: this.dataset.studyType,",
+              " param: this.dataset.pknca,",
+              " checked: this.checked,",
+              " ts: Date.now()});"
+            )
+          )
+        )
+      ))
+    }
+    tags$tr(cells)
+  })
+
+  tags$div(
+    class = "param-matrix-container",
+    tags$table(
+      class = "param-matrix-table",
+      tags$thead(
+        tags$tr(group_header_cells),
+        tags$tr(param_header_cells)
+      ),
+      tags$tbody(body_rows)
+    )
+  )
+}
+
+#' Sync all checkboxes in the matrix to match the current state via JS.
+#'
+#' Used when the state changes externally (overrides, clear-all) to
+#' update the DOM without re-rendering the table.
+#'
+#' @param session The Shiny session object.
+#' @param state The current selections_state data frame.
+#' @param study_type_names Character vector of study type names.
+#' @noRd
+.sync_checkboxes_js <- function(session, state, study_type_names) {
+  js_lines <- character(0)
+  for (st in study_type_names) {
+    for (i in seq_len(nrow(state))) {
+      is_checked <- isTRUE(state[[st]][i])
+      cb_id <- paste0(
+        "cb__",
+        gsub("[^A-Za-z0-9]", "_", st),
+        "__",
+        gsub("[^A-Za-z0-9]", "_", state$PKNCA[i])
+      )
+      full_id <- session$ns(cb_id)
+      checked_str <- if (is_checked) "true" else "false"
+      checked_class <- if (is_checked) {
+        "el.parentElement.classList.add('checked');"
+      } else {
+        "el.parentElement.classList.remove('checked');"
+      }
+      js_lines <- c(js_lines, paste0(
+        "(function(){var el=document.getElementById('",
+        full_id, "');if(el){el.checked=", checked_str, ";",
+        checked_class, "}})();"
+      ))
+    }
+  }
+  if (length(js_lines) > 0) {
+    runjs(paste(js_lines, collapse = "\n"))
+  }
 }
