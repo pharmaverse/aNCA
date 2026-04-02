@@ -6,12 +6,12 @@
 #' Detect changes between old and new PKNCA data
 #'
 #' Compares two PKNCA data objects to determine if the underlying data, half-life adjustments,
-#' or selected intervals have changed. Used to decide when to update plots.
+#' options, or selected intervals have changed. Used to decide when to update plots.
 #' @param old Previous PKNCA data object
 #' @param new New PKNCA data object
 #' @param reason_col Optional column name for reasons (default: "REASON")
 #' to ignore in data comparison
-#' @return List with logicals: `in_data`, `in_hl_adj`, `in_selected_intervals`
+#' @return List with logicals: `in_data`, `in_hl_adj`, `in_options`, `in_selected_intervals`
 detect_pknca_data_changes <- function(old, new, reason_col = "REASON") {
   excl_hl_col <- new$conc$columns$exclude_half.life
   incl_hl_col <- new$conc$columns$include_half.life
@@ -38,6 +38,7 @@ detect_pknca_data_changes <- function(old, new, reason_col = "REASON") {
         old$conc$data[[incl_hl_col]],
         new$conc$data[[incl_hl_col]]
       ),
+    in_options = !identical(old$options$min.hl.points, new$options$min.hl.points),
     in_selected_intervals = !identical(new$intervals, old$intervals)
   )
 }
