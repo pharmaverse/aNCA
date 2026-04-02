@@ -72,6 +72,10 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     unique()
   pknca_data$impute <- NA_character_
 
+  if (nrow(pknca_data$intervals) == 0) {
+    return(list(plots = list(), data = list()))
+  }
+
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,
     concu_col, exclude_hl_col, title_vars
