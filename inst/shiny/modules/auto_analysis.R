@@ -13,7 +13,8 @@ auto_analysis_ui <- function(id) {
 
 #' @param id Module ID.
 #' @param raw_data_reactive Reactive returning the raw uploaded data frame.
-auto_analysis_server <- function(id, raw_data_reactive) {
+#' @param settings_override_reactive Reactive returning uploaded settings (or NULL).
+auto_analysis_server <- function(id, raw_data_reactive, settings_override_reactive) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -30,10 +31,12 @@ auto_analysis_server <- function(id, raw_data_reactive) {
         return()
       }
 
+      settings <- tryCatch(settings_override_reactive(), error = function(e) NULL)
+
       loading_popup("Running auto-analysis...")
 
       tryCatch({
-        results <- .run_auto_pipeline(raw_data)
+        results <- .run_auto_pipeline(raw_data, settings)
 
         # Build ZIP
         output_dir <- file.path(tempdir(), "auto_analysis_output")
@@ -129,19 +132,34 @@ auto_analysis_server <- function(id, raw_data_reactive) {
   mapping
 }
 
-#' Run the full NCA pipeline on raw data with auto-detected settings.
+#' Run the full NCA pipeline on raw data.
+#' Uses uploaded settings when available, otherwise auto-detects defaults.
 #' @param raw_data Data frame with raw PK data.
+#' @param settings_override Optional settings list from an uploaded YAML file.
+#'   Expected keys: mapping, filters, settings, slope_rules.
 #' @return List with pipeline outputs.
 #' @noRd
-.run_auto_pipeline <- function(raw_data) {
-  log_info("Auto-analysis: building mapping...")
-  mapping <- .build_auto_mapping(names(raw_data))
+.run_auto_pipeline <- function(raw_data, settings_override = NULL) {
+  sett <- settings_override$settings
+  has_settings <- !is.null(sett)
+
+  # --- Mapping ---
+  if (!is.null(settings_override$mapping)) {
+    log_info("Auto-analysis: using uploaded mapping.")
+    mapping <- settings_override$mapping
+  } else {
+    log_info("Auto-analysis: auto-detecting mapping from column names...")
+    mapping <- .build_auto_mapping(names(raw_data))
+  }
+
+  # --- Filters ---
+  applied_filters <- settings_override$filters
 
   log_info("Auto-analysis: creating PKNCA data object...")
   pknca_obj <- PKNCA_create_data_object(
     adnca_data = raw_data,
     mapping = mapping,
-    applied_filters = NULL,
+    applied_filters = applied_filters,
     time_duplicate_rows = NULL
   )
 
@@ -167,44 +185,77 @@ auto_analysis_server <- function(id, raw_data_reactive) {
       )
     )
 
-  # Derive defaults from the data
+  # --- NCA settings: use uploaded values or derive from data ---
   conc_data <- pknca_obj$conc$data
-  all_analytes <- unique(conc_data[["PARAM"]])
-  all_profiles <- unique(conc_data[["ATPTREF"]])
-  all_pcspec <- unique(conc_data[["PCSPEC"]])
+  method <- if (has_settings && !is.null(sett$method)) sett$method else "linear"
+  analytes <- if (has_settings && !is.null(sett$analyte)) sett$analyte else unique(conc_data[["PARAM"]])
+  profiles <- if (has_settings && !is.null(sett$profile)) sett$profile else unique(conc_data[["ATPTREF"]])
+  pcspec <- if (has_settings && !is.null(sett$pcspec)) sett$pcspec else unique(conc_data[["PCSPEC"]])
+  start_impute <- if (has_settings && !is.null(sett$data_imputation$impute_c0)) sett$data_imputation$impute_c0 else TRUE
+  blq_rule <- if (has_settings) sett$data_imputation$blq_imputation_rule else NULL
+  exclusion_list <- if (has_settings) sett$general_exclusions else NULL
+  param_selections <- if (has_settings && !is.null(sett$parameters$selections)) sett$parameters$selections else NULL
+  int_parameters <- if (has_settings) sett$int_parameters else NULL
+  slope_rules <- settings_override$slope_rules
+  bioavailability <- if (has_settings) sett$bioavailability else NULL
+  flag_rules <- if (has_settings) sett$flags else NULL
+  ratio_table <- if (has_settings) sett$ratio_table else NULL
 
   log_info("Auto-analysis: configuring NCA settings...")
-  log_info("  Analytes: {paste(all_analytes, collapse = ', ')}")
-  log_info("  Profiles: {paste(all_profiles, collapse = ', ')}")
-  log_info("  Specimens: {paste(all_pcspec, collapse = ', ')}")
+  log_info("  Method: {method}")
+  log_info("  Analytes: {paste(analytes, collapse = ', ')}")
+  log_info("  Profiles: {paste(profiles, collapse = ', ')}")
+  log_info("  Specimens: {paste(pcspec, collapse = ', ')}")
+  if (has_settings) log_info("  Using uploaded settings file.")
 
   pknca_obj <- PKNCA_update_data_object(
     adnca_data = pknca_obj,
-    method = "linear",
-    selected_analytes = all_analytes,
-    selected_profile = all_profiles,
-    selected_pcspec = all_pcspec,
-    start_impute = TRUE,
-    hl_adj_rules = NULL,
-    exclusion_list = NULL,
+    method = method,
+    selected_analytes = analytes,
+    selected_profile = profiles,
+    selected_pcspec = pcspec,
+    start_impute = start_impute,
+    hl_adj_rules = slope_rules,
+    exclusion_list = exclusion_list,
     keep_interval_cols = NULL,
-    parameter_selections = NULL,
-    int_parameters = NULL,
-    blq_imputation_rule = NULL
+    parameter_selections = param_selections,
+    int_parameters = int_parameters,
+    blq_imputation_rule = blq_rule
   )
 
   log_info("Auto-analysis: running NCA calculations...")
   pknca_res <- pknca_obj %>%
-    PKNCA_calculate_nca(blq_rule = NULL) %>%
-    add_f_to_pknca_results(NULL) %>%
-    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
+    PKNCA_calculate_nca(blq_rule = blq_rule) %>%
+    add_f_to_pknca_results(bioavailability) %>%
+    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+
+  # Apply flag rules if provided
+  if (!is.null(flag_rules)) {
+    pknca_res <- pknca_res %>%
+      PKNCA_hl_rules_exclusion(
+        rules = flag_rules %>%
+          purrr::keep(\(x) x$is.checked) %>%
+          purrr::map(\(x) x$threshold)
+      )
+  }
+
+  # Apply ratio calculations if provided
+  if (!is.null(ratio_table)) {
+    pknca_res <- pknca_res %>%
+      calculate_table_ratios(ratio_table = ratio_table)
+  }
+
+  pknca_res <- pknca_res %>%
     remove_pp_not_requested()
 
   log_info("Auto-analysis: generating CDISC datasets...")
   cdisc_datasets <- export_cdisc(pknca_res, grouping_vars = character(0))
 
   log_info("Auto-analysis: pivoting results...")
-  pivoted_results <- pivot_wider_pknca_results(myres = pknca_res)
+  pivoted_results <- pivot_wider_pknca_results(
+    myres = pknca_res,
+    flag_rules = flag_rules
+  )
 
   log_info("Auto-analysis: computing summary statistics...")
   summary_stats <- tryCatch(

@@ -210,7 +210,11 @@ server <- function(input, output, session) {
   })
 
   # AUTO-ANALYSIS ----
-  auto_analysis_server("auto_analysis", tab_data_outputs$adnca_raw)
+  auto_analysis_server(
+    "auto_analysis",
+    tab_data_outputs$adnca_raw,
+    tab_data_outputs$settings_override
+  )
 
   # EXPLORATION ----
   tab_explore_server(
