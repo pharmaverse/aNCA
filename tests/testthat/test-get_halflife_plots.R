@@ -122,8 +122,10 @@ describe("get_halflife_plot", {
       line = list(color = "rgba(255,127,14,1)")
     )
     plots_with_excl_details <- plots_with_excl[[1]]$x$data[[2]]$marker
+    # With the excluded point, PKNCA may not find a valid lambda.z fit,
+    # so remaining points are not marked as used (black, not green).
     exp_plots_details_with_excl <- list(
-      color = c("black", "black", "red", "green", "green"),
+      color = c("black", "black", "red", "black", "black"),
       size = 15,
       symbol = c("circle", "circle", "x", "circle", "circle"),
       line = list(color = "rgba(255,127,14,1)")
@@ -195,5 +197,40 @@ describe("get_halflife_plot", {
       )
     plots <- get_halflife_plots(pknca_all_sel_excl)[["plots"]]
     expect_no_error(plots)
+  })
+
+  it("generates plots when half.life is FALSE but dependent params are TRUE", {
+    pknca_dep_only <- base_pknca
+    # Set half.life = FALSE but keep a direct dependent (lambda.z)
+    pknca_dep_only$intervals <- pknca_dep_only$intervals %>%
+      dplyr::filter(type_interval == "main") %>%
+      dplyr::mutate(half.life = FALSE, lambda.z = TRUE)
+    plots <- withCallingHandlers(
+      get_halflife_plots(pknca_dep_only)[["plots"]],
+      warning = function(w) {
+        if (grepl("Ignoring", conditionMessage(w)))
+          invokeRestart("muffleWarning")
+      }
+    )
+    expect_type(plots, "list")
+    expect_true(length(plots) >= 1)
+    expect_s3_class(plots[[1]], "plotly")
+  })
+
+  it("returns empty list when no half.life-related param is selected", {
+    pknca_no_hl <- base_pknca
+    # Set half.life = FALSE and only keep cmax (not HL-dependent)
+    hl_dep <- PKNCA::get.parameter.deps("half.life")
+    pknca_no_hl$intervals <- pknca_no_hl$intervals %>%
+      dplyr::filter(type_interval == "main") %>%
+      dplyr::mutate(
+        half.life = FALSE,
+        dplyr::across(
+          dplyr::any_of(hl_dep), ~FALSE
+        )
+      )
+    plots <- get_halflife_plots(pknca_no_hl)[["plots"]]
+    expect_type(plots, "list")
+    expect_length(plots, 0)
   })
 })

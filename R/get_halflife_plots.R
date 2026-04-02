@@ -9,10 +9,11 @@
 #'   concentration data with NCA results, even when they have only one
 #'   unique level.  Columns not present in the data are silently ignored.
 #' @returns A list with plotly objects and data
-#' @importFrom dplyr filter select mutate group_by ungroup group_split %>% any_of
+#' @importFrom dplyr filter select mutate group_by ungroup group_split
+#' @importFrom dplyr %>% any_of across all_of if_any
 #' @importFrom stats lm predict as.formula
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
-#' @importFrom PKNCA pk.nca
+#' @importFrom PKNCA pk.nca get.parameter.deps
 #' @export
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
                                title_vars = NULL) {
@@ -48,9 +49,32 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 
   # Adjust the input to compute half-life & show original row number
   pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data))
+
+  # Keep intervals where half.life or any dependent parameter is selected,
+  # then reduce them to only compute half.life (which yields lambda.z,
+  # r.squared, etc. as side-effects). This avoids imputation and duplicate-key
+  # issues from other parameters.
+  hl_dep_params <- intersect(
+    PKNCA::get.parameter.deps("half.life"),
+    names(pknca_data$intervals)
+  )
+  all_params <- intersect(
+    setdiff(names(PKNCA::get.interval.cols()), c("start", "end")),
+    names(pknca_data$intervals)
+  )
+  other_params <- setdiff(all_params, "half.life")
+
   pknca_data$intervals <- pknca_data$intervals %>%
-    filter(type_interval == "main", half.life) %>%
+    filter(type_interval == "main") %>%
+    filter(half.life | if_any(all_of(hl_dep_params))) %>%
+    mutate(half.life = TRUE, across(all_of(other_params), ~FALSE)) %>%
+    mutate(impute = NA_character_) %>%
     unique()
+  pknca_data$impute <- NA_character_
+
+  if (nrow(pknca_data$intervals) == 0) {
+    return(list(plots = list(), data = list()))
+  }
 
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,
