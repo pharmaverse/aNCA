@@ -87,3 +87,11 @@ pivoted_results <- pivot_wider_pknca_results(
   flag_rules = flag_rules,
   extra_vars_to_keep = extra_vars_to_keep
 )
+
+## Collect all outputs #############################################
+auto_results <- list(
+  nca_results = list(
+    nca_pkparam = pivoted_results
+  ),
+  CDISC = cdisc_datasets
+)

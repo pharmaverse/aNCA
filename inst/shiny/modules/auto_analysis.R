@@ -45,7 +45,7 @@ auto_analysis_server <- function(id, raw_data_reactive, settings_override_reacti
         # 3. Generate the R script from the template
         script_path <- file.path(tempdir(), "auto_analysis_script.R")
         template_path <- system.file(
-          "www/templates/auto_analysis_template.R", package = "aNCA"
+          "www/templates/script_template.R", package = "aNCA"
         )
         get_code(
           setts_obj = setts_obj,
