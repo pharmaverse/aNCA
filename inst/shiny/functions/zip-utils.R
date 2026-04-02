@@ -183,6 +183,19 @@ get_dose_esc_results <- function(
       sd_max = TRUE
     )
 
+    # Analyte comparison: mean plot faceted by DOSETRT × PARAM
+    analyte_comparison_i <- exploration_meanplot(
+      pknca_data = o_nca_i$data,
+      color_by = group_by_vars,
+      facet_by = c("DOSETRT", analyte_col),
+      filtering_list = list(
+        PCSPEC = unique(d_conc_i[[pcspec_col]]),
+        ATPTREF = unique(d_conc_i[[profile_col]])
+      ),
+      ylog_scale = TRUE,
+      sd_max = TRUE
+    )
+
     stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
@@ -262,6 +275,7 @@ get_dose_esc_results <- function(
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
+      analyte_comparison = analyte_comparison_i,
       statistics = stats_i,
       boxplot = boxplots_i,
       info = info_i,
