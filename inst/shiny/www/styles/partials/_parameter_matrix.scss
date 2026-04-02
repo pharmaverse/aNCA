@@ -50,6 +50,10 @@ thead .param-matrix-row-header {
 }
 
 /* Group header row (TYPE names spanning columns) */
+$type-standard: #3a7cc2;
+$type-urine: #c2a03a;
+$type-sparse: #7a5cb0;
+
 .param-matrix-group-header {
   background: $anca-blue;
   color: $anca-white;
@@ -62,6 +66,21 @@ thead .param-matrix-row-header {
 
   &:first-of-type {
     border-left: none;
+  }
+
+  &[data-type="standard"] {
+    background: $type-standard;
+    border-bottom-color: darken($type-standard, 10%);
+  }
+
+  &[data-type="urine"] {
+    background: $type-urine;
+    border-bottom-color: darken($type-urine, 10%);
+  }
+
+  &[data-type="sparse"] {
+    background: $type-sparse;
+    border-bottom-color: darken($type-sparse, 10%);
   }
 }
 

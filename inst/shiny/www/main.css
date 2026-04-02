@@ -276,6 +276,21 @@ thead .param-matrix-row-header {
   border-left: none;
 }
 
+.param-matrix-group-header[data-type="standard"] {
+  background: #3a7cc2;
+  border-bottom-color: #2e6399;
+}
+
+.param-matrix-group-header[data-type="urine"] {
+  background: #c2a03a;
+  border-bottom-color: #9b802e;
+}
+
+.param-matrix-group-header[data-type="sparse"] {
+  background: #7a5cb0;
+  border-bottom-color: #61498d;
+}
+
 .param-matrix-col-header {
   background: #E7ECFA;
   text-align: center;

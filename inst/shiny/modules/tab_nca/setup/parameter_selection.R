@@ -519,6 +519,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       tags$th(
         class = "param-matrix-group-header",
         colspan = nrow(grp),
+        `data-type` = tolower(type_name),
         type_name
       )
     ))
