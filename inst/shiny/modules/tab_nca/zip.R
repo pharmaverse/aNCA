@@ -56,10 +56,11 @@ zip_ui <- function(id) {
       id       = "summary",
       label    = "Summary Slides",
       sections = list(
-        list(id = "meanplot",   label = "Mean Plots"),
-        list(id = "linplot",    label = "Spaghetti / Group Plot"),
-        list(id = "boxplot",    label = "Box Plot"),
-        list(id = "statistics", label = "Summary Statistics")
+        list(id = "meanplot",            label = "Mean Plots"),
+        list(id = "analyte_comparison",  label = "Analyte Comparison"),
+        list(id = "linplot",             label = "Spaghetti / Group Plot"),
+        list(id = "boxplot",             label = "Box Plot"),
+        list(id = "statistics",          label = "Summary Statistics")
       )
     )
   )
