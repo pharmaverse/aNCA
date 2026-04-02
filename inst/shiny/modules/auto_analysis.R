@@ -1,8 +1,8 @@
 #' Auto-Analysis Module
 #'
-#' Runs the full NCA pipeline programmatically using the loaded data and
-#' default (or auto-detected) settings, then exports results as a ZIP file.
-#' Bypasses all manual UI steps (mapping, filtering, NCA setup).
+#' Generates an R script from the current app settings (or uploaded settings)
+#' using get_code(), executes it over the loaded data, and exports the
+#' results as a ZIP file.
 
 #' @param id Module ID.
 auto_analysis_ui <- function(id) {
@@ -20,7 +20,6 @@ auto_analysis_server <- function(id, raw_data_reactive, settings_override_reacti
 
     auto_zip_path <- reactiveVal(NULL)
 
-    # Triggered by the button in data_upload_ui (via session$userData)
     observeEvent(session$userData$auto_analysis_trigger(), {
       req(session$userData$auto_analysis_trigger() > 0)
 
@@ -31,19 +30,49 @@ auto_analysis_server <- function(id, raw_data_reactive, settings_override_reacti
         return()
       }
 
-      settings <- tryCatch(settings_override_reactive(), error = function(e) NULL)
+      settings_override <- tryCatch(settings_override_reactive(), error = function(e) NULL)
 
       loading_popup("Running auto-analysis...")
 
       tryCatch({
-        results <- .run_auto_pipeline(raw_data, settings)
+        # 1. Build a settings object for get_code()
+        setts_obj <- .build_settings_object(raw_data, settings_override)
 
-        # Build ZIP
+        # 2. Save raw data to temp file so the generated script can read it
+        data_tmp <- file.path(tempdir(), "auto_input_data.rds")
+        saveRDS(raw_data, data_tmp)
+
+        # 3. Generate the R script from the template
+        script_path <- file.path(tempdir(), "auto_analysis_script.R")
+        template_path <- system.file(
+          "www/templates/auto_analysis_template.R", package = "aNCA"
+        )
+        get_code(
+          setts_obj = setts_obj,
+          output_path = script_path,
+          template_path = template_path
+        )
+
+        # 4. Source the script in a dedicated environment
+        log_info("Auto-analysis: executing generated script...")
+        run_env <- new.env(parent = globalenv())
+        run_env$data_path <- data_tmp
+        source(script_path, local = run_env)
+
+        # 5. Extract results
+        results <- run_env$auto_results
+
+        # 6. Save to ZIP
         output_dir <- file.path(tempdir(), "auto_analysis_output")
         unlink(output_dir, recursive = TRUE)
         dir.create(output_dir, recursive = TRUE)
 
-        .save_auto_results(results, output_dir)
+        save_output(
+          output = results,
+          output_path = output_dir,
+          table_formats = c("csv", "rds", "xpt")
+        )
+        .export_session_info(output_dir)
 
         zip_path <- file.path(tempdir(), "auto_analysis.zip")
         wd <- getwd()
@@ -58,7 +87,7 @@ auto_analysis_server <- function(id, raw_data_reactive, settings_override_reacti
         showNotification("Auto-analysis complete! Download starting...",
                          type = "message", duration = 5)
 
-        # Trigger the hidden download button via JS
+        # Trigger the hidden download button
         shinyjs::runjs(sprintf(
           "document.getElementById('%s').click();",
           ns("download")
@@ -99,7 +128,105 @@ auto_analysis_server <- function(id, raw_data_reactive, settings_override_reacti
   })
 }
 
-# --- Internal pipeline functions ---
+#' Build a plain settings list for get_code() from uploaded settings or defaults.
+#'
+#' Mirrors the structure that get_code() expects (settings_list$...),
+#' using uploaded settings when available, otherwise auto-detecting from data.
+#'
+#' @param raw_data The raw data frame.
+#' @param settings_override Uploaded settings list (or NULL).
+#' @return A plain list compatible with get_code(setts_obj = ...).
+#' @noRd
+.build_settings_object <- function(raw_data, settings_override = NULL) {
+  col_names <- names(raw_data)
+  has_override <- !is.null(settings_override)
+  sett <- if (has_override) settings_override$settings else NULL
+
+  # Mapping: from uploaded settings or auto-detected
+  mapping <- if (has_override && !is.null(settings_override$mapping)) {
+    settings_override$mapping
+  } else {
+    .build_auto_mapping(col_names)
+  }
+
+  # Filters: from uploaded settings or none
+  applied_filters <- if (has_override) settings_override$filters else NULL
+
+  # NCA settings: from uploaded or defaults
+  method <- sett$method %||% "linear"
+  start_impute <- sett$data_imputation$impute_c0 %||% TRUE
+  blq_rule <- if (!is.null(sett)) sett$data_imputation$blq_imputation_rule else NULL
+  bioavailability <- if (!is.null(sett)) sett$bioavailability else NULL
+  general_exclusions <- if (!is.null(sett)) sett$general_exclusions else NULL
+  int_parameters <- if (!is.null(sett)) sett$int_parameters else NULL
+  param_selections <- if (!is.null(sett) && !is.null(sett$parameters)) sett$parameters$selections else NULL
+
+  # Analyte/profile/pcspec: from settings or will be derived from data after mapping.
+  # We need to apply mapping to know what columns exist, so we do a quick mapping pass.
+  mapped_data <- tryCatch({
+    raw_data %>%
+      apply_mapping(mapping, silent = TRUE) %>%
+      create_metabfl(mapping$Metabolites) %>%
+      adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
+  }, error = function(e) NULL)
+
+  if (!is.null(mapped_data)) {
+    analyte <- sett$analyte %||% unique(mapped_data[["PARAM"]])
+    profile <- sett$profile %||% unique(mapped_data[["ATPTREF"]])
+    pcspec <- sett$pcspec %||% unique(mapped_data[["PCSPEC"]])
+  } else {
+    analyte <- sett$analyte
+    profile <- sett$profile
+    pcspec <- sett$pcspec
+  }
+
+  # Flag rules: from settings or defaults (all unchecked)
+  flags <- if (!is.null(sett) && !is.null(sett$flags)) {
+    sett$flags
+  } else {
+    list(
+      R2ADJ = list(is.checked = FALSE, threshold = 0),
+      R2 = list(is.checked = FALSE, threshold = 0),
+      AUCPEO = list(is.checked = FALSE, threshold = 0),
+      AUCPEP = list(is.checked = FALSE, threshold = 0),
+      LAMZSPN = list(is.checked = FALSE, threshold = 0)
+    )
+  }
+
+  # Slope rules, ratio table, units, extra vars
+  slope_rules <- if (has_override) settings_override$slope_rules else NULL
+  ratio_table <- if (!is.null(sett)) sett$ratio_table else NULL
+  units_table <- if (!is.null(sett)) sett$units else NULL
+
+  # Grouping variables from mapping
+  extra_vars <- mapping$Grouping_Variables
+  extra_vars <- if (is.null(extra_vars) || all(extra_vars == "")) character(0) else extra_vars
+
+  list(
+    mapping = mapping,
+    applied_filters = applied_filters,
+    time_duplicate_rows = NULL,
+    settings = list(
+      method = method,
+      analyte = analyte,
+      profile = profile,
+      pcspec = pcspec,
+      data_imputation = list(
+        impute_c0 = start_impute,
+        blq_imputation_rule = blq_rule
+      ),
+      bioavailability = bioavailability,
+      general_exclusions = general_exclusions,
+      int_parameters = int_parameters,
+      parameters = list(selections = param_selections),
+      flags = flags
+    ),
+    slope_rules = slope_rules,
+    ratio_table = ratio_table,
+    units_table = units_table,
+    extra_vars_to_keep = extra_vars
+  )
+}
 
 #' Build a column mapping from data column names using the same auto-detection
 #' logic as the mapping UI (update_selectize_inputs).
@@ -119,7 +246,6 @@ auto_analysis_server <- function(id, raw_data_reactive, settings_override_reacti
     potential <- intersect(c(var, alternatives), col_names)
 
     if (length(potential) == 0) {
-      # For non-multi-choice, try predefined values as fallback
       val_matches <- values[nchar(values) > 0]
       mapping[[var]] <- if (length(val_matches) > 0) val_matches[[1]] else ""
     } else if (is_multi) {
@@ -130,177 +256,4 @@ auto_analysis_server <- function(id, raw_data_reactive, settings_override_reacti
   }
 
   mapping
-}
-
-#' Run the full NCA pipeline on raw data.
-#' Uses uploaded settings when available, otherwise auto-detects defaults.
-#' @param raw_data Data frame with raw PK data.
-#' @param settings_override Optional settings list from an uploaded YAML file.
-#'   Expected keys: mapping, filters, settings, slope_rules.
-#' @return List with pipeline outputs.
-#' @noRd
-.run_auto_pipeline <- function(raw_data, settings_override = NULL) {
-  sett <- settings_override$settings
-  has_settings <- !is.null(sett)
-
-  # --- Mapping ---
-  if (!is.null(settings_override$mapping)) {
-    log_info("Auto-analysis: using uploaded mapping.")
-    mapping <- settings_override$mapping
-  } else {
-    log_info("Auto-analysis: auto-detecting mapping from column names...")
-    mapping <- .build_auto_mapping(names(raw_data))
-  }
-
-  # --- Filters ---
-  applied_filters <- settings_override$filters
-
-  log_info("Auto-analysis: creating PKNCA data object...")
-  pknca_obj <- PKNCA_create_data_object(
-    adnca_data = raw_data,
-    mapping = mapping,
-    applied_filters = applied_filters,
-    time_duplicate_rows = NULL
-  )
-
-  # Simplify volume units (same as tab_data_server)
-  pknca_obj$units <- pknca_obj$units %>%
-    mutate(
-      PPSTRESU = {
-        new_ppstresu <- ifelse(
-          PPTESTCD %in% metadata_nca_parameters$PKNCA[
-            metadata_nca_parameters$unit_type == "volume"
-          ],
-          sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
-          PPSTRESU
-        )
-        ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .data[["PPSTRESU"]])
-      },
-      conversion_factor = ifelse(
-        PPTESTCD %in% metadata_nca_parameters$PKNCA[
-          metadata_nca_parameters$unit_type == "volume"
-        ],
-        get_conversion_factor(PPORRESU, PPSTRESU),
-        conversion_factor
-      )
-    )
-
-  # --- NCA settings: use uploaded values or derive from data ---
-  conc_data <- pknca_obj$conc$data
-  method <- if (has_settings && !is.null(sett$method)) sett$method else "linear"
-  analytes <- if (has_settings && !is.null(sett$analyte)) sett$analyte else unique(conc_data[["PARAM"]])
-  profiles <- if (has_settings && !is.null(sett$profile)) sett$profile else unique(conc_data[["ATPTREF"]])
-  pcspec <- if (has_settings && !is.null(sett$pcspec)) sett$pcspec else unique(conc_data[["PCSPEC"]])
-  start_impute <- if (has_settings && !is.null(sett$data_imputation$impute_c0)) sett$data_imputation$impute_c0 else TRUE
-  blq_rule <- if (has_settings) sett$data_imputation$blq_imputation_rule else NULL
-  exclusion_list <- if (has_settings) sett$general_exclusions else NULL
-  param_selections <- if (has_settings && !is.null(sett$parameters$selections)) sett$parameters$selections else NULL
-  int_parameters <- if (has_settings) sett$int_parameters else NULL
-  slope_rules <- settings_override$slope_rules
-  bioavailability <- if (has_settings) sett$bioavailability else NULL
-  flag_rules <- if (has_settings) sett$flags else NULL
-  ratio_table <- if (has_settings) sett$ratio_table else NULL
-
-  log_info("Auto-analysis: configuring NCA settings...")
-  log_info("  Method: {method}")
-  log_info("  Analytes: {paste(analytes, collapse = ', ')}")
-  log_info("  Profiles: {paste(profiles, collapse = ', ')}")
-  log_info("  Specimens: {paste(pcspec, collapse = ', ')}")
-  if (has_settings) log_info("  Using uploaded settings file.")
-
-  pknca_obj <- PKNCA_update_data_object(
-    adnca_data = pknca_obj,
-    method = method,
-    selected_analytes = analytes,
-    selected_profile = profiles,
-    selected_pcspec = pcspec,
-    start_impute = start_impute,
-    hl_adj_rules = slope_rules,
-    exclusion_list = exclusion_list,
-    keep_interval_cols = NULL,
-    parameter_selections = param_selections,
-    int_parameters = int_parameters,
-    blq_imputation_rule = blq_rule
-  )
-
-  log_info("Auto-analysis: running NCA calculations...")
-  pknca_res <- pknca_obj %>%
-    PKNCA_calculate_nca(blq_rule = blq_rule) %>%
-    add_f_to_pknca_results(bioavailability) %>%
-    mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
-
-  # Apply flag rules if provided
-  if (!is.null(flag_rules)) {
-    pknca_res <- pknca_res %>%
-      PKNCA_hl_rules_exclusion(
-        rules = flag_rules %>%
-          purrr::keep(\(x) x$is.checked) %>%
-          purrr::map(\(x) x$threshold)
-      )
-  }
-
-  # Apply ratio calculations if provided
-  if (!is.null(ratio_table)) {
-    pknca_res <- pknca_res %>%
-      calculate_table_ratios(ratio_table = ratio_table)
-  }
-
-  pknca_res <- pknca_res %>%
-    remove_pp_not_requested()
-
-  log_info("Auto-analysis: generating CDISC datasets...")
-  cdisc_datasets <- export_cdisc(pknca_res, grouping_vars = character(0))
-
-  log_info("Auto-analysis: pivoting results...")
-  pivoted_results <- pivot_wider_pknca_results(
-    myres = pknca_res,
-    flag_rules = flag_rules
-  )
-
-  log_info("Auto-analysis: computing summary statistics...")
-  summary_stats <- tryCatch(
-    calculate_summary_stats(data = pknca_res$result),
-    error = function(e) {
-      log_warn("Summary statistics failed: {conditionMessage(e)}")
-      NULL
-    }
-  )
-
-  list(
-    pknca_res = pknca_res,
-    pknca_obj = pknca_obj,
-    cdisc_datasets = cdisc_datasets,
-    pivoted_results = pivoted_results,
-    summary_stats = summary_stats
-  )
-}
-
-#' Save auto-analysis results to a directory structure compatible with the ZIP export.
-#' @param results List from .run_auto_pipeline().
-#' @param output_dir Target directory.
-#' @noRd
-.save_auto_results <- function(results, output_dir) {
-  # NCA results (pivoted table)
-  nca_dir <- file.path(output_dir, "nca_results")
-  dir.create(nca_dir, recursive = TRUE, showWarnings = FALSE)
-  save_table_format(results$pivoted_results, file.path(nca_dir, "nca_pkparam"),
-                    formats = c("csv", "rds"))
-
-  # Summary statistics
-  if (!is.null(results$summary_stats)) {
-    save_table_format(results$summary_stats, file.path(nca_dir, "nca_statistics"),
-                      formats = c("csv", "rds"))
-  }
-
-  # CDISC datasets
-  cdisc_dir <- file.path(output_dir, "CDISC")
-  dir.create(cdisc_dir, recursive = TRUE, showWarnings = FALSE)
-  for (ds_name in names(results$cdisc_datasets)) {
-    save_table_format(results$cdisc_datasets[[ds_name]],
-                      file.path(cdisc_dir, ds_name),
-                      formats = c("csv", "rds", "xpt"))
-  }
-
-  # Session info
-  .export_session_info(output_dir)
 }
