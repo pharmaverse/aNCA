@@ -53,7 +53,7 @@ add_pptx_sl_table <- function(pptx, df, title = "",
     officer::ftext(subtitle, prop = officer::fp_text(font.size = 12)),
     fp_p = officer::fp_par(text.align = "center", line_spacing = 1)
   )
-
+  
   # Set flextable to autofit and center for better appearance
   ft <- flextable::flextable(df) %>%
     flextable::autofit()
@@ -224,6 +224,56 @@ add_pptx_sl_plot <- function(pptx, plot) {
   list(pptx = pptx, lst_group_slide = lst_group_slide, group_slides = group_slides)
 }
 
+#' Add a Summary of Contents slide to a PowerPoint presentation
+#'
+#' Each TOC entry is placed as a text box with a hyperlink to the target slide.
+#' The slide is appended at the end and then moved to `insert_at`; all target
+#' indices are shifted by +1 to account for the inserted slide.
+#'
+#' @param pptx rpptx object
+#' @param toc_entries List of lists, each with `title` (character) and
+#'   `slide` (integer slide index before insertion).
+#' @param insert_at Slide position for the TOC slide (default: 2).
+#' @return rpptx object with TOC slide inserted.
+#' @keywords internal
+add_pptx_sl_toc <- function(pptx, toc_entries, insert_at = 2) {
+  if (length(toc_entries) == 0) return(pptx)
+
+  pptx <- officer::add_slide(pptx, layout = "Title Only", master = "Office Theme")
+  pptx <- officer::ph_with(
+    pptx,
+    value = "Summary of Contents",
+    location = officer::ph_location_type(type = "title")
+  )
+
+  line_height <- 0.55
+  top_start <- 1.8
+  for (i in seq_along(toc_entries)) {
+    entry <- toc_entries[[i]]
+    entry_label <- paste0("toc_entry_", i)
+    target_slide <- entry$slide + 1 # +1 because the TOC slide itself shifts indices
+
+    pptx <- officer::ph_with(
+      pptx,
+      value = officer::fpar(
+        officer::ftext(
+          entry$title,
+          prop = officer::fp_text(font.size = 16, color = "#0563C1", underlined = TRUE)
+        )
+      ),
+      location = officer::ph_location(
+        left = 1, top = top_start + (i - 1) * line_height,
+        width = 8, height = line_height,
+        newlabel = entry_label
+      )
+    )
+    pptx <- officer::ph_slidelink(pptx, ph_label = entry_label,
+                                  slide_index = target_slide)
+  }
+
+  officer::move_slide(pptx, index = length(pptx), to = insert_at)
+}
+
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
 #' Adds slides for summary tables, mean plots, line plots, and individual subject results
 #' @param res_dose_slides List of results for each dose group
@@ -247,9 +297,10 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   in_sections <- function(id) is.null(slide_sections) || id %in% slide_sections
 
   pptx <- create_pptx_doc(path, title, template)
-
+  
   lst_group_slide <- 1
   group_slides <- numeric()
+
   for (i in seq_along(res_dose_slides)) {
     result <- .process_pptx_group_slides(pptx, res_dose_slides[[i]], i, in_sections,
                                          lst_group_slide, group_slides)
@@ -278,6 +329,28 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
       pptx <- add_pptx_sl_table(pptx, non_empty[[name]], title = label)
     }
   }
+
+  # Build a simple Summary of Contents with the major sections
+  toc_entries <- list()
+  if (length(group_slides) > 0) {
+    toc_entries <- c(toc_entries, list(list(title = "Summary Results", slide = 2L)))
+  }
+  has_individual <- in_sections("ind_plots") || in_sections("ind_params")
+  if (has_individual) {
+    toc_entries <- c(toc_entries, list(list(
+      title = "Extra Figures (Individual Results)",
+      slide = as.integer(length(group_slides) + 2)
+    )))
+  }
+  if (length(non_empty) > 0) {
+    # Additional analysis title slide is right after all group + extra slides
+    additional_start <- length(pptx) - length(non_empty)
+    toc_entries <- c(toc_entries, list(list(
+      title = "Additional Analysis Figures",
+      slide = as.integer(additional_start)
+    )))
+  }
+  pptx <- add_pptx_sl_toc(pptx, toc_entries, insert_at = 2)
 
   print(pptx, target = path)
   invisible(TRUE)

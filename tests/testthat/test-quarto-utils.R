@@ -254,12 +254,13 @@ describe("create_qmd_dose_slides", {
     expect_false(grepl("# Extra Figures", content, fixed = TRUE))
   })
 
-  it("includes toc: true in YAML header", {
+  it("includes toc: true and toc-depth: 1 in YAML header", {
     out_file <- tempfile(fileext = ".qmd")
     create_qmd_dose_slides(base_slides, out_file, "NCA Results", use_plotly = FALSE)
     content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
 
     expect_true(grepl("toc: true", content, fixed = TRUE))
+    expect_true(grepl("toc-depth: 1", content, fixed = TRUE))
   })
 
   it("includes info table on section header, not repeated per subject", {
