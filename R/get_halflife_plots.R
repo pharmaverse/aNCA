@@ -16,39 +16,39 @@
 #' @export
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
                                title_vars = NULL) {
-  
+
   # If the input has empty concentration or intervals, just return an empty list
   if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
     return(list(plots = list(), data = list()))
   }
-  
+
   # Identify column names
   time_col <- pknca_data$conc$columns$time
   conc_col <- pknca_data$conc$columns$concentration
   timeu_col <- pknca_data$conc$columns$timeu
   concu_col <- pknca_data$conc$columns$concu
   exclude_hl_col <- pknca_data$conc$columns$exclude_half.life
-  
+
   # Define which columns use for the title to keep it short
   group_conc_cols <- group_vars(pknca_data)
   group_conc_n_levels <- sapply(
     pknca_data$conc$data[group_conc_cols], \(x) length(unique(x))
   )
   title_cols <- group_conc_cols[group_conc_n_levels > 1]
-  
+
   # Append caller-specified title variables that exist in the data
   extra <- intersect(title_vars, names(pknca_data$conc$data))
   title_cols <- unique(c(extra, title_cols))
-  
+
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
     pknca_data$conc$data[["exclude_half.life"]] <- FALSE
     exclude_hl_col <- "exclude_half.life"
   }
-  
+
   # Adjust the input to compute half-life & show original row number
   pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data))
-  
+
   # Keep intervals where half.life or any dependent parameter is selected,
   # then reduce them to only compute half.life (which yields lambda.z,
   # r.squared, etc. as side-effects). This avoids imputation and duplicate-key
@@ -62,7 +62,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     names(pknca_data$intervals)
   )
   other_params <- setdiff(all_params, "half.life")
-  
+
   pknca_data$intervals <- pknca_data$intervals %>%
     filter(type_interval == "main") %>%
     filter(half.life | if_any(all_of(hl_dep_params))) %>%
@@ -70,12 +70,12 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     mutate(impute = NA_character_) %>%
     unique()
   pknca_data$impute <- NA_character_
-  
+
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,
     concu_col, exclude_hl_col, title_vars
   )
-  
+
   # Mark points used in half-life calculation
   info_per_plot_list <- d_conc_with_res %>%
     # Indicate plot details
@@ -124,7 +124,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     filter(.[[time_col]] <= tlast) %>%
     # Disconsider BLQ points at the middle as well
     filter(.[[conc_col]] > 0)
-  
+
   info_per_plot_list <- info_per_plot_list %>%
     mutate(
       color = "black",
@@ -134,12 +134,12 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     ) %>%
     group_by(!!!syms(c(group_vars(pknca_data), "start", "end"))) %>%
     group_split()
-  
+
   plot_list <- list()
   data_list <- list()
   for (i in seq_along(info_per_plot_list)) {
     df <- info_per_plot_list[[i]]
-    
+
     # Create line data
     if (any(df$is_halflife_used, na.rm = TRUE)) {
       df_fit <- df[df$is_halflife_used, ]
@@ -154,7 +154,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
       )
       colnames(fit_line_data)[1] <- time_col
     }
-    
+
     # Unique plot ID based on grouping variables and interval times
     plotid_vars <- c(group_vars(pknca_data), "start", "end")
     plotid <- paste0(
@@ -163,7 +163,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
         collapse = "_"
       )
     )
-    
+
     # Create the plot
     available_title_cols <- intersect(title_cols, names(df))
     plot_list[[plotid]] <- get_halflife_plots_single(
@@ -203,14 +203,14 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
                                          exclude_hl_col,
                                          extra_vars = NULL) {
   o_nca <- suppressWarnings(PKNCA::pk.nca(pknca_data))
-  
+
   if (!"PPSTRES" %in% names(o_nca$result)) {
     o_nca$result$PPSTRES <- o_nca$result$PPORRES
     if ("PPORRESU" %in% names(o_nca$result)) {
       o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
     }
   }
-  
+
   wide_output <- o_nca
   wide_output$result <- wide_output$result %>%
     filter(
@@ -219,17 +219,17 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     ) %>%
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
-  
+
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()
-  
+
   conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
                         timeu_col, concu_col, exclude_hl_col, "ROWID")
   merge_by <- c(group_vars(pknca_data))
   extra <- intersect(extra_vars, names(pknca_data$conc$data))
   conc_select_cols <- c(conc_select_cols, extra)
   merge_by <- c(merge_by, extra)
-  
+
   merge(
     pknca_data$conc$data %>%
       select(!!!syms(conc_select_cols)),
@@ -262,19 +262,19 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 #' @returns A plotly object representing the scatter points (plot_data)
 #' @noRd
 get_halflife_plots_single <- function(
-    plot_data,
-    fit_line_data,
-    time_col,
-    conc_col,
-    group_vars,
-    title,
-    subtitle,
-    xlab,
-    ylab,
-    color,
-    symbol,
-    add_annotations = TRUE,
-    text = NULL
+  plot_data,
+  fit_line_data,
+  time_col,
+  conc_col,
+  group_vars,
+  title,
+  subtitle,
+  xlab,
+  ylab,
+  color,
+  symbol,
+  add_annotations = TRUE,
+  text = NULL
 ) {
   if (is.null(text)) {
     text <- paste0(

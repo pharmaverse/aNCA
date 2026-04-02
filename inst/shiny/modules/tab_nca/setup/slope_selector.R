@@ -28,7 +28,7 @@
 slope_selector_ui <- function(id) {
   ns <- NS(id)
   assets <- system.file("shiny/www", package = "aNCA")
-  
+
   div(
     class = "slope-selector-module",
     manual_slopes_table_ui(ns("manual_slopes")),
@@ -45,36 +45,36 @@ slope_selector_ui <- function(id) {
                 Please remember to apply your changes once you are done by clicking Run NCA again!
               "),
             div(class = "gif-grid",
-                div(
-                  class = "gif-container",
-                  tags$h1("Check"),
-                  tags$h6("Hover the mouse over points to inspect individual samples."),
-                  img(src = "images/slope_plot_check.gif", alt = "Check")
+              div(
+                class = "gif-container",
+                tags$h1("Check"),
+                tags$h6("Hover the mouse over points to inspect individual samples."),
+                img(src = "images/slope_plot_check.gif", alt = "Check")
+              ),
+              div(
+                class = "gif-container",
+                tags$h1("Zoom"),
+                tags$h6("Click and drag to select and zoom in a specific area.",
+                  " Double click to zoom out."
                 ),
-                div(
-                  class = "gif-container",
-                  tags$h1("Zoom"),
-                  tags$h6("Click and drag to select and zoom in a specific area.",
-                          " Double click to zoom out."
-                  ),
-                  img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
+                img(src = "images/slope_plot_zoom.gif", alt = "Zoom")
+              ),
+              div(
+                class = "gif-container",
+                tags$h1("Select"),
+                tags$h6("Click the first and then the last point",
+                        " you want to include in the slope."),
+                img(src = "images/slope_plot_select.gif", alt = "Select")
+              ),
+              div(
+                class = "gif-container",
+                tags$h1("Exclude"),
+                tags$h6(
+                  tags$div("Double click a point to exclude it."),
+                  tags$div("Double click it again to include it back.")
                 ),
-                div(
-                  class = "gif-container",
-                  tags$h1("Select"),
-                  tags$h6("Click the first and then the last point",
-                          " you want to include in the slope."),
-                  img(src = "images/slope_plot_select.gif", alt = "Select")
-                ),
-                div(
-                  class = "gif-container",
-                  tags$h1("Exclude"),
-                  tags$h6(
-                    tags$div("Double click a point to exclude it."),
-                    tags$div("Double click it again to include it back.")
-                  ),
-                  img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
-                )
+                img(src = "images/slope_plot_exclude.gif", alt = "Exclude")
+              )
             )
           ),
           style = "unite",
@@ -130,32 +130,25 @@ slope_selector_server <- function( # nolint
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
-    
+
     ns <- session$ns
-    
+
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
-    
+
     observeEvent(processed_pknca_data(), {
       req(processed_pknca_data())
-      
+
       new_pknca_data <- processed_pknca_data()
-      # Keep main intervals where half.life or any dependent param is selected.
-      # get_halflife_plots() handles the rest (forcing half.life, clearing impute).
-      hl_dep_params <- intersect(
-        PKNCA::get.parameter.deps("half.life"),
-        names(new_pknca_data$intervals)
-      )
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
-        filter(type_interval == "main") %>%
-        filter(half.life | if_any(all_of(hl_dep_params))) %>%
+        filter(type_interval == "main", half.life) %>%
         unique()
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
         new = new_pknca_data,
         reason_col = "REASON"
       )
-      
+
       if (changes$in_data) {
         # New data or major changes: regenerate all plots
         plot_outputs(get_halflife_plots(
@@ -168,7 +161,7 @@ slope_selector_server <- function( # nolint
         # Add/remove plots based on intervals (selection from nca_setup.R)
         plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
       }
-      
+
       # Update the searching widget choices based on the new data
       if (changes$in_data | changes$in_selected_intervals) {
         updateSelectInput(
@@ -186,21 +179,21 @@ slope_selector_server <- function( # nolint
         group_conc_cols <- group_vars(pknca_data)
         group_conc_n_levels <- sapply(pknca_data$conc$data[group_conc_cols], \(x) length(unique(x)))
         group_cols_to_order <- group_conc_cols[group_conc_n_levels > 1]
-        
+
         updateOrderInput(
           session = session,
           inputId = "order_groups",
           items = group_cols_to_order
         )
       }
-      
+
       # Save the plots for the zip download (nca_results.R)
       session$userData$results$slope_selector <- plot_outputs()
-      
+
       # Update the object for future comparisons
       pknca_data(new_pknca_data)
     })
-    
+
     # Call the pagination/searcher module to:
     # - Providing indices of plots for the selected subject(s)
     # - Providing indices for which plots to display based on pagination
@@ -210,7 +203,7 @@ slope_selector_server <- function( # nolint
       plot_outputs = plot_outputs,
       plots_per_page = reactive(input$plots_per_page)
     )
-    
+
     observe({
       req(plot_outputs())
       output$slope_plots_ui <- renderUI({
@@ -224,13 +217,13 @@ slope_selector_server <- function( # nolint
           .[page_search$page_start():page_search$page_end()]
       })
     })
-    
+
     # Creates an initial version of the manual slope adjustments table with pknca_data
     # and handles the addition and deletion of rows through the UI
     slopes_table <- manual_slopes_table_server("manual_slopes", pknca_data, manual_slopes_override)
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
-    
+
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveVal(NULL)
     observeEvent(event_data("plotly_click", priority = "event"), {
@@ -245,24 +238,24 @@ slope_selector_server <- function( # nolint
       # Update reactive values: last click & manual slopes table
       last_click_data(click_result$last_click_data)
       manual_slopes(click_result$manual_slopes)
-      
+
       # render rectable anew #
       shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
       refresh_reactable(refresh_reactable() + 1)
     })
-    
+
     #' Separate event handling updating displayed reactable upon every change (adding and removing
     #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
     #' the table would mean losing focus on text inputs when entering values.
     observeEvent(manual_slopes(), {
       req(manual_slopes())
-      
+
       # Update reactable with rules
       reactable::updateReactable(
         outputId = "manual_slopes",
         data = manual_slopes()
       )
-      
+
     })
     #' returns half life adjustments rules to update processed_pknca_data in nca_setup.R
     manual_slopes
