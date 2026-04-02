@@ -140,8 +140,15 @@ slope_selector_server <- function( # nolint
       req(processed_pknca_data())
 
       new_pknca_data <- processed_pknca_data()
+      # Keep main intervals where half.life or any dependent param is selected.
+      # get_halflife_plots() handles the rest (forcing half.life, clearing impute).
+      hl_dep_params <- intersect(
+        PKNCA::get.parameter.deps("half.life"),
+        names(new_pknca_data$intervals)
+      )
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
-        filter(type_interval == "main", half.life) %>%
+        filter(type_interval == "main") %>%
+        filter(half.life | if_any(all_of(hl_dep_params))) %>%
         unique()
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
