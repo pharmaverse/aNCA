@@ -1,0 +1,130 @@
+/* Parameter selection matrix — rows: study types, columns: parameters */
+
+.param-matrix-wrapper {
+  margin-top: 0.5em;
+}
+
+.param-matrix-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 60vh;
+  border: 1px solid $grey-5;
+  border-radius: 4px;
+}
+
+.param-matrix-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.75em;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* Sticky first column and header rows */
+.param-matrix-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.param-matrix-corner,
+.param-matrix-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: $anca-white;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-weight: 600;
+  text-align: left;
+  border-right: 2px solid $grey-4;
+}
+
+/* Ensure corner cell is above both sticky axes */
+.param-matrix-corner {
+  z-index: 4;
+}
+
+thead .param-matrix-row-header {
+  z-index: 4;
+}
+
+/* Group header row (TYPE names spanning columns) */
+.param-matrix-group-header {
+  background: $anca-blue;
+  color: $anca-white;
+  text-align: center;
+  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 0.95em;
+  border-left: 2px solid $anca-white;
+  border-bottom: 1px solid darken($anca-blue, 10%);
+
+  &:first-of-type {
+    border-left: none;
+  }
+}
+
+/* Individual parameter column headers */
+.param-matrix-col-header {
+  background: $anca-blue-light;
+  text-align: center;
+  padding: 4px 6px;
+  font-weight: 500;
+  font-size: 0.85em;
+  white-space: nowrap;
+  cursor: help;
+  border-right: 1px solid $grey-5;
+  border-bottom: 2px solid $grey-4;
+  min-width: 55px;
+
+  &:hover {
+    background: darken($anca-blue-light, 8%);
+  }
+}
+
+/* Body rows */
+.param-matrix-table tbody tr {
+  &:nth-child(even) {
+    background: lighten($grey-5, 5%);
+  }
+
+  &:hover {
+    background: lighten($anca-blue-light, 3%);
+  }
+}
+
+/* Body row header (study type label) */
+td.param-matrix-row-header {
+  background: $anca-white;
+  font-size: 0.9em;
+  border-bottom: 1px solid $grey-5;
+}
+
+tbody tr:nth-child(even) td.param-matrix-row-header {
+  background: lighten($grey-5, 5%);
+}
+
+tbody tr:hover td.param-matrix-row-header {
+  background: lighten($anca-blue-light, 3%);
+}
+
+/* Checkbox cells */
+.param-matrix-cell {
+  text-align: center;
+  padding: 4px;
+  border-right: 1px solid $grey-5;
+  border-bottom: 1px solid $grey-5;
+  cursor: pointer;
+
+  &.checked {
+    background: lighten($anca-blue-light, 2%);
+  }
+}
+
+.param-matrix-checkbox {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: $anca-blue;
+}
