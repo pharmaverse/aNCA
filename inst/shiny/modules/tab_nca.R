@@ -110,26 +110,6 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
                      reactive(slope_rules()),
                      columns = NULL)
 
-    # Auto-analysis: wait for processed_pknca_data to be ready, then trigger NCA run
-    auto_nca_pending <- reactiveVal(FALSE)
-
-    observeEvent(session$userData$auto_run_nca(), {
-      req(isTRUE(session$userData$auto_run_nca()))
-      session$userData$auto_run_nca(FALSE)
-      log_info("Auto-analysis: waiting for NCA setup to complete.")
-      auto_nca_pending(TRUE)
-    })
-
-    observeEvent(processed_pknca_data(), {
-      if (!isTRUE(auto_nca_pending())) return()
-      auto_nca_pending(FALSE)
-      log_info("Auto-analysis: NCA setup ready, triggering NCA run.")
-      # Short delay to let the UI flush before clicking
-      later::later(function() {
-        shinyjs::click("run_nca")
-      }, delay = 0.5)
-    })
-
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())

@@ -114,10 +114,11 @@ data_upload_server <- function(id) {
       .handle_version_delete(pending_versioned, .get_selected_version)
     })
 
-    # Auto-analysis trigger: set flag on session$userData so parent modules can react
+    # Auto-analysis: increment the trigger counter so the auto_analysis module reacts
     observeEvent(input$run_auto_analysis, {
       log_info("Auto-analysis triggered by user.")
-      session$userData$auto_analysis_triggered(TRUE)
+      current <- isolate(session$userData$auto_analysis_trigger())
+      session$userData$auto_analysis_trigger(current + 1)
     })
 
     list(

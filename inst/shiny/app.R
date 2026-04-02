@@ -147,6 +147,9 @@ ui <- function() {
       )
     ),
 
+    # Hidden download handler for auto-analysis
+    auto_analysis_ui("auto_analysis"),
+
     shinyjs::useShinyjs(),
     reactable.extras::reactable_extras_dependency()
   )
@@ -168,10 +171,8 @@ server <- function(input, output, session) {
   # Versioned settings storage (list of version entries)
   session$userData$settings_versions <- reactiveVal(list())
 
-  # Auto-analysis flags for cross-module orchestration
-  session$userData$auto_analysis_triggered <- reactiveVal(FALSE)
-  session$userData$auto_run_nca <- reactiveVal(FALSE)
-  session$userData$auto_save_pending <- reactiveVal(FALSE)
+  # Auto-analysis trigger counter (incremented by data_upload button)
+  session$userData$auto_analysis_trigger <- reactiveVal(0)
 
   # Uploaded dataset filename (set by data_upload module)
   session$userData$dataset_filename <- NULL
@@ -208,6 +209,9 @@ server <- function(input, output, session) {
     }
   })
 
+  # AUTO-ANALYSIS ----
+  auto_analysis_server("auto_analysis", tab_data_outputs$adnca_raw)
+
   # EXPLORATION ----
   tab_explore_server(
     "explore",
@@ -238,15 +242,6 @@ server <- function(input, output, session) {
     grouping_vars = tab_data_outputs$extra_group_vars
   )
 
-  # Auto-analysis: open Save modal after NCA results are ready
-  observeEvent(tab_nca_outputs$res_nca(), {
-    if (!isTRUE(session$userData$auto_save_pending())) return()
-    session$userData$auto_save_pending(FALSE)
-    log_info("Auto-analysis: NCA complete, opening Save dialog.")
-    later::later(function() {
-      shinyjs::click("zip_modal-open_zip_modal")
-    }, delay = 1)
-  })
 }
 
 shiny::shinyApp(ui, server)
