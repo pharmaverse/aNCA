@@ -213,19 +213,125 @@ h5 {
   display: inline-block !important;
 }
 
-/* parameter selection gird */
-.nca-pill-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
+/* Parameter selection matrix — rows: study types, columns: parameters */
+.param-matrix-wrapper {
+  margin-top: 0.5em;
 }
 
-.nca-pill {
-  background-color: #e0ecff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.9em;
+.param-matrix-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 60vh;
+  border: 1px solid #dadada;
+  border-radius: 4px;
+}
+
+.param-matrix-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.75em;
+  width: max-content;
+  min-width: 100%;
+}
+
+.param-matrix-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.param-matrix-corner,
+.param-matrix-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #ffffff;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-weight: 600;
+  text-align: left;
+  border-right: 2px solid #cdcdcd;
+}
+
+.param-matrix-corner {
+  z-index: 4;
+}
+
+thead .param-matrix-row-header {
+  z-index: 4;
+}
+
+.param-matrix-group-header {
+  background: #007bc2;
+  color: #ffffff;
   text-align: center;
+  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 0.95em;
+  border-left: 2px solid #ffffff;
+  border-bottom: 1px solid #006aa8;
+}
+
+.param-matrix-group-header:first-of-type {
+  border-left: none;
+}
+
+.param-matrix-col-header {
+  background: #E7ECFA;
+  text-align: center;
+  padding: 4px 6px;
+  font-weight: 500;
+  font-size: 0.85em;
+  white-space: nowrap;
+  cursor: help;
+  border-right: 1px solid #dadada;
+  border-bottom: 2px solid #cdcdcd;
+  min-width: 55px;
+}
+
+.param-matrix-col-header:hover {
+  background: #d4daf0;
+}
+
+.param-matrix-table tbody tr:nth-child(even) {
+  background: #f0f0f0;
+}
+
+.param-matrix-table tbody tr:hover {
+  background: #edf0fc;
+}
+
+td.param-matrix-row-header {
+  background: #ffffff;
+  font-size: 0.9em;
+  border-bottom: 1px solid #dadada;
+}
+
+tbody tr:nth-child(even) td.param-matrix-row-header {
+  background: #f0f0f0;
+}
+
+tbody tr:hover td.param-matrix-row-header {
+  background: #edf0fc;
+}
+
+.param-matrix-cell {
+  text-align: center;
+  padding: 4px;
+  border-right: 1px solid #dadada;
+  border-bottom: 1px solid #dadada;
+  cursor: pointer;
+}
+
+.param-matrix-cell.checked {
+  background: #ebf0fc;
+}
+
+.param-matrix-checkbox {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: #007bc2;
 }
 
 .tlg-module {
