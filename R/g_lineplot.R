@@ -112,8 +112,7 @@ g_lineplot <- function(data,
       x = x_lab,
       y = y_lab,
       title = title,
-      color = .build_color_legend_title(color_by, color_labels),
-      linetype = ""
+      color = .build_color_legend_title(color_by, color_labels)
     ) +
     theme_bw()
   # Hide linetype legend when distinction is already encoded in color_var

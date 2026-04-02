@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Slope selector now shows a message instead of crashing when lambda z is not selected or when plot data is empty (#1122)
+
 ## Features added
 
 * Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)

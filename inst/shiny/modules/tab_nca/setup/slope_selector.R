@@ -17,6 +17,8 @@
 #' @param id Character. Shiny module id.
 #' @param processed_pknca_data Reactive. PKNCAdata object for plotting and table context.
 #' @param manual_slopes_override Reactive. Optional custom settings override for the slopes table.
+#' @param settings_inputs Optional list with reactives `analyte`, `pcspec`, `profile`.
+#'   Used to detect when selections are empty and show an informative message.
 #' @return manual_slopes (data.frame of user slope inclusions/exclusions)
 #'
 #' @details
@@ -126,7 +128,7 @@ slope_selector_ui <- function(id) {
 }
 
 slope_selector_server <- function( # nolint
-  id, processed_pknca_data, manual_slopes_override
+  id, processed_pknca_data, manual_slopes_override, settings_inputs = NULL
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
@@ -140,9 +142,17 @@ slope_selector_server <- function( # nolint
       req(processed_pknca_data())
 
       new_pknca_data <- processed_pknca_data()
-      new_pknca_data$intervals <- new_pknca_data$intervals %>%
+      hl_intervals <- new_pknca_data$intervals %>%
         filter(type_interval == "main", half.life) %>%
         unique()
+
+      if (nrow(hl_intervals) == 0) {
+        plot_outputs(NULL)
+        pknca_data(NULL)
+        return()
+      }
+      new_pknca_data$intervals <- hl_intervals
+
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
         new = new_pknca_data,
@@ -204,11 +214,82 @@ slope_selector_server <- function( # nolint
       plots_per_page = reactive(input$plots_per_page)
     )
 
+    # Reset slope selector state when settings selections become empty.
+    # processed_pknca_data won't recompute (blocked by req in settings),
+    # so we observe the raw inputs directly.
+    if (!is.null(settings_inputs)) {
+      observe({
+        analyte <- settings_inputs$analyte()
+        pcspec <- settings_inputs$pcspec()
+        profile <- settings_inputs$profile()
+
+        if (is.null(analyte) || length(analyte) == 0 ||
+            is.null(pcspec) || length(pcspec) == 0 ||
+            is.null(profile) || length(profile) == 0) {
+          plot_outputs(NULL)
+          pknca_data(NULL)
+        }
+      })
+    }
+
     observe({
-      req(plot_outputs())
       output$slope_plots_ui <- renderUI({
+        # Show message when settings selections are empty
+        if (!is.null(settings_inputs)) {
+          analyte <- settings_inputs$analyte()
+          pcspec <- settings_inputs$pcspec()
+          profile <- settings_inputs$profile()
+
+          if (is.null(analyte) || length(analyte) == 0 ||
+              is.null(pcspec) || length(pcspec) == 0 ||
+              is.null(profile) || length(profile) == 0) {
+            return(tags$p(
+              class = "text-muted",
+              "Please select an analyte, specimen, and NCA profile in Settings",
+              "to display slope selector plots."
+            ))
+          }
+        }
+
+        new_pknca_data <- processed_pknca_data()
+
+        if (is.null(new_pknca_data)) {
+          return(tags$p(
+            class = "text-muted",
+            "Plot cannot be displayed: no data available."
+          ))
+        }
+
+        main_intervals <- new_pknca_data$intervals %>%
+          filter(type_interval == "main") %>%
+          unique()
+
+        hl_intervals <- main_intervals %>% filter(half.life)
+        if (nrow(hl_intervals) == 0) {
+          if (nrow(main_intervals) == 0) {
+            return(tags$p(
+              class = "text-muted",
+              "Plot cannot be displayed: no data available."
+            ))
+          } else {
+            return(tags$p(
+              class = "text-muted",
+              "Lambda z half-life has not been added to the selected parameters.",
+              "Add LAMZHL to use the slope selector."
+            ))
+          }
+        }
+
+        plots <- plot_outputs()
+        if (is.null(plots) || length(plots) == 0) {
+          return(tags$p(
+            class = "text-muted",
+            "Plot cannot be displayed: no data available."
+          ))
+        }
+
         shinyjs::enable(selector = ".btn-page")
-        plot_outputs() %>%
+        plots %>%
           # Filter plots based on user search
           .[page_search$is_plot_searched()] %>%
           # Arrange plots by the specified group order
