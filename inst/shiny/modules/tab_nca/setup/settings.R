@@ -170,6 +170,34 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Flag Rule Sets",
+        fluidRow(
+          column(
+            width = 10
+          ),
+          column(
+            width = 2,
+            dropdown(
+              div(
+                tags$h2("Flag Rule Sets Help"),
+                p(
+                  "Flag rules define quality thresholds for NCA results.",
+                  "Parameters that violate a checked rule are flagged in the",
+                  "results table and excluded from descriptive statistics."
+                ),
+                p(
+                  "Each checked rule also generates criterion columns",
+                  "(CRITy / CRITyFL) and a summary analysis flag (PPSUMFL)",
+                  "in the ADPP dataset."
+                )
+              ),
+              style = "unite",
+              right = TRUE,
+              icon = icon("question"),
+              status = "primary",
+              width = "400px"
+            )
+          )
+        ),
         .rule_input(
           ns("R2ADJ"), "R2ADJ >=", 0.7, 0.05, 0, 1,
           tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"

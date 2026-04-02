@@ -21,6 +21,9 @@
 #'                            or ggplot otherwise (FALSE)
 #' @param seed                An integer value to set the seed for reproducibility of jittering.
 #' Default (NULL) will use the current R seed.
+#' @param show_excluded       Logical. If `TRUE`, excluded records (those with a populated
+#'                            `exclude` column) are overlaid as cross-shaped points. They are
+#'                            never included in box/violin statistics. Default is `FALSE`.
 #'
 #' @return A plotly object representing the violin or box plot.
 #' @import dplyr
@@ -35,8 +38,67 @@ flexible_violinboxplot <- function(res_nca,
                                    labels_df = metadata_nca_variables,
                                    box = TRUE,
                                    plotly = TRUE,
-                                   seed = NULL) {
+                                   seed = NULL,
+                                   show_excluded = FALSE) {
 
+  prepared <- .prepare_boxplot_data(res_nca, parameter, varvalstofilter)
+
+  error_boxplot <- .check_boxplot_data(prepared$included, parameter)
+  if (!is.null(error_boxplot)) return(error_boxplot)
+
+  box_data <- .handle_tooltips(prepared$included, tooltip_vars, labels_df)
+  excluded_data <- if (show_excluded && nrow(prepared$excluded) > 0) {
+    .handle_tooltips(prepared$excluded, tooltip_vars, labels_df)
+  } else {
+    prepared$excluded
+  }
+
+  ylabel <- .build_ylabel(parameter, box_data$PPSTRESU[1])
+
+  shared_aes <- aes(
+    x = interaction(!!!syms(xvars), sep = "\n"),
+    y = PPSTRES,
+    color = interaction(!!!syms(colorvars))
+  )
+
+  p <- ggplot(
+    data = box_data %>% arrange(!!!syms(colorvars)),
+    aes(
+      x = interaction(!!!syms(xvars), sep = "\n"),
+      y = PPSTRES,
+      color = interaction(!!!syms(colorvars)),
+      text = tooltip_text
+    )
+  ) +
+    .geom_distribution(box, shared_aes) +
+    geom_point(position = position_jitterdodge(seed = seed)) +
+    .geom_excluded(excluded_data, show_excluded, colorvars, xvars, seed) +
+    labs(
+      x = paste(xvars, collapse = ", "),
+      y = ylabel,
+      color = paste(colorvars, collapse = ", ")
+    ) +
+    scale_color_brewer(type = "qual") +
+    theme_bw() +
+    theme(legend.position = "right",
+          panel.spacing = unit(3, "lines"),
+          strip.text = element_text(size = 10))
+
+  if (plotly) ggplotly(p, tooltip = "text") else p
+}
+
+
+#' Prepare and split data for boxplot/violin
+#'
+#' Joins results with concentration data, filters by parameter, and splits
+#' into included and excluded records.
+#'
+#' @param res_nca PKNCA results object.
+#' @param parameter Parameter to filter on.
+#' @param varvalstofilter Filter values (passed to `.create_filter_expr`).
+#' @returns List with `included` and `excluded` data frames.
+#' @noRd
+.prepare_boxplot_data <- function(res_nca, parameter, varvalstofilter) {
   group_columns <- group_vars(res_nca$data$conc)
   boxplotdata <- left_join(
     res_nca$result,
@@ -55,91 +117,66 @@ flexible_violinboxplot <- function(res_nca,
       )
     )
 
-  # Create filter expression
   filter_expr <- .create_filter_expr(boxplotdata, varvalstofilter)
+  filtered <- boxplotdata %>%
+    filter(!!filter_expr, PPTESTCD == parameter)
 
-  # Filter data
-  box_data <- boxplotdata %>%
-    filter(
-      !!filter_expr,
-      PPTESTCD == parameter
-    )
+  is_excluded <- !is.na(filtered[["exclude"]]) & filtered[["exclude"]] != ""
+  list(
+    included = filtered[!is_excluded, , drop = FALSE],
+    excluded = filtered[is_excluded, , drop = FALSE]
+  )
+}
 
-  # Check boxplot data validity; return a plot with an error message if invalid
-  error_boxplot <- .check_boxplot_data(box_data, parameter)
-  if (!is.null(error_boxplot)) return(error_boxplot)
-
-  # --- Tooltip Construction ---
-  box_data <- .handle_tooltips(box_data, tooltip_vars, labels_df)
-
-  # ylabel of violin/boxplot
-  ylabel <- {
-    if (box_data$PPSTRESU[1] == "unitless" ||
-          box_data$PPSTRESU[1] == "" ||
-          is.na(box_data$PPSTRESU[1]) ||
-          is.null(box_data$PPSTRESU)) {
-      parameter
-    } else {
-      paste(parameter, " [", box_data$PPSTRESU[1], "]")
-    }
+#' Add boxplot or violin geometry
+#' @param box Logical. TRUE for boxplot, FALSE for violin.
+#' @param shared_aes Shared aesthetic mapping for x, y, color.
+#' @returns A ggplot2 geom layer.
+#' @noRd
+.geom_distribution <- function(box, shared_aes) {
+  if (box) {
+    geom_boxplot(mapping = shared_aes, inherit.aes = FALSE)
+  } else {
+    geom_violin(mapping = shared_aes, inherit.aes = FALSE, drop = FALSE)
   }
+}
 
-  # Make the plot
-  p <- ggplot(
-    data = box_data %>% arrange(!!!syms(colorvars)),
+#' Overlay excluded records as cross-shaped points
+#' @param excluded_data Data frame of excluded records (with tooltip_text).
+#' @param show_excluded Logical toggle.
+#' @param colorvars Character vector of color variables.
+#' @param xvars Character vector of x-axis variables.
+#' @param seed Jitter seed.
+#' @returns A geom_point layer or NULL.
+#' @noRd
+.geom_excluded <- function(excluded_data, show_excluded, colorvars, xvars, seed) {
+  if (!show_excluded || nrow(excluded_data) == 0) return(NULL)
+  geom_point(
+    data = excluded_data %>% arrange(!!!syms(colorvars)),
     aes(
       x = interaction(!!!syms(xvars), sep = "\n"),
       y = PPSTRES,
       color = interaction(!!!syms(colorvars)),
       text = tooltip_text
-    )
+    ),
+    shape = 4, size = 3,
+    position = position_jitterdodge(seed = seed),
+    inherit.aes = FALSE
   )
-
-  #  Make boxplot or violin
-  if (box) {
-    p <- p + geom_boxplot(
-      aes(
-        x = interaction(!!!syms(xvars), sep = "\n"),
-        y = PPSTRES,
-        color = interaction(!!!syms(colorvars))
-      ),
-      inherit.aes = FALSE
-    )
-  } else {
-
-    p <- p + geom_violin(
-      aes(
-        x = interaction(!!!syms(xvars), sep = "\n"),
-        y = PPSTRES,
-        color = interaction(!!!syms(colorvars))
-      ),
-      inherit.aes = FALSE,
-      drop = FALSE
-    )
-  }
-
-  # Include points, labels and theme
-  p <- p +
-    geom_point(position = position_jitterdodge(seed = seed)) +
-    labs(
-      x = paste(xvars, collapse = ", "),
-      y = ylabel,
-      color = paste(colorvars, collapse = ", ")
-    ) +
-    scale_color_brewer(type = "qual") +
-    theme_bw() +
-    theme(legend.position = "right",
-          panel.spacing = unit(3, "lines"),
-          strip.text = element_text(size = 10))
-
-  # Make plotly with hover features
-  if (plotly) {
-    ggplotly(p, tooltip = "text")
-  } else {
-    p
-  }
 }
 
+#' Build y-axis label from parameter name and unit
+#' @param parameter Parameter name string.
+#' @param unit Unit string (may be NA, NULL, empty, or "unitless").
+#' @returns Formatted y-axis label.
+#' @noRd
+.build_ylabel <- function(parameter, unit) {
+  if (is.null(unit) || is.na(unit) || unit == "" || unit == "unitless") {
+    parameter
+  } else {
+    paste(parameter, " [", unit, "]")
+  }
+}
 
 #' Helper function create text used to filter data frame
 #' @param boxplotdata Data frame to be filtered
