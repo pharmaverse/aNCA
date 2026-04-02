@@ -198,25 +198,23 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         select(-starts_with("can_"))
     })
 
-    # Sync the base state to the live state and update checkboxes via JS
-    # so the table does not re-render on override/data changes.
-    observeEvent(base_selections(), {
-      new_state <- base_selections()
-      selections_state(new_state)
-      .sync_checkboxes_js(session, new_state, unique(study_types_df()$type))
-    })
-
     # Get a simple reactive list of study type names
     study_types_list <- reactive(unique(study_types_df()$type))
 
+    # Sync the base state to the live state.
+    # Always updates selections_state; the renderUI below handles
+    # when to re-render vs when to JS-sync.
+    observeEvent(base_selections(), {
+      selections_state(base_selections())
+    })
+
     # --- Matrix UI rendering ---
-    # Only re-renders when the table structure changes (study types list),
-    # not on individual checkbox clicks.
+    # Depends on base_selections() so it re-renders on structural
+    # changes (initial load, data change, override upload).
+    # Checkbox clicks only modify selections_state() — they do NOT
+    # change base_selections(), so the table is not re-rendered.
     output$param_matrix_ui <- renderUI({
-      req(study_types_list())
-      # Read selections once for initial render; further clicks are
-      # handled without re-rendering.
-      state <- isolate(selections_state())
+      state <- base_selections()
       req(state)
       study_types <- study_types_list()
 
