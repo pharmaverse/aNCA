@@ -365,6 +365,16 @@ zip_ui <- function(id) {
             )
           )
         ),
+        shinyjs::hidden(
+          div(
+            id = ns("settings_comment_container"),
+            textInput(
+              ns("settings_save_comment"),
+              label = "Settings comment (optional)",
+              placeholder = "e.g. final NCA, first draft"
+            )
+          )
+        ),
         div(class = "w-100", uiOutput(ns("export_validation_ui")))
       ),
       footer = tagList(
@@ -486,6 +496,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     )
 
     observeEvent(input$confirm_export, {
+      session$userData$settings_save_comment <- input$settings_save_comment %||% ""
       export_state$res_tree_texts <- input$res_tree
       tree_items_save <- .available_tree_items(
         nca_available       = isTRUE(nca_available()),
@@ -583,9 +594,11 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
           output_tmpdir <- file.path(tempdir(), "output")
           unlink(output_tmpdir, recursive = TRUE)
 
+          nca_result <- tryCatch(res_nca(), error = function(e) NULL)
+
           prepare_export_files(
             target_dir    = output_tmpdir,
-            res_nca       = res_nca(),
+            res_nca       = nca_result,
             settings      = settings,
             grouping_vars = grouping_vars(),
             input         = frozen_input,
