@@ -361,17 +361,19 @@ zip_ui <- function(id) {
                 selected = table_formats,
                 multiple = TRUE
               ),
-              style = "margin-bottom: 2em;"
-            )
-          )
-        ),
-        shinyjs::hidden(
-          div(
-            id = ns("settings_comment_container"),
-            textInput(
-              ns("settings_save_comment"),
-              label = "Settings comment (optional)",
-              placeholder = "e.g. final NCA, first draft"
+              style = "margin-bottom: 1em;"
+            ),
+            shinyjs::hidden(
+              div(
+                id = ns("settings_comment_container"),
+                tags$br(),
+                h4("Comment ", tags$small("(optional)")),
+                textInput(
+                  ns("settings_comment"),
+                  label = NULL,
+                  placeholder = "e.g. final NCA, first draft"
+                )
+              )
             )
           )
         ),
@@ -496,7 +498,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     )
 
     observeEvent(input$confirm_export, {
-      session$userData$settings_save_comment <- input$settings_save_comment %||% ""
+      session$userData$settings_save_comment <- input$settings_comment %||% ""
       export_state$res_tree_texts <- input$res_tree
       tree_items_save <- .available_tree_items(
         nca_available       = isTRUE(nca_available()),
