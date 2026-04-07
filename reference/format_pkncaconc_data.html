@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9136</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9137</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,8 @@
 <span>  rrlt_column <span class="op">=</span> <span class="st">"ARRLT"</span>,</span>
 <span>  route_column <span class="op">=</span> <span class="st">"ROUTE"</span>,</span>
 <span>  time_end_column <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  nca_exclude_reason_columns <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  nca_exclude_reason_columns <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">dose_group_columns</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -108,6 +109,12 @@ calculate <code>CONCDUR</code>.</p></dd>
 <dd><p>A character vector specifying the columns to indicate reasons
 for excluding records from NCA analysis.</p></dd>
 
+
+<dt id="arg-dose-group-columns">dose_group_columns<a class="anchor" aria-label="anchor" href="#arg-dose-group-columns"></a></dt>
+<dd><p>Character vector of columns to group by when computing
+DOSNOA. Should use dose-level grouping (without specimen/analyte columns)
+to ensure consistent dose numbering across specimen types.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -141,7 +148,8 @@ the route column (ROUTE, CDISC: C66729).</p></li>
 <span class="r-in"><span>  group_columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STUDYID"</span>, <span class="st">"DOSETRT"</span>, <span class="st">"USUBJID"</span>, <span class="st">"PARAM"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  time_column <span class="op">=</span> <span class="st">"AFRLT"</span>,</span></span>
 <span class="r-in"><span>  rrlt_column <span class="op">=</span> <span class="st">"ARRLT"</span>,</span></span>
-<span class="r-in"><span>  route_column <span class="op">=</span> <span class="st">"ROUTE"</span></span></span>
+<span class="r-in"><span>  route_column <span class="op">=</span> <span class="st">"ROUTE"</span>,</span></span>
+<span class="r-in"><span>  dose_group_columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STUDYID"</span>, <span class="st">"DOSETRT"</span>, <span class="st">"USUBJID"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>

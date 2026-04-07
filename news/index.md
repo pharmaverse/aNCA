@@ -219,6 +219,10 @@
   interval parameter with its range suffix (e.g. `AUCINT_0-12`,
   `CAVGINT_0-24`) instead of collapsing them into a single entry
   ([\#1148](https://github.com/pharmaverse/aNCA/issues/1148))
+- Fixed `DOSNOA` computation using specimen-level grouping (including
+  PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1`
+  instead of `DOSNOA=2`, leading to incorrect dose time matching
+  ([\#1116](https://github.com/pharmaverse/aNCA/issues/1116))
 
 ## aNCA 0.1.0
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9136</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9137</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,6 +131,7 @@
 <li>Filtering will now correctly also affect all the input widgets in NCA setup (<a href="https://github.com/pharmaverse/aNCA/issues/1092" class="external-link">#1092</a>)</li>
 <li>All Results input widgets now shows each manual interval parameter with its range suffix (e.g. <code>AUCINT_0-12</code>, <code>CAVGINT_0-24</code>) instead of collapsing them into a single entry (<a href="https://github.com/pharmaverse/aNCA/issues/1146" class="external-link">#1146</a>)</li>
 <li>Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. <code>AUCINT_0-12</code>, <code>CAVGINT_0-24</code>) instead of collapsing them into a single entry (<a href="https://github.com/pharmaverse/aNCA/issues/1148" class="external-link">#1148</a>)</li>
+<li>Fixed <code>DOSNOA</code> computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get <code>DOSNOA=1</code> instead of <code>DOSNOA=2</code>, leading to incorrect dose time matching (<a href="https://github.com/pharmaverse/aNCA/issues/1116" class="external-link">#1116</a>)</li>
 </ul></div>
 </div>
     <div class="section level2">
