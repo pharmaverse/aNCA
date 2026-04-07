@@ -132,9 +132,51 @@ data_imputation_ui <- function(id) {
   )
 }
 
-data_imputation_server <- function(id) {
+data_imputation_server <- function(id, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Restore widgets when settings are uploaded
+    observeEvent(settings_override(), {
+      settings <- settings_override()
+      req(settings)
+
+      imputation <- settings$data_imputation
+      req(imputation)
+
+      # Restore impute_c0 switch
+      if (!is.null(imputation$impute_c0)) {
+        update_switch("should_impute_c0", value = imputation$impute_c0)
+      }
+
+      # Restore BLQ strategy dropdown
+      if (!is.null(imputation$blq_strategy)) {
+        updateSelectInput(
+          session,
+          inputId = "select_blq_strategy",
+          selected = imputation$blq_strategy
+        )
+
+        # Restore strategy-specific values
+        rule <- imputation$blq_imputation_rule
+        if (!is.null(rule)) {
+          switch(imputation$blq_strategy,
+            "Tmax based imputation" = {
+              .update_blq_selectize(session, "before_tmax", rule$before.tmax)
+              .update_blq_selectize(session, "after_tmax", rule$after.tmax)
+            },
+            "Positional BLQ imputation" = {
+              .update_blq_selectize(session, "before_first_non_blq", rule$first)
+              .update_blq_selectize(session, "in_between_non_blqs", rule$middle)
+              .update_blq_selectize(session, "after_last_non_blq", rule$last)
+            },
+            "Set value for all BLQ" = {
+              .update_blq_selectize(session, "blq_value", rule$first)
+            }
+          )
+        }
+      }
+    })
 
     blq_imputation_rule <- reactive({
       req(input$select_blq_strategy)
@@ -189,9 +231,23 @@ data_imputation_server <- function(id) {
 
     list(
       should_impute_c0 = reactive(input$should_impute_c0),
+      blq_strategy = reactive(input$select_blq_strategy),
       blq_imputation_rule = blq_imputation_rule
     )
   })
+}
+
+# Helper to update a blq_selectize input, adding custom numeric values to choices
+.update_blq_selectize <- function(session, input_id, value) {
+  if (is.null(value)) return()
+  value_str <- as.character(value)
+  choices <- unique(c("drop", "keep", value_str))
+  updateSelectizeInput(
+    session,
+    inputId = input_id,
+    choices = choices,
+    selected = value_str
+  )
 }
 
 # Helper function for BLQ selectize inputs

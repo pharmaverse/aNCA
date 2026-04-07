@@ -204,7 +204,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     conc_data <- reactive(adnca_data()$conc$data)
 
     # Modules for Data Imputation
-    data_imputation <- data_imputation_server("data_imputation")
+    data_imputation <- data_imputation_server("data_imputation", settings_override)
 
     # File Upload Handling
     observeEvent(c(data(), settings_override()), {
@@ -428,6 +428,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         bioavailability = input$bioavailability,
         data_imputation = list(
           impute_c0 = data_imputation$should_impute_c0(),
+          blq_strategy = data_imputation$blq_strategy(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
         int_parameters = int_parameters(),
@@ -559,7 +560,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     )
   }
 
-  update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+  # Data imputation is restored by data_imputation_server via settings_override
 
   if (!is.null(settings$int_parameters)) {
     int_parameters(settings$int_parameters)
