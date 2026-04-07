@@ -4,6 +4,10 @@
 
 ### Features added
 
+- Exploration sidebars: “View Exports” button opens a scrollable gallery
+  modal showing all saved plots inline with name, type, timestamp
+  headers and a remove option
+  ([\#1137](https://github.com/pharmaverse/aNCA/issues/1137))
 - Added “Min. Points for Half-life” setting in NCA \> Settings \>
   General Settings, allowing users to configure PKNCA’s `min.hl.points`
   option (range 2–10, default 3)
