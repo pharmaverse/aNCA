@@ -63,6 +63,11 @@ create_start_impute <- function(pknca_data) {
     ) %>%
     unique()
 
+  # If the merge produced no matching rows, preserve the original intervals
+  if (nrow(mydata_with_int) == 0) {
+    return(pknca_data)
+  }
+
   # Process imputation strategy based on each interval
   pknca_data$intervals <- mydata_with_int %>%
     # Consider by interval (calculation) and concentration group (parameter, specimen)
