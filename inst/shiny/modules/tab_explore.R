@@ -195,14 +195,16 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       log_info("Removed exploration plot: {plot_name}")
     }
 
-    # Wire saved outputs server for each sidebar.
-    # Each instance has its own namespace so button IDs don't collide.
-    saved_outputs_server("saved_outputs_indiv", saved_plots_metadata,
-                         get_plot_obj = .get_plot_obj, on_remove = .on_remove)
-    saved_outputs_server("saved_outputs_mean", saved_plots_metadata,
-                         get_plot_obj = .get_plot_obj, on_remove = .on_remove)
-    saved_outputs_server("saved_outputs_qc", saved_plots_metadata,
-                         get_plot_obj = .get_plot_obj, on_remove = .on_remove)
+    # Single gallery instance avoids tripling renderPlotly outputs and
+    # observers. The two extra buttons forward their clicks as triggers.
+    saved_outputs_server(
+      "saved_outputs_indiv", saved_plots_metadata,
+      get_plot_obj = .get_plot_obj, on_remove = .on_remove,
+      extra_triggers = list(
+        reactive(input[["saved_outputs_mean-view_exports"]]),
+        reactive(input[["saved_outputs_qc-view_exports"]])
+      )
+    )
 
     # --- Add to Exports handlers ---
 

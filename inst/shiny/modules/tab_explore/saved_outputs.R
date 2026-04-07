@@ -66,9 +66,9 @@ saved_outputs_ui <- function(id) {
 
 #' Saved Outputs Server
 #'
-#' Opens a single modal displaying all saved exploration plots vertically.
-#' Each plot is rendered inline with a header (name, type, timestamp) and
-#' a remove button. The user scrolls to compare plots at a glance.
+#' Manages a single modal gallery displaying all saved exploration plots.
+#' Only one instance should be created per exploration tab set. Multiple
+#' sidebar buttons can trigger the modal via `extra_triggers`.
 #'
 #' @param id Module namespace ID.
 #' @param saved_plots_metadata A reactive returning a data.frame with columns:
@@ -77,8 +77,10 @@ saved_outputs_ui <- function(id) {
 #'   for the given plot name, or NULL if not found.
 #' @param on_remove A callback function(plot_name) called when the user
 #'   removes a plot.
+#' @param extra_triggers A list of reactive expressions (e.g. button inputs
+#'   from other sidebars) that should also open the modal.
 saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
-                                 on_remove) {
+                                 on_remove, extra_triggers = list()) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -92,9 +94,20 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
       ))
     }
 
+    # Own button trigger
     observeEvent(input$view_exports, {
       show_modal()
     })
+
+    # External button triggers (from other sidebar instances)
+    for (trigger in extra_triggers) {
+      local({
+        local_trigger <- trigger
+        observeEvent(local_trigger(), {
+          show_modal()
+        })
+      })
+    }
 
     # Track which output IDs have been registered to avoid re-registration
     # and to clean up orphaned outputs when plots are removed.
