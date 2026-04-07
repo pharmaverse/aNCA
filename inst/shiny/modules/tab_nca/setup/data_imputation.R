@@ -150,30 +150,48 @@ data_imputation_server <- function(id, settings_override) {
       }
 
       # Restore BLQ strategy dropdown
-      if (!is.null(imputation$blq_strategy)) {
-        updateSelectInput(
-          session,
-          inputId = "select_blq_strategy",
-          selected = imputation$blq_strategy
-        )
+      valid_strategies <- c(
+        "Tmax based imputation",
+        "Positional BLQ imputation",
+        "Set value for all BLQ",
+        "No BLQ handling"
+      )
 
-        # Restore strategy-specific values
-        rule <- imputation$blq_imputation_rule
-        if (!is.null(rule)) {
-          switch(imputation$blq_strategy,
-            "Tmax based imputation" = {
-              .update_blq_selectize(session, "before_tmax", rule$before.tmax)
-              .update_blq_selectize(session, "after_tmax", rule$after.tmax)
-            },
-            "Positional BLQ imputation" = {
-              .update_blq_selectize(session, "before_first_non_blq", rule$first)
-              .update_blq_selectize(session, "in_between_non_blqs", rule$middle)
-              .update_blq_selectize(session, "after_last_non_blq", rule$last)
-            },
-            "Set value for all BLQ" = {
-              .update_blq_selectize(session, "blq_value", rule$first)
-            }
+      if (!is.null(imputation$blq_strategy)) {
+        if (!imputation$blq_strategy %in% valid_strategies) {
+          showNotification(
+            paste0(
+              "BLQ strategy '", imputation$blq_strategy,
+              "' from settings not recognized. Reverting to default."
+            ),
+            type = "warning",
+            duration = 8
           )
+        } else {
+          updateSelectInput(
+            session,
+            inputId = "select_blq_strategy",
+            selected = imputation$blq_strategy
+          )
+
+          # Restore strategy-specific values
+          rule <- imputation$blq_imputation_rule
+          if (!is.null(rule)) {
+            switch(imputation$blq_strategy,
+              "Tmax based imputation" = {
+                .update_blq_selectize(session, "before_tmax", rule$before.tmax)
+                .update_blq_selectize(session, "after_tmax", rule$after.tmax)
+              },
+              "Positional BLQ imputation" = {
+                .update_blq_selectize(session, "before_first_non_blq", rule$first)
+                .update_blq_selectize(session, "in_between_non_blqs", rule$middle)
+                .update_blq_selectize(session, "after_last_non_blq", rule$last)
+              },
+              "Set value for all BLQ" = {
+                .update_blq_selectize(session, "blq_value", rule$first)
+              }
+            )
+          }
         }
       }
     })
