@@ -314,6 +314,31 @@ describe("PKNCA_update_data_object", {
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
   })
 
+  it("uses default min.hl.points of 3 when not specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE
+    )
+    expect_equal(updated_data$options$min.hl.points, 3)
+  })
+
+  it("sets custom min.hl.points when specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE,
+      min_hl_points = 5
+    )
+    expect_equal(updated_data$options$min.hl.points, 5)
+  })
+
   it("calls update_main_intervals internally when parameter_selections is provided", {
     # study_types_df is derived internally via detect_study_types().
     # simple_data has ADOSEDUR=0.5 (infusion) and single dose -> "Single IV Infusion"
