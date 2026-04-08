@@ -373,6 +373,10 @@ predict_ratio_units <- function(ratio_table, units_table) {
   units_lookup <- units_table %>%
     mutate(PPTESTCD_cdisc = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
 
+  # Identify group columns in the units table (everything except core unit columns)
+  core_cols <- c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+  group_cols <- setdiff(names(units_table), core_cols)
+
   ratio_unit_rows <- lapply(seq_len(nrow(ratio_table)), function(i) {
     test_param <- ratio_table$TestParameter[i]
     ref_param <- ratio_table$RefParameter[i]
@@ -390,7 +394,6 @@ predict_ratio_units <- function(ratio_table, units_table) {
     if (ref_col %in% names(ref_units)) {
       ref_units <- ref_units %>% filter(!!sym(ref_col) == ref_val)
     }
-    ref_pporresu <- unique(ref_units$PPORRESU)
 
     # Look up test parameter units (all groups except ref, or specific test group)
     test_units <- units_lookup %>%
@@ -404,6 +407,8 @@ predict_ratio_units <- function(ratio_table, units_table) {
     } else if (ref_col %in% names(test_units)) {
       test_units <- test_units %>% filter(!!sym(ref_col) != ref_val)
     }
+
+    ref_pporresu <- unique(ref_units$PPORRESU)
     test_pporresu <- unique(test_units$PPORRESU)
 
     if (length(ref_pporresu) == 0 || length(test_pporresu) == 0) {
@@ -420,13 +425,55 @@ predict_ratio_units <- function(ratio_table, units_table) {
       !is.na(combos$factor), "fraction", paste0(combos$test_u, "/", combos$ref_u)
     )
 
-    data.frame(
-      PPTESTCD = ratio_pptestcd,
-      PPORRESU = unique(combos$PPORRESU),
-      PPSTRESU = unique(combos$PPORRESU),
-      conversion_factor = 1,
-      stringsAsFactors = FALSE
-    )
+    distinct_units <- unique(combos$PPORRESU)
+
+    if (length(distinct_units) == 1) {
+      # All combos produce the same unit — single row, no label needed
+      data.frame(
+        PPTESTCD = ratio_pptestcd,
+        PPORRESU = distinct_units,
+        PPSTRESU = distinct_units,
+        conversion_factor = 1,
+        stringsAsFactors = FALSE
+      )
+    } else {
+      # Different combos produce different units — one row per unit with
+      # group context appended to PPTESTCD for disambiguation.
+      # Use the ref group column values to build the label since the contrast
+      # variable is what drives unit differences.
+      ref_by_unit <- ref_units %>%
+        select(any_of(c(group_cols, "PPORRESU"))) %>%
+        distinct()
+      test_by_unit <- test_units %>%
+        select(any_of(c(group_cols, "PPORRESU"))) %>%
+        distinct()
+
+      labelled <- lapply(distinct_units, function(u) {
+        # Find which test/ref unit values produced this ratio unit
+        matching <- combos[combos$PPORRESU == u, , drop = FALSE]
+        # Look up group values for the test units involved
+        test_groups_for_u <- test_by_unit %>%
+          filter(PPORRESU %in% matching$test_u) %>%
+          select(any_of(group_cols))
+        # Build a readable label from group values
+        if (ncol(test_groups_for_u) > 0 && nrow(test_groups_for_u) > 0) {
+          group_labels <- apply(test_groups_for_u, 1, function(row) {
+            paste(row, collapse = ", ")
+          })
+          label <- paste(unique(group_labels), collapse = "; ")
+        } else {
+          label <- u
+        }
+        data.frame(
+          PPTESTCD = paste0(ratio_pptestcd, " [", label, "]"),
+          PPORRESU = u,
+          PPSTRESU = u,
+          conversion_factor = 1,
+          stringsAsFactors = FALSE
+        )
+      })
+      bind_rows(labelled)
+    }
   })
 
   result <- bind_rows(ratio_unit_rows)
