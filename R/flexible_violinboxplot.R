@@ -47,13 +47,7 @@ flexible_violinboxplot <- function(res_nca,
     suffix = c("", ".concdata")
   ) %>%
     # Rename manual interval parameters to include the range suffix
-    mutate(
-      PPTESTCD = ifelse(
-        type_interval == "manual",
-        paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
-        PPTESTCD
-      )
-    )
+    rename_interval_params()
 
   # Create filter expression
   filter_expr <- .create_filter_expr(boxplotdata, varvalstofilter)
