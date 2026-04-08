@@ -289,7 +289,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
         updateSelectizeInput(session, "select_WTBLU", selected = "")
       }
 
-      mapping <- imported_mapping()
+      mapping <- imported_mapping()$mapping
       if (!is.null(mapping)) {
         # process mapping using settings to override default selections
         .process_imported_mapping(mapping, adnca_data(), session)
@@ -301,8 +301,8 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
       # Use pending import if available, otherwise fall back to METABFL default
-      selected_metab <- if (!is.null(imported_mapping()$Metabolites)) {
-        imported <- imported_mapping()$Metabolites
+      selected_metab <- if (!is.null(imported_mapping()$mapping$Metabolites)) {
+        imported <- imported_mapping()$mapping$Metabolites
         imported
       } else if ("METABFL" %in% names(adnca_data())) {
         unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
@@ -377,6 +377,34 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     resolved_time_duplicate_rows <- reactiveVal(NULL)
     observe({
       session$userData$time_duplicate_rows <- resolved_time_duplicate_rows()
+      # Store key-based representation for settings export
+      session$userData$time_duplicate_keys <- extract_time_dup_keys(
+        mapped_data(), resolved_time_duplicate_rows()
+      )
+    })
+
+    # Apply imported time duplicate keys from settings
+    observeEvent(imported_mapping()$time_duplicate_keys, {
+      req(mapped_data())
+      keys_df <- imported_mapping()$time_duplicate_keys
+      if (!is.null(keys_df) && nrow(keys_df) > 0) {
+        matched_indices <- match_time_dup_keys(mapped_data(), keys_df)
+        n_stored <- nrow(keys_df)
+        n_matched <- length(matched_indices %||% integer(0))
+        if (n_matched < n_stored) {
+          showNotification(
+            sprintf(
+              "%d of %d stored duplicate exclusions could not be matched to the current dataset.",
+              n_stored - n_matched, n_stored
+            ),
+            type = "warning",
+            duration = 10
+          )
+        }
+        if (!is.null(matched_indices)) {
+          resolved_time_duplicate_rows(matched_indices)
+        }
+      }
     })
 
     processed_data <- reactive({

@@ -125,7 +125,13 @@ tab_data_server <- function(id) {
     uploaded_data <- data_upload_server("raw_data")
 
     # Call the column mapping module
-    imported_mapping <- reactive(uploaded_data$settings_override()$mapping)
+    imported_mapping <- reactive({
+      override <- uploaded_data$settings_override()
+      list(
+        mapping = override$mapping,
+        time_duplicate_keys = override$time_duplicate_keys
+      )
+    })
     column_mapping <- data_mapping_server(
       id = "column_mapping",
       adnca_data = uploaded_data$adnca_raw,
