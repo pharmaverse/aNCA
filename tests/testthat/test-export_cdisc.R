@@ -687,3 +687,26 @@ describe("export_cdisc: flag_rules NULL or empty produces no flag columns", {
     expect_false("PPSUMFL" %in% names(adpp))
   })
 })
+
+describe("export_cdisc: CRITy column creation", {
+
+  it("creates CRIT1 and CRIT1FL for a single flag rule", {
+    result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
+    adpp <- result$adpp
+    expect_true("CRIT1" %in% names(adpp))
+    expect_true("CRIT1FL" %in% names(adpp))
+    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
+  })
+
+  it("creates CRITy columns for each flag rule", {
+    rules <- c("R2ADJ < 0.7", "AUCPEO > 20")
+    result <- export_cdisc(test_pknca_res, flag_rules = rules)
+    adpp <- result$adpp
+    expect_true("CRIT1" %in% names(adpp))
+    expect_true("CRIT1FL" %in% names(adpp))
+    expect_true("CRIT2" %in% names(adpp))
+    expect_true("CRIT2FL" %in% names(adpp))
+    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
+    expect_equal(unique(adpp$CRIT2), "AUCPEO > 20")
+  })
+})
