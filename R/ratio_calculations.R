@@ -345,6 +345,97 @@ append_ratio_units <- function(units_table, ratio_rows) {
   bind_rows(units_table, ratio_units)
 }
 
+#' Predict unit rows for ratio parameters before NCA runs
+#'
+#' Derives the expected PPORRESU for each row in a ratio table by looking up
+#' the test and reference parameter units in the existing units table. Uses the
+#' same fraction-vs-compound logic as [calculate_ratios()]: if test and ref
+#' units are convertible the ratio unit is `"fraction"`, otherwise it is
+#' `"test_unit / ref_unit"`.
+#'
+#' @param ratio_table Data frame with ratio definitions. Must contain columns
+#'   `TestParameter`, `RefParameter`, `RefGroups`, `TestGroups`, `PPTESTCD`.
+#'   Group references use the `"COLUMN: VALUE"` format.
+#' @param units_table Data frame. The PKNCAdata units table with at least
+#'   `PPTESTCD` and `PPORRESU` columns, plus optional group columns.
+#' @returns A data frame with columns matching `units_table` structure
+#'   (`PPTESTCD`, `PPORRESU`, `PPSTRESU`, `conversion_factor`, and any group
+#'   columns), containing one row per distinct ratio unit. Returns a
+#'   zero-row data frame if no ratio units can be derived.
+#' @keywords internal
+predict_ratio_units <- function(ratio_table, units_table) {
+  if (is.null(ratio_table) || nrow(ratio_table) == 0 || is.null(units_table)) {
+    return(units_table[0, ])
+  }
+
+  # Translate PKNCA-style PPTESTCDs in the units table to CDISC style
+  # so they match the ratio table's TestParameter/RefParameter values
+  units_lookup <- units_table %>%
+    mutate(PPTESTCD_cdisc = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+
+  ratio_unit_rows <- lapply(seq_len(nrow(ratio_table)), function(i) {
+    test_param <- ratio_table$TestParameter[i]
+    ref_param <- ratio_table$RefParameter[i]
+    ref_group_str <- ratio_table$RefGroups[i]
+    test_group_str <- ratio_table$TestGroups[i]
+    ratio_pptestcd <- ratio_table$PPTESTCD[i]
+
+    # Parse "COLUMN: VALUE" format
+    ref_col <- gsub("(.*): (.*)", "\\1", ref_group_str)
+    ref_val <- gsub("(.*): (.*)", "\\2", ref_group_str)
+
+    # Look up ref parameter units filtered to the ref group
+    ref_units <- units_lookup %>%
+      filter(PPTESTCD_cdisc == ref_param)
+    if (ref_col %in% names(ref_units)) {
+      ref_units <- ref_units %>% filter(!!sym(ref_col) == ref_val)
+    }
+    ref_pporresu <- unique(ref_units$PPORRESU)
+
+    # Look up test parameter units (all groups except ref, or specific test group)
+    test_units <- units_lookup %>%
+      filter(PPTESTCD_cdisc == test_param)
+    if (test_group_str != "(all other levels)" && ref_col %in% names(test_units)) {
+      test_col <- gsub("(.*): (.*)", "\\1", test_group_str)
+      test_val <- gsub("(.*): (.*)", "\\2", test_group_str)
+      if (test_col %in% names(test_units)) {
+        test_units <- test_units %>% filter(!!sym(test_col) == test_val)
+      }
+    } else if (ref_col %in% names(test_units)) {
+      test_units <- test_units %>% filter(!!sym(ref_col) != ref_val)
+    }
+    test_pporresu <- unique(test_units$PPORRESU)
+
+    if (length(ref_pporresu) == 0 || length(test_pporresu) == 0) {
+      return(NULL)
+    }
+
+    # For each test/ref unit combination, determine the ratio unit
+    combos <- expand.grid(
+      test_u = test_pporresu, ref_u = ref_pporresu,
+      stringsAsFactors = FALSE
+    )
+    combos$factor <- get_conversion_factor(combos$ref_u, combos$test_u)
+    combos$PPORRESU <- ifelse(
+      !is.na(combos$factor), "fraction", paste0(combos$test_u, "/", combos$ref_u)
+    )
+
+    data.frame(
+      PPTESTCD = ratio_pptestcd,
+      PPORRESU = unique(combos$PPORRESU),
+      PPSTRESU = unique(combos$PPORRESU),
+      conversion_factor = 1,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  result <- bind_rows(ratio_unit_rows)
+  if (nrow(result) == 0) {
+    return(units_table[0, ])
+  }
+  distinct(result)
+}
+
 #' Links the table ratio of the App with the ratio calculations via PKNCA results
 #'
 #' @param res A PKNCAresult object.

@@ -19,7 +19,7 @@ units_table_ui <- function(id) {
   )
 }
 
-units_table_server <- function(id, mydata) {
+units_table_server <- function(id, mydata, ratio_table = reactive(NULL)) {
 
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -28,6 +28,15 @@ units_table_server <- function(id, mydata) {
     observeEvent(input$open_units_table, {
       default_units <- mydata()$units %>%
         dplyr::mutate(default = TRUE)
+
+      # Append predicted ratio unit rows from the ratio table configuration
+      ratio_units <- predict_ratio_units(ratio_table(), mydata()$units)
+      if (nrow(ratio_units) > 0) {
+        default_units <- dplyr::bind_rows(
+          default_units,
+          dplyr::mutate(ratio_units, default = TRUE)
+        )
+      }
 
       if (!is.null(session$userData$units_table())) {
         custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
@@ -204,6 +213,15 @@ units_table_server <- function(id, mydata) {
     observeEvent(session$userData$units_table(), {
       default_units <- mydata()$units %>%
         dplyr::mutate(default = TRUE)
+
+      # Append predicted ratio unit rows from the ratio table configuration
+      ratio_units <- predict_ratio_units(ratio_table(), mydata()$units)
+      if (nrow(ratio_units) > 0) {
+        default_units <- dplyr::bind_rows(
+          default_units,
+          dplyr::mutate(ratio_units, default = TRUE)
+        )
+      }
 
       custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
       by_cols <- intersect(names(default_units), names(custom_units))
