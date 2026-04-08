@@ -81,21 +81,21 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
 #' @param plot_outputs Current plot outputs (named list)
 #' @return Updated plot_outputs (named list)
 handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
+  # Join on identity columns only (not parameter flags) so that
+  # parameter selection changes are treated as updates, not add+remove.
+  id_cols <- intersect(
+    c(group_vars(new_pknca_data), "start", "end"),
+    intersect(names(new_pknca_data$intervals), names(old_pknca_data$intervals))
+  )
   new_intervals <- anti_join(
     new_pknca_data$intervals,
     old_pknca_data$intervals,
-    by = intersect(
-      names(new_pknca_data$intervals),
-      names(old_pknca_data$intervals)
-    )
+    by = id_cols
   )
   rm_intervals <- anti_join(
     old_pknca_data$intervals,
     new_pknca_data$intervals,
-    by = intersect(
-      names(new_pknca_data$intervals),
-      names(old_pknca_data$intervals)
-    )
+    by = id_cols
   )
   if (nrow(new_intervals) > 0) {
     affected_groups <- new_intervals %>%
@@ -238,6 +238,7 @@ parse_plot_names_to_df <- function(named_list) {
 #' @importFrom dplyr arrange across all_of
 #' @return A named list of plots, ordered by the specified group columns.
 arrange_plots_by_groups <- function(named_list, group_cols) {
+  if (length(named_list) == 0) return(named_list)
   plot_df <- parse_plot_names_to_df(named_list)
   arranged_df <- plot_df %>%
     arrange(across(all_of(group_cols)))
