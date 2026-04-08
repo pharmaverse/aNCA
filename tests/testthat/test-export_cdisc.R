@@ -807,3 +807,18 @@ describe("export_cdisc: PPSUMFL and PPSUMRSN derivation", {
     expect_true(all(unflagged$PPSUMRSN == ""))
   })
 })
+
+describe("export_cdisc: flag columns do not leak to other outputs", {
+
+  it("does not leak the exclude column into the final ADPP output", {
+    result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
+    expect_false("exclude" %in% names(result$adpp))
+  })
+
+  it("does not add CRITy or PPSUMFL columns to the PP dataset", {
+    result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
+    pp <- result$pp
+    crit_cols <- grep("^CRIT|PPSUMFL|PPSUMRSN", names(pp), value = TRUE)
+    expect_length(crit_cols, 0)
+  })
+})
