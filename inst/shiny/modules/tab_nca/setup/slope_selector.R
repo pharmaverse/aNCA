@@ -149,8 +149,8 @@ slope_selector_server <- function( # nolint
         reason_col = "REASON"
       )
 
-      if (changes$in_data) {
-        # New data or major changes: regenerate all plots
+      if (changes$in_data || changes$in_options) {
+        # New data or options changes (e.g. min.hl.points): regenerate all plots
         plot_outputs(get_halflife_plots(
           new_pknca_data, title_vars = "ATPTREF"
         )[["plots"]])

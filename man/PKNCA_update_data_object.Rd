@@ -14,6 +14,7 @@ PKNCA_update_data_object(
   hl_adj_rules = NULL,
   exclusion_list = NULL,
   keep_interval_cols = NULL,
+  min_hl_points = 3,
   parameter_selections = NULL,
   int_parameters = NULL,
   blq_imputation_rule = NULL,
@@ -47,6 +48,9 @@ concentration data. Each item in the list should have:
 
 \item{keep_interval_cols}{Optional character vector of additional columns
 to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results}
+
+\item{min_hl_points}{Minimum number of points to use for half-life calculation.
+Must be >= 2. Default is 3 (PKNCA default).}
 
 \item{parameter_selections}{Optional named list of selected PKNCA parameters
 by study type (forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}}).}

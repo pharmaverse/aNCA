@@ -104,19 +104,7 @@ ratios_table_server <- function(
     })
 
     ratio_reference_options <- reactive({
-      # We paste the column name and value to use as a specified input
-      if (ncol(ratio_groups()) == 0) {
-        return(NULL)
-      }
-
-      ratio_groups() %>%
-        # Convert all columns to character
-        mutate(across(everything(), as.character)) %>%
-        pivot_longer(cols = everything()) %>%
-        mutate(input_name = paste0(name, ": ", value)) %>%
-        pull(input_name) %>%
-        unique() %>%
-        sort()
+      .build_ratio_reference_options(ratio_groups())
     })
 
     ratio_param_options <- reactive({
@@ -170,11 +158,10 @@ ratios_table_server <- function(
       ratio_df <- isolate(pending_ratios())
       pending_ratios(NULL)
 
-      required_cols <- c(
-        "TestParameter", "RefParameter", "RefGroups", "TestGroups",
-        "AggregateSubject", "AdjustingFactor", "PPTESTCD"
-      )
-      if (!all(required_cols %in% names(ratio_df))) {
+      ratio_df <- .coerce_ratio_df(ratio_df)
+      if (is.null(ratio_df) || nrow(ratio_df) == 0) return()
+
+      if (!.has_required_ratio_cols(ratio_df)) {
         showNotification("Skipped ratio import: missing required columns",
                          type = "warning", duration = 10)
         return()
@@ -344,6 +331,20 @@ ratios_table_server <- function(
   })
 }
 
+# Build reference options from ratio group columns.
+.build_ratio_reference_options <- function(groups_df) {
+  if (ncol(groups_df) == 0) {
+    return(NULL)
+  }
+  groups_df %>%
+    mutate(across(everything(), as.character)) %>%
+    pivot_longer(cols = everything()) %>%
+    mutate(input_name = paste0(name, ": ", value)) %>%
+    pull(input_name) %>%
+    unique() %>%
+    sort()
+}
+
 .generate_pptestcd_for_ratios <- function(tbl, adnca_data) {
   analyte_col <- adnca_data$conc$columns$groups$group_analyte
   profile_col <- "ATPTREF"
@@ -373,6 +374,24 @@ ratios_table_server <- function(
       ),
       PPTESTCD = make.unique(PPTESTCD, sep = "")
     )
+}
+
+# Coerce imported ratio data to a data frame, handling YAML empty arrays.
+.coerce_ratio_df <- function(ratio_df) {
+  if (!is.data.frame(ratio_df)) {
+    ratio_df <- tryCatch(as.data.frame(ratio_df, stringsAsFactors = FALSE),
+                         error = function(e) NULL)
+  }
+  ratio_df
+}
+
+# Check that a ratio data frame has all required columns.
+.has_required_ratio_cols <- function(ratio_df) {
+  required_cols <- c(
+    "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+    "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+  )
+  all(required_cols %in% names(ratio_df))
 }
 
 # Validate all rows in a ratio table. Returns list(keep, skipped).
