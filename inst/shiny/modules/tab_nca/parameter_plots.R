@@ -48,12 +48,7 @@ parameter_plots_server <- function(id, res_nca) {
     observeEvent(res_nca(), {
       # Rename manual interval parameters to include the range suffix
       # (e.g. AUCINT -> AUCINT_0-12) so each interval appears as a distinct choice
-      result_data <- res_nca()$result %>%
-        mutate(PPTESTCD = ifelse(
-          type_interval == "manual",
-          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
-          PPTESTCD
-        ))
+      result_data <- rename_interval_params(res_nca()$result)
       param_choices <- unique(result_data$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
