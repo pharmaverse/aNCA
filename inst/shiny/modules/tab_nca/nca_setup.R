@@ -123,10 +123,14 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         hl_adj_rules = slope_rules(),
         exclusion_list = general_exclusions(),
         keep_interval_cols = extra_group_vars(),
+        min_hl_points = settings()$min_hl_points,
         parameter_selections = parameters_output$selections(),
         int_parameters = settings()$int_parameters,
         blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
+
+      # Wait for study types to settle during reactive transitions
+      req(nrow(parameters_output$types_df()) > 0)
 
       # Show bioavailability widget if it is possible to calculate
       if (final_data$dose$data$std_route %>% unique() %>% length() == 2) {
