@@ -77,6 +77,7 @@ identify difference between missing and not requested (#934)
 * Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
 * All Results input widgets now shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1146)
 * Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1148)
+* Fixed `PKNCA_update_data_object` custom units table join using hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys, which failed when the units table included group columns like `PARAM` or `PCSPEC` (#1159)
 * Fixed `DOSNOA` computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1` instead of `DOSNOA=2`, leading to incorrect dose time matching (#1116)
 
 # aNCA 0.1.0
