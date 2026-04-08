@@ -1,3 +1,4 @@
+
 #' Evaluates range notation. If provided notation is invalid, returns NA.
 #'
 #' @param x character string with range notation, e.g. 1:5.
