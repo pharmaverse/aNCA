@@ -12,7 +12,7 @@
 #' @importFrom dplyr filter select mutate group_by ungroup group_split
 #' @importFrom dplyr %>% any_of across all_of if_any
 #' @importFrom stats lm predict as.formula
-#' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
+#' @importFrom plotly plot_ly add_lines layout add_trace plotly_build event_register
 #' @importFrom PKNCA pk.nca get.parameter.deps
 #' @export
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
@@ -286,7 +286,8 @@ get_halflife_plots_single <- function(
       "(", plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
     )
   }
-  plotly::plot_ly() %>%
+  plotly::plot_ly(source = "A") %>%
+    plotly::event_register("plotly_click") %>%
     plotly::add_lines(
       data = fit_line_data,
       x = ~get(time_col),
