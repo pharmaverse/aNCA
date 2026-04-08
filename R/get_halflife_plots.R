@@ -191,6 +191,12 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
       o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
     }
   }
+  # pk.nca() with units can return 0-row results containing PPSTRES but not
+
+  # PPORRES. Ensure PPORRES exists so as.data.frame(out_format="wide") works.
+  if (!"PPORRES" %in% names(o_nca$result)) {
+    o_nca$result$PPORRES <- o_nca$result$PPSTRES
+  }
 
   wide_output <- o_nca
   wide_output$result <- wide_output$result %>%
