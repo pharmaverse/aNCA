@@ -86,7 +86,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
                      choices = ratio_groups(),
                      initial_selection = NULL,
                      selector_ui_wrapper = "summary_groups_ui_wrapper",
-                     id = "summarygroups",
+                     id = "summary_groups",
                      label = "Summarise by:",
                      metadata_type = "variable")
     })
@@ -187,7 +187,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
       req(results())
 
       summary <- results() %>%
-        group_by(across(all_of(input$summarygroups)), Ratio_Type) %>%
+        group_by(across(all_of(input$summary_groups)), Ratio_Type) %>%
         summarise(
           Geomean_Ratio = round(exp(mean(log(Ratio), na.rm = TRUE)), 3),
           N = n(),
@@ -195,7 +195,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         )
       results() %>%
         bind_rows(summary) %>%
-        arrange(across(all_of(input$summarygroups)), Ratio_Type)
+        arrange(across(all_of(input$summary_groups)), Ratio_Type)
     })
 
     reactable_server(
