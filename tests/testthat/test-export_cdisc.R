@@ -667,3 +667,23 @@ describe("export_cdisc PKSUM1F derivation", {
     expect_equal(pksum1fn_row$Core, "Perm")
   })
 })
+
+describe("export_cdisc: flag_rules NULL or empty produces no flag columns", {
+
+  it("produces no CRITy or PPSUMFL columns when flag_rules is NULL", {
+    result <- export_cdisc(test_pknca_res, flag_rules = NULL)
+    adpp <- result$adpp
+    crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
+    expect_length(crit_cols, 0)
+    expect_false("PPSUMFL" %in% names(adpp))
+    expect_false("PPSUMRSN" %in% names(adpp))
+  })
+
+  it("produces no CRITy or PPSUMFL columns when flag_rules is empty", {
+    result <- export_cdisc(test_pknca_res, flag_rules = character(0))
+    adpp <- result$adpp
+    crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
+    expect_length(crit_cols, 0)
+    expect_false("PPSUMFL" %in% names(adpp))
+  })
+})
