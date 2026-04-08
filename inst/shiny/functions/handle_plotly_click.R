@@ -78,13 +78,17 @@ handle_plotly_click <- function(last_click_data, manual_slopes, click_data, pknc
   idx <- as.numeric(click_data$customdata$ROWID)
   time <- as.numeric(click_data$x)
   row <- pknca_data$conc$data[idx, ]
+  # Select only identity columns — param flags are irrelevant for
+  # matching clicks to intervals and break identical() comparisons.
+  id_cols <- c(group_vars(pknca_data), "start", "end", "ATPTREF")
   int <- pknca_data$intervals %>%
     merge(row, by = c(group_vars(pknca_data))) %>%
     filter(
       start <= row[[pknca_data$conc$columns$time]] &
         end >= row[[pknca_data$conc$columns$time]]
     ) %>%
-    select(any_of(names(pknca_data$intervals)))
+    select(any_of(id_cols)) %>%
+    unique()
   group <- int %>%
     select(any_of(c(group_vars(pknca_data), "ATPTREF")))
   list(idx = idx, time = time, row = row, int = int, group = group)
