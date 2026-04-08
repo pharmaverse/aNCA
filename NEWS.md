@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
+
 ## Features added
 
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
