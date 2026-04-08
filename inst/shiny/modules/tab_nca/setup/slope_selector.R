@@ -212,16 +212,29 @@ slope_selector_server <- function( # nolint
     )
 
     observe({
-      req(length(plot_outputs()) > 0)
+      req(!is.null(plot_outputs()))
       output$slope_plots_ui <- renderUI({
-        shinyjs::enable(selector = ".btn-page")
-        plot_outputs() %>%
-          # Filter plots based on user search
-          .[page_search$is_plot_searched()] %>%
-          # Arrange plots by the specified group order
-          arrange_plots_by_groups(input$order_groups) %>%
-          # Display only the plots for the current page
-          .[page_search$page_start():page_search$page_end()]
+        if (length(plot_outputs()) == 0) {
+          div(
+            class = "slope-selector-empty-state",
+            icon("info-circle"),
+            tags$p(
+              "No slope plots to display.",
+              "Half-life plots require at least one half-life",
+              "related parameter to be selected",
+              "(e.g., LAMZHL, LAMZ, R2ADJ, LAMZNPT)."
+            )
+          )
+        } else {
+          shinyjs::enable(selector = ".btn-page")
+          plot_outputs() %>%
+            # Filter plots based on user search
+            .[page_search$is_plot_searched()] %>%
+            # Arrange plots by the specified group order
+            arrange_plots_by_groups(input$order_groups) %>%
+            # Display only the plots for the current page
+            .[page_search$page_start():page_search$page_end()]
+        }
       })
     })
 
