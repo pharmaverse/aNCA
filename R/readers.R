@@ -147,6 +147,7 @@ read_settings <- function(path) {
   obj$settings$int_parameters <- .convert_list_to_df(obj$settings$int_parameters)
   obj$filters <- .convert_filter_values(obj$filters)
   obj$settings$ratio_table <- .convert_list_to_df(obj$settings$ratio_table)
+  obj$time_duplicate_keys <- .convert_list_to_df(obj$time_duplicate_keys)
 
   obj
 }
