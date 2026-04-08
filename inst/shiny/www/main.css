@@ -446,6 +446,18 @@ div[data-value="Settings"] > div.row a {
   text-align: left !important;
 }
 
+.slope-selector-module .slope-selector-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2em;
+  margin: 2em 0;
+  color: #a7a7a7;
+  font-style: italic;
+  text-align: center;
+}
+
 .slope-selector-module .slope-plots-container {
   margin-top: 2em;
   min-height: calc(100vh - 220px);
