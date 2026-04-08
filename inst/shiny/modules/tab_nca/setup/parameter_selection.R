@@ -49,15 +49,16 @@ parameter_selection_ui <- function(id) {
             ),
             tags$ul(
               tags$li(
-                tags$b("Study types table"),
-                ": Detected study types and the number of subjects."
-              ),
-              tags$li(
                 tags$b("Parameter matrix"),
                 ": Rows are study types, columns are PK parameters. ",
                 "Click a cell to toggle whether a parameter is calculated ",
                 "for that study type. Hover a column header to see the ",
                 "full parameter name."
+              ),
+              tags$li(
+                tags$b("Detected study types"),
+                ": Expandable section showing detected study types ",
+                "and the number of subjects."
               )
             )
           ),
@@ -69,10 +70,6 @@ parameter_selection_ui <- function(id) {
         ),
       ),
     ),
-    p("The following study types were detected in the data:"),
-    card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
-
-    br(),
     fluidRow(
       column(
         width = 10,
@@ -97,6 +94,19 @@ parameter_selection_ui <- function(id) {
     div(
       class = "param-matrix-wrapper",
       uiOutput(ns("param_matrix_ui"))
+    ),
+
+    br(),
+    accordion(
+      accordion_panel(
+        title = "Detected Study Types",
+        icon = icon("microscope"),
+        card(
+          reactable_ui(ns("study_types")),
+          class = "border-0 shadow-none"
+        )
+      ),
+      open = FALSE
     )
   )
 }
