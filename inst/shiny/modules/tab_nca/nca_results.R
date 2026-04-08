@@ -55,12 +55,22 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       #' Apply units
       if (!is.null(session$userData$units_table())) {
         res$data$units <- session$userData$units_table()
+
+        custom_units <- session$userData$units_table() %>%
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+
+        # Join only on identifier columns, excluding value/unit columns
+        value_cols <- c("PPSTRESU", "PPSTRES", "PPORRESU", "conversion_factor", "default")
+        by_cols <- setdiff(
+          intersect(names(res$result), names(custom_units)),
+          value_cols
+        )
+
         res$result <- res$result %>%
           select(-PPSTRESU, -PPSTRES) %>%
           left_join(
-            session$userData$units_table() %>%
-              mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
-            by = intersect(names(.), names(session$userData$units_table()))
+            custom_units %>% select(all_of(by_cols), PPSTRESU, conversion_factor),
+            by = by_cols
           ) %>%
           mutate(PPSTRES = ifelse(
             !is.na(conversion_factor),
