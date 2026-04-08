@@ -63,7 +63,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
             by = intersect(names(.), names(session$userData$units_table()))
           ) %>%
           mutate(PPSTRES = ifelse(
-            !is.null(conversion_factor),
+            !is.na(conversion_factor),
             PPORRES * conversion_factor,
             PPORRES
           )) %>%
