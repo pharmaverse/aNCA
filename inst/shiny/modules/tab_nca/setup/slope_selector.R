@@ -212,7 +212,7 @@ slope_selector_server <- function( # nolint
     )
 
     observe({
-      req(plot_outputs())
+      req(length(plot_outputs()) > 0)
       output$slope_plots_ui <- renderUI({
         shinyjs::enable(selector = ".btn-page")
         plot_outputs() %>%
