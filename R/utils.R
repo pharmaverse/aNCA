@@ -1,3 +1,26 @@
+#' Rename manual interval parameters with dose-relative range suffix
+#'
+#' For rows where `type_interval == "manual"`, appends
+#' `_<start_dose>-<end_dose>` to `PPTESTCD` so that each interval
+#' appears as a distinct entry (e.g., `AUCINT` becomes `AUCINT_0-12`).
+#' Non-manual rows are left unchanged.
+#'
+#' @param data A data frame with columns `PPTESTCD`, `type_interval`,
+#'   `start_dose`, and `end_dose`.
+#'
+#' @returns The input data frame with `PPTESTCD` renamed for manual intervals.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @noRd
+#' @keywords internal
+rename_interval_params <- function(data) {
+  mutate(data, PPTESTCD = ifelse(
+    type_interval == "manual",
+    paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
+    PPTESTCD
+  ))
+}
 
 #' Evaluates range notation. If provided notation is invalid, returns NA.
 #'
