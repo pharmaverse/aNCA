@@ -149,7 +149,9 @@ slope_selector_server <- function( # nolint
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
         filter(type_interval == "main") %>%
         filter(half.life | if_any(all_of(hl_dep_params))) %>%
-        unique()
+        distinct(across(all_of(
+          c(group_vars(new_pknca_data), "start", "end")
+        )), .keep_all = TRUE)
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
         new = new_pknca_data,
