@@ -533,7 +533,8 @@ prepare_export_files <- function(target_dir,
     settings = settings_list,
     mapping = session$userData$mapping,
     slope_rules = session$userData$slope_rules(),
-    filters = session$userData$applied_filters
+    filters = session$userData$applied_filters,
+    time_duplicate_keys = session$userData$time_duplicate_keys
   )
 
   dataset_name <- session$userData$dataset_filename %||% ""
