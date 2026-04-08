@@ -307,6 +307,11 @@ update_main_intervals <- function(
   # Remove any imputation from the observational parameters
   data <- rm_impute_obs_params(data, metadata_nca_parameters)
 
+  # Ensure impute column is always character to prevent anti_join type mismatches
+  if ("impute" %in% names(data$intervals) && !is.character(data$intervals$impute)) {
+    data$intervals$impute <- as.character(data$intervals$impute)
+  }
+
   data
 }
 
