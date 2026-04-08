@@ -710,3 +710,50 @@ describe("export_cdisc: CRITy column creation", {
     expect_equal(unique(adpp$CRIT2), "AUCPEO > 20")
   })
 })
+
+describe("export_cdisc: CRITyFL values", {
+
+  it("sets CRITyFL to Y when exclude does not contain the rule message", {
+    result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
+    adpp <- result$adpp
+    expect_true(all(adpp$CRIT1FL == "Y"))
+  })
+
+  it("sets CRITyFL to N for records whose exclude contains the rule message", {
+    modified <- test_pknca_res
+    modified$result <- modified$result %>%
+      mutate(
+        exclude = ifelse(
+          PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1],
+          "R2ADJ < 0.7",
+          exclude
+        )
+      )
+    result <- export_cdisc(modified, flag_rules = c("R2ADJ < 0.7"))
+    adpp <- result$adpp
+    flagged <- adpp %>%
+      filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
+    unflagged <- adpp %>%
+      filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
+    expect_true(all(flagged$CRIT1FL == "N"))
+    expect_true(all(unflagged$CRIT1FL == "Y"))
+  })
+
+  it("handles multiple rules where only one is violated", {
+    modified <- test_pknca_res
+    modified$result <- modified$result %>%
+      mutate(
+        exclude = ifelse(
+          PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1],
+          "R2ADJ < 0.7",
+          exclude
+        )
+      )
+    result <- export_cdisc(modified, flag_rules = c("R2ADJ < 0.7", "AUCPEO > 20"))
+    adpp <- result$adpp
+    flagged <- adpp %>%
+      filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
+    expect_true(all(flagged$CRIT1FL == "N"))
+    expect_true(all(flagged$CRIT2FL == "Y"))
+  })
+})
