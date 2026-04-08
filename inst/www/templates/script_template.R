@@ -41,6 +41,7 @@ pknca_obj <- adnca_data %>%
     exclusion_list = settings_list$settings$general_exclusions,
     hl_adj_rules = slope_rules,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE")),
+    min_hl_points = settings_list$settings$min_hl_points %||% 3,
     parameter_selections = parameters_selected_per_study,
     int_parameters = int_parameters,
     custom_units_table = units_table
