@@ -223,6 +223,11 @@
   interval parameter with its range suffix (e.g. `AUCINT_0-12`,
   `CAVGINT_0-24`) instead of collapsing them into a single entry
   ([\#1148](https://github.com/pharmaverse/aNCA/issues/1148))
+- Fixed `PKNCA_update_data_object` custom units table join using
+  hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys,
+  which failed when the units table included group columns like `PARAM`
+  or `PCSPEC`
+  ([\#1159](https://github.com/pharmaverse/aNCA/issues/1159))
 - Fixed `DOSNOA` computation using specimen-level grouping (including
   PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1`
   instead of `DOSNOA=2`, leading to incorrect dose time matching
