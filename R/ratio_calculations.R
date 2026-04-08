@@ -267,6 +267,10 @@ calculate_ratios.PKNCAresults <- function(
 
   # Update the PKNCA results with the new ratios
   data$result <- bind_rows(data$result, ratios_result)
+
+  # Append ratio unit rows to the PKNCAdata units table
+  data$data$units <- append_ratio_units(data$data$units, ratios_result)
+
   data
 }
 
@@ -310,7 +314,35 @@ calculate_table_ratios <- function(res, ratio_table) {
 
   # Combine all results into the original PKNCAresult object
   res$result <- do.call(bind_rows, c(list(res$result), ratio_results))
+
+  # Append ratio unit rows to the PKNCAdata units table
+  res$data$units <- append_ratio_units(res$data$units, bind_rows(ratio_results))
+
   res
+}
+
+#' Append unit rows for ratio parameters to an existing units table
+#'
+#' Extracts distinct (PPTESTCD, PPORRESU) combinations from ratio result rows
+#' and appends them to the units table with PPSTRESU = PPORRESU and
+#' conversion_factor = 1. Group columns present in both the units table and
+#' ratio results are preserved.
+#'
+#' @param units_table Data frame. The existing PKNCAdata units table, or NULL.
+#' @param ratio_rows Data frame. Ratio result rows containing at least
+#'   PPTESTCD and PPORRESU.
+#' @returns The updated units table with ratio unit rows appended,
+#'   or the original table if no rows to add.
+#' @keywords internal
+append_ratio_units <- function(units_table, ratio_rows) {
+  if (is.null(units_table) || nrow(ratio_rows) == 0) {
+    return(units_table)
+  }
+  ratio_units <- ratio_rows %>%
+    select(any_of(names(units_table))) %>%
+    mutate(PPSTRESU = PPORRESU, conversion_factor = 1) %>%
+    distinct()
+  bind_rows(units_table, ratio_units)
 }
 
 #' Links the table ratio of the App with the ratio calculations via PKNCA results

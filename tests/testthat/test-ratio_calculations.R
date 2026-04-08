@@ -326,4 +326,109 @@ describe("calculate_ratios", {
     expect_equal(ratios_df$PPORRESU, rep("fraction", 2))
     expect_false("PPSTRESU" %in% names(ratios_df))
   })
+
+  it("appends ratio unit rows to $data$units (PKNCAresults, same units)", {
+    units_before <- res_simple$data$units
+    pknca_res <- calculate_ratios(
+      res_simple,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
+    )
+    units_after <- pknca_res$data$units
+
+    # Units table should have grown
+    expect_gt(nrow(units_after), nrow(units_before))
+
+    # Ratio unit rows should exist with PPTESTCD = RACMAX
+    ratio_unit_rows <- units_after %>% filter(PPTESTCD == "RACMAX")
+    expect_gt(nrow(ratio_unit_rows), 0)
+    expect_equal(unique(ratio_unit_rows$PPORRESU), "fraction")
+    expect_equal(unique(ratio_unit_rows$PPSTRESU), "fraction")
+    expect_equal(unique(ratio_unit_rows$conversion_factor), 1)
+  })
+
+  it("appends ratio unit rows with compound units when units differ (PKNCAresults)", {
+    res_diff_units <- res_simple
+    res_diff_units$result <- res_simple$result %>%
+      mutate(
+        PPORRESU = ifelse(PARAM == "B", "ng/mL", "unknown_unit"),
+        PPSTRESU = ifelse(PARAM == "B", "ng/mL", "unknown_unit")
+      )
+
+    pknca_res <- calculate_ratios(
+      res_diff_units,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
+    )
+
+    ratio_unit_rows <- pknca_res$data$units %>% filter(PPTESTCD == "RACMAX")
+    expect_gt(nrow(ratio_unit_rows), 0)
+    expect_equal(unique(ratio_unit_rows$PPORRESU), "ng/mL/unknown_unit")
+  })
+
+  it("does not modify units when $data$units is NULL (PKNCAresults)", {
+    res_no_units <- res_simple
+    res_no_units$data$units <- NULL
+
+    pknca_res <- calculate_ratios(
+      res_no_units,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
+    )
+
+    expect_null(pknca_res$data$units)
+  })
+})
+
+describe("append_ratio_units", {
+  it("returns NULL when units_table is NULL", {
+    result <- append_ratio_units(NULL, data.frame(PPTESTCD = "X", PPORRESU = "mg"))
+    expect_null(result)
+  })
+
+  it("returns original table when ratio_rows is empty", {
+    units_tbl <- data.frame(PPTESTCD = "CMAX", PPORRESU = "ng/mL",
+                            PPSTRESU = "ng/mL", conversion_factor = 1)
+    result <- append_ratio_units(units_tbl, data.frame())
+    expect_equal(result, units_tbl)
+  })
+
+  it("appends distinct ratio unit rows", {
+    units_tbl <- data.frame(PPTESTCD = "CMAX", PPORRESU = "ng/mL",
+                            PPSTRESU = "ng/mL", conversion_factor = 1)
+    ratio_rows <- data.frame(
+      PPTESTCD = c("RACMAX", "RACMAX"),
+      PPORRESU = c("fraction", "fraction"),
+      EXTRA_COL = c("a", "b")
+    )
+    result <- append_ratio_units(units_tbl, ratio_rows)
+    expect_equal(nrow(result), 2)
+    expect_equal(result$PPTESTCD, c("CMAX", "RACMAX"))
+    expect_equal(result$PPSTRESU, c("ng/mL", "fraction"))
+    expect_equal(result$conversion_factor, c(1, 1))
+  })
+
+  it("preserves group columns from units_table", {
+    units_tbl <- data.frame(PPTESTCD = "CMAX", PPORRESU = "ng/mL",
+                            PPSTRESU = "ng/mL", conversion_factor = 1,
+                            PARAM = "A")
+    ratio_rows <- data.frame(
+      PPTESTCD = c("RACMAX", "RACMAX"),
+      PPORRESU = c("fraction", "fraction"),
+      PARAM = c("B", "B")
+    )
+    result <- append_ratio_units(units_tbl, ratio_rows)
+    expect_equal(nrow(result), 2)
+    expect_true("PARAM" %in% names(result))
+    expect_equal(result$PARAM, c("A", "B"))
+  })
 })
