@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Fixed custom unit conversions being silently discarded in NCA results — unit-adjusted values are now correctly passed through to the results table (#1199)
+
 ## Features added
 
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
