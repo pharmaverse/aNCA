@@ -757,3 +757,53 @@ describe("export_cdisc: CRITyFL values", {
     expect_true(all(flagged$CRIT2FL == "Y"))
   })
 })
+
+describe("export_cdisc: PPSUMFL and PPSUMRSN derivation", {
+
+  it("sets PPSUMFL to empty when no exclusions exist", {
+    result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
+    adpp <- result$adpp
+    expect_true("PPSUMFL" %in% names(adpp))
+    expect_true(all(adpp$PPSUMFL == ""))
+  })
+
+  it("sets PPSUMFL to Y for records with any exclusion", {
+    modified <- test_pknca_res
+    modified$result <- modified$result %>%
+      mutate(
+        exclude = ifelse(
+          PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1],
+          "R2ADJ < 0.7",
+          exclude
+        )
+      )
+    result <- export_cdisc(modified, flag_rules = c("R2ADJ < 0.7"))
+    adpp <- result$adpp
+    flagged <- adpp %>%
+      filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
+    unflagged <- adpp %>%
+      filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
+    expect_true(all(flagged$PPSUMFL == "Y"))
+    expect_true(all(unflagged$PPSUMFL == ""))
+  })
+
+  it("populates PPSUMRSN with the exclusion reasons", {
+    modified <- test_pknca_res
+    modified$result <- modified$result %>%
+      mutate(
+        exclude = ifelse(
+          PPTESTCD == "cmax" & USUBJID == unique(USUBJID)[1],
+          "R2ADJ < 0.7; AUCPEO > 20",
+          exclude
+        )
+      )
+    result <- export_cdisc(modified, flag_rules = c("R2ADJ < 0.7", "AUCPEO > 20"))
+    adpp <- result$adpp
+    flagged <- adpp %>%
+      filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
+    unflagged <- adpp %>%
+      filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
+    expect_equal(unique(flagged$PPSUMRSN), "R2ADJ < 0.7; AUCPEO > 20")
+    expect_true(all(unflagged$PPSUMRSN == ""))
+  })
+})
