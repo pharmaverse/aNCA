@@ -240,4 +240,3 @@ describe("match_time_dup_keys", {
     expect_equal(sort(result), c(1L, 3L))
   })
 })
-
