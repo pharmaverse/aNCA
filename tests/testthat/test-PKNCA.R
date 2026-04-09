@@ -668,4 +668,97 @@ describe("add_exclusion_reasons", {
       expect_s3_class(results, "PKNCAresults")
     })
   })
+
+  describe("PKNCA_hl_rules_exclusion coverage", {
+    it("covers the else branch for non-AUCPE parameters (Lines 720-728)", {
+      # Create NCA results first
+      res <- PKNCA_calculate_nca(pknca_data)
+
+      # Create rules with non-AUCPE parameter (half.life)
+      rules <- list(half.life = 0.1)
+
+      # Apply the function
+      result <- PKNCA_hl_rules_exclusion(res, rules)
+
+      expect_s3_class(result, "PKNCAresults")
+    })
+
+    it("covers AUCPE branch for AUCPE parameters (Lines 710-719)", {
+      # Create NCA results first
+      res <- PKNCA_calculate_nca(pknca_data)
+
+      # Create rules with AUCPE parameter
+      rules <- list(aucpext.obs = 0.9)
+
+      # Apply the function
+      result <- PKNCA_hl_rules_exclusion(res, rules)
+
+      expect_s3_class(result, "PKNCAresults")
+    })
+  })
+
+  describe("remove_pp_not_requested coverage", {
+    it("removes parameters not requested in intervals", {
+      # Create NCA results first
+      res <- PKNCA_calculate_nca(pknca_data)
+
+      # Add impute column (required by remove_pp_not_requested)
+      res$data$intervals$impute <- NA_character_
+
+      # Manually set intervals with only cmax and tmax requested
+      res$data$intervals$cmax <- TRUE
+      res$data$intervals$tmax <- TRUE
+      res$data$intervals$auclast <- FALSE
+      res$data$intervals$aucinf.obs <- FALSE
+
+      # Apply the function
+      result <- remove_pp_not_requested(res)
+
+      expect_s3_class(result, "PKNCAresults")
+      expect_true("result" %in% names(result))
+    })
+  })
+
+# ---  new, from code coverage
+
+ describe("PKNCA_hl_rules_exclusion coverage", {
+    it("covers the else branch for non-AUCPE parameters (Lines 720-728)", {
+      # Create NCA results first
+      res <- PKNCA_calculate_nca(pknca_data)
+      # Create rules with non-AUCPE parameter (half.life)
+      rules <- list(half.life = 0.1)
+      # Apply the function
+      result <- PKNCA_hl_rules_exclusion(res, rules)
+      expect_s3_class(result, "PKNCAresults")
+    })
+    it("covers AUCPE branch for AUCPE parameters (Lines 710-719)", {
+      # Create NCA results first
+      res <- PKNCA_calculate_nca(pknca_data)
+      # Create rules with AUCPE parameter
+      rules <- list(aucpext.obs = 0.9)
+      # Apply the function
+      result <- PKNCA_hl_rules_exclusion(res, rules)
+      expect_s3_class(result, "PKNCAresults")
+    })
+  })
+# ---
+# chunk2 ---
+describe("remove_pp_not_requested coverage", {
+    it("removes parameters not requested in intervals", {
+      # Create NCA results first
+      res <- PKNCA_calculate_nca(pknca_data)
+      # Add impute column (required by remove_pp_not_requested)
+      res$data$intervals$impute <- NA_character_
+      # Manually set intervals with only cmax and tmax requested
+      res$data$intervals$cmax <- TRUE
+      res$data$intervals$tmax <- TRUE
+      res$data$intervals$auclast <- FALSE
+      res$data$intervals$aucinf.obs <- FALSE
+      # Apply the function
+      result <- remove_pp_not_requested(res)
+      expect_s3_class(result, "PKNCAresults")
+      expect_true("result" %in% names(result))
+    })
+  })
+# ---
 })
