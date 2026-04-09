@@ -86,43 +86,15 @@ run_app <- function(datapath = NULL, settings = NULL,
 }
 
 #' Check if all dependencies required to run shiny application are installed.
-#' If not, install them.
-#' This list of packages should also be provided as `Suggests` in the DESCRIPTION file.
+#'
+#' All core Shiny app dependencies are now listed in Imports and are guaranteed
+#' to be installed. This function only checks for optional Suggests packages
+#' that enhance the app experience but are not strictly required to start it.
 #' @noRd
 check_app_dependencies <- function() {
-  deps <- c(
-    "bslib",
-    "dplyr",
-    "htmlwidgets",
-    "logger",
-    "formatters",
-    "magrittr",
-    "plotly",
-    "purrr",
-    "reactable",
-    "reactable.extras",
-    "shiny",
-    "shinycssloaders",
-    "shinyjs",
-    "shinyjqui",
-    "shinyWidgets",
-    "stats",
-    "stringi",
-    "tidyr",
-    "tools",
-    "utils",
-    "rlang",
-    "yaml"
-  )
+  # All core app dependencies are now in Imports (installed automatically).
+  # Optional packages (haven, officer, flextable, rlistings, etc.) are checked
 
-  missing_packages <- purrr::keep(deps, function(dep) !requireNamespace(dep, quietly = TRUE))
-
-  if (length(missing_packages) != 0) {
-    stop(paste0(
-      "Some packages required for Shiny application are missing. ",
-      "You can install them by running `install.packages(c(",
-      paste0("'", missing_packages, "'", collapse = ", "),
-      "))`"
-    ))
-  }
+  # at point-of-use with requireNamespace() guards.
+  invisible(NULL)
 }
