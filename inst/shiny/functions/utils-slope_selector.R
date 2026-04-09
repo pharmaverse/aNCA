@@ -81,15 +81,6 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
 #' @param plot_outputs Current plot outputs (named list)
 #' @return Updated plot_outputs (named list)
 handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
-  # Coerce impute to character in both to prevent anti_join type mismatch
-  if ("impute" %in% names(new_pknca_data$intervals) &&
-      !is.character(new_pknca_data$intervals$impute)) {
-    new_pknca_data$intervals$impute <- as.character(new_pknca_data$intervals$impute)
-  }
-  if ("impute" %in% names(old_pknca_data$intervals) &&
-      !is.character(old_pknca_data$intervals$impute)) {
-    old_pknca_data$intervals$impute <- as.character(old_pknca_data$intervals$impute)
-  }
   new_intervals <- anti_join(
     new_pknca_data$intervals,
     old_pknca_data$intervals,

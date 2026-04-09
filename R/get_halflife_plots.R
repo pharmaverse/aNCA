@@ -57,6 +57,11 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     concu_col, exclude_hl_col, title_vars
   )
 
+  # No usable results (e.g. no concentration data within interval range)
+  if (nrow(d_conc_with_res) == 0) {
+    return(list(plots = list(), data = list()))
+  }
+
   # Mark points used in half-life calculation
   info_per_plot_list <- d_conc_with_res %>%
     # Indicate plot details
@@ -206,6 +211,18 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     ) %>%
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
+
+  # If no half-life results were produced (e.g. no conc data in interval range),
+  # return an empty data frame so callers get zero plots instead of a merge error.
+  if (nrow(wide_output$result) == 0) {
+    conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
+                          timeu_col, concu_col, exclude_hl_col, "ROWID")
+    return(
+      pknca_data$conc$data %>%
+        select(!!!syms(conc_select_cols)) %>%
+        filter(FALSE)
+    )
+  }
 
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()

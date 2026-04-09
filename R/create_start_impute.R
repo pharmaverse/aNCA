@@ -36,6 +36,10 @@ create_start_impute <- function(pknca_data) {
   group_columns <- unique(c(conc_group_columns, dose_group_columns))
   nca_excl_column <- pknca_data$conc$columns$exclude
 
+  # Tag each original interval for tracking
+  original_intervals <- pknca_data$intervals %>%
+    mutate(INT_ROWID = row_number())
+
   mydata_with_int <- merge(
     x = pknca_data$conc$data %>%
       filter(!!sym(nca_excl_column) %in% c("", NA_character_)) %>%
@@ -50,12 +54,7 @@ create_start_impute <- function(pknca_data) {
       ) %>%
       rename(TIME_DOSE = !!sym(time_dose_column))
   ) %>%
-    merge(
-      pknca_data$intervals %>%
-        # Each interval operation has to be treated later independently
-        # to prevent issues in is.possible.c0.logslope
-        mutate(INT_ROWID = row_number())
-    ) %>%
+    merge(original_intervals) %>%
     filter(
       !!sym(time_column) >= start,
       !!sym(time_column) <= end,
@@ -63,8 +62,16 @@ create_start_impute <- function(pknca_data) {
     ) %>%
     unique()
 
-  # Process imputation strategy based on each interval
-  pknca_data$intervals <- mydata_with_int %>%
+  # If no concentration data matched any interval, set impute to NA for all
+  if (nrow(mydata_with_int) == 0) {
+    pknca_data$intervals <- original_intervals %>%
+      mutate(impute = NA_character_) %>%
+      select(-INT_ROWID)
+    return(pknca_data)
+  }
+
+  # Compute imputation strategy from matched concentration data
+  imputed_intervals <- mydata_with_int %>%
     # Consider by interval (calculation) and concentration group (parameter, specimen)
     group_by(INT_ROWID, "TIME_DOSE", !!!syms(intersect(conc_group_columns, names(.)))) %>%
     arrange(across(any_of(c("INT_ROWID", group_columns, time_column, "TIME_DOSE")))) %>%
@@ -106,8 +113,22 @@ create_start_impute <- function(pknca_data) {
       )
     ) %>%
     ungroup() %>%
-    # Select only the columns of interest
-    select(any_of(c("start", "end", group_vars(pknca_data), "impute", names(pknca_data$intervals))))
+    select(any_of(c("start", "end", group_vars(pknca_data), "impute",
+                     names(pknca_data$intervals), "INT_ROWID")))
+
+  # Preserve intervals that had no matching concentration data, with impute = NA
+  matched_rowids <- unique(imputed_intervals$INT_ROWID)
+  unmatched_intervals <- original_intervals %>%
+    filter(!INT_ROWID %in% matched_rowids) %>%
+    mutate(impute = NA_character_)
+
+  # Combine matched (possibly expanded from ambiguous) and unmatched intervals
+  pknca_data$intervals <- bind_rows(
+    imputed_intervals,
+    unmatched_intervals
+  ) %>%
+    select(-INT_ROWID) %>%
+    arrange(across(any_of(c("start", "end", group_columns))))
 
   pknca_data
 
