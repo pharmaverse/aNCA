@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9140</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9141</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,9 @@
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
 <div class="section level3">
 <h3 id="features-added-development-version">Features added<a class="anchor" aria-label="anchor" href="#features-added-development-version"></a></h3>
-<ul><li>Exploration sidebars: “View Exports” button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (<a href="https://github.com/pharmaverse/aNCA/issues/1137" class="external-link">#1137</a>)</li>
+<ul><li>
+<code><a href="../reference/run_app.html">run_app()</a></code> now accepts a <code>settings</code> parameter to pre-load a YAML settings file on startup (<a href="https://github.com/pharmaverse/aNCA/issues/514" class="external-link">#514</a>)</li>
+<li>Exploration sidebars: “View Exports” button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (<a href="https://github.com/pharmaverse/aNCA/issues/1137" class="external-link">#1137</a>)</li>
 <li>Added “Min. Points for Half-life” setting in NCA &gt; Settings &gt; General Settings, allowing users to configure PKNCA’s <code>min.hl.points</code> option (range 2–10, default 3) (<a href="https://github.com/pharmaverse/aNCA/issues/1155" class="external-link">#1155</a>)</li>
 <li>Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (<a href="https://github.com/pharmaverse/aNCA/issues/1103" class="external-link">#1103</a>)</li>
 <li>Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (<a href="https://github.com/pharmaverse/aNCA/issues/1156" class="external-link">#1156</a>)</li>

@@ -4,6 +4,9 @@
 
 ### Features added
 
+- [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
+  now accepts a `settings` parameter to pre-load a YAML settings file on
+  startup ([\#514](https://github.com/pharmaverse/aNCA/issues/514))
 - Exploration sidebars: “View Exports” button opens a scrollable gallery
   modal showing all saved plots inline with name, type, timestamp
   headers and a remove option
