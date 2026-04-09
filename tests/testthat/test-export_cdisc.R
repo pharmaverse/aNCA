@@ -760,15 +760,20 @@ describe("export_cdisc: CRITyFL values", {
 
 describe("export_cdisc: PPSUMFL and PPSUMRSN derivation", {
 
+  # The base fixture may have pre-existing exclude values from PKNCA
+  # (e.g., half-life failures). Clear them to isolate PPSUMFL/PPSUMRSN logic.
+  clean_res <- test_pknca_res
+  clean_res$result <- clean_res$result %>% mutate(exclude = NA_character_)
+
   it("sets PPSUMFL to empty when no exclusions exist", {
-    result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
+    result <- export_cdisc(clean_res, flag_rules = c("R2ADJ < 0.7"))
     adpp <- result$adpp
     expect_true("PPSUMFL" %in% names(adpp))
     expect_true(all(adpp$PPSUMFL == ""))
   })
 
   it("sets PPSUMFL to Y for records with any exclusion", {
-    modified <- test_pknca_res
+    modified <- clean_res
     modified$result <- modified$result %>%
       mutate(
         exclude = ifelse(
@@ -788,7 +793,7 @@ describe("export_cdisc: PPSUMFL and PPSUMRSN derivation", {
   })
 
   it("populates PPSUMRSN with the exclusion reasons", {
-    modified <- test_pknca_res
+    modified <- clean_res
     modified$result <- modified$result %>%
       mutate(
         exclude = ifelse(
