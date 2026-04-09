@@ -327,3 +327,4 @@ describe("calculate_ratios", {
     expect_false("PPSTRESU" %in% names(ratios_df))
   })
 })
+
