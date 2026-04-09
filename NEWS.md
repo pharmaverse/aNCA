@@ -54,6 +54,7 @@
   PPTX and HTML exports; box plot parameters are also configurable (#972)
 
 ## Bugs fixed
+* ZIP export before running NCA no longer fails with an `.htm` error page; `res_nca()` is now wrapped so the silent error is caught (#1213)
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
