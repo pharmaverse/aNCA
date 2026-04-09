@@ -87,14 +87,23 @@ run_app <- function(datapath = NULL, settings = NULL,
 
 #' Check if all dependencies required to run shiny application are installed.
 #'
-#' All core Shiny app dependencies are now listed in Imports and are guaranteed
-#' to be installed. This function only checks for optional Suggests packages
-#' that enhance the app experience but are not strictly required to start it.
+#' Reads the Imports field from DESCRIPTION and verifies each package is
+#' available. This keeps the check in sync with DESCRIPTION automatically.
 #' @noRd
 check_app_dependencies <- function() {
-  # All core app dependencies are now in Imports (installed automatically).
-  # Optional packages (haven, officer, flextable, rlistings, etc.) are checked
+  desc <- read.dcf(system.file("DESCRIPTION", package = "aNCA"), fields = "Imports")
+  deps <- trimws(unlist(strsplit(desc[1, "Imports"], ",")))
+  deps <- gsub("\\s*\\(.*\\)", "", deps) # strip version constraints
+  deps <- deps[nzchar(deps)]
 
-  # at point-of-use with requireNamespace() guards.
-  invisible(NULL)
+  missing_packages <- deps[!vapply(deps, requireNamespace, logical(1), quietly = TRUE)]
+
+  if (length(missing_packages) > 0) {
+    stop(
+      "Some packages required for the Shiny application are missing. ",
+      "You can install them by running:\n",
+      "  install.packages(c(", paste0("'", missing_packages, "'", collapse = ", "), "))",
+      call. = FALSE
+    )
+  }
 }

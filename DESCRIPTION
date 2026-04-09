@@ -33,7 +33,6 @@ Imports:
     glue,
     htmltools,
     htmlwidgets,
-    later,
     logger,
     magrittr,
     PKNCA (>= 0.12.1),
