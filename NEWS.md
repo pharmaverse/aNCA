@@ -2,6 +2,11 @@
 
 ## Features added
 
+* `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
+* Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
+* Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
+* Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (#1103)
+* Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (#1156)
 * Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
 * Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)
 * General Exclusions: "Excl. TLG" checkbox per exclusion entry sets PKSUM1F to "Y", filtering those rows from TLGs (#1018)
@@ -41,12 +46,16 @@
 * Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
 * Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
 * Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
-* Help buttons have been included/updated for most App sections: `Parameter Selection`, `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
+* Help buttons have been included/updated for most App sections: `Parameter Selection`,
+  `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
 * Removed `methods`, `scales`, and `stringr` from package dependencies, replacing all usages with base R equivalents (#1108)
 * SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
-
+* Export modal now allows users to select which slide sections (mean plots, statistics,
+  line plots, box plots, individual plots/parameters, additional analysis) to include in
+  PPTX and HTML exports; box plot parameters are also configurable (#972)
 
 ## Bugs fixed
+* SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
@@ -66,7 +75,10 @@ identify difference between missing and not requested (#934)
 * Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
 * Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
 * Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
+* All Results input widgets now shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1146)
 * Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1148)
+* Fixed `PKNCA_update_data_object` custom units table join using hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys, which failed when the units table included group columns like `PARAM` or `PCSPEC` (#1159)
+* Fixed `DOSNOA` computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1` instead of `DOSNOA=2`, leading to incorrect dose time matching (#1116)
 
 # aNCA 0.1.0
 

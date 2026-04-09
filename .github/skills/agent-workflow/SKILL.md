@@ -145,6 +145,14 @@ Agent will:
 
 ## Guidelines
 
+### Code Principles
+
+Agents should follow the principles in `AGENTS.md` during development and review:
+
+- **Simplicity:** Avoid unnecessary nesting and abstraction. Write the minimum code needed.
+- **Code reuse:** Search all files in `R/` and `inst/shiny/functions/` for existing helpers before writing new code.
+- **CSS/SCSS:** Edit both `.scss` source and `main.css` (agents cannot run the compile script).
+
 ### Be Specific
 
 - Always provide PR/issue numbers: "Review PR #123"
@@ -183,6 +191,5 @@ Agent will:
 
 ## References
 
-- `AGENTS.md` — Full development guidelines
-- `.github/copilot-instructions.md` — Repository-wide conventions
-- `.github/agents/` — Custom agent profiles
+- `AGENTS.md` — Single source of truth for all guidelines
+- `.github/agents/` — Role-specific agent profiles

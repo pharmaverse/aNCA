@@ -23,6 +23,7 @@ How to test features not covered by unit tests.
 - [ ] Package version is incremented
 - [ ] R script works with the new implementation (if applicable)
 - [ ] Settings upload works with the new implementation (if applicable)
+- [ ] If any `.scss` change was done, run `data-raw/compile_css.R`
 
 ## Notes to reviewer
 

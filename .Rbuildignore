@@ -8,6 +8,7 @@
 ^pkgdown/
 ^dev/
 ^\.lintr$
+^\.devcontainer$
 ^\.github/
 ^LICENSE\.md$
 ^\.covrignore$
