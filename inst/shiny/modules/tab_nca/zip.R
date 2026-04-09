@@ -658,7 +658,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     }
     items$extras            <- TREE_LIST$extras
   } else {
-    items$extras <- TREE_LIST$extras[c("settings_file", "session_info")]
+    items$extras <- TREE_LIST$extras[c("settings_file", "session_info", "session_log")]
   }
 
   items
@@ -693,7 +693,8 @@ TREE_LIST <- list(
     results_slides = "",
     r_script = "",
     settings_file = "",
-    session_info = ""
+    session_info = "",
+    session_log = ""
   )
 )
 
