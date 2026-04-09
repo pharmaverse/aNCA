@@ -462,6 +462,9 @@ calculate_ratio_app <- function(
 #'
 #' For non-interval parameters, all rows are kept. For interval parameters,
 #' only rows matching the base PPTESTCD and the specific start/end are retained.
+#' Uses `start_dose`/`end_dose` (dose-relative times) when available, since
+#' `int_parameters` defines intervals relative to dose time. Falls back to
+#' absolute `start`/`end` when dose-relative columns are absent.
 #'
 #' @param result_data Data.frame of PKNCA results.
 #' @param test_parsed Parsed test parameter (from parse_interval_parameter).
@@ -469,15 +472,23 @@ calculate_ratio_app <- function(
 #' @returns Filtered data.frame.
 #' @noRd
 .filter_interval_results <- function(result_data, test_parsed, ref_parsed) {
-  # Remove rows for the same base PPTESTCD but different start/end
+  # Use dose-relative times when available (int_parameters defines relative offsets)
+  has_dose_cols <- all(c("start_dose", "end_dose") %in% names(result_data))
+  start_col <- if (has_dose_cols) result_data$start_dose else result_data$start
+  end_col <- if (has_dose_cols) result_data$end_dose else result_data$end
+
+  # Remove rows for the same base PPTESTCD but different interval
   if (test_parsed$is_interval) {
     other_intervals <- result_data$PPTESTCD == test_parsed$base &
-      !(result_data$start == test_parsed$start & result_data$end == test_parsed$end)
+      !(start_col == test_parsed$start & end_col == test_parsed$end)
     result_data <- result_data[!other_intervals, , drop = FALSE]
   }
   if (ref_parsed$is_interval) {
+    # Recompute columns after potential test filtering
+    start_col <- if (has_dose_cols) result_data$start_dose else result_data$start
+    end_col <- if (has_dose_cols) result_data$end_dose else result_data$end
     other_intervals <- result_data$PPTESTCD == ref_parsed$base &
-      !(result_data$start == ref_parsed$start & result_data$end == ref_parsed$end)
+      !(start_col == ref_parsed$start & end_col == ref_parsed$end)
     result_data <- result_data[!other_intervals, , drop = FALSE]
   }
   result_data
