@@ -322,7 +322,7 @@ calculate_table_ratios <- function(res, ratio_table) {
 #' @returns A list with `base` (character), `start` (numeric), `end` (numeric),
 #'   and `is_interval` (logical). When `is_interval` is FALSE, `start` and `end`
 #'   are NULL.
-#' @keywords internal
+#' @noRd
 parse_interval_parameter <- function(param) {
   m <- regmatches(param, regexec("^(.+)_(\\d+\\.?\\d*)-(\\d+\\.?\\d*)$", param))[[1]]
   if (length(m) == 4) {
@@ -467,7 +467,7 @@ calculate_ratio_app <- function(
 #' @param test_parsed Parsed test parameter (from parse_interval_parameter).
 #' @param ref_parsed Parsed ref parameter (from parse_interval_parameter).
 #' @returns Filtered data.frame.
-#' @keywords internal
+#' @noRd
 .filter_interval_results <- function(result_data, test_parsed, ref_parsed) {
   # Remove rows for the same base PPTESTCD but different start/end
   if (test_parsed$is_interval) {
