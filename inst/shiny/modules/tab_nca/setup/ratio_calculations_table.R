@@ -108,7 +108,7 @@ ratios_table_server <- function(
     })
 
     ratio_param_options <- reactive({
-      adnca_data()$intervals %>%
+      main_params <- adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         filter(type_interval == "main") %>%
         select(
@@ -121,6 +121,10 @@ ratios_table_server <- function(
         names() %>%
         purrr::keep(~ grepl("^(auc[itl\\.]|cmax|ae)", ., ignore.case = TRUE)) %>%
         translate_terms("PKNCA", "PPTESTCD")
+
+      # Append interval parameters with range suffix (e.g. AUCINT_0-20)
+      interval_params <- .build_interval_param_options(int_parameters())
+      unique(c(main_params, interval_params))
     })
 
     # Table columns
@@ -329,6 +333,21 @@ ratios_table_server <- function(
     # Return the table as a reactive
     ratio_table
   })
+}
+
+# Build interval parameter options with range suffix from int_parameters table.
+# Rows with NA start/end are excluded since they represent incomplete definitions.
+# Returns e.g. c("AUCINT_0-20", "AUCINT_0-30").
+.build_interval_param_options <- function(int_params) {
+  if (is.null(int_params) || nrow(int_params) == 0) {
+    return(character(0))
+  }
+  complete <- !is.na(int_params$start_auc) & !is.na(int_params$end_auc)
+  if (!any(complete)) {
+    return(character(0))
+  }
+  int_params <- int_params[complete, , drop = FALSE]
+  paste0(int_params$parameter, "_", int_params$start_auc, "-", int_params$end_auc)
 }
 
 # Build reference options from ratio group columns.
