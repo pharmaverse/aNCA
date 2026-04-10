@@ -2,6 +2,7 @@ settings:
   method: lin up/log down
   data_imputation:
     impute_c0: yes
+    blq_strategy: No BLQ handling
     blq_imputation_rule:
       first: keep
       middle: keep

@@ -3,6 +3,7 @@ settings:
   bioavailability: f_aucinf.obs
   data_imputation:
     impute_c0: yes
+    blq_strategy: No BLQ handling
     blq_imputation_rule:
       first: keep
       middle: keep
