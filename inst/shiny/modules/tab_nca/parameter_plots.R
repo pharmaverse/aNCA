@@ -31,6 +31,11 @@ parameter_plots_ui <- function(id) {
         value = TRUE,
         onLabel = "Boxplot",
         offLabel = "Violinplot"
+      ),
+      checkboxInput(
+        inputId = ns("show_excluded"),
+        label = "Show excluded points (\u2717)",
+        value = FALSE
       )
     ),
     plotlyOutput(ns("boxplot"))
@@ -48,12 +53,7 @@ parameter_plots_server <- function(id, res_nca) {
     observeEvent(res_nca(), {
       # Rename manual interval parameters to include the range suffix
       # (e.g. AUCINT -> AUCINT_0-12) so each interval appears as a distinct choice
-      result_data <- res_nca()$result %>%
-        mutate(PPTESTCD = ifelse(
-          type_interval == "manual",
-          paste0(PPTESTCD, "_", start, "-", end),
-          PPTESTCD
-        ))
+      result_data <- rename_interval_params(res_nca()$result)
       param_choices <- unique(result_data$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
@@ -146,6 +146,7 @@ parameter_plots_server <- function(id, res_nca) {
         varvalstofilter = input$selected_filters_boxplot,
         tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
         box = input$violinplot_toggle_switch,
+        show_excluded = input$show_excluded
       )
     })
 
