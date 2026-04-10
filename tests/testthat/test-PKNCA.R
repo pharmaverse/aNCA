@@ -534,18 +534,6 @@ describe("add_exclusion_reasons", {
         REASON = "Manual Outlier" # Required for line 296
       )
       # has error, TODO if this df is chosen
-      if (FALSE) {
-        rules <- data.frame(
-          STUDYID = rep("STUDY001", 2),
-          USUBJID = rep("SUBJ001", 2),
-          PARAM = rep("AnalyteA", 2),
-          PCSPEC = rep("Plasma", 2),
-          DOSETRT = rep("DrugA", 2),
-          TYPE = c("Exclusion", "Selection"),
-          RANGE = c("1:2", "4, 6:8"), # Covers single points AND ranges
-          REASON = c("Bad injection", "Best points")
-        )
-      }
       updated <- PKNCA_update_data_object(
         adnca_data = pknca_data,
         method = "lin up log down",
