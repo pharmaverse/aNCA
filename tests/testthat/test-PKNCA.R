@@ -314,6 +314,31 @@ describe("PKNCA_update_data_object", {
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
   })
 
+  it("uses default min.hl.points of 3 when not specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE
+    )
+    expect_equal(updated_data$options$min.hl.points, 3)
+  })
+
+  it("sets custom min.hl.points when specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE,
+      min_hl_points = 5
+    )
+    expect_equal(updated_data$options$min.hl.points, 5)
+  })
+
   it("calls update_main_intervals internally when parameter_selections is provided", {
     # study_types_df is derived internally via detect_study_types().
     # simple_data has ADOSEDUR=0.5 (infusion) and single dose -> "Single IV Infusion"
@@ -341,6 +366,81 @@ describe("PKNCA_update_data_object", {
 
   it("applies custom_units_table when provided", {
     custom_units <- data.frame(
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      custom_units_table = custom_units
+    )
+    cmax_row <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                     updated_data$units$PPORRESU == "ng/mL", ]
+    expect_equal(nrow(cmax_row), 1)
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+  })
+
+  it("applies custom_units_table correctly when units table has group columns", {
+    # Inject a PARAM-grouped units table into ma_data to simulate the scenario
+    # where different analytes have different units (e.g. from PKNCA_build_units_table
+    # when PARAM is the minimal grouping column).
+    ma_analytes <- unique(multiple_data$PARAM)
+    ma_dosnos <- unique(multiple_data$ATPTREF)
+    ma_pcspecs <- unique(multiple_data$PCSPEC)
+
+    grouped_ma_data <- ma_data
+    grouped_ma_data$units <- rbind(
+      PKNCA::pknca_units_table(
+        concu = "ng/mL", timeu = "hr", doseu = "mg"
+      ) %>% dplyr::mutate(PARAM = "AnalyteX", PPSTRESU = PPORRESU, conversion_factor = 1),
+      PKNCA::pknca_units_table(
+        concu = "mg/mL", timeu = "hr", doseu = "mg"
+      ) %>% dplyr::mutate(PARAM = "AnalyteY", PPSTRESU = PPORRESU, conversion_factor = 1)
+    )
+
+    # Update only AnalyteX's cmax unit, leaving AnalyteY unchanged
+    custom_units <- data.frame(
+      PARAM = "AnalyteX",
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = grouped_ma_data,
+      method = method,
+      selected_analytes = ma_analytes,
+      selected_profile = ma_dosnos,
+      selected_pcspec = ma_pcspecs,
+      custom_units_table = custom_units
+    )
+
+    # AnalyteX cmax should be updated
+    cmax_x <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                   updated_data$units$PARAM == "AnalyteX", ]
+    expect_equal(nrow(cmax_x), 1)
+    expect_equal(cmax_x$PPSTRESU, "ug/mL")
+    expect_equal(cmax_x$conversion_factor, 0.001)
+
+    # AnalyteY cmax should remain unchanged (default: PPSTRESU == PPORRESU)
+    cmax_y <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                   updated_data$units$PARAM == "AnalyteY", ]
+    expect_equal(nrow(cmax_y), 1)
+    expect_equal(cmax_y$PPSTRESU, cmax_y$PPORRESU)
+    expect_equal(cmax_y$conversion_factor, 1)
+  })
+
+  it("handles custom_units_table with extra columns not in data$units", {
+    # custom_units_table may have columns (e.g. PARAM) that don't exist in
+    # data$units — these should be dropped gracefully.
+    custom_units <- data.frame(
+      PARAM = "AnalyteA",
       PPTESTCD = "cmax",
       PPORRESU = "ng/mL",
       PPSTRESU = "ug/mL",

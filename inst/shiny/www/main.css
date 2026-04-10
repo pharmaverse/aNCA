@@ -115,6 +115,11 @@ h5 {
   text-align: center;
 }
 
+.modal-footer {
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+}
+
 .modal-intro {
   font-family: "Arial";
   /* Elegant font type for intro text */
@@ -490,6 +495,18 @@ div[data-value="Settings"] > div.row a {
 .slope-selector-module .inline-select-input > div {
   width: 5em !important;
   text-align: left !important;
+}
+
+.slope-selector-module .slope-selector-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2em;
+  margin: 2em 0;
+  color: #a7a7a7;
+  font-style: italic;
+  text-align: center;
 }
 
 .slope-selector-module .slope-plots-container {

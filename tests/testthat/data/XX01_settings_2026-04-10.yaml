@@ -1,0 +1,193 @@
+current:
+  comment: dup
+  datetime: 2026-04-10T10:54:04
+  dataset: test-duplicate-ADNCA.csv
+  anca_version: 0.1.0.9138
+  tab: nca
+  settings:
+    analyte: Analyte01
+    profile: DOSE 1
+    pcspec: SERUM
+    method: lin up/log down
+    min_hl_points: 3
+    bioavailability: ~
+    data_imputation:
+      impute_c0: yes
+      blq_imputation_rule:
+        first: keep
+        middle: keep
+        last: keep
+    int_parameters:
+      parameter:
+      - AUCINT
+      - AUCINT
+      start_auc:
+      - .na.real
+      - .na.real
+      end_auc:
+      - .na.real
+      - .na.real
+    flags:
+      R2ADJ:
+        is.checked: yes
+        threshold: 0.7
+      R2:
+        is.checked: no
+        threshold: 0.7
+      AUCPEO:
+        is.checked: yes
+        threshold: 20
+      AUCPEP:
+        is.checked: yes
+        threshold: 20
+      LAMZSPN:
+        is.checked: yes
+        threshold: 2
+    units: ~
+    general_exclusions: []
+    parameters:
+      selections:
+        Multiple IV Infusion:
+        - adj.r.squared
+        - auclast
+        - auclast.dn
+        - clast.obs
+        - clast.obs.dn
+        - cmax
+        - cmax.dn
+        - half.life
+        - lambda.z
+        - lambda.z.n.points
+        - lambda.z.time.first
+        - r.squared
+        - span.ratio
+        - tlast
+        - tmax
+        - vss.obs
+      types_df:
+        USUBJID:
+        - '11101'
+        - '11102'
+        - '11103'
+        - '11104'
+        - '11105'
+        - '11106'
+        - '11107'
+        - '11108'
+        - '11109'
+        - '11110'
+        - '11111'
+        - '11112'
+        - '11201'
+        - '11202'
+        - '11203'
+        - '11204'
+        - '11301'
+        - '11302'
+        - '25101'
+        - '25102'
+        - '25103'
+        - '25104'
+        - '25201'
+        std_route:
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        - intravascular
+        type:
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+        - Multiple IV Infusion
+    ratio_table:
+      TestParameter: []
+      RefParameter: []
+      RefGroups: []
+      TestGroups: []
+      AggregateSubject: []
+      AdjustingFactor: []
+      PPTESTCD: []
+  mapping:
+    STUDYID: STUDYID
+    USUBJID: USUBJID
+    ATPTREF: ATPTREF
+    PARAM: PARAM
+    Metabolites: ~
+    PCSPEC: PCSPEC
+    AVAL: AVAL
+    ROUTE: ROUTE
+    DOSETRT: DRUG
+    DOSEA: DOSEA
+    AFRLT: AFRLT
+    ARRLT: ARRLT
+    NFRLT: NFRLT
+    NRRLT: NRRLT
+    AVALU: AVALU
+    RRLTU: RRLTU
+    DOSEU: DOSEU
+    Grouping_Variables:
+    - TRT01A
+    - TRT01P
+    - RACE
+    - SEX
+    AEFRLT: AFRLT
+    ADOSEDUR: ADOSEDUR
+    WTBL: WTBL
+    WTBLU: WTBLU
+    TRTRINT: TAU
+  slope_rules:
+    STUDYID: []
+    PCSPEC: []
+    DOSETRT: []
+    USUBJID: []
+    PARAM: []
+    TYPE: []
+    RANGE: []
+    REASON: []
+  filters: ~
+  time_duplicate_keys:
+    AFRLT: 73.08
+    STUDYID: XX01
+    PCSPEC: SERUM
+    DOSETRT: Analyte01
+    USUBJID: '11101'
+    PARAM: Analyte01
+    AVAL: .na.real

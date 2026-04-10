@@ -65,6 +65,17 @@ settings_ui <- function(id) {
             )
           ),
           column(
+            4,
+            numericInput(
+              ns("min_hl_points"),
+              "Min. Points for Half-life:",
+              value = 3,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          ),
+          column(
             4, # pickerinput only enabled when IV and EX data present
             shinyjs::hidden(
               div(
@@ -159,6 +170,34 @@ settings_ui <- function(id) {
       ),
       accordion_panel(
         title = "Flag Rule Sets",
+        fluidRow(
+          column(
+            width = 10
+          ),
+          column(
+            width = 2,
+            dropdown(
+              div(
+                tags$h2("Flag Rule Sets Help"),
+                p(
+                  "Flag rules define quality thresholds for NCA results.",
+                  "Parameters that violate a checked rule are flagged in the",
+                  "results table and excluded from descriptive statistics."
+                ),
+                p(
+                  "Each checked rule also generates criterion columns",
+                  "(CRITy / CRITyFL) and a summary analysis flag (PPSUMFL)",
+                  "in the ADPP dataset."
+                )
+              ),
+              style = "unite",
+              right = TRUE,
+              icon = icon("question"),
+              status = "primary",
+              width = "400px"
+            )
+          )
+        ),
         .rule_input(
           ns("R2ADJ"), "R2ADJ >=", 0.7, 0.05, 0, 1,
           tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
@@ -193,7 +232,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     conc_data <- reactive(adnca_data()$conc$data)
 
     # Modules for Data Imputation
-    data_imputation <- data_imputation_server("data_imputation")
+    data_imputation <- data_imputation_server("data_imputation", settings_override)
 
     # File Upload Handling
     observeEvent(c(data(), settings_override()), {
@@ -324,6 +363,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEO_threshold", max = 100, min = 0, lab = "AUCPEO")
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
+    limit_input_value(input, session, "min_hl_points", max = 10, min = 2, lab = "Min. HL Points")
 
     # Reactive value to store the partial intervals data table
     # Define the parameters that can be used for partial area calculations
@@ -412,9 +452,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         profile = input$select_profile,
         pcspec = input$select_pcspec,
         method = input$method,
+        min_hl_points = input$min_hl_points,
         bioavailability = input$bioavailability,
         data_imputation = list(
           impute_c0 = data_imputation$should_impute_c0(),
+          blq_strategy = data_imputation$blq_strategy(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
         int_parameters = int_parameters(),
@@ -531,6 +573,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
                                          int_parameters, refresh_reactable) {
   updateSelectInput(session, inputId = "method", selected = settings$method)
 
+  if (!is.null(settings$min_hl_points)) {
+    updateNumericInput(
+      session, inputId = "min_hl_points",
+      value = settings$min_hl_points
+    )
+  }
+
   dose_routes <- unique(adnca_data()$dose$data$std_route)
   if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
     updateSelectInput(
@@ -539,7 +588,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     )
   }
 
-  update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+  # Data imputation is restored by data_imputation_server via settings_override
 
   if (!is.null(settings$int_parameters)) {
     int_parameters(settings$int_parameters)

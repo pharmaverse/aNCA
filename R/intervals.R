@@ -145,7 +145,8 @@ format_pkncadata_intervals <- function(pknca_conc,
   conc_data <- data$conc$data
   conc_groups <- group_vars(data$conc)
   dose_groups <- group_vars(data$dose)
-  groups <- intersect(dose_groups, conc_groups)
+  # Use union of conc and dose groups (to include PCSPEC for excretion detection)
+  groups <- unique(c(conc_groups, dose_groups))
   groups <- groups[vapply(groups, function(col) {
     !is.null(col) && length(unique(conc_data[[col]])) > 1
   }, logical(1))]
@@ -218,6 +219,7 @@ update_main_intervals <- function(
   impute = TRUE,
   blq_imputation_rule = NULL
 ) {
+
   if (is.null(parameter_selections)) parameter_selections <- list()
   if (is.null(int_parameters)) {
     int_parameters <- data.frame(

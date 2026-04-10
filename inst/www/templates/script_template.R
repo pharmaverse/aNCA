@@ -41,6 +41,7 @@ pknca_obj <- adnca_data %>%
     exclusion_list = settings_list$settings$general_exclusions,
     hl_adj_rules = slope_rules,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE")),
+    min_hl_points = settings_list$settings$min_hl_points %||% 3,
     parameter_selections = parameters_selected_per_study,
     int_parameters = int_parameters,
     custom_units_table = units_table
@@ -79,8 +80,20 @@ pknca_res <- pknca_obj %>%
   remove_pp_not_requested()
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
+
+# Build flag rule exclusion messages for ADPP CRITy/CRITyFL/PPSUMFL columns
+flag_operators <- c(R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < ")
+checked_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
+flag_rule_msgs <- if (length(checked_flags) > 0) {
+  vapply(names(checked_flags), function(nm) {
+    paste0(nm, flag_operators[nm], checked_flags[[nm]]$threshold)
+  }, character(1), USE.NAMES = FALSE)
+} else {
+  NULL
+}
+
 cdisc_datasets <- pknca_res %>%
-  export_cdisc(grouping_vars = extra_vars_to_keep)
+  export_cdisc(grouping_vars = extra_vars_to_keep, flag_rules = flag_rule_msgs)
 
 pivoted_results <- pivot_wider_pknca_results(
   myres = pknca_res,

@@ -11,6 +11,9 @@
 #' @param res_nca Object with results of the NCA analysis.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
+#' @param flag_rules Character vector of flag rule exclusion messages applied during NCA
+#'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). Each entry generates a CRITy/CRITyFL
+#'   column pair in ADPP, plus PPSUMFL and PPSUMRSN columns. Defaults to `NULL` (no flags).
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -23,7 +26,7 @@
 #' @import dplyr
 #' @importFrom formatters `var_labels<-`
 #' @export
-export_cdisc <- function(res_nca, grouping_vars = character(0)) {
+export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NULL) {
   # Define the CDISC columns we need and its rules using the metadata_nca_variables object
   CDISC_COLS <- metadata_nca_variables %>%
     filter(Dataset %in% c("ADNCA", "ADPP", "PP")) %>%
@@ -161,7 +164,8 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
     ungroup() %>%
 
     # Select only columns needed for PP, ADPP, ADNCA
-    select(any_of(c(metadata_nca_variables[["Variable"]], grouping_vars))) %>%
+    # Keep "exclude" for ADPP flag derivation; it is dropped later
+    select(any_of(c(metadata_nca_variables[["Variable"]], "exclude", grouping_vars))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
@@ -211,7 +215,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
     )
 
   adpp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable, grouping_vars))) %>%
+    select(any_of(c(CDISC_COLS$ADPP$Variable, "exclude", grouping_vars))) %>%
     # Deselect permitted columns with only NAs
     select(
       -which(
@@ -219,7 +223,10 @@ export_cdisc <- function(res_nca, grouping_vars = character(0)) {
           sapply(., function(x) all(is.na(x))) &
           !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
       )
-    )
+    ) %>%
+    # Add CRITy/CRITyFL flags and PPSUMFL/PPSUMRSN based on flag rules
+    .add_crit_flags(flag_rules) %>%
+    select(-any_of("exclude"))
 
   adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
@@ -510,4 +517,51 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   # Remove the original exclusion column and return the output
   data %>%
     select(-!!sym(nca_excl_colname))
+}
+
+#' Add CRITy/CRITyFL and PPSUMFL/PPSUMRSN columns to ADPP
+#'
+#' For each flag rule message, creates a CRITy column (criterion description)
+#' and CRITyFL column ("Y" if satisfied, "N" if violated) by grepping the
+#' `exclude` column. PPSUMFL is "Y" when all criteria are satisfied.
+#'
+#' @param data A data.frame with an `exclude` column from PKNCA results.
+#' @param flag_rules Character vector of exclusion messages applied during NCA
+#'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). If `NULL` or empty, returns
+#'   data unchanged.
+#' @returns The input data with CRITy, CRITyFL, PPSUMFL, and PPSUMRSN columns added.
+#' @noRd
+#' @keywords internal
+.add_crit_flags <- function(data, flag_rules) {
+  if (is.null(flag_rules) || length(flag_rules) == 0) {
+    return(data)
+  }
+
+  exclude_vals <- data[["exclude"]]
+  # Treat NA as no exclusion
+  exclude_vals[is.na(exclude_vals)] <- ""
+
+  for (i in seq_along(flag_rules)) {
+    rule_msg <- flag_rules[i]
+    crit_col <- paste0("CRIT", i)
+    critfl_col <- paste0("CRIT", i, "FL")
+
+    # CRITy: the criterion description (constant for all rows)
+    data[[crit_col]] <- rule_msg
+
+    # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
+    # Split on "; " (PKNCA separator) and do exact element matching to avoid
+    # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
+    is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
+      rule_msg %in% parts
+    }, logical(1))
+    data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
+  }
+
+  # PPSUMFL/PPSUMRSN: derived directly from whether exclude is populated
+  has_exclusions <- exclude_vals != ""
+  data[["PPSUMFL"]] <- ifelse(has_exclusions, "Y", "")
+  data[["PPSUMRSN"]] <- exclude_vals
+
+  data
 }
