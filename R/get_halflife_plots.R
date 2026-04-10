@@ -221,7 +221,6 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     }
   }
   # pk.nca() with units can return 0-row results containing PPSTRES but not
-
   # PPORRES. Ensure PPORRES exists so as.data.frame(out_format="wide") works.
   if (!"PPORRES" %in% names(o_nca$result)) {
     o_nca$result$PPORRES <- o_nca$result$PPSTRES
@@ -238,6 +237,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 
   # If no half-life results were produced (e.g. no conc data in interval range),
   # return an empty data frame so callers get zero plots instead of a merge error.
+  # NOTE: the returned frame lacks NCA columns (lambda.z, adj.r.squared, etc.);
+  # the nrow(d_conc_with_res) == 0 guard in get_halflife_plots handles this.
   if (nrow(wide_output$result) == 0) {
     conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
                           timeu_col, concu_col, exclude_hl_col, "ROWID")
