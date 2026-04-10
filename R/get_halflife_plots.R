@@ -255,6 +255,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
                         timeu_col, concu_col, exclude_hl_col, "ROWID")
   merge_by <- c(group_vars(pknca_data))
   extra <- intersect(extra_vars, names(pknca_data$conc$data))
+  extra <- intersect(extra, names(wide_output))
   conc_select_cols <- c(conc_select_cols, extra)
   merge_by <- c(merge_by, extra)
 
