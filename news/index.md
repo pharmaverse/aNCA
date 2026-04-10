@@ -231,6 +231,14 @@
   interval parameter with its range suffix (e.g. `AUCINT_0-12`,
   `CAVGINT_0-24`) instead of collapsing them into a single entry
   ([\#1148](https://github.com/pharmaverse/aNCA/issues/1148))
+- Manual interval parameter renaming now uses dose-relative times
+  (`start_dose`/`end_dose`) consistently across descriptive statistics,
+  parameter plots, and boxplots, matching `pivot_wider_pknca_results`
+  ([\#1169](https://github.com/pharmaverse/aNCA/issues/1169))
+- Descriptive statistics parameter columns are now correctly displayed
+  when using the `selector_label` widget, and duplicate rows from the
+  concentration data join are deduplicated
+  ([\#1169](https://github.com/pharmaverse/aNCA/issues/1169))
 - Fixed `PKNCA_update_data_object` custom units table join using
   hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys,
   which failed when the units table included group columns like `PARAM`
