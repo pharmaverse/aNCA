@@ -383,41 +383,43 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       )
     })
 
-    # Apply imported time duplicate keys from settings once when loaded.
-    # Matches stored keys against the current dataset to recover row indices.
-    observeEvent(imported_mapping()$time_duplicate_keys, {
-      keys_df <- imported_mapping()$time_duplicate_keys
-      if (is.null(keys_df) || nrow(keys_df) == 0) return()
-      # Only apply if no manual resolution has happened yet
-      if (!is.null(resolved_time_duplicate_rows())) return()
-      req(mapped_data())
-
-      matched_indices <- match_time_dup_keys(mapped_data(), keys_df)
-      n_stored <- nrow(keys_df)
-      n_matched <- length(matched_indices %||% integer(0))
-      if (n_matched < n_stored) {
-        showNotification(
-          sprintf(
-            paste(
-              "%d of %d stored duplicate exclusions could not be",
-              "matched to the current dataset."
-            ),
-            n_stored - n_matched, n_stored
-          ),
-          type = "warning",
-          duration = 10
-        )
-      }
-      if (!is.null(matched_indices)) {
-        resolved_time_duplicate_rows(matched_indices)
-      }
-    }, ignoreNULL = TRUE, once = FALSE)
-
     processed_data <- reactive({
       req(mapped_data())
+
+      # On first run, if settings contain stored keys, match them against
+      # the current dataset to recover row indices synchronously before
+      # annotate_duplicates() runs. Must be inline to avoid a race with
+      # the reactive flush cycle.
+      dup_rows <- resolved_time_duplicate_rows()
+      if (is.null(dup_rows)) {
+        keys_df <- imported_mapping()$time_duplicate_keys
+        if (!is.null(keys_df) && nrow(keys_df) > 0) {
+          matched_indices <- match_time_dup_keys(mapped_data(), keys_df)
+          n_stored <- nrow(keys_df)
+          n_matched <- length(matched_indices %||% integer(0))
+          if (n_matched < n_stored) {
+            showNotification(
+              sprintf(
+                paste(
+                  "%d of %d stored duplicate exclusions could not be",
+                  "matched to the current dataset."
+                ),
+                n_stored - n_matched, n_stored
+              ),
+              type = "warning",
+              duration = 10
+            )
+          }
+          if (!is.null(matched_indices)) {
+            resolved_time_duplicate_rows(matched_indices)
+            dup_rows <- matched_indices
+          }
+        }
+      }
+
       tryCatch(
         {
-          result <- annotate_duplicates(mapped_data(), resolved_time_duplicate_rows())
+          result <- annotate_duplicates(mapped_data(), dup_rows)
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
