@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
+
 ## Features added
 
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
