@@ -9,7 +9,7 @@ parameter, and dose information."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9143</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9144</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,8 @@ parameter, and dose information.</p>
 <span>  labels_df <span class="op">=</span> <span class="va">metadata_nca_variables</span>,</span>
 <span>  box <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  plotly <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  show_excluded <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -129,6 +130,12 @@ or ggplot otherwise (FALSE)</p></dd>
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>An integer value to set the seed for reproducibility of jittering.
 Default (NULL) will use the current R seed.</p></dd>
+
+
+<dt id="arg-show-excluded">show_excluded<a class="anchor" aria-label="anchor" href="#arg-show-excluded"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, excluded records (those with a populated
+<code>exclude</code> column) are overlaid as cross-shaped points. They are
+never included in box/violin statistics. Default is <code>FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

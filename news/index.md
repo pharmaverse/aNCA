@@ -20,6 +20,11 @@
   Save button in header, version selection modal on upload, version
   delete support
   ([\#1103](https://github.com/pharmaverse/aNCA/issues/1103))
+- ADPP now includes CRITy/CRITyFL columns for each checked flag rule and
+  PPSUMFL/PPSUMRSN columns indicating summary exclusion status. Flagged
+  records are excluded from descriptive statistics and parameter plot
+  statistics, with an optional toggle to overlay excluded points as
+  crosses ([\#1141](https://github.com/pharmaverse/aNCA/issues/1141))
 - Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be
   resized by dragging the left edge. Default width increased to 250px,
   left nav sidebar reduced to 150px

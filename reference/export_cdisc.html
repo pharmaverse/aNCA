@@ -9,7 +9,7 @@ Attention: All parameters that do no match pptest dataframe will be lost in this
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9143</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9144</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@ Attention: All parameters that do no match pptest dataframe will be lost in this
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">export_cdisc</span><span class="op">(</span><span class="va">res_nca</span>, grouping_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">export_cdisc</span><span class="op">(</span><span class="va">res_nca</span>, grouping_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>, flag_rules <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -81,6 +81,12 @@ Attention: All parameters that do no match pptest dataframe will be lost in this
 <dt id="arg-grouping-vars">grouping_vars<a class="anchor" aria-label="anchor" href="#arg-grouping-vars"></a></dt>
 <dd><p>Character vector of non-standard grouping variable names to include
 as additional columns in ADNCA, ADPP, and PP outputs. Defaults to <code>character(0)</code>.</p></dd>
+
+
+<dt id="arg-flag-rules">flag_rules<a class="anchor" aria-label="anchor" href="#arg-flag-rules"></a></dt>
+<dd><p>Character vector of flag rule exclusion messages applied during NCA
+(e.g., <code>c("R2ADJ &lt; 0.8", "AUCPEO &gt; 20")</code>). Each entry generates a CRITy/CRITyFL
+column pair in ADPP, plus PPSUMFL and PPSUMRSN columns. Defaults to <code>NULL</code> (no flags).</p></dd>
 
 </dl></div>
     <div class="section level2">

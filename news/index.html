@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9143</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9144</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,7 @@
 <li>Exploration sidebars: “View Exports” button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (<a href="https://github.com/pharmaverse/aNCA/issues/1137" class="external-link">#1137</a>)</li>
 <li>Added “Min. Points for Half-life” setting in NCA &gt; Settings &gt; General Settings, allowing users to configure PKNCA’s <code>min.hl.points</code> option (range 2–10, default 3) (<a href="https://github.com/pharmaverse/aNCA/issues/1155" class="external-link">#1155</a>)</li>
 <li>Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (<a href="https://github.com/pharmaverse/aNCA/issues/1103" class="external-link">#1103</a>)</li>
+<li>ADPP now includes CRITy/CRITyFL columns for each checked flag rule and PPSUMFL/PPSUMRSN columns indicating summary exclusion status. Flagged records are excluded from descriptive statistics and parameter plot statistics, with an optional toggle to overlay excluded points as crosses (<a href="https://github.com/pharmaverse/aNCA/issues/1141" class="external-link">#1141</a>)</li>
 <li>Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (<a href="https://github.com/pharmaverse/aNCA/issues/1156" class="external-link">#1156</a>)</li>
 <li>Moved <code>rlistings</code>, <code>officer</code>, and <code>flextable</code> from Imports to Suggests with user-facing notifications when missing (<a href="https://github.com/pharmaverse/aNCA/issues/1106" class="external-link">#1106</a>)</li>
 <li>Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (<a href="https://github.com/pharmaverse/aNCA/issues/1136" class="external-link">#1136</a>)</li>

@@ -7,7 +7,7 @@ pptest dataframe will be lost in this pipeline!
 ## Usage
 
 ``` r
-export_cdisc(res_nca, grouping_vars = character(0))
+export_cdisc(res_nca, grouping_vars = character(0), flag_rules = NULL)
 ```
 
 ## Arguments
@@ -21,6 +21,13 @@ export_cdisc(res_nca, grouping_vars = character(0))
   Character vector of non-standard grouping variable names to include as
   additional columns in ADNCA, ADPP, and PP outputs. Defaults to
   `character(0)`.
+
+- flag_rules:
+
+  Character vector of flag rule exclusion messages applied during NCA
+  (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). Each entry generates a
+  CRITy/CRITyFL column pair in ADPP, plus PPSUMFL and PPSUMRSN columns.
+  Defaults to `NULL` (no flags).
 
 ## Value
 

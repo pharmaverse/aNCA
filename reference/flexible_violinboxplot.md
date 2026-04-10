@@ -16,7 +16,8 @@ flexible_violinboxplot(
   labels_df = metadata_nca_variables,
   box = TRUE,
   plotly = TRUE,
-  seed = NULL
+  seed = NULL,
+  show_excluded = FALSE
 )
 ```
 
@@ -67,6 +68,12 @@ flexible_violinboxplot(
 
   An integer value to set the seed for reproducibility of jittering.
   Default (NULL) will use the current R seed.
+
+- show_excluded:
+
+  Logical. If `TRUE`, excluded records (those with a populated `exclude`
+  column) are overlaid as cross-shaped points. They are never included
+  in box/violin statistics. Default is `FALSE`.
 
 ## Value
 
