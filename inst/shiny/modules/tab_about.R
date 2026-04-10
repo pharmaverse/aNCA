@@ -202,9 +202,9 @@ tab_about_server <- function(id) {
     })
 
     # Session info — computed once per session (doesn't change at runtime)
-    session_info_text <- paste(
-      utils::capture.output(utils::sessionInfo()),
-      collapse = "\n"
+    session_info_text <- tryCatch(
+      paste(utils::capture.output(utils::sessionInfo()), collapse = "\n"),
+      error = function(e) paste("Session info unavailable:", e$message)
     )
 
     output$session_info <- renderText({
