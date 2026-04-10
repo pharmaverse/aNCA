@@ -39,6 +39,21 @@
 #' )
 #' calculate_summary_stats(data)
 
+#' Get the most frequent non-NA unit from a character vector
+#'
+#' Returns `NA_character_` when all values are `NA` or the vector is empty,
+#' so grouped `mutate()` always gets a consistent character type.
+#'
+#' @param x Character vector of unit values (may contain NAs).
+#' @returns A single character string (the mode) or `NA_character_`.
+#' @keywords internal
+#' @noRd
+.mode_unit <- function(x) {
+  counts <- table(x)
+  if (length(counts) == 0) return(NA_character_)
+  names(sort(counts, decreasing = TRUE))[1]
+}
+
 calculate_summary_stats <- function(data, input_groups = "ATPTREF") {
 
   # Return an empty data frame if the input data is empty
@@ -64,14 +79,14 @@ calculate_summary_stats <- function(data, input_groups = "ATPTREF") {
 
     # Standardize units to the most frequent one within the groups (or first otherwise)
     mutate(
-      ModeUnit = names(sort(table(PPSTRESU), decreasing = TRUE, useNA = "ifany")[1])[1]
+      ModeUnit = .mode_unit(PPSTRESU)
     ) %>%
     ungroup() %>%
     mutate(
       ModeConv_factor = get_conversion_factor(PPORRESU, ModeUnit),
       PPSTRES = PPORRES * ModeConv_factor,
       PPTESTCD = ifelse(
-        ModeUnit == "",
+        is.na(ModeUnit) | ModeUnit == "",
         PPTESTCD,
         paste0(PPTESTCD, "[", ModeUnit, "]")
       ),
