@@ -22,6 +22,8 @@ BLQ
 Buckeridge
 CDISC
 CMAX
+CRITy
+CRITyFL
 Clast
 Cmax
 Cond
@@ -69,6 +71,8 @@ PKNCAresult
 PKNCAresults
 PKSUM
 PPSTRESU
+PPSUMFL
+PPSUMRSN
 PPTEST
 PPTESTCD
 PPTX
@@ -97,6 +101,7 @@ SDTMIG
 SMS
 STUDYID
 SelectInputs
+Summarise
 TLG
 TLGs
 TMAX
@@ -137,6 +142,7 @@ dataformat
 dateTime
 datetime
 datetimes
+deduplicated
 devtools
 df
 dm

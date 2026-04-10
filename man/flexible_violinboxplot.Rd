@@ -14,7 +14,8 @@ flexible_violinboxplot(
   labels_df = metadata_nca_variables,
   box = TRUE,
   plotly = TRUE,
-  seed = NULL
+  seed = NULL,
+  show_excluded = FALSE
 )
 }
 \arguments{
@@ -43,6 +44,10 @@ or ggplot otherwise (FALSE)}
 
 \item{seed}{An integer value to set the seed for reproducibility of jittering.
 Default (NULL) will use the current R seed.}
+
+\item{show_excluded}{Logical. If \code{TRUE}, excluded records (those with a populated
+\code{exclude} column) are overlaid as cross-shaped points. They are
+never included in box/violin statistics. Default is \code{FALSE}.}
 }
 \value{
 A plotly object representing the violin or box plot.

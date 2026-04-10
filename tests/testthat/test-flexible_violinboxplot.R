@@ -370,11 +370,13 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
   })
 
   it("handles aucint parameter mutation logic", {
-    # Test specific PPTESTCD mutation logic: startsWith(PPTESTCD, "aucint")
+    # Test manual interval renaming: type_interval == "manual" triggers
+    # PPTESTCD rename using signif(start_dose)/signif(end_dose)
     res_aucint <- boxplotdata
     res_aucint$result$PPTESTCD <- "aucint.all"
-    res_aucint$result$start <- 0
-    res_aucint$result$end <- 24
+    res_aucint$result$type_interval <- "manual"
+    res_aucint$result$start_dose <- 0
+    res_aucint$result$end_dose <- 24
 
     # Filter must match the mutated name: "aucint.all_0-24"
     p <- flexible_violinboxplot(
