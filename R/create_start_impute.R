@@ -114,7 +114,7 @@ create_start_impute <- function(pknca_data) {
     ) %>%
     ungroup() %>%
     select(any_of(c("start", "end", group_vars(pknca_data), "impute",
-                     names(pknca_data$intervals), "INT_ROWID")))
+                    names(pknca_data$intervals), "INT_ROWID")))
 
   # Preserve intervals that had no matching concentration data, with impute = NA
   matched_rowids <- unique(imputed_intervals$INT_ROWID)
