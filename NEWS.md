@@ -1,10 +1,5 @@
 # aNCA (development version)
 
-## Bug fixes
-
-* Fixed custom unit conversions being silently discarded in NCA results — unit-adjusted values are now correctly passed through to the results table (#1199)
-* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
-
 ## Features added
 
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
@@ -87,6 +82,8 @@ identify difference between missing and not requested (#934)
 * Descriptive statistics parameter columns are now correctly displayed when using the `selector_label` widget, and duplicate rows from the concentration data join are deduplicated (#1169)
 * Fixed `PKNCA_update_data_object` custom units table join using hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys, which failed when the units table included group columns like `PARAM` or `PCSPEC` (#1159)
 * Fixed `DOSNOA` computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1` instead of `DOSNOA=2`, leading to incorrect dose time matching (#1116)
+* Fixed custom unit conversions being silently discarded in NCA results — unit-adjusted values are now correctly passed through to the results table (#1199)
+* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
 
 # aNCA 0.1.0
 
