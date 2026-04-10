@@ -2,6 +2,12 @@
 
 ## aNCA (development version)
 
+### Bug fixes
+
+- Fixed “Summarise by” selector in Matrix Ratios having no effect due to
+  input ID mismatch (`summarygroups` vs `summary_groups`)
+  ([\#1198](https://github.com/pharmaverse/aNCA/issues/1198))
+
 ### Features added
 
 - [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
