@@ -162,14 +162,14 @@ create_metabfl <- function(dataset, metabolites) {
 #' `"time_duplicate_error"` if unresolved time duplicates are found, with the duplicate rows
 #'   attached as `duplicate_data` in the condition.
 #'
-#' @importFrom dplyr group_by mutate ungroup cur_group_id n row_number
+#' @importFrom dplyr group_by mutate ungroup cur_group_id n row_number across all_of
 #' @keywords internal
 annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
   dataset$ROWID <- seq_len(nrow(dataset))
 
-  # Mark exact duplicates
+  # Mark exact duplicates (group by all key cols including AVAL)
   dataset <- dataset %>%
-    group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+    group_by(across(all_of(TIME_DUP_KEY_COLS))) %>%
     mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
     ungroup()
 
@@ -178,9 +178,9 @@ annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
     dataset$DTYPE[time_duplicate_rows] <- "TIME DUPLICATE"
   }
 
-  # Detect remaining time duplicates
+  # Detect remaining time duplicates (group by time-point cols, without AVAL)
   dataset <- dataset %>%
-    group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
+    group_by(across(all_of(TIME_DUP_GROUP_COLS))) %>%
     mutate(
       .is_time_dup = (n() - sum(DTYPE != "")) > 1,
       .dup_group = cur_group_id()
@@ -206,9 +206,12 @@ annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
   dataset[, !names(dataset) %in% c(".is_time_dup", ".dup_group", "ROWID")]
 }
 
-# Columns that identify a time duplicate row
-TIME_DUP_KEY_COLS <- c("AFRLT", "STUDYID", "PCSPEC", "DOSETRT", # nolint: object_name_linter
-                       "USUBJID", "PARAM", "AVAL")
+# Columns that define a time duplicate group (used in annotate_duplicates)
+TIME_DUP_GROUP_COLS <- c("AFRLT", "STUDYID", "PCSPEC", "DOSETRT", # nolint: object_name_linter
+                         "USUBJID", "PARAM")
+
+# Key columns include AVAL to distinguish rows within a group
+TIME_DUP_KEY_COLS <- c(TIME_DUP_GROUP_COLS, "AVAL") # nolint: object_name_linter
 
 #' Extract key columns for excluded time duplicate rows
 #'
@@ -225,9 +228,11 @@ TIME_DUP_KEY_COLS <- c("AFRLT", "STUDYID", "PCSPEC", "DOSETRT", # nolint: object
 #' @keywords internal
 #' @noRd
 extract_time_dup_keys <- function(dataset, row_indices) {
-  if (is.null(row_indices) || length(row_indices) == 0) return(NULL)
+  if (is.null(dataset) || is.null(row_indices) || length(row_indices) == 0) return(NULL)
   cols <- intersect(TIME_DUP_KEY_COLS, names(dataset))
-  dataset[row_indices, cols, drop = FALSE]
+  result <- dataset[row_indices, cols, drop = FALSE]
+  rownames(result) <- NULL
+  result
 }
 
 #' Match stored time duplicate keys against a dataset to recover row indices
@@ -248,7 +253,7 @@ match_time_dup_keys <- function(dataset, keys_df) {
   cols <- intersect(names(keys_df), names(dataset))
   if (length(cols) == 0) return(NULL)
 
-  # Build a match key for both sides
+  # Build a composite key for both sides
   build_key <- function(df) {
     do.call(paste, c(df[, cols, drop = FALSE], list(sep = "\x1f")))
   }
@@ -256,7 +261,18 @@ match_time_dup_keys <- function(dataset, keys_df) {
   data_keys <- build_key(dataset)
   stored_keys <- build_key(keys_df)
 
-  matched <- which(data_keys %in% stored_keys)
+  # Match each stored key to at most one dataset row (first occurrence)
+  # to prevent over-matching when multiple rows share identical key values
+  matched <- integer(0)
+  remaining_indices <- seq_along(data_keys)
+  for (sk in stored_keys) {
+    hit <- remaining_indices[data_keys[remaining_indices] == sk]
+    if (length(hit) > 0) {
+      matched <- c(matched, hit[1])
+      remaining_indices <- setdiff(remaining_indices, hit[1])
+    }
+  }
+
   if (length(matched) == 0) return(NULL)
-  matched
+  sort(matched)
 }
