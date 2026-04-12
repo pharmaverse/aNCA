@@ -38,8 +38,12 @@ multiple_data <- data.frame(
   RRLTU = rep("hour", 12)
 )
 
+
+
 # Simple example dataset
 pknca_data <- PKNCA_create_data_object(simple_data)
+
+reset <-  function() PKNCA_create_data_object(simple_data)
 
 # ToDo (Gerardo): refine PKNCA_create_data_object ----
 #                 to make less implicit column assumptions
@@ -710,6 +714,7 @@ describe("add_exclusion_reasons", {
 # ---  new, from code coverage
 
  describe("PKNCA_hl_rules_exclusion coverage", {
+    pknca_data <- reset()
     it("covers the else branch for non-AUCPE parameters (Lines 720-728)", {
       # Create NCA results first
       res <- PKNCA_calculate_nca(pknca_data)
