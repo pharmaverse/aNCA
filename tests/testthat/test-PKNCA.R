@@ -502,7 +502,7 @@ describe("add_exclusion_reasons", {
     pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
     expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
   })
-  #  Following are GEMINI created:
+  #  --- BLQ 1 
   describe("PKNCA_calculate_nca BLQ Imputation", {
     it("triggers BLQ imputation logic when blq_rule is provided", {
       # Define a rule: first BLQ is 0, middle is dropped, last is 0
@@ -518,6 +518,7 @@ describe("add_exclusion_reasons", {
       expect_false(exists("PKNCA_impute_method_blq", envir = as.environment(1)))
     })
   })
+  # --- BLQ 2 
   describe("PKNCA_update_data_object Rules Branch", {
     it("hits the update_pknca_with_rules branch (Line 287)", {
       # The string MUST contain a colon ':' to satisfy the split on line 280
@@ -552,39 +553,7 @@ describe("add_exclusion_reasons", {
       expect_true(any(updated$conc$data$exclude_half.life))
     })
   })
-  ##
-  # 1. GEMINI:   Close BLQ and on.exit (Lines 343–374)
-  #
-  # The ! marks on these lines exist because we haven't passed a blq_rule
-  # that actually gets used. We need to provide a rule and data that
-  # contains a 0 or a value below the limit to trigger the
-  # internal .assign_global function.
-  ##
-  describe("PKNCA_calculate_nca Coverage Gaps", {
-    it("covers BLQ imputation and global variable cleanup (Lines 343-374)", {
-      # 1. Create data with a BLQ (0)
-      # <----------------------------------- jr changed
-      # blq_data <- adnca_data # Use your standard mock data   #nolint
-      blq_data <- simple_data # Use your standard mock data
-      blq_data$AVAL[2] <- 0
-
-      # 2. Define a rule to trigger the logic
-      # This hits lines 343-365
-      blq_rule <- list(first = "keep", middle = "drop", last = "keep")
-
-      pknca_blq_obj <- PKNCA_create_data_object(blq_data)
-
-      # 3. Run NCA
-      # This triggers the .assign_global and the on.exit cleanup (Line 374)
-      results <- PKNCA_calculate_nca(pknca_blq_obj, blq_rule = blq_rule)
-
-      expect_s3_class(results, "PKNCAresults")
-      # Verify cleanup: global variable should be gone
-      expect_false(exists("PKNCA_impute_method_blq", envir = as.environment(1)))
-    })
-  })
-
-  ## <---------------- jr added
+  
   describe("PKNCA_impute_method_start_logslope()", {
     it("returns the original data frame when all concentrations in the window are NA", {
       conc <- c(NA, NA, NA)
@@ -598,69 +567,7 @@ describe("add_exclusion_reasons", {
       expect_true(all(is.na(result$conc)))
     })
   })
-  # PKNCA Final Coverage Push----
-  describe("PKNCA Final Coverage Push", {
-    # Helper to generate fresh data for every 'it' block
-    get_test_data <- function() {
-      data.frame(
-        STUDYID = "STUDY001",
-        PCSPEC = "Plasma",
-        ROUTE = "IV",
-        DOSETRT = "DrugA",
-        USUBJID = "SUBJ001",
-        ATPTREF = 1,
-        PARAM = "AnalyteA",
-        AVAL = c(0, 5, 10, 7, 3, 1),
-        AVALU = "ng/mL",
-        DOSEA = 100,
-        DOSEU = "mg",
-        AFRLT = c(0, 1, 2, 3, 4, 6),
-        ARRLT = c(0, 1, 2, 3, 4, 6),
-        NFRLT = c(0, 1, 2, 3, 4, 6),
-        ADOSEDUR = 0.5,
-        RRLTU = "hour"
-      )
-    }
-
-    it("covers BLQ imputation and global cleanup (Lines 343-374)", {
-      # 1. Setup BLQ data
-      blq_data <- get_test_data()
-      blq_data$AVAL[2] <- 0
-
-      # 2. Trigger BLQ branch (Lines 343-365)
-      blq_rule <- list(first = "keep", middle = "drop", last = "keep")
-      p_obj <- PKNCA_create_data_object(blq_data)
-
-      # 3. Run and trigger on.exit cleanup (Line 374)
-      res <- PKNCA_calculate_nca(p_obj, blq_rule = blq_rule)
-
-      expect_s3_class(res, "PKNCAresults")
-      expect_false(exists("PKNCA_impute_method_blq", envir = as.environment(1)))
-    })
-    # <------------ jr added this it()
-    it("covers BLQ imputation execution logic (Lines 347-365)", {
-      # 1. Setup data with a BLQ value (0)
-      blq_test_data <- simple_data
-      blq_test_data$AVAL[2] <- 0
-
-      # 2. Create the data object
-      pknca_obj <- PKNCA_create_data_object(blq_test_data)
-
-      # 3. Manually inject the 'blq' imputation requirement into the intervals
-      # This is the key to making PKNCA actually call the code on lines 347-365
-      pknca_obj$intervals$impute <- "blq"
-
-      # 4. Define a rule and run calculation
-      # Using a numeric value like 0.25 ensures clean.conc.blq is fully exercised
-      blq_rule <- list(first = "keep", middle = "drop", last = "keep")
-
-      results <- PKNCA_calculate_nca(pknca_obj, blq_rule = blq_rule)
-
-      # 5. Verify it ran without crashing
-      expect_s3_class(results, "PKNCAresults")
-    })
-  })
-
+  # --- BLQ 4
   describe("PKNCA_hl_rules_exclusion coverage", {
     it("covers the else branch for non-AUCPE parameters (Lines 720-728)", {
       # Create NCA results first
@@ -755,3 +662,4 @@ describe("remove_pp_not_requested coverage", {
   })
 # ---
 })
+
