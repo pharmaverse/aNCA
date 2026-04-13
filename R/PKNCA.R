@@ -149,7 +149,8 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
     time_end_column = time_end_column,
     rrlt_column = "ARRLT",
     route_column = route_column,
-    nca_exclude_reason_columns = nca_exclude_reason_columns
+    nca_exclude_reason_columns = nca_exclude_reason_columns,
+    dose_group_columns = c(group_columns, usubjid_column)
   ) %>%
     arrange(across(all_of(c(usubjid_column, time_column))))
 
@@ -375,10 +376,12 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   # Apply custom units table
   if (!is.null(custom_units_table)) {
+    common_cols <- intersect(names(data$units), names(custom_units_table))
+    by_cols <- setdiff(common_cols, c("PPSTRESU", "PPSTRES", "conversion_factor"))
     data$units <- rows_update(
       data$units,
-      custom_units_table,
-      by = c("PPTESTCD", "PPORRESU"),
+      custom_units_table[, common_cols, drop = FALSE],
+      by = by_cols,
       unmatched = "ignore"
     )
   }

@@ -129,6 +129,9 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
+      # Wait for study types to settle during reactive transitions
+      req(nrow(parameters_output$types_df()) > 0)
+
       # Show bioavailability widget if it is possible to calculate
       if (final_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")

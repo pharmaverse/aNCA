@@ -3,9 +3,11 @@
 #' @param id A character string specifying the module ID.
 #' @param is_mean_plot A logical value indicating whether to show options
 #'                     specific to the mean plot. Default is FALSE.
+#' @param extra_ui Optional UI elements appended at the bottom of the sidebar
+#'   (e.g. saved outputs table).
 #'
 #' @return A UI definition for the plot sidebar.
-plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
+plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
   ns <- NS(id)
 
   sidebar(
@@ -18,6 +20,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE) {
       class = "btn btn-primary btn-sm",
       width = "100%"
     ),
+    extra_ui,
     selectInput(
       ns("palette"),
       "Select Color Theme:",
