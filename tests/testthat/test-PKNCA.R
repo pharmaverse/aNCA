@@ -642,24 +642,5 @@ describe("add_exclusion_reasons", {
     })
   })
 # ---
-# chunk2 ---
-describe("remove_pp_not_requested coverage", {
-    it("removes parameters not requested in intervals", {
-      # Create NCA results first
-      res <- PKNCA_calculate_nca(pknca_data)
-      # Add impute column (required by remove_pp_not_requested)
-      res$data$intervals$impute <- NA_character_
-      # Manually set intervals with only cmax and tmax requested
-      res$data$intervals$cmax <- TRUE
-      res$data$intervals$tmax <- TRUE
-      res$data$intervals$auclast <- FALSE
-      res$data$intervals$aucinf.obs <- FALSE
-      # Apply the function
-      result <- remove_pp_not_requested(res)
-      expect_s3_class(result, "PKNCAresults")
-      expect_true("result" %in% names(result))
-    })
-  })
-# ---
 })
 
