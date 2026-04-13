@@ -137,6 +137,32 @@ describe("pivot_wider_pknca_results", {
     expect_no_error(.validate_pknca_params(pknca_res, pivoted_res))
   })
 
+  it("does not append NA to column names when PPSTRESU is NA", {
+    # Simulate a manual interval parameter (e.g., RCAMINT) where all
+    # subjects have NA results and NA units
+    res_with_na_units <- pknca_res
+    na_rows <- res_with_na_units$result %>%
+      filter(type_interval == "manual") %>%
+      slice(1:2) %>%
+      mutate(
+        PPTESTCD = "RCAMINT",
+        PPSTRESU = NA_character_,
+        PPORRESU = NA_character_,
+        PPSTRES = NA_real_,
+        PPORRES = NA_real_,
+        start_dose = 0,
+        end_dose = 20
+      )
+    res_with_na_units$result <- bind_rows(res_with_na_units$result, na_rows)
+
+    result <- pivot_wider_pknca_results(res_with_na_units)
+
+    # RCAMINT column should be named without NA suffix
+    rcamint_cols <- grep("RCAMINT", colnames(result), value = TRUE)
+    expect_true(any(grepl("^RCAMINT_0-20$", rcamint_cols)))
+    expect_false(any(grepl("NA", rcamint_cols)))
+  })
+
   it("rounds numeric values to three decimals", {
     expected_num_param_cols <- c(
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",
