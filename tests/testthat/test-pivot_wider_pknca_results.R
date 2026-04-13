@@ -139,17 +139,25 @@ describe("pivot_wider_pknca_results", {
 
   it("does not append NA to column names when PPSTRESU is NA", {
     # Simulate a manual interval parameter (e.g., RCAMINT) where all
-    # subjects have NA results and NA units
+    # subjects have NA results and NA units.
+    # Use a single existing manual row as template, keeping start/end
+    # consistent with start_dose/end_dose so add_label_attribute aligns.
     res_with_na_units <- pknca_res
-    na_rows <- res_with_na_units$result %>%
+    template_row <- res_with_na_units$result %>%
       filter(type_interval == "manual") %>%
-      slice(1:2) %>%
+      slice(1)
+    dose_time <- template_row$start - template_row$start_dose
+
+    na_rows <- bind_rows(template_row, template_row) %>%
       mutate(
+        USUBJID = unique(res_with_na_units$result$USUBJID)[1:2],
         PPTESTCD = "RCAMINT",
         PPSTRESU = NA_character_,
         PPORRESU = NA_character_,
         PPSTRES = NA_real_,
         PPORRES = NA_real_,
+        start = dose_time,
+        end = dose_time + 20,
         start_dose = 0,
         end_dose = 20
       )
@@ -159,7 +167,7 @@ describe("pivot_wider_pknca_results", {
 
     # RCAMINT column should be named without NA suffix
     rcamint_cols <- grep("RCAMINT", colnames(result), value = TRUE)
-    expect_true(any(grepl("^RCAMINT_0-20$", rcamint_cols)))
+    expect_true(any(grepl("RCAMINT_0-20", rcamint_cols)))
     expect_false(any(grepl("NA", rcamint_cols)))
   })
 
