@@ -260,6 +260,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         available_choices = profile_choices,
         override_val = settings$profile
       )
+      log_info("NCA profile selection changed: ", paste(target_profile, collapse = ", "))
       updatePickerInput(
         session, "select_profile",
         choices = profile_choices, selected = target_profile
