@@ -81,11 +81,6 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     concu_col, exclude_hl_col, title_vars
   )
 
-  # No usable results (e.g. no concentration data within interval range)
-  if (nrow(d_conc_with_res) == 0) {
-    return(list(plots = list(), data = list()))
-  }
-
   # Mark points used in half-life calculation
   info_per_plot_list <- d_conc_with_res %>%
     # Indicate plot details
@@ -236,17 +231,18 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
 
   # If no half-life results were produced (e.g. no conc data in interval range),
-  # return an empty data frame so callers get zero plots instead of a merge error.
-  # NOTE: the returned frame lacks NCA columns (lambda.z, adj.r.squared, etc.);
-  # the nrow(d_conc_with_res) == 0 guard in get_halflife_plots handles this.
+  # return a 0-row data frame with all expected columns so callers can proceed
+  # without special-casing empty results.
   if (nrow(wide_output$result) == 0) {
+    nca_cols <- c("start", "end", "lambda.z.time.first", "lambda.z.time.last",
+                  "lambda.z", "adj.r.squared", "span.ratio", "tlast", "exclude")
     conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
                           timeu_col, concu_col, exclude_hl_col, "ROWID")
-    return(
-      pknca_data$conc$data %>%
-        select(!!!syms(conc_select_cols)) %>%
-        filter(FALSE)
-    )
+    empty <- pknca_data$conc$data %>%
+      select(!!!syms(conc_select_cols)) %>%
+      filter(FALSE)
+    empty[, setdiff(nca_cols, names(empty))] <- numeric(0)
+    return(empty)
   }
 
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
