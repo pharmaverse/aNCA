@@ -4,10 +4,17 @@
 \alias{run_app}
 \title{Run the Shiny app}
 \usage{
-run_app(datapath = NULL, ...)
+run_app(datapath = NULL, settings = NULL, settings_version = 1L, ...)
 }
 \arguments{
 \item{datapath}{Full path to a single \code{.csv} or \code{.rds} data file.}
+
+\item{settings}{Full path to a \code{.yaml} settings file.}
+
+\item{settings_version}{Version selector for versioned settings files.
+Either an integer index (1 = most recent, 2 = second, etc.) or a
+character string matched against the version \code{comment} field.
+Defaults to \code{1L} (most recent). Ignored for non-versioned files.}
 
 \item{...}{Arguments passed to \code{shiny::runApp()}}
 }
@@ -26,16 +33,35 @@ the widget within the app, it will replace the initial data for the current sess
 
 If \code{datapath} is \code{NULL} (default), the app will launch without pre-loading any
 data, and a file must be uploaded manually within the app.
+
+If a \code{settings} path is provided, the app will load the settings file on
+startup and apply the saved configuration (analyte, method, units, etc.).
+The pre-loaded settings can be overwritten by uploading a new settings file.
+
+For versioned settings files (containing \code{current} and \code{previous} entries),
+the most recent version is loaded by default. Use \code{settings_version} to
+select a different version by index or comment:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{run_app(settings = "settings.yaml", settings_version = 2)
+run_app(settings = "settings.yaml", settings_version = "NCA draft")
+}\if{html}{\out{</div>}}
 }
 \examples{
-\donttest{
-  # Show the packaged example path (safe non-interactive snippet)
-  adnca_path <- system.file("shiny/data/example-ADNCA.csv", package = "aNCA")
-  adnca_path
+\dontrun{
+  # Launch the app without pre-loaded data or settings:
+  run_app()
 
-  # To actually launch the app, run interactively:
-  if (interactive()) {
-    run_app(datapath = adnca_path)
-  }
+  # Pre-load a settings file (use the full path to your YAML file):
+  run_app(settings = system.file("www/templates/clinical_template.yaml", package = "aNCA"))
+
+  # Pre-load both data and settings:
+  run_app(
+    datapath = "/path/to/adpc.csv",
+    settings = "/path/to/settings.yaml"
+  )
+
+  # Load a specific version from a versioned settings file:
+  run_app(settings = "/path/to/settings.yaml", settings_version = 2)
+  run_app(settings = "/path/to/settings.yaml", settings_version = "NCA draft")
 }
 }

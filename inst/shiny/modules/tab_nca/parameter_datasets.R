@@ -1,59 +1,44 @@
+#' Module for viewing and downloading CDISC parameter datasets (PP, ADPP, ADNCA).
+#'
+#' Renders each dataset in an interactive table with CSV/XLSX download options.
+#'
+#' @param id Module namespace ID.
+
 parameter_datasets_ui <- function(id) {
   ns <- NS(id)
   navset_pill(
-    nav_panel("PP",   reactable_ui(ns("pp_dataset"))),
-    nav_panel("ADPP", reactable_ui(ns("adpp_dataset"))),
-    nav_panel("ADNCA", reactable_ui(ns("adnca_dataset")))
+    nav_panel("PP", card(reactable_ui(ns("pp_dataset")), class = "border-0 shadow-none")),
+    nav_panel("ADPP", card(reactable_ui(ns("adpp_dataset")), class = "border-0 shadow-none")),
+    nav_panel("ADNCA", card(reactable_ui(ns("adnca_dataset")), class = "border-0 shadow-none"))
   )
 }
 
-parameter_datasets_server <- function(id, res_nca) {
+parameter_datasets_server <- function(id, res_nca, grouping_vars = reactive(character(0)),
+                                      settings = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     CDISC <- reactive({
       req(res_nca())
-
-      # Only select from results the requested parameters by the user
-      ############################################################################
-      # TODO (Gerardo): Once PKNCA non covered parameters start being covered,
-      # this can be done instead using filter_requested = TRUE
-      res_nca_req <- res_nca()
-      params_not_requested <- res_nca_req$data$intervals %>%
-        select(any_of(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))) %>%
-        # For all logical columns, mutate FALSE to NA
-        mutate(across(where(is.logical), ~ ifelse(.x, TRUE, NA))) %>%
-        # Only select column that are only NA
-        select(where(~ all(is.na(.x)))) %>%
-        names()
-      res_nca_req$result <- res_nca_req$result %>%
-        filter(!PPTESTCD %in% translate_terms(params_not_requested, "PKNCA", "PPTESTCD"))
-      ############################################################################
-
-      export_cdisc(res_nca_req)
+      flag_rules <- .build_flag_rule_messages(settings())
+      export_cdisc(res_nca(), grouping_vars = grouping_vars(), flag_rules = flag_rules)
     })
 
     reactable_server(
       "pp_dataset",
       reactive(CDISC()$pp),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_pp"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_prefix("_"), "pp")
     )
     reactable_server(
       "adpp_dataset",
       reactive(CDISC()$adpp),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_adpp"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_prefix("_"), "adpp")
     )
     reactable_server(
       "adnca_dataset",
       reactive(CDISC()$adnca),
       download_buttons = c("csv", "xlsx"),
-      file_name = function() paste0(session$userData$project_name(), "_adnca"),
-      style = list(fontSize = "0.75em"),
-      height = "68vh"
+      file_name = function() paste0(session$userData$project_prefix("_"), "adnca")
     )
 
     # Save the results in the output folder
@@ -61,4 +46,34 @@ parameter_datasets_server <- function(id, res_nca) {
       session$userData$results$CDISC <- CDISC()[c("pp", "adpp", "adnca")]
     })
   })
+}
+
+#' Build flag rule exclusion messages from settings
+#'
+#' Converts the flags list from settings (with is.checked and threshold)
+#' into the character vector of exclusion messages that PKNCA writes
+#' into the `exclude` column (e.g., "R2ADJ < 0.8").
+#'
+#' @param settings The settings list (with `$flags`). If NULL, returns NULL.
+#' @returns Character vector of flag rule messages, or NULL if no flags are checked.
+#' @noRd
+.build_flag_rule_messages <- function(settings) {
+  if (is.null(settings) || is.null(settings$flags)) {
+    return(NULL)
+  }
+
+  # Comparison operators per flag parameter (same order as in settings)
+  flag_operators <- c(
+    R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < "
+  )
+
+  checked <- purrr::keep(settings$flags, function(x) x$is.checked)
+  if (length(checked) == 0) {
+    return(NULL)
+  }
+
+  flag_names <- names(checked)
+  vapply(flag_names, function(nm) {
+    paste0(nm, flag_operators[nm], checked[[nm]]$threshold)
+  }, character(1), USE.NAMES = FALSE)
 }

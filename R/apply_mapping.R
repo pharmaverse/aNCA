@@ -1,3 +1,12 @@
+# Default column order after mapping.
+# Used as the default `desired_order` in apply_mapping().
+MAPPING_DESIRED_ORDER <- c( # nolint: object_name_linter
+  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
+  "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
+  "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
+  "VOLUME", "VOLUMEU", "WTBL", "WTBLU", "TRTRINT", "METABFL"
+)
+
 #' Apply UI-Based Column Mapping to a Dataset
 #'
 #' This function takes a dataset and applies user-specified column mappings
@@ -9,7 +18,7 @@
 #' @param dataset A data frame containing the raw data to be transformed.
 #' @param mapping A named list of column mappings.
 #' @param desired_order A character vector specifying the desired column order
-#'                      in the output dataset.
+#'                      in the output dataset. Defaults to `MAPPING_DESIRED_ORDER`.
 #' @param req_mappings A character vector indicating the names of the mapping object
 #'                     that must always be populated
 #' @param silent Boolean, whether to print message with applied mapping.
@@ -32,7 +41,7 @@
 #' @importFrom dplyr rename select any_of everything group_by slice ungroup
 #' @export
 apply_mapping <- function(
-  dataset, mapping, desired_order, silent = TRUE,
+  dataset, mapping, desired_order = MAPPING_DESIRED_ORDER, silent = TRUE,
   req_mappings = c(
     "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
     "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
@@ -133,4 +142,137 @@ apply_mapping <- function(
 #' @export
 create_metabfl <- function(dataset, metabolites) {
   mutate(dataset, METABFL = ifelse(PARAM %in% metabolites, "Y", ""))
+}
+
+#' Annotate Duplicate Concentration Records
+#'
+#' Detects and annotates duplicate records in mapped ADNCA data. Exact
+#' duplicates (same AVAL and time point within a group) are marked as
+#' `DTYPE = "COPY"`. Time duplicates (same time point but different AVAL)
+#' can be resolved via `time_duplicate_rows`.
+#'
+#' @param dataset A mapped data frame with standard ADNCA columns.
+#' @param time_duplicate_rows Optional integer vector of row indices
+#'   (in the mapped dataset) to mark as `"TIME DUPLICATE"`. These indices
+#'   refer to row positions after mapping (1-based). Row order is preserved
+#'   through `group_by`/`mutate` operations.
+#'   When `NULL` and time duplicates are detected, an error is raised.
+#'
+#' @returns The dataset with a `DTYPE` column added. Raises an error of class
+#' `"time_duplicate_error"` if unresolved time duplicates are found, with the duplicate rows
+#'   attached as `duplicate_data` in the condition.
+#'
+#' @importFrom dplyr group_by mutate ungroup cur_group_id n row_number across all_of
+#' @keywords internal
+annotate_duplicates <- function(dataset, time_duplicate_rows = NULL) {
+  dataset$ROWID <- seq_len(nrow(dataset))
+
+  # Mark exact duplicates (group by all key cols including AVAL)
+  dataset <- dataset %>%
+    group_by(across(all_of(TIME_DUP_KEY_COLS))) %>%
+    mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
+    ungroup()
+
+  # Mark user-specified time duplicate rows
+  if (!is.null(time_duplicate_rows) && length(time_duplicate_rows) > 0) {
+    dataset$DTYPE[time_duplicate_rows] <- "TIME DUPLICATE"
+  }
+
+  # Detect remaining time duplicates (group by time-point cols, without AVAL)
+  dataset <- dataset %>%
+    group_by(across(all_of(TIME_DUP_GROUP_COLS))) %>%
+    mutate(
+      .is_time_dup = (n() - sum(DTYPE != "")) > 1,
+      .dup_group = cur_group_id()
+    ) %>%
+    ungroup()
+
+  if (any(dataset$.is_time_dup, na.rm = TRUE)) {
+    dup_data <- dataset[dataset$.is_time_dup, ]
+    stop(
+      errorCondition(
+        paste0(
+          "Time duplicate rows detected. ",
+          "Multiple records share the same time point within a group ",
+          "but have different concentration values. ",
+          "Resolve by providing `time_duplicate_rows` with the row indices to exclude."
+        ),
+        class = "time_duplicate_error",
+        duplicate_data = dup_data
+      )
+    )
+  }
+
+  dataset[, !names(dataset) %in% c(".is_time_dup", ".dup_group", "ROWID")]
+}
+
+# Columns that define a time duplicate group (used in annotate_duplicates)
+TIME_DUP_GROUP_COLS <- c("AFRLT", "STUDYID", "PCSPEC", "DOSETRT", # nolint: object_name_linter
+                         "USUBJID", "PARAM")
+
+# Key columns include AVAL to distinguish rows within a group
+TIME_DUP_KEY_COLS <- c(TIME_DUP_GROUP_COLS, "AVAL") # nolint: object_name_linter
+
+#' Extract key columns for excluded time duplicate rows
+#'
+#' Given a mapped dataset and the row indices flagged as time duplicates,
+#' returns a data.frame of the key columns for those rows. This is used
+#' to persist duplicate resolutions in a dataset-independent format.
+#'
+#' @param dataset The mapped data.frame (after `apply_mapping()`).
+#' @param row_indices Integer vector of row indices to extract.
+#'
+#' @returns A data.frame with one row per excluded duplicate, containing
+#'   only the key columns. Returns NULL if `row_indices` is NULL or empty.
+#'
+#' @keywords internal
+#' @noRd
+extract_time_dup_keys <- function(dataset, row_indices) {
+  if (is.null(dataset) || is.null(row_indices) || length(row_indices) == 0) return(NULL)
+  cols <- intersect(TIME_DUP_KEY_COLS, names(dataset))
+  result <- dataset[row_indices, cols, drop = FALSE]
+  rownames(result) <- NULL
+  result
+}
+
+#' Match stored time duplicate keys against a dataset to recover row indices
+#'
+#' Given a data.frame of key columns (from a previous session) and a new
+#' mapped dataset, finds the row indices in the new dataset that match.
+#' Rows in `keys_df` that don't match any row are silently dropped.
+#'
+#' @param dataset The mapped data.frame (after `apply_mapping()`).
+#' @param keys_df A data.frame of key columns (from `extract_time_dup_keys()`).
+#'
+#' @returns An integer vector of matched row indices, or NULL if no matches.
+#'
+#' @keywords internal
+#' @noRd
+match_time_dup_keys <- function(dataset, keys_df) {
+  if (is.null(keys_df) || nrow(keys_df) == 0) return(NULL)
+  cols <- intersect(names(keys_df), names(dataset))
+  if (length(cols) == 0) return(NULL)
+
+  # Build a composite key for both sides
+  build_key <- function(df) {
+    do.call(paste, c(df[, cols, drop = FALSE], list(sep = "\x1f")))
+  }
+
+  data_keys <- build_key(dataset)
+  stored_keys <- build_key(keys_df)
+
+  # Match each stored key to at most one dataset row (first occurrence)
+  # to prevent over-matching when multiple rows share identical key values
+  matched <- integer(0)
+  remaining_indices <- seq_along(data_keys)
+  for (sk in stored_keys) {
+    hit <- remaining_indices[data_keys[remaining_indices] == sk]
+    if (length(hit) > 0) {
+      matched <- c(matched, hit[1])
+      remaining_indices <- setdiff(remaining_indices, hit[1])
+    }
+  }
+
+  if (length(matched) == 0) return(NULL)
+  sort(matched)
 }

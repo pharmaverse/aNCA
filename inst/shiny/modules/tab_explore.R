@@ -7,27 +7,45 @@ tab_explore_ui <- function(id) {
 
   navset_card_pill(
     id = "visuals",
-    nav_panel("Individual Plots",
+    height = "90vh",
+    full_screen = TRUE,
+    nav_panel(
+      "Individual Plots",
       layout_sidebar(
-        sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
-        plotlyOutput(ns("individualplot"), height = "100%")
+        sidebar = plot_sidebar_ui(
+          ns("individual_sidebar"),
+          is_mean_plot = FALSE,
+          extra_ui = saved_outputs_ui(ns("saved_outputs_indiv"))
+        ),
+        fillable = TRUE,
+        plotlyOutput(ns("individualplot"), height = "100%"),
+        br(), br()
       )
     ),
-    nav_panel("Mean Plots",
+    nav_panel(
+      "Mean Plots",
       layout_sidebar(
-        sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
-        plotlyOutput(ns("mean_plot"), height = "100%")
+        sidebar = plot_sidebar_ui(
+          ns("mean_sidebar"),
+          is_mean_plot = TRUE,
+          extra_ui = saved_outputs_ui(ns("saved_outputs_mean"))
+        ),
+        fillable = TRUE,
+        plotlyOutput(ns("mean_plot"), height = "100%"),
+        br(), br()
       )
     ),
     nav_panel(
       "PK/Dose QC Plot",
-      pk_dose_qc_plot_ui(ns("pk_dose_qc_plot"))
+      pk_dose_qc_plot_ui(
+        ns("pk_dose_qc_plot"),
+        extra_ui = saved_outputs_ui(ns("saved_outputs_qc"))
+      )
     )
   )
 }
 
 # SERVER LOGIC OF NAVBAR OUTPUT TAB ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 # In the output tab of the navbar, dynamic graphics of the input
 # as well as the results of the NCA analysis are displayed. The user can dynamically
 # display graphics and summaries of these data.
@@ -36,169 +54,267 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    data <- reactive({
-      req(pknca_data())
-      pknca_data()$conc$data
-    })
+    # Counters for incremented plot names in the ZIP export
+    indiv_counter <- reactiveVal(0L)
+    mean_counter <- reactiveVal(0L)
+    qc_counter <- reactiveVal(0L)
+
+    # Track custom plot names mapped to their base type for export filtering
+    # Named character vector: name = base_type (e.g., c(my_plot = "individual"))
+    session$userData$exploration_custom_names <- reactiveVal(character(0))
+
+    # Metadata for saved outputs table (data.frame: name, type, timestamp)
+    saved_plots_metadata <- reactiveVal(empty_saved_plots_metadata())
 
     # Initiate the sidebar server modules
-    individual_inputs <- plot_sidebar_server(
+    individual_sidebar <- plot_sidebar_server(
       "individual_sidebar",
       pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
 
-    mean_inputs <- plot_sidebar_server(
+    mean_sidebar <- plot_sidebar_server(
       "mean_sidebar",
       pknca_data = pknca_data,
       grouping_vars = extra_group_vars
     )
 
+    individual_inputs <- individual_sidebar$inputs
+    mean_inputs <- mean_sidebar$inputs
 
-    # TAB: General Lineplot --------------------------------------------------------
-
-    master_palettes_list <- reactive({
-      req(individual_inputs()$palette_theme)
-      req(individual_inputs()$color_by)
-
-      get_persistent_palette(
-        data(),
-        individual_inputs()$color_by,
-        palette_name = individual_inputs()$palette_theme
-      )
-    })
-
-    # Compute the individual plot object
     individualplot <- reactive({
-      req(data(), individual_inputs()$param,
-          individual_inputs()$pcspec,
-          individual_inputs()$usubjid,
-          individual_inputs()$color_by)
+      req(pknca_data(), individual_inputs()$color_by)
       log_info("Rendering individual plots")
 
-      individual_output <- process_data_individual(
-        data = data(),
-        selected_usubjids = individual_inputs()$usubjid,
-        selected_analytes = individual_inputs()$param,
-        selected_pcspec = individual_inputs()$pcspec,
-        profiles_selected = individual_inputs()$profiles,
-        ylog_scale = individual_inputs()$ylog_scale
-      )
-
-      time_col <- if (!is.null(individual_inputs()$profiles)) "ARRLT" else "AFRLT"
-
-      tt_vars <- unique(c("AVAL", time_col,
-                          "USUBJID", individual_inputs()$color_by))
-
-      dose_data = if (individual_inputs()$show_dose) {
-        data() %>%
-          mutate(TIME_DOSE = round(AFRLT - ARRLT, 6))
-      } else {
-        NULL
-      }
-
-      lineplot <- g_lineplot(
-        data = individual_output,
-        x_var = time_col,
-        y_var = "AVAL",
+      exploration_individualplot(
+        pknca_data = isolate(pknca_data()),
         color_by = individual_inputs()$color_by,
         facet_by = individual_inputs()$facet_by,
+        show_facet_n = individual_inputs()$show_facet_n,
+        filtering_list = individual_inputs()$filtering_list,
+        show_dose = individual_inputs()$show_dose,
         ylog_scale = individual_inputs()$ylog_scale,
+        show_legend = individual_inputs()$show_legend,
+        x_limits = individual_inputs()$x_limits,
+        y_limits = individual_inputs()$y_limits,
         threshold_value = individual_inputs()$threshold_value,
-        dose_data = dose_data,
-        palette = master_palettes_list(),
-        tooltip_vars = tt_vars,
-        labels_df = metadata_nca_variables
+        labels_df = metadata_nca_variables,
+        use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
+        palette = individual_inputs()$palette,
+        line_type = individual_inputs()$y_axis_values
       )
-      lineplot
-    })
-
-    # Save the object for the zip folder whenever it changes
-    observe({
-      req(individualplot())
-      session$userData$results$exploration$individualplot <- individualplot()
     })
 
     # Render the individual plot in plotly
     output$individualplot <- renderPlotly({
       req(individualplot())
-      ggplotly(individualplot(), tooltip = "text")
+      ggplotly(individualplot(), tooltip = "tooltip_text")
     })
 
-    # TAB: Mean Plot -----------------------------------------------------------
-
-    mean_palettes_list <- reactive({
-      req(mean_inputs()$palette_theme)
-      req(mean_inputs()$color_by)
-
-      get_persistent_palette(
-        data(),
-        mean_inputs()$color_by,
-        palette_name = mean_inputs()$palette_theme
-      )
-    })
-
-    # Compute the meanplot object
     meanplot <- reactive({
-      req(data(), mean_inputs()$param, mean_inputs()$pcspec,
-          mean_inputs()$color_by)
+      req(pknca_data(), mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
 
-      mean_output <- process_data_mean(
-        data = data(),
-        selected_analytes = mean_inputs()$param,
-        selected_pcspec = mean_inputs()$pcspec,
-        profiles_selected = mean_inputs()$profiles,
-        ylog_scale = mean_inputs()$ylog_scale,
-        color_by = mean_inputs()$color_by,
-        facet_by = mean_inputs()$facet_by
-      )
-
-      time_col <- if (!is.null(mean_inputs()$profiles)) "NRRLT" else "NFRLT"
-
-      tt_vars <- unique(c("Mean", time_col, mean_inputs()$colorby))
-
-      dose_data = if (mean_inputs()$show_dose) {
-        data() %>%
-          mutate(TIME_DOSE = round(NFRLT - NRRLT, 6))
-      } else {
-        NULL
-      }
-
-      meanplot <- g_lineplot(
-        data = mean_output,
-        x_var = time_col,
-        y_var = "Mean",
+      exploration_meanplot(
+        pknca_data = isolate(pknca_data()),
         color_by = mean_inputs()$color_by,
         facet_by = mean_inputs()$facet_by,
-        ylog_scale = mean_inputs()$ylog_scale,
+        show_facet_n = mean_inputs()$show_facet_n,
+        filtering_list = mean_inputs()$filtering_list,
+        show_dose = mean_inputs()$show_dose,
+        palette = mean_inputs()$palette,
         sd_min = mean_inputs()$sd_min,
         sd_max = mean_inputs()$sd_max,
         ci = mean_inputs()$ci,
+        ylog_scale = mean_inputs()$ylog_scale,
+        show_legend = mean_inputs()$show_legend,
+        x_limits = mean_inputs()$x_limits,
+        y_limits = mean_inputs()$y_limits,
         threshold_value = mean_inputs()$threshold_value,
-        dose_data = dose_data,
-        palette = mean_palettes_list(),
-        tooltip_vars = tt_vars,
-        labels_df = metadata_nca_variables
+        labels_df = metadata_nca_variables,
+        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
+        line_type = mean_inputs()$y_axis_values
       )
-
-      session$userData$results$exploration$meanplot <- meanplot
-      meanplot
     })
 
-    # Save the objects for the ZIP folder whenever they change
+    # Clear saved exploration plots when new data is loaded
+    observeEvent(pknca_data(), {
+      session$userData$results$exploration <- list()
+      session$userData$exploration_custom_names(character(0))
+      saved_plots_metadata(empty_saved_plots_metadata())
+      indiv_counter(0L)
+      mean_counter(0L)
+      qc_counter(0L)
+    })
+
+    # Save each plot independently for the ZIP folder
     observe({
-      req(individualplot(), meanplot())
+      req(individualplot())
       session$userData$results$exploration$individualplot <- individualplot()
+    })
+
+    observe({
+      req(meanplot())
       session$userData$results$exploration$meanplot <- meanplot()
     })
 
     # Render the mean plot output in plotly
     output$mean_plot <- renderPlotly({
       req(meanplot())
-      ggplotly(meanplot(), tooltip = "text")
+      ggplotly(meanplot(), tooltip = "tooltip_text")
     })
 
-    pk_dose_qc_plot_server("pk_dose_qc_plot", pknca_data, extra_group_vars)
+    qc_plot_outputs <- pk_dose_qc_plot_server(
+      "pk_dose_qc_plot", pknca_data, extra_group_vars
+    )
+
+    # Save the default QC plot for the ZIP folder
+    observe({
+      req(qc_plot_outputs$current_plot())
+      session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
+    })
+
+    # --- Saved Outputs gallery ---
+
+    .get_plot_obj <- function(plot_name) {
+      session$userData$results$exploration[[plot_name]]
+    }
+
+    .on_remove <- function(plot_name) {
+      session$userData$results$exploration[[plot_name]] <- NULL
+      existing <- session$userData$exploration_custom_names()
+      existing <- existing[names(existing) != plot_name]
+      session$userData$exploration_custom_names(existing)
+
+      saved_plots_metadata(remove_saved_plot(saved_plots_metadata(), plot_name))
+
+      showNotification(
+        paste0("Plot '", plot_name, "' removed from exports"),
+        type = "message", duration = 3
+      )
+      log_info("Removed exploration plot: {plot_name}")
+    }
+
+    # Single gallery instance avoids tripling renderPlotly outputs and
+    # observers. The two extra buttons forward their clicks as triggers.
+    saved_outputs_server(
+      "saved_outputs_indiv", saved_plots_metadata,
+      get_plot_obj = .get_plot_obj, on_remove = .on_remove,
+      extra_triggers = list(
+        reactive(input[["saved_outputs_mean-view_exports"]]),
+        reactive(input[["saved_outputs_qc-view_exports"]])
+      )
+    )
+
+    # --- Add to Exports handlers ---
+
+    # Track which plot type triggered the modal
+    pending_plot_type <- reactiveVal(NULL)
+
+    # Show modal with filename input
+    .show_export_modal <- function(default_name) {
+      showModal(modalDialog(
+        title = "Add to Exports",
+        textInput(ns("export_plot_name"), "Plot name:", value = default_name),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton(ns("confirm_add_to_exports"), "Save",
+                       class = "btn btn-primary")
+        ),
+        size = "s",
+        easyClose = TRUE
+      ))
+    }
+
+    # Wire each plot type's "Add to Exports" button to the modal
+    export_buttons <- list(
+      list(
+        trigger = individual_sidebar$add_to_exports,
+        plot = individualplot,
+        type = "individual",
+        counter = indiv_counter,
+        prefix = "individualplot"
+      ),
+      list(
+        trigger = mean_sidebar$add_to_exports,
+        plot = meanplot,
+        type = "mean",
+        counter = mean_counter,
+        prefix = "meanplot"
+      ),
+      list(
+        trigger = qc_plot_outputs$add_to_exports,
+        plot = qc_plot_outputs$current_plot,
+        type = "qc",
+        counter = qc_counter,
+        prefix = "qcplot"
+      )
+    )
+
+    lapply(export_buttons, function(btn) {
+      observeEvent(btn$trigger(), {
+        req(btn$plot())
+        pending_plot_type(btn$type)
+        .show_export_modal(paste0(btn$prefix, btn$counter() + 1L))
+      })
+    })
+
+    # Confirm save from modal — increment counter only on actual save
+    observeEvent(input$confirm_add_to_exports, {
+      raw_name <- input$export_plot_name
+      plot_name <- gsub("[^A-Za-z0-9_-]", "_", raw_name)
+      req(nzchar(plot_name))
+
+      # Warn user if sanitization changed the name
+      if (plot_name != raw_name) {
+        showNotification(
+          paste0("Name sanitized to '", plot_name, "'"),
+          type = "warning", duration = 4
+        )
+      }
+
+      type <- pending_plot_type()
+      plot_obj <- switch(type,
+        individual = individualplot(),
+        mean = meanplot(),
+        qc = qc_plot_outputs$current_plot()
+      )
+      req(plot_obj)
+
+      is_overwrite <- plot_name %in% names(session$userData$results$exploration)
+
+      # Increment counter only after confirmed save (skip on overwrite)
+      if (!is_overwrite) {
+        if (type == "individual") indiv_counter(indiv_counter() + 1L)
+        else if (type == "mean") mean_counter(mean_counter() + 1L)
+        else if (type == "qc") qc_counter(qc_counter() + 1L)
+      }
+
+      session$userData$results$exploration[[plot_name]] <- plot_obj
+      existing <- session$userData$exploration_custom_names()
+      existing[plot_name] <- type
+      session$userData$exploration_custom_names(existing)
+
+      # Update saved outputs metadata
+      type_label <- switch(type,
+        individual = "Individual",
+        mean = "Mean",
+        qc = "QC"
+      )
+      ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+      saved_plots_metadata(
+        upsert_saved_plot(saved_plots_metadata(), plot_name, type_label, ts)
+      )
+
+      removeModal()
+
+      msg <- if (is_overwrite) {
+        paste0("Plot '", plot_name, "' updated")
+      } else {
+        paste0("Plot saved as '", plot_name, "'")
+      }
+      showNotification(msg, type = "message", duration = 3)
+      log_info("Saved exploration plot: {plot_name} (overwrite={is_overwrite})")
+    }, ignoreInit = TRUE)
   })
 }

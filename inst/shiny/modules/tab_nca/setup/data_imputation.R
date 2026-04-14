@@ -68,21 +68,25 @@ data_imputation_ui <- function(id) {
         width = 2,
         dropdown(
           div(
-            tags$h4("BLQ Imputation Help"),
-            p("BLQ (Below Limit of Quantification) imputation controls"),
-            tags$ul(
-              tags$li(
-                tags$b("Tmax based:"), " Set rules for BLQ values before/after Tmax."
+            tags$h2("BLQ Imputation Help"),
+            p(
+              "Imputes concentration values for BLQ (Below Limit of Quantification) samples.",
+              "Only applies to non-observational parameters:"
+            ),
+            tags$table(
+              class = "imputation-help-table",
+              tags$thead(
+                tags$tr(
+                  tags$th("Strategy"),
+                  tags$th("Description")
+                )
               ),
-              tags$li(
-                tags$b("Positional:"),
-                " Set rules for BLQ values before, between, or after non-BLQ values."
-              ),
-              tags$li(
-                tags$b("Set value:"), " Assign a single value to all BLQ."
-              ),
-              tags$li(
-                tags$b("No handling:"), " Keep all values as is."
+              tags$tbody(
+                tr("Tmax based", "Set rules for BLQ values before/after Tmax"),
+                tr("Positional",
+                   "Set rules for BLQ before, between or after the first/last non-BLQ values"),
+                tr("Set value", "Assign a single value to all BLQ"),
+                tr("No handling", "Keep all values as is")
               )
             ),
             tags$b("Custom values:"),
@@ -97,7 +101,7 @@ data_imputation_ui <- function(id) {
           right = TRUE,
           icon = icon("question"),
           status = "primary",
-          width = "400px"
+          width = "500px"
         )
       )
     ),
@@ -126,34 +130,132 @@ data_imputation_ui <- function(id) {
       )
     ),
     hr(),
-    # Start impute (C0) widget
-    input_switch(
-      id = ns("should_impute_c0"),
-      label = "Impute Start Concentration",
-      value = TRUE
-    ),
-    br(),
-    helpText(HTML(paste(
-      "Imputes a start-of-interval concentration to calculate non-observational parameters:",
-      "- If start concentration is present: C0 = C0",
-      "- If not IV bolus (or metabolite) & first dose: C0 = 0",
-      "- If not IV bolus (or metabolite) & not first dose with predose: C0 = predose",
-      "- If IV bolus & monoexponential data: logslope",
-      "- If IV bolus & not monoexponential data: C0 = C1",
-      sep = "<br>"
-    )))
+    # Start impute (C0) widget and help button
+    fluidRow(
+      column(
+        width = 10,
+        input_switch(
+          id = ns("should_impute_c0"),
+          label = "Impute Start Concentration",
+          value = TRUE
+        )
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h2("Start Concentration Imputation Help"),
+            p(
+              "Imputes a start-of-interval concentration (dose time).",
+              "It only applies to non-observational parameters.",
+              "Depending on the interval, the imputation changes:"
+            ),
+            tags$table(
+              class = "imputation-help-table",
+              tags$thead(
+                tags$tr(
+                  tags$th("Interval scenario"),
+                  tags$th("Imputation Rule")
+                )
+              ),
+              tags$tbody(
+                tr("Start concentration already present", "C0 = C0"),
+                tr("Not IV bolus (or metabolite) & first dose", "C0 = 0"),
+                tr("Not IV bolus (or metabolite) & not first dose with predose", "C0 = predose"),
+                tr("IV bolus & monoexponential data", "log-back-extrapolation"),
+                tr("IV bolus & not monoexponential data", "C0 = C1")
+              )
+            )
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "500px"
+        )
+      )
+    )
   )
 }
 
-data_imputation_server <- function(id) {
+data_imputation_server <- function(id, settings_override) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    # Restore widgets when settings are uploaded
+    observeEvent(settings_override(), {
+      settings <- settings_override()
+      req(settings)
+
+      imputation <- settings$data_imputation
+      req(imputation)
+
+      # Restore impute_c0 switch
+      if (!is.null(imputation$impute_c0)) {
+        update_switch("should_impute_c0", value = imputation$impute_c0)
+      }
+
+      # Restore NA imputation dropdown
+      if (!is.null(imputation$na_imputation_rule)) {
+        val <- as.character(imputation$na_imputation_rule)
+        updateSelectizeInput(
+          session,
+          inputId = "na_imputation",
+          choices = unique(c("drop", "0", val)),
+          selected = val
+        )
+      }
+
+      # Restore BLQ strategy dropdown
+      valid_strategies <- c(
+        "Tmax based imputation",
+        "Positional BLQ imputation",
+        "Set value for all BLQ",
+        "No BLQ handling"
+      )
+
+      if (!is.null(imputation$blq_strategy)) {
+        if (!imputation$blq_strategy %in% valid_strategies) {
+          showNotification(
+            paste0(
+              "BLQ strategy '", imputation$blq_strategy,
+              "' from settings not recognized. Reverting to default."
+            ),
+            type = "warning",
+            duration = 8
+          )
+        } else {
+          updateSelectInput(
+            session,
+            inputId = "select_blq_strategy",
+            selected = imputation$blq_strategy
+          )
+
+          # Restore strategy-specific values
+          rule <- imputation$blq_imputation_rule
+          if (!is.null(rule)) {
+            switch(imputation$blq_strategy,
+              "Tmax based imputation" = {
+                .update_blq_selectize(session, "before_tmax", rule$before.tmax)
+                .update_blq_selectize(session, "after_tmax", rule$after.tmax)
+              },
+              "Positional BLQ imputation" = {
+                .update_blq_selectize(session, "before_first_non_blq", rule$first)
+                .update_blq_selectize(session, "in_between_non_blqs", rule$middle)
+                .update_blq_selectize(session, "after_last_non_blq", rule$last)
+              },
+              "Set value for all BLQ" = {
+                .update_blq_selectize(session, "blq_value", rule$first)
+              }
+            )
+          }
+        }
+      }
+    })
 
     blq_imputation_rule <- reactive({
       req(input$select_blq_strategy)
-      rule_list <- switch(
-        input$select_blq_strategy,
+      rule_list <- switch(input$select_blq_strategy,
         "Tmax based imputation" = list(
           before.tmax = input$before_tmax,
           after.tmax = input$after_tmax
@@ -224,10 +326,24 @@ data_imputation_server <- function(id) {
 
     list(
       should_impute_c0 = reactive(input$should_impute_c0),
-      blq_imputation_rule = blq_imputation_rule,
-      na_imputation_rule = na_imputation_rule
+      na_imputation_rule = na_imputation_rule,
+      blq_strategy = reactive(input$select_blq_strategy),
+      blq_imputation_rule = blq_imputation_rule
     )
   })
+}
+
+# Helper to update a blq_selectize input, adding custom numeric values to choices
+.update_blq_selectize <- function(session, input_id, value) {
+  if (is.null(value)) return()
+  value_str <- as.character(value)
+  choices <- unique(c("drop", "keep", value_str))
+  updateSelectizeInput(
+    session,
+    inputId = input_id,
+    choices = choices,
+    selected = value_str
+  )
 }
 
 # Helper function for BLQ selectize inputs
@@ -241,5 +357,12 @@ blq_selectize <- function(id, label, selected = NULL) {
       placeholder = "Type a numeric value to impute or select option"
     ),
     width = "25%"
+  )
+}
+
+# Helper for table rows in help popups (variable columns)
+tr <- function(...) {
+  tags$tr(
+    lapply(list(...), function(cell) tags$td(cell, style = "padding:4px;"))
   )
 }

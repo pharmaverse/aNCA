@@ -1,3 +1,8 @@
+/* Global font */
+body {
+  font-family: "Arial";
+}
+
 /* custom css for progress bar */
 .shiny-notification {
   position: fixed !important;
@@ -31,6 +36,25 @@ h5 {
   margin-bottom: 0;
 }
 
+/* shared help dropdown content styling */
+.anca-help-dropdown h2 {
+  font-size: 1.1em;
+  margin: 0 0 0.75rem;
+}
+
+.anca-help-dropdown p {
+  margin: 0 0 0.75rem;
+}
+
+.anca-help-dropdown ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.anca-help-dropdown li {
+  margin-bottom: 0.5rem;
+}
+
 .nca-numeric-container {
   display: flex;
   align-items: center;
@@ -51,7 +75,12 @@ h5 {
 
 /* modals */
 .modal-dialog {
-  max-width: 800px;
+  max-width: 1000px;
+  margin-top: 1rem;
+}
+
+.modal.fade .modal-dialog {
+  transform: translate(0, 0);
 }
 
 .modal-header {
@@ -62,7 +91,7 @@ h5 {
 }
 
 .modal-title {
-  font-family: "Arial", sans-serif;
+  font-family: "Arial";
   font-size: 32px;
   /* Larger title font size */
   font-weight: bold;
@@ -78,7 +107,7 @@ h5 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  font-family: "Arial", sans-serif;
+  font-family: "Arial";
   font-size: 16px;
   background-color: #f5f5f5;
   /* Light grey body background */
@@ -86,8 +115,13 @@ h5 {
   text-align: center;
 }
 
+.modal-footer {
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+}
+
 .modal-intro {
-  font-family: "Georgia", serif;
+  font-family: "Arial";
   /* Elegant font type for intro text */
   font-size: 18px;
   margin-bottom: 20px;
@@ -150,7 +184,7 @@ h5 {
   /* More vibrant color */
   text-align: center;
   /* Center the title */
-  font-family: "Arial", sans-serif;
+  font-family: "Arial";
   /* Use a more attractive font */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   /* Add a subtle text shadow */
@@ -281,23 +315,91 @@ div[data-value="Settings"] > div.row a {
   padding: 0;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
+/* Left nav sidebar only (Data / Exploration / NCA / TLG / About) */
+.bslib-page-sidebar > .bslib-sidebar-layout {
+  --_sidebar-width: 150px !important;
 }
 
-.sidebar .sidebar-content {
+/* Left nav sidebar: no padding (nav pills handle their own spacing) */
+.bslib-page-sidebar > .bslib-sidebar-layout > .sidebar .sidebar-content {
   padding-left: 0 !important;
   padding-right: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+/* Right-side sidebars: width and padding */
+.sidebar-right {
+  --_sidebar-width: 250px !important;
+}
+
+/* Drag handle for resizing right-side sidebars */
+.sidebar-right > .sidebar > .sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.sidebar-right > .sidebar > .sidebar-resize-handle:hover,
+.sidebar-right > .sidebar > .sidebar-resize-handle.dragging {
+  background: #007bc2;
+}
+
+.sidebar-right > .sidebar {
+  position: relative;
+}
+
+.sidebar-right > .sidebar .sidebar-content {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  overflow-x: hidden !important;
+}
+
+/* Prevent dropdowns/inputs from overflowing the sidebar */
+.sidebar-right .shiny-input-container {
+  max-width: 100% !important;
+}
+
+.sidebar-right .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar .sidebar-content .row > :nth-child(2) {
   display: none;
 }
 
+.sidebar .sidebar-content .row {
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
 .sidebar .sidebar-content .row > :first-child {
   width: 100%;
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
   padding-left: 0;
   padding-right: 0;
+}
+
+.sidebar .sidebar-content .row > :first-child > ul {
+  flex: 1;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.sidebar .sidebar-content .row > :first-child > ul > li:last-child {
+  margin-top: auto;
 }
 
 .sidebar .sidebar-content .row > :first-child > ul > li > a {
@@ -317,8 +419,7 @@ div[data-value="Settings"] > div.row a {
 
 .slope-selector-module {
   padding: 1em;
-  height: calc(100vh - 150px);
-  max-height: calc(100vh - 150px);
+  min-height: calc(100vh - 150px);
   /* Style each group of widgets */
 }
 
@@ -373,7 +474,8 @@ div[data-value="Settings"] > div.row a {
   position: fixed;
   bottom: 0;
   width: 75%;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(1px);
   padding: 10px;
   z-index: 1000;
   border-top: 1px solid #dadada;
@@ -395,9 +497,21 @@ div[data-value="Settings"] > div.row a {
   text-align: left !important;
 }
 
+.slope-selector-module .slope-selector-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2em;
+  margin: 2em 0;
+  color: #a7a7a7;
+  font-style: italic;
+  text-align: center;
+}
+
 .slope-selector-module .slope-plots-container {
   margin-top: 2em;
-  height: calc(100vh - 220px);
+  min-height: calc(100vh - 220px);
   margin-bottom: 2em;
 }
 
@@ -406,8 +520,20 @@ div[data-value="Settings"] > div.row a {
   margin-bottom: 2em;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(33em, 1fr));
-  height: calc(100vh - 220px);
+  min-height: calc(100vh - 220px);
   gap: 1rem;
+}
+
+.imputation-help-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.imputation-help-table th, .imputation-help-table td {
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  padding: 4px;
 }
 
 .data-tab-container {
@@ -592,40 +718,6 @@ div[data-value="Settings"] > div.row a {
   background-color: #E7ECFA;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
-}
-
-.sidebar .sidebar-content {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-.sidebar .sidebar-content .row > :nth-child(2) {
-  display: none;
-}
-
-.sidebar .sidebar-content .row > :first-child {
-  width: 100%;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a {
-  padding-left: 30px;
-  padding-right: 30px;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #E7ECFA;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
-  color: #c0c0c0;
-}
-
 .stepper-wrapper {
   max-width: 100%;
   margin-bottom: 40px;
@@ -698,6 +790,28 @@ div[data-value="Settings"] > div.row a {
 }
 
 .excretion-section-container .excretion-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: #5b5b5b;
+  border: 2px solid #cfe2f3;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.nca-run-container {
+  position: relative;
+}
+
+.nca-run-container .nca-run-overlay {
   position: absolute;
   top: 0;
   left: 0;

@@ -13,21 +13,30 @@ NON_STD_MAPPING_INFO <- data.frame(
   ),
   mapping_section = c("Supplemental Variables", "Sample Variables"),
   mapping_alternatives = c(
-    "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, STRAIN, DOSFRM, NOMDOSE, DOSEP",
+    paste0(
+      "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, DOSFRM, ",
+      "STRAIN, DOSFRM, NOMDOSE, DOSEP, COHORT, PART, PERIOD, FEDSTATE"
+    ),
     ""
   ),
-  is_multiple_choice = c(TRUE, TRUE)
+  is_multiple_choice = c(TRUE, TRUE),
+  mapping_order = c(18, 5),
+  allow_create_numeric = c(FALSE, FALSE)
 )
 
 # Make an unique dataset with all the variables for the mapping
 MAPPING_INFO <- metadata_nca_variables %>%
   filter(is.mapped, Dataset == "ADNCA") %>%
-  select(Variable, Label, Order, Values, mapping_tooltip, mapping_section, mapping_alternatives) %>%
+  select(
+    Variable, Label, Values, mapping_tooltip,
+    mapping_section, mapping_alternatives, mapping_order,
+    allow_create_numeric
+  ) %>%
   mutate(
     is_multiple_choice = ifelse(Variable == "NCAwXRS", TRUE, FALSE)
   ) %>%
   bind_rows(NON_STD_MAPPING_INFO) %>%
-  arrange(Order)
+  arrange(mapping_order)
 
 MAPPING_BY_SECTION <- split(MAPPING_INFO, MAPPING_INFO$mapping_section)
 sections_order <- c(
@@ -36,13 +45,7 @@ sections_order <- c(
 )
 MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 
-# Define the desired column order
-MAPPING_DESIRED_ORDER <- c(
-  "STUDYID", "USUBJID", "PARAM", "PCSPEC", "ATPTREF",
-  "AVAL", "AVALU", "AFRLT", "ARRLT", "NRRLT", "NFRLT",
-  "RRLTU", "ROUTE", "DOSETRT", "DOSEA", "DOSEU", "ADOSEDUR",
-  "VOLUME", "VOLUMEU", "TRTRINT", "METABFL"
-)
+# Column order is the default in apply_mapping()
 
 #' Column Mapping Widget
 #'
@@ -56,9 +59,21 @@ MAPPING_DESIRED_ORDER <- c(
 #' @return A Shiny `div` containing a `selectizeInput` with associated labels and tooltip.
 #'
 #' @examples
-#' column_mapping_widget(ns = NS("example"), id = "STUDYID",
-#' tooltip_text = "Select the study identifier column.")
-.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE) {
+#' column_mapping_widget(
+#'   ns = NS("example"), id = "STUDYID",
+#'   tooltip_text = "Select the study identifier column."
+#' )
+.column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE,
+                                   allow_create_numeric = FALSE) {
+  selectize_options <- if (allow_create_numeric) {
+    list(
+      create = TRUE,
+      placeholder = "Select column or type a numeric value"
+    )
+  } else {
+    list(placeholder = "Select Column")
+  }
+
   div(
     class = "column-mapping-row",
     tooltip(
@@ -67,7 +82,7 @@ MAPPING_DESIRED_ORDER <- c(
         "",
         choices = NULL,
         multiple = multiple,
-        options = list(placeholder = "Select Column"),
+        options = selectize_options,
         width = "40%"
       ),
       tooltip_text,
@@ -93,9 +108,89 @@ MAPPING_DESIRED_ORDER <- c(
     h5(section_title),
     lapply(seq_len(nrow(mapping_df)), function(i) {
       row <- mapping_df[i, ]
-      .column_mapping_widget(ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice)
+      .column_mapping_widget(
+        ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice,
+        allow_create_numeric = isTRUE(row$allow_create_numeric)
+      )
     })
   )
+}
+.observe_numeric_inputs <- function(input, session, adnca_data, mapping_info) {
+  numeric_vars <- mapping_info$Variable[mapping_info$allow_create_numeric %in% TRUE]
+  lapply(numeric_vars, function(var) {
+    input_id <- paste0("select_", var)
+    observeEvent(input[[input_id]], {
+      value <- input[[input_id]]
+      if (!is.null(value) && value != "" && !value %in% names(adnca_data())) {
+        if (!grepl("^[0-9]+(\\.[0-9]+)?$", value)) {
+          showNotification(
+            paste0(var, ": only numeric values are allowed. '", value, "' is not valid."),
+            type = "warning",
+            duration = 5
+          )
+          updateSelectizeInput(session, input_id, selected = "")
+        }
+      }
+    })
+  })
+}
+
+.process_imported_mapping <- function(mapping, adnca_data, session) {
+
+  if (!is.null(mapping)) {
+    column_names <- names(adnca_data)
+    skipped <- character(0)
+
+    for (var in MAPPING_INFO$Variable) {
+      if (!var %in% names(mapping) || var == "Metabolites") next
+      val <- mapping[[var]]
+
+      # Build the set of valid values: column names + predefined Values +
+      # numeric literals for allow_create_numeric variables.
+      var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
+      predefined <- strsplit(var_info$Values, ", ")[[1]]
+      valid_values <- c(column_names, predefined)
+
+      is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
+      invalid <- val[val != "" & !val %in% valid_values]
+      if (is_numeric_ok) {
+        invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
+      }
+
+      if (length(invalid) > 0) {
+        skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
+        next
+      }
+
+      # For allow_create_numeric variables with custom numeric values,
+      # the value must be added to choices or updateSelectizeInput ignores it.
+      custom_numeric <- if (is_numeric_ok) {
+        val[!val %in% c(column_names, predefined)]
+      } else {
+        character(0)
+      }
+      if (length(custom_numeric) > 0) {
+        updateSelectizeInput(
+          session, paste0("select_", var),
+          choices = list(
+            "Select Column" = "",
+            "Mapping Columns" = c(column_names, custom_numeric),
+            "Mapping Values" = predefined
+          ),
+          selected = val
+        )
+      } else {
+        updateSelectizeInput(session, paste0("select_", var), selected = val)
+      }
+    }
+
+    if (length(skipped) > 0) {
+      showNotification(
+        paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
+        type = "warning", duration = 10
+      )
+    }
+  }
 }
 
 #' Column Mapping Module
@@ -164,7 +259,7 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, adnca_data, trigger) {
+data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -180,13 +275,24 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     })
 
     # Populate the static inputs with column names
-    observeEvent(adnca_data(), {
+    observeEvent(c(adnca_data(), imported_mapping()), {
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
 
-      # Exception: If by default VOLUME is not mapped, then neither is VOLUMEU
+      # Exceptions:
+      # If by default VOLUME is not mapped, then neither is VOLUMEU
       if (!"VOLUME" %in% column_names) {
         updateSelectizeInput(session, "select_VOLUMEU", selected = "")
+      }
+      # If by default WTBL is not mapped, then neither is WTBLU
+      if (!"WTBL" %in% column_names) {
+        updateSelectizeInput(session, "select_WTBLU", selected = "")
+      }
+
+      mapping <- imported_mapping()$mapping
+      if (!is.null(mapping)) {
+        # process mapping using settings to override default selections
+        .process_imported_mapping(mapping, adnca_data(), session)
       }
     })
     # Populate the dynamic input Metabolites
@@ -194,7 +300,11 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       req(input$select_PARAM != "")
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
-      selected_metab <- if ("METABFL" %in% names(adnca_data())) {
+      # Use pending import if available, otherwise fall back to METABFL default
+      selected_metab <- if (!is.null(imported_mapping()$mapping$Metabolites)) {
+        imported <- imported_mapping()$mapping$Metabolites
+        imported
+      } else if ("METABFL" %in% names(adnca_data())) {
         unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
       } else {
         NULL
@@ -204,6 +314,9 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         choices = choices_metab, selected = selected_metab
       )
     })
+
+    # Validate numeric inputs for variables with allow_create_numeric = TRUE
+    .observe_numeric_inputs(input, session, adnca_data, MAPPING_INFO)
 
     # Observe submit button click and update processed_data
     mapping <- reactive({
@@ -220,31 +333,25 @@ data_mapping_server <- function(id, adnca_data, trigger) {
       # Subset the list with the final names
       mapping_list[names_to_keep]
     })
+    observe({
+      m <- mapping()
+      names(m) <- gsub("^select_", "", names(m))
+      session$userData$mapping <- m
+    })
 
     mapped_data <- reactive({
       req(adnca_data())
       log_info("Processing data mapping...")
 
       mapping_ <- mapping()
-      names(mapping_) <- gsub("select_", "", names(mapping_))
+      names(mapping_) <- gsub("^select_", "", names(mapping_))
 
-      tryCatch({
-        adnca_data() %>%
-          apply_mapping(
-            mapping_,
-            MAPPING_DESIRED_ORDER,
-            silent = FALSE
-          ) %>%
-          create_metabfl(input$select_Metabolites) %>%
-          adjust_class_and_length(metadata_nca_variables, adjust_length = FALSE)
-
-      }, warning = function(w) {
+      tryCatch(
         withCallingHandlers(
           {
             adnca_data() %>%
               apply_mapping(
                 mapping_,
-                MAPPING_DESIRED_ORDER,
                 silent = FALSE
               ) %>%
               create_metabfl(input$select_Metabolites) %>%
@@ -253,69 +360,112 @@ data_mapping_server <- function(id, adnca_data, trigger) {
           warning = function(w) {
             log_warn(conditionMessage(w))
             showNotification(conditionMessage(w), type = "warning", duration = 10)
+            invokeRestart("muffleWarning")
           }
-        )
-      }, error = function(e) {
-        log_error(conditionMessage(e))
-        showNotification(conditionMessage(e), type = "error", duration = NULL)
-        NULL
-      })
+        ),
+        error = function(e) {
+          log_error(conditionMessage(e))
+          showNotification(conditionMessage(e), type = "error", duration = NULL)
+          NULL
+        }
+      )
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 
-    #Check for blocking duplicates
-    # groups based on PKNCAconc formula
-
+    # Check for blocking duplicates using annotate_duplicates()
     df_duplicates <- reactiveVal(NULL)
+    resolved_time_duplicate_rows <- reactiveVal(NULL)
+    observe({
+      session$userData$time_duplicate_rows <- resolved_time_duplicate_rows()
+      # Store key-based representation for settings export
+      session$userData$time_duplicate_keys <- extract_time_dup_keys(
+        mapped_data(), resolved_time_duplicate_rows()
+      )
+    })
+
     processed_data <- reactive({
       req(mapped_data())
 
-      dataset <- mapped_data() %>%
-        # Annotate exact duplicate records
-        group_by(AVAL, AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-        mutate(DTYPE = ifelse(row_number() > 1, "COPY", "")) %>%
-        # Annotate duplicate time records
-        group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-        mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
-        mutate(.dup_group = cur_group_id()) %>%
-        ungroup() %>%
-        mutate(ROWID = row_number())
-
-      if (!is.null(input$keep_selected_btn) && input$keep_selected_btn > 0) {
-        # Get selected rows from the reactable
-        selected <- getReactableState("duplicate_modal_table", "selected")
-        dataset <- df_duplicates() %>%
-          group_by(is.time.duplicate) %>%
-          mutate(
-            DTYPE = ifelse(
-              is.time.duplicate & !row_number() %in% selected,
-              "TIME DUPLICATE",
-              DTYPE
+      # On first run, if settings contain stored keys, match them against
+      # the current dataset to recover row indices synchronously before
+      # annotate_duplicates() runs. Must be inline to avoid a race with
+      # the reactive flush cycle.
+      dup_rows <- resolved_time_duplicate_rows()
+      if (is.null(dup_rows)) {
+        keys_df <- imported_mapping()$time_duplicate_keys
+        if (!is.null(keys_df) && nrow(keys_df) > 0) {
+          matched_indices <- match_time_dup_keys(mapped_data(), keys_df)
+          n_stored <- nrow(keys_df)
+          n_matched <- length(matched_indices %||% integer(0))
+          if (n_matched < n_stored) {
+            showNotification(
+              sprintf(
+                paste(
+                  "%d of %d stored duplicate exclusions could not be",
+                  "matched to the current dataset."
+                ),
+                n_stored - n_matched, n_stored
+              ),
+              type = "warning",
+              duration = 10
             )
-          ) %>%
-          group_by(AFRLT, STUDYID, PCSPEC, DOSETRT, USUBJID, PARAM) %>%
-          mutate(is.time.duplicate = (n() - sum(DTYPE != "")) > 1) %>%
-          ungroup()
-        if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
-          showNotification(
-            "There are still duplicate time records. Please resolve them before proceeding.",
-            type = "error", duration = NULL
-          )
-          return(NULL)
-        } else {
-          removeModal()
-          select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
+          }
+          if (!is.null(matched_indices)) {
+            resolved_time_duplicate_rows(matched_indices)
+            dup_rows <- matched_indices
+          }
         }
       }
 
-      if (any(dataset$is.time.duplicate, na.rm = TRUE)) {
-        df_duplicates(dataset)
-        return(NULL)
-      } else {
-        select(dataset, any_of(c(names(mapped_data()), "DTYPE")))
-      }
+      tryCatch(
+        {
+          result <- annotate_duplicates(mapped_data(), dup_rows)
+          select(result, any_of(c(names(mapped_data()), "DTYPE")))
+        },
+        time_duplicate_error = function(e) {
+          df_duplicates(e$duplicate_data)
+          NULL
+        }
+      )
     }) %>%
-      bindEvent(list(mapped_data(), input$keep_selected_btn), ignoreInit = FALSE)
+      bindEvent(
+        list(mapped_data(), resolved_time_duplicate_rows()),
+        ignoreInit = FALSE
+      )
+
+    observeEvent(input$keep_selected_btn, {
+      req(df_duplicates())
+      selected <- getReactableState("duplicate_modal_table", "selected")
+
+      # Derive rows to EXCLUDE (all duplicate rows the user did NOT select)
+      dup_data <- df_duplicates()
+      dup_row_indices <- dup_data$ROWID
+      keep_indices <- if (!is.null(selected)) dup_row_indices[selected] else integer(0)
+      exclude_indices <- setdiff(dup_row_indices, keep_indices)
+
+      # Combine with any previously resolved rows
+      prev <- resolved_time_duplicate_rows()
+      new_exclusions <- unique(c(prev, exclude_indices))
+
+      # Validate: check if the selection resolves all time duplicates
+      tryCatch(
+        {
+          annotate_duplicates(mapped_data(), new_exclusions)
+          # Selection resolves all duplicates — proceed
+          resolved_time_duplicate_rows(new_exclusions)
+          removeModal()
+        },
+        time_duplicate_error = function(e) {
+          # Still unresolved duplicates — update and re-show modal
+          resolved_time_duplicate_rows(new_exclusions)
+          df_duplicates(e$duplicate_data)
+          showNotification(
+            "There are still unresolved time duplicates. Please select rows to keep.",
+            type = "warning"
+          )
+        }
+      )
+    })
 
     observeEvent(df_duplicates(), {
       showModal(
@@ -342,12 +492,17 @@ data_mapping_server <- function(id, adnca_data, trigger) {
     })
 
     output$duplicate_modal_table <- renderReactable({
+      req(df_duplicates())
+      dup_data <- df_duplicates()
       reactable(
-        df_duplicates() %>%
-          filter(is.time.duplicate),
-        columns = list(.dup_group = colDef(show = FALSE)),
+        dup_data,
+        columns = list(
+          .dup_group = colDef(show = FALSE),
+          .is_time_dup = colDef(show = FALSE),
+          ROWID = colDef(show = FALSE)
+        ),
         rowStyle = function(index) {
-          if (df_duplicates()[index, ".dup_group"] %% 2 == 0) {
+          if (dup_data[index, ".dup_group"] %% 2 == 0) {
             list(background = "white")
           } else {
             list(background = "#e6f2ff")
@@ -359,15 +514,24 @@ data_mapping_server <- function(id, adnca_data, trigger) {
         wrap = FALSE,
         resizable = TRUE,
         showPageSizeOptions = TRUE,
-        pageSizeOptions = c(10, 25, 50, 100, nrow(df_duplicates())),
+        pageSizeOptions = c(10, 25, 50, 100, nrow(dup_data)),
         defaultPageSize = 10,
         style = list(fontSize = "0.75em")
       )
     })
+
+    # Cleaned mapping with select_ prefix removed
+    cleaned_mapping <- reactive({
+      m <- mapping()
+      names(m) <- gsub("^select_", "", names(m))
+      m
+    })
+
     list(
       processed_data = processed_data,
+      mapping = cleaned_mapping,
       grouping_variables = reactive(input$select_Grouping_Variables),
-      nca_exclusion_flags = reactive(input$select_NCAwXRS)
+      time_duplicate_rows = resolved_time_duplicate_rows
     )
   })
 }

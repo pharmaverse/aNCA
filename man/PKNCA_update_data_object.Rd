@@ -10,9 +10,15 @@ PKNCA_update_data_object(
   selected_analytes,
   selected_profile,
   selected_pcspec,
-  should_impute_c0 = TRUE,
+  start_impute = TRUE,
+  hl_adj_rules = NULL,
   exclusion_list = NULL,
-  keep_interval_cols = NULL
+  keep_interval_cols = NULL,
+  min_hl_points = 3,
+  parameter_selections = NULL,
+  int_parameters = NULL,
+  blq_imputation_rule = NULL,
+  custom_units_table = NULL
 )
 }
 \arguments{
@@ -26,7 +32,12 @@ PKNCA_update_data_object(
 
 \item{selected_pcspec}{User selected specimen}
 
-\item{should_impute_c0}{Logical indicating whether to impute start concentration values}
+\item{start_impute}{Logical indicating whether to impute start concentration values.
+Also forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}} when \code{parameter_selections} is provided.}
+
+\item{hl_adj_rules}{A data frame containing half-life adjustment rules. It must
+contain group columns and rule specification columns;
+TYPE: (Inclusion, Exclusion), RANGE: (start-end).}
 
 \item{exclusion_list}{List of exclusion reasons and row indices to apply to the
 concentration data. Each item in the list should have:
@@ -37,6 +48,21 @@ concentration data. Each item in the list should have:
 
 \item{keep_interval_cols}{Optional character vector of additional columns
 to keep in the intervals data frame and when the NCA is run (pk.nca) also in the results}
+
+\item{min_hl_points}{Minimum number of points to use for half-life calculation.
+Must be >= 2. Default is 3 (PKNCA default).}
+
+\item{parameter_selections}{Optional named list of selected PKNCA parameters
+by study type (forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}}).}
+
+\item{int_parameters}{Optional data frame containing partial AUC ranges
+(forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}}).}
+
+\item{blq_imputation_rule}{Optional list defining the BLQ imputation rule
+(forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}}).}
+
+\item{custom_units_table}{Optional data frame with PPSTRESU overrides.
+When provided, applied via \code{\link[dplyr:rows]{dplyr::rows_update()}} on the PKNCAdata units table.}
 }
 \value{
 A fully configured \code{PKNCAdata} object.
@@ -56,6 +82,13 @@ Step 3: Format intervals using \code{format_pkncadata_intervals()}
 Step 4: Apply filtering based on user selections and partial aucs
 
 Step 5: Impute start values if requested
+
+Step 6: Indicate points excluded / selected manually for half-life
+
+Step 7 (optional): Update intervals with parameter selections per study type
+and partial AUC ranges via \code{\link[=update_main_intervals]{update_main_intervals()}}.
+
+Step 8 (optional): Apply custom units table for PPSTRESU overrides.
 
 Note*: The function assumes that the \code{adnca_data} object has been
 created using the \code{PKNCA_create_data_object()} function.

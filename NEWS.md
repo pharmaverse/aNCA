@@ -2,8 +2,31 @@
 
 ## Features added
 
+* `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
+* Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
+* Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
+* Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (#1103)
+* ADPP now includes CRITy/CRITyFL columns for each checked flag rule and PPSUMFL/PPSUMRSN columns indicating summary exclusion status. Flagged records are excluded from descriptive statistics and parameter plot statistics, with an optional toggle to overlay excluded points as crosses (#1141)
+* Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (#1156)
+* Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
+* Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)
+* General Exclusions: "Excl. TLG" checkbox per exclusion entry sets PKSUM1F to "Y", filtering those rows from TLGs (#1018)
+* NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile with bidirectional cascading updates between Analyte and Specimen (#1114)
+* Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (#1104)
+* Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (#1091)
+* Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (#1082)
+* Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (#1077)
+* Searchable PK parameter reference table added to NCA > Setup, showing metadata, app location, and PKNCA function for each parameter (#1023)
+* Settings YAML units can now contain just `PPTESTCD` and `PPSTRESU` (default target units). (#1027)
+* Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (#988)
+* Exploration plots: "Add to Exports" button saves named plot snapshots to the ZIP export. When custom snapshots exist for a plot type, only the snapshots are exported (the default plot is omitted). QC plot also included in the export tree (#1002)
+* CDISC ZIP export now includes a `Pre_Specs.xlsx` file with variable-level metadata for each selected dataset (#998) and a session information file (#829)
+* New "About" tab in the app sidebar with links, citation, authors, license, version info, and a "Copy session info" button (#1015)
+* Export filenames use STUDYID as fallback when no project name is set, date suffix removed (#1000)
+* Project name auto-populated from STUDYID on data upload (#1000)
 * Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (#791)
 * Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (#752)
+* R script exported in ZIP folder to re-run and replicate App outputs (#789)
 * Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (#712)
 * New flagging rule for lambda-z calculations based on r-squared, R2 (#834)
 * New Parameter Selection section in NCA tab allowing to select parameters by study type (#795)
@@ -15,9 +38,26 @@
 * CMAX automatically selected in box plots if available (#890)
 * Allow user to select additional `grouping variables` (chosen in the mapping) for ratio calculations (#868)
 * General button at top page to save all NCA results, settings & draft slides as a ZIP file (#638)
-
+* Settings are now uploaded on initial opening of the app in the data tab, and applied to the next steps (#860)
+* Settings file has been converted from rds to yaml, allowing better readability and editing for users. (#901)
+* WTBL and WTBLU columns added to the data mapping, for optional conversion of dose to adjust to body weight for excretion calculations (#959)
+* Slope selector table for half life adjustments uses time to choose the point of interest. Also it is aesthetics have been polished (#956)
+* Partial interval parameters section now allows other calculations than `AUCINT`, such as `RCAMINT`, `AUCINTD` or `CAVGINT` among others (#524)
+* Slope selector plots count with grouping options (#333)
+* Add x/y axis limits for the exploration plots (#817) and facet titles including subject count (#894)
+* Settings upload and processing is flexible, so non-data specific template settings can be uploaded (#993)
+* Mapping will allow custom numeric input values instead of columns for `ADOSEDUR` and `TRTRINT` (#1051)
+* Help buttons have been included/updated for most App sections: `Parameter Selection`,
+  `Slope Selector`, `Additional Analysis` and `Partial Interval calculations` (#975)
+* Removed `methods`, `scales`, and `stringr` from package dependencies, replacing all usages with base R equivalents (#1108)
+* SelectInputs updated using a new function to ensure all widgets include variable labels. (#899)
+* Export modal now allows users to select which slide sections (mean plots, statistics,
+  line plots, box plots, individual plots/parameters, additional analysis) to include in
+  PPTX and HTML exports; box plot parameters are also configurable (#972)
+* Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (#1195)
 
 ## Bugs fixed
+* SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
 * Bug fix for box/violin plots that were crashing when violin option selected (#786)
@@ -30,6 +70,20 @@
 * Bug fix to allow for unrecognized units to be used in AVALU and DOSEU (#861)
 * Bug fix so NA units are allowed in the data (as per CDISC guidelines for NA samples) and not treated as a unique unit (#907)
 * Bug fix so app doesn't crash if NCA is rerun with an error (e.g. No exclusion REASON) (#913)
+* NCA results flagging logic updated to include Missing column and correctly
+identify difference between missing and not requested (#934)
+* Pagination controls in the slope selector and the interactivity of the plots is less buggy (#956)
+* Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (#963)
+* Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (#1008)
+* Prevent a crash when selecting already defined identity variables (i.e, `DOSETRT`) for the `Additional Grouping Variables` in the `Mapping Tab` (#1060)
+* Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
+* All Results input widgets now shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1146)
+* Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1148)
+* Manual interval parameter renaming now uses dose-relative times (`start_dose`/`end_dose`) consistently across descriptive statistics, parameter plots, and boxplots, matching `pivot_wider_pknca_results` (#1169)
+* Descriptive statistics parameter columns are now correctly displayed when using the `selector_label` widget, and duplicate rows from the concentration data join are deduplicated (#1169)
+* Fixed `PKNCA_update_data_object` custom units table join using hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys, which failed when the units table included group columns like `PARAM` or `PCSPEC` (#1159)
+* Fixed `DOSNOA` computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1` instead of `DOSNOA=2`, leading to incorrect dose time matching (#1116)
+* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
 
 # aNCA 0.1.0
 

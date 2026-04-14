@@ -137,9 +137,9 @@ tab_tlg_server <- function(id, data) {
       wrap = TRUE,
       selection = "multiple",
       editable = c("Footnote", "Stratification", "Condition", "Comment"),
-      columns = list(
-        Output = colDef(html = TRUE)
-      )
+      columns = function(df) {
+        define_cols(df, overrides = list(Output = colDef(html = TRUE)))
+      }
     )
 
     observeEvent(selected_tlg_state()$edit(), {
@@ -179,9 +179,9 @@ tab_tlg_server <- function(id, data) {
       selection = "multiple",
       defaultExpanded = TRUE,
       width = "775px", # fit to the modal width
-      columns = list(
-        PKid = colDef(html = TRUE)
-      )
+      columns = function(df) {
+        define_cols(df, overrides = list(Output = colDef(html = TRUE)))
+      }
     )
 
     # Update the Selection column when the confirm_add_tlg button is pressed
@@ -275,21 +275,32 @@ tab_tlg_server <- function(id, data) {
         select("id") %>%
         pull()
 
-      panels <- lapply(tlg_order_listings, function(g_id) {
-        list_ui <- {
-          g_def <- .TLG_DEFINITIONS[[g_id]]
-          module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
+      if (!requireNamespace("rlistings", quietly = TRUE)) {
+        panels <- list(nav_panel(
+          "Listings",
+          tags$div(
+            class = "alert alert-warning",
+            "Package 'rlistings' is not installed. Install it to view listings:",
+            tags$code("install.packages('rlistings')")
+          )
+        ))
+      } else {
+        panels <- lapply(tlg_order_listings, function(g_id) {
+          list_ui <- {
+            g_def <- .TLG_DEFINITIONS[[g_id]]
+            module_id <- paste0(g_id, stringi::stri_rand_strings(1, 5))
 
-          if (exists(g_def$fun)) {
-            tlg_module_server(module_id, data, "listing", get(g_def$fun), g_def$options)
-            tlg_module_ui(session$ns(module_id), "listing", g_def$options)
-          } else {
-            tags$div("Listing not implemented yet")
+            if (exists(g_def$fun)) {
+              tlg_module_server(module_id, data, "listing", get(g_def$fun), g_def$options)
+              tlg_module_ui(session$ns(module_id), "listing", g_def$options)
+            } else {
+              tags$div("Listing not implemented yet")
+            }
           }
-        }
 
-        nav_panel(g_def$label, list_ui)
-      })
+          nav_panel(g_def$label, list_ui)
+        })
+      }
 
       panels$"widths" <- c(2, 10)
 

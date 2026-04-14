@@ -4,16 +4,18 @@
 ratios_table_ui <- function(id) {
   ns <- NS(id)
   fluidRow(
-
-    # Main widgets for the ratio table
-    div(
-      class = "plot-widget-group",
+    column(
+      width = 10,
+      # Main widgets for the ratio table
       actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
-      actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning"),
-      # Help button
+      actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
+    ),
+    # Help button
+    column(
+      width = 2,
       dropdown(
         div(
-          tags$h1("Ratio calculations guide"),
+          tags$h2("Ratio Calculations Help"),
           p("
             This section is to perform ratio calculations within the allowed parameters
             that you previously selected. Add a new row for each ratio calculation to
@@ -63,17 +65,23 @@ ratios_table_ui <- function(id) {
         style = "unite",
         right = TRUE,
         icon = icon("question"),
-        status = "primary"
-      ),
+        status = "primary",
+        width = "500px"
+      )
     ),
-    fluidRow(
-      reactableOutput(ns("ratio_calculations"))
-    )
+    reactableOutput(ns("ratio_calculations"))
   )
+
 }
 
+#' Validate imported ratio rows against available options.
+#' @param ratio_df Data.frame of imported ratio rows.
+#' @param param_options Character vector of valid parameter codes.
+#' @param ref_options Character vector of valid group reference strings.
+#' @returns List with `valid` (data.frame) and `skipped` (character vector of reasons).
+#' @noRd
 ratios_table_server <- function(
-    id, adnca_data, extra_group_vars) {
+    id, adnca_data, extra_group_vars, imported_ratios) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -96,19 +104,7 @@ ratios_table_server <- function(
     })
 
     ratio_reference_options <- reactive({
-      # We paste the column name and value to use as a specified input
-      if (ncol(ratio_groups()) == 0) {
-        return(NULL)
-      }
-
-      ratio_groups() %>%
-        # Convert all columns to character
-        mutate(across(everything(), as.character)) %>%
-        pivot_longer(cols = everything()) %>%
-        mutate(input_name = paste0(name, ": ", value)) %>%
-        pull(input_name) %>%
-        unique() %>%
-        sort()
+      .build_ratio_reference_options(ratio_groups())
     })
 
     ratio_param_options <- reactive({
@@ -145,6 +141,48 @@ ratios_table_server <- function(
         PPTESTCD = character(),
         stringsAsFactors = FALSE
       )
+    })
+
+    # Restore ratios from uploaded settings (append to existing rows).
+    # pending_ratios stores the import until param/group options are available.
+    pending_ratios <- reactiveVal(NULL)
+
+    observeEvent(imported_ratios(), {
+      req(imported_ratios())
+      pending_ratios(imported_ratios())
+    })
+
+    observe({
+      req(pending_ratios(), ratio_param_options(), ratio_reference_options())
+
+      ratio_df <- isolate(pending_ratios())
+      pending_ratios(NULL)
+
+      ratio_df <- .coerce_ratio_df(ratio_df)
+      if (is.null(ratio_df) || nrow(ratio_df) == 0) return()
+
+      if (!.has_required_ratio_cols(ratio_df)) {
+        showNotification("Skipped ratio import: missing required columns",
+                         type = "warning", duration = 10)
+        return()
+      }
+
+      result <- .validate_ratio_table(
+        ratio_df, ratio_param_options(), ratio_reference_options()
+      )
+
+      if (length(result$skipped) > 0) {
+        showNotification(
+          paste0("Skipped ratio rows:\n", paste(result$skipped, collapse = "\n")),
+          type = "warning", duration = 10
+        )
+      }
+
+      if (any(result$keep)) {
+        ratio_table(ratio_df[result$keep, , drop = FALSE])
+        reset_reactable_memory()
+        refresh_reactable(refresh_reactable() + 1)
+      }
     })
 
     # Add row
@@ -293,6 +331,20 @@ ratios_table_server <- function(
   })
 }
 
+# Build reference options from ratio group columns.
+.build_ratio_reference_options <- function(groups_df) {
+  if (ncol(groups_df) == 0) {
+    return(NULL)
+  }
+  groups_df %>%
+    mutate(across(everything(), as.character)) %>%
+    pivot_longer(cols = everything()) %>%
+    mutate(input_name = paste0(name, ": ", value)) %>%
+    pull(input_name) %>%
+    unique() %>%
+    sort()
+}
+
 .generate_pptestcd_for_ratios <- function(tbl, adnca_data) {
   analyte_col <- adnca_data$conc$columns$groups$group_analyte
   profile_col <- "ATPTREF"
@@ -322,4 +374,66 @@ ratios_table_server <- function(
       ),
       PPTESTCD = make.unique(PPTESTCD, sep = "")
     )
+}
+
+# Coerce imported ratio data to a data frame, handling YAML empty arrays.
+.coerce_ratio_df <- function(ratio_df) {
+  if (!is.data.frame(ratio_df)) {
+    ratio_df <- tryCatch(as.data.frame(ratio_df, stringsAsFactors = FALSE),
+                         error = function(e) NULL)
+  }
+  ratio_df
+}
+
+# Check that a ratio data frame has all required columns.
+.has_required_ratio_cols <- function(ratio_df) {
+  required_cols <- c(
+    "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+    "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+  )
+  all(required_cols %in% names(ratio_df))
+}
+
+# Validate all rows in a ratio table. Returns list(keep, skipped).
+.validate_ratio_table <- function(ratio_df, param_options, ref_options) {
+  all_group_options <- c(ref_options, "(all other levels)")
+  valid_agg <- c("yes", "no", "if-needed")
+  skipped <- character()
+  keep <- logical(nrow(ratio_df))
+
+  for (i in seq_len(nrow(ratio_df))) {
+    reasons <- .validate_ratio_row(
+      ratio_df[i, ], param_options, ref_options, all_group_options, valid_agg
+    )
+    if (length(reasons) == 0) {
+      keep[i] <- TRUE
+    } else {
+      skipped <- c(skipped, paste0("Row ", i, " (", ratio_df$PPTESTCD[i], "): ",
+                                   paste(reasons, collapse = "; ")))
+    }
+  }
+  list(keep = keep, skipped = skipped)
+}
+
+# Validate a single ratio row against available options.
+# Returns a character vector of reasons (empty if valid).
+.validate_ratio_row <- function(row, param_options, ref_options,
+                                all_group_options, valid_agg) {
+  reasons <- character()
+  if (!row$TestParameter %in% param_options)
+    reasons <- c(reasons, paste0("TestParameter '", row$TestParameter, "' not available"))
+  if (!row$RefParameter %in% param_options)
+    reasons <- c(reasons, paste0("RefParameter '", row$RefParameter, "' not available"))
+  if (!row$RefGroups %in% ref_options)
+    reasons <- c(reasons, paste0("RefGroups '", row$RefGroups, "' not available"))
+  if (!row$TestGroups %in% all_group_options)
+    reasons <- c(reasons, paste0("TestGroups '", row$TestGroups, "' not available"))
+  if (!tolower(row$AggregateSubject) %in% valid_agg)
+    reasons <- c(reasons, paste0("AggregateSubject '", row$AggregateSubject, "' invalid"))
+  if (!is.numeric(row$AdjustingFactor) || length(row$AdjustingFactor) != 1 ||
+        is.na(row$AdjustingFactor))
+    reasons <- c(reasons, paste0(
+      "AdjustingFactor '", row$AdjustingFactor, "' must be a single numeric value"
+    ))
+  reasons
 }

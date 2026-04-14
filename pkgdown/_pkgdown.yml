@@ -3,14 +3,25 @@ template:
   light-switch: true
 navbar:
   structure:
-    left: [home, reference, articles, validations, news, faqs]
+    left: [home, user_guide, dev_guide, project]
     right: [search, github, lightswitch]
   components:
     home:
       text: "Get Started"
       href: articles/aNCA.html
-    articles:
-      text: Contributing
+    user_guide:
+      text: "User Resources"
+      icon: fa-book
+      menu:
+        - text: Manual
+          href: articles/manual.html
+        - text: NCA Concepts
+          href: articles/background.html
+        - text: FAQs
+          href: articles/FAQs.html
+    dev_guide:
+      text: "Developer Resources"
+      icon: fa-code
       menu:
         - text: Contributing
           href: articles/contributing.html
@@ -18,24 +29,18 @@ navbar:
           href: articles/adding_tlg.html
         - text: Design & Architecture
           href: articles/design.html
-        - text: NCA Concepts
-          href: articles/background.html
+        - text: Functions manual
+          href: reference/index.html
+    project:
+      text: "Project"
+      icon: fa-info-circle
+      menu:
         - text: Governance
           href: articles/governance.html
         - text: Roadmap
           href: articles/roadmap.html
-    validations:
-      text: "Validation Plan"
-      icon: fa-check-circle
-      href: articles/validations.html
-      aria-label: Validations
-    reference:
-      text: "Functions manual"
-      href: reference/index.html
-    news:
-      text: "News & Releases"
-      href: news/index.html
-    faqs:
-      text: "FAQs"
-      href: articles/FAQs.html
+        - text: Validation Plan
+          href: articles/validations.html
+        - text: News & Releases
+          href: news/index.html
 url: "https://pharmaverse.github.io/aNCA/"

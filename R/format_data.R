@@ -12,6 +12,9 @@
 #'   calculate `CONCDUR`.
 #' @param nca_exclude_reason_columns A character vector specifying the columns to indicate reasons
 #'   for excluding records from NCA analysis.
+#' @param dose_group_columns Character vector of columns to group by when computing
+#'   DOSNOA. Should use dose-level grouping (without specimen/analyte columns)
+#'   to ensure consistent dose numbering across specimen types.
 #'
 #' @returns A data frame containing the filtered and processed concentration data. The following new
 #'   columns are created:
@@ -36,13 +39,14 @@
 #'   - Arranges the data by group_columns and dose time.
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- adnca_example
 #' conc_data <- format_pkncaconc_data(
 #'   ADNCA = adnca,
 #'   group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
 #'   time_column = "AFRLT",
 #'   rrlt_column = "ARRLT",
-#'   route_column = "ROUTE"
+#'   route_column = "ROUTE",
+#'   dose_group_columns = c("STUDYID", "DOSETRT", "USUBJID")
 #' )
 #' @import dplyr
 #' @export
@@ -53,7 +57,8 @@ format_pkncaconc_data <- function(ADNCA,
                                   rrlt_column = "ARRLT",
                                   route_column = "ROUTE",
                                   time_end_column = NULL,
-                                  nca_exclude_reason_columns = NULL) {
+                                  nca_exclude_reason_columns = NULL,
+                                  dose_group_columns) {
   if (nrow(ADNCA) == 0) {
     stop("Input dataframe is empty. Please provide a valid ADNCA dataframe.")
   }
@@ -109,7 +114,7 @@ format_pkncaconc_data <- function(ADNCA,
     "(INFUS|DRIP|IV|INTRAVEN|IVADMIN|BOLUS|INTRAVASCULAR|INTRA-?ARTERIAL|",
     "INTRACARDIAC|INTRACORONARY)"
   )
-  ADNCA %>%
+  ADNCA <- ADNCA %>%
     mutate( #round to prevent floating point precision issues
       dose_time = round(!!sym(time_column) - !!sym(rrlt_column), 6),
       std_route =  ifelse(
@@ -117,13 +122,21 @@ format_pkncaconc_data <- function(ADNCA,
         "intravascular",
         "extravascular"
       )
-    ) %>%
+    )
+
+  # Compute DOSNOA from unique dose times per dose group, then join back.
+  # This avoids diff() sensitivity to sort order when multiple PARAM/PCSPEC
+  # share the same dose times.
+  dose_numbering <- ADNCA %>%
+    distinct(!!!syms(dose_group_columns), dose_time) %>%
+    arrange(!!!syms(dose_group_columns), dose_time) %>%
+    group_by(!!!syms(dose_group_columns)) %>%
+    mutate(DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))) %>%
+    ungroup()
+
+  ADNCA %>%
+    left_join(dose_numbering, by = c(dose_group_columns, "dose_time")) %>%
     arrange(!!!syms(group_columns), dose_time) %>%
-    group_by(!!!syms(group_columns)) %>%
-    mutate(
-      DOSNOA = cumsum(c(TRUE, diff(dose_time) > tol))
-    ) %>%
-    ungroup() %>%
     select(-dose_time)
 }
 

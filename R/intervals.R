@@ -25,7 +25,7 @@
 #'  or contain multiple doses in dataset
 #'
 #' @examples
-#' adnca <- read.csv(system.file("shiny/data/example-ADNCA.csv", package = "aNCA"))
+#' adnca <- adnca_example
 #' pknca_data <- PKNCA_create_data_object(adnca)
 #' pknca_conc <- pknca_data$conc
 #' pknca_dose <- pknca_data$dose
@@ -82,7 +82,8 @@ format_pkncadata_intervals <- function(pknca_conc,
     )))
 
   # Based on dose times create a data frame with start and end times
-  dose_intervals <- left_join(sub_pknca_dose,
+  dose_intervals <- left_join(
+    sub_pknca_dose,
     sub_pknca_conc,
     by = intersect(names(sub_pknca_dose), c(conc_groups, "DOSNOA")),
     relationship = "many-to-many"
@@ -90,7 +91,6 @@ format_pkncadata_intervals <- function(pknca_conc,
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
     mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
-    filter(ARRLT >= 0) %>% # filter out negative ARRLT values
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
     ungroup() %>%
@@ -118,6 +118,8 @@ format_pkncadata_intervals <- function(pknca_conc,
       )
     }) %>%
     ungroup() %>%
+    # Remove scientifically invalid intervals where start > end
+    filter(start <= end) %>%
     select(any_of(c("start", "end", conc_groups,
                     "ATPTREF", "DOSNOA", "VOLUME", keep_interval_cols))) %>%
 
@@ -127,12 +129,76 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(type_interval = "main")
 }
 
+#' Derive study types from a PKNCAdata object
+#'
+#' Extracts concentration and dose data, merges dose duration if needed,
+#' and calls [detect_study_types()] to classify each group.
+#'
+#' @param data A PKNCAdata object.
+#'
+#' @returns A deduplicated data frame with grouping columns and a `type` column.
+#'
+#' @importFrom dplyr mutate left_join filter select slice_max distinct across all_of
+#' @noRd
+#' @keywords internal
+.derive_study_types <- function(data) {
+  conc_data <- data$conc$data
+  conc_groups <- group_vars(data$conc)
+  dose_groups <- group_vars(data$dose)
+  # Use union of conc and dose groups (to include PCSPEC for excretion detection)
+  groups <- unique(c(conc_groups, dose_groups))
+  groups <- groups[vapply(groups, function(col) {
+    !is.null(col) && length(unique(conc_data[[col]])) > 1
+  }, logical(1))]
+
+  # Blank METABFL unconditionally so metabolite-specific types are not
+  # assigned at the interval level.
+  conc_data$METABFL <- ""
+
+  # Dose duration may live in dose data only; merge it for detect_study_types.
+  duration_col <- data$dose$columns$duration
+  if (!is.null(duration_col) && !duration_col %in% names(conc_data)) {
+    dose_data <- data$dose$data
+    if (duration_col %in% names(dose_data)) {
+      conc_time <- data$conc$columns$time
+      dose_time <- data$dose$columns$time
+      join_by <- intersect(dose_groups, conc_groups)
+
+      dose_subset <- dose_data[, unique(c(join_by, dose_time, duration_col)), drop = FALSE]
+      dose_subset <- unique(dose_subset)
+      names(dose_subset)[names(dose_subset) == dose_time] <- ".dose_time"
+
+      conc_data <- conc_data %>%
+        mutate(.ROWID = seq_len(n())) %>%
+        left_join(dose_subset, by = join_by, relationship = "many-to-many") %>%
+        filter(.dose_time <= .data[[conc_time]] | is.na(.dose_time)) %>%
+        slice_max(.dose_time, n = 1, by = .ROWID, with_ties = FALSE) %>%
+        select(-".ROWID", -".dose_time")
+    } else {
+      conc_data[[duration_col]] <- 0
+    }
+  }
+
+  study_types_df <- detect_study_types(
+    conc_data,
+    groups,
+    metabfl_column = "METABFL",
+    route_column = data$dose$columns$route,
+    volume_column = data$conc$columns$volume
+  )
+
+  # Deduplicate by grouping columns to prevent interval row duplication
+  # when detect_study_types produces multiple types per group.
+  grouping_cols <- setdiff(names(study_types_df), "type")
+  study_types_df %>%
+    distinct(across(all_of(grouping_cols)), .keep_all = TRUE)
+}
+
 #' Update an intervals data frame with user-selected parameters by study type
 #'
 #' @param data A PKNCAdata object containing intervals and dosing data.
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
-#' @param study_types_df A data frame mapping analysis profiles to their study type.
-#' @param auc_data A data frame containing partial AUC ranges.
+#' @param int_parameters A data frame containing partial AUC ranges.
 #' @param impute Logical indicating whether to impute start values for parameters.
 #' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
 #' imputation rule using PKNCA format. The list should either contain three elements named:
@@ -142,23 +208,32 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' which does not specify any BLQ imputation in any interval.
 #'
 #' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
+#' @importFrom dplyr group_by ungroup slice_max distinct
 #' @importFrom purrr pmap
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
 update_main_intervals <- function(
   data,
-  parameter_selections,
-  study_types_df, auc_data,
+  parameter_selections = NULL,
+  int_parameters = NULL,
   impute = TRUE,
   na_imputation_rule = NULL,
   blq_imputation_rule = NULL
 ) {
+
+  if (is.null(parameter_selections)) parameter_selections <- list()
+  if (is.null(int_parameters)) {
+    int_parameters <- data.frame(
+      parameter = character(), start_auc = numeric(), end_auc = numeric()
+    )
+  }
+
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
-  # Determine the grouping columns from the study_types_df
-  grouping_cols <- setdiff(names(study_types_df), c("type"))
+  study_types_df <- .derive_study_types(data)
+
+  grouping_cols <- setdiff(names(study_types_df), "type")
   missing_columns <- setdiff(grouping_cols, colnames(data$intervals))
-  # check for grouping cols in intervals
   if (length(missing_columns) > 0) {
     stop(paste("Missing required columns:", paste(missing_columns, collapse = ", ")))
   }
@@ -187,17 +262,18 @@ update_main_intervals <- function(
     select(-type)
 
   # Add partial AUCs if any
-  auc_ranges <- auc_data %>%
-    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc)
+  auc_ranges <- int_parameters %>%
+    filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc) %>%
+    mutate(parameter = translate_terms(parameter, "PPTESTCD", "PKNCA"))
 
   # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc) {
+  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc, parameter) {
     data$intervals %>%
       mutate(
         start = start + start_auc,
         end = start + (end_auc - start_auc),
         across(where(is.logical), ~FALSE),
-        aucint.last = TRUE,
+        !!sym(parameter) := TRUE,
         type_interval = "manual"
       )
   })

@@ -1,7 +1,6 @@
 .slope-selector-module {
   padding: 1em;
-  height: calc(100vh - 150px);
-  max-height: calc(100vh - 150px);
+  min-height: calc(100vh - 150px);
 
   .sw-dropdown {
     float: right;
@@ -54,7 +53,8 @@
     position: fixed; 
     bottom: 0;
     width: 75%;
-    background: $anca-white;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(1px);
     padding: 10px;
     z-index: 1000;
     border-top: 1px solid $grey-5;
@@ -77,9 +77,21 @@
     text-align: left !important;
   }
 
+  .slope-selector-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2em;
+    margin: 2em 0;
+    color: $grey-1;
+    font-style: italic;
+    text-align: center;
+  }
+
   .slope-plots-container {
     margin-top: 2em;
-    height: calc(100vh - 220px);
+    min-height: calc(100vh - 220px);
     margin-bottom: 2em;
   }
 
@@ -88,7 +100,7 @@
     margin-bottom: 2em;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(33em, 1fr));
-    height: calc(100vh - 220px);
+    min-height: calc(100vh - 220px);
     gap: 1rem;
   }
 }

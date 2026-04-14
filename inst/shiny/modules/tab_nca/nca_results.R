@@ -1,19 +1,19 @@
+#' Module for displaying NCA results.
+#'
+#' Provides a parameter picker, units table, interactive results table with
+#' color-coded acceptance flags and a download button for the NCA output.
+#'
+#' @param id Module namespace ID.
+
 # nca_results UI Module
 nca_results_ui <- function(id) {
   ns <- NS(id)
 
   nav_panel(
     "NCA Results",
-    pickerInput(
-      ns("params"),
-      "Select Parameters :",
-      choices = list("Run NCA first" = ""),
-      selected = list("Run NCA first" = ""),
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("select_params_ui_wrapper")
     ),
-    units_table_ui(ns("units_table")),
-    reactable_ui(ns("myresults")),
+    card(reactable_ui(ns("myresults")), class = "border-0 shadow-none"),
 
     # Color legend for the results table
     div(
@@ -48,14 +48,6 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    units_table_server(
-      "units_table",
-      reactive({          #' Pass `pknca_data` to the units table only when the results
-        req(res_nca())    #' are available.
-        pknca_data()
-      })
-    )
-
     final_results <- reactive({
       req(res_nca())
       res <- res_nca()
@@ -70,7 +62,11 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
               mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")),
             by = intersect(names(.), names(session$userData$units_table()))
           ) %>%
-          mutate(PPSTRES = PPORRES * conversion_factor) %>%
+          mutate(PPSTRES = ifelse(
+            !is.null(conversion_factor),
+            PPORRES * conversion_factor,
+            PPORRES
+          )) %>%
           select(-conversion_factor)
       }
 
@@ -79,47 +75,15 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       results <- res_nca()
 
       # Transform results
-      final_results <- pivot_wider_pknca_results(results)
+      extra_vars_to_keep <- c(grouping_vars(), "DOSEA", "ATPTREF", "ROUTE")
+      session$userData$extra_vars_to_keep <- extra_vars_to_keep
 
-      # Join subject data to allow the user to group by it
-      conc_data_to_join <- res_nca()$data$conc$data %>%
-        select(any_of(c(
-          grouping_vars(),
-          unname(unlist(res_nca()$data$conc$columns$groups)),
-          "DOSEA",
-          "ATPTREF",
-          "ROUTE"
-        )))
+      final_results <- pivot_wider_pknca_results(
+        results,
+        flag_rules = settings()$flags,
+        extra_vars_to_keep = extra_vars_to_keep
+      )
 
-      final_results <- final_results %>%
-        inner_join(conc_data_to_join, by = intersect(names(.), names(conc_data_to_join))) %>%
-        distinct() %>%
-        mutate(
-          flagged = "NOT DONE"
-        )
-
-      # Add flaging column in the pivoted results
-      applied_flags <- purrr::keep(settings()$flags, function(x) x$is.checked)
-      flag_params <- names(settings()$flags)
-      flag_thr <- sapply(settings()$flags, FUN =  function(x) x$threshold)
-      flag_rule_msgs <- paste0(flag_params, c(" < ", " < ", " > ", " > ", " < "), flag_thr)
-      flag_cols <- names(final_results)[formatters::var_labels(final_results)
-                                        %in% translate_terms(flag_params, "PPTESTCD", "PPTEST")]
-
-      if (length(flag_params) > 0) {
-        final_results <- final_results %>%
-          rowwise() %>%
-          mutate(
-            flagged = case_when(
-              is.na(Exclude) ~ "ACCEPTED",
-              any(sapply(
-                flag_rule_msgs, function(msg) str_detect(Exclude, fixed(msg))
-              )) ~ "FLAGGED",
-              TRUE ~ "MISSING"
-            )
-          ) %>%
-          ungroup()
-      }
       final_results
     })
 
@@ -127,53 +91,69 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       req(final_results())
 
       # Save the latest version of the object
-      session$userData$results$nca_results$pivoted_results <- final_results()
+      session$userData$results$nca_results$nca_pkparam <- final_results()
 
       # Represent the available parameters in the input
       param_pptest_cols <- intersect(
         unname(formatters::var_labels(final_results())),
         unique(c(metadata_nca_parameters$PPTEST, ratio_table()$PPTESTCD))
       )
-      param_inputnames <- translate_terms(param_pptest_cols, "PPTEST", "input_names")
+      param_inputnames <- metadata_nca_parameters$PPTESTCD[
+        match(param_pptest_cols, metadata_nca_parameters$PPTEST)
+      ]
 
-      updatePickerInput(
-        session = session,
-        inputId = "params",
-        label = "Select Parameters :",
-        choices = sort(param_inputnames),
-        selected =  param_inputnames
-      )
+      # Add manual interval parameters (e.g. AUCINT_0-12) to the selector
+      col_names <- names(final_results())
+      col_base_names <- sub("\\[.*", "", col_names)
+      interval_params <- col_base_names[grepl("_\\d+.*-\\d+", col_base_names)]
+      # Remove bare base names (e.g. "AUCINT") that only exist as manual intervals —
+      # they have no standalone meaning and would appear as empty entries
+      interval_base_names <- unique(sub("_\\d+.*", "", interval_params))
+      param_inputnames <- setdiff(param_inputnames, interval_base_names)
+      param_inputnames <- unique(c(param_inputnames, interval_params))
+
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = sort(param_inputnames),
+                     initial_selection = param_inputnames,
+                     selector_ui_wrapper = "select_params_ui_wrapper",
+                     id = "params",
+                     label = "Select Parameters:",
+                     metadata_type = "parameter")
     })
 
     output_results <- reactive({
       req(final_results(), input$params)
 
       # Select columns of parameters selected, considering each can have multiple diff units
-      param_cols <- unique(res_nca()$result$PPTESTCD)
+      # Include interval-suffixed names so they can be individually toggled
+      col_names_all <- names(final_results())
+      all_param_cols <- unique(c(
+        res_nca()$result$PPTESTCD,
+        sub("\\[.*", "", col_names_all[grepl("_\\d+.*-\\d+", col_names_all)])
+      ))
       input_params <- sub(":.*", "", input$params)
       #identify parameters to be removed from final results
-      params_rem_cols <- setdiff(param_cols, input_params)
+      params_rem_cols <- setdiff(all_param_cols, input_params)
 
       col_names <- names(final_results())
       # Extract base names before the "[", or leave as-is if no "["
-      col_base_names <- ifelse(str_detect(col_names, "\\["),
-                               str_remove(col_names, "\\[.*"),
+      col_base_names <- ifelse(grepl("\\[", col_names),
+                               sub("\\[.*", "", col_names),
                                col_names)
 
       final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)]))) %>%
-        # Add group variable labels (others were added in pivot_wider_pknca_result)
-        apply_labels()
+        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
     })
 
     reactable_server(
       "myresults",
       output_results,
-      compact = TRUE,
-      style = list(fontSize = "0.75em"),
-      height = "68vh",
       rowStyle = function(x) {
         function(index) {
+          if (!"flagged" %in% names(x)) return(NULL)
+
           flagged_value <- x$flagged[index]
           if (flagged_value == "FLAGGED") {
             list(backgroundColor = FLAG_COLOR_FLAGGED)
@@ -188,7 +168,7 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
 
     output$local_download_NCAres <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_name(), "-pivoted_NCA_results.csv")
+        paste0(session$userData$project_prefix("-"), "pivoted_NCA_results.csv")
       },
       content = function(file) {
         write.csv(output_results(), file, row.names = FALSE)

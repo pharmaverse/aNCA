@@ -11,12 +11,17 @@ add_exclusion_reasons(pknca_data, exclusion_list)
 
 \item{exclusion_list}{A list of lists, each with elements:
 \itemize{
-\item reason: character string with the exclusion reason (e.g., "Vomiting")
+\item reason: character string with the exclusion reason
 \item rows: integer vector of row indices to apply the reason to
+\item exclude_nca: logical, if TRUE the rows are excluded from NCA
+calculations (added to the exclude column)
+\item exclude_tlg: logical, if TRUE the rows are flagged with
+PKSUM1F = "Y" so TLGs can filter them out
 }}
 }
 \value{
-The modified PKNCAdata object with updated exclusion reasons in the concentration object.
+The modified PKNCAdata object with updated exclusion
+reasons and PKSUM1F in the concentration object.
 }
 \description{
 This function adds exclusion reasons to the \code{exclude} column of the concentration object

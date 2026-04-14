@@ -6,30 +6,30 @@
 #' variables. It also defines the output area for the interactive plot.
 #'
 #' @param id A character string giving the namespace for the module.
+#' @param extra_ui Optional UI elements appended at the bottom of the sidebar.
 #'
 #' @returns A UI element representing the QC plot tab.
 
-pk_dose_qc_plot_ui <- function(id) {
+pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
   ns <- NS(id)
+
   # The nav_panel function creates the tab
   layout_sidebar(
+    fillable = TRUE,
     sidebar = sidebar(
       position = "right",
       open = TRUE,
-      pickerInput(
-        inputId = ns("group_var"),
-        label = "Choose the variables to group by:",
-        choices = NULL,
-        selected = NULL,
-        multiple = TRUE,
-        options = list(`actions-box` = TRUE)
+      actionButton(
+        ns("add_to_exports"),
+        label = "Add to Exports",
+        icon = icon("plus"),
+        class = "btn btn-primary btn-sm",
+        width = "100%"
       ),
-      pickerInput(
-        inputId = ns("colour_var"),
-        label = "Choose the variables to colour by:",
-        choices = NULL,
-        selected = NULL,
-        options = list(`actions-box` = TRUE)
+      extra_ui,
+      uiOutput(ns("groupvar_ui_wrapper")
+      ),
+      uiOutput(ns("colourvar_ui_wrapper")
       ),
       pickerInput(
         inputId = ns("pcspec"),
@@ -56,7 +56,8 @@ pk_dose_qc_plot_ui <- function(id) {
         options = list(`actions-box` = TRUE)
       )
     ),
-    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%")
+    plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
+    br(), br()
   )
 }
 
@@ -93,20 +94,30 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       )
 
       param_choices_colour <- c(dose_col, route_col)
-      updatePickerInput(
-        session,
-        "colour_var",
-        choices = param_choices_colour,
-        selected = param_choices_colour[1]
-      )
 
-      param_choices_group <- grouping_vars()
-      updatePickerInput(
-        session,
-        "group_var",
-        choices = param_choices_group,
-        selected = param_choices_group[1]
-      )
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = param_choices_colour,
+                     initial_selection = param_choices_colour[1],
+                     selector_ui_wrapper = "colourvar_ui_wrapper",
+                     id = "colour_var",
+                     label = "Choose the variables to colour by:",
+                     metadata_type = "variable",
+                     multiple = FALSE)
+
+      variable_choices_group <- grouping_vars()
+
+      # Rendering the group by selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = variable_choices_group,
+                     initial_selection = variable_choices_group[1],
+                     selector_ui_wrapper = "groupvar_ui_wrapper",
+                     id = "group_var",
+                     label = "Choose the variables to group by:",
+                     metadata_type = "variable")
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
       updatePickerInput(
@@ -136,12 +147,11 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       list(conc = filtered_conc, dose = filtered_dose)
     })
 
-    # Render the PK Dose QC plot
-    output$pk_dose_qc_plot <- renderPlotly({
+    # Build the QC plot as a reactive ggplot (reused for rendering and saving)
+    qc_ggplot <- reactive({
       req(filtered_data())
       req(input$colour_var, input$group_var, input$usubjid, input$show_samples_doses)
 
-      subj_col <- pknca_data()$conc$columns$subject
       dose_col <- pknca_data()$dose$columns$dose
       doseu_col <- pknca_data()$dose$columns$doseu
 
@@ -149,13 +159,6 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
       show_doses <- "Doses" %in% input$show_samples_doses
 
       colour_var_units <- if (input$colour_var == dose_col) doseu_col else NULL
-
-      # Adjust height based on number of subjects and groups
-      height_adjust <- 200 + 20 * filtered_data()$dose %>%
-        group_by(across(all_of(input$group_var))) %>%
-        summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop") %>%
-        pull(n) %>%
-        max(na.rm = TRUE) * length(unique(filtered_data()$dose[, input$group_var]))
 
       pk_dose_qc_plot(
         data_conc = filtered_data()$conc,
@@ -171,9 +174,37 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         title = "Dose and Sample Events",
         show_pk_samples = show_pk_samples,
         show_doses = show_doses,
-        as_plotly = TRUE,
-        height = max(c(1000, height_adjust))
+        as_plotly = FALSE
       )
     })
+
+    # Render the PK Dose QC plot as interactive plotly
+    output$pk_dose_qc_plot <- renderPlotly({
+      req(qc_ggplot())
+
+      subj_col <- pknca_data()$conc$columns$subject
+
+      # Adjust height based on number of subjects and groups
+      n_max <- filtered_data()$dose %>%
+        group_by(across(all_of(input$group_var))) %>%
+        summarise(n = n_distinct(!!sym(subj_col)), .groups = "drop") %>%
+        pull(n) %>%
+        max(na.rm = TRUE)
+      n_groups <- length(unique(filtered_data()$dose[, input$group_var]))
+      height_adjust <- 200 + 20 * n_max * n_groups
+
+      p <- qc_ggplot()
+      ggplotly(p, tooltip = "text", height = max(c(1000, height_adjust))) %>%
+        layout(
+          title = list(text = p$labels$title),
+          legend = list(traceorder = "normal")
+        )
+    })
+
+    # Return the add_to_exports button click and the current plot
+    list(
+      add_to_exports = reactive(input$add_to_exports),
+      current_plot = qc_ggplot
+    )
   })
 }

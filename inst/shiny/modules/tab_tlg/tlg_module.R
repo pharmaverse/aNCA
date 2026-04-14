@@ -8,6 +8,19 @@
 #' To read more check out documentation for each function of the module and the contributing
 #' guidelines.
 
+#' Filter out rows excluded from TLGs via PKSUM1F.
+#' Rows with PKSUM1F == "Y" are removed.
+#' @param data A data frame (typically conc$data).
+#' @return The filtered data frame.
+#' @noRd
+filter_tlg_excluded <- function(data) {
+  if ("PKSUM1F" %in% names(data)) {
+    data[data$PKSUM1F != "Y", , drop = FALSE]
+  } else {
+    data
+  }
+}
+
 #' Function generating UI for a TLG module.
 #'
 #' @param id      id of the module, preferably with randomly generated part to avoid conflicts
@@ -23,12 +36,12 @@ tlg_module_ui <- function(id, type, options) {
         class = "tlg-options-container",
         dropdown(
           div(
-            tags$h2(str_glue("{type} options")),
-            tags$p(str_glue("
+            tags$h2(glue::glue("{type} options")),
+            tags$p(glue::glue("
               You can specify any {type} customization options that are supported by the specific
               {type} implementation function.
             ")),
-            tags$p(str_glue(
+            tags$p(glue::glue(
               "Leaving a widget empty will allow default behaviour of the {type} function."
             )),
             tags$p(
@@ -166,7 +179,8 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
-        do.call(render_list, purrr::list_modify(list(data = data()$conc$data), !!!list_options))
+        tlg_data <- filter_tlg_excluded(data()$conc$data)
+        do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")
@@ -190,7 +204,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
     options_values <- lapply(names(options), function(option) {
       if (is.character(options[[option]])) return(NULL)
-      fn <- get(str_glue("tlg_option_{options[[option]]$type}_server"))
+      fn <- get(glue::glue("tlg_option_{options[[option]]$type}_server"))
       fn(option, options[[option]], data, reactive(input$reset_widgets))
     }) %>%
       setNames(names(options)) %>%
@@ -213,6 +227,6 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
   if (grepl(".group_label", opt_id)) {
     return(tags$h1(opt_def, class = "tlg-group-label"))
   }
-  ui_fn <- get(str_glue("tlg_option_{opt_def$type}_ui"))
+  ui_fn <- get(glue::glue("tlg_option_{opt_def$type}_ui"))
   ui_fn(opt_id, opt_def, data)
 }

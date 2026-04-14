@@ -11,6 +11,15 @@ excretion_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
+    # Header row with help button
+    div(
+      style = "display: flex; gap: 0.5em; align-items: center; margin-bottom: 1.2em;",
+      tags$h2(
+        "Excretion Analysis",
+        style = "font-size:1.2em; margin-bottom:0.6em; margin-right:1em;"
+      ),
+      excretion_help_ui()
+    ),
     div(
       class = "excretion-section-container",
       id = ns("excretion_section_container"),
@@ -22,9 +31,9 @@ excretion_ui <- function(id) {
         card(
           card_body(
             selectInput(ns("matrix_select"), "Select Matrices:", choices = NULL, multiple = TRUE),
-            selectInput(ns("end_time_col"), "Map End Time Column:", choices = NULL),
+            uiOutput(ns("map_end_col_ui_wrapper")),
             checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = TRUE),
-            selectInput(ns("param_select"), "Select Parameters:", choices = NULL, multiple = TRUE),
+            uiOutput(ns("param_select_ui_wrapper")),
             checkboxGroupInput(
               ns("interval_types"),
               "Select Interval Types:",
@@ -34,9 +43,7 @@ excretion_ui <- function(id) {
             actionButton(ns("submit_btn"), "Submit")
           )
         ),
-        card(
-          reactable_ui(ns("results_table"))
-        )
+        card(reactable_ui(ns("results_table")), class = "border-0 shadow-none")
       )
     )
   )
@@ -73,12 +80,35 @@ excretion_server <- function(id, input_pknca_data) {
 
       updateSelectInput(session, "matrix_select", choices = pcspecs,
                         selected = if ("Urine" %in% pcspecs) "Urine" else NULL)
-      updateSelectInput(session, "end_time_col", choices = available_cols,
-                        selected = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL)
-      updateSelectInput(session, "param_select", choices = metadata_nca_parameters %>%
-                          filter(TYPE == "Urine") %>%
-                          pull(PKNCA, PPTESTCD),
-                        selected = c("ae", "fe"))
+
+      # Rendering the map end time column selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = available_cols,
+                     initial_selection = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL,
+                     selector_ui_wrapper = "map_end_col_ui_wrapper",
+                     id = "end_time_col",
+                     label = "Map End Time Column:",
+                     metadata_type = "variable",
+                     pknca_data = NULL,
+                     multiple = FALSE)
+
+      urine_params_to_select <- metadata_nca_parameters %>%
+        filter(TYPE == "Urine")
+
+      parameters_to_select <- urine_params_to_select$PPTESTCD
+
+      # Rendering the parameters to select selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = parameters_to_select,
+                     initial_selection = c("RCAMINT", "FREXINT"),
+                     selector_ui_wrapper = "param_select_ui_wrapper",
+                     id = "param_select",
+                     label = "Select Parameters:",
+                     metadata_type = "parameter")
     })
 
     # Perform calculations
@@ -88,15 +118,17 @@ excretion_server <- function(id, input_pknca_data) {
 
       dose_col <- data$dose$columns$dose
       doseu <- data$dose$columns$doseu
-      weight_col <- "WEIGHT"
-      weightu <- "WEIGHTU"
+      weight_col <- "WTBL"
+      weightu <- "WTBLU"
 
       # Adjust dose by bodyweight if selected
       if (input$adjust_bw) {
         # Check if weight columns exist
         if (!(weight_col %in% names(data$dose$data)) || !(weightu %in% names(data$dose$data))) {
-          showNotification("Please ensure WEIGHT and WEIGHTU columns exist in the dose data.
-                           No adjustments can be made.", type = "warning")
+          showNotification(
+            glue::glue("Please ensure {weight_col} and {weightu} columns exist in the dose data.
+                      No adjustments can be made."), type = "warning"
+          )
           return(NULL)
         }
 
@@ -194,10 +226,7 @@ excretion_server <- function(id, input_pknca_data) {
       "results_table",
       results_output,
       defaultPageSize = 10,
-      compact = TRUE,
-      showPageSizeOptions = TRUE,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output()))),
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(results_output())))
     )
 
     # Save the results in the output folder
@@ -205,4 +234,44 @@ excretion_server <- function(id, input_pknca_data) {
       session$userData$results$additional_analysis$excretion_results <- results_output()
     })
   })
+}
+
+# Excretion analysis help button dropdown
+excretion_help_ui <- function() {
+  dropdown(
+    div(
+      class = "anca-help-dropdown",
+      style = "min-width:22em; max-width:30em;",
+      tags$h2("Excretion Analysis Help"),
+      p("Analyze excretion parameters for selected matrices (e.g., URINE) and intervals."),
+      tags$ul(
+        tags$li(
+          tags$b("Select Matrices"), ": Choose specimen types for excretion analysis."
+        ),
+        tags$li(
+          tags$b("Map End Time"), ": Select the column marking the end of sample collection."
+        ),
+        tags$li(
+          tags$b("Adjust for Body Weight"),
+          ": Optionally adjust dose by body weight if available."
+        ),
+        tags$li(
+          tags$b("Select Parameters"), ": Pick excretion PK parameters to calculate."
+        ),
+        tags$li(
+          tags$b("Interval Types"), ": Choose to analyze by samples, dose profiles or both."
+        ),
+        tags$li(
+          tags$b("Results Table"), ": View and download calculated excretion results."
+        )
+      ),
+      p(
+        "Complete selections and click Submit. Results update below. ",
+        "If VOLUME is missing, analysis is disabled."
+      )
+    ),
+    style = "unite",
+    icon = icon("question"),
+    status = "primary"
+  )
 }

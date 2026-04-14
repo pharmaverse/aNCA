@@ -26,7 +26,7 @@ data_filtering_ui <- function(id) {
         class = "data-filtering-container",
         div(
           class = "filtered-table-container",
-          reactable_ui(ns("filtered_data_display"))
+          card(reactable_ui(ns("filtered_data_display")), class = "border-0 shadow-none")
         ),
         div(
           class = "filters-container",
@@ -42,20 +42,67 @@ data_filtering_ui <- function(id) {
   )
 }
 
-data_filtering_server <- function(id, raw_adnca_data) {
-  moduleServer(id, function(input, output, session) {
-    # Handle user-provided filters
-    filters <- reactiveValues()
+#' Insert a filter panel into the accordion and start its server module.
+#' @param session Shiny session.
+#' @param filters ReactiveValues storing filter modules.
+#' @param filter_counter ReactiveVal with current filter count.
+#' @param filters_metadata Reactive with column metadata.
+#' @param initial_values Optional list with column, condition, value to restore.
+#' @noRd
+.insert_filter_panel <- function(session, filters, filter_counter,
+                                 filters_metadata, initial_values = NULL) {
+  filter_counter(filter_counter() + 1)
+  accordion_panel_close(id = "filters", values = TRUE)
 
-    # Hold information about data types and choices for filters.
+  filter_id <- paste0("filter_", filter_counter())
+
+  accordion_panel_insert(
+    id = "filters",
+    panel = input_filter_ui(session$ns(filter_id), names(filters_metadata()))
+  )
+  accordion_panel_open(id = "filters", value = session$ns(filter_id))
+
+  filters[[filter_id]] <- input_filter_server(
+    filter_id,
+    filters_metadata = filters_metadata,
+    initial_values = initial_values
+  )
+}
+
+#' Remove all existing filter panels and reset the counter.
+#' @param session Shiny session.
+#' @param filters ReactiveValues storing filter modules.
+#' @param filter_counter ReactiveVal with current filter count.
+#' @noRd
+.clear_filter_panels <- function(session, filters, filter_counter) {
+  for (fid in names(reactiveValuesToList(filters))) {
+    removeUI(
+      selector = paste0(
+        ".accordion-item[data-value='",
+        session$ns(fid), "']"
+      )
+    )
+    filters[[fid]] <- NULL
+  }
+  filter_counter(0)
+}
+
+data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
+  moduleServer(id, function(input, output, session) {
+    filters <- reactiveValues()
+    filter_counter <- reactiveVal(0)
+
     filters_metadata <- reactive({
       req(raw_adnca_data())
-
       lapply(colnames(raw_adnca_data()), function(col) {
         if (is.numeric(raw_adnca_data()[[col]]) && length(unique(raw_adnca_data()[[col]])) > 20) {
           list(type = "numeric")
         } else {
-          list(type = "text", choices = sort(unique(raw_adnca_data()[[col]])))
+          vals <- unique(raw_adnca_data()[[col]])
+          has_na <- any(is.na(vals))
+          choices <- sort(vals[!is.na(vals)])
+          if (has_na) choices <- c(choices, "(NA)")
+          list(type = "text", choices = choices)
         }
       }) %>%
         setNames(colnames(raw_adnca_data())) %>%
@@ -63,23 +110,74 @@ data_filtering_server <- function(id, raw_adnca_data) {
     })
 
     observeEvent(input$add_filter, {
-      accordion_panel_close(id = "filters", values = TRUE)
-
-      # Create a unique ID for each filter
-      filter_id <- paste0("filter_", input$add_filter)
-
-      # Insert a new filter UI
-      accordion_panel_insert(
-        id = "filters",
-        panel = input_filter_ui(session$ns(filter_id), names(filters_metadata()))
-      )
-
-      accordion_panel_open(id = "filters", value = session$ns(filter_id))
-
-      filters[[filter_id]] <- input_filter_server(filter_id, filters_metadata = filters_metadata)
+      .insert_filter_panel(session, filters, filter_counter, filters_metadata)
     })
 
-    #' When filters change, show notification reminding the user about submitting
+    # Restore filters from uploaded settings.
+    # pending_import stores filters until metadata is ready.
+    # awaiting_columns stores expected columns for auto-submit;
+    # cleared after submit so the observer becomes a no-op.
+    pending_import <- reactiveVal(NULL)
+    awaiting_columns <- reactiveVal(NULL)
+
+    observeEvent(imported_filters(), {
+      req(imported_filters())
+      pending_import(imported_filters())
+    })
+
+    # Restore filter panels once metadata is available.
+    observe({
+      req(pending_import(), filters_metadata())
+
+      filters_to_restore <- isolate(pending_import())
+      pending_import(NULL)
+
+      .clear_filter_panels(session, filters, filter_counter)
+
+      meta <- filters_metadata()
+      valid_filters <- Filter(
+        function(filt) {
+          col <- filt$column
+          if (!col %in% names(meta)) return(FALSE)
+          # For categorical columns, check that at least one value exists
+          if (meta[[col]]$type != "numeric") {
+            any(filt$value %in% meta[[col]]$choices)
+          } else {
+            TRUE
+          }
+        },
+        filters_to_restore
+      )
+
+      for (filt in valid_filters) {
+        .insert_filter_panel(
+          session, filters, filter_counter, filters_metadata, filt
+        )
+      }
+
+      awaiting_columns(
+        vapply(valid_filters, `[[`, character(1), "column")
+      )
+    })
+
+    # Auto-submit once all restored filters report the expected columns.
+    observe({
+      req(awaiting_columns())
+
+      current <- lapply(
+        reactiveValuesToList(filters), function(x) x()
+      ) %>% purrr::keep(\(x) !is.null(x))
+
+      current_cols <- vapply(
+        current, function(f) f$column %||% "", character(1)
+      )
+
+      if (all(awaiting_columns() %in% current_cols)) {
+        awaiting_columns(NULL)
+        shinyjs::click("submit_filters")
+      }
+    })
+
     filter_reminder_notification <- reactiveVal(NULL)
     observe({
       applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
@@ -100,19 +198,19 @@ data_filtering_server <- function(id, raw_adnca_data) {
     filtered_data <- reactive({
       removeNotification(filter_reminder_notification())
 
-      # Extract filters from reactive values
       applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
 
       if (length(applied_filters) == 0) return(raw_adnca_data())
 
       applied_filters %>%
-        sapply(\(filt) str_glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) %>% # nolint
+        sapply(\(filt) glue::glue("* {filt$column} {filt$condition} {paste0(filt$value, collapse = ', ')}")) %>% # nolint
         paste0(collapse = "\n") %>%
         paste0("Submitting the following filters:\n", .) %>%
         log_info()
 
-      # Filter and return data
+      session$userData$applied_filters <- applied_filters
+
       withCallingHandlers({
         apply_filters(raw_adnca_data(), applied_filters)
       }, warning = function(w) {
@@ -127,14 +225,21 @@ data_filtering_server <- function(id, raw_adnca_data) {
     }) %>%
       bindEvent(input$submit_filters, raw_adnca_data())
 
+    # Expose the applied filters list
+    applied_filters_list <- reactive({
+      lapply(reactiveValuesToList(filters), function(x) x()) %>%
+        purrr::keep(\(x) !is.null(x))
+    })
+
     reactable_server(
       "filtered_data_display",
       filtered_data,
-      height = "50vh",
-      defaultPageSize = 25,
-      style = list(fontSize = "0.75em")
+      height = "50vh"
     )
 
-    filtered_data
+    list(
+      filtered_data = filtered_data,
+      applied_filters = applied_filters_list
+    )
   })
 }

@@ -28,6 +28,63 @@ get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
 }, USE.NAMES = FALSE)
 
 
+#' Apply default target units onto a data-derived units table
+#'
+#' Takes a table of desired target units (with `PPTESTCD` and `PPSTRESU`)
+#' and merges it with a data-derived units table to fill in `PPORRESU` and
+#' calculate `conversion_factor`. Parameters not present in the defaults
+#' retain their data-derived values.
+#'
+#' @param default_units A data frame with at least `PPTESTCD` and `PPSTRESU` columns.
+#' @param data_units A data frame with the full data-derived units table
+#'   (`PPTESTCD`, `PPORRESU`, `PPSTRESU`, `conversion_factor`, and optional group columns).
+#'
+#' @returns A list with two elements:
+#'   * `units` - The complete units table with defaults applied.
+#'   * `failed` - A data frame of rows where conversion factor could not be calculated.
+#'
+#' @importFrom dplyr left_join mutate coalesce filter select any_of
+#' @export
+apply_unit_defaults <- function(default_units, data_units) {
+  # Identify group columns (everything except the core unit columns)
+  core_cols <- c("PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
+  group_cols <- setdiff(names(data_units), core_cols)
+
+  # Join imported defaults onto data units by PPTESTCD (and any group columns present)
+  join_cols <- intersect(c("PPTESTCD", group_cols), names(default_units))
+
+  merged <- left_join(
+    data_units,
+    default_units %>%
+      select(any_of(c(join_cols, "PPSTRESU"))) %>%
+      rename(imported_PPSTRESU = PPSTRESU),
+    by = join_cols
+  )
+
+  # Apply imported PPSTRESU where available, keep data default otherwise
+  merged <- merged %>%
+    mutate(
+      PPSTRESU = coalesce(imported_PPSTRESU, PPSTRESU),
+      conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU)
+    ) %>%
+    select(-imported_PPSTRESU)
+
+  # Identify rows where conversion failed
+  failed <- merged %>% filter(is.na(conversion_factor))
+
+  # For failed rows, revert to data defaults (PPSTRESU = PPORRESU, factor = 1)
+  if (nrow(failed) > 0) {
+    merged <- merged %>%
+      mutate(
+        PPSTRESU = ifelse(is.na(conversion_factor), PPORRESU, PPSTRESU),
+        conversion_factor = ifelse(is.na(conversion_factor), 1, conversion_factor)
+      )
+  }
+
+  list(units = merged, failed = failed)
+}
+
+
 #' Convert Numeric Value and Unit to ISO 8601 Duration
 #'
 #' The function converts a numeric value and its associated time unit into ISO 8601 duration string.
@@ -131,9 +188,9 @@ convert_to_iso8601_duration <- Vectorize(function(value, unit) {
 #' The function assumes that the `AVALU` column contains concentration units
 #' in the form of "x/y" (e.g., "ug/mL", "mg/g").
 #' @importFrom dplyr `%>%` mutate sym
+#' @importFrom glue glue
 #' @importFrom purrr pmap_chr
 #' @importFrom units set_units drop_units
-#' @importFrom stringr str_split str_trim
 #' @examples
 #' df <- data.frame(
 #'   PCSPEC = c("urine", "feces", "plasma"),
@@ -164,10 +221,10 @@ convert_volume_units <- function(df,
 
     if (any(is.na(c(concu, vol, volu)))) next
 
-    unit_parts <- str_split(concu, "/", simplify = TRUE)
-    if (ncol(unit_parts) != 2) next
+    unit_parts <- strsplit(concu, "/")[[1]]
+    if (length(unit_parts) != 2) next
 
-    denom_unit <- str_trim(unit_parts[2])
+    denom_unit <- trimws(unit_parts[2])
 
     tryCatch({
       u_vol <- set_units(vol, volu, mode = "standard")
@@ -186,7 +243,7 @@ convert_volume_units <- function(df,
       log_conversion(i, vol, volu, u_vol_new, denom_unit, concu, verbose = TRUE)
       TRUE
     }, error = function(e) {
-      warning(glue::glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit}
+      warning(glue("Row {i}: Failed to convert {vol} {volu} to {denom_unit}
                          (concentration: {concu}): {e$message}"))
     })
 

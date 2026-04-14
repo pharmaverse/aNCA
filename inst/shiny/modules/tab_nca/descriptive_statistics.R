@@ -14,13 +14,7 @@ descriptive_statistics_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    pickerInput(
-      inputId = ns("select_display_parameters"),
-      label = "Parameter to display:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("param_to_display_ui_wrapper")
     ),
     pickerInput(
       inputId = ns("select_display_statistic"),
@@ -30,17 +24,9 @@ descriptive_statistics_ui <- function(id) {
       multiple = TRUE,
       options = list(`actions-box` = TRUE)
     ),
-    pickerInput(
-      ns("summary_groupby"),
-      "Group by variables:",
-      choices = NULL,
-      selected = NULL,
-      multiple = TRUE,
-      options = list(`actions-box` = TRUE)
+    uiOutput(ns("groupby_ui_wrapper")
     ),
-    card(
-      reactable_ui(ns("descriptive_stats"))
-    ),
+    card(reactable_ui(ns("descriptive_stats")), class = "border-0 shadow-none"),
     card(
       downloadButton(ns("download_summary"), "Download the NCA Summary Data")
     )
@@ -50,6 +36,8 @@ descriptive_statistics_ui <- function(id) {
 # Server function for the summary statistics module
 descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+
     # Update the input for the group by picker
     observeEvent(res_nca(), {
       req(res_nca())
@@ -63,9 +51,24 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
 
+      grouping_vars <- c(group_cols, classification_cols, subj_col)
+      initial_selection <-  c(group_cols, classification_cols)
+
+      # Rendering the group by selector
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = grouping_vars,
+                     initial_selection = initial_selection,
+                     selector_ui_wrapper = "groupby_ui_wrapper",
+                     id = "summary_groupby",
+                     label = "Group by variables:",
+                     metadata_type = "variable")
+
       updatePickerInput(session, "summary_groupby",
-                        choices = c(group_cols, classification_cols, subj_col),
-                        selected = c(group_cols, classification_cols))
+                        choices = unique(c(group_cols, classification_cols, subj_col)),
+                        selected = unique(c(group_cols, classification_cols)))
+
     })
 
     # Reactive expression for summary table based on selected group and parameters
@@ -81,38 +84,56 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
-      results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
+      results_to_join <- res_nca()$data$conc$data %>%
+        select(any_of(cols_to_join)) %>%
+        distinct()
       stats_data <- inner_join(
         results$result,
         results_to_join,
         by = intersect(names(results$result), names(results_to_join)),
         relationship = "many-to-many"
       ) %>%
-        filter(type_interval != "manual")
+        # Exclude flagged records from summary statistics
+        filter(is.na(exclude) | exclude == "") %>%
+        # Rename manual interval parameters to include the range suffix
+        # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
+        rename_interval_params()
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
     })
 
     summary_stats_filtered <- reactive({
+      # Map clean parameter names (e.g. "CMAX") back to actual column names
+      # that include units (e.g. "CMAX[ng/mL]")
+      all_cols <- colnames(summary_stats())
+      selected_params <- input$select_display_parameters
+      matched_cols <- all_cols[gsub("\\[.*", "", all_cols) %in% selected_params]
+
       summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic")), input$select_display_parameters) %>%
-        filter(Statistic %in% input$select_display_statistic) %>%
-        apply_labels()
+        select(any_of(c(input$summary_groupby, "Statistic", matched_cols))) %>%
+        filter(Statistic %in% input$select_display_statistic)
     })
 
     observeEvent(res_nca(), {
       req(summary_stats())
 
-      # Update the select display parameters picker input
-      updatePickerInput(
-        session,
-        "select_display_parameters",
-        choices = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby)),
-        selected = setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
-      )
+      # Get the statistics variables needed
+      params_needed <- setdiff(colnames(summary_stats()), c("Statistic", input$summary_groupby))
+      clean_params_needed <- gsub("\\[.*", "", params_needed)
 
-      # Update the select display parameters picker input
+      # Rendering the parameter to display variable
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = clean_params_needed,
+                     initial_selection = clean_params_needed,
+                     selector_ui_wrapper = "param_to_display_ui_wrapper",
+                     id = "select_display_parameters",
+                     label = "Parameter to display:",
+                     metadata_type = "parameter")
+
+      # Update the select display statistics picker input
       updatePickerInput(
         session,
         "select_display_statistic",
@@ -123,26 +144,22 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
     # Save the updates of the object for the ZIP file
     observeEvent(summary_stats(), {
-      session$userData$results$nca_results$descriptive_statistics <- summary_stats()
+      session$userData$results$nca_results$nca_statistics <- summary_stats()
     })
 
     # Render the reactive summary table in a data table
     reactable_server(
       "descriptive_stats",
       summary_stats_filtered,
-      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered()))),
       defaultPageSize = 10,
-      striped = TRUE,
-      bordered = TRUE,
-      compact = TRUE,
-      style = list(fontSize = "0.75em")
+      pageSizeOptions = reactive(c(10, 25, 50, 100, nrow(summary_stats_filtered())))
     )
 
     # Download summary statistics as CSV
     output$download_summary <- downloadHandler(
       filename = function() {
         paste0(
-          session$userData$project_name(), "-",
+          session$userData$project_prefix("-"),
           "NCA_summary_",
           format(Sys.time(), "%Y-%m-%d"), ".csv"
         )
@@ -152,6 +169,5 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         write.csv(summary_stats_filtered(), file)
       }
     )
-
   })
 }

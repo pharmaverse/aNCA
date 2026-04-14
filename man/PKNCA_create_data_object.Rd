@@ -4,14 +4,33 @@
 \alias{PKNCA_create_data_object}
 \title{Creates a \code{PKNCA::PKNCAdata} object.}
 \usage{
-PKNCA_create_data_object(adnca_data, nca_exclude_reason_columns = NULL)
+PKNCA_create_data_object(
+  adnca_data,
+  mapping = NULL,
+  applied_filters = NULL,
+  time_duplicate_rows = NULL
+)
 }
 \arguments{
-\item{adnca_data}{Data table containing ADNCA data.}
+\item{adnca_data}{Data frame containing raw or pre-processed ADNCA data.}
 
-\item{nca_exclude_reason_columns}{Optional character vector of column names.
-Excluding records from the NCA
-must be indicated by populating any of these columns with a non-empty character value.}
+\item{mapping}{Optional named list of column mappings (as produced by the
+Shiny mapping UI). When provided, the preprocessing pipeline is run
+internally and NCA exclusion flag columns are derived from
+\code{mapping$NCAwXRS} (plus \code{"DTYPE"}). Metabolite names are taken from
+\code{mapping$Metabolites}. Defaults to \code{NULL} (no preprocessing, no
+exclusion columns).}
+
+\item{applied_filters}{Optional list of filters to apply (see
+\code{\link[=apply_filters]{apply_filters()}}). Only used when \code{mapping} is provided.
+Defaults to \code{NULL}.}
+
+\item{time_duplicate_rows}{Optional integer vector of row indices (in the
+mapped dataset, before filtering) to mark as \code{"TIME DUPLICATE"} in the
+\code{DTYPE} column. When \code{NULL} (the default) and time duplicates are
+detected, an error of class \code{"time_duplicate_error"} is raised with the
+duplicate rows attached. Use this to forward user-resolved selections
+from the Shiny duplicate resolution modal.}
 }
 \value{
 \code{PKNCAdata} object with concentration, doses, and units based on ADNCA data.
@@ -20,15 +39,26 @@ must be indicated by populating any of these columns with a non-empty character 
 Creates a \code{PKNCA::PKNCAdata} object.
 }
 \details{
-This function creates a standard PKNCAdata object from ADNCA data.
-It requires the following columns in the ADNCA data:
+This function creates a standard PKNCAdata object from raw or pre-processed
+ADNCA data.
+
+When \code{mapping} is provided, the function runs the full preprocessing pipeline
+internally: column mapping (\code{\link[=apply_mapping]{apply_mapping()}}), metabolite flagging
+(\code{\link[=create_metabfl]{create_metabfl()}}), class/length adjustment (\code{\link[=adjust_class_and_length]{adjust_class_and_length()}}),
+duplicate annotation, optional filtering (\code{\link[=apply_filters]{apply_filters()}}), and derives
+NCA exclusion flag columns from \code{mapping$NCAwXRS} (plus \code{"DTYPE"}).
+
+When \code{mapping} is \code{NULL} (the default), the function expects already
+pre-processed ADNCA data with the standard column names in place.
+
+The ADNCA data (after preprocessing, if applicable) must contain:
 \itemize{
 \item STUDYID: Study identifier.
 \item PCSPEC: Matrix.
 \item ROUTE: Route of administration.
 \item DOSETRT: Drug identifier.
 \item USUBJID: Unique subject identifier.
-\item ATPTREF: (Non- standard column). Can be any column, used for filtering the data for NCA
+\item ATPTREF: (Non-standard column). Can be any column, used for filtering the data for NCA
 \item PARAM: Analyte.
 \item AVAL: Analysis value.
 \item AVALU: AVAL unit.
@@ -40,12 +70,14 @@ It requires the following columns in the ADNCA data:
 \item ADOSEDUR: Duration of dose.
 \item RRLTU: Time unit.
 }
+
+Then it proceeds to:
 \enumerate{
 \item Creating pk concentration data using \code{format_pkncaconc_data()}.
 \item Creating dosing data using \code{format_pkncadose_data()}.
-\item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}.
+\item Creating \code{PKNCAconc} object using \code{PKNCA::PKNCAconc()}
 with formula \code{AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM}.
-\item Creating PKNCAdose object using \code{PKNCA::PKNCAdose()}.
+\item Creating PKNCAdose object using \code{PKNCA::PKNCAdose()}
 with formula \code{DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID}.
 \item Creating PKNCAdata object using \code{PKNCA::PKNCAdata()}.
 \item Updating units in PKNCAdata object so each analyte has its own unit.
@@ -53,22 +85,22 @@ with formula \code{DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID}.
 }
 \examples{
 adnca_data <- data.frame(
-STUDYID = rep("STUDY001", 6),
-PCSPEC = rep("Plasma", 6),
-ROUTE = rep("IV", 6),
-DOSETRT = rep("DrugA", 6),
-USUBJID = rep("SUBJ001", 6),
-ATPTREF = rep(1, 6),
-PARAM = rep("AnalyteA", 6),
-AVAL = c(0, 5, 10, 7, 3, 1),
-AVALU = rep("ng/mL", 6),
-DOSEA = rep(100, 6),
-DOSEU = rep("mg", 6),
-AFRLT = c(0, 1, 2, 3, 4, 6),
-ARRLT = c(0, 1, 2, 3, 4, 6),
-NFRLT = c(0, 1, 2, 3, 4, 6),
-ADOSEDUR = rep(0.5, 6),
-RRLTU = rep("hour", 6)
+  STUDYID = rep("STUDY001", 6),
+  PCSPEC = rep("Plasma", 6),
+  ROUTE = rep("IV", 6),
+  DOSETRT = rep("DrugA", 6),
+  USUBJID = rep("SUBJ001", 6),
+  ATPTREF = rep(1, 6),
+  PARAM = rep("AnalyteA", 6),
+  AVAL = c(0, 5, 10, 7, 3, 1),
+  AVALU = rep("ng/mL", 6),
+  DOSEA = rep(100, 6),
+  DOSEU = rep("mg", 6),
+  AFRLT = c(0, 1, 2, 3, 4, 6),
+  ARRLT = c(0, 1, 2, 3, 4, 6),
+  NFRLT = c(0, 1, 2, 3, 4, 6),
+  ADOSEDUR = rep(0.5, 6),
+  RRLTU = rep("hour", 6)
 )
 PKNCA_create_data_object(adnca_data)
 

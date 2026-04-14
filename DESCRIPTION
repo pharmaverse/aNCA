@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.1.0.9042
+Version: 0.1.0.9148
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -28,23 +28,20 @@ License: Apache License (>= 2)
 Imports: 
     dplyr,
     formatters,
-    flextable,
     ggplot2,
+    glue,
     magrittr,
-    methods,
-    officer,
     PKNCA (>= 0.12.1),
     plotly (>= 4.11.0),
     purrr,
     rlang,
-    rlistings,
-    scales,
     stats,
-    stringr,
     tern,
     tidyr,
     units,
-    utils
+    utils,
+    writexl,
+    yaml
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -52,8 +49,8 @@ Suggests:
     arrow,
     covr,
     DT,
+    flextable,
     ggh4x,
-    glue,
     haven,
     htmltools,
     htmlwidgets,
@@ -64,12 +61,15 @@ Suggests:
     markdown,
     mockery,
     nestcolor,
-    openxlsx2,
+    officer,
     pak,
+    readxl,
     reactable,
     reactable.extras,
+    rlistings,
     rmarkdown,
     sass,
+    scales,
     shiny,
     shinycssloaders,
     shinyjs,
@@ -82,7 +82,6 @@ Suggests:
     quarto,
     vdiffr,
     withr,
-    yaml,
     zip
 Config/testthat/edition: 3
 Language: en-US

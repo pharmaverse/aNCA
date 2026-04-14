@@ -34,6 +34,9 @@
 #' @return A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
 #'
 #' @export
+#' @importFrom ggplot2 ggplot aes geom_point facet_wrap scale_shape_manual
+#' scale_colour_manual scale_alpha_manual labs theme_bw
+#' @importFrom plotly ggplotly layout
 #' @examples
 #'
 #' # Sample concentration data
@@ -67,7 +70,6 @@
 #'   colour_var_units = "DOSE_UNIT",
 #'   title = "Sample Dosing and PK Plot"
 #' )
-#' @export
 pk_dose_qc_plot <- function(data_conc,
                             data_dose = NULL,
                             x_var,
@@ -129,7 +131,11 @@ pk_dose_qc_plot <- function(data_conc,
 
   # Define colors: black for PK samples, hue palette for doses
   if (length(colour_levels) > 0) {
-    dose_colours <- scales::hue_pal()(length(colour_levels))
+    n_colours <- length(colour_levels)
+    dose_colours <- grDevices::hcl(
+      h = seq(15, 375, length.out = n_colours + 1)[seq_len(n_colours)],
+      c = 100, l = 65
+    )
   } else {
     dose_colours <- character()
   }
