@@ -203,6 +203,7 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 
 ## PR Workflow
 
+- **Before creating a branch**: Always `git fetch origin main && git checkout origin/main` to ensure you branch from the latest remote main. Do not rely on the local `main` ref being up to date.
 - **Branch name**: `<issue-number>-<type>/<short-description>` (e.g., `123-bug/data-upload-fails`)
 - **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes
 - **PR template**: Use `.github/PULL_REQUEST_TEMPLATE.md`. Link issue with `Closes #<number>`, describe changes, complete the contributor checklist
