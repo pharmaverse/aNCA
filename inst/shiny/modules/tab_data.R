@@ -17,6 +17,19 @@
 #'   - auto_replay_ready: reactive logical, TRUE when auto-replay data
 #'     processing is complete and the app can navigate to the saved tab
 
+#' Abort auto-replay, dismiss loading popup, and show a warning.
+#' @param auto_replay ReactiveVal to reset.
+#' @param message Warning message to display.
+#' @param log_msg Message for the log.
+#' @keywords internal
+#' @noRd
+.abort_auto_replay <- function(auto_replay, message, log_msg) {
+  auto_replay(FALSE)
+  shiny::removeModal()
+  log_warn(log_msg)
+  showNotification(message, type = "warning", duration = 10)
+}
+
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
@@ -165,15 +178,13 @@ tab_data_server <- function(id) {
         shinyjs::delay(500, {
           skipped <- session$userData$mapping_skipped %||% character(0)
           if (length(skipped) > 0) {
-            auto_replay(FALSE)
-            shiny::removeModal()
-            log_warn("Auto-replay aborted: partial mapping failure.")
-            showNotification(
+            .abort_auto_replay(
+              auto_replay,
               paste(
                 "Session restore stopped: some column mappings could",
                 "not be applied. Please review and continue manually."
               ),
-              type = "warning", duration = 10
+              "Auto-replay aborted: partial mapping failure."
             )
             data_step("mapping")
             updateTabsetPanel(
@@ -193,15 +204,13 @@ tab_data_server <- function(id) {
       if (!auto_replay()) return()
       shinyjs::delay(15000, {
         if (auto_replay()) {
-          auto_replay(FALSE)
-          shiny::removeModal()
-          log_warn("Auto-replay aborted: pipeline did not complete in time.")
-          showNotification(
+          .abort_auto_replay(
+            auto_replay,
             paste(
               "Session restore stopped: the data pipeline did not",
               "complete. Please review and continue manually."
             ),
-            type = "warning", duration = 10
+            "Auto-replay aborted: pipeline did not complete in time."
           )
         }
       })
@@ -210,20 +219,18 @@ tab_data_server <- function(id) {
     observeEvent(adnca_mapped(), {
       req(adnca_mapped())
 
-      # Auto-replay step 2: Check for partial mapping failure.
-      # If mappings were skipped, abort auto-replay and stay on mapping.
+      # Auto-replay step 2 (safety net): Check for partial mapping failure.
+      # Primary check is in step 1 delay callback; this catches late races.
       if (auto_replay()) {
         skipped <- session$userData$mapping_skipped %||% character(0)
         if (length(skipped) > 0) {
-          auto_replay(FALSE)
-          shiny::removeModal()
-          log_warn("Auto-replay aborted: partial mapping failure.")
-          showNotification(
+          .abort_auto_replay(
+            auto_replay,
             paste(
-              "Session restore stopped: some column mappings could not",
-              "be applied. Please review the mapping and continue manually."
+              "Session restore stopped: some column mappings could",
+              "not be applied. Please review and continue manually."
             ),
-            type = "warning", duration = 10
+            "Auto-replay aborted: partial mapping failure."
           )
           data_step("mapping")
           updateTabsetPanel(session, "data_navset", selected = "Mapping")

@@ -135,6 +135,38 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   })
 }
 
+#' Restore duplicate exclusions from stored key-based representation.
+#' Matches stored keys against the current dataset and notifies the user
+#' if some exclusions could not be matched.
+#' @param data The current mapped dataset.
+#' @param keys_df A data.frame of key columns (from settings), or NULL.
+#' @returns Matched row indices, or NULL if nothing to restore.
+#' @keywords internal
+#' @noRd
+.restore_duplicate_exclusions <- function(data, keys_df) {
+  if (is.null(keys_df) || nrow(keys_df) == 0) return(NULL)
+
+  matched_indices <- match_time_dup_keys(data, keys_df)
+  n_stored <- nrow(keys_df)
+  n_matched <- length(matched_indices %||% integer(0))
+
+  if (n_matched < n_stored) {
+    showNotification(
+      sprintf(
+        paste(
+          "%d of %d stored duplicate exclusions could not be",
+          "matched to the current dataset."
+        ),
+        n_stored - n_matched, n_stored
+      ),
+      type = "warning",
+      duration = 10
+    )
+  }
+
+  matched_indices
+}
+
 .process_imported_mapping <- function(mapping, adnca_data, session) {
 
   if (is.null(mapping)) return(character(0))
@@ -389,34 +421,14 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     processed_data <- reactive({
       req(mapped_data())
 
-      # On first run, if settings contain stored keys, match them against
-      # the current dataset to recover row indices synchronously before
-      # annotate_duplicates() runs. Must be inline to avoid a race with
-      # the reactive flush cycle.
       dup_rows <- resolved_time_duplicate_rows()
       if (is.null(dup_rows)) {
-        keys_df <- imported_mapping()$time_duplicate_keys
-        if (!is.null(keys_df) && nrow(keys_df) > 0) {
-          matched_indices <- match_time_dup_keys(mapped_data(), keys_df)
-          n_stored <- nrow(keys_df)
-          n_matched <- length(matched_indices %||% integer(0))
-          if (n_matched < n_stored) {
-            showNotification(
-              sprintf(
-                paste(
-                  "%d of %d stored duplicate exclusions could not be",
-                  "matched to the current dataset."
-                ),
-                n_stored - n_matched, n_stored
-              ),
-              type = "warning",
-              duration = 10
-            )
-          }
-          if (!is.null(matched_indices)) {
-            resolved_time_duplicate_rows(matched_indices)
-            dup_rows <- matched_indices
-          }
+        restored <- .restore_duplicate_exclusions(
+          mapped_data(), imported_mapping()$time_duplicate_keys
+        )
+        if (!is.null(restored)) {
+          resolved_time_duplicate_rows(restored)
+          dup_rows <- restored
         }
       }
 
