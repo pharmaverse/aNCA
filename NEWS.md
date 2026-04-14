@@ -1,10 +1,16 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
+
 ## Features added
 
+* `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
 * Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
 * Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (#1103)
+* ADPP now includes CRITy/CRITyFL columns for each checked flag rule and PPSUMFL/PPSUMRSN columns indicating summary exclusion status. Flagged records are excluded from descriptive statistics and parameter plot statistics, with an optional toggle to overlay excluded points as crosses (#1141)
 * Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (#1156)
 * Moved `rlistings`, `officer`, and `flextable` from Imports to Suggests with user-facing notifications when missing (#1106)
 * Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (#1136)
@@ -76,6 +82,9 @@ identify difference between missing and not requested (#934)
 * Filtering will now correctly also affect all the input widgets in NCA setup (#1092)
 * All Results input widgets now shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1146)
 * Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. `AUCINT_0-12`, `CAVGINT_0-24`) instead of collapsing them into a single entry (#1148)
+* Manual interval parameter renaming now uses dose-relative times (`start_dose`/`end_dose`) consistently across descriptive statistics, parameter plots, and boxplots, matching `pivot_wider_pknca_results` (#1169)
+* Descriptive statistics parameter columns are now correctly displayed when using the `selector_label` widget, and duplicate rows from the concentration data join are deduplicated (#1169)
+* Fixed `PKNCA_update_data_object` custom units table join using hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys, which failed when the units table included group columns like `PARAM` or `PCSPEC` (#1159)
 * Fixed `DOSNOA` computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1` instead of `DOSNOA=2`, leading to incorrect dose time matching (#1116)
 
 # aNCA 0.1.0

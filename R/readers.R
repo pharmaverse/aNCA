@@ -91,11 +91,17 @@ readers <- list(
 #'
 #' Supports both the legacy flat format (top-level `settings` key) and
 #' the versioned format (top-level `current` key). For versioned files
-#' the most recent version is returned by default. The full versioned
+#' the most recent version is returned by default. Use `version` to
+#' select a specific version by index or comment. The full versioned
 #' object is attached as attribute `"versioned"` so callers can offer
 #' version selection.
 #'
 #' @param path Character string with path to the settings YAML file.
+#' @param version Version selector for versioned settings files.
+#'   Either an integer index (1 = most recent, 2 = second, etc.) or a
+#'   character string matched against the version `comment` field.
+#'   Defaults to `1L` (most recent). Ignored for non-versioned (legacy)
+#'   settings files.
 #' @returns A list with parsed settings. For versioned files, the
 #'   attribute `"versioned"` contains the full
 #'   [read_versioned_settings()] result.
@@ -103,16 +109,15 @@ readers <- list(
 #' @importFrom yaml read_yaml
 #'
 #' @export
-read_settings <- function(path) {
+read_settings <- function(path, version = 1L) {
   obj <- yaml::read_yaml(path)
   versioned_attr <- NULL
 
   if ("current" %in% names(obj) && is.list(obj$current) &&
         "datetime" %in% names(obj$current)) {
-    # Versioned format — pass already-parsed YAML to avoid reading twice
     versioned_attr <- read_versioned_settings(obj = obj)
-    version <- versioned_attr$versions[[1]]
-    obj <- version[setdiff(names(version), VERSION_META_KEYS)]
+    chosen <- .select_version(versioned_attr$versions, version)
+    obj <- chosen[setdiff(names(chosen), VERSION_META_KEYS)]
   }
 
   # Shared validation — works for both legacy and versioned
@@ -150,6 +155,73 @@ read_settings <- function(path) {
   obj$time_duplicate_keys <- .convert_list_to_df(obj$time_duplicate_keys)
 
   obj
+}
+
+#' Select a version from a sorted list of version entries.
+#'
+#' @param versions List of version entries (sorted newest first, as
+#'   returned by [read_versioned_settings()]).
+#' @param version An integer index (default `1L` = most recent) or a
+#'   character string to match against the `comment` field.
+#' @returns A single version entry list.
+#' @noRd
+.select_version <- function(versions, version = 1L) {
+  if (is.null(version) || (is.numeric(version) && version == 1L)) {
+    return(versions[[1]])
+  }
+  if (is.numeric(version)) {
+    .select_version_by_index(versions, as.integer(version))
+  } else if (is.character(version)) {
+    .select_version_by_comment(versions, version)
+  } else {
+    stop("version must be NULL, an integer, or a character string.")
+  }
+}
+
+#' @noRd
+.select_version_by_index <- function(versions, idx) {
+  if (idx < 1 || idx > length(versions)) {
+    stop(
+      "version index ", idx, " is out of range. ",
+      "The file contains ", length(versions), " version(s)."
+    )
+  }
+  versions[[idx]]
+}
+
+#' @noRd
+.select_version_by_comment <- function(versions, comment) {
+  comments <- vapply(
+    versions,
+    function(v) if (is.null(v$comment)) "" else v$comment,
+    character(1)
+  )
+  match_idx <- which(comments == comment)
+  if (length(match_idx) == 0) {
+    stop(
+      "No version with comment \"", comment, "\" found. ",
+      "Available comments: ",
+      paste0("\"", comments[nzchar(comments)], "\"", collapse = ", ")
+    )
+  }
+  if (length(match_idx) > 1) {
+    .warn_duplicate_comments(versions, match_idx, comment)
+  }
+  versions[[match_idx[1]]]
+}
+
+#' @noRd
+.warn_duplicate_comments <- function(versions, match_idx, comment) {
+  dup_info <- vapply(match_idx, function(i) {
+    dt <- versions[[i]]$datetime
+    paste0("  index ", i, " (", if (is.null(dt)) "no date" else dt, ")")
+  }, character(1))
+  warning(
+    "Multiple versions with comment \"", comment, "\" found. ",
+    "Using the most recent (index ", match_idx[1], "). ",
+    "Use version = <index> to pick a specific one:\n",
+    paste(dup_info, collapse = "\n")
+  )
 }
 
 #' Convert a YAML list to a data.frame via bind_rows.
