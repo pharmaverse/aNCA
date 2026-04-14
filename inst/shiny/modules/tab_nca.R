@@ -122,8 +122,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       if (target == "nca") {
         auto_nca_pending(TRUE)
         # Safety: if NCA auto-run doesn't trigger within 10s, dismiss popup
-        later::later(function() {
-          if (isolate(auto_nca_pending())) {
+        shinyjs::delay(10000, {
+          if (auto_nca_pending()) {
             auto_nca_pending(FALSE)
             shiny::removeModal()
             log_warn("Auto-replay: NCA auto-run timed out.")
@@ -132,7 +132,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
               type = "warning", duration = 10
             )
           }
-        }, delay = 10)
+        })
       }
     })
 
@@ -140,10 +140,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       if (!auto_nca_pending()) return()
       auto_nca_pending(FALSE)
       # Delay to let the settings cascade settle before triggering NCA
-      later::later(function() {
+      shinyjs::delay(1500, {
         log_info("Auto-replay: triggering NCA calculation.")
         shinyjs::click("run_nca")
-      }, delay = 1.5)
+      })
     })
 
     #' Triggers NCA analysis, creating res_nca reactive

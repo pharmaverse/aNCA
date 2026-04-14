@@ -157,12 +157,10 @@ tab_data_server <- function(id) {
         session$userData$auto_replay_target_tab <- override$tab %||% ""
         log_info("Auto-replay: settings detected, will auto-advance.")
         loading_popup("Restoring session...")
-        # Delay to allow mapping selectize inputs to update.
-        # isolate() is required because later callbacks run outside
-        # a reactive context.
-        later::later(function() {
-          trigger_mapping_submit(isolate(trigger_mapping_submit()) + 1)
-        }, delay = 0.5)
+        # Delay to allow mapping selectize inputs to update
+        shinyjs::delay(500, {
+          trigger_mapping_submit(trigger_mapping_submit() + 1)
+        })
       }
     })
 
@@ -171,8 +169,8 @@ tab_data_server <- function(id) {
     # data creation errors, and any other unexpected stalls.
     observeEvent(trigger_mapping_submit(), {
       if (!auto_replay()) return()
-      later::later(function() {
-        if (isolate(auto_replay())) {
+      shinyjs::delay(15000, {
+        if (auto_replay()) {
           auto_replay(FALSE)
           shiny::removeModal()
           log_warn("Auto-replay aborted: pipeline did not complete in time.")
@@ -184,7 +182,7 @@ tab_data_server <- function(id) {
             type = "warning", duration = 10
           )
         }
-      }, delay = 15)
+      })
     }, ignoreInit = TRUE)
 
     observeEvent(adnca_mapped(), {
