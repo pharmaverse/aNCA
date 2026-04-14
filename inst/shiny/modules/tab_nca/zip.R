@@ -301,7 +301,8 @@ zip_ui <- function(id) {
 
 # Show the "Export Results" modal dialog
 .show_export_modal <- function(ns, TREE_UI, selected_tree,
-                               plot_formats, slide_formats, table_formats) {
+                               plot_formats, slide_formats, table_formats,
+                               settings_selected = TRUE) {
   slide_choices <- if (
     requireNamespace("officer", quietly = TRUE) &&
       requireNamespace("flextable", quietly = TRUE)
@@ -361,8 +362,21 @@ zip_ui <- function(id) {
                 selected = table_formats,
                 multiple = TRUE
               ),
-              style = "margin-bottom: 2em;"
-            )
+              style = "margin-bottom: 1em;"
+            ),
+            {
+              comment_div <- div(
+                id = ns("settings_comment_container"),
+                tags$br(),
+                h4("Comment ", tags$small("(optional)")),
+                textInput(
+                  ns("settings_comment"),
+                  label = NULL,
+                  placeholder = "e.g. final NCA, first draft"
+                )
+              )
+              if (settings_selected) comment_div else shinyjs::hidden(comment_div)
+            }
           )
         ),
         div(class = "w-100", uiOutput(ns("export_validation_ui")))
@@ -435,6 +449,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     # Show/hide settings comment based on settings_file selection
     observe({
       selected <- input$res_tree
+      req(!is.null(selected))
       if ("settings_file" %in% selected) {
         shinyjs::show("settings_comment_container")
       } else {
@@ -486,6 +501,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     )
 
     observeEvent(input$confirm_export, {
+      session$userData$settings_save_comment <- input$settings_comment %||% ""
       export_state$res_tree_texts <- input$res_tree
       tree_items_save <- .available_tree_items(
         nca_available       = isTRUE(nca_available()),
@@ -564,7 +580,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       .show_export_modal(ns, TREE_UI, saved_tree,
                          export_state$plot_formats,
                          export_state$slide_formats,
-                         export_state$table_formats)
+                         export_state$table_formats,
+                         settings_selected = "settings_file" %in%
+                           export_state$res_tree_texts)
     })
 
     .run_export <- function(fname, slide_config = NULL) {
@@ -583,9 +601,11 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
           output_tmpdir <- file.path(tempdir(), "output")
           unlink(output_tmpdir, recursive = TRUE)
 
+          nca_result <- tryCatch(res_nca(), error = function(e) NULL)
+
           prepare_export_files(
             target_dir    = output_tmpdir,
-            res_nca       = res_nca(),
+            res_nca       = nca_result,
             settings      = settings,
             grouping_vars = grouping_vars(),
             input         = frozen_input,

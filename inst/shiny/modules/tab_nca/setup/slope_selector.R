@@ -140,9 +140,18 @@ slope_selector_server <- function( # nolint
       req(processed_pknca_data())
 
       new_pknca_data <- processed_pknca_data()
+      # Keep main intervals where half.life or any dependent param is selected.
+      # get_halflife_plots() handles the rest (forcing half.life, clearing impute).
+      hl_dep_params <- intersect(
+        PKNCA::get.parameter.deps("half.life"),
+        names(new_pknca_data$intervals)
+      )
       new_pknca_data$intervals <- new_pknca_data$intervals %>%
-        filter(type_interval == "main", half.life) %>%
-        unique()
+        filter(type_interval == "main") %>%
+        filter(half.life | if_any(all_of(hl_dep_params))) %>%
+        distinct(across(all_of(
+          c(group_vars(new_pknca_data), "start", "end")
+        )), .keep_all = TRUE)
       changes <- detect_pknca_data_changes(
         old = pknca_data(),
         new = new_pknca_data,
@@ -205,16 +214,29 @@ slope_selector_server <- function( # nolint
     )
 
     observe({
-      req(plot_outputs())
+      req(!is.null(plot_outputs()))
       output$slope_plots_ui <- renderUI({
-        shinyjs::enable(selector = ".btn-page")
-        plot_outputs() %>%
-          # Filter plots based on user search
-          .[page_search$is_plot_searched()] %>%
-          # Arrange plots by the specified group order
-          arrange_plots_by_groups(input$order_groups) %>%
-          # Display only the plots for the current page
-          .[page_search$page_start():page_search$page_end()]
+        if (length(plot_outputs()) == 0) {
+          div(
+            class = "slope-selector-empty-state",
+            icon("info-circle"),
+            tags$p(
+              "No slope plots to display.",
+              "Half-life plots require at least one half-life",
+              "related parameter to be selected",
+              "(e.g., LAMZHL, LAMZ, R2ADJ, LAMZNPT)."
+            )
+          )
+        } else {
+          shinyjs::enable(selector = ".btn-page")
+          plot_outputs() %>%
+            # Filter plots based on user search
+            .[page_search$is_plot_searched()] %>%
+            # Arrange plots by the specified group order
+            arrange_plots_by_groups(input$order_groups) %>%
+            # Display only the plots for the current page
+            .[page_search$page_start():page_search$page_end()]
+        }
       })
     })
 
