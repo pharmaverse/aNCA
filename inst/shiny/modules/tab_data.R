@@ -30,6 +30,202 @@
   showNotification(message, type = "warning", duration = 10)
 }
 
+#' Set up step navigation observers (next/prev/restart buttons).
+#' @param input Shiny input.
+#' @param session Shiny session.
+#' @param data_step ReactiveVal for current step.
+#' @param trigger_mapping_submit ReactiveVal to trigger mapping.
+#' @param steps Character vector of step IDs.
+#' @param step_labels Character vector of step display labels.
+#' @keywords internal
+#' @noRd
+.setup_step_navigation <- function(input, session, data_step,
+                                   trigger_mapping_submit,
+                                   steps, step_labels) {
+  observe({
+    current <- data_step()
+    if (current == steps[1]) {
+      shinyjs::disable("prev_step")
+    } else {
+      shinyjs::enable("prev_step")
+    }
+  })
+
+  observeEvent(input$restart, {
+    log_info("Application restarting...")
+    session$reload()
+  })
+
+  observeEvent(input$next_step, {
+    shinyjs::disable("next_step")
+    current_step <- isolate(data_step())
+    if (current_step %in% c("upload", "filtering")) {
+      idx <- match(current_step, steps)
+      data_step(steps[idx + 1])
+      updateTabsetPanel(
+        session, "data_navset", selected = step_labels[idx + 1]
+      )
+    } else if (current_step == "mapping") {
+      trigger_mapping_submit(trigger_mapping_submit() + 1)
+    } else if (current_step == "preview") {
+      shinyjs::runjs(
+        "document.querySelector(`a[data-value='exploration']`).click();"
+      )
+    }
+  })
+
+  observe({
+    data_step()
+    shinyjs::enable("next_step")
+  })
+
+  observeEvent(input$prev_step, {
+    current <- data_step()
+    idx <- match(current, steps)
+    if (!is.na(idx) && idx > 1) {
+      data_step(steps[idx - 1])
+    }
+    updateTabsetPanel(
+      session, "data_navset", selected = step_labels[idx - 1]
+    )
+  })
+}
+
+#' Set up auto-replay observers for restoring a session from settings.
+#' @param uploaded_data List of reactives from data_upload_server.
+#' @param auto_replay ReactiveVal tracking auto-replay state.
+#' @param data_step ReactiveVal for current step.
+#' @param trigger_mapping_submit ReactiveVal to trigger mapping.
+#' @param processed_data Reactive for filtered data.
+#' @param pknca_data Reactive for PKNCA data object.
+#' @param session Shiny session.
+#' @returns ReactiveVal that signals when auto-replay is complete.
+#' @keywords internal
+#' @noRd
+.setup_auto_replay <- function(uploaded_data, auto_replay, data_step,
+                               trigger_mapping_submit,
+                               processed_data, pknca_data, session) {
+  # Step 1: Detect settings upload and trigger mapping submission.
+  observeEvent(uploaded_data$settings_override(), {
+    override <- uploaded_data$settings_override()
+    if (is.null(override) || is.null(override$mapping)) return()
+
+    auto_replay(TRUE)
+    session$userData$auto_replay_target_tab <- override$tab %||% ""
+    session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
+    log_info("Auto-replay: settings detected, will auto-advance.")
+    loading_popup("Restoring session...")
+
+    shinyjs::delay(500, {
+      skipped <- session$userData$mapping_skipped %||% character(0)
+      if (length(skipped) > 0) {
+        .abort_auto_replay(
+          auto_replay,
+          paste(
+            "Session restore stopped: some column mappings could",
+            "not be applied. Please review and continue manually."
+          ),
+          "Auto-replay aborted: partial mapping failure."
+        )
+        data_step("mapping")
+        updateTabsetPanel(session, "data_navset", selected = "Mapping")
+      } else {
+        trigger_mapping_submit(trigger_mapping_submit() + 1)
+      }
+    })
+  })
+
+  # Safety timeout: abort if pipeline doesn't complete within 15s.
+  observeEvent(trigger_mapping_submit(), {
+    if (!auto_replay()) return()
+    shinyjs::delay(15000, {
+      if (auto_replay()) {
+        .abort_auto_replay(
+          auto_replay,
+          paste(
+            "Session restore stopped: the data pipeline did not",
+            "complete. Please review and continue manually."
+          ),
+          "Auto-replay aborted: pipeline did not complete in time."
+        )
+      }
+    })
+  }, ignoreInit = TRUE)
+
+  # Step 2 (safety net) is handled by the adnca_mapped observer in
+  # tab_data_server, which also handles the normal advance to filtering.
+
+  # Step 3: After filtering completes, advance to preview.
+  # When filters are imported, processed_data fires twice: once with
+  # unfiltered data, then again after auto-submit. Skip the first fire.
+  auto_replay_filter_pending <- reactiveVal(FALSE)
+
+  observeEvent(uploaded_data$settings_override(), {
+    override <- uploaded_data$settings_override()
+    has_filters <- !is.null(override$filters) && length(override$filters) > 0
+    auto_replay_filter_pending(has_filters)
+  })
+
+  observeEvent(processed_data(), {
+    if (!auto_replay()) return()
+    if (auto_replay_filter_pending()) {
+      auto_replay_filter_pending(FALSE)
+      return()
+    }
+    data_step("preview")
+    updateTabsetPanel(session, "data_navset", selected = "Preview")
+  })
+
+  # Step 4: Signal that data processing is complete.
+  auto_replay_ready <- reactiveVal(FALSE)
+  observeEvent(pknca_data(), {
+    if (!auto_replay()) return()
+    if (is.null(pknca_data())) {
+      auto_replay(FALSE)
+      shiny::removeModal()
+      return()
+    }
+    auto_replay(FALSE)
+    auto_replay_ready(TRUE)
+  })
+
+  auto_replay_ready
+}
+
+# TODO: Remove once PKNCA simplifies volume units in PPORRESU by default.
+#' Simplify volume-type units in a PKNCA units table.
+#' @param units A data.frame with PPTESTCD, PPORRESU, PPSTRESU,
+#'   conversion_factor columns.
+#' @returns The units data.frame with simplified volume units.
+#' @keywords internal
+#' @noRd
+.simplify_volume_units <- function(units) {
+  vol_params <- metadata_nca_parameters$PKNCA[
+    metadata_nca_parameters$unit_type == "volume"
+  ]
+  is_vol <- units$PPTESTCD %in% vol_params
+
+  new_ppstresu <- ifelse(
+    is_vol,
+    sapply(units$PPSTRESU, function(x) {
+      simplify_unit(x, as_character = TRUE)
+    }),
+    units$PPSTRESU
+  )
+  # Only accept changes producing simple units
+  new_ppstresu <- ifelse(
+    nchar(new_ppstresu) < 3, new_ppstresu, units$PPSTRESU
+  )
+
+  units$PPSTRESU <- new_ppstresu
+  units$conversion_factor <- ifelse(
+    is_vol,
+    get_conversion_factor(units$PPORRESU, units$PPSTRESU),
+    units$conversion_factor
+  )
+  units
+}
+
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
@@ -97,49 +293,11 @@ tab_data_server <- function(id) {
     step_labels <- c("Upload", "Mapping", "Filtering", "Preview")
     data_step <- reactiveVal("upload")
 
-    # Auto-replay state: tracks whether we are auto-advancing through
-    # the data pipeline after a settings upload.
     auto_replay <- reactiveVal(FALSE)
-    observe({
-      current <- data_step()
-      if (current == steps[1]) {
-        shinyjs::disable("prev_step")
-      } else {
-        shinyjs::enable("prev_step")
-      }
-    })
-    observeEvent(input$restart, {
-      log_info("Application restarting...")
-      session$reload()
-    })
-    observeEvent(input$next_step, {
-      shinyjs::disable("next_step") # Disable button on click
-      current_step <- isolate(data_step())
-      if (current_step %in% c("upload", "filtering")) {
-        idx <- match(current_step, steps)
-        data_step(steps[idx + 1])
-        updateTabsetPanel(session, "data_navset", selected = step_labels[idx + 1])
-      } else if (current_step == "mapping") {
-        trigger_mapping_submit(trigger_mapping_submit() + 1)
-      } else if (current_step == "preview") {
-        shinyjs::runjs("document.querySelector(`a[data-value='exploration']`).click();")
-      }
-    })
 
-    # enable next step after progression
-    observe({
-      data_step()
-      shinyjs::enable("next_step")
-    })
-
-    observeEvent(input$prev_step, {
-      current <- data_step()
-      idx <- match(current, steps)
-      if (!is.na(idx) && idx > 1) {
-        data_step(steps[idx - 1])
-      }
-      updateTabsetPanel(session, "data_navset", selected = step_labels[idx - 1])
-    })
+    .setup_step_navigation(
+      input, session, data_step, trigger_mapping_submit, steps, step_labels
+    )
     #' Load raw ADNCA data
     uploaded_data <- data_upload_server("raw_data")
 
@@ -160,67 +318,11 @@ tab_data_server <- function(id) {
     #' Reactive value for the processed dataset
     adnca_mapped <- column_mapping$processed_data
 
-    # Auto-replay step 1: When settings with mapping are uploaded,
-    # activate auto-replay and trigger mapping submission after a
-    # short delay to let Shiny flush the selectize input updates.
-    observeEvent(uploaded_data$settings_override(), {
-      override <- uploaded_data$settings_override()
-      if (!is.null(override) && !is.null(override$mapping)) {
-        auto_replay(TRUE)
-        session$userData$auto_replay_target_tab <- override$tab %||% ""
-        session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
-        log_info("Auto-replay: settings detected, will auto-advance.")
-        loading_popup("Restoring session...")
-        # Delay to allow mapping selectize inputs to update.
-        # Check for skipped mappings before triggering submit —
-        # .process_imported_mapping sets mapping_skipped during the
-        # same flush cycle that populates the selectize inputs.
-        shinyjs::delay(500, {
-          skipped <- session$userData$mapping_skipped %||% character(0)
-          if (length(skipped) > 0) {
-            .abort_auto_replay(
-              auto_replay,
-              paste(
-                "Session restore stopped: some column mappings could",
-                "not be applied. Please review and continue manually."
-              ),
-              "Auto-replay aborted: partial mapping failure."
-            )
-            data_step("mapping")
-            updateTabsetPanel(
-              session, "data_navset", selected = "Mapping"
-            )
-          } else {
-            trigger_mapping_submit(trigger_mapping_submit() + 1)
-          }
-        })
-      }
-    })
-
-    # Auto-replay safety: abort if the pipeline doesn't complete within
-    # 15 seconds. Covers mapping failures, unresolved duplicates, PKNCA
-    # data creation errors, and any other unexpected stalls.
-    observeEvent(trigger_mapping_submit(), {
-      if (!auto_replay()) return()
-      shinyjs::delay(15000, {
-        if (auto_replay()) {
-          .abort_auto_replay(
-            auto_replay,
-            paste(
-              "Session restore stopped: the data pipeline did not",
-              "complete. Please review and continue manually."
-            ),
-            "Auto-replay aborted: pipeline did not complete in time."
-          )
-        }
-      })
-    }, ignoreInit = TRUE)
-
+    # Advance to filtering after mapping completes.
+    # Also acts as auto-replay step 2 safety net: if mappings were
+    # skipped, abort auto-replay and stay on mapping.
     observeEvent(adnca_mapped(), {
       req(adnca_mapped())
-
-      # Auto-replay step 2 (safety net): Check for partial mapping failure.
-      # Primary check is in step 1 delay callback; this catches late races.
       if (auto_replay()) {
         skipped <- session$userData$mapping_skipped %||% character(0)
         if (length(skipped) > 0) {
@@ -237,7 +339,6 @@ tab_data_server <- function(id) {
           return()
         }
       }
-
       data_step("filtering")
       updateTabsetPanel(session, "data_navset", selected = "Filtering")
     })
@@ -248,32 +349,6 @@ tab_data_server <- function(id) {
       "data_filtering", adnca_mapped, imported_filters
     )
     processed_data <- filtering_result$filtered_data
-
-    # Auto-replay step 3: After filtering completes, advance to preview.
-    # When filters are imported, processed_data fires twice: once with
-    # unfiltered data (from raw_adnca_data change), then again after
-    # auto-submit applies filters. We use a flag to skip the first fire
-    # when imported filters are present.
-    auto_replay_filter_pending <- reactiveVal(FALSE)
-
-    observeEvent(uploaded_data$settings_override(), {
-      override <- uploaded_data$settings_override()
-      has_filters <- !is.null(override$filters) && length(override$filters) > 0
-      auto_replay_filter_pending(has_filters)
-    })
-
-    observeEvent(processed_data(), {
-      if (!auto_replay()) return()
-
-      if (auto_replay_filter_pending()) {
-        # First fire was from raw data change; wait for filter auto-submit
-        auto_replay_filter_pending(FALSE)
-        return()
-      }
-
-      data_step("preview")
-      updateTabsetPanel(session, "data_navset", selected = "Preview")
-    })
 
     #' Global variable to store grouping variables
     extra_group_vars <- column_mapping$grouping_variables
@@ -301,49 +376,24 @@ tab_data_server <- function(id) {
     )
 
     # Use raw data + mapping to create a PKNCA object
-    #' Initializes PKNCA::PKNCAdata object from raw adnca data
     pknca_data <- reactive({
       req(processed_data())
       log_trace("Creating PKNCA::data object.")
 
       tryCatch({
-        #' Create data object
         pknca_object <- PKNCA_create_data_object(
           adnca_data = uploaded_data$adnca_raw(),
           mapping = column_mapping$mapping(),
           applied_filters = filtering_result$applied_filters(),
           time_duplicate_rows = column_mapping$time_duplicate_rows()
         )
-        ############################################################################################
-        # TODO: Until PKNCA manages to simplify by default in PPORRESU its volume units,
-        # this is implemented here via hardcoding in PPSTRESU
-        pknca_object$units <- pknca_object$units %>%
-          mutate(
-            PPSTRESU = {
-              new_ppstresu <- ifelse(
-                PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                  metadata_nca_parameters$unit_type == "volume"
-                ],
-                sapply(PPSTRESU, function(x) simplify_unit(x, as_character = TRUE)),
-                PPSTRESU
-              )
-              # Only accept changes producing simple units
-              ifelse(nchar(new_ppstresu) < 3, new_ppstresu, .[["PPSTRESU"]])
-            },
-            conversion_factor = ifelse(
-              PPTESTCD %in% metadata_nca_parameters$PKNCA[
-                metadata_nca_parameters$unit_type == "volume"
-              ],
-              get_conversion_factor(PPORRESU, PPSTRESU),
-              conversion_factor
-            )
-          )
-        ############################################################################################
+        pknca_object$units <- .simplify_volume_units(pknca_object$units)
         log_success("PKNCA data object created.")
 
-        #' Enable related tabs and update the curent view if data is created succesfully.
         purrr::walk(c("nca", "exploration", "tlg"), function(tab) {
-          shinyjs::enable(selector = paste0("#page li a[data-value=", tab, "]"))
+          shinyjs::enable(
+            selector = paste0("#page li a[data-value=", tab, "]")
+          )
         })
 
         pknca_object
@@ -355,21 +405,10 @@ tab_data_server <- function(id) {
     }) %>%
       bindEvent(processed_data())
 
-    # Auto-replay step 4: Signal that data processing is complete and
-    # the app can navigate to the saved tab.
-    auto_replay_ready <- reactiveVal(FALSE)
-    observeEvent(pknca_data(), {
-      if (!auto_replay()) return()
-      if (is.null(pknca_data())) {
-        # PKNCA data creation failed — abort auto-replay.
-        # The error notification is already shown by the tryCatch above.
-        auto_replay(FALSE)
-        shiny::removeModal()
-        return()
-      }
-      auto_replay(FALSE)
-      auto_replay_ready(TRUE)
-    })
+    auto_replay_ready <- .setup_auto_replay(
+      uploaded_data, auto_replay, data_step, trigger_mapping_submit,
+      processed_data, pknca_data, session
+    )
 
     list(
       pknca_data = pknca_data,

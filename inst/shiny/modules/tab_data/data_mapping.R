@@ -167,8 +167,55 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   matched_indices
 }
 
-.process_imported_mapping <- function(mapping, adnca_data, session) {
+#' Validate and apply a single mapping variable.
+#' @param var Variable name from MAPPING_INFO.
+#' @param val Value(s) from the imported mapping.
+#' @param column_names Available column names in the dataset.
+#' @param session Shiny session for updating inputs.
+#' @returns Error string if the mapping was skipped, or NULL on success.
+#' @keywords internal
+#' @noRd
+.apply_single_mapping <- function(var, val, column_names, session) {
+  var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
+  predefined <- strsplit(var_info$Values, ", ")[[1]]
+  valid_values <- c(column_names, predefined)
 
+  is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
+  invalid <- val[val != "" & !val %in% valid_values]
+  if (is_numeric_ok) {
+    invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
+  }
+
+  if (length(invalid) > 0) {
+    return(paste0(var, " (", paste(invalid, collapse = ", "), ")"))
+  }
+
+  custom_numeric <- if (is_numeric_ok) {
+    val[!val %in% c(column_names, predefined)]
+  } else {
+    character(0)
+  }
+
+  if (length(custom_numeric) > 0) {
+    updateSelectizeInput(
+      session, paste0("select_", var),
+      choices = list(
+        "Select Column" = "",
+        "Mapping Columns" = c(column_names, custom_numeric),
+        "Mapping Values" = predefined
+      ),
+      selected = val
+    )
+  } else {
+    updateSelectizeInput(
+      session, paste0("select_", var), selected = val
+    )
+  }
+
+  NULL
+}
+
+.process_imported_mapping <- function(mapping, adnca_data, session) {
   if (is.null(mapping)) return(character(0))
 
   column_names <- names(adnca_data)
@@ -176,50 +223,18 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 
   for (var in MAPPING_INFO$Variable) {
     if (!var %in% names(mapping) || var == "Metabolites") next
-    val <- mapping[[var]]
-
-    # Build the set of valid values: column names + predefined Values +
-    # numeric literals for allow_create_numeric variables.
-    var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
-    predefined <- strsplit(var_info$Values, ", ")[[1]]
-    valid_values <- c(column_names, predefined)
-
-    is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
-    invalid <- val[val != "" & !val %in% valid_values]
-    if (is_numeric_ok) {
-      invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
-    }
-
-    if (length(invalid) > 0) {
-      skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
-      next
-    }
-
-    # For allow_create_numeric variables with custom numeric values,
-    # the value must be added to choices or updateSelectizeInput ignores it.
-    custom_numeric <- if (is_numeric_ok) {
-      val[!val %in% c(column_names, predefined)]
-    } else {
-      character(0)
-    }
-    if (length(custom_numeric) > 0) {
-      updateSelectizeInput(
-        session, paste0("select_", var),
-        choices = list(
-          "Select Column" = "",
-          "Mapping Columns" = c(column_names, custom_numeric),
-          "Mapping Values" = predefined
-        ),
-        selected = val
-      )
-    } else {
-      updateSelectizeInput(session, paste0("select_", var), selected = val)
-    }
+    result <- .apply_single_mapping(
+      var, mapping[[var]], column_names, session
+    )
+    if (!is.null(result)) skipped <- c(skipped, result)
   }
 
   if (length(skipped) > 0) {
     showNotification(
-      paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
+      paste(
+        "Mapping skipped for missing columns:",
+        paste(skipped, collapse = "; ")
+      ),
       type = "warning", duration = 10
     )
   }
