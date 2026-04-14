@@ -161,3 +161,114 @@ describe("create_metabflag", {
     expect_equal(result_df3, expected_df)
   })
 })
+
+describe("extract_time_dup_keys", {
+  test_data <- data.frame(
+    AFRLT = c(1, 1, 2), STUDYID = c("S1", "S1", "S1"),
+    PCSPEC = c("PLASMA", "PLASMA", "PLASMA"),
+    DOSETRT = c("D1", "D1", "D1"), USUBJID = c("U1", "U1", "U2"),
+    PARAM = c("P1", "P1", "P1"), AVAL = c(10, 20, 30),
+    EXTRA_COL = c("a", "b", "c"),
+    stringsAsFactors = FALSE
+  )
+
+  it("extracts key columns for given row indices", {
+    result <- extract_time_dup_keys(test_data, c(1, 2))
+    expect_s3_class(result, "data.frame")
+    expect_equal(nrow(result), 2)
+    expect_equal(names(result), TIME_DUP_KEY_COLS)
+    expect_equal(result$AVAL, c(10, 20))
+    expect_false("EXTRA_COL" %in% names(result))
+  })
+
+  it("returns NULL for NULL indices", {
+    expect_null(extract_time_dup_keys(test_data, NULL))
+  })
+
+  it("returns NULL for empty indices", {
+    expect_null(extract_time_dup_keys(test_data, integer(0)))
+  })
+
+  it("returns NULL for NULL dataset", {
+    expect_null(extract_time_dup_keys(NULL, c(1, 2)))
+  })
+
+  it("resets row names in the result", {
+    result <- extract_time_dup_keys(test_data, c(2, 3))
+    expect_equal(rownames(result), c("1", "2"))
+  })
+})
+
+describe("match_time_dup_keys", {
+  test_data <- data.frame(
+    AFRLT = c(1, 1, 2, 3), STUDYID = c("S1", "S1", "S1", "S1"),
+    PCSPEC = c("PLASMA", "PLASMA", "PLASMA", "PLASMA"),
+    DOSETRT = c("D1", "D1", "D1", "D1"),
+    USUBJID = c("U1", "U1", "U2", "U3"),
+    PARAM = c("P1", "P1", "P1", "P1"),
+    AVAL = c(10, 20, 30, 40),
+    stringsAsFactors = FALSE
+  )
+
+  it("matches stored keys to row indices in the dataset", {
+    keys_df <- data.frame(
+      AFRLT = 1, STUDYID = "S1", PCSPEC = "PLASMA",
+      DOSETRT = "D1", USUBJID = "U1", PARAM = "P1", AVAL = 20,
+      stringsAsFactors = FALSE
+    )
+    result <- match_time_dup_keys(test_data, keys_df)
+    expect_equal(result, 2L)
+  })
+
+  it("returns NULL when no keys match", {
+    keys_df <- data.frame(
+      AFRLT = 99, STUDYID = "S1", PCSPEC = "PLASMA",
+      DOSETRT = "D1", USUBJID = "U1", PARAM = "P1", AVAL = 999,
+      stringsAsFactors = FALSE
+    )
+    expect_null(match_time_dup_keys(test_data, keys_df))
+  })
+
+  it("returns NULL for NULL keys_df", {
+    expect_null(match_time_dup_keys(test_data, NULL))
+  })
+
+  it("returns NULL for empty keys_df", {
+    expect_null(match_time_dup_keys(test_data, data.frame()))
+  })
+
+  it("matches multiple keys", {
+    keys_df <- data.frame(
+      AFRLT = c(1, 2), STUDYID = c("S1", "S1"),
+      PCSPEC = c("PLASMA", "PLASMA"), DOSETRT = c("D1", "D1"),
+      USUBJID = c("U1", "U2"), PARAM = c("P1", "P1"),
+      AVAL = c(10, 30),
+      stringsAsFactors = FALSE
+    )
+    result <- match_time_dup_keys(test_data, keys_df)
+    expect_equal(sort(result), c(1L, 3L))
+  })
+
+  it("matches at most one row per stored key when rows share identical keys", {
+    # Dataset with two rows that have identical key values
+    dup_data <- data.frame(
+      AFRLT = c(1, 1, 2), STUDYID = c("S1", "S1", "S1"),
+      PCSPEC = c("PLASMA", "PLASMA", "PLASMA"),
+      DOSETRT = c("D1", "D1", "D1"),
+      USUBJID = c("U1", "U1", "U2"),
+      PARAM = c("P1", "P1", "P1"),
+      AVAL = c(10, 10, 30),
+      stringsAsFactors = FALSE
+    )
+    # One stored key matching the duplicated value
+    keys_df <- data.frame(
+      AFRLT = 1, STUDYID = "S1", PCSPEC = "PLASMA",
+      DOSETRT = "D1", USUBJID = "U1", PARAM = "P1", AVAL = 10,
+      stringsAsFactors = FALSE
+    )
+    result <- match_time_dup_keys(dup_data, keys_df)
+    # Should match exactly one row, not both
+    expect_equal(length(result), 1L)
+    expect_true(result %in% c(1L, 2L))
+  })
+})
