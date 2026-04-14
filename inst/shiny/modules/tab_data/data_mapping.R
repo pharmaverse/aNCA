@@ -137,60 +137,62 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 
 .process_imported_mapping <- function(mapping, adnca_data, session) {
 
-  if (!is.null(mapping)) {
-    column_names <- names(adnca_data)
-    skipped <- character(0)
+  if (is.null(mapping)) return(character(0))
 
-    for (var in MAPPING_INFO$Variable) {
-      if (!var %in% names(mapping) || var == "Metabolites") next
-      val <- mapping[[var]]
+  column_names <- names(adnca_data)
+  skipped <- character(0)
 
-      # Build the set of valid values: column names + predefined Values +
-      # numeric literals for allow_create_numeric variables.
-      var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
-      predefined <- strsplit(var_info$Values, ", ")[[1]]
-      valid_values <- c(column_names, predefined)
+  for (var in MAPPING_INFO$Variable) {
+    if (!var %in% names(mapping) || var == "Metabolites") next
+    val <- mapping[[var]]
 
-      is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
-      invalid <- val[val != "" & !val %in% valid_values]
-      if (is_numeric_ok) {
-        invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
-      }
+    # Build the set of valid values: column names + predefined Values +
+    # numeric literals for allow_create_numeric variables.
+    var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
+    predefined <- strsplit(var_info$Values, ", ")[[1]]
+    valid_values <- c(column_names, predefined)
 
-      if (length(invalid) > 0) {
-        skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
-        next
-      }
-
-      # For allow_create_numeric variables with custom numeric values,
-      # the value must be added to choices or updateSelectizeInput ignores it.
-      custom_numeric <- if (is_numeric_ok) {
-        val[!val %in% c(column_names, predefined)]
-      } else {
-        character(0)
-      }
-      if (length(custom_numeric) > 0) {
-        updateSelectizeInput(
-          session, paste0("select_", var),
-          choices = list(
-            "Select Column" = "",
-            "Mapping Columns" = c(column_names, custom_numeric),
-            "Mapping Values" = predefined
-          ),
-          selected = val
-        )
-      } else {
-        updateSelectizeInput(session, paste0("select_", var), selected = val)
-      }
+    is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
+    invalid <- val[val != "" & !val %in% valid_values]
+    if (is_numeric_ok) {
+      invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
     }
 
-    if (length(skipped) > 0) {
-      showNotification(
-        paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
-        type = "warning", duration = 10
+    if (length(invalid) > 0) {
+      skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
+      next
+    }
+
+    # For allow_create_numeric variables with custom numeric values,
+    # the value must be added to choices or updateSelectizeInput ignores it.
+    custom_numeric <- if (is_numeric_ok) {
+      val[!val %in% c(column_names, predefined)]
+    } else {
+      character(0)
+    }
+    if (length(custom_numeric) > 0) {
+      updateSelectizeInput(
+        session, paste0("select_", var),
+        choices = list(
+          "Select Column" = "",
+          "Mapping Columns" = c(column_names, custom_numeric),
+          "Mapping Values" = predefined
+        ),
+        selected = val
       )
+    } else {
+      updateSelectizeInput(session, paste0("select_", var), selected = val)
     }
   }
+
+  if (length(skipped) > 0) {
+    showNotification(
+      paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
+      type = "warning", duration = 10
+    )
+  }
+
+  skipped
 }
 
 #' Column Mapping Module
@@ -292,7 +294,8 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       mapping <- imported_mapping()$mapping
       if (!is.null(mapping)) {
         # process mapping using settings to override default selections
-        .process_imported_mapping(mapping, adnca_data(), session)
+        skipped <- .process_imported_mapping(mapping, adnca_data(), session)
+        session$userData$mapping_skipped <- skipped
       }
     })
     # Populate the dynamic input Metabolites

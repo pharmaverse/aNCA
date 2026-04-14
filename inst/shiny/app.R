@@ -210,12 +210,35 @@ server <- function(input, output, session) {
     tab_data_outputs$extra_group_vars
   )
 
+  # Auto-replay: navigate to saved tab once data processing completes.
+  observeEvent(tab_data_outputs$auto_replay_ready(), {
+    req(tab_data_outputs$auto_replay_ready())
+    target_tab <- session$userData$auto_replay_target_tab %||% ""
+    valid_tabs <- c("data", "exploration", "nca", "tlg")
+
+    if (target_tab %in% valid_tabs && target_tab != "data") {
+      log_info("Auto-replay: navigating to saved tab '", target_tab, "'.")
+      js <- sprintf(
+        "document.querySelector(`a[data-value='%s']`).click();",
+        target_tab
+      )
+      shinyjs::runjs(js)
+    }
+
+    # Dismiss loading popup unless NCA auto-run will handle it
+    if (target_tab != "nca") {
+      shiny::removeModal()
+      log_success("Auto-replay: session restored.")
+    }
+  })
+
   # NCA ----
   tab_nca_outputs <- tab_nca_server(
     "nca",
     tab_data_outputs$pknca_data,
     tab_data_outputs$extra_group_vars,
-    tab_data_outputs$settings_override
+    tab_data_outputs$settings_override,
+    auto_replay_ready = tab_data_outputs$auto_replay_ready
   )
 
   # TLG

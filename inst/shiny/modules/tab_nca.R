@@ -75,7 +75,8 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) {
+tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
+                           auto_replay_ready) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -109,6 +110,41 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     reactable_server("manual_slopes",
                      reactive(slope_rules()),
                      columns = NULL)
+
+    # Auto-replay: trigger NCA run once settings are applied and data is ready.
+    # A delayed trigger ensures the settings cascade (analyte → pcspec →
+    # profile) has settled before running NCA.
+    auto_nca_pending <- reactiveVal(FALSE)
+
+    observeEvent(auto_replay_ready(), {
+      req(auto_replay_ready())
+      target <- session$userData$auto_replay_target_tab %||% ""
+      if (target == "nca") {
+        auto_nca_pending(TRUE)
+        # Safety: if NCA auto-run doesn't trigger within 10s, dismiss popup
+        later::later(function() {
+          if (auto_nca_pending()) {
+            auto_nca_pending(FALSE)
+            shiny::removeModal()
+            log_warn("Auto-replay: NCA auto-run timed out.")
+            showNotification(
+              "Session restored but NCA could not be auto-run. Please run NCA manually.",
+              type = "warning", duration = 10
+            )
+          }
+        }, delay = 10)
+      }
+    })
+
+    observeEvent(processed_pknca_data(), {
+      if (!auto_nca_pending()) return()
+      auto_nca_pending(FALSE)
+      # Delay to let the settings cascade settle before triggering NCA
+      later::later(function() {
+        log_info("Auto-replay: triggering NCA calculation.")
+        shinyjs::click("run_nca")
+      }, delay = 1.5)
+    })
 
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
