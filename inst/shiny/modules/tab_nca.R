@@ -123,7 +123,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         auto_nca_pending(TRUE)
         # Safety: if NCA auto-run doesn't trigger within 10s, dismiss popup
         later::later(function() {
-          if (auto_nca_pending()) {
+          if (isolate(auto_nca_pending())) {
             auto_nca_pending(FALSE)
             shiny::removeModal()
             log_warn("Auto-replay: NCA auto-run timed out.")
