@@ -156,9 +156,26 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
                                                               is.logical)]))) {
         log_error("Invalid parameters")
-        showNotification("No suitable parameters selected for NCA calculation.
-         Please go back and select parameters suitable for the data.",
-                         type = "error", duration = NULL)
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          shiny::removeModal()
+          showNotification(
+            paste(
+              "Session restored but NCA could not be auto-run:",
+              "no suitable parameters for this dataset.",
+              "Please adjust settings and run NCA manually."
+            ),
+            type = "warning", duration = 10
+          )
+        } else {
+          showNotification(
+            paste(
+              "No suitable parameters selected for NCA calculation.",
+              "Please go back and select parameters suitable for the data."
+            ),
+            type = "error", duration = NULL
+          )
+        }
         return(NULL)
       }
 
