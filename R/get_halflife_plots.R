@@ -234,15 +234,20 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   # return a 0-row data frame with all expected columns so callers can proceed
   # without special-casing empty results.
   if (nrow(wide_output$result) == 0) {
-    nca_cols <- c("start", "end", "lambda.z.time.first", "lambda.z.time.last",
-                  "lambda.z", "adj.r.squared", "span.ratio", "tlast", "exclude")
     conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
                           timeu_col, concu_col, exclude_hl_col, "ROWID")
-    empty <- pknca_data$conc$data %>%
-      select(!!!syms(conc_select_cols)) %>%
-      filter(FALSE)
-    empty[, setdiff(nca_cols, names(empty))] <- numeric(0)
-    return(empty)
+    return(
+      pknca_data$conc$data %>%
+        select(!!!syms(conc_select_cols)) %>%
+        filter(FALSE) %>%
+        mutate(
+          start = numeric(0), end = numeric(0),
+          lambda.z = numeric(0), adj.r.squared = numeric(0),
+          span.ratio = numeric(0), lambda.z.time.first = numeric(0),
+          lambda.z.time.last = numeric(0), tlast = numeric(0),
+          exclude = character(0)
+        )
+    )
   }
 
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
