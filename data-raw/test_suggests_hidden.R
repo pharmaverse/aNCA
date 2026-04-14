@@ -39,14 +39,12 @@ cat("Hidden:", paste(hidden, collapse = ", "), "\n")
 
 # --- Load and run ---
 devtools::load_all()
-aNCA::run_app()
+run_app()
 
 # --- Restore function (call after stopping the app) ---
-restore_packages <- function() {
-  for (pkg in hidden) {
-    to <- file.path(lib, pkg)
-    from <- paste0(to, "_HIDDEN")
-    if (dir.exists(from)) file.rename(from, to)
-  }
-  cat("Restored:", paste(hidden, collapse = ", "), "\n")
+for (pkg in hidden) {
+  to <- file.path(lib, pkg)
+  from <- paste0(to, "_HIDDEN")
+  if (dir.exists(from)) file.rename(from, to)
 }
+cat("Restored:", paste(hidden, collapse = ", "), "\n")
