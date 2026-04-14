@@ -240,7 +240,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           settings = export_settings,
           mapping = session$userData$mapping,
           slope_rules = slope_rules(),
-          filters = session$userData$applied_filters
+          filters = session$userData$applied_filters,
+          time_duplicate_keys = session$userData$time_duplicate_keys
         )
 
         dataset_name <- session$userData$dataset_filename %||% ""

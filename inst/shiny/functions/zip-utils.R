@@ -183,6 +183,8 @@ get_dose_esc_results <- function(
       sd_max = TRUE
     )
 
+    # TODO: Filter out excluded records (where `exclude` is populated) before
+    # calculating summary statistics, consistent with descriptive_statistics.R
     stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
@@ -533,7 +535,8 @@ prepare_export_files <- function(target_dir,
     settings = settings_list,
     mapping = session$userData$mapping,
     slope_rules = session$userData$slope_rules(),
-    filters = session$userData$applied_filters
+    filters = session$userData$applied_filters,
+    time_duplicate_keys = session$userData$time_duplicate_keys
   )
 
   dataset_name <- session$userData$dataset_filename %||% ""
