@@ -102,6 +102,39 @@
 #' @returns ReactiveVal that signals when auto-replay is complete.
 #' @keywords internal
 #' @noRd
+#' Start auto-replay: store target tab, show loading popup, and
+#' trigger mapping submission after a delay.
+#' @keywords internal
+#' @noRd
+.start_auto_replay <- function(override, auto_replay, data_step,
+                               trigger_mapping_submit, session) {
+  auto_replay(TRUE)
+  session$userData$auto_replay_target_tab <- override$tab %||% ""
+  session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
+  has_filters <- !is.null(override$filters) && length(override$filters) > 0
+  session$userData$auto_replay_filter_pending <- has_filters
+  log_info("Auto-replay: settings detected, will auto-advance.")
+  loading_popup("Restoring session...")
+
+  shinyjs::delay(500, {
+    skipped <- session$userData$mapping_skipped %||% character(0)
+    if (length(skipped) > 0) {
+      .abort_auto_replay(
+        auto_replay,
+        paste(
+          "Session restore stopped: some column mappings could",
+          "not be applied. Please review and continue manually."
+        ),
+        "Auto-replay aborted: partial mapping failure."
+      )
+      data_step("mapping")
+      updateTabsetPanel(session, "data_navset", selected = "Mapping")
+    } else {
+      trigger_mapping_submit(trigger_mapping_submit() + 1)
+    }
+  })
+}
+
 .setup_auto_replay <- function(uploaded_data, auto_replay, data_step,
                                trigger_mapping_submit,
                                processed_data, pknca_data, session) {
@@ -109,30 +142,9 @@
   observeEvent(uploaded_data$settings_override(), {
     override <- uploaded_data$settings_override()
     if (is.null(override) || is.null(override$mapping)) return()
-
-    auto_replay(TRUE)
-    session$userData$auto_replay_target_tab <- override$tab %||% ""
-    session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
-    log_info("Auto-replay: settings detected, will auto-advance.")
-    loading_popup("Restoring session...")
-
-    shinyjs::delay(500, {
-      skipped <- session$userData$mapping_skipped %||% character(0)
-      if (length(skipped) > 0) {
-        .abort_auto_replay(
-          auto_replay,
-          paste(
-            "Session restore stopped: some column mappings could",
-            "not be applied. Please review and continue manually."
-          ),
-          "Auto-replay aborted: partial mapping failure."
-        )
-        data_step("mapping")
-        updateTabsetPanel(session, "data_navset", selected = "Mapping")
-      } else {
-        trigger_mapping_submit(trigger_mapping_submit() + 1)
-      }
-    })
+    .start_auto_replay(
+      override, auto_replay, data_step, trigger_mapping_submit, session
+    )
   })
 
   # Safety timeout: abort if pipeline doesn't complete within 15s.
@@ -158,18 +170,11 @@
   # Step 3: After filtering completes, advance to preview.
   # When filters are imported, processed_data fires twice: once with
   # unfiltered data, then again after auto-submit. Skip the first fire.
-  auto_replay_filter_pending <- reactiveVal(FALSE)
-
-  observeEvent(uploaded_data$settings_override(), {
-    override <- uploaded_data$settings_override()
-    has_filters <- !is.null(override$filters) && length(override$filters) > 0
-    auto_replay_filter_pending(has_filters)
-  })
-
+  # The pending flag is set in .start_auto_replay via session$userData.
   observeEvent(processed_data(), {
     if (!auto_replay()) return()
-    if (auto_replay_filter_pending()) {
-      auto_replay_filter_pending(FALSE)
+    if (isTRUE(session$userData$auto_replay_filter_pending)) {
+      session$userData$auto_replay_filter_pending <- FALSE
       return()
     }
     data_step("preview")
