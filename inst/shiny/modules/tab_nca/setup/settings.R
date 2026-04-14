@@ -273,6 +273,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
+      log_info("Analyte selection changed: ", paste(input$select_analyte, collapse = ", "))
+
       settings <- .consume_settings()
 
       all_pcspec <- unique(data()$PCSPEC) %>% na.omit()
@@ -307,6 +309,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
+      log_info("Specimen selection changed: ", paste(input$select_pcspec, collapse = ", "))
+
       settings <- .consume_settings()
 
       all_analyte <- unique(data()$PARAM) %>% na.omit()
@@ -328,6 +332,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       .update_profile(settings)
     })
 
+    # Log method and min half-life points changes
+    observeEvent(input$method, {
+      log_info("Extrapolation method changed: {input$method}")
+    }, ignoreInit = TRUE)
+
+    observeEvent(input$min_hl_points, {
+      log_info("Min. half-life points changed: {input$min_hl_points}")
+    }, ignoreInit = TRUE)
+
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
@@ -336,6 +349,18 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
     limit_input_value(input, session, "min_hl_points", max = 10, min = 2, lab = "Min. HL Points")
+
+    # Log flag rule changes
+    .flag_names <- c("R2ADJ", "R2", "AUCPEO", "AUCPEP", "LAMZSPN")
+    lapply(.flag_names, function(flag) {
+      observeEvent(input[[paste0(flag, "_rule")]], {
+        state <- if (input[[paste0(flag, "_rule")]]) "enabled" else "disabled"
+        log_info("Flag rule {flag} {state}")
+      }, ignoreInit = TRUE)
+      observeEvent(input[[paste0(flag, "_threshold")]], {
+        log_info("Flag rule {flag} threshold changed: {input[[paste0(flag, '_threshold')]]}")
+      }, ignoreInit = TRUE)
+    })
 
     # Reactive value to store the partial intervals data table
     # Define the parameters that can be used for partial area calculations
