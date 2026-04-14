@@ -226,7 +226,8 @@ server <- function(input, output, session) {
     }
 
     # Dismiss loading popup unless NCA auto-run will handle it
-    if (target_tab != "nca") {
+    nca_ran <- isTRUE(session$userData$auto_replay_nca_ran)
+    if (target_tab != "nca" || !nca_ran) {
       shiny::removeModal()
       log_success("Auto-replay: session restored.")
     }

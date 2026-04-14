@@ -115,11 +115,13 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     # A delayed trigger ensures the settings cascade (analyte → pcspec →
     # profile) has settled before running NCA.
     auto_nca_pending <- reactiveVal(FALSE)
+    auto_nca_running <- reactiveVal(FALSE)
 
     observeEvent(auto_replay_ready(), {
       req(auto_replay_ready())
       target <- session$userData$auto_replay_target_tab %||% ""
-      if (target == "nca") {
+      nca_ran <- isTRUE(session$userData$auto_replay_nca_ran)
+      if (target == "nca" && nca_ran) {
         auto_nca_pending(TRUE)
         # Safety: if NCA auto-run doesn't trigger within 10s, dismiss popup
         shinyjs::delay(10000, {
@@ -142,6 +144,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       # Delay to let the settings cascade settle before triggering NCA
       shinyjs::delay(1500, {
         log_info("Auto-replay: triggering NCA calculation.")
+        auto_nca_running(TRUE)
         shinyjs::click("run_nca")
       })
     })
@@ -159,7 +162,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         return(NULL)
       }
 
-      loading_popup("Calculating NCA results...")
+      if (!auto_nca_running()) {
+        loading_popup("Calculating NCA results...")
+      }
 
       log_info("Calculating NCA results...")
 
@@ -237,8 +242,15 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
         NULL
       }, finally = {
-        # Delay the removal of loading modal to give it enough time to render
-        later::later(~shiny::removeModal(session = session), delay = 0.5)
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          # Dismiss the "Restoring session..." popup
+          shiny::removeModal()
+          log_success("Auto-replay: session restored with NCA results.")
+        } else {
+          # Delay the removal of loading modal to give it enough time to render
+          later::later(~shiny::removeModal(session = session), delay = 0.5)
+        }
       })
     }) %>%
       bindEvent(input$run_nca)
@@ -252,6 +264,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     observe({
       req(res_nca())
       session$userData$final_units <- res_nca()$data$units
+      session$userData$nca_ran <- TRUE
     })
 
     #' Show slopes results

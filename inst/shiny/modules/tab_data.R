@@ -155,6 +155,7 @@ tab_data_server <- function(id) {
       if (!is.null(override) && !is.null(override$mapping)) {
         auto_replay(TRUE)
         session$userData$auto_replay_target_tab <- override$tab %||% ""
+        session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
         log_info("Auto-replay: settings detected, will auto-advance.")
         loading_popup("Restoring session...")
         # Delay to allow mapping selectize inputs to update
