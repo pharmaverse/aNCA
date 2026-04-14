@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9147</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9148</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,10 +60,6 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
-<ul><li>Fixed “Summarise by” selector in Matrix Ratios having no effect due to input ID mismatch (<code>summarygroups</code> vs <code>summary_groups</code>) (<a href="https://github.com/pharmaverse/aNCA/issues/1198" class="external-link">#1198</a>)</li>
-</ul></div>
-<div class="section level3">
 <h3 id="features-added-development-version">Features added<a class="anchor" aria-label="anchor" href="#features-added-development-version"></a></h3>
 <ul><li>
 <code><a href="../reference/run_app.html">run_app()</a></code> now accepts a <code>settings</code> parameter to pre-load a YAML settings file on startup (<a href="https://github.com/pharmaverse/aNCA/issues/514" class="external-link">#514</a>)</li>
@@ -115,6 +111,7 @@
 <li>Removed <code>methods</code>, <code>scales</code>, and <code>stringr</code> from package dependencies, replacing all usages with base R equivalents (<a href="https://github.com/pharmaverse/aNCA/issues/1108" class="external-link">#1108</a>)</li>
 <li>SelectInputs updated using a new function to ensure all widgets include variable labels. (<a href="https://github.com/pharmaverse/aNCA/issues/899" class="external-link">#899</a>)</li>
 <li>Export modal now allows users to select which slide sections (mean plots, statistics, line plots, box plots, individual plots/parameters, additional analysis) to include in PPTX and HTML exports; box plot parameters are also configurable (<a href="https://github.com/pharmaverse/aNCA/issues/972" class="external-link">#972</a>)</li>
+<li>Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (<a href="https://github.com/pharmaverse/aNCA/issues/1195" class="external-link">#1195</a>)</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bugs-fixed-development-version">Bugs fixed<a class="anchor" aria-label="anchor" href="#bugs-fixed-development-version"></a></h3>
@@ -143,6 +140,7 @@
 <li>Descriptive statistics parameter columns are now correctly displayed when using the <code>selector_label</code> widget, and duplicate rows from the concentration data join are deduplicated (<a href="https://github.com/pharmaverse/aNCA/issues/1169" class="external-link">#1169</a>)</li>
 <li>Fixed <code>PKNCA_update_data_object</code> custom units table join using hardcoded <code>by = c("PPTESTCD", "PPORRESU")</code> instead of dynamic keys, which failed when the units table included group columns like <code>PARAM</code> or <code>PCSPEC</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1159" class="external-link">#1159</a>)</li>
 <li>Fixed <code>DOSNOA</code> computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get <code>DOSNOA=1</code> instead of <code>DOSNOA=2</code>, leading to incorrect dose time matching (<a href="https://github.com/pharmaverse/aNCA/issues/1116" class="external-link">#1116</a>)</li>
+<li>Fixed “Summarise by” selector in Matrix Ratios having no effect due to input ID mismatch (<code>summarygroups</code> vs <code>summary_groups</code>) (<a href="https://github.com/pharmaverse/aNCA/issues/1198" class="external-link">#1198</a>)</li>
 </ul></div>
 </div>
     <div class="section level2">

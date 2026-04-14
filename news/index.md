@@ -2,12 +2,6 @@
 
 ## aNCA (development version)
 
-### Bug fixes
-
-- Fixed “Summarise by” selector in Matrix Ratios having no effect due to
-  input ID mismatch (`summarygroups` vs `summary_groups`)
-  ([\#1198](https://github.com/pharmaverse/aNCA/issues/1198))
-
 ### Features added
 
 - [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
@@ -166,6 +160,9 @@
   additional analysis) to include in PPTX and HTML exports; box plot
   parameters are also configurable
   ([\#972](https://github.com/pharmaverse/aNCA/issues/972))
+- Settings file now outputs and time duplicate exclusions and processes
+  them automatically upon settings upload
+  ([\#1195](https://github.com/pharmaverse/aNCA/issues/1195))
 
 ### Bugs fixed
 
@@ -254,6 +251,9 @@
   PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1`
   instead of `DOSNOA=2`, leading to incorrect dose time matching
   ([\#1116](https://github.com/pharmaverse/aNCA/issues/1116))
+- Fixed “Summarise by” selector in Matrix Ratios having no effect due to
+  input ID mismatch (`summarygroups` vs `summary_groups`)
+  ([\#1198](https://github.com/pharmaverse/aNCA/issues/1198))
 
 ## aNCA 0.1.0
 
