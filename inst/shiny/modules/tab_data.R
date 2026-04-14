@@ -158,9 +158,30 @@ tab_data_server <- function(id) {
         session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
         log_info("Auto-replay: settings detected, will auto-advance.")
         loading_popup("Restoring session...")
-        # Delay to allow mapping selectize inputs to update
+        # Delay to allow mapping selectize inputs to update.
+        # Check for skipped mappings before triggering submit —
+        # .process_imported_mapping sets mapping_skipped during the
+        # same flush cycle that populates the selectize inputs.
         shinyjs::delay(500, {
-          trigger_mapping_submit(trigger_mapping_submit() + 1)
+          skipped <- session$userData$mapping_skipped %||% character(0)
+          if (length(skipped) > 0) {
+            auto_replay(FALSE)
+            shiny::removeModal()
+            log_warn("Auto-replay aborted: partial mapping failure.")
+            showNotification(
+              paste(
+                "Session restore stopped: some column mappings could",
+                "not be applied. Please review and continue manually."
+              ),
+              type = "warning", duration = 10
+            )
+            data_step("mapping")
+            updateTabsetPanel(
+              session, "data_navset", selected = "Mapping"
+            )
+          } else {
+            trigger_mapping_submit(trigger_mapping_submit() + 1)
+          }
         })
       }
     })
