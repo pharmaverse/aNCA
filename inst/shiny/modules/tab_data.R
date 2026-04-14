@@ -148,8 +148,9 @@
   })
 
   # Safety timeout: abort if pipeline doesn't complete within 15s.
+  # The delay callback checks auto_replay() itself, so no early return
+  # needed — the timer is harmless if auto-replay finishes first.
   observeEvent(trigger_mapping_submit(), {
-    if (!auto_replay()) return()
     shinyjs::delay(15000, {
       if (auto_replay()) {
         .abort_auto_replay(
