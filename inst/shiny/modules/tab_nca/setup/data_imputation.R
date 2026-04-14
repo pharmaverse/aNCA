@@ -197,12 +197,12 @@ data_imputation_server <- function(id, settings_override) {
     })
 
     observeEvent(input$select_blq_strategy, {
-      log_info("BLQ imputation strategy changed: {input$select_blq_strategy}")
+      log_info("BLQ imputation strategy changed: ", input$select_blq_strategy)
     }, ignoreInit = TRUE)
 
     observeEvent(input$should_impute_c0, {
       state <- if (isTRUE(input$should_impute_c0)) "enabled" else "disabled"
-      log_info("Start concentration imputation {state}")
+      log_info("Start concentration imputation ", state)
     }, ignoreInit = TRUE)
 
     blq_imputation_rule <- reactive({

@@ -288,7 +288,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         available_choices = profile_choices,
         override_val = settings$profile
       )
-      log_info("NCA profile selection changed: ", paste(target_profile, collapse = ", "))
+      if (length(target_profile) > 0 && !anyNA(target_profile)) {
+        log_info("NCA profile selection changed: ", paste(target_profile, collapse = ", "))
+      }
       updatePickerInput(
         session, "select_profile",
         choices = profile_choices, selected = target_profile
@@ -363,11 +365,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Log method and min half-life points changes
     observeEvent(input$method, {
-      log_info("Extrapolation method changed: {input$method}")
+      log_info("Extrapolation method changed: ", input$method)
     }, ignoreInit = TRUE)
 
     observeEvent(input$min_hl_points, {
-      log_info("Min. half-life points changed: {input$min_hl_points}")
+      log_info("Min. half-life points changed: ", input$min_hl_points)
     }, ignoreInit = TRUE)
 
     # Include keyboard limits for the settings GUI display
@@ -380,14 +382,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "min_hl_points", max = 10, min = 2, lab = "Min. HL Points")
 
     # Log flag rule changes
-    .flag_names <- c("R2ADJ", "R2", "AUCPEO", "AUCPEP", "LAMZSPN")
-    lapply(.flag_names, function(flag) {
-      observeEvent(input[[paste0(flag, "_rule")]], {
-        state <- if (input[[paste0(flag, "_rule")]]) "enabled" else "disabled"
-        log_info("Flag rule {flag} {state}")
+    lapply(c("R2ADJ", "R2", "AUCPEO", "AUCPEP", "LAMZSPN"), function(flag) {
+      rule_id <- paste0(flag, "_rule")
+      threshold_id <- paste0(flag, "_threshold")
+      observeEvent(input[[rule_id]], {
+        state <- if (input[[rule_id]]) "enabled" else "disabled"
+        log_info("Flag rule ", flag, " ", state)
       }, ignoreInit = TRUE)
-      observeEvent(input[[paste0(flag, "_threshold")]], {
-        log_info("Flag rule {flag} threshold changed: {input[[paste0(flag, '_threshold')]]}")
+      observeEvent(input[[threshold_id]], {
+        log_info("Flag rule ", flag, " threshold changed: ", input[[threshold_id]])
       }, ignoreInit = TRUE)
     })
 
