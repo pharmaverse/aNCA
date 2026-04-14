@@ -81,7 +81,7 @@ ratios_table_ui <- function(id) {
 #' @returns List with `valid` (data.frame) and `skipped` (character vector of reasons).
 #' @noRd
 ratios_table_server <- function(
-    id, adnca_data, extra_group_vars, imported_ratios, int_parameters = reactive(NULL)) {
+    id, adnca_data, extra_group_vars, imported_ratios, int_parameters) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
