@@ -77,6 +77,18 @@
     text-align: left !important;
   }
 
+  .slope-selector-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2em;
+    margin: 2em 0;
+    color: $grey-1;
+    font-style: italic;
+    text-align: center;
+  }
+
   .slope-plots-container {
     margin-top: 2em;
     min-height: calc(100vh - 220px);
