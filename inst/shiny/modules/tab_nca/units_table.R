@@ -26,13 +26,12 @@ units_table_server <- function(id, mydata) {
 
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
-      default_units <- mydata()$units %>%
-        dplyr::mutate(default = TRUE)
+      default_units <- mydata()$units
 
       if (!is.null(session$userData$units_table())) {
-        custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
+        custom_units <- session$userData$units_table()
         by_cols <- intersect(names(default_units), names(custom_units))
-        by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
+        by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
         dplyr::rows_update(
           default_units,
           custom_units,
