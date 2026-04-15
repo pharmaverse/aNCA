@@ -84,20 +84,20 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
 
-    # Auto-populate units_table with any units that differ from their defaults
-    # (e.g. volume unit simplification from tab_data.R). This ensures the
-    # settings export and R script include these changes even if the user
-    # never opens the Units modal.
+    # Keep units_table synchronized with the current dataset. Store the full
+    # units table so downstream code never receives a partial units table, and
+    # clear it when no units are available to avoid stale values persisting
+    # across uploads.
     observeEvent(pknca_data(), {
-      units <- pknca_data()$units
-      differs <- !is.na(units$PPSTRESU) & !is.na(units$PPORRESU) &
-        units$PPSTRESU != units$PPORRESU
-      changed <- units[differs, , drop = FALSE]
-      if (nrow(changed) > 0) {
-        session$userData$units_table(changed)
-      }
-    })
+      current_pknca_data <- pknca_data()
 
+      if (is.null(current_pknca_data) || is.null(current_pknca_data$units)) {
+        session$userData$units_table(NULL)
+        return()
+      }
+
+      session$userData$units_table(current_pknca_data$units)
+    }, ignoreNULL = FALSE)
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
