@@ -90,7 +90,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     # never opens the Units modal.
     observeEvent(pknca_data(), {
       units <- pknca_data()$units
-      changed <- units[units$PPSTRESU != units$PPORRESU, , drop = FALSE]
+      differs <- !is.na(units$PPSTRESU) & !is.na(units$PPORRESU) &
+        units$PPSTRESU != units$PPORRESU
+      changed <- units[differs, , drop = FALSE]
       if (nrow(changed) > 0) {
         session$userData$units_table(changed)
       }
