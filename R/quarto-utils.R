@@ -169,6 +169,22 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
     if (in_sections("boxplot") && is.list(boxplots_i)) {
       .add_qmd_boxplot_slides(quarto_path, boxplots_i, i, use_plotly)
     }
+    if (in_sections("dose_norm_plot") &&
+          !is.null(res_dose_slides[[i]]$dose_norm_meanplot)) {
+      has_dn_stats <- !is.null(res_dose_slides[[i]]$dose_norm_statistics) &&
+        ncol(res_dose_slides[[i]]$dose_norm_statistics) > 2
+      add_qmd_sl_plottabletable(
+        quarto_path = quarto_path,
+        df1 = if (has_dn_stats) {
+          paste0("res_dose_slides[[", i, "]]$dose_norm_statistics")
+        } else {
+          NULL
+        },
+        df2 = NULL,
+        plot = paste0("res_dose_slides[[", i, "]]$dose_norm_meanplot"),
+        use_plotly = use_plotly
+      )
+    }
   }
 }
 
@@ -182,7 +198,8 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 .add_qmd_ind_slides <- function(quarto_path, res_dose_slides, in_sections, use_plotly) {
   for (i in seq_along(res_dose_slides)) {
     if (length(res_dose_slides[[i]]$ind_params) == 0 &&
-          length(res_dose_slides[[i]]$ind_plots) == 0) {
+          length(res_dose_slides[[i]]$ind_plots) == 0 &&
+          length(res_dose_slides[[i]]$ind_dose_norm_params %||% list()) == 0) {
       next
     }
     .add_qmd_group_section_header(
@@ -204,6 +221,18 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
         },
         use_plotly = use_plotly
       )
+    }
+    dn_params_i <- res_dose_slides[[i]]$ind_dose_norm_params %||% list()
+    if (in_sections("dose_norm_ind_params") && length(dn_params_i) > 0) {
+      for (subj in names(dn_params_i)) {
+        add_qmd_sl_plottabletable(
+          quarto_path = quarto_path,
+          df1 = paste0("res_dose_slides[[", i, "]]$ind_dose_norm_params[['", subj, "']]"),
+          df2 = NULL,
+          plot = NULL,
+          use_plotly = use_plotly
+        )
+      }
     }
   }
 }
@@ -260,8 +289,9 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
 
   # Mean plot + statistics block
   has_summary <- in_sections("meanplot") || in_sections("statistics") ||
-    in_sections("linplot") || in_sections("boxplot")
-  has_individual <- in_sections("ind_plots") || in_sections("ind_params")
+    in_sections("linplot") || in_sections("boxplot") || in_sections("dose_norm_plot")
+  has_individual <- in_sections("ind_plots") || in_sections("ind_params") ||
+    in_sections("dose_norm_ind_params")
 
   if (has_summary) .add_qmd_summary_slides(quarto_path, res_dose_slides, in_sections, use_plotly)
   if (has_summary && has_individual) write("\n# Extra Figures", file = quarto_path, append = TRUE)
