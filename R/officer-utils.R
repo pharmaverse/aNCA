@@ -73,6 +73,48 @@ add_pptx_sl_plot <- function(pptx, plot) {
     officer::ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
+#' Add one individual-subject slide (plot+table, plot-only, or table-only)
+#' @param pptx An officer pptx object.
+#' @param group_data One element of res_dose_slides (a dose group).
+#' @param subj Subject identifier string.
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @return Updated pptx object.
+#' @keywords internal
+#' @noRd
+.add_pptx_one_ind_slide <- function(pptx, group_data, subj, in_sections) {
+  if (in_sections("ind_plots") && in_sections("ind_params")) {
+    add_pptx_sl_plottable(pptx,
+                          df   = group_data$ind_params[[subj]],
+                          plot = group_data$ind_plots[[subj]])
+  } else if (in_sections("ind_plots")) {
+    add_pptx_sl_plot(pptx, plot = group_data$ind_plots[[subj]])
+  } else {
+    add_pptx_sl_table(pptx, df = group_data$ind_params[[subj]], footer = "")
+  }
+}
+
+#' Add dose-normalised PK parameter slides for all subjects in a dose group
+#' @param pptx An officer pptx object.
+#' @param group_data One element of res_dose_slides (a dose group).
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @return List with elements `pptx` and `n_slides`.
+#' @keywords internal
+#' @noRd
+.add_pptx_dose_norm_ind_slides <- function(pptx, group_data, in_sections) {
+  dose_norm_params <- group_data$ind_dose_norm_params %||% list()
+  if (!in_sections("dose_norm_ind_params") || length(dose_norm_params) == 0) {
+    return(list(pptx = pptx, n_slides = 0L))
+  }
+  pptx <- purrr::reduce(
+    names(dose_norm_params),
+    function(pptx, subj) {
+      add_pptx_sl_table(pptx, df = dose_norm_params[[subj]], footer = "")
+    },
+    .init = pptx
+  )
+  list(pptx = pptx, n_slides = length(dose_norm_params))
+}
+
 #' Add individual-subject slides for one dose group to a pptx object
 #' @param pptx rpptx object
 #' @param group_data Single element from res_dose_slides
@@ -98,34 +140,12 @@ add_pptx_sl_plot <- function(pptx, plot) {
   )
   pptx <- purrr::reduce(
     names(group_data$ind_params),
-    function(pptx, subj) {
-      if (in_sections("ind_plots") && in_sections("ind_params")) {
-        add_pptx_sl_plottable(pptx,
-                              df   = group_data$ind_params[[subj]],
-                              plot = group_data$ind_plots[[subj]])
-      } else if (in_sections("ind_plots")) {
-        add_pptx_sl_plot(pptx, plot = group_data$ind_plots[[subj]])
-      } else {
-        add_pptx_sl_table(pptx, df = group_data$ind_params[[subj]], footer = "")
-      }
-    },
+    function(pptx, subj) .add_pptx_one_ind_slide(pptx, group_data, subj, in_sections),
     .init = pptx
   )
-  if (in_sections("dose_norm_ind_params") && length(group_data$ind_dose_norm_params) > 0) {
-    pptx <- purrr::reduce(
-      names(group_data$ind_dose_norm_params),
-      function(pptx, subj) {
-        add_pptx_sl_table(pptx, df = group_data$ind_dose_norm_params[[subj]], footer = "")
-      },
-      .init = pptx
-    )
-  }
-  n_dose_norm_ind <- if (in_sections("dose_norm_ind_params")) {
-    length(group_data$ind_dose_norm_params)
-  } else {
-    0L
-  }
-  n_slides <- 1 + length(group_data$ind_params) + n_dose_norm_ind
+  dose_norm_result <- .add_pptx_dose_norm_ind_slides(pptx, group_data, in_sections)
+  pptx <- dose_norm_result$pptx
+  n_slides <- 1 + length(group_data$ind_params) + dose_norm_result$n_slides
   list(pptx = pptx, n_slides = n_slides)
 }
 
