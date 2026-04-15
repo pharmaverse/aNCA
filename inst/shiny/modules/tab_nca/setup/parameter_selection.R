@@ -93,7 +93,7 @@ parameter_selection_ui <- function(id) {
 
     div(
       class = "param-matrix-wrapper",
-      uiOutput(ns("param_matrix_ui"))
+      withSpinner(uiOutput(ns("param_matrix_ui")))
     ),
 
     br(),
