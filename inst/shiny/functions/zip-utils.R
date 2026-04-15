@@ -126,6 +126,8 @@ format_to_xpt_compatible <- function(data) {
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
 #' @param boxplot_parameters Character vector of parameters to use for boxplots.
+#' @param dose_norm_parameters Character vector of dose-normalised parameter codes to include
+#'   (default: `c("CMAXD", "AUCLSTD", "AUCIFOD")`).
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
 #'
@@ -200,24 +202,20 @@ get_dose_esc_results <- function(
 
     # TODO: Filter out excluded records (where `exclude` is populated) before
     # calculating summary statistics, consistent with descriptive_statistics.R
-    stats_i <- calculate_summary_stats(
+    all_stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
     ) %>%
-      filter(
-        Statistic %in% statistics
-      ) %>%
+      filter(Statistic %in% statistics)
+
+    stats_i <- all_stats_i %>%
       select(
         any_of(c(facet_vars, "Statistic")),
         any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% summary_stats_parameters])
       ) %>%
       unique()
 
-    dose_norm_stats_i <- calculate_summary_stats(
-      data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
-      input_groups = facet_vars
-    ) %>%
-      filter(Statistic %in% statistics) %>%
+    dose_norm_stats_i <- all_stats_i %>%
       select(
         any_of(c(facet_vars, "Statistic")),
         any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% dose_norm_parameters])
@@ -302,7 +300,7 @@ get_dose_esc_results <- function(
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
-      dose_norm_meanplot   = dose_norm_meanplot_i,
+      dose_norm_meanplot = dose_norm_meanplot_i,
       statistics = stats_i,
       dose_norm_statistics = dose_norm_stats_i,
       boxplot = boxplots_i,
