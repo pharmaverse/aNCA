@@ -451,4 +451,3 @@ describe("calculate_ratio_app with interval parameters", {
     expect_true(nrow(ratios) > 0)
   })
 })
-
