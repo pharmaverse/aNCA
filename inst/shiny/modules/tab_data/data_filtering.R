@@ -182,7 +182,8 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
     observe({
       applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
         purrr::keep(\(x) !is.null(x))
-      if (length(applied_filters) == 0) {
+      if (length(applied_filters) == 0 ||
+          isTRUE(session$userData$auto_replay_active)) {
         removeNotification(filter_reminder_notification())
       } else {
         showNotification(

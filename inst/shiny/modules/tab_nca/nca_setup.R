@@ -139,7 +139,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         shinyjs::hide(selector = ".bioavailability-picker")
       }
 
-      if (nrow(final_data$intervals) == 0) {
+      if (nrow(final_data$intervals) == 0 &&
+          !isTRUE(session$userData$auto_replay_active)) {
         showNotification(
           "All intervals were filtered. Please revise your settings",
           type = "warning",

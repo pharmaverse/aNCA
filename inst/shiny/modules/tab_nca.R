@@ -128,6 +128,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         shinyjs::delay(10000, {
           if (auto_nca_pending()) {
             auto_nca_pending(FALSE)
+            session$userData$auto_replay_active <- FALSE
             shiny::removeModal()
             log_warn("Auto-replay: NCA auto-run timed out.")
             showNotification(
@@ -157,6 +158,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         log_error("Invalid parameters")
         if (auto_nca_running()) {
           auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
           shiny::removeModal()
           showNotification(
             paste(
@@ -260,6 +262,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       }, finally = {
         if (auto_nca_running()) {
           auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
           # Dismiss the "Restoring session..." popup
           shiny::removeModal()
           log_success("Auto-replay: session restored with NCA results.")

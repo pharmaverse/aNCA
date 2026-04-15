@@ -4,8 +4,9 @@
 #' @param log_msg Message for the log.
 #' @keywords internal
 #' @noRd
-.abort_auto_replay <- function(auto_replay, message, log_msg) {
+.abort_auto_replay <- function(auto_replay, message, log_msg, session) {
   auto_replay(FALSE)
+  session$userData$auto_replay_active <- FALSE
   shiny::removeModal()
   log_warn(log_msg)
   showNotification(message, type = "warning", duration = 10)
@@ -87,6 +88,7 @@
 .start_auto_replay <- function(override, auto_replay, data_step,
                                trigger_mapping_submit, session) {
   auto_replay(TRUE)
+  session$userData$auto_replay_active <- TRUE
   session$userData$auto_replay_target_tab <- override$tab %||% ""
   session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
   has_filters <- !is.null(override$filters) && length(override$filters) > 0
@@ -103,7 +105,8 @@
           "Session restore stopped: some column mappings could",
           "not be applied. Please review and continue manually."
         ),
-        "Auto-replay aborted: partial mapping failure."
+        "Auto-replay aborted: partial mapping failure.",
+        session
       )
       data_step("mapping")
       updateTabsetPanel(session, "data_navset", selected = "Mapping")
@@ -150,7 +153,8 @@
             "Session restore stopped: the data pipeline did not",
             "complete. Please review and continue manually."
           ),
-          "Auto-replay aborted: pipeline did not complete in time."
+          "Auto-replay aborted: pipeline did not complete in time.",
+          session
         )
       }
     })
@@ -179,10 +183,13 @@
     if (!auto_replay()) return()
     if (is.null(pknca_data())) {
       auto_replay(FALSE)
+      session$userData$auto_replay_active <- FALSE
       shiny::removeModal()
       return()
     }
     auto_replay(FALSE)
+    # Keep auto_replay_active TRUE until NCA auto-run completes (cleared
+    # in tab_nca_server) so intermediate notifications stay suppressed.
     auto_replay_ready(TRUE)
   })
 
@@ -329,7 +336,8 @@ tab_data_server <- function(id) {
               "Session restore stopped: some column mappings could",
               "not be applied. Please review and continue manually."
             ),
-            "Auto-replay aborted: partial mapping failure."
+            "Auto-replay aborted: partial mapping failure.",
+            session
           )
           data_step("mapping")
           updateTabsetPanel(session, "data_navset", selected = "Mapping")
