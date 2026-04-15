@@ -112,22 +112,17 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
                      columns = NULL)
 
     # Auto-replay: trigger NCA run once settings are applied and data is ready.
-    # Uses a debounced settings reactive to wait for the full cascade
-    # (analyte → pcspec → profile → parameters) to settle, instead of
-    # relying on a fixed delay.
+    # Debounces processed_pknca_data to wait for the full settings cascade
+    # (analyte → pcspec → profile → parameters → data object) to settle.
     auto_nca_pending <- reactiveVal(FALSE)
     auto_nca_running <- reactiveVal(FALSE)
-    # Tracks whether the debounced settings have fired since auto-replay
-    # was armed. Prevents triggering NCA with stale pre-import settings.
-    auto_nca_settings_settled <- reactiveVal(FALSE)
-    settings_debounced <- settings %>% debounce(500)
+    pknca_data_debounced <- processed_pknca_data %>% debounce(1000)
 
     observeEvent(auto_replay_ready(), {
       req(auto_replay_ready())
       target <- session$userData$auto_replay_target_tab %||% ""
       nca_ran <- isTRUE(session$userData$auto_replay_nca_ran)
       if (target == "nca" && nca_ran) {
-        auto_nca_settings_settled(FALSE)
         auto_nca_pending(TRUE)
         # Safety: if NCA auto-run doesn't trigger within 10s, dismiss popup
         shinyjs::delay(10000, {
@@ -144,25 +139,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       }
     })
 
-    # Mark settings as settled once the debounced value fires after
-    # auto-replay is armed, then attempt to trigger NCA.
-    observeEvent(settings_debounced(), {
+    # Trigger NCA once the debounced data object has settled.
+    observeEvent(pknca_data_debounced(), {
       if (!auto_nca_pending()) return()
-      auto_nca_settings_settled(TRUE)
-      # processed_pknca_data may have already fired — trigger now
-      if (!is.null(tryCatch(processed_pknca_data(), error = function(e) NULL))) {
-        auto_nca_pending(FALSE)
-        log_info("Auto-replay: triggering NCA calculation.")
-        auto_nca_running(TRUE)
-        shinyjs::click("run_nca")
-      }
-    })
-
-    # Also attempt to trigger when processed data changes, in case
-    # it fires after settings have already settled.
-    observeEvent(processed_pknca_data(), {
-      if (!auto_nca_pending()) return()
-      if (!auto_nca_settings_settled()) return()
       auto_nca_pending(FALSE)
       log_info("Auto-replay: triggering NCA calculation.")
       auto_nca_running(TRUE)
