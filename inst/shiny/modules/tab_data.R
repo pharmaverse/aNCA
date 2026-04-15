@@ -1,22 +1,3 @@
-#' Module handling pre-processing of data.
-#'
-#' @details
-#' Handles user upload or dummy data, filtering, mapping and reviewing. The general pipeline for
-#' the module is:
-#' 1. Upload raw adnca data (or return a dummy dataset)
-#' 2. Filter the raw data based on user input
-#' 3. Process the data based on column mapping specifications
-#' The module also allows the user to review the data after performing filtering and mapping -
-#' the processed data will go further into the analysis pipeline.
-#'
-#' @returns list containing:
-#'   - pknca_data: reactive PKNCAdata object for analysis
-#'   - adnca_raw: reactive raw uploaded ADNCA data (or dummy data)
-#'   - extra_group_vars: reactive grouping variables from column mapping
-#'   - settings_override: reactive uploaded settings (or NULL)
-#'   - auto_replay_ready: reactive logical, TRUE when auto-replay data
-#'     processing is complete and the app can navigate to the saved tab
-
 #' Abort auto-replay, dismiss loading popup, and show a warning.
 #' @param auto_replay ReactiveVal to reset.
 #' @param message Warning message to display.
@@ -91,19 +72,16 @@
   })
 }
 
-#' Set up auto-replay observers for restoring a session from settings.
-#' @param uploaded_data List of reactives from data_upload_server.
+
+#' Start auto-replay: store target tab, show loading popup, and
+#' trigger mapping submission after a delay. Aborts if any column
+#' mappings were skipped.
+#' @param override List from settings_override (must contain `tab`,
+#'   `nca_ran`, `filters`).
 #' @param auto_replay ReactiveVal tracking auto-replay state.
 #' @param data_step ReactiveVal for current step.
 #' @param trigger_mapping_submit ReactiveVal to trigger mapping.
-#' @param processed_data Reactive for filtered data.
-#' @param pknca_data Reactive for PKNCA data object.
 #' @param session Shiny session.
-#' @returns ReactiveVal that signals when auto-replay is complete.
-#' @keywords internal
-#' @noRd
-#' Start auto-replay: store target tab, show loading popup, and
-#' trigger mapping submission after a delay.
 #' @keywords internal
 #' @noRd
 .start_auto_replay <- function(override, auto_replay, data_step,
@@ -135,6 +113,19 @@
   })
 }
 
+#' Set up auto-replay observers for restoring a session from settings.
+#' Wires up the pipeline: settings upload -> mapping -> filtering ->
+#' preview -> signal ready. Includes a 15s safety timeout.
+#' @param uploaded_data List of reactives from data_upload_server.
+#' @param auto_replay ReactiveVal tracking auto-replay state.
+#' @param data_step ReactiveVal for current step.
+#' @param trigger_mapping_submit ReactiveVal to trigger mapping.
+#' @param processed_data Reactive for filtered data.
+#' @param pknca_data Reactive for PKNCA data object.
+#' @param session Shiny session.
+#' @returns ReactiveVal that signals when auto-replay is complete.
+#' @keywords internal
+#' @noRd
 .setup_auto_replay <- function(uploaded_data, auto_replay, data_step,
                                trigger_mapping_submit,
                                processed_data, pknca_data, session) {
