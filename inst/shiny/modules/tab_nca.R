@@ -112,10 +112,12 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
                      columns = NULL)
 
     # Auto-replay: trigger NCA run once settings are applied and data is ready.
-    # A delayed trigger ensures the settings cascade (analyte → pcspec →
-    # profile) has settled before running NCA.
+    # Uses a debounced settings reactive to wait for the full cascade
+    # (analyte → pcspec → profile → parameters) to settle, instead of
+    # relying on a fixed delay.
     auto_nca_pending <- reactiveVal(FALSE)
     auto_nca_running <- reactiveVal(FALSE)
+    settings_debounced <- settings %>% debounce(500)
 
     observeEvent(auto_replay_ready(), {
       req(auto_replay_ready())
@@ -138,15 +140,16 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       }
     })
 
-    observeEvent(processed_pknca_data(), {
-      if (!auto_nca_pending()) return()
+    # Wait for both processed data and debounced settings before triggering
+    # NCA. This ensures the settings cascade has fully settled.
+    observe({
+      req(auto_nca_pending())
+      req(processed_pknca_data())
+      req(settings_debounced())
       auto_nca_pending(FALSE)
-      # Delay to let the settings cascade settle before triggering NCA
-      shinyjs::delay(1500, {
-        log_info("Auto-replay: triggering NCA calculation.")
-        auto_nca_running(TRUE)
-        shinyjs::click("run_nca")
-      })
+      log_info("Auto-replay: triggering NCA calculation.")
+      auto_nca_running(TRUE)
+      shinyjs::click("run_nca")
     })
 
     #' Triggers NCA analysis, creating res_nca reactive
