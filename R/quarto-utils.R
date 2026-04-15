@@ -141,7 +141,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @keywords internal
 #' @noRd
-.add_qmd_dose_norm_summary_slide <- function(quarto_path, res_dose_slides, i, use_plotly) {
+.add_qmd_dose_norm_slide <- function(quarto_path, res_dose_slides, i, use_plotly) {
   if (is.null(res_dose_slides[[i]]$dose_norm_meanplot)) return(invisible(NULL))
   has_dn_stats <- !is.null(res_dose_slides[[i]]$dose_norm_statistics) &&
     ncol(res_dose_slides[[i]]$dose_norm_statistics) > 2
@@ -195,7 +195,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
       .add_qmd_boxplot_slides(quarto_path, boxplots_i, i, use_plotly)
     }
     if (in_sections("dose_norm_plot")) {
-      .add_qmd_dose_norm_summary_slide(quarto_path, res_dose_slides, i, use_plotly)
+      .add_qmd_dose_norm_slide(quarto_path, res_dose_slides, i, use_plotly)
     }
   }
 }
@@ -209,7 +209,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @keywords internal
 #' @noRd
 .add_qmd_dose_norm_ind_slides <- function(quarto_path, res_dose_slides, i,
-                                           in_sections, use_plotly) {
+                                          in_sections, use_plotly) {
   dn_params_i <- res_dose_slides[[i]]$ind_dose_norm_params %||% list()
   if (!in_sections("dose_norm_ind_params") || length(dn_params_i) == 0) {
     return(invisible(NULL))
