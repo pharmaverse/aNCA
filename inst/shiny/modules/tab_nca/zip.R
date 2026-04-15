@@ -180,10 +180,10 @@ zip_ui <- function(id) {
           )
         ),
         div(
-          id = "dose_norm_params_container",
+          id = ns("dose_norm_params_container"),
           shinyWidgets::virtualSelectInput(
             inputId       = ns("slide_dose_norm_params"),
-            label         = "Dose-normalised parameters",
+            label         = "Dose-normalised parameters:",
             choices       = dose_norm_choices,
             selected      = dose_norm_default,
             multiple      = TRUE,
@@ -241,6 +241,11 @@ zip_ui <- function(id) {
   .check_format_selections(tree, plot_formats, table_formats, slide_formats)
 }
 
+# Helper: check that params are non-empty when a named section is selected
+.check_params_not_empty <- function(slide_sections_tree, section_label, params, error_msg) {
+  if (section_label %in% slide_sections_tree && length(params) == 0) error_msg else NULL
+}
+
 # Validate slide configuration — returns character(0) if valid, else a vector of messages
 .validate_slide_config <- function(slide_sections_tree, ind_params,
                                    summary_params, boxplot_params, dose_norm_params) {
@@ -248,19 +253,22 @@ zip_ui <- function(id) {
   if (is.null(slide_sections_tree) || length(slide_sections_tree) == 0) {
     msgs <- c(msgs, "Select at least one slide section to include.")
   }
-  if ("PK Parameters" %in% slide_sections_tree && length(ind_params) == 0) {
-    msgs <- c(msgs, "Individual slide parameters cannot be empty.")
-  }
-  if ("Summary Statistics" %in% slide_sections_tree && length(summary_params) == 0) {
-    msgs <- c(msgs, "Summary slide parameters cannot be empty.")
-  }
-  if ("Box Plot" %in% slide_sections_tree && length(boxplot_params) == 0) {
-    msgs <- c(msgs, "Box plot parameters cannot be empty.")
-  }
-  if (
-    any(c("Dose-Normalised Plots", "Dose-Normalised PK Parameters") %in% slide_sections_tree) &&
-      length(dose_norm_params) == 0
-  ) {
+  msgs <- c(msgs, Filter(Negate(is.null), list(
+    .check_params_not_empty(
+      slide_sections_tree, "PK Parameters", ind_params,
+      "Individual slide parameters cannot be empty."
+    ),
+    .check_params_not_empty(
+      slide_sections_tree, "Summary Statistics", summary_params,
+      "Summary slide parameters cannot be empty."
+    ),
+    .check_params_not_empty(
+      slide_sections_tree, "Box Plot", boxplot_params,
+      "Box plot parameters cannot be empty."
+    )
+  )))
+  dose_norm_sections <- c("Dose-Normalised Plots", "Dose-Normalised PK Parameters")
+  if (any(dose_norm_sections %in% slide_sections_tree) && length(dose_norm_params) == 0) {
     msgs <- c(msgs, "Dose-normalised parameters cannot be empty.")
   }
   msgs
