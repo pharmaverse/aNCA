@@ -139,6 +139,7 @@ get_dose_esc_results <- function(
   summary_stats_parameters = stats_parameters,
   boxplot_parameters = c("AUCIFO"),
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  dose_norm_parameters = c("CMAXD", "AUCLSTD", "AUCIFOD"),
   labels_df = metadata_nca_variables
 ) {
   # Define column names
@@ -183,6 +184,20 @@ get_dose_esc_results <- function(
       sd_max = TRUE
     )
 
+    dose_norm_meanplot_i <- exploration_meanplot(
+      pknca_data = o_nca_i$data,
+      color_by = group_by_vars,
+      facet_by = facet_vars,
+      filtering_list = list(
+        PARAM = unique(d_conc_i[[analyte_col]]),
+        PCSPEC = unique(d_conc_i[[pcspec_col]]),
+        ATPTREF = unique(d_conc_i[[profile_col]])
+      ),
+      ylog_scale = FALSE,
+      sd_max = TRUE,
+      line_type = "dose-normalized"
+    )
+
     # TODO: Filter out excluded records (where `exclude` is populated) before
     # calculating summary statistics, consistent with descriptive_statistics.R
     stats_i <- calculate_summary_stats(
@@ -195,6 +210,17 @@ get_dose_esc_results <- function(
       select(
         any_of(c(facet_vars, "Statistic")),
         any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% summary_stats_parameters])
+      ) %>%
+      unique()
+
+    dose_norm_stats_i <- calculate_summary_stats(
+      data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
+      input_groups = facet_vars
+    ) %>%
+      filter(Statistic %in% statistics) %>%
+      select(
+        any_of(c(facet_vars, "Statistic")),
+        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% dose_norm_parameters])
       ) %>%
       unique()
 
@@ -245,6 +271,18 @@ get_dose_esc_results <- function(
       pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
       split(.[[o_nca$data$conc$columns$subject]])
 
+    ind_dose_norm_params_i <- merge(o_nca$result, group_i) %>%
+      filter(PPTESTCD %in% dose_norm_parameters) %>%
+      mutate(parameter_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
+      select(any_of(
+        c(
+          o_nca$data$conc$columns$subject,
+          "start", "end", "parameter_unit", "PPSTRES"
+        )
+      )) %>%
+      pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
+      split(.[[o_nca$data$conc$columns$subject]])
+
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
       lapply(function(d_conc_i) {
@@ -264,10 +302,13 @@ get_dose_esc_results <- function(
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
+      dose_norm_meanplot   = dose_norm_meanplot_i,
       statistics = stats_i,
+      dose_norm_statistics = dose_norm_stats_i,
       boxplot = boxplots_i,
       info = info_i,
       ind_params = ind_params,
+      ind_dose_norm_params = ind_dose_norm_params_i,
       ind_plots = ind_plots,
       group = group_string
     )
@@ -454,6 +495,11 @@ prepare_export_files <- function(target_dir,
   boxplot_parameters       <- slide_config$boxplot_parameters
   if (length(boxplot_parameters) == 0) boxplot_parameters <- c("CMAX", "AUCIFO", "LAMZHL")
 
+  dose_norm_parameters <- rlang::`%||%`(
+    slide_config$dose_norm_parameters, c("CMAXD", "AUCLSTD", "AUCIFOD")
+  )
+  if (length(dose_norm_parameters) == 0) dose_norm_parameters <- c("CMAXD", "AUCLSTD", "AUCIFOD")
+
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
@@ -463,7 +509,8 @@ prepare_export_files <- function(target_dir,
     ind_stats_parameters     = ind_stats_parameters,
     summary_stats_parameters = summary_stats_parameters,
     boxplot_parameters        = boxplot_parameters,
-    info_vars = grouping_vars
+    info_vars = grouping_vars,
+    dose_norm_parameters = dose_norm_parameters
   )
 
   # Attach additional_analysis from session results
