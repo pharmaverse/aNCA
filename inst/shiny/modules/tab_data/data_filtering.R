@@ -172,7 +172,7 @@ data_filtering_ui <- function(id) {
     applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
       purrr::keep(\(x) !is.null(x))
     if (length(applied_filters) == 0 ||
-        isTRUE(session$userData$auto_replay_active)) {
+          isTRUE(session$userData$auto_replay_active)) {
       removeNotification(notification_id())
     } else {
       showNotification(
