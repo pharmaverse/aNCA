@@ -523,11 +523,8 @@ prepare_export_files <- function(target_dir,
 .export_settings <- function(target_dir, session) {
   settings_list <- session$userData$settings()
 
-  if (!is.null(settings_list$units)) {
-    settings_list$units <- settings_list$units %>%
-      dplyr::filter(!default) %>%
-      dplyr::select(-default)
-  }
+  # units table from session$userData$units_table() already contains
+  # only changed rows (PPSTRESU != PPORRESU), no filtering needed.
 
   settings_list$ratio_table <- session$userData$ratio_table()
 
