@@ -101,8 +101,7 @@ units_table_server <- function(id, mydata) {
         PPORRESU = colDef(name = "Default Unit"),
         PPSTRESU = colDef(name = "Custom Unit"),
         conversion_factor = colDef(name = "Conversion Factor"),
-        is_hidden = colDef(show = FALSE),
-        default = colDef(show = FALSE)
+        is_hidden = colDef(show = FALSE)
       ),
       pagination = FALSE,
       filterable = TRUE,
@@ -155,7 +154,6 @@ units_table_server <- function(id, mydata) {
           )
         }
 
-        modal_units_table[info$row, "default"] <- FALSE
         modal_units_table[info$row, "conversion_factor"] <- conversion_factor_value
       }
 
