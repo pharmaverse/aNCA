@@ -49,7 +49,8 @@ zip_ui <- function(id) {
       label    = "Individual Slides",
       sections = list(
         list(id = "ind_plots",  label = "Individual Plots"),
-        list(id = "ind_params", label = "PK Parameters")
+        list(id = "ind_params", label = "PK Parameters"),
+        list(id = "dose_norm_ind_params", label = "Dose-Normalised PK Parameters")
       )
     ),
     list(
@@ -59,7 +60,8 @@ zip_ui <- function(id) {
         list(id = "meanplot",   label = "Mean Plots"),
         list(id = "linplot",    label = "Spaghetti / Group Plot"),
         list(id = "boxplot",    label = "Box Plot"),
-        list(id = "statistics", label = "Summary Statistics")
+        list(id = "statistics", label = "Summary Statistics"),
+        list(id = "dose_norm_plot", label = "Dose-Normalised Plots")
       )
     )
   )
@@ -92,9 +94,18 @@ zip_ui <- function(id) {
   })
 }
 
+# Filter available NCA parameter codes to only dose-normalised ones
+.dose_norm_param_codes <- function(available_params) {
+  dn_codes <- metadata_nca_variables$PPTESTCD[
+    metadata_nca_variables$function_name == "pk.calc.dn"
+  ]
+  intersect(available_params, dn_codes)
+}
+
 # Show the "Customise Slide Contents" modal dialog
 .show_customise_slides_modal <- function(ns, slide_tree, all_leaf_ids,
-                                         virtual_choices, available_params, default_selected) {
+                                         virtual_choices, available_params, default_selected,
+                                         dose_norm_choices, dose_norm_default) {
   showModal(modalDialog(
     title = "Customise Slide Contents",
     p(
@@ -168,6 +179,18 @@ zip_ui <- function(id) {
             width                    = "100%"
           )
         ),
+        div(
+          id = "dose_norm_params_container",
+          shinyWidgets::virtualSelectInput(
+            inputId       = ns("slide_dose_norm_params"),
+            label         = "Dose-normalised parameters",
+            choices       = dose_norm_choices,
+            selected      = dose_norm_default,
+            multiple      = TRUE,
+            search        = TRUE,
+            dropboxWrapper = "body"
+          )
+        ),
         helpText(
           icon("circle-info"),
           "Only parameters calculated in this NCA run are available for selection.",
@@ -220,7 +243,7 @@ zip_ui <- function(id) {
 
 # Validate slide configuration — returns character(0) if valid, else a vector of messages
 .validate_slide_config <- function(slide_sections_tree, ind_params,
-                                   summary_params, boxplot_params) {
+                                   summary_params, boxplot_params, dose_norm_params) {
   msgs <- character(0)
   if (is.null(slide_sections_tree) || length(slide_sections_tree) == 0) {
     msgs <- c(msgs, "Select at least one slide section to include.")
@@ -233,6 +256,12 @@ zip_ui <- function(id) {
   }
   if ("Box Plot" %in% slide_sections_tree && length(boxplot_params) == 0) {
     msgs <- c(msgs, "Box plot parameters cannot be empty.")
+  }
+  if (
+    any(c("Dose-Normalised Plots", "Dose-Normalised PK Parameters") %in% slide_sections_tree) &&
+      length(dose_norm_params) == 0
+  ) {
+    msgs <- c(msgs, "Dose-normalised parameters cannot be empty.")
   }
   msgs
 }
@@ -295,7 +324,8 @@ zip_ui <- function(id) {
     slide_sections           = selected_sections,
     ind_stats_parameters     = input$slide_ind_params,
     summary_stats_parameters = input$slide_summary_params,
-    boxplot_parameters       = input$slide_boxplot_param
+    boxplot_parameters       = input$slide_boxplot_param,
+    dose_norm_parameters     = input$slide_dose_norm_params
   )
 }
 
@@ -442,7 +472,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         slide_sections_tree = input$slide_sections_tree,
         ind_params          = input$slide_ind_params,
         summary_params      = input$slide_summary_params,
-        boxplot_params      = input$slide_boxplot_param
+        boxplot_params      = input$slide_boxplot_param,
+        dose_norm_params    = input$slide_dose_norm_params
       )
     })
 
@@ -474,6 +505,10 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       shinyjs::toggle("ind_params_container",     condition = "PK Parameters"    %in% tree)
       shinyjs::toggle("summary_params_container", condition = "Summary Statistics" %in% tree)
       shinyjs::toggle("boxplot_params_container", condition = "Box Plot"           %in% tree)
+      shinyjs::toggle(
+        "dose_norm_params_container",
+        condition = any(c("Dose-Normalised Plots", "Dose-Normalised PK Parameters") %in% tree)
+      )
     })
 
     # Show ZIP export modal when button is clicked
@@ -558,9 +593,16 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       virtual_choices <- .make_param_virtual_choices(available_params)
       default_selected <- intersect(DEFAULT_STATS_PARAMETERS, available_params)
 
+      dose_norm_available <- .dose_norm_param_codes(available_params)
+      dose_norm_default   <- intersect(DEFAULT_DOSE_NORM_PARAMETERS, dose_norm_available)
+
       removeModal()
-      .show_customise_slides_modal(ns, slide_tree, all_leaf_ids,
-                                   virtual_choices, available_params, default_selected)
+      .show_customise_slides_modal(
+        ns, slide_tree, all_leaf_ids,
+        virtual_choices, available_params, default_selected,
+        dose_norm_choices = dose_norm_available,
+        dose_norm_default = dose_norm_default
+      )
     })
 
     observeEvent(input$back_to_export, {
@@ -687,6 +729,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
 DEFAULT_STATS_PARAMETERS <- c(
   "CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"
 )
+
+DEFAULT_DOSE_NORM_PARAMETERS <- c("CMAXD", "AUCLSTD", "AUCIFOD")
 
 # Define a list with the possible outputs to export as end objects.
 # Consider all the zip_server options to create and align accordingly.
