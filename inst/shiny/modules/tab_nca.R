@@ -12,12 +12,14 @@
 #'    and display, including modules like `nca_results.R`, `parameter_datasets.R`,
 #'    `descriptive_statistics.R` and `additional_analysis.R`
 #'
+#' @param id Module ID.
+#' @param pknca_data Reactive PKNCAdata object from the data tab.
+#' @param extra_group_vars Reactive with additional grouping variable names.
+#' @param settings_override Reactive with uploaded settings list (or NULL).
+#' @param auto_replay_ready ReactiveVal that signals when auto-replay
+#'   data processing is complete and NCA can be auto-triggered.
 #'
-#' @param id           ID of the module.
-#' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
-#' @param extra_group_vars Column name(s) of the additional variable options for input widgets
-#'
-#' @returns `res_nca` reactive with results data object.
+#' @returns List with `res_nca` and `processed_pknca_data` reactives.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
 

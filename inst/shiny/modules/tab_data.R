@@ -164,12 +164,19 @@
   # tab_data_server, which also handles the normal advance to filtering.
 
   # Step 3: After filtering completes, advance to preview.
-  # When filters are imported, processed_data fires twice: once with
-  # unfiltered data, then again after auto-submit. Skip the first fire.
-  # The pending flag is set in .start_auto_replay via session$userData.
+  # When filters are imported, processed_data (filtered_data in
+  # data_filtering.R) fires exactly twice:
+  #   1. Triggered by raw_adnca_data() change via bindEvent — unfiltered.
+  #   2. Triggered by auto-submit clicking submit_filters — filtered.
+  # The pending flag skips fire 1 so we only advance on fire 2.
+  # This invariant holds because filtered_data is bound to
+  # (input$submit_filters, raw_adnca_data()) and auto-replay only
+  # clicks submit once. If that bindEvent changes, this logic must
+  # be revisited.
   observeEvent(processed_data(), {
     if (!auto_replay()) return()
     if (isTRUE(session$userData$auto_replay_filter_pending)) {
+      log_trace("Auto-replay: skipping first processed_data fire (pre-filter).")
       session$userData$auto_replay_filter_pending <- FALSE
       return()
     }
@@ -230,6 +237,21 @@
   units
 }
 
+#' Data tab module (upload, mapping, filtering, preview).
+#'
+#' Handles the data pre-processing pipeline: upload raw ADNCA data,
+#' map columns, apply filters, and create a PKNCAdata object. When
+#' settings are uploaded alongside data, auto-replay restores the
+#' previous session state.
+#'
+#' @param id Module ID.
+#'
+#' @returns List containing:
+#'   - `pknca_data`: reactive PKNCAdata object for analysis.
+#'   - `adnca_raw`: reactive raw uploaded ADNCA data.
+#'   - `extra_group_vars`: reactive grouping variables from column mapping.
+#'   - `settings_override`: reactive uploaded settings (or NULL).
+#'   - `auto_replay_ready`: ReactiveVal signalling auto-replay completion.
 tab_data_ui <- function(id) {
   ns <- NS(id)
 
