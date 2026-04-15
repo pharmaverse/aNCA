@@ -2,32 +2,30 @@
 % Please edit documentation in R/get_session_code.R
 \name{get_settings_code}
 \alias{get_settings_code}
-\title{Generate a session script from settings and mapping files}
+\title{Generate a session script from a settings YAML file}
 \usage{
 get_settings_code(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = system.file("www/templates/script_template.R", package = "aNCA"),
-  mapping = default_mapping
+  template_path = system.file("www/templates/script_template.R", package = "aNCA")
 )
 }
 \arguments{
-\item{settings_file_path}{Path to the yaml file containing the settings list.}
+\item{settings_file_path}{Path to the YAML file containing the settings.}
 
 \item{data_path}{Path to the data file to be referenced in the script.}
 
 \item{output_path}{Path to write the resulting script file.}
 
-\item{template_path}{Path to the R script template file. By default, uses the one
-installed from your aNCA package version.}
-
-\item{mapping}{Named list mapping variable names (default: \code{default_mapping}).}
+\item{template_path}{Path to the R script template file. By default, uses
+the one installed from your aNCA package version.}
 }
 \value{
 Invisibly returns the output_path.
 }
 \description{
-This function reads a settings yaml file and data path, and generates an R script
-that can reproduce the session using a template.
+Reads a settings YAML file and generates an R script that can reproduce the
+session. Mapping, filters, ratio table, and units are read from the YAML
+when present; legacy files without these fields fall back to defaults.
 }

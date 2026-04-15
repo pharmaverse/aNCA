@@ -183,24 +183,95 @@ describe("clean_deparse()", {
 })
 
 describe("get_settings_code: ", {
-  setts_file <- testthat::test_path("data/test-settings.yaml")
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
-  output_file <- tempfile(fileext = ".R")
   placeholder <- "settings_list"
 
-  get_settings_code(
-    settings_file_path = setts_file,
-    data_path = data_file,
-    output_path = output_file
-  )
+  describe("with legacy settings (no mapping in YAML)", {
+    setts_file <- testthat::test_path("data/test-settings.yaml")
+    output_file <- tempfile(fileext = ".R")
 
-  it("writes a script R file output and substitutes placeholders", {
-    expect_true(file.exists(output_file))
+    get_settings_code(
+      settings_file_path = setts_file,
+      data_path = data_file,
+      output_path = output_file
+    )
+
+    it("writes a script R file output and substitutes placeholders", {
+      expect_true(file.exists(output_file))
+    })
+
+    it("substitutes placeholders in the output file", {
+      file_content <- readLines(output_file)
+      expect_false(any(grepl(placeholder, file_content)))
+    })
+
+    it("falls back to default mapping for legacy files", {
+      file_content <- paste(readLines(output_file), collapse = "\n")
+      # Default mapping uses DOSEA for select_DOSEA
+      expect_match(file_content, "select_DOSEA")
+      expect_match(file_content, '"DOSEA"')
+    })
+
+    it("derives extra_vars_to_keep from default mapping", {
+      file_content <- paste(readLines(output_file), collapse = "\n")
+      # Default grouping vars are TRT01A, RACE, SEX
+      expect_match(file_content, '"TRT01A"')
+      expect_match(file_content, '"DOSEA"')
+      expect_match(file_content, '"ATPTREF"')
+      expect_match(file_content, '"ROUTE"')
+    })
   })
 
-  it("substitutes placeholders in the output file", {
-    file_content <- readLines(output_file)
-    expect_false(any(grepl(placeholder, file_content)))
+  describe("with mapping, filters, and ratio_table in YAML", {
+    setts_file <- testthat::test_path("data/test-settings-with-mapping.yaml")
+    output_file <- tempfile(fileext = ".R")
+
+    get_settings_code(
+      settings_file_path = setts_file,
+      data_path = data_file,
+      output_path = output_file
+    )
+
+    it("writes a script R file output and substitutes placeholders", {
+      expect_true(file.exists(output_file))
+    })
+
+    it("substitutes placeholders in the output file", {
+      file_content <- readLines(output_file)
+      expect_false(any(grepl(placeholder, file_content)))
+    })
+
+    it("reads mapping from YAML instead of using defaults", {
+      file_content <- paste(readLines(output_file), collapse = "\n")
+      # Custom mapping uses DOSE_AMT for select_DOSEA
+      expect_match(file_content, '"DOSE_AMT"')
+    })
+
+    it("reads filters from YAML", {
+      file_content <- paste(readLines(output_file), collapse = "\n")
+      expect_match(file_content, '"Analyte01"')
+      expect_match(file_content, '"Analyte02"')
+    })
+
+    it("reads ratio_table from YAML", {
+      file_content <- paste(readLines(output_file), collapse = "\n")
+      expect_match(file_content, "MRCMAX")
+    })
+
+    it("reads units_table from YAML", {
+      file_content <- paste(readLines(output_file), collapse = "\n")
+      expect_match(file_content, "ng/mL")
+    })
+
+    it("derives extra_vars_to_keep from YAML mapping", {
+      file_content <- paste(readLines(output_file), collapse = "\n")
+      # Custom grouping vars are COHORT, SEX (not TRT01A, RACE from default)
+      expect_match(file_content, '"COHORT"')
+      expect_match(file_content, '"SEX"')
+      expect_match(file_content, '"DOSEA"')
+      expect_match(file_content, '"ATPTREF"')
+      expect_match(file_content, '"ROUTE"')
+    })
   })
 })
 
