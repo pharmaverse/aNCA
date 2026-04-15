@@ -50,7 +50,7 @@ zip_ui <- function(id) {
       sections = list(
         list(id = "ind_plots",  label = "Individual Plots"),
         list(id = "ind_params", label = "PK Parameters"),
-        list(id = "dose_norm_ind_params", label = "Dose-Normalised PK Parameters")
+        list(id = "dose_norm_ind_params", label = "Dose-Normalised Plots & Parameters")
       )
     ),
     list(
@@ -61,7 +61,7 @@ zip_ui <- function(id) {
         list(id = "linplot",    label = "Spaghetti / Group Plot"),
         list(id = "boxplot",    label = "Box Plot"),
         list(id = "statistics", label = "Summary Statistics"),
-        list(id = "dose_norm_plot", label = "Dose-Normalised Plots")
+        list(id = "dose_norm_plot", label = "Dose-Normalised Plot & Statistics")
       )
     )
   )
@@ -94,12 +94,25 @@ zip_ui <- function(id) {
   })
 }
 
-# Filter available NCA parameter codes to only dose-normalised ones
-.dose_norm_param_codes <- function(available_params) {
-  dn_codes <- metadata_nca_variables$PPTESTCD[
-    metadata_nca_variables$function_name == "pk.calc.dn"
+# Build grouped virtualSelectInput choices for dose-normalised NCA parameters
+.dose_norm_param_choices <- function(available_params) {
+  dn_meta <- metadata_nca_parameters[
+    grepl("_dosenorm$", metadata_nca_parameters$unit_type) &
+      metadata_nca_parameters$PPTESTCD %in% available_params,
   ]
-  intersect(available_params, dn_codes)
+  if (nrow(dn_meta) == 0) return(list())
+  by_type <- split(dn_meta, dn_meta$unit_type)
+  lapply(names(by_type), function(type_name) {
+    df <- by_type[[type_name]]
+    options_list <- lapply(seq_len(nrow(df)), function(i) {
+      list(
+        label       = as.character(df$PPTESTCD[i]),
+        value       = as.character(df$PPTESTCD[i]),
+        description = as.character(df$PPTEST[i])
+      )
+    })
+    list(label = type_name, options = options_list)
+  })
 }
 
 # Show the "Customise Slide Contents" modal dialog
@@ -182,13 +195,16 @@ zip_ui <- function(id) {
         div(
           id = ns("dose_norm_params_container"),
           shinyWidgets::virtualSelectInput(
-            inputId       = ns("slide_dose_norm_params"),
-            label         = "Dose-normalised parameters:",
-            choices       = dose_norm_choices,
-            selected      = dose_norm_default,
-            multiple      = TRUE,
-            search        = TRUE,
-            dropboxWrapper = "body"
+            inputId                  = ns("slide_dose_norm_params"),
+            label                    = "Dose-normalised parameters:",
+            choices                  = dose_norm_choices,
+            selected                 = dose_norm_default,
+            multiple                 = TRUE,
+            search                   = TRUE,
+            showSelectedOptionsFirst = TRUE,
+            hasOptionDescription     = TRUE,
+            showValueAsTags          = TRUE,
+            width                    = "100%"
           )
         ),
         helpText(
@@ -248,7 +264,8 @@ zip_ui <- function(id) {
 
 # Validate slide configuration — returns character(0) if valid, else a vector of messages
 .validate_slide_config <- function(slide_sections_tree, ind_params,
-                                   summary_params, boxplot_params, dose_norm_params) {
+                                   summary_params, boxplot_params, dose_norm_params,
+                                   dose_norm_choices = character(0)) {
   msgs <- character(0)
   if (is.null(slide_sections_tree) || length(slide_sections_tree) == 0) {
     msgs <- c(msgs, "Select at least one slide section to include.")
@@ -267,8 +284,12 @@ zip_ui <- function(id) {
       "Box plot parameters cannot be empty."
     )
   )))
-  dose_norm_sections <- c("Dose-Normalised Plots", "Dose-Normalised PK Parameters")
-  if (any(dose_norm_sections %in% slide_sections_tree) && length(dose_norm_params) == 0) {
+  dose_norm_sections <- c("Dose-Normalised Plot & Statistics", "Dose-Normalised Plots & Parameters")
+  if (
+    length(dose_norm_choices) > 0 &&
+      any(dose_norm_sections %in% slide_sections_tree) &&
+      length(dose_norm_params) == 0
+  ) {
     msgs <- c(msgs, "Dose-normalised parameters cannot be empty.")
   }
   msgs
@@ -481,7 +502,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         ind_params          = input$slide_ind_params,
         summary_params      = input$slide_summary_params,
         boxplot_params      = input$slide_boxplot_param,
-        dose_norm_params    = input$slide_dose_norm_params
+        dose_norm_params    = input$slide_dose_norm_params,
+        dose_norm_choices   = dose_norm_available_rv()
       )
     })
 
@@ -510,13 +532,13 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
 
     observe({
       tree <- input$slide_sections_tree
+      dose_norm_labels <- c(
+        "Dose-Normalised Plot & Statistics", "Dose-Normalised Plots & Parameters"
+      )
       shinyjs::toggle("ind_params_container",     condition = "PK Parameters"    %in% tree)
       shinyjs::toggle("summary_params_container", condition = "Summary Statistics" %in% tree)
       shinyjs::toggle("boxplot_params_container", condition = "Box Plot"           %in% tree)
-      shinyjs::toggle(
-        "dose_norm_params_container",
-        condition = any(c("Dose-Normalised Plots", "Dose-Normalised PK Parameters") %in% tree)
-      )
+      shinyjs::toggle("dose_norm_params_container", condition = any(dose_norm_labels %in% tree))
     })
 
     # Show ZIP export modal when button is clicked
@@ -532,8 +554,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
                          c("png", "html"), c("pptx", "qmd"), c("rds", "xpt", "csv"))
     })
 
-    slide_types_rv <- reactiveVal(list())
-    modal_shown    <- reactiveVal(FALSE)
+    slide_types_rv       <- reactiveVal(list())
+    modal_shown          <- reactiveVal(FALSE)
+    dose_norm_available_rv <- reactiveVal(character(0))
 
     export_state <- reactiveValues(
       res_tree       = NULL,
@@ -601,14 +624,18 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       virtual_choices <- .make_param_virtual_choices(available_params)
       default_selected <- intersect(DEFAULT_STATS_PARAMETERS, available_params)
 
-      dose_norm_available <- .dose_norm_param_codes(available_params)
-      dose_norm_default   <- intersect(DEFAULT_DOSE_NORM_PARAMETERS, dose_norm_available)
+      dose_norm_choices  <- .dose_norm_param_choices(available_params)
+      dose_norm_codes    <- unlist(lapply(dose_norm_choices, function(g) {
+        vapply(g$options, `[[`, character(1), "value")
+      }))
+      dose_norm_default  <- intersect(DEFAULT_DOSE_NORM_PARAMETERS, dose_norm_codes)
+      dose_norm_available_rv(dose_norm_codes)
 
       removeModal()
       .show_customise_slides_modal(
         ns, slide_tree, all_leaf_ids,
         virtual_choices, available_params, default_selected,
-        dose_norm_choices = dose_norm_available,
+        dose_norm_choices = dose_norm_choices,
         dose_norm_default = dose_norm_default
       )
     })
