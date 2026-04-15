@@ -82,10 +82,12 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @keywords internal
 #' @noRd
 .add_pptx_ind_slides <- function(pptx, group_data, group_index, in_sections) {
-  if (!in_sections("ind_plots") && !in_sections("ind_params")) {
+  if (!in_sections("ind_plots") && !in_sections("ind_params") &&
+        !in_sections("dose_norm_ind_params")) {
     return(list(pptx = pptx, n_slides = 0))
   }
-  if (length(group_data$ind_params) == 0 && length(group_data$ind_plots) == 0) {
+  if (length(group_data$ind_params) == 0 && length(group_data$ind_plots) == 0 &&
+        length(group_data$ind_dose_norm_params) == 0) {
     return(list(pptx = pptx, n_slides = 0))
   }
   pptx <- add_pptx_sl_table(
@@ -109,7 +111,21 @@ add_pptx_sl_plot <- function(pptx, plot) {
     },
     .init = pptx
   )
-  n_slides <- 1 + length(group_data$ind_params)
+  if (in_sections("dose_norm_ind_params") && length(group_data$ind_dose_norm_params) > 0) {
+    pptx <- purrr::reduce(
+      names(group_data$ind_dose_norm_params),
+      function(pptx, subj) {
+        add_pptx_sl_table(pptx, df = group_data$ind_dose_norm_params[[subj]], footer = "")
+      },
+      .init = pptx
+    )
+  }
+  n_dose_norm_ind <- if (in_sections("dose_norm_ind_params")) {
+    length(group_data$ind_dose_norm_params)
+  } else {
+    0L
+  }
+  n_slides <- 1 + length(group_data$ind_params) + n_dose_norm_ind
   list(pptx = pptx, n_slides = n_slides)
 }
 
@@ -152,6 +168,27 @@ add_pptx_sl_plot <- function(pptx, plot) {
   }
 }
 
+#' Add a dose-normalised mean plot and statistics slide for a dose group
+#' @param pptx An officer pptx object.
+#' @param group_data One element of res_dose_slides (a dose group).
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @return Updated pptx object.
+#' @keywords internal
+#' @noRd
+.add_pptx_dose_norm_slide <- function(pptx, group_data, in_sections) {
+  if (!in_sections("dose_norm_plot")) return(pptx)
+  if (is.null(group_data$dose_norm_meanplot)) return(pptx)
+  has_stats <- !is.null(group_data$dose_norm_statistics) &&
+    ncol(group_data$dose_norm_statistics) > 2
+  if (has_stats) {
+    add_pptx_sl_plottable(pptx,
+                          df   = group_data$dose_norm_statistics,
+                          plot = group_data$dose_norm_meanplot)
+  } else {
+    add_pptx_sl_plot(pptx, plot = group_data$dose_norm_meanplot)
+  }
+}
+
 #' Add boxplot slides for a dose group and return updated pptx and slide count
 #' @param pptx An officer pptx object.
 #' @param group_data One element of res_dose_slides (a dose group).
@@ -190,8 +227,13 @@ add_pptx_sl_plot <- function(pptx, plot) {
   }
   bp_result <- .add_pptx_boxplot_slides(pptx, group_data, in_sections)
   pptx <- bp_result$pptx
+  pptx <- .add_pptx_dose_norm_slide(pptx, group_data, in_sections)
+  n_dose_norm_slides <- as.integer(
+    in_sections("dose_norm_plot") && !is.null(group_data$dose_norm_meanplot)
+  )
   n_main_slides <- as.integer(in_sections("meanplot") || in_sections("statistics"))
-  n_summary_slides <- 1L + n_main_slides + as.integer(in_sections("linplot")) + bp_result$n_slides
+  n_summary_slides <- 1L + n_main_slides + as.integer(in_sections("linplot")) +
+    bp_result$n_slides + n_dose_norm_slides
   list(pptx = pptx, n_summary_slides = n_summary_slides)
 }
 
@@ -211,7 +253,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
   pptx <- ind_result$pptx
   n_ind_slides <- ind_result$n_slides
   has_summary <- in_sections("meanplot") || in_sections("statistics") ||
-    in_sections("linplot") || in_sections("boxplot")
+    in_sections("linplot") || in_sections("boxplot") || in_sections("dose_norm_plot")
   if (has_summary) {
     summary_result <- .add_pptx_group_summary(pptx, group_data, i, in_sections, lst_group_slide)
     pptx <- summary_result$pptx
