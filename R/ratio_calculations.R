@@ -484,19 +484,35 @@ calculate_ratio_app <- function(
   start_col <- if (has_dose_cols) result_data$start_dose else result_data$start
   end_col <- if (has_dose_cols) result_data$end_dose else result_data$end
 
-  # Remove rows for the same base PPTESTCD but different interval
+  # Build a logical vector of rows to remove: rows that share a base PPTESTCD
+
+  # with an interval parameter but don't match any of the requested ranges.
+  # When test and ref share the same base (e.g. AUCINT_0-2 vs AUCINT_2-4),
+  # both ranges must be kept.
+  rows_to_remove <- rep(FALSE, nrow(result_data))
+
   if (test_parsed$is_interval) {
-    other_intervals <- result_data$PPTESTCD == test_parsed$base &
-      !(start_col == test_parsed$start & end_col == test_parsed$end)
-    result_data <- result_data[!other_intervals, , drop = FALSE]
+    is_test_base <- result_data$PPTESTCD == test_parsed$base
+    matches_test <- start_col == test_parsed$start & end_col == test_parsed$end
+
+    if (ref_parsed$is_interval && ref_parsed$base == test_parsed$base) {
+      # Same base PPTESTCD: keep rows matching either range
+      matches_ref <- start_col == ref_parsed$start & end_col == ref_parsed$end
+      rows_to_remove <- rows_to_remove | (is_test_base & !matches_test & !matches_ref)
+    } else {
+      rows_to_remove <- rows_to_remove | (is_test_base & !matches_test)
+    }
   }
+
   if (ref_parsed$is_interval) {
-    # Recompute columns after potential test filtering
-    start_col <- if (has_dose_cols) result_data$start_dose else result_data$start
-    end_col <- if (has_dose_cols) result_data$end_dose else result_data$end
-    other_intervals <- result_data$PPTESTCD == ref_parsed$base &
-      !(start_col == ref_parsed$start & end_col == ref_parsed$end)
-    result_data <- result_data[!other_intervals, , drop = FALSE]
+    is_ref_base <- result_data$PPTESTCD == ref_parsed$base
+    matches_ref <- start_col == ref_parsed$start & end_col == ref_parsed$end
+
+    # Skip if already handled above (same base as test)
+    if (!(test_parsed$is_interval && test_parsed$base == ref_parsed$base)) {
+      rows_to_remove <- rows_to_remove | (is_ref_base & !matches_ref)
+    }
   }
-  result_data
+
+  result_data[!rows_to_remove, , drop = FALSE]
 }
