@@ -126,7 +126,7 @@ format_to_xpt_compatible <- function(data) {
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
 #' @param boxplot_parameters Character vector of parameters to use for boxplots.
-#' @param dose_norm_parameters Character vector of dose-normalised parameter codes to include
+#' @param dose_norm_parameters Character vector of dose-normalized parameter codes to include
 #'   (default: `c("CMAXD", "AUCLSTD", "AUCIFOD")`).
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).

@@ -161,7 +161,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
   }
 }
 
-#' Add a dose-normalised mean plot and statistics slide for a dose group
+#' Add a dose-normalized mean plot and statistics slide for a dose group
 #' @param pptx An officer pptx object.
 #' @param group_data One element of res_dose_slides (a dose group).
 #' @param in_sections Function(id) returning TRUE when the section id is selected.

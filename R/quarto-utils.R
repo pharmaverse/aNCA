@@ -134,7 +134,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
   }
 }
 
-#' Append a dose-normalised mean plot slide for one dose group to a qmd file
+#' Append a dose-normalized mean plot slide for one dose group to a qmd file
 #' @param quarto_path Path to the Quarto (.qmd) file to append to.
 #' @param res_dose_slides List of results for each dose group.
 #' @param i Integer index of this dose group.

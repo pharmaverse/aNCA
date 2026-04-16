@@ -60,7 +60,7 @@ zip_ui <- function(id) {
         list(id = "linplot",    label = "Spaghetti / Group Plot"),
         list(id = "boxplot",    label = "Box Plot"),
         list(id = "statistics", label = "Summary Statistics"),
-        list(id = "dose_norm_plot", label = "Dose-Normalised Plot & Statistics")
+        list(id = "dose_norm_plot", label = "Dose-Normalized Plot & Statistics")
       )
     )
   )
@@ -93,7 +93,7 @@ zip_ui <- function(id) {
   })
 }
 
-# Build grouped virtualSelectInput choices for dose-normalised NCA parameters
+# Build grouped virtualSelectInput choices for dose-normalized NCA parameters
 .dose_norm_param_choices <- function(available_params) {
   dn_meta <- metadata_nca_parameters[
     grepl("_dosenorm$", metadata_nca_parameters$unit_type) &
@@ -119,12 +119,12 @@ zip_ui <- function(id) {
   })
 }
 
-# Show the "Customise Slide Contents" modal dialog
-.show_customise_slides_modal <- function(ns, slide_tree, all_leaf_ids,
+# Show the "Customize Slide Contents" modal dialog
+.show_customize_slides_modal <- function(ns, slide_tree, all_leaf_ids,
                                          virtual_choices, available_params, default_selected,
                                          dose_norm_choices, dose_norm_default) {
   showModal(modalDialog(
-    title = "Customise Slide Contents",
+    title = "Customize Slide Contents",
     p(
       class = "modal-intro",
       "Select which slide sections to include and which PK parameters to show.",
@@ -200,7 +200,7 @@ zip_ui <- function(id) {
           id = ns("dose_norm_params_container"),
           shinyWidgets::virtualSelectInput(
             inputId                  = ns("slide_dose_norm_params"),
-            label                    = "Dose-normalised parameters:",
+            label                    = "Dose-normalized parameters:",
             choices                  = dose_norm_choices,
             selected                 = dose_norm_default,
             multiple                 = TRUE,
@@ -290,10 +290,10 @@ zip_ui <- function(id) {
   )))
   if (
     length(dose_norm_choices) > 0 &&
-      "Dose-Normalised Plot & Statistics" %in% slide_sections_tree &&
+      "Dose-Normalized Plot & Statistics" %in% slide_sections_tree &&
       length(dose_norm_params) == 0
   ) {
-    msgs <- c(msgs, "Dose-normalised parameters cannot be empty.")
+    msgs <- c(msgs, "Dose-normalized parameters cannot be empty.")
   }
   msgs
 }
@@ -341,7 +341,7 @@ zip_ui <- function(id) {
   paste0(project, ".zip")
 }
 
-# Resolve slide configuration from customise modal inputs
+# Resolve slide configuration from customize modal inputs
 .resolve_slide_config <- function(input, slide_types_rv) {
   selected_tree <- input$slide_sections_tree
   types <- slide_types_rv()
@@ -377,7 +377,7 @@ zip_ui <- function(id) {
         p(
           class = "modal-intro",
           "Choose what to include in your export and the file formats to generate.",
-          "Slide decks can be further customised in the next step."
+          "Slide decks can be further customized in the next step."
         ),
         fluidRow(
           column(
@@ -540,7 +540,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       shinyjs::toggle("boxplot_params_container", condition = "Box Plot"           %in% tree)
       shinyjs::toggle(
         "dose_norm_params_container",
-        condition = "Dose-Normalised Plot & Statistics" %in% tree
+        condition = "Dose-Normalized Plot & Statistics" %in% tree
       )
     })
 
@@ -635,7 +635,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       dose_norm_available_rv(dose_norm_codes)
 
       removeModal()
-      .show_customise_slides_modal(
+      .show_customize_slides_modal(
         ns, slide_tree, all_leaf_ids,
         virtual_choices, available_params, default_selected,
         dose_norm_choices = dose_norm_choices,
