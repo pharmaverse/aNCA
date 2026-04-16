@@ -269,18 +269,6 @@ get_dose_esc_results <- function(
       pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
       split(.[[o_nca$data$conc$columns$subject]])
 
-    ind_dose_norm_params_i <- merge(o_nca$result, group_i) %>%
-      filter(PPTESTCD %in% dose_norm_parameters) %>%
-      mutate(parameter_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
-      select(any_of(
-        c(
-          o_nca$data$conc$columns$subject,
-          "start", "end", "parameter_unit", "PPSTRES"
-        )
-      )) %>%
-      pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
-      split(.[[o_nca$data$conc$columns$subject]])
-
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
       split(.[[o_nca$data$conc$columns$subject]]) %>%
       lapply(function(d_conc_i) {
@@ -306,7 +294,6 @@ get_dose_esc_results <- function(
       boxplot = boxplots_i,
       info = info_i,
       ind_params = ind_params,
-      ind_dose_norm_params = ind_dose_norm_params_i,
       ind_plots = ind_plots,
       group = group_string
     )

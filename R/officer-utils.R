@@ -93,28 +93,6 @@ add_pptx_sl_plot <- function(pptx, plot) {
   }
 }
 
-#' Add dose-normalised PK parameter slides for all subjects in a dose group
-#' @param pptx An officer pptx object.
-#' @param group_data One element of res_dose_slides (a dose group).
-#' @param in_sections Function(id) returning TRUE when the section id is selected.
-#' @return List with elements `pptx` and `n_slides`.
-#' @keywords internal
-#' @noRd
-.add_pptx_dose_norm_ind_slides <- function(pptx, group_data, in_sections) {
-  dose_norm_params <- group_data$ind_dose_norm_params %||% list()
-  if (!in_sections("dose_norm_ind_params") || length(dose_norm_params) == 0) {
-    return(list(pptx = pptx, n_slides = 0L))
-  }
-  pptx <- purrr::reduce(
-    names(dose_norm_params),
-    function(pptx, subj) {
-      add_pptx_sl_table(pptx, df = dose_norm_params[[subj]], footer = "")
-    },
-    .init = pptx
-  )
-  list(pptx = pptx, n_slides = length(dose_norm_params))
-}
-
 #' Add individual-subject slides for one dose group to a pptx object
 #' @param pptx rpptx object
 #' @param group_data Single element from res_dose_slides
@@ -124,12 +102,10 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @keywords internal
 #' @noRd
 .add_pptx_ind_slides <- function(pptx, group_data, group_index, in_sections) {
-  if (!in_sections("ind_plots") && !in_sections("ind_params") &&
-        !in_sections("dose_norm_ind_params")) {
+  if (!in_sections("ind_plots") && !in_sections("ind_params")) {
     return(list(pptx = pptx, n_slides = 0))
   }
-  if (length(group_data$ind_params) == 0 && length(group_data$ind_plots) == 0 &&
-        length(group_data$ind_dose_norm_params) == 0) {
+  if (length(group_data$ind_params) == 0 && length(group_data$ind_plots) == 0) {
     return(list(pptx = pptx, n_slides = 0))
   }
   pptx <- add_pptx_sl_table(
@@ -143,10 +119,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
     function(pptx, subj) .add_pptx_one_ind_slide(pptx, group_data, subj, in_sections),
     .init = pptx
   )
-  dose_norm_result <- .add_pptx_dose_norm_ind_slides(pptx, group_data, in_sections)
-  pptx <- dose_norm_result$pptx
-  n_slides <- 1 + length(group_data$ind_params) + dose_norm_result$n_slides
-  list(pptx = pptx, n_slides = n_slides)
+  list(pptx = pptx, n_slides = 1 + length(group_data$ind_params))
 }
 
 #' Filter an additional_analysis list to non-empty data frames,

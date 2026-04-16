@@ -200,31 +200,6 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
   }
 }
 
-#' Append dose-normalised PK parameter slides for one dose group to a qmd file
-#' @param quarto_path Path to the Quarto (.qmd) file to append to.
-#' @param res_dose_slides List of results for each dose group.
-#' @param i Integer index of this dose group.
-#' @param in_sections Function(id) returning TRUE when the section id is selected.
-#' @param use_plotly Logical, whether to convert plots to plotly.
-#' @keywords internal
-#' @noRd
-.add_qmd_dose_norm_ind_slides <- function(quarto_path, res_dose_slides, i,
-                                          in_sections, use_plotly) {
-  dn_params_i <- res_dose_slides[[i]]$ind_dose_norm_params %||% list()
-  if (!in_sections("dose_norm_ind_params") || length(dn_params_i) == 0) {
-    return(invisible(NULL))
-  }
-  for (subj in names(dn_params_i)) {
-    add_qmd_sl_plottabletable(
-      quarto_path = quarto_path,
-      df1 = paste0("res_dose_slides[[", i, "]]$ind_dose_norm_params[['", subj, "']]"),
-      df2 = NULL,
-      plot = NULL,
-      use_plotly = use_plotly
-    )
-  }
-}
-
 #' Append individual-subject slides for all dose groups to a qmd file
 #' @param quarto_path Path to the Quarto (.qmd) file to append to.
 #' @param res_dose_slides List of results for each dose group.
@@ -235,8 +210,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 .add_qmd_ind_slides <- function(quarto_path, res_dose_slides, in_sections, use_plotly) {
   for (i in seq_along(res_dose_slides)) {
     if (length(res_dose_slides[[i]]$ind_params) == 0 &&
-          length(res_dose_slides[[i]]$ind_plots) == 0 &&
-          length(res_dose_slides[[i]]$ind_dose_norm_params %||% list()) == 0) {
+          length(res_dose_slides[[i]]$ind_plots) == 0) {
       next
     }
     .add_qmd_group_section_header(
@@ -259,7 +233,6 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
         use_plotly = use_plotly
       )
     }
-    .add_qmd_dose_norm_ind_slides(quarto_path, res_dose_slides, i, in_sections, use_plotly)
   }
 }
 
@@ -298,8 +271,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
   list(
     summary = in_sections("meanplot") || in_sections("statistics") ||
       in_sections("linplot") || in_sections("boxplot") || in_sections("dose_norm_plot"),
-    individual = in_sections("ind_plots") || in_sections("ind_params") ||
-      in_sections("dose_norm_ind_params")
+    individual = in_sections("ind_plots") || in_sections("ind_params")
   )
 }
 

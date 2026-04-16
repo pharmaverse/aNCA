@@ -381,22 +381,4 @@ describe("create_qmd_dose_slides", {
     content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
     expect_false(grepl("dose_norm_meanplot", content, fixed = TRUE))
   })
-
-  it("includes dose_norm_ind_params when dose_norm_ind_params is in slide_sections", {
-    slides <- base_slides
-    attr(slides, "slide_sections") <- c("dose_norm_ind_params")
-    out_file <- tempfile(fileext = ".qmd")
-    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
-    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
-    expect_true(grepl("ind_dose_norm_params", content, fixed = TRUE))
-  })
-
-  it("omits dose_norm_ind_params when not in slide_sections", {
-    slides <- base_slides
-    attr(slides, "slide_sections") <- c("ind_params", "ind_plots")
-    out_file <- tempfile(fileext = ".qmd")
-    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
-    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
-    expect_false(grepl("ind_dose_norm_params", content, fixed = TRUE))
-  })
 })

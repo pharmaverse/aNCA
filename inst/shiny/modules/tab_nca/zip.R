@@ -49,8 +49,7 @@ zip_ui <- function(id) {
       label    = "Individual Slides",
       sections = list(
         list(id = "ind_plots",  label = "Individual Plots"),
-        list(id = "ind_params", label = "PK Parameters"),
-        list(id = "dose_norm_ind_params", label = "Dose-Normalised Plots & Parameters")
+        list(id = "ind_params", label = "PK Parameters")
       )
     ),
     list(
@@ -101,6 +100,11 @@ zip_ui <- function(id) {
       metadata_nca_parameters$PPTESTCD %in% available_params,
   ]
   if (nrow(dn_meta) == 0) return(list())
+  label_map <- c(
+    conc_dosenorm = "Concentration (Dose Norm.)",
+    auc_dosenorm  = "AUC (Dose Norm.)",
+    aumc_dosenorm = "AUMC (Dose Norm.)"
+  )
   by_type <- split(dn_meta, dn_meta$unit_type)
   lapply(names(by_type), function(type_name) {
     df <- by_type[[type_name]]
@@ -111,7 +115,7 @@ zip_ui <- function(id) {
         description = as.character(df$PPTEST[i])
       )
     })
-    list(label = type_name, options = options_list)
+    list(label = label_map[[type_name]] %||% type_name, options = options_list)
   })
 }
 
@@ -284,10 +288,9 @@ zip_ui <- function(id) {
       "Box plot parameters cannot be empty."
     )
   )))
-  dose_norm_sections <- c("Dose-Normalised Plot & Statistics", "Dose-Normalised Plots & Parameters")
   if (
     length(dose_norm_choices) > 0 &&
-      any(dose_norm_sections %in% slide_sections_tree) &&
+      "Dose-Normalised Plot & Statistics" %in% slide_sections_tree &&
       length(dose_norm_params) == 0
   ) {
     msgs <- c(msgs, "Dose-normalised parameters cannot be empty.")
@@ -532,13 +535,13 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
 
     observe({
       tree <- input$slide_sections_tree
-      dose_norm_labels <- c(
-        "Dose-Normalised Plot & Statistics", "Dose-Normalised Plots & Parameters"
-      )
       shinyjs::toggle("ind_params_container",     condition = "PK Parameters"    %in% tree)
       shinyjs::toggle("summary_params_container", condition = "Summary Statistics" %in% tree)
       shinyjs::toggle("boxplot_params_container", condition = "Box Plot"           %in% tree)
-      shinyjs::toggle("dose_norm_params_container", condition = any(dose_norm_labels %in% tree))
+      shinyjs::toggle(
+        "dose_norm_params_container",
+        condition = "Dose-Normalised Plot & Statistics" %in% tree
+      )
     })
 
     # Show ZIP export modal when button is clicked
