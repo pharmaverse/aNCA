@@ -196,35 +196,6 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
   }
 }
 
-#' Default CDISC column  used as fallback for legacy settings files
-#' that do not contain a  section.
-#' @noRd
-.default_mapping <- list(
-  select_STUDYID = "STUDYID",
-  select_USUBJID = "USUBJID",
-  select_DOSEA = "DOSEA",
-  select_DOSEU = "DOSEU",
-  select_DOSETRT = "DOSETRT",
-  select_PARAM = "PARAM",
-  select_Metabolites = "Metab-DrugA",
-  select_ARRLT = "ARRLT",
-  select_NRRLT = "NRRLT",
-  select_AFRLT = "AFRLT",
-  select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
-  select_NFRLT = "NFRLT",
-  select_PCSPEC = "PCSPEC",
-  select_ROUTE = "ROUTE",
-  select_TRTRINT = "TRTRINT",
-  select_ADOSEDUR = "ADOSEDUR",
-  select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
-  select_RRLTU = "RRLTU",
-  select_VOLUME = "VOLUME",
-  select_VOLUMEU = "VOLUMEU",
-  select_AVAL = "AVAL",
-  select_AVALU = "AVALU",
-  select_ATPTREF = "ATPTREF"
-)
-
 #' Generate a session script from a settings YAML file
 #'
 #' Reads a settings YAML file and generates an R script that can reproduce the
@@ -252,8 +223,6 @@ get_settings_code <- function(
   ratio_table <- settings[["settings"]][["ratio_table"]]
   units_table <- settings[["settings"]][["units"]]
 
-  # YAML-sourced mapping uses unprefixed keys (e.g. "Grouping_Variables"),
-  # while .default_mapping uses prefixed keys (e.g. "select_Grouping_Variables").
   grouping_vars <- mapping[["Grouping_Variables"]]
   extra_vars_to_keep <- c(grouping_vars, "DOSEA", "ATPTREF", "ROUTE")
 
