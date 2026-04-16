@@ -196,8 +196,8 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
   }
 }
 
-#' Default CDISC column mapping used as fallback for legacy settings files
-#' that do not contain a mapping section.
+#' Default CDISC column  used as fallback for legacy settings files
+#' that do not contain a  section.
 #' @noRd
 .default_mapping <- list(
   select_STUDYID = "STUDYID",
@@ -254,8 +254,7 @@ get_settings_code <- function(
 
   # YAML-sourced mapping uses unprefixed keys (e.g. "Grouping_Variables"),
   # while .default_mapping uses prefixed keys (e.g. "select_Grouping_Variables").
-  grouping_vars <- mapping[["Grouping_Variables"]] %||%
-    mapping[["select_Grouping_Variables"]]
+  grouping_vars <- mapping[["Grouping_Variables"]]
   extra_vars_to_keep <- c(grouping_vars, "DOSEA", "ATPTREF", "ROUTE")
 
   session <- list(
