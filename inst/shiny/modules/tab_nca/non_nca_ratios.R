@@ -28,12 +28,8 @@ non_nca_ratio_ui <- function(id, title, select_label1, select_label2) {
           ),
           column(
             6,
-            selectInput(
-              ns("summary_groups"),
-              "Summarise By:",
-              choices = NULL,
-              multiple = TRUE
-            )
+            uiOutput(ns("summary_groups_ui_wrapper")
+            ),
           )
         ),
         # Placeholder for dynamically added ratio pair selectors
@@ -84,8 +80,17 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
     })
 
     observeEvent(ratio_groups(), {
-      updateSelectInput(session, "summary_groups", choices = ratio_groups())
+      selector_label(input = input,
+                     output = output,
+                     session = session,
+                     choices = ratio_groups(),
+                     initial_selection = NULL,
+                     selector_ui_wrapper = "summary_groups_ui_wrapper",
+                     id = "summary_groups",
+                     label = "Summarise by:",
+                     metadata_type = "variable")
     })
+
 
     # Add the first pair automatically when data is loaded
     observeEvent(data(), {

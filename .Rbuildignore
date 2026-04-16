@@ -4,9 +4,11 @@
 ^\.Rproj\.user$
 ^\.renvignore$
 ^CONTRIBUTING.md$
+^AGENTS\.md$
 ^pkgdown/
 ^dev/
 ^\.lintr$
+^\.devcontainer$
 ^\.github/
 ^LICENSE\.md$
 ^\.covrignore$

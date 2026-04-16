@@ -1,3 +1,27 @@
+#' Rename manual interval parameters with dose-relative range suffix
+#'
+#' For rows where `type_interval == "manual"`, appends
+#' `_<start_dose>-<end_dose>` to `PPTESTCD` so that each interval
+#' appears as a distinct entry (e.g., `AUCINT` becomes `AUCINT_0-12`).
+#' Non-manual rows are left unchanged.
+#'
+#' @param data A data frame with columns `PPTESTCD`, `type_interval`,
+#'   `start_dose`, and `end_dose`.
+#'
+#' @returns The input data frame with `PPTESTCD` renamed for manual intervals.
+#'
+#' @importFrom dplyr mutate
+#'
+#' @noRd
+#' @keywords internal
+rename_interval_params <- function(data) {
+  mutate(data, PPTESTCD = ifelse(
+    type_interval == "manual",
+    paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
+    PPTESTCD
+  ))
+}
+
 #' Evaluates range notation. If provided notation is invalid, returns NA.
 #'
 #' @param x character string with range notation, e.g. 1:5.
@@ -17,10 +41,9 @@
 #' @param range_vector numeric vector with numbers to compress into string
 #' @returns simplest possible character string representing provided vector
 #'
-#' @importFrom methods is
 #'
 .compress_range <- function(range_vector) {
-  if (!is(range_vector, "numeric")) range_vector <- suppressWarnings(as.numeric(range_vector))
+  if (!is.numeric(range_vector)) range_vector <- suppressWarnings(as.numeric(range_vector))
   if (any(is.na(range_vector))) stop("Error: only numeric values allowed")
   if (length(range_vector) == 0) return(NA_integer_)
 
@@ -42,30 +65,6 @@
 #' It ensures that when no valid data is available, a meaningful placeholder plot is displayed
 #' instead of causing an error.
 #'
-#' @param message A character string specifying the text to display in the center of the empty plot.
-#'                Defaults to `"No data available"`.
-#'
-#' @importFrom plotly plot_ly
-#'
-#' @returns A Plotly object representing an empty plot with hidden axes.
-.plotly_empty_plot <- function(message = "No data available") {
-  plot_ly() %>%
-    layout(
-      title = "",
-      xaxis = list(visible = FALSE),
-      yaxis = list(visible = FALSE),
-      annotations = list(
-        text = message,
-        x = 0.5,
-        y = 0.5,
-        showarrow = FALSE,
-        font = list(size = 18, color = "red"),
-        xref = "paper",
-        yref = "paper"
-      )
-    )
-}
-
 #' Parses annotations in the context of data. Special characters and syntax are substituted by
 #' actual data and/or substituted for format that is better parsed via rendering functions
 #' (e.g. plotly).
@@ -83,7 +82,7 @@
 #' @returns Parsed annotation text.
 #'
 #' @importFrom magrittr `%>%`
-#' @importFrom stringr str_glue
+#' @importFrom glue glue
 #'
 #' @export
 parse_annotation <- function(data, text) {
@@ -91,7 +90,7 @@ parse_annotation <- function(data, text) {
     gsub("\n", "<br>", .) %>%
     gsub("\\$(\\w+)", "{unique(data[['\\1']])}", .) %>%
     gsub("!(\\w+)", "{attr(data[['\\1']], 'label')}", .) %>%
-    str_glue(.na = "ERR", .null = "ERR")
+    glue(.na = "ERR", .null = "ERR")
 }
 
 #' Contatenates a list and data frame objects into formatted string for logging.

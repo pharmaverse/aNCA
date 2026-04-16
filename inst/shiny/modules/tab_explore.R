@@ -12,24 +12,35 @@ tab_explore_ui <- function(id) {
     nav_panel(
       "Individual Plots",
       layout_sidebar(
-        sidebar = plot_sidebar_ui(ns("individual_sidebar"), is_mean_plot = FALSE),
+        sidebar = plot_sidebar_ui(
+          ns("individual_sidebar"),
+          is_mean_plot = FALSE,
+          extra_ui = saved_outputs_ui(ns("saved_outputs_indiv"))
+        ),
         fillable = TRUE,
         plotlyOutput(ns("individualplot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(
       "Mean Plots",
       layout_sidebar(
-        sidebar = plot_sidebar_ui(ns("mean_sidebar"), is_mean_plot = TRUE),
+        sidebar = plot_sidebar_ui(
+          ns("mean_sidebar"),
+          is_mean_plot = TRUE,
+          extra_ui = saved_outputs_ui(ns("saved_outputs_mean"))
+        ),
         fillable = TRUE,
         plotlyOutput(ns("mean_plot"), height = "100%"),
-        br()
+        br(), br()
       )
     ),
     nav_panel(
       "PK/Dose QC Plot",
-      pk_dose_qc_plot_ui(ns("pk_dose_qc_plot"))
+      pk_dose_qc_plot_ui(
+        ns("pk_dose_qc_plot"),
+        extra_ui = saved_outputs_ui(ns("saved_outputs_qc"))
+      )
     )
   )
 }
@@ -51,6 +62,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Track custom plot names mapped to their base type for export filtering
     # Named character vector: name = base_type (e.g., c(my_plot = "individual"))
     session$userData$exploration_custom_names <- reactiveVal(character(0))
+
+    # Metadata for saved outputs table (data.frame: name, type, timestamp)
+    saved_plots_metadata <- reactiveVal(empty_saved_plots_metadata())
 
     # Initiate the sidebar server modules
     individual_sidebar <- plot_sidebar_server(
@@ -86,7 +100,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         threshold_value = individual_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
         use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
-        palette = individual_inputs()$palette
+        palette = individual_inputs()$palette,
+        line_type = individual_inputs()$y_axis_values
       )
     })
 
@@ -117,7 +132,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         y_limits = mean_inputs()$y_limits,
         threshold_value = mean_inputs()$threshold_value,
         labels_df = metadata_nca_variables,
-        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose
+        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
+        line_type = mean_inputs()$y_axis_values
       )
     })
 
@@ -125,15 +141,20 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     observeEvent(pknca_data(), {
       session$userData$results$exploration <- list()
       session$userData$exploration_custom_names(character(0))
+      saved_plots_metadata(empty_saved_plots_metadata())
       indiv_counter(0L)
       mean_counter(0L)
       qc_counter(0L)
     })
 
-    # Save the default objects for the ZIP folder whenever they change
+    # Save each plot independently for the ZIP folder
     observe({
-      req(individualplot(), meanplot())
+      req(individualplot())
       session$userData$results$exploration$individualplot <- individualplot()
+    })
+
+    observe({
+      req(meanplot())
       session$userData$results$exploration$meanplot <- meanplot()
     })
 
@@ -152,6 +173,38 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(qc_plot_outputs$current_plot())
       session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
     })
+
+    # --- Saved Outputs gallery ---
+
+    .get_plot_obj <- function(plot_name) {
+      session$userData$results$exploration[[plot_name]]
+    }
+
+    .on_remove <- function(plot_name) {
+      session$userData$results$exploration[[plot_name]] <- NULL
+      existing <- session$userData$exploration_custom_names()
+      existing <- existing[names(existing) != plot_name]
+      session$userData$exploration_custom_names(existing)
+
+      saved_plots_metadata(remove_saved_plot(saved_plots_metadata(), plot_name))
+
+      showNotification(
+        paste0("Plot '", plot_name, "' removed from exports"),
+        type = "message", duration = 3
+      )
+      log_info("Removed exploration plot: {plot_name}")
+    }
+
+    # Single gallery instance avoids tripling renderPlotly outputs and
+    # observers. The two extra buttons forward their clicks as triggers.
+    saved_outputs_server(
+      "saved_outputs_indiv", saved_plots_metadata,
+      get_plot_obj = .get_plot_obj, on_remove = .on_remove,
+      extra_triggers = list(
+        reactive(input[["saved_outputs_mean-view_exports"]]),
+        reactive(input[["saved_outputs_qc-view_exports"]])
+      )
+    )
 
     # --- Add to Exports handlers ---
 
@@ -241,6 +294,18 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       existing <- session$userData$exploration_custom_names()
       existing[plot_name] <- type
       session$userData$exploration_custom_names(existing)
+
+      # Update saved outputs metadata
+      type_label <- switch(type,
+        individual = "Individual",
+        mean = "Mean",
+        qc = "QC"
+      )
+      ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+      saved_plots_metadata(
+        upsert_saved_plot(saved_plots_metadata(), plot_name, type_label, ts)
+      )
+
       removeModal()
 
       msg <- if (is_overwrite) {

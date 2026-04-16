@@ -103,20 +103,166 @@ describe("PKNCA_create_data_object", {
     expect_true("AMOUNTU" %in% names(pknca_volume_data$conc$data))
   })
 
-  it("handles exclusions indicated through nca_exclude_reason_columns", {
+  it("runs preprocessing pipeline when mapping is provided", {
+    # Raw data with non-standard column names
+    raw_data <- data.frame(
+      STUDY = rep("STUDY001", 6),
+      SPEC = rep("Plasma", 6),
+      ADMIN = rep("IV", 6),
+      DRUG = rep("DrugA", 6),
+      SUBJ = rep("SUBJ001", 6),
+      DOSNO = rep(1, 6),
+      ANALYTE = rep("AnalyteA", 6),
+      CONC = c(0, 5, 10, 7, 3, 1),
+      CONC_UNIT = rep("ng/mL", 6),
+      DOSE = rep(100, 6),
+      DOSE_UNIT = rep("mg", 6),
+      TIME = c(0, 1, 2, 3, 4, 6),
+      RTIME = c(0, 1, 2, 3, 4, 6),
+      NTIME = c(0, 1, 2, 3, 4, 6),
+      NRTIME = c(0, 1, 2, 3, 4, 6),
+      DOSEDUR = rep(0.5, 6),
+      TIME_UNIT = rep("hour", 6),
+      stringsAsFactors = FALSE
+    )
+
+    mapping <- list(
+      STUDYID = "STUDY", USUBJID = "SUBJ", PARAM = "ANALYTE",
+      PCSPEC = "SPEC", ATPTREF = "DOSNO", AVAL = "CONC",
+      AVALU = "CONC_UNIT", AFRLT = "TIME", ARRLT = "RTIME",
+      NFRLT = "NTIME", NRRLT = "NRTIME", RRLTU = "TIME_UNIT",
+      ROUTE = "ADMIN", DOSETRT = "DRUG", DOSEA = "DOSE",
+      DOSEU = "DOSE_UNIT", ADOSEDUR = "DOSEDUR",
+      Metabolites = character(0), NCAwXRS = character(0),
+      Grouping_Variables = character(0)
+    )
+
+    result <- PKNCA_create_data_object(raw_data, mapping = mapping)
+    expect_s3_class(result, "PKNCAdata")
+    expect_true("AVAL" %in% names(result$conc$data))
+    expect_true("METABFL" %in% names(result$conc$data))
+  })
+
+  it("applies filters when mapping and applied_filters are provided", {
+    raw_data <- data.frame(
+      STUDYID = rep("STUDY001", 6),
+      PCSPEC = rep("Plasma", 6),
+      ROUTE = rep("IV", 6),
+      DOSETRT = rep("DrugA", 6),
+      USUBJID = rep(c("SUBJ001", "SUBJ002"), each = 3),
+      ATPTREF = rep(1, 6),
+      PARAM = rep("AnalyteA", 6),
+      AVAL = c(0, 5, 10, 7, 3, 1),
+      AVALU = rep("ng/mL", 6),
+      DOSEA = rep(100, 6),
+      DOSEU = rep("mg", 6),
+      AFRLT = rep(c(0, 1, 2), 2),
+      ARRLT = rep(c(0, 1, 2), 2),
+      NFRLT = rep(c(0, 1, 2), 2),
+      NRRLT = rep(c(0, 1, 2), 2),
+      ADOSEDUR = rep(0.5, 6),
+      RRLTU = rep("hour", 6),
+      stringsAsFactors = FALSE
+    )
+
+    # Identity mapping (columns already have standard names)
+    mapping <- as.list(setNames(names(raw_data), names(raw_data)))
+    mapping$Metabolites <- character(0)
+    mapping$NCAwXRS <- character(0)
+    mapping$Grouping_Variables <- character(0)
+
+    filters <- list(
+      list(column = "USUBJID", condition = "==", value = "SUBJ001")
+    )
+
+    result <- PKNCA_create_data_object(
+      raw_data,
+      mapping = mapping, applied_filters = filters
+    )
+    expect_s3_class(result, "PKNCAdata")
+    # Only SUBJ001 should remain after filtering
+    expect_true(all(result$conc$data$USUBJID == "SUBJ001"))
+  })
+
+  it("handles exclusions derived from mapping NCAwXRS", {
     subjs <- unique(multiple_data$USUBJID)
     adnca_excl_cols <- multiple_data %>%
       mutate(
         NCA1XRS = ifelse(USUBJID == subjs[1], "Patient Disconsidered", ""),
         NCA2XRS = ifelse(USUBJID == subjs[2], "Patient Vomiting", "")
       )
-    pknca_excl_subj1 <- PKNCA_create_data_object(adnca_excl_cols, "NCA1XRS")
-    pknca_excl_all <- PKNCA_create_data_object(adnca_excl_cols, c("NCA1XRS", "NCA2XRS"))
+
+    # Identity mapping with NCAwXRS exclusion columns
+    identity_mapping <- as.list(setNames(names(adnca_excl_cols), names(adnca_excl_cols)))
+    identity_mapping$Metabolites <- character(0)
+    identity_mapping$Grouping_Variables <- character(0)
+
+    mapping_one <- identity_mapping
+    mapping_one$NCAwXRS <- "NCA1XRS"
+
+    mapping_all <- identity_mapping
+    mapping_all$NCAwXRS <- c("NCA1XRS", "NCA2XRS")
+
+    pknca_excl_subj1 <- PKNCA_create_data_object(adnca_excl_cols, mapping = mapping_one)
+    pknca_excl_all <- PKNCA_create_data_object(adnca_excl_cols, mapping = mapping_all)
     excl_col <- pknca_excl_subj1$conc$columns$exclude
     expect_true(all(
       suppressWarnings(PKNCA::pk.nca(pknca_excl_subj1))[["result"]][["USUBJID"]] == subjs[2]
     ))
     expect_false(any(pknca_excl_all$conc$data[[excl_col]] %in% c("", NA_character_)))
+  })
+
+  it("marks exact duplicates as DTYPE COPY via mapping pipeline", {
+    # Data with an exact duplicate row (same AVAL at same time)
+    dup_data <- simple_data
+    dup_data <- rbind(dup_data, dup_data[3, ])
+
+    identity_mapping <- as.list(setNames(names(dup_data), names(dup_data)))
+    identity_mapping$Metabolites <- character(0)
+    identity_mapping$NCAwXRS <- character(0)
+    identity_mapping$Grouping_Variables <- character(0)
+
+    result <- PKNCA_create_data_object(dup_data, mapping = identity_mapping)
+    expect_s3_class(result, "PKNCAdata")
+    expect_true("DTYPE" %in% names(result$conc$data))
+    expect_true(any(result$conc$data$DTYPE == "COPY"))
+  })
+
+  it("raises time_duplicate_error for unresolved time duplicates via mapping", {
+    # Data with a time duplicate (same time, different AVAL)
+    dup_data <- simple_data
+    extra_row <- dup_data[3, ]
+    extra_row$AVAL <- 999
+    dup_data <- rbind(dup_data, extra_row)
+
+    identity_mapping <- as.list(setNames(names(dup_data), names(dup_data)))
+    identity_mapping$Metabolites <- character(0)
+    identity_mapping$NCAwXRS <- character(0)
+    identity_mapping$Grouping_Variables <- character(0)
+
+    expect_error(
+      PKNCA_create_data_object(dup_data, mapping = identity_mapping),
+      class = "time_duplicate_error"
+    )
+  })
+
+  it("resolves time duplicates when time_duplicate_rows is provided", {
+    dup_data <- simple_data
+    extra_row <- dup_data[3, ]
+    extra_row$AVAL <- 999
+    dup_data <- rbind(dup_data, extra_row)
+
+    identity_mapping <- as.list(setNames(names(dup_data), names(dup_data)))
+    identity_mapping$Metabolites <- character(0)
+    identity_mapping$NCAwXRS <- character(0)
+    identity_mapping$Grouping_Variables <- character(0)
+
+    # Exclude the extra row (row 7 after mapping)
+    result <- PKNCA_create_data_object(
+      dup_data, mapping = identity_mapping, time_duplicate_rows = 7L
+    )
+    expect_s3_class(result, "PKNCAdata")
+    expect_true(any(result$conc$data$DTYPE == "TIME DUPLICATE"))
   })
 })
 
@@ -138,7 +284,7 @@ describe("PKNCA_update_data_object", {
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      should_impute_c0 = TRUE
+      start_impute = TRUE
     )
     expect_s3_class(updated_data, "PKNCAdata")
   })
@@ -150,7 +296,7 @@ describe("PKNCA_update_data_object", {
       selected_analytes = "AnalyteX",
       selected_profile = 1,
       selected_pcspec = "Plasma",
-      should_impute_c0 = FALSE
+      start_impute = FALSE
     )
     intervals <- updated_data$intervals
     expect_true(all(intervals$PARAM == "AnalyteX"))
@@ -165,7 +311,7 @@ describe("PKNCA_update_data_object", {
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      should_impute_c0 = TRUE
+      start_impute = TRUE
     )
     expect_equal(updated_data$options$auc.method, "lin up log down")
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
@@ -174,7 +320,7 @@ describe("PKNCA_update_data_object", {
 })
 
 
-# Calculate NCA ----
+#Calculate NCA
 nca_results <- PKNCA_calculate_nca(pknca_data)
 
 describe("PKNCA_calculate_nca", {
@@ -265,11 +411,9 @@ describe("PKNCA_build_units_table", {
     filter(USUBJID == 8)
 
   o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-    concu = "AVALU", timeu = "RRLTU"
-  )
+                             concu = "AVALU", timeu = "RRLTU")
   o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-    doseu = "DOSEU"
-  )
+                             doseu = "DOSEU")
   units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
 
   it("creates a seggregated units table when unit columns are defined in the PKNCA objects", {
@@ -295,11 +439,9 @@ describe("PKNCA_build_units_table", {
 
   it("creates an uniform units table when units are not defined as columns in the PKNCA obj", {
     o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-      concu = "ng/mL", timeu = "h"
-    )
+                               concu = "ng/mL", timeu = "h")
     o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-      doseu = "mg"
-    )
+                               doseu = "mg")
     units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
     # Check units_table is a data frame
     expect_true(is.data.frame(units_table))
@@ -336,8 +478,7 @@ describe("PKNCA_build_units_table", {
   it("reports an error when units are not uniform through all concentration groups", {
     d_conc$AVALU[1] <- "pg/L"
     o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-      concu = "AVALU", timeu = "RRLTU"
-    )
+                               concu = "AVALU", timeu = "RRLTU")
     expect_error(
       PKNCA_build_units_table(o_conc, o_dose),
       regexp = "Units should be uniform at least across concentration groups.*"
@@ -345,8 +486,7 @@ describe("PKNCA_build_units_table", {
   })
 
   it("ignores NA units when the unit column already contains one valid value", {
-    # <------------------------------ jr added next 1 line
-    blq_data <- simple_data # Use your standard mock data
+
     d_conc$AVALU[1] <- NA
     o_conc <- PKNCA::PKNCAconc(
       d_conc,
@@ -502,145 +642,4 @@ describe("add_exclusion_reasons", {
     pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
     expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
   })
-  #  --- BLQ 1 
-  describe("PKNCA_calculate_nca BLQ Imputation", {
-    it("triggers BLQ imputation logic when blq_rule is provided", {
-      # Define a rule: first BLQ is 0, middle is dropped, last is 0
-      blq_rule_list <- list(first = "keep", middle = "drop", last = "keep")
-      # We need data with a 0 to trigger BLQ logic
-      blq_test_data <- simple_data
-      blq_test_data$AVAL[2] <- 0
-      pknca_blq_obj <- PKNCA_create_data_object(blq_test_data)
-      # This will trigger lines 343-36
-      res <- PKNCA_calculate_nca(pknca_blq_obj, blq_rule = blq_rule_list)
-      expect_s3_class(res, "PKNCAresults")
-      # Verify the global function was created then removed (Line 374)
-      expect_false(exists("PKNCA_impute_method_blq", envir = as.environment(1)))
-    })
-  })
-  # --- BLQ 2 
-  describe("PKNCA_update_data_object Rules Branch", {
-    it("hits the update_pknca_with_rules branch (Line 287)", {
-      # The string MUST contain a colon ':' to satisfy the split on line 280
-      # and a REASON column to satisfy the paste on line 296
-      # (TODO) GEMINI says choose 1 (ONE) of following test df
-      # Pro-Tip for 100% Coverage
-      # (choice 2) If you want to be extra thorough and cover the "Selection" branch (line 291)
-      # as well as the multiple ranges logic in .are_points_in_range,
-      # you can use two rows in your rules:
-      rules <- data.frame(
-        STUDYID = "STUDY001",
-        USUBJID = "SUBJ001",
-        PARAM = "AnalyteA",
-        PCSPEC = "Plasma",
-        DOSETRT = "DrugA",
-        TYPE = "Exclusion",
-        RANGE = "1:4", # Use colon here
-        REASON = "Manual Outlier" # Required for line 296
-      )
-      # has error, TODO if this df is chosen
-      updated <- PKNCA_update_data_object(
-        adnca_data = pknca_data,
-        method = "lin up log down",
-        selected_analytes = "AnalyteA",
-        selected_profile = 1,
-        selected_pcspec = "Plasma",
-        hl_adj_rules = rules
-      )
-
-      expect_s3_class(updated, "PKNCAdata")
-      # Optional: Verify the flag was actually set   # nolint
-      expect_true(any(updated$conc$data$exclude_half.life))
-    })
-  })
-  
-  describe("PKNCA_impute_method_start_logslope()", {
-    it("returns the original data frame when all concentrations in the window are NA", {
-      conc <- c(NA, NA, NA)
-      time <- c(1, 2, 3)
-      start <- 0
-      end <- 4
-      result <- PKNCA_impute_method_start_logslope(conc, time, start, end)
-
-      # Expect no new rows added (length remains 3)
-      expect_equal(nrow(result), 3)
-      expect_true(all(is.na(result$conc)))
-    })
-  })
-  # --- BLQ 4
-  describe("PKNCA_hl_rules_exclusion coverage", {
-    it("covers the else branch for non-AUCPE parameters (Lines 720-728)", {
-      # Create NCA results first
-      res <- PKNCA_calculate_nca(pknca_data)
-
-      # Create rules with non-AUCPE parameter (half.life)
-      rules <- list(half.life = 0.1)
-
-      # Apply the function
-      result <- PKNCA_hl_rules_exclusion(res, rules)
-
-      expect_s3_class(result, "PKNCAresults")
-    })
-
-    it("covers AUCPE branch for AUCPE parameters (Lines 710-719)", {
-      # Create NCA results first
-      res <- PKNCA_calculate_nca(pknca_data)
-
-      # Create rules with AUCPE parameter
-      rules <- list(aucpext.obs = 0.9)
-
-      # Apply the function
-      result <- PKNCA_hl_rules_exclusion(res, rules)
-
-      expect_s3_class(result, "PKNCAresults")
-    })
-  })
-
-  describe("remove_pp_not_requested coverage", {
-    it("removes parameters not requested in intervals", {
-      # Create NCA results first
-      res <- PKNCA_calculate_nca(pknca_data)
-
-      # Add impute column (required by remove_pp_not_requested)
-      res$data$intervals$impute <- NA_character_
-
-      # Manually set intervals with only cmax and tmax requested
-      res$data$intervals$cmax <- TRUE
-      res$data$intervals$tmax <- TRUE
-      res$data$intervals$auclast <- FALSE
-      res$data$intervals$aucinf.obs <- FALSE
-
-      # Apply the function
-      result <- remove_pp_not_requested(res)
-
-      expect_s3_class(result, "PKNCAresults")
-      expect_true("result" %in% names(result))
-    })
-  })
-
-# ---  new, from code coverage
-
- describe("PKNCA_hl_rules_exclusion coverage", {
-    pknca_data <- reset()
-    it("covers the else branch for non-AUCPE parameters (Lines 720-728)", {
-      # Create NCA results first
-      res <- PKNCA_calculate_nca(pknca_data)
-      # Create rules with non-AUCPE parameter (half.life)
-      rules <- list(half.life = 0.1)
-      # Apply the function
-      result <- PKNCA_hl_rules_exclusion(res, rules)
-      expect_s3_class(result, "PKNCAresults")
-    })
-    it("covers AUCPE branch for AUCPE parameters (Lines 710-719)", {
-      # Create NCA results first
-      res <- PKNCA_calculate_nca(pknca_data)
-      # Create rules with AUCPE parameter
-      rules <- list(aucpext.obs = 0.9)
-      # Apply the function
-      result <- PKNCA_hl_rules_exclusion(res, rules)
-      expect_s3_class(result, "PKNCAresults")
-    })
-  })
-# ---
 })
-

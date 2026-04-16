@@ -1,3 +1,9 @@
+#' Module for viewing and downloading CDISC parameter datasets (PP, ADPP, ADNCA).
+#'
+#' Renders each dataset in an interactive table with CSV/XLSX download options.
+#'
+#' @param id Module namespace ID.
+
 parameter_datasets_ui <- function(id) {
   ns <- NS(id)
   navset_pill(
@@ -7,11 +13,13 @@ parameter_datasets_ui <- function(id) {
   )
 }
 
-parameter_datasets_server <- function(id, res_nca) {
+parameter_datasets_server <- function(id, res_nca, grouping_vars = reactive(character(0)),
+                                      settings = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     CDISC <- reactive({
       req(res_nca())
-      export_cdisc(res_nca())
+      flag_rules <- .build_flag_rule_messages(settings())
+      export_cdisc(res_nca(), grouping_vars = grouping_vars(), flag_rules = flag_rules)
     })
 
     reactable_server(
@@ -38,4 +46,34 @@ parameter_datasets_server <- function(id, res_nca) {
       session$userData$results$CDISC <- CDISC()[c("pp", "adpp", "adnca")]
     })
   })
+}
+
+#' Build flag rule exclusion messages from settings
+#'
+#' Converts the flags list from settings (with is.checked and threshold)
+#' into the character vector of exclusion messages that PKNCA writes
+#' into the `exclude` column (e.g., "R2ADJ < 0.8").
+#'
+#' @param settings The settings list (with `$flags`). If NULL, returns NULL.
+#' @returns Character vector of flag rule messages, or NULL if no flags are checked.
+#' @noRd
+.build_flag_rule_messages <- function(settings) {
+  if (is.null(settings) || is.null(settings$flags)) {
+    return(NULL)
+  }
+
+  # Comparison operators per flag parameter (same order as in settings)
+  flag_operators <- c(
+    R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < "
+  )
+
+  checked <- purrr::keep(settings$flags, function(x) x$is.checked)
+  if (length(checked) == 0) {
+    return(NULL)
+  }
+
+  flag_names <- names(checked)
+  vapply(flag_names, function(nm) {
+    paste0(nm, flag_operators[nm], checked[[nm]]$threshold)
+  }, character(1), USE.NAMES = FALSE)
 }

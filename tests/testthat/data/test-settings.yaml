@@ -6,6 +6,7 @@ settings:
   bioavailability: ~
   data_imputation:
     impute_c0: yes
+    blq_strategy: No BLQ handling
     blq_imputation_rule:
       first: keep
       middle: keep
@@ -36,6 +37,21 @@ settings:
     LAMZSPN:
       is.checked: yes
       threshold: 2
+  ratio_table:
+  - TestParameter: CMAX
+    RefParameter: CMAX
+    RefGroups: 'ANALYTE: DrugA'
+    TestGroups: '(all other levels)'
+    AggregateSubject: 'no'
+    AdjustingFactor: 1
+    PPTESTCD: MRCMAX
+  - TestParameter: AUCLAST
+    RefParameter: AUCLAST
+    RefGroups: 'ROUTE: INTRAVASCULAR'
+    TestGroups: '(all other levels)'
+    AggregateSubject: if-needed
+    AdjustingFactor: 1
+    PPTESTCD: FABS
   units: ~
   general_exclusions: []
   parameters:

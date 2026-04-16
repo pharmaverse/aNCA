@@ -10,7 +10,6 @@ require(plotly)
 require(purrr)
 require(reactable)
 require(reactable.extras)
-require(sass)
 require(shiny)
 require(shinycssloaders)
 require(shinyjs)
@@ -18,7 +17,6 @@ require(shinyjqui)
 require(shinyWidgets)
 require(stats)
 require(stringi)
-require(stringr)
 require(tidyr)
 require(tools)
 require(utils)
@@ -31,11 +29,6 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 assets <- system.file("shiny/www", package = "aNCA")
 
 shiny::addResourcePath("logos", system.file("man/figures", package = "aNCA"))
-
-sass(
-  sass_file(file.path(assets, "styles/main.scss")),
-  output = file.path(assets, "main.css")
-)
 
 setup_logger()
 
@@ -167,6 +160,17 @@ server <- function(input, output, session) {
     if (input$project_name != "") input$project_name else ""
   })
 
+  # Track active tab for settings versioning
+  session$userData$active_tab <- reactive({
+    input$page %||% ""
+  })
+
+  # Versioned settings storage (list of version entries)
+  session$userData$settings_versions <- reactiveVal(list())
+
+  # Uploaded dataset filename (set by data_upload module)
+  session$userData$dataset_filename <- NULL
+
   # Helper (plain function, not reactive): prepend project name with separator
   session$userData$project_prefix <- function(sep = "-") {
     pn <- session$userData$project_name()
@@ -224,6 +228,7 @@ server <- function(input, output, session) {
   zip_server(
     "zip_modal",
     res_nca = tab_nca_outputs$res_nca,
+    adnca_data = tab_data_outputs$pknca_data,
     settings = session$userData$settings,
     grouping_vars = tab_data_outputs$extra_group_vars
   )
