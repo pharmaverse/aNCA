@@ -327,6 +327,16 @@ tab_data_server <- function(id) {
     #' Load raw ADNCA data
     uploaded_data <- data_upload_server("raw_data")
 
+    # Set auto_replay_active early so child modules (e.g. data_filtering)
+    # can check it during the same flush cycle. Uses priority = 10 to
+    # run before default-priority observers in child modules.
+    observeEvent(uploaded_data$settings_override(), {
+      override <- uploaded_data$settings_override()
+      if (!is.null(override) && !is.null(override$mapping)) {
+        session$userData$auto_replay_active <- TRUE
+      }
+    }, priority = 10)
+
     # Call the column mapping module
     imported_mapping <- reactive({
       override <- uploaded_data$settings_override()
