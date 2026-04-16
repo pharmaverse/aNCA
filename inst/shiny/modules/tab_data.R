@@ -88,7 +88,8 @@
 .start_auto_replay <- function(override, auto_replay, data_step,
                                trigger_mapping_submit, session) {
   auto_replay(TRUE)
-  session$userData$auto_replay_active <- TRUE
+  # auto_replay_active is set by the priority-10 observer in
+  # tab_data_server, which fires before this function runs.
   session$userData$auto_replay_target_tab <- override$tab %||% ""
   session$userData$auto_replay_nca_ran <- isTRUE(override$nca_ran)
   has_filters <- !is.null(override$filters) && length(override$filters) > 0
