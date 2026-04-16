@@ -287,6 +287,9 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
           n_params <- if (is.null(params)) 0 else length(params)
 
           log_info("Parameter selection for '{study_type}': {n_params} parameters selected.")
+          if (n_params > 0) {
+            log_debug("Parameters for '", study_type, "': ", paste(params, collapse = ", "))
+          }
         }, ignoreNULL = FALSE, ignoreInit = TRUE)
       })
     })

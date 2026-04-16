@@ -288,6 +288,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         available_choices = profile_choices,
         override_val = settings$profile
       )
+      if (length(target_profile) > 0 && !anyNA(target_profile)) {
+        log_info("NCA profile selection changed: ", paste(target_profile, collapse = ", "))
+      }
       updatePickerInput(
         session, "select_profile",
         choices = profile_choices, selected = target_profile
@@ -300,6 +303,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       if (updating_filters()) return()
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
+
+      log_info("Analyte selection changed: ", paste(input$select_analyte, collapse = ", "))
 
       settings <- .consume_settings()
 
@@ -335,6 +340,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
+      log_info("Specimen selection changed: ", paste(input$select_pcspec, collapse = ", "))
+
       settings <- .consume_settings()
 
       all_analyte <- unique(data()$PARAM) %>% na.omit()
@@ -356,6 +363,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       .update_profile(settings)
     })
 
+    # Log method and min half-life points changes
+    observeEvent(input$method, {
+      log_info("Extrapolation method changed: ", input$method)
+    }, ignoreInit = TRUE)
+
+    observeEvent(input$min_hl_points, {
+      log_info("Min. half-life points changed: ", input$min_hl_points)
+    }, ignoreInit = TRUE)
+
     # Include keyboard limits for the settings GUI display
 
     # Keyboard limits for the setting thresholds
@@ -364,6 +380,19 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
     limit_input_value(input, session, "min_hl_points", max = 10, min = 2, lab = "Min. HL Points")
+
+    # Log flag rule changes
+    lapply(c("R2ADJ", "R2", "AUCPEO", "AUCPEP", "LAMZSPN"), function(flag) {
+      rule_id <- paste0(flag, "_rule")
+      threshold_id <- paste0(flag, "_threshold")
+      observeEvent(input[[rule_id]], {
+        state <- if (input[[rule_id]]) "enabled" else "disabled"
+        log_info("Flag rule ", flag, " ", state)
+      }, ignoreInit = TRUE)
+      observeEvent(input[[threshold_id]], {
+        log_info("Flag rule ", flag, " threshold changed: ", input[[threshold_id]])
+      }, ignoreInit = TRUE)
+    })
 
     # Reactive value to store the partial intervals data table
     # Define the parameters that can be used for partial area calculations
