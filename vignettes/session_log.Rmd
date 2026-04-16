@@ -1,0 +1,201 @@
+---
+title: "Session Log Reference"
+description: >
+  Reference for the session log exported with aNCA results.
+  Describes what events are captured, log levels, and configuration.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Session Log Reference}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+When you export results as a ZIP file, aNCA includes a `session_log.txt` that
+records application events from your session. This page explains what the log
+contains, how to read it, and how to configure its verbosity.
+
+## What the log captures
+
+The session log records events emitted by explicit logging calls placed
+throughout the aNCA Shiny application. Each line follows this format:
+
+```
+[2025-04-30 09:40:16] INFO: Calculating NCA results...
+```
+
+The log captures **application-level events** — not raw R console output.
+Only messages that pass through aNCA's internal `log_*()` functions appear
+in the file.
+
+### What is NOT captured
+
+- Unexpected R warnings or errors that are not wrapped in a `tryCatch` block
+  with a corresponding `log_warn()` or `log_error()` call.
+- Messages from third-party packages (e.g., `PKNCA`, `dplyr`) unless the
+  application explicitly catches and logs them.
+- Raw `cat()` or `print()` output from any source.
+
+## Log levels
+
+aNCA uses six log levels, ordered from most to least verbose:
+
+| Level | Purpose |
+|---|---|
+| **TRACE** | Fine-grained internal operations (module attachment, reactive updates) |
+| **DEBUG** | Detailed diagnostic data (parameter lists, slope rule dumps) |
+| **INFO** | Key user-facing operations (data upload, NCA calculation, setting changes) |
+| **SUCCESS** | Completion confirmations (data loaded, results calculated) |
+| **WARN** | Non-fatal issues (calculation warnings, incompatible settings) |
+| **ERROR** | Failures (calculation errors, file load failures) |
+
+The default threshold is **INFO**, meaning only INFO, SUCCESS, WARN, and ERROR
+messages appear. Set `aNCA_LOG_LEVEL=TRACE` or `aNCA_LOG_LEVEL=DEBUG` in your
+`.Renviron` file to see more detail.
+
+## Logged events by workflow stage
+
+The following table lists all events currently captured in the session log,
+organized by the stage of the workflow where they occur.
+
+### Startup
+
+| Event | Level |
+|---|---|
+| Application startup | INFO |
+| Application restarting | INFO |
+
+### Data Upload
+
+| Event | Level |
+|---|---|
+| Data upload initialized (with file path) | INFO |
+| All user data loaded | SUCCESS |
+| File loading errors | ERROR |
+| User data binding errors | ERROR |
+
+### Settings Restore
+
+| Event | Level |
+|---|---|
+| Settings restored from version | SUCCESS |
+| Settings loaded from file | SUCCESS |
+| Settings load failure | ERROR |
+| Incompatible settings (analyte, profile, specimen) | WARN |
+
+### Data Mapping
+
+| Event | Level |
+|---|---|
+| Processing data mapping | INFO |
+| Data mapping warnings | WARN |
+| Data mapping errors | ERROR |
+
+### Data Filtering
+
+| Event | Level |
+|---|---|
+| Data filtering warnings | WARN |
+
+### NCA Settings
+
+| Event | Level |
+|---|---|
+| Analyte selection changed | INFO |
+| Specimen selection changed | INFO |
+| NCA profile selection changed | INFO |
+| Extrapolation method changed | INFO |
+| Min. half-life points changed | INFO |
+| Flag rule enabled/disabled | INFO |
+| Flag rule threshold changed | INFO |
+| BLQ imputation strategy changed | INFO |
+| Start concentration imputation toggled | INFO |
+
+### Parameter Selection
+
+| Event | Level |
+|---|---|
+| Parameter count per study type | INFO |
+| Full parameter list per study type | DEBUG |
+
+### Slope Selector
+
+| Event | Level |
+|---|---|
+| Module server attachment | TRACE |
+| Plotly click detected | TRACE |
+| Manual slope rule added | INFO |
+| Manual slope rule removed | INFO |
+| Slope rules summary (inclusions/exclusions count) | DEBUG |
+| Manual slopes override applied | DEBUG |
+| Manual slopes override incompatible | WARN |
+| Slope edit table rendering | TRACE |
+
+### General Exclusions
+
+| Event | Level |
+|---|---|
+| Exclusion added (row count, type, reason) | INFO |
+| Exclusion removed | INFO |
+| Exclusions restored from settings | INFO |
+
+### NCA Calculation
+
+| Event | Level |
+|---|---|
+| Creating / updating PKNCA data object | TRACE |
+| PKNCA data object created | SUCCESS |
+| PKNCA data object creation error | ERROR |
+| Updating parameter selection data | TRACE |
+| Calculating NCA results | INFO |
+| NCA calculation warnings | WARN |
+| NCA results calculated | SUCCESS |
+| NCA calculation error | ERROR |
+| Invalid parameters | ERROR |
+
+### Exploration Plots
+
+| Event | Level |
+|---|---|
+| Rendering individual plots | INFO |
+| Computing mean plot | INFO |
+| Rendering boxplot | INFO |
+| Exploration plot saved (with overwrite flag) | INFO |
+| Exploration plot removed | INFO |
+
+### TLG Generation
+
+| Event | Level |
+|---|---|
+| TLG module server attachment | TRACE |
+| Submitted TLG list | DEBUG |
+| TLG list rendering error | ERROR |
+
+### Export
+
+| Event | Level |
+|---|---|
+| Downloading summary statistics as CSV | INFO |
+
+### Units & Other
+
+| Event | Level |
+|---|---|
+| Applying custom units specification | TRACE |
+
+## Configuring the log level
+
+Set the `aNCA_LOG_LEVEL` environment variable before starting the app.
+Valid values: `TRACE`, `DEBUG`, `INFO` (default), `SUCCESS`, `WARN`, `ERROR`.
+
+In your `.Renviron` file:
+
+```
+aNCA_LOG_LEVEL=DEBUG
+```
+
+Or set it in R before launching:
+
+```r
+Sys.setenv(aNCA_LOG_LEVEL = "TRACE")
+aNCA::run_app()
+```

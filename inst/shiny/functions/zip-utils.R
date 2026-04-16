@@ -428,6 +428,12 @@ prepare_export_files <- function(target_dir,
                  detail = "Saving session info...")
     .export_session_info(target_dir)
   }
+
+  if ("session_log" %in% input$res_tree) {
+    progress$set(message = "Creating exports...",
+                 detail = "Saving session log...")
+    .export_session_log(target_dir)
+  }
   progress$inc(0.8)
 
   .clean_export_dir(target_dir, input, custom_names)
@@ -641,6 +647,45 @@ prepare_export_files <- function(target_dir,
   writeLines(lines, file.path(target_dir, "session_info.txt"))
 }
 
+#' Export the in-memory session log to a text file.
+#' @param target_dir Target directory for the export.
+#' @keywords internal
+.export_session_log <- function(target_dir) {
+  log_buffer <- get_log_buffer()
+
+  threshold <- .log_env$threshold
+  header <- c(
+    "# aNCA Session Log",
+    "#",
+    "# This file contains application events captured during your session.",
+    "# It records data upload, mapping, NCA settings, parameter selection,",
+    "# slope adjustments, exclusions, calculation results, and exports.",
+    "#",
+    "# Warnings and errors from these operations are included when caught",
+    "# by the application. Unexpected R errors or warnings from third-party",
+    "# packages that are not explicitly handled will NOT appear here.",
+    "#",
+    paste0("# Log level: ", threshold,
+           " (configurable via aNCA_LOG_LEVEL env var)"),
+    paste0("# Levels shown at current threshold: ",
+           paste(names(.LOG_LEVELS)[.LOG_LEVELS >= .LOG_LEVELS[[threshold]]],
+                 collapse = ", ")),
+    "#",
+    "# For a full reference of logged events, see:",
+    "# https://pharmaverse.github.io/aNCA/articles/session_log.html",
+    "#",
+    paste0("# Generated: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")),
+    "# -------------------------------------------------------------------",
+    ""
+  )
+
+  if (length(log_buffer) == 0L) {
+    log_buffer <- "(No log entries captured during this session.)"
+  }
+
+  writeLines(c(header, log_buffer), file.path(target_dir, "session_log.txt"))
+}
+
 #' Clean Export Directory
 #' @param target_dir Target directory to clean
 #' @param input Shiny input object
@@ -676,6 +721,10 @@ prepare_export_files <- function(target_dir,
   }
   if ("session_info" %in% fnames) {
     files_req <- c(files_req, grep("session_info\\.txt$", all_files,
+                                   value = TRUE))
+  }
+  if ("session_log" %in% fnames) {
+    files_req <- c(files_req, grep("session_log\\.txt$", all_files,
                                    value = TRUE))
   }
   file.remove(all_files[!all_files %in% files_req])
