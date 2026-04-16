@@ -251,9 +251,12 @@ get_settings_code <- function(
   filters <- settings[["filters"]]
   ratio_table <- settings[["settings"]][["ratio_table"]]
   units_table <- settings[["settings"]][["units"]]
-  extra_vars_to_keep <- c(
-    mapping[["select_Grouping_Variables"]], "DOSEA", "ATPTREF", "ROUTE"
-  )
+
+  # YAML-sourced mapping uses unprefixed keys (e.g. "Grouping_Variables"),
+  # while .default_mapping uses prefixed keys (e.g. "select_Grouping_Variables").
+  grouping_vars <- mapping[["Grouping_Variables"]] %||%
+    mapping[["select_Grouping_Variables"]]
+  extra_vars_to_keep <- c(grouping_vars, "DOSEA", "ATPTREF", "ROUTE")
 
   session <- list(
     settings = settings[["settings"]],
