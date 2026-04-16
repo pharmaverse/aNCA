@@ -81,12 +81,21 @@ parameter_selection_ui <- function(id) {
       ),
       column(
         width = 2,
-        actionButton(
-          ns("clear_all"),
-          label = "Clear all",
-          icon = icon("eraser"),
-          class = "btn-sm btn-outline-danger",
-          style = "margin-top: 0.5em;"
+        div(
+          class = "d-flex gap-1 justify-content-end",
+          style = "margin-top: 0.5em;",
+          actionButton(
+            ns("select_all"),
+            label = "Select all",
+            icon = icon("check-double"),
+            class = "btn-sm btn-outline-primary"
+          ),
+          actionButton(
+            ns("clear_all"),
+            label = "Clear all",
+            icon = icon("eraser"),
+            class = "btn-sm btn-outline-danger"
+          )
         )
       )
     ),
@@ -249,7 +258,18 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       }
     })
 
-    # --- Clear all selections ---
+    # --- Select all / Clear all ---
+    observeEvent(input$select_all, {
+      state <- selections_state()
+      req(state)
+      study_type_names <- study_types_list()
+      for (st in study_type_names) {
+        state[[st]] <- TRUE
+      }
+      selections_state(state)
+      .sync_checkboxes_js(session, state, study_type_names)
+    })
+
     observeEvent(input$clear_all, {
       state <- selections_state()
       req(state)
