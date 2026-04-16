@@ -57,6 +57,7 @@
 * Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (#1195)
 
 ## Bugs fixed
+* Fixed NA `PPSTRESU` handling across NCA results: descriptive statistics no longer crash when a parameter group has all-NA units, and manual interval parameters (e.g., RCAMINT) no longer get `NA` appended to their column names (#1216)
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
