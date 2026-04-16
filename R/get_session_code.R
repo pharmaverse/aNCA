@@ -196,43 +196,17 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
   }
 }
 
-default_mapping <- list(
-  select_STUDYID = "STUDYID",
-  select_USUBJID = "USUBJID",
-  select_DOSEA = "DOSEA",
-  select_DOSEU = "DOSEU",
-  select_DOSETRT = "DOSETRT",
-  select_PARAM = "PARAM",
-  select_Metabolites = "Metab-DrugA",
-  select_ARRLT = "ARRLT",
-  select_NRRLT = "NRRLT",
-  select_AFRLT = "AFRLT",
-  select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
-  select_NFRLT = "NFRLT",
-  select_PCSPEC = "PCSPEC",
-  select_ROUTE = "ROUTE",
-  select_TRTRINT = "TRTRINT",
-  select_ADOSEDUR = "ADOSEDUR",
-  select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
-  select_RRLTU = "RRLTU",
-  select_VOLUME = "VOLUME",
-  select_VOLUMEU = "VOLUMEU",
-  select_AVAL = "AVAL",
-  select_AVALU = "AVALU",
-  select_ATPTREF = "ATPTREF"
-)
-
-#' Generate a session script from settings and mapping files
+#' Generate a session script from a settings YAML file
 #'
-#' This function reads a settings yaml file and data path, and generates an R script
-#' that can reproduce the session using a template.
+#' Reads a settings YAML file and generates an R script that can reproduce the
+#' session. Mapping, filters, ratio table, and units are read from the YAML
+#' when present; legacy files without these fields fall back to defaults.
 #'
-#' @param settings_file_path Path to the yaml file containing the settings list.
+#' @param settings_file_path Path to the YAML file containing the settings.
 #' @param data_path Path to the data file to be referenced in the script.
-#' @param template_path Path to the R script template file. By default, uses the one
-#' installed from your aNCA package version.
+#' @param template_path Path to the R script template file. By default, uses
+#'   the one installed from your aNCA package version.
 #' @param output_path Path to write the resulting script file.
-#' @param mapping Named list mapping variable names (default: \code{default_mapping}).
 #'
 #' @return Invisibly returns the output_path.
 #' @export
@@ -240,19 +214,30 @@ get_settings_code <- function(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = system.file("www/templates/script_template.R", package = "aNCA"),
-  # TODO: mapping should be included in the settings file as well
-  # so it keeps working as expected also from the settings file
-  mapping = default_mapping
+  template_path = system.file("www/templates/script_template.R", package = "aNCA")
 ) {
   settings <- read_settings(settings_file_path)
+
+  mapping <- settings[["mapping"]] %||% .default_mapping
+  filters <- settings[["filters"]]
+  ratio_table <- settings[["settings"]][["ratio_table"]]
+  units_table <- settings[["settings"]][["units"]]
+
+  grouping_vars <- mapping[["Grouping_Variables"]]
+  extra_vars_to_keep <- c(grouping_vars, "DOSEA", "ATPTREF", "ROUTE")
+
   session <- list(
     settings = settings[["settings"]],
     slope_rules = settings[["slope_rules"]],
     data_path = data_path,
     mapping = mapping,
-    time_duplicate_rows = NULL
+    applied_filters = filters,
+    ratio_table = ratio_table,
+    units_table = units_table,
+    extra_vars_to_keep = extra_vars_to_keep,
+    time_duplicate_rows = settings[["time_duplicate_keys"]]
   )
+
   get_code(
     template_path = template_path,
     setts_obj = session,
