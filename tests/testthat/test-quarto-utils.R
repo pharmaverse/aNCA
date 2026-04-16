@@ -7,7 +7,16 @@ describe("create_qmd_dose_slides", {
       linplot = ggplot2::ggplot(),
       boxplot = list(AUCIFO = ggplot2::ggplot()),
       ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
-      ind_plots = list(SUBJ01 = ggplot2::ggplot())
+      ind_plots = list(SUBJ01 = ggplot2::ggplot()),
+      dose_norm_meanplot   = ggplot2::ggplot(),
+      dose_norm_statistics = data.frame(
+        stat = "Mean",
+        `CMAXD[ng/mL/mg]` = 0.5,
+        check.names = FALSE
+      ),
+      ind_dose_norm_params = list(
+        SUBJ01 = data.frame(`CMAXD[ng/mL/mg]` = 0.5, check.names = FALSE)
+      )
     )
   )
 
@@ -321,5 +330,55 @@ describe("create_qmd_dose_slides", {
 
     expect_true(grepl("Group 1 (Individual)", content, fixed = TRUE))
     expect_false(grepl("Group 2 (Individual)", content, fixed = TRUE))
+  })
+
+  it("always has a blank line after slide separator even when plot is NULL", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("statistics", "ind_params")
+    out_file <- tempfile(fileext = ".qmd")
+
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    lines <- readLines(out_file, warn = FALSE)
+
+    separator_indices <- which(lines == "---")
+    # Skip the YAML header delimiters (first two occurrences)
+    slide_separators <- separator_indices[separator_indices > 2]
+
+    expect_true(length(slide_separators) > 0)
+    for (idx in slide_separators) {
+      expect_equal(
+        lines[idx + 1], "",
+        info = paste0("'---' at line ", idx, " must be followed by a blank line")
+      )
+    }
+  })
+
+  it("sanitizes newlines in title to prevent YAML parse errors", {
+    out_file <- tempfile(fileext = ".qmd")
+    create_qmd_dose_slides(base_slides, out_file, "Line1\nLine2\r\nLine3", use_plotly = FALSE)
+    lines <- readLines(out_file, warn = FALSE)
+
+    title_line <- lines[grep("^title:", lines)[1]]
+    expect_false(grepl("\n", title_line, fixed = TRUE))
+    expect_false(grepl("\r", title_line, fixed = TRUE))
+    expect_true(grepl("Line1 Line2 Line3", title_line, fixed = TRUE))
+  })
+
+  it("includes dose_norm_plot when dose_norm_plot is in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("dose_norm_plot")
+    out_file <- tempfile(fileext = ".qmd")
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+    expect_true(grepl("dose_norm_meanplot", content, fixed = TRUE))
+  })
+
+  it("omits dose_norm_plot when dose_norm_plot is not in slide_sections", {
+    slides <- base_slides
+    attr(slides, "slide_sections") <- c("meanplot", "statistics")
+    out_file <- tempfile(fileext = ".qmd")
+    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+    expect_false(grepl("dose_norm_meanplot", content, fixed = TRUE))
   })
 })
