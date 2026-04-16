@@ -29,6 +29,8 @@ navbar:
           href: articles/adding_tlg.html
         - text: Design & Architecture
           href: articles/design.html
+        - text: Session Log Reference
+          href: articles/session_log.html
         - text: Functions manual
           href: reference/index.html
     project:

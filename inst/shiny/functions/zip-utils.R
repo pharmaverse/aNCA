@@ -651,10 +651,38 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 .export_session_log <- function(target_dir) {
   log_buffer <- get_log_buffer()
+
+  threshold <- .log_env$threshold
+  header <- c(
+    "# aNCA Session Log",
+    "#",
+    "# This file contains application events captured during your session.",
+    "# It records data upload, mapping, NCA settings, parameter selection,",
+    "# slope adjustments, exclusions, calculation results, and exports.",
+    "#",
+    "# Warnings and errors from these operations are included when caught",
+    "# by the application. Unexpected R errors or warnings from third-party",
+    "# packages that are not explicitly handled will NOT appear here.",
+    "#",
+    paste0("# Log level: ", threshold,
+           " (configurable via aNCA_LOG_LEVEL env var)"),
+    paste0("# Levels shown at current threshold: ",
+           paste(names(.LOG_LEVELS)[.LOG_LEVELS >= .LOG_LEVELS[[threshold]]],
+                 collapse = ", ")),
+    "#",
+    "# For a full reference of logged events, see:",
+    "# https://pharmaverse.github.io/aNCA/articles/session_log.html",
+    "#",
+    paste0("# Generated: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")),
+    "# -------------------------------------------------------------------",
+    ""
+  )
+
   if (length(log_buffer) == 0L) {
     log_buffer <- "(No log entries captured during this session.)"
   }
-  writeLines(log_buffer, file.path(target_dir, "session_log.txt"))
+
+  writeLines(c(header, log_buffer), file.path(target_dir, "session_log.txt"))
 }
 
 #' Clean Export Directory

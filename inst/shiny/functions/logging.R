@@ -6,6 +6,14 @@
 #
 # Log levels: TRACE < DEBUG < INFO < SUCCESS < WARN < ERROR
 # Default threshold: INFO (configurable via aNCA_LOG_LEVEL env var).
+#
+# The log captures application-level events only — not raw R console
+# output. Warnings and errors from third-party packages appear only
+# when explicitly caught by tryCatch blocks with log_warn/log_error.
+#
+# The in-memory buffer is exported as session_log.txt in the ZIP
+# download. For a full reference of logged events, see:
+# https://pharmaverse.github.io/aNCA/articles/session_log.html
 
 .log_env <- new.env(parent = emptyenv())
 .log_env$threshold <- "INFO"
