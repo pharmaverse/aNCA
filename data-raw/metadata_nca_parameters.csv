@@ -44,11 +44,11 @@ aumclast.dn,AUMCLSTD,AUMC to Last Nonzero Conc Norm by Dose,AUMCLSTD: AUMC to La
 c0,C0,Initial Conc,C0: Initial Conc,pk.calc.c0,Initial concentration after an IV bolus,TRUE,conc,Standard,Concentration,,F,T,T,T,F,F
 cav,CAVG,Average Conc,CAVG: Average Conc,pk.calc.cav,The average concentration during an interval (calculated with AUClast),TRUE,conc,Standard,Concentration,auclast,T,T,F,T,T,T
 cav.dn,CAVGD,Average Conc Norm by Dose,CAVGD: Average Conc Norm by Dose,pk.calc.dn,Dose normalized cav,TRUE,conc_dosenorm,Standard,Concentration,cav,T,T,F,T,T,F
-cav.int.all,CAVGINA,Cavg All,CAVGINA: Cavg All,pk.calc.cav,The average concentration during an interval (calculated with AUCint.all),FALSE,conc,Standard,Concentration,aucint.all,T,T,F,T,T,T
-cav.int.inf.obs,CAVGINO,Cavg Infinity Obs,CAVGINO: Cavg Infinity Obs,pk.calc.cav,The average concentration during an interval (calculated with AUCint.inf.obs),FALSE,conc,Standard,Concentration,aucint.inf.obs,T,T,F,F,T,T
-cav.int.inf.pred,CAVGINP,Cavg Infinity Pred,CAVGINP: Cavg Infinity Pred,pk.calc.cav,The average concentration during an interval (calculated with AUCint.inf.pred),FALSE,conc,Standard,Concentration,aucint.inf.pred,T,T,F,F,T,T
+cav.int.all,CAVGINTA,"Average Conc Interval (based on AUCall)","CAVGINTA: Average Conc Interval (based on AUCall)",pk.calc.cav,The average concentration during an interval (calculated with AUCint.all),FALSE,conc,Standard,Concentration,aucint.all,T,T,F,T,T,T
+cav.int.inf.obs,CAVGINTO,"Average Conc Interval (based on AUCinf,obs)","CAVGINTO: Average Conc Interval (based on AUCinf,obs)",pk.calc.cav,The average concentration during an interval (calculated with AUCint.inf.obs),FALSE,conc,Standard,Concentration,aucint.inf.obs,T,T,F,F,T,T
+cav.int.inf.pred,CAVGINTP,"Average Conc Interval (based on AUCinf,pred)","CAVGINTP: Average Conc Interval (based on AUCinf,pred)",pk.calc.cav,The average concentration during an interval (calculated with AUCint.inf.pred),FALSE,conc,Standard,Concentration,aucint.inf.pred,T,T,F,F,T,T
 cav.int.last,CAVGINT,Average Conc from T1 to T2,CAVGINT: Average Conc from T1 to T2,pk.calc.cav,The average concentration during an interval (calculated with AUCint.last),TRUE,conc,Standard,Concentration,aucint.last,T,T,T,T,T,T
-ceoi,CEOI,Ceoi,CEOI: Ceoi,pk.calc.ceoi,Concentration at the end of infusion,FALSE,conc,IV,Concentration,,F,T,T,T,F,T
+ceoi,CONCEINF,Concentration at End Infusion,CONCEINF: Concentration at End Infusion,pk.calc.ceoi,Concentration at the end of infusion,FALSE,conc,IV,Concentration,,F,T,T,T,F,T
 cl.all,CLALL,CL (based on AUCall),CLALL: CL (based on AUCall),pk.calc.cl,Clearance or observed oral clearance calculated with AUCall,FALSE,clearance,Standard,Clearance,aucall,F,T,T,F,T,F
 cl.last,CLLST,CL (based on AUClast),CLLST: CL (based on AUClast),pk.calc.cl,Clearance or observed oral clearance calculated to Clast,FALSE,clearance,Standard,Clearance,auclast,F,T,T,F,T,F
 cl.obs,CLO,Total CL Obs,CLO: Total CL Obs,pk.calc.cl,Clearance or observed oral clearance calculated with observed Clast,TRUE,clearance,Standard,Clearance,aucinf.obs,F,T,T,F,T,F
