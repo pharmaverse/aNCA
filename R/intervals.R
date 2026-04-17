@@ -15,8 +15,8 @@
 #' The function performs the following steps:
 #'   - Creates a vector with all pharmacokinetic parameters.
 #'   - Based on dose times, creates a data frame with start and end times.
-#'   - If TRTRINT column is present in data, sets last dose end time to start + TRTRINT,
-#'   or if TRTRINT is NA then either Inf if only one dose present, or max end time if not.
+#'   - If TRTRINT column is present in data, if TRTRINT is NA then it sets end time
+#'    to Inf if only one dose present, or max end time if not.
 #'   - If no TRTRINT column in data, sets last dose end time to the time of last sample
 #'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
@@ -102,13 +102,12 @@ format_pkncadata_intervals <- function(pknca_conc,
     }) %>%
     group_by(!!!syms(conc_groups)) %>%
     arrange(start) %>%
-    # Make end based on next dose time (if no more, TRTRINT or last NFRLT)
+    # Make end based on next dose time (if no more, last NFRLT)
     mutate(end = if (has_trtrint) {
       case_when(
         !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
-        is.na(TRTRINT) & is_one_dose ~ Inf,
-        is.na(TRTRINT) ~ start + max_end,
-        TRUE ~ start + TRTRINT
+        is.na(TRTRINT) & is_one_dose ~ Inf, #TAU = NA assumes single dose
+        TRUE ~ start + max_end
       )
     } else {
       case_when(
