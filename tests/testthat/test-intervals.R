@@ -79,7 +79,7 @@ describe("format_pkncadata_intervals", {
     )
   })
 
-  it("correctly uses tau if column is available", {
+  it("sets last time to end AFRLT for last dose when TRTRINT available", {
     df_conc_tau <- df_conc %>%
       mutate(TRTRINT = 5) # Add a tau column for testing
 
@@ -92,7 +92,7 @@ describe("format_pkncadata_intervals", {
 
     result_tau <- format_pkncadata_intervals(pknca_conc_tau, pknca_dose)
 
-    expect_equal(result_tau$end[4], 10)
+    expect_equal(result_tau$end[4], 9)
   })
 
   it("sets last time to end AFRLT if no TRTRINT available", {
