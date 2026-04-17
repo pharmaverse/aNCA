@@ -15,8 +15,8 @@
 #' The function performs the following steps:
 #'   - Creates a vector with all pharmacokinetic parameters.
 #'   - Based on dose times, creates a data frame with start and end times.
-#'   - If TRTRINT column is present in data, sets last dose end time to start + TRTRINT,
-#'   or if TRTRINT is NA then either Inf if only one dose present, or max end time if not.
+#'   - If TRTRINT column is present in data, if TRTRINT is NA then it sets end time
+#'    to Inf if only one dose present, or max end time if not.
 #'   - If no TRTRINT column in data, sets last dose end time to the time of last sample
 #'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
