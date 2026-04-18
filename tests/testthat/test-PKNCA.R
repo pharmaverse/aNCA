@@ -317,6 +317,57 @@ describe("PKNCA_update_data_object", {
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
   })
+it("applies half-life adjustment rules when hl_adj_rules is provided", {
+  rules <- data.frame(
+    STUDYID = "STUDY001",
+    USUBJID = "SUBJ001",
+    PARAM = "AnalyteA",
+    PCSPEC = "Plasma",
+    DOSETRT = "DrugA",
+    TYPE = "Exclusion",
+    RANGE = "1:4",
+    REASON = "Manual Outlier",
+    stringsAsFactors = FALSE
+  )
+  updated <- PKNCA_update_data_object(
+    adnca_data = pknca_data,
+    method = "lin up log down",
+    selected_analytes = analytes,
+    selected_profile = dosnos,
+    selected_pcspec = pcspecs,
+    hl_adj_rules = rules
+  )
+  expect_s3_class(updated, "PKNCAdata")
+  expect_true(any(updated$conc$data$exclude_half.life))
+})
+it("applies custom units table when custom_units_table is provided", {
+  custom_units <- data.frame(
+    #AVALU = "ng/mL",
+    #RRLTU = "hours",
+    #DOSEU = "mg",
+    PPORRESU = "ng/mL",
+    PPTESTCD = "CMAX",    
+    stringsAsFactors = FALSE
+  )
+  updated <- PKNCA_update_data_object(
+    adnca_data = pknca_data,
+    method = "lin up log down",
+    selected_analytes = analytes,
+    selected_profile = dosnos,
+    selected_pcspec = pcspecs,
+    custom_units_table = custom_units
+  )
+  expect_s3_class(updated, "PKNCAdata")
+  expect_true("units" %in% names(updated))
+})
+ it("sets PKSUM1F to Y when exclude_tlg is TRUE", {
+  excl_list <- list(
+    list(reason = "TLG Exclusion", rows = c(1, 2), exclude_tlg = TRUE)
+  )
+  pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
+  expect_equal(pknca_data_excl$conc$data$PKSUM1F[1], "Y")
+  expect_equal(pknca_data_excl$conc$data$PKSUM1F[2], "Y")
+}) 
 })
 
 
@@ -336,6 +387,25 @@ describe("PKNCA_calculate_nca", {
     # Check that only two items have been added to the list
     expect_equal(length(colnames(nca_results$result)), 15)
   })
+
+describe("remove_pp_not_requested", {
+  it("returns a PKNCAresults object with filtered parameters", {
+    nca_res <- PKNCA_calculate_nca(pknca_data)
+    nca_res$data$intervals$impute <- NA_character_
+    result <- remove_pp_not_requested(nca_res)
+    expect_s3_class(result, "PKNCAresults")
+    expect_true("result" %in% names(result))
+    expect_true("data" %in% names(result))
+  })
+})
+
+
+
+
+
+
+
+# ----
 })
 describe("PKNCA_impute_method_start_logslope", {
   it("does not impute when start is in the data", {
