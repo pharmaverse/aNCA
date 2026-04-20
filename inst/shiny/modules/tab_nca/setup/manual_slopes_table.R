@@ -93,7 +93,7 @@ manual_slopes_table_server <- function(
 
     # Add a new row to the table when the user clicks the add button
     observeEvent(input$add_rule, {
-      log_info("Slope selector: adding manual slope rule")
+      log_trace("Slope selector: adding manual slope rule")
       first_group <- slopes_pknca_groups()[1, ]
       time_col <- pknca_data()$conc$columns$time
       new_row <- cbind(
@@ -126,7 +126,7 @@ manual_slopes_table_server <- function(
 
     # Remove selected rows from the table when the user clicks the remove button
     observeEvent(input$remove_rule, {
-      log_info("Slope selector: removing manual slope rule")
+      log_trace("Slope selector: removing manual slope rule")
       selected <- getReactableState("manual_slopes", "selected")
       req(selected)
       edited_slopes <- manual_slopes()[-selected, ]
