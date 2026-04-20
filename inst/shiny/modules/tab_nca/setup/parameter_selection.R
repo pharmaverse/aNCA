@@ -91,6 +91,12 @@ parameter_selection_ui <- function(id) {
             class = "btn-sm btn-outline-primary"
           ),
           actionButton(
+            ns("reset_defaults"),
+            label = "Defaults",
+            icon = icon("rotate-left"),
+            class = "btn-sm btn-outline-secondary"
+          ),
+          actionButton(
             ns("clear_all"),
             label = "Clear all",
             icon = icon("eraser"),
@@ -268,6 +274,20 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       }
       selections_state(state)
       .sync_checkboxes_js(session, state, study_type_names)
+    })
+
+    observeEvent(input$reset_defaults, {
+      req(study_types_df())
+      default_state <- .apply_parameter_selections(
+        selection_df = all_params,
+        study_type_names = unique(study_types_df()$type),
+        default_params = DEFAULT_PARAMS
+      ) %>%
+        select(-starts_with("can_"))
+      selections_state(default_state)
+      .sync_checkboxes_js(
+        session, default_state, unique(study_types_df()$type)
+      )
     })
 
     observeEvent(input$clear_all, {
