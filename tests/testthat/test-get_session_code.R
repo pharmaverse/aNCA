@@ -204,22 +204,6 @@ describe("get_settings_code: ", {
       file_content <- readLines(output_file)
       expect_false(any(grepl(placeholder, file_content)))
     })
-
-    it("falls back to default mapping for legacy files", {
-      file_content <- paste(readLines(output_file), collapse = "\n")
-      # Default mapping uses DOSEA for select_DOSEA
-      expect_match(file_content, "select_DOSEA")
-      expect_match(file_content, '"DOSEA"')
-    })
-
-    it("derives extra_vars_to_keep from default mapping", {
-      file_content <- paste(readLines(output_file), collapse = "\n")
-      # Default grouping vars are TRT01A, RACE, SEX
-      expect_match(file_content, '"TRT01A"')
-      expect_match(file_content, '"DOSEA"')
-      expect_match(file_content, '"ATPTREF"')
-      expect_match(file_content, '"ROUTE"')
-    })
   })
 
   describe("with mapping, filters, and ratio_table in YAML", {

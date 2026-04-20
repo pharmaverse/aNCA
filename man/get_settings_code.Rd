@@ -26,6 +26,5 @@ Invisibly returns the output_path.
 }
 \description{
 Reads a settings YAML file and generates an R script that can reproduce the
-session. Mapping, filters, ratio table, and units are read from the YAML
-when present; legacy files without these fields fall back to defaults.
+session. Mapping, filters, ratio table, and units are all read from the YAML.
 }

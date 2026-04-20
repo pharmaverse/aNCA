@@ -196,40 +196,10 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
   }
 }
 
-#' Default CDISC column mapping used as fallback for legacy settings files
-#' that do not contain a mapping section.
-#' @noRd
-.default_mapping <- list(
-  select_STUDYID = "STUDYID",
-  select_USUBJID = "USUBJID",
-  select_DOSEA = "DOSEA",
-  select_DOSEU = "DOSEU",
-  select_DOSETRT = "DOSETRT",
-  select_PARAM = "PARAM",
-  select_Metabolites = "Metab-DrugA",
-  select_ARRLT = "ARRLT",
-  select_NRRLT = "NRRLT",
-  select_AFRLT = "AFRLT",
-  select_NCAwXRS = c("NCA1XRS", "NCA2XRS"),
-  select_NFRLT = "NFRLT",
-  select_PCSPEC = "PCSPEC",
-  select_ROUTE = "ROUTE",
-  select_TRTRINT = "TRTRINT",
-  select_ADOSEDUR = "ADOSEDUR",
-  select_Grouping_Variables = c("TRT01A", "RACE", "SEX"),
-  select_RRLTU = "RRLTU",
-  select_VOLUME = "VOLUME",
-  select_VOLUMEU = "VOLUMEU",
-  select_AVAL = "AVAL",
-  select_AVALU = "AVALU",
-  select_ATPTREF = "ATPTREF"
-)
-
 #' Generate a session script from a settings YAML file
 #'
 #' Reads a settings YAML file and generates an R script that can reproduce the
-#' session. Mapping, filters, ratio table, and units are read from the YAML
-#' when present; legacy files without these fields fall back to defaults.
+#' session. Mapping, filters, ratio table, and units are all read from the YAML.
 #'
 #' @param settings_file_path Path to the YAML file containing the settings.
 #' @param data_path Path to the data file to be referenced in the script.
@@ -247,26 +217,17 @@ get_settings_code <- function(
 ) {
   settings <- read_settings(settings_file_path)
 
-  mapping <- settings[["mapping"]] %||% .default_mapping
-  filters <- settings[["filters"]]
-  ratio_table <- settings[["settings"]][["ratio_table"]]
-  units_table <- settings[["settings"]][["units"]]
-
-  # YAML-sourced mapping uses unprefixed keys (e.g. "Grouping_Variables"),
-  # while .default_mapping uses prefixed keys (e.g. "select_Grouping_Variables").
-  grouping_vars <- mapping[["Grouping_Variables"]] %||%
-    mapping[["select_Grouping_Variables"]]
-  extra_vars_to_keep <- c(grouping_vars, "DOSEA", "ATPTREF", "ROUTE")
-
   session <- list(
     settings = settings[["settings"]],
     slope_rules = settings[["slope_rules"]],
     data_path = data_path,
-    mapping = mapping,
-    applied_filters = filters,
-    ratio_table = ratio_table,
-    units_table = units_table,
-    extra_vars_to_keep = extra_vars_to_keep,
+    mapping = settings[["mapping"]],
+    applied_filters = settings[["filters"]],
+    ratio_table = settings[["settings"]][["ratio_table"]],
+    units_table = settings[["settings"]][["units"]],
+    extra_vars_to_keep = c(
+      settings[["mapping"]][["Grouping_Variables"]], "DOSEA", "ATPTREF", "ROUTE"
+    ),
     time_duplicate_rows = settings[["time_duplicate_keys"]]
   )
 
