@@ -20,7 +20,7 @@ nca_setup_ui <- function(id) {
   navset_pill_list(
     widths = c(2, 10),
     nav_panel(
-      "Settings",
+      "General Settings",
       fluidRow(
         actionButton(
           ns("open_save_settings_modal"),
@@ -29,17 +29,17 @@ nca_setup_ui <- function(id) {
           class = "btn-primary"
         )
       ),
-      fluidRow(units_table_ui(ns("units_table"))),
-      settings_ui(ns("nca_settings")),
-      accordion(
-        accordion_panel(
-          title = "Ratio Calculations",
-          ratios_table_ui(ns("ratio_calculations_table"))
-        ),
-        open = c("General Settings", "Parameter Selection")
+      settings_ui(ns("nca_settings"))
+    ),
+    nav_panel(
+      "Parameter Selection",
+      parameter_selection_ui(
+        ns("nca_setup_parameter"),
+        units_ui = units_table_ui(ns("units_table")),
+        intervals_ui = partial_intervals_ui(ns("nca_settings")),
+        ratios_ui = ratios_table_ui(ns("ratio_calculations_table"))
       )
     ),
-    nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
     nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
     nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
   )
