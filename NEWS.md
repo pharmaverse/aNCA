@@ -56,6 +56,8 @@
   line plots, box plots, individual plots/parameters, additional analysis) to include in
   PPTX and HTML exports; box plot parameters are also configurable (#972)
 * Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (#1195)
+* Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters). Includes Select all, Defaults, and Clear all buttons.
+
 
 ## Bugs fixed
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
