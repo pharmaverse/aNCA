@@ -166,7 +166,23 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       has_full_units <- all(c("PPORRESU", "conversion_factor") %in% names(imported_units))
 
       if (has_full_units) {
-        session$userData$units_table(imported_units)
+        # Imported settings contain only changed rows (PPSTRESU != PPORRESU).
+        # Merge them into the full data-derived units table so downstream code
+        # that expects the complete table (e.g. nca_results.R) works correctly.
+        observe({
+          req(processed_pknca_data())
+          data_units <- processed_pknca_data()$units
+          by_cols <- intersect(names(data_units), names(imported_units))
+          by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
+          merged <- rows_update(
+            data_units,
+            imported_units,
+            by = by_cols,
+            unmatched = "ignore"
+          )
+          session$userData$units_table(merged)
+        }) %>%
+          bindEvent(processed_pknca_data(), once = TRUE)
       } else {
         # Defaults-only format: wait for data-derived units, then resolve.
         observe({
