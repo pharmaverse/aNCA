@@ -167,6 +167,9 @@
 - Settings file now outputs and time duplicate exclusions and processes
   them automatically upon settings upload
   ([\#1195](https://github.com/pharmaverse/aNCA/issues/1195))
+- Parameter selection UI replaced with an interactive checkbox matrix
+  (study types × parameters). Includes Select all, Defaults, and Clear
+  all buttons.
 
 ### Bugs fixed
 
