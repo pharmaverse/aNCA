@@ -60,7 +60,8 @@ zip_ui <- function(id) {
         list(id = "linplot",    label = "Spaghetti / Group Plot"),
         list(id = "boxplot",    label = "Box Plot"),
         list(id = "statistics", label = "Summary Statistics"),
-        list(id = "dose_norm_plot", label = "Dose-Normalized Plot & Statistics")
+        list(id = "dose_norm_plot",       label = "Dose-Normalized Plot"),
+        list(id = "dose_norm_statistics", label = "Dose-Normalized Statistics")
       )
     )
   )
@@ -290,7 +291,7 @@ zip_ui <- function(id) {
   )))
   if (
     length(dose_norm_choices) > 0 &&
-      "Dose-Normalized Plot & Statistics" %in% slide_sections_tree &&
+      any(c("Dose-Normalized Plot", "Dose-Normalized Statistics") %in% slide_sections_tree) &&
       length(dose_norm_params) == 0
   ) {
     msgs <- c(msgs, "Dose-normalized parameters cannot be empty.")
@@ -540,7 +541,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       shinyjs::toggle("boxplot_params_container", condition = "Box Plot"           %in% tree)
       shinyjs::toggle(
         "dose_norm_params_container",
-        condition = "Dose-Normalized Plot & Statistics" %in% tree
+        condition = any(c("Dose-Normalized Plot", "Dose-Normalized Statistics") %in% tree)
       )
     })
 

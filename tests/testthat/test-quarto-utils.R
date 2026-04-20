@@ -12,6 +12,7 @@ describe("create_qmd_dose_slides", {
       dose_norm_statistics = data.frame(
         stat = "Mean",
         `CMAXD[ng/mL/mg]` = 0.5,
+        `AUCINFOD[ng*h/mL/mg]` = 10.5,
         check.names = FALSE
       ),
       ind_dose_norm_params = list(
@@ -364,21 +365,43 @@ describe("create_qmd_dose_slides", {
     expect_true(grepl("Line1 Line2 Line3", title_line, fixed = TRUE))
   })
 
-  it("includes dose_norm_plot when dose_norm_plot is in slide_sections", {
-    slides <- base_slides
-    attr(slides, "slide_sections") <- c("dose_norm_plot")
+  test_that(".add_qmd_dose_norm_slide includes plot when dose_norm_plot selected", {
     out_file <- tempfile(fileext = ".qmd")
-    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    slides <- base_slides
+    in_plot_only <- function(id) id == "dose_norm_plot"
+    .add_qmd_dose_norm_slide(out_file, slides, 1, use_plotly = FALSE, in_plot_only)
     content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
     expect_true(grepl("dose_norm_meanplot", content, fixed = TRUE))
+    expect_false(grepl("dose_norm_statistics", content, fixed = TRUE))
   })
 
-  it("omits dose_norm_plot when dose_norm_plot is not in slide_sections", {
-    slides <- base_slides
-    attr(slides, "slide_sections") <- c("meanplot", "statistics")
+  test_that(".add_qmd_dose_norm_slide includes stats when dose_norm_statistics selected", {
     out_file <- tempfile(fileext = ".qmd")
-    create_qmd_dose_slides(slides, out_file, "NCA Results", use_plotly = FALSE)
+    slides <- base_slides
+    in_stats_only <- function(id) id == "dose_norm_statistics"
+    .add_qmd_dose_norm_slide(out_file, slides, 1, use_plotly = FALSE, in_stats_only)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+    expect_true(grepl("dose_norm_statistics", content, fixed = TRUE))
+    expect_false(grepl("dose_norm_meanplot", content, fixed = TRUE))
+  })
+
+  test_that(".add_qmd_dose_norm_slide includes both when both sections selected", {
+    out_file <- tempfile(fileext = ".qmd")
+    slides <- base_slides
+    in_both <- function(id) id %in% c("dose_norm_plot", "dose_norm_statistics")
+    .add_qmd_dose_norm_slide(out_file, slides, 1, use_plotly = FALSE, in_both)
+    content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
+    expect_true(grepl("dose_norm_meanplot", content, fixed = TRUE))
+    expect_true(grepl("dose_norm_statistics", content, fixed = TRUE))
+  })
+
+  test_that(".add_qmd_dose_norm_slide omits content when neither section selected", {
+    out_file <- tempfile(fileext = ".qmd")
+    slides <- base_slides
+    in_none <- function(id) FALSE
+    .add_qmd_dose_norm_slide(out_file, slides, 1, use_plotly = FALSE, in_none)
     content <- paste(readLines(out_file, warn = FALSE), collapse = "\n")
     expect_false(grepl("dose_norm_meanplot", content, fixed = TRUE))
+    expect_false(grepl("dose_norm_statistics", content, fixed = TRUE))
   })
 })
