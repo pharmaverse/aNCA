@@ -624,7 +624,10 @@ prepare_export_files <- function(target_dir,
     # Collect attached packages (base + other) with versions, sorted alphabetically
     attached <- c(
       vapply(si$otherPkgs, function(p) {
-        tryCatch(paste0("  ", p$Package, " ", p$Version), error = function(e) paste0("  ", p$Package))
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
       }, ""),
       vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
     )
@@ -633,7 +636,10 @@ prepare_export_files <- function(target_dir,
     # Loaded-only (namespace) packages
     if (length(si$loadedOnly) > 0) {
       loaded <- vapply(si$loadedOnly, function(p) {
-        tryCatch(paste0("  ", p$Package, " ", p$Version), error = function(e) paste0("  ", p$Package))
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
       }, "")
       hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
     }
