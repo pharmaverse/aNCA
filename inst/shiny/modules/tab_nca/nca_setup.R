@@ -228,6 +228,11 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       },
       content = function(con) {
         export_settings <- final_settings()
+        # Only export units that differ from defaults (PPSTRESU != PPORRESU)
+        if (!is.null(export_settings$units)) {
+          export_settings$units <- export_settings$units %>%
+            filter(!is.na(PPSTRESU), !is.na(PPORRESU), PPSTRESU != PPORRESU)
+        }
         export_settings$ratio_table <- ratio_table()
         payload <- list(
           settings = export_settings,

@@ -189,9 +189,7 @@ units_table_server <- function(id, mydata) {
       }
 
       log_trace("Applying custom units specification.")
-      modal_units_table() %>%
-        dplyr::filter(!is.na(PPSTRESU), !is.na(PPORRESU), PPSTRESU != PPORRESU) %>%
-        session$userData$units_table()
+      session$userData$units_table(modal_units_table())
 
       # Close the modal message window for the user
       removeModal()
