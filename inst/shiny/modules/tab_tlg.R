@@ -250,7 +250,11 @@ tab_tlg_server <- function(id, data) {
       panels <- lapply(tlg_order_graphs, function(g_id) {
         graph_ui <- {
           g_def <- .TLG_DEFINITIONS[[g_id]]
-          module_id <- paste0(g_id, paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = ""))
+          module_id <- paste0(
+            g_id,
+            paste0(sample(c(letters, 0:9), 5, replace = TRUE),
+                   collapse = "")
+          )
 
           if (exists(g_def$fun)) {
             tlg_module_server(module_id, data, "graph", get(g_def$fun), g_def$options)
@@ -288,7 +292,11 @@ tab_tlg_server <- function(id, data) {
         panels <- lapply(tlg_order_listings, function(g_id) {
           list_ui <- {
             g_def <- .TLG_DEFINITIONS[[g_id]]
-            module_id <- paste0(g_id, paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = ""))
+            module_id <- paste0(
+              g_id,
+              paste0(sample(c(letters, 0:9), 5, replace = TRUE),
+                     collapse = "")
+            )
 
             if (exists(g_def$fun)) {
               tlg_module_server(module_id, data, "listing", get(g_def$fun), g_def$options)
