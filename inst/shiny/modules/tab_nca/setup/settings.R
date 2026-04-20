@@ -229,7 +229,7 @@ settings_ui <- function(id) {
           tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
         )
       ),
-      open = c("General Settings", "Parameter Selection")
+      open = "General Settings"
     )
   )
 }
