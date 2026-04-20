@@ -219,6 +219,56 @@ describe("read_settings", {
     expect_null(res$filters)
   })
 
+  it("parses time_duplicate_keys as a data.frame", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(
+      settings = list(method = "linear"),
+      time_duplicate_keys = list(
+        list(AFRLT = 1, STUDYID = "S1", PCSPEC = "PLASMA",
+             DOSETRT = "D1", USUBJID = "U1", PARAM = "P1", AVAL = 10),
+        list(AFRLT = 2, STUDYID = "S1", PCSPEC = "PLASMA",
+             DOSETRT = "D1", USUBJID = "U1", PARAM = "P1", AVAL = 20)
+      )
+    ), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+
+    expect_s3_class(res$time_duplicate_keys, "data.frame")
+    expect_equal(nrow(res$time_duplicate_keys), 2)
+    expect_equal(res$time_duplicate_keys$USUBJID, c("U1", "U1"))
+    expect_equal(res$time_duplicate_keys$AVAL, c(10, 20))
+  })
+
+  it("returns NULL time_duplicate_keys when not present", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear")), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+
+    expect_null(res$time_duplicate_keys)
+  })
+
+  it("round-trips time_duplicate_keys through versioned settings", {
+    tmp_yaml <- withr::local_tempfile(fileext = ".yaml")
+    keys_df <- data.frame(
+      AFRLT = c(1, 2), STUDYID = c("S1", "S1"), PCSPEC = c("PLASMA", "PLASMA"),
+      DOSETRT = c("D1", "D1"), USUBJID = c("U1", "U1"),
+      PARAM = c("P1", "P1"), AVAL = c(10, 20),
+      stringsAsFactors = FALSE
+    )
+    payload <- list(
+      settings = list(method = "linear"),
+      time_duplicate_keys = keys_df
+    )
+    version <- create_settings_version(payload, comment = "test")
+    write_versioned_settings(list(version), tmp_yaml)
+
+    res <- read_settings(tmp_yaml)
+
+    expect_s3_class(res$time_duplicate_keys, "data.frame")
+    expect_equal(nrow(res$time_duplicate_keys), 2)
+    expect_equal(res$time_duplicate_keys$AVAL, c(10, 20))
+  })
   # -- Helpers for versioned settings fixtures --
   write_two_version_yaml <- function(path,
                                      comment1 = "latest run",

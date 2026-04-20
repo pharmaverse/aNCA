@@ -9,6 +9,7 @@ ARRLT
 ATPTREF
 AUCIFOD
 AUCLSTD
+AUCINT
 AUCPEO
 AUCPEP
 AUCall
@@ -145,6 +146,7 @@ devtools
 df
 dm
 doi
+dropdowns
 extravascular
 ggplot
 ggplots
@@ -187,6 +189,7 @@ roadmap
 rpptx
 runnable
 scrollable
+selectable
 signif
 standardizations
 synthesised

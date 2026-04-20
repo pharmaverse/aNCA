@@ -1,15 +1,12 @@
 # aNCA (development version)
 
-## Bug fixes
-
-* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
-
 ## Features added
 
 * Added dose-normalised slides to the PPT/QMD export. Each group now includes an optional
   "Dose-Normalized Plots" summary slide (dose-normalised mean plot + parameter table) and
   an optional "Dose-Normalized PK Parameters" individual slide. Both are controlled via the
   Customize Slides modal and default to CMAXD, AUCLSTD, and AUCIFOD (#1054).
+* Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
 * Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
@@ -62,6 +59,9 @@
 * Export modal now allows users to select which slide sections (mean plots, statistics,
   line plots, box plots, individual plots/parameters, additional analysis) to include in
   PPTX and HTML exports; box plot parameters are also configurable (#972)
+* Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (#1195)
+* Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters). Includes Select all, Defaults, and Clear all buttons.
+
 
 ## Bugs fixed
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
@@ -90,6 +90,7 @@ identify difference between missing and not requested (#934)
 * Descriptive statistics parameter columns are now correctly displayed when using the `selector_label` widget, and duplicate rows from the concentration data join are deduplicated (#1169)
 * Fixed `PKNCA_update_data_object` custom units table join using hardcoded `by = c("PPTESTCD", "PPORRESU")` instead of dynamic keys, which failed when the units table included group columns like `PARAM` or `PCSPEC` (#1159)
 * Fixed `DOSNOA` computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get `DOSNOA=1` instead of `DOSNOA=2`, leading to incorrect dose time matching (#1116)
+* Fixed "Summarise by" selector in Matrix Ratios having no effect due to input ID mismatch (`summarygroups` vs `summary_groups`) (#1198)
 
 # aNCA 0.1.0
 
