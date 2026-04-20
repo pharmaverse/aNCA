@@ -283,7 +283,7 @@ update_main_intervals <- function(
   ) %>%
     unique()
 
-  data$impute <- NA
+  data$impute <- NA_character_
 
   # Impute start values if requested
   if (impute) {
