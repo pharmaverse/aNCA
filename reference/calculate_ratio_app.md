@@ -26,12 +26,13 @@ calculate_ratio_app(
 
 - test_parameter:
 
-  Character. The PPTESTCD value to use as test (numerator).
+  Character. The PPTESTCD value to use as test (numerator). May include
+  a range suffix for interval parameters (e.g. `AUCINT_0-20`).
 
 - ref_parameter:
 
   Character. The PPTESTCD value to use as reference (denominator).
-  Defaults to test_parameter.
+  Defaults to test_parameter. May include a range suffix.
 
 - test_group:
 

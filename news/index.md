@@ -4,6 +4,10 @@
 
 ### Features added
 
+- Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in
+  the ratio calculations Test/Ref Parameter dropdowns, with correct
+  start/end filtering in the ratio computation
+  ([\#1135](https://github.com/pharmaverse/aNCA/issues/1135))
 - [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
   now accepts a `settings` parameter to pre-load a YAML settings file on
   startup ([\#514](https://github.com/pharmaverse/aNCA/issues/514))
