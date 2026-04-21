@@ -73,6 +73,26 @@ add_pptx_sl_plot <- function(pptx, plot) {
     officer::ph_with(value = plot, location = "Picture Placeholder 2")
 }
 
+#' Add one individual-subject slide (plot+table, plot-only, or table-only)
+#' @param pptx An officer pptx object.
+#' @param group_data One element of res_dose_slides (a dose group).
+#' @param subj Subject identifier string.
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @return Updated pptx object.
+#' @keywords internal
+#' @noRd
+.add_pptx_one_ind_slide <- function(pptx, group_data, subj, in_sections) {
+  if (in_sections("ind_plots") && in_sections("ind_params")) {
+    add_pptx_sl_plottable(pptx,
+                          df   = group_data$ind_params[[subj]],
+                          plot = group_data$ind_plots[[subj]])
+  } else if (in_sections("ind_plots")) {
+    add_pptx_sl_plot(pptx, plot = group_data$ind_plots[[subj]])
+  } else {
+    add_pptx_sl_table(pptx, df = group_data$ind_params[[subj]], footer = "")
+  }
+}
+
 #' Add individual-subject slides for one dose group to a pptx object
 #' @param pptx rpptx object
 #' @param group_data Single element from res_dose_slides
@@ -96,21 +116,10 @@ add_pptx_sl_plot <- function(pptx, plot) {
   )
   pptx <- purrr::reduce(
     names(group_data$ind_params),
-    function(pptx, subj) {
-      if (in_sections("ind_plots") && in_sections("ind_params")) {
-        add_pptx_sl_plottable(pptx,
-                              df   = group_data$ind_params[[subj]],
-                              plot = group_data$ind_plots[[subj]])
-      } else if (in_sections("ind_plots")) {
-        add_pptx_sl_plot(pptx, plot = group_data$ind_plots[[subj]])
-      } else {
-        add_pptx_sl_table(pptx, df = group_data$ind_params[[subj]], footer = "")
-      }
-    },
+    function(pptx, subj) .add_pptx_one_ind_slide(pptx, group_data, subj, in_sections),
     .init = pptx
   )
-  n_slides <- 1 + length(group_data$ind_params)
-  list(pptx = pptx, n_slides = n_slides)
+  list(pptx = pptx, n_slides = 1 + length(group_data$ind_params))
 }
 
 #' Filter an additional_analysis list to non-empty data frames,
@@ -152,6 +161,47 @@ add_pptx_sl_plot <- function(pptx, plot) {
   }
 }
 
+#' Dispatch rendering for a dose-normalised slide (plot+table, plot-only, or table-only)
+#' @param pptx An officer pptx object.
+#' @param group_data One element of res_dose_slides (a dose group).
+#' @param show_plot Logical; whether the dose_norm_plot section is selected.
+#' @param has_stats Logical; whether dose_norm_statistics is available and selected.
+#' @return Updated pptx object.
+#' @keywords internal
+#' @noRd
+.render_dose_norm_slide <- function(pptx, group_data, show_plot, has_stats) {
+  has_plot <- show_plot && !is.null(group_data$dose_norm_meanplot)
+  if (has_plot && has_stats) {
+    add_pptx_sl_plottable(pptx,
+                          df   = group_data$dose_norm_statistics,
+                          plot = group_data$dose_norm_meanplot)
+  } else if (has_plot) {
+    add_pptx_sl_plot(pptx, plot = group_data$dose_norm_meanplot)
+  } else if (has_stats) {
+    add_pptx_sl_table(pptx, df = group_data$dose_norm_statistics, footer = "")
+  } else {
+    pptx
+  }
+}
+
+#' Add a dose-normalized mean plot and statistics slide for a dose group
+#' @param pptx An officer pptx object.
+#' @param group_data One element of res_dose_slides (a dose group).
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @return Updated pptx object.
+#' @keywords internal
+#' @noRd
+.add_pptx_dose_norm_slide <- function(pptx, group_data, in_sections) {
+  show_plot  <- in_sections("dose_norm_plot")
+  show_stats <- in_sections("dose_norm_statistics")
+  if (!show_plot && !show_stats) return(pptx)
+  if (is.null(group_data$dose_norm_meanplot) && !show_stats) return(pptx)
+  has_stats <- show_stats &&
+    !is.null(group_data$dose_norm_statistics) &&
+    ncol(group_data$dose_norm_statistics) > 2
+  .render_dose_norm_slide(pptx, group_data, show_plot, has_stats)
+}
+
 #' Add boxplot slides for a dose group and return updated pptx and slide count
 #' @param pptx An officer pptx object.
 #' @param group_data One element of res_dose_slides (a dose group).
@@ -190,9 +240,43 @@ add_pptx_sl_plot <- function(pptx, plot) {
   }
   bp_result <- .add_pptx_boxplot_slides(pptx, group_data, in_sections)
   pptx <- bp_result$pptx
+  pptx <- .add_pptx_dose_norm_slide(pptx, group_data, in_sections)
+  n_dose_norm_slides <- as.integer(
+    (in_sections("dose_norm_plot") || in_sections("dose_norm_statistics")) &&
+      (!is.null(group_data$dose_norm_meanplot) ||
+         (!is.null(group_data$dose_norm_statistics) &&
+            ncol(group_data$dose_norm_statistics) > 2))
+  )
   n_main_slides <- as.integer(in_sections("meanplot") || in_sections("statistics"))
-  n_summary_slides <- 1L + n_main_slides + as.integer(in_sections("linplot")) + bp_result$n_slides
+  n_summary_slides <- 1L + n_main_slides + as.integer(in_sections("linplot")) +
+    bp_result$n_slides + n_dose_norm_slides
   list(pptx = pptx, n_summary_slides = n_summary_slides)
+}
+
+#' Check whether any summary section is selected
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @return Logical scalar.
+#' @keywords internal
+#' @noRd
+.has_summary_sections <- function(in_sections) {
+  sections <- c("meanplot", "statistics", "linplot", "boxplot",
+                "dose_norm_plot", "dose_norm_statistics")
+  any(vapply(sections, in_sections, logical(1)))
+}
+
+#' Update slide index counters when summary slides are added for a dose group
+#' @param lst_group_slide Current slide index counter (integer).
+#' @param n_ind_slides Number of individual slides added.
+#' @param n_summary_slides Number of summary slides added.
+#' @param group_slides Integer vector of summary slide indices accumulated so far.
+#' @return List with elements `lst_group_slide` and `group_slides`.
+#' @keywords internal
+#' @noRd
+.update_group_slide_index <- function(lst_group_slide, n_ind_slides, n_summary_slides,
+                                      group_slides) {
+  lst_group_slide <- lst_group_slide + n_ind_slides + n_summary_slides
+  group_slides <- c(group_slides, (lst_group_slide - n_summary_slides + 1):(lst_group_slide))
+  list(lst_group_slide = lst_group_slide, group_slides = group_slides)
 }
 
 #' Process one dose group's slides, returning updated pptx, lst_group_slide, group_slides
@@ -210,14 +294,13 @@ add_pptx_sl_plot <- function(pptx, plot) {
   ind_result <- .add_pptx_ind_slides(pptx, group_data, i, in_sections)
   pptx <- ind_result$pptx
   n_ind_slides <- ind_result$n_slides
-  has_summary <- in_sections("meanplot") || in_sections("statistics") ||
-    in_sections("linplot") || in_sections("boxplot")
-  if (has_summary) {
+  if (.has_summary_sections(in_sections)) {
     summary_result <- .add_pptx_group_summary(pptx, group_data, i, in_sections, lst_group_slide)
     pptx <- summary_result$pptx
-    n_summary_slides <- summary_result$n_summary_slides
-    lst_group_slide <- lst_group_slide + n_ind_slides + n_summary_slides
-    group_slides <- c(group_slides, (lst_group_slide - n_summary_slides + 1):(lst_group_slide))
+    idx <- .update_group_slide_index(lst_group_slide, n_ind_slides,
+                                     summary_result$n_summary_slides, group_slides)
+    lst_group_slide <- idx$lst_group_slide
+    group_slides <- idx$group_slides
   } else {
     lst_group_slide <- lst_group_slide + n_ind_slides
   }

@@ -2,6 +2,10 @@
 
 ## Features added
 
+* Added dose-normalised slides to the PPT/QMD export. Each group now includes an optional
+  "Dose-Normalized Plots" summary slide (dose-normalised mean plot + parameter table) and
+  an optional "Dose-Normalized PK Parameters" individual slide. Both are controlled via the
+  Customize Slides modal and default to CMAXD, AUCLSTD, and AUCIFOD (#1054).
 * Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)

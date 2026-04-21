@@ -188,3 +188,75 @@ describe("create_pptx_dose_slides", {
     expect_lt(length(officer::read_pptx(out_one)), length(officer::read_pptx(out_both)))
   })
 })
+
+describe(".add_pptx_dose_norm_slide", {
+  template <- system.file("www/templates/template.pptx", package = "aNCA")
+
+  it("adds plot-only slide when dose_norm_plot selected", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    group_data <- list(
+      dose_norm_meanplot = ggplot2::ggplot(),
+      dose_norm_statistics = data.frame(
+        stat = "Mean", `CMAXD[ng/mL/mg]` = 0.5, `AUCDIFO[ng*h/mL/mg]` = 1.5, check.names = FALSE
+      )
+    )
+    in_plot_only <- function(id) id == "dose_norm_plot"
+    result <- .add_pptx_dose_norm_slide(pptx, group_data, in_plot_only)
+    expect_equal(length(result), initial_count + 1L)
+  })
+
+  it("adds stats-only slide when dose_norm_statistics selected", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    group_data <- list(
+      dose_norm_meanplot = ggplot2::ggplot(),
+      dose_norm_statistics = data.frame(
+        stat = "Mean", `CMAXD[ng/mL/mg]` = 0.5, `AUCDIFO[ng*h/mL/mg]` = 1.5, check.names = FALSE
+      )
+    )
+    in_stats_only <- function(id) id == "dose_norm_statistics"
+    result <- .add_pptx_dose_norm_slide(pptx, group_data, in_stats_only)
+    expect_equal(length(result), initial_count + 1L)
+  })
+
+  it("adds combined slide when both sections selected", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    group_data <- list(
+      dose_norm_meanplot = ggplot2::ggplot(),
+      dose_norm_statistics = data.frame(
+        stat = "Mean", `CMAXD[ng/mL/mg]` = 0.5, `AUCDIFO[ng*h/mL/mg]` = 1.5, check.names = FALSE
+      )
+    )
+    in_both <- function(id) id %in% c("dose_norm_plot", "dose_norm_statistics")
+    result <- .add_pptx_dose_norm_slide(pptx, group_data, in_both)
+    expect_equal(length(result), initial_count + 1L)
+  })
+
+  it("skips when neither section is selected", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    group_data <- list(
+      dose_norm_meanplot = ggplot2::ggplot(),
+      dose_norm_statistics = data.frame(
+        stat = "Mean", `CMAXD[ng/mL/mg]` = 0.5, `AUCDIFO[ng*h/mL/mg]` = 1.5, check.names = FALSE
+      )
+    )
+    in_none <- function(id) FALSE
+    result <- .add_pptx_dose_norm_slide(pptx, group_data, in_none)
+    expect_equal(length(result), initial_count)
+  })
+
+  it("skips when dose_norm_meanplot is NULL", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    in_all <- function(id) TRUE
+    group_data <- list(
+      dose_norm_meanplot = NULL,
+      dose_norm_statistics = data.frame(DOSEA = "10mg", Statistic = "Mean")
+    )
+    result <- .add_pptx_dose_norm_slide(pptx, group_data, in_all)
+    expect_equal(length(result), initial_count)
+  })
+})
