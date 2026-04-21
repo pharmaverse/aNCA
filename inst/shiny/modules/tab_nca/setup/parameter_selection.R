@@ -457,7 +457,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       can_exc <- params$can_excretion[i]
       locs <- character(0)
       if (type %in% c("Standard", "IV")) {
-        locs <- c(locs, "Setup > Parameter Selection")
+        locs <- c(locs, "Parameter Selection > Matrix")
       }
       if (type == "Urine" || identical(can_exc, "T")) {
         locs <- c(
@@ -466,10 +466,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       }
       if (type == "PKNCA-not-covered" && cat == "Ratio") {
         locs <- c(
-          locs, "Additional Analysis > Ratios"
+          locs, "Parameter Selection > Ratio Calculations"
         )
       }
-      if (length(locs) == 0) "Setup > Parameter Selection"
+      if (length(locs) == 0) "Parameter Selection > Matrix"
       else paste(locs, collapse = "; ")
     },
     character(1)
