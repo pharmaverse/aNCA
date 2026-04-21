@@ -1,7 +1,8 @@
-# Generate a session script from settings and mapping files
+# Generate a session script from a settings YAML file
 
-This function reads a settings yaml file and data path, and generates an
-R script that can reproduce the session using a template.
+Reads a settings YAML file and generates an R script that can reproduce
+the session. Mapping, filters, ratio table, and units are all read from
+the YAML.
 
 ## Usage
 
@@ -10,8 +11,7 @@ get_settings_code(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = system.file("www/templates/script_template.R", package = "aNCA"),
-  mapping = default_mapping
+  template_path = system.file("www/templates/script_template.R", package = "aNCA")
 )
 ```
 
@@ -19,7 +19,7 @@ get_settings_code(
 
 - settings_file_path:
 
-  Path to the yaml file containing the settings list.
+  Path to the YAML file containing the settings.
 
 - data_path:
 
@@ -33,10 +33,6 @@ get_settings_code(
 
   Path to the R script template file. By default, uses the one installed
   from your aNCA package version.
-
-- mapping:
-
-  Named list mapping variable names (default: `default_mapping`).
 
 ## Value
 

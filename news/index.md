@@ -173,6 +173,11 @@
 
 ### Bugs fixed
 
+- [`get_settings_code()`](https://pharmaverse.github.io/aNCA/reference/get_settings_code.md)
+  now reads mapping, filters, ratio table, and units from the settings
+  YAML instead of using hardcoded defaults. Legacy YAML files without
+  these fields still work via fallback. The `mapping` parameter has been
+  removed ([\#1189](https://github.com/pharmaverse/aNCA/issues/1189))
 - SASS compilation moved from runtime (`app.R`) to a
   `data-raw/compile_css.R` script, fixing startup crashes on read-only
   deployments
