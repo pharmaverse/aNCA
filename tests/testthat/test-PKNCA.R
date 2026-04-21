@@ -38,14 +38,10 @@ multiple_data <- data.frame(
   RRLTU = rep("hour", 12)
 )
 
-
-
 # Simple example dataset
 pknca_data <- PKNCA_create_data_object(simple_data)
 
-reset <-  function() PKNCA_create_data_object(simple_data)
-
-# ToDo (Gerardo): refine PKNCA_create_data_object ----
+# ToDo (Gerardo): refine PKNCA_create_data_object
 #                 to make less implicit column assumptions
 
 describe("PKNCA_create_data_object", {
@@ -266,7 +262,7 @@ describe("PKNCA_create_data_object", {
   })
 })
 
-# Test PKNCA_update_data_object ----
+# Test PKNCA_update_data_object
 describe("PKNCA_update_data_object", {
   method <- "lin up log down"
   params <- c("cmax", "tmax", "auclast", "aucinf.obs")
@@ -317,61 +313,195 @@ describe("PKNCA_update_data_object", {
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
   })
-it("applies half-life adjustment rules when hl_adj_rules is provided", {
-  rules <- data.frame(
-    STUDYID = "STUDY001",
-    USUBJID = "SUBJ001",
-    PARAM = "AnalyteA",
-    PCSPEC = "Plasma",
-    DOSETRT = "DrugA",
-    TYPE = "Exclusion",
-    RANGE = "1:4",
-    REASON = "Manual Outlier",
-    stringsAsFactors = FALSE
-  )
-  updated <- PKNCA_update_data_object(
-    adnca_data = pknca_data,
-    method = "lin up log down",
-    selected_analytes = analytes,
-    selected_profile = dosnos,
-    selected_pcspec = pcspecs,
-    hl_adj_rules = rules
-  )
-  expect_s3_class(updated, "PKNCAdata")
-  expect_true(any(updated$conc$data$exclude_half.life))
-})
-it("applies custom units table when custom_units_table is provided", {
-  custom_units <- data.frame(
-    #AVALU = "ng/mL",
-    #RRLTU = "hours",
-    #DOSEU = "mg",
-    PPORRESU = "ng/mL",
-    PPTESTCD = "CMAX",    
-    stringsAsFactors = FALSE
-  )
-  updated <- PKNCA_update_data_object(
-    adnca_data = pknca_data,
-    method = "lin up log down",
-    selected_analytes = analytes,
-    selected_profile = dosnos,
-    selected_pcspec = pcspecs,
-    custom_units_table = custom_units
-  )
-  expect_s3_class(updated, "PKNCAdata")
-  expect_true("units" %in% names(updated))
-})
- it("sets PKSUM1F to Y when exclude_tlg is TRUE", {
-  excl_list <- list(
-    list(reason = "TLG Exclusion", rows = c(1, 2), exclude_tlg = TRUE)
-  )
-  pknca_data_excl <- add_exclusion_reasons(pknca_data, excl_list)
-  expect_equal(pknca_data_excl$conc$data$PKSUM1F[1], "Y")
-  expect_equal(pknca_data_excl$conc$data$PKSUM1F[2], "Y")
-}) 
+
+  it("uses default min.hl.points of 3 when not specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE
+    )
+    expect_equal(updated_data$options$min.hl.points, 3)
+  })
+
+  it("sets custom min.hl.points when specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE,
+      min_hl_points = 5
+    )
+    expect_equal(updated_data$options$min.hl.points, 5)
+  })
+
+  it("calls update_main_intervals internally when parameter_selections is provided", {
+    # study_types_df is derived internally via detect_study_types().
+    # simple_data has ADOSEDUR=0.5 (infusion) and single dose -> "Single IV Infusion"
+    parameter_selections <- list(
+      `Single IV Infusion` = c("cmax", "tmax", "auclast")
+    )
+
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = FALSE,
+      parameter_selections = parameter_selections,
+      int_parameters = data.frame(
+        parameter = character(), start_auc = numeric(), end_auc = numeric()
+      )
+    )
+    expect_s3_class(updated_data, "PKNCAdata")
+    expect_true(all(updated_data$intervals$cmax))
+    expect_true(all(updated_data$intervals$tmax))
+    expect_true(all(updated_data$intervals$auclast))
+  })
+
+  it("applies custom_units_table when provided", {
+    custom_units <- data.frame(
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      custom_units_table = custom_units
+    )
+    cmax_row <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                     updated_data$units$PPORRESU == "ng/mL", ]
+    expect_equal(nrow(cmax_row), 1)
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+  })
+
+  it("applies custom_units_table correctly when units table has group columns", {
+    # Inject a PARAM-grouped units table into ma_data to simulate the scenario
+    # where different analytes have different units (e.g. from PKNCA_build_units_table
+    # when PARAM is the minimal grouping column).
+    ma_analytes <- unique(multiple_data$PARAM)
+    ma_dosnos <- unique(multiple_data$ATPTREF)
+    ma_pcspecs <- unique(multiple_data$PCSPEC)
+
+    grouped_ma_data <- ma_data
+    grouped_ma_data$units <- rbind(
+      PKNCA::pknca_units_table(
+        concu = "ng/mL", timeu = "hr", doseu = "mg"
+      ) %>% dplyr::mutate(PARAM = "AnalyteX", PPSTRESU = PPORRESU, conversion_factor = 1),
+      PKNCA::pknca_units_table(
+        concu = "mg/mL", timeu = "hr", doseu = "mg"
+      ) %>% dplyr::mutate(PARAM = "AnalyteY", PPSTRESU = PPORRESU, conversion_factor = 1)
+    )
+
+    # Update only AnalyteX's cmax unit, leaving AnalyteY unchanged
+    custom_units <- data.frame(
+      PARAM = "AnalyteX",
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = grouped_ma_data,
+      method = method,
+      selected_analytes = ma_analytes,
+      selected_profile = ma_dosnos,
+      selected_pcspec = ma_pcspecs,
+      custom_units_table = custom_units
+    )
+
+    # AnalyteX cmax should be updated
+    cmax_x <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                   updated_data$units$PARAM == "AnalyteX", ]
+    expect_equal(nrow(cmax_x), 1)
+    expect_equal(cmax_x$PPSTRESU, "ug/mL")
+    expect_equal(cmax_x$conversion_factor, 0.001)
+
+    # AnalyteY cmax should remain unchanged (default: PPSTRESU == PPORRESU)
+    cmax_y <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                   updated_data$units$PARAM == "AnalyteY", ]
+    expect_equal(nrow(cmax_y), 1)
+    expect_equal(cmax_y$PPSTRESU, cmax_y$PPORRESU)
+    expect_equal(cmax_y$conversion_factor, 1)
+  })
+
+  it("handles custom_units_table with extra columns not in data$units", {
+    # custom_units_table may have columns (e.g. PARAM) that don't exist in
+    # data$units — these should be dropped gracefully.
+    custom_units <- data.frame(
+      PARAM = "AnalyteA",
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      custom_units_table = custom_units
+    )
+    cmax_row <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                     updated_data$units$PPORRESU == "ng/mL", ]
+    expect_equal(nrow(cmax_row), 1)
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+  })
+
+  it("skips update_main_intervals when neither parameter_selections nor int_parameters is set", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = FALSE
+    )
+    # Without parameter_selections or int_parameters, all parameter flags remain FALSE
+    expect_true(all(!updated_data$intervals$cmax))
+  })
+
+  it("applies half-life adjustment rules when hl_adj_rules is provided", {
+    rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Exclusion",
+      RANGE = "1:4",
+      REASON = "Manual Outlier",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = rules
+    )
+    expect_s3_class(updated, "PKNCAdata")
+    expect_true(any(updated$conc$data$exclude_half.life))
+  })
+
 })
 
 
-#Calculate NCA
+# Calculate NCA
 nca_results <- PKNCA_calculate_nca(pknca_data)
 
 describe("PKNCA_calculate_nca", {
@@ -387,6 +517,7 @@ describe("PKNCA_calculate_nca", {
     # Check that only two items have been added to the list
     expect_equal(length(colnames(nca_results$result)), 15)
   })
+})
 
 describe("remove_pp_not_requested", {
   it("returns a PKNCAresults object with filtered parameters", {
@@ -399,14 +530,6 @@ describe("remove_pp_not_requested", {
   })
 })
 
-
-
-
-
-
-
-# ----
-})
 describe("PKNCA_impute_method_start_logslope", {
   it("does not impute when start is in the data", {
     expect_equal(
@@ -447,6 +570,7 @@ describe("PKNCA_impute_method_start_logslope", {
     )
   })
 })
+
 describe("PKNCA_impute_method_start_c1", {
   it("does not impute when start is in the data", {
     expect_equal(
@@ -472,7 +596,7 @@ describe("PKNCA_impute_method_start_c1", {
   })
 })
 
-# Tests for PKNA_build_units_table ----
+# Tests for PKNA_build_units_table
 describe("PKNCA_build_units_table", {
   # Subset the data to only include USUBJID 8 (2 analytes, A & B)
   d_conc <- FIXTURE_CONC_DATA %>%
@@ -480,17 +604,21 @@ describe("PKNCA_build_units_table", {
   d_dose <- FIXTURE_DOSE_DATA %>%
     filter(USUBJID == 8)
 
-  o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                             concu = "AVALU", timeu = "RRLTU")
-  o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-                             doseu = "DOSEU")
+  o_conc <- PKNCA::PKNCAconc(
+    d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+    concu = "AVALU", timeu = "RRLTU"
+  )
+  o_dose <- PKNCA::PKNCAdose(
+    d_dose, DOSEA ~ AFRLT | USUBJID,
+    doseu = "DOSEU"
+  )
   units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
 
   it("creates a seggregated units table when unit columns are defined in the PKNCA objects", {
     # Check units_table is a data frame
     expect_true(is.data.frame(units_table))
 
-    # Contains the segregating variable PARAM & parameter unit columns
+    # Contains the seggregating variable PARAM & parameter unit columns
     expect_equal(
       colnames(units_table),
       c("PARAM", "PPTESTCD", "PPORRESU", "PPSTRESU", "conversion_factor")
@@ -508,10 +636,14 @@ describe("PKNCA_build_units_table", {
   })
 
   it("creates an uniform units table when units are not defined as columns in the PKNCA obj", {
-    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                               concu = "ng/mL", timeu = "h")
-    o_dose <- PKNCA::PKNCAdose(d_dose, DOSEA ~ AFRLT | USUBJID,
-                               doseu = "mg")
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "ng/mL", timeu = "h"
+    )
+    o_dose <- PKNCA::PKNCAdose(
+      d_dose, DOSEA ~ AFRLT | USUBJID,
+      doseu = "mg"
+    )
     units_table <- expect_no_error(PKNCA_build_units_table(o_conc, o_dose))
     # Check units_table is a data frame
     expect_true(is.data.frame(units_table))
@@ -547,8 +679,10 @@ describe("PKNCA_build_units_table", {
 
   it("reports an error when units are not uniform through all concentration groups", {
     d_conc$AVALU[1] <- "pg/L"
-    o_conc <- PKNCA::PKNCAconc(d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
-                               concu = "AVALU", timeu = "RRLTU")
+    o_conc <- PKNCA::PKNCAconc(
+      d_conc, AVAL ~ AFRLT | USUBJID / PARAM,
+      concu = "AVALU", timeu = "RRLTU"
+    )
     expect_error(
       PKNCA_build_units_table(o_conc, o_dose),
       regexp = "Units should be uniform at least across concentration groups.*"
@@ -556,7 +690,6 @@ describe("PKNCA_build_units_table", {
   })
 
   it("ignores NA units when the unit column already contains one valid value", {
-
     d_conc$AVALU[1] <- NA
     o_conc <- PKNCA::PKNCAconc(
       d_conc,
@@ -648,7 +781,7 @@ describe("check_valid_pknca_data", {
   })
 })
 
-# Tests for add_exclusion_reasons ----
+# Tests for add_exclusion_reasons
 describe("add_exclusion_reasons", {
   it("adds a single exclusion reason to specified rows", {
     # Prepare exclusion list: exclude row 2 with reason "Test Reason"
@@ -711,5 +844,72 @@ describe("add_exclusion_reasons", {
     pknca_data_no_excl$conc$columns[["exclude"]] <- NULL
     pknca_data_excl <- add_exclusion_reasons(pknca_data_no_excl, excl_list)
     expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
+  })
+
+  it("sets PKSUM1F to Y for TLG exclusions", {
+    excl_list <- list(
+      list(
+        reason = "TLG only", rows = c(2, 3),
+        exclude_nca = FALSE, exclude_tlg = TRUE
+      )
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # NCA exclude column should be untouched for these rows
+    expect_true(all(result$conc$data[[excl_col]][c(2, 3)] %in% c("", NA)))
+
+    # PKSUM1F should be "Y" for excluded rows, "" for others
+    expect_equal(result$conc$data$PKSUM1F[c(2, 3)], c("Y", "Y"))
+    expect_true(all(result$conc$data$PKSUM1F[-c(2, 3)] == ""))
+  })
+
+  it("applies NCA exclusion only when exclude_nca is TRUE", {
+    excl_list <- list(
+      list(
+        reason = "NCA only", rows = 1,
+        exclude_nca = TRUE, exclude_tlg = FALSE
+      )
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # NCA exclude column should have the reason
+    expect_equal(result$conc$data[[excl_col]][1], "NCA only")
+
+    # PKSUM1F should remain "" (no TLG exclusion)
+    expect_equal(result$conc$data$PKSUM1F[1], "")
+  })
+
+  it("applies both NCA and TLG exclusion together", {
+    excl_list <- list(
+      list(
+        reason = "Both", rows = 4,
+        exclude_nca = TRUE, exclude_tlg = TRUE
+      )
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # NCA exclusion applied
+    expect_equal(result$conc$data[[excl_col]][4], "Both")
+
+    # TLG exclusion applied
+    expect_equal(result$conc$data$PKSUM1F[4], "Y")
+  })
+
+  it("defaults exclude_nca to TRUE for backward compatibility", {
+    # Old-style exclusion without exclude_nca/exclude_tlg fields
+    excl_list <- list(
+      list(reason = "Legacy", rows = 5)
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    excl_col <- result$conc$columns$exclude
+
+    # Should still apply NCA exclusion
+    expect_equal(result$conc$data[[excl_col]][5], "Legacy")
+
+    # No TLG exclusion (exclude_tlg not set)
+    expect_equal(result$conc$data$PKSUM1F[5], "")
   })
 })
