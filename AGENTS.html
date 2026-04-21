@@ -275,6 +275,8 @@
 <div class="section level2">
 <h2 id="pr-workflow">PR Workflow<a class="anchor" aria-label="anchor" href="#pr-workflow"></a></h2>
 <ul><li>
+<strong>Before creating a branch</strong>: Always <code>git fetch origin main &amp;&amp; git checkout origin/main</code> to ensure you branch from the latest remote main. Do not rely on the local <code>main</code> ref being up to date.</li>
+<li>
 <strong>Branch name</strong>: <code>&lt;issue-number&gt;-&lt;type&gt;/&lt;short-description&gt;</code> (e.g., <code>123-bug/data-upload-fails</code>)</li>
 <li>
 <strong>Before submitting</strong>: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes</li>

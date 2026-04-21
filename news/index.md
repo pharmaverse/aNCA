@@ -4,6 +4,11 @@
 
 ### Features added
 
+- Settings upload now auto-restores the previous session: auto-applies
+  mapping, filters, and data processing, navigates to the saved tab, and
+  auto-runs NCA if it was previously run. Incompatible settings degrade
+  gracefully with user notifications
+  ([\#1225](https://github.com/pharmaverse/aNCA/issues/1225))
 - Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in
   the ratio calculations Test/Ref Parameter dropdowns, with correct
   start/end filtering in the ratio computation

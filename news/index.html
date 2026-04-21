@@ -61,7 +61,8 @@
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
 <div class="section level3">
 <h3 id="features-added-development-version">Features added<a class="anchor" aria-label="anchor" href="#features-added-development-version"></a></h3>
-<ul><li>Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (<a href="https://github.com/pharmaverse/aNCA/issues/1135" class="external-link">#1135</a>)</li>
+<ul><li>Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (<a href="https://github.com/pharmaverse/aNCA/issues/1225" class="external-link">#1225</a>)</li>
+<li>Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (<a href="https://github.com/pharmaverse/aNCA/issues/1135" class="external-link">#1135</a>)</li>
 <li>
 <code><a href="../reference/run_app.html">run_app()</a></code> now accepts a <code>settings</code> parameter to pre-load a YAML settings file on startup (<a href="https://github.com/pharmaverse/aNCA/issues/514" class="external-link">#514</a>)</li>
 <li>Exploration sidebars: “View Exports” button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (<a href="https://github.com/pharmaverse/aNCA/issues/1137" class="external-link">#1137</a>)</li>

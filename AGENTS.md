@@ -247,6 +247,10 @@ for requesting new features
 
 ## PR Workflow
 
+- **Before creating a branch**: Always
+  `git fetch origin main && git checkout origin/main` to ensure you
+  branch from the latest remote main. Do not rely on the local `main`
+  ref being up to date.
 - **Branch name**: `<issue-number>-<type>/<short-description>` (e.g.,
   `123-bug/data-upload-fails`)
 - **Before submitting**: Run checks above, bump version (+1 compared to
