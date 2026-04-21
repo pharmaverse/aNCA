@@ -152,11 +152,13 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     })
 
     # Keep the post processing ratio calculations requested by the user
+    int_parameters <- reactive(settings()$int_parameters)
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data,
       extra_group_vars = extra_group_vars,
-      imported_ratios = imported_ratios
+      imported_ratios = imported_ratios,
+      int_parameters = int_parameters
     )
 
     # Automatically update the units table when settings are uploaded.

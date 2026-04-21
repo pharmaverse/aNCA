@@ -2,7 +2,8 @@
 
 ## Features added
 
-* Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#722, PR #1225)
+* Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#1225)
+* Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
 * Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
@@ -56,6 +57,8 @@
   line plots, box plots, individual plots/parameters, additional analysis) to include in
   PPTX and HTML exports; box plot parameters are also configurable (#972)
 * Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (#1195)
+* Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters). Includes Select all, Defaults, and Clear all buttons.
+
 
 ## Bugs fixed
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
