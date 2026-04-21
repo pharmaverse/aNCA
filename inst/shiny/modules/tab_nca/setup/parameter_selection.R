@@ -18,9 +18,9 @@
 #'   \item{types_df}{A `reactive` data frame containing the study type detection results.}
 
 parameter_selection_ui <- function(id,
-                                  units_ui = NULL,
-                                  intervals_ui = NULL,
-                                  ratios_ui = NULL) {
+                                   units_ui = NULL,
+                                   intervals_ui = NULL,
+                                   ratios_ui = NULL) {
   ns <- NS(id)
   tagList(
     # Header row with help button
