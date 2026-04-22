@@ -497,7 +497,64 @@ describe("PKNCA_update_data_object", {
     expect_s3_class(updated, "PKNCAdata")
     expect_true(any(updated$conc$data$exclude_half.life))
   })
+  it("flags exclude_half.life on matching points via hl_adj_rules Exclusion", {
+    excl_rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Exclusion",
+      RANGE = "3:3",
+      REASON = "Outlier",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = excl_rules
+    )
+    conc <- updated$conc$data
+    at_t3 <- conc$AFRLT == 3
+    # t=3 should be flagged for exclusion with the specified reason
+    expect_true(all(conc$exclude_half.life[at_t3]))
+    expect_true(all(grepl("Outlier", conc$REASON[at_t3])))
+    # Other points should remain unflagged
+    expect_false(any(conc$exclude_half.life[!at_t3]))
+  })
 
+  it("flags include_half.life on matching points via hl_adj_rules Selection", {
+    # Force-include t=2 to t=4 in the half-life regression
+    sel_rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Selection",
+      RANGE = "2:4",
+      REASON = "Manual selection",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = sel_rules
+    )
+    conc <- updated$conc$data
+    in_range <- conc$AFRLT >= 2 & conc$AFRLT <= 4
+    # t=2, t=3, t=4 should be flagged for inclusion with the specified reason
+    expect_true(all(conc$include_half.life[in_range]))
+    expect_true(all(grepl("Manual selection", conc$REASON[in_range])))
+    # Points outside the range should remain unflagged
+    expect_true(all(is.na(conc$include_half.life[!in_range])))
+  })
 })
 
 
