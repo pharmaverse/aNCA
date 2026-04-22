@@ -1,0 +1,607 @@
+---
+title: "anca_code_example"
+author: 
+date: "2026-04-22"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+## Introduction
+The aNCA Shiny app exports a **settings YAML** and an **R script** that together
+reproduce the analysis outside the app. This vignette walks through that R
+script step by step, using the built-in `adnca_example` dataset with concrete
+values for every setting.
+
+## Start here: choose your workflow
+Use this section to decide how you want to run NCA, based on your background and preferred workflow.
+
+| If you are... | Best path | What you get |
+|---|---|---|
+| Comfortable running scripted analyses in R | [Path A: run the full script directly](#path-a-run-the-full-script-directly) | Maximum control and visibility over each step |
+| Working from settings YAML files (e.g., from app exports or versioned config files) | [Path B: generate the same script from YAML](#path-b-generate-the-same-script-from-yaml-with-get_settings_code) | Reproducible script generation with `get_settings_code()` |
+| Prefer playing with an App and an interface | [Path C: generate from the app](#path-c-generate-from-the-anca-app) | Build settings interactively, then export YAML and script |
+
+## Install the development version first
+This feature is currently available on the development branch. It will be soon released on CRAN as well.
+
+```{r install-dev-version, eval = FALSE}
+# Option 1
+remotes::install_github("pharmaverse/aNCA@1090-enhancement-website-for-r-script")
+
+# Option 2
+pak::pak("pharmaverse/aNCA@1090-enhancement-website-for-r-script")
+```
+
+Then restart your R session and confirm the installed version:
+
+```{r check-version, eval = FALSE}
+packageVersion("aNCA")
+```
+
+By the end you will have:
+- A PKNCAdata object with mapped columns, filters and intervals
+- NCA results with flag rules, interval parameters and ratio calculations applied
+- CDISC-compliant PP, ADPP, and ADNCA datasets
+- A pivoted results table ready for review
+
+## Path A: run the full script directly
+
+### 1. Load the package and data
+```{r load, eval = FALSE}
+library(aNCA)
+library(dplyr)
+# The example dataset ships with the package.
+# In practice this would be: adnca_data <- read_pk("path/to/your/data.csv")
+adnca_data <- adnca_example
+head(adnca_data, 300)
+```
+`adnca_example` is a 76-row ADNCA dataset with two analytes (DrugA and its
+metabolite Metab-DrugA), two specimen types (SERUM and URINE), and two dosing
+periods (DOSE 1, DOSE 2). Subjects received different dose levels via
+EXTRAVASCULAR and INTRAVASCULAR routes.
+
+### 2. Define the column mapping
+The mapping tells aNCA which columns in your dataset correspond to the expected
+CDISC variables. Keys match the standard ADNCA column names; values are the
+actual column names in your data.
+```{r mapping, eval = FALSE}
+mapping <- list(
+  STUDYID = "STUDYID",
+  USUBJID = "USUBJID",
+  DOSEA   = "DOSEA",
+  DOSEU   = "DOSEU",
+  DOSETRT = "DOSETRT",
+  PARAM   = "PARAM",
+  Metabolites = "Metab-DrugA",
+  ARRLT   = "ARRLT",
+  NRRLT   = "NRRLT",
+  AFRLT   = "AFRLT",
+  NCAwXRS = c("NCA1XRS", "NCA2XRS"),
+  NFRLT   = "NFRLT",
+  PCSPEC  = "PCSPEC",
+  ROUTE   = "ROUTE",
+  TRTRINT = "TRTRINT",
+  ADOSEDUR = "ADOSEDUR",
+  Grouping_Variables = c("TRT01A", "RACE", "SEX"),
+  RRLTU   = "RRLTU",
+  VOLUME  = "VOLUME",
+  VOLUMEU = "VOLUMEU",
+  AVAL    = "AVAL",
+  AVALU   = "AVALU",
+  ATPTREF = "ATPTREF"
+)
+```
+A few notes:
+- **`Metabolites`**: The PARAM value(s) that represent metabolites. aNCA uses
+  this to set the `METABFL` flag.
+- **`NCAwXRS`**: One or more columns containing NCA exclusion reason codes.
+  Subjects flagged here are excluded from calculations.
+- **`Grouping_Variables`**: Columns carried through to results and used for
+  grouping in descriptive statistics (e.g., treatment arm, demographics).
+
+### 3. Set up filters
+Filters restrict the data before analysis. Each filter specifies a column and
+the values to keep. Here we keep only the parent drug for serum specimens:
+```{r filters, eval = FALSE}
+applied_filters <- list(
+  list(column = "PARAM",  value = c("DrugA")),
+  list(column = "PCSPEC", value = c("SERUM"))
+)
+```
+Pass `NULL` if no filters are needed.
+
+### 4. Define NCA settings
+
+#### 4.1 Partial interval calculations
+Interval parameters compute AUC or average concentration over custom time
+windows. Each row specifies the parameter code, start time and end time:
+```{r int_parameters, eval = FALSE}
+int_parameters <- data.frame(
+  parameter = c("AUCINT", "CAVGINT"),
+  start_auc = c(0, 0),
+  end_auc   = c(12, 12)
+)
+```
+This calculates for each dose AUCs from 0–12 h and average concentration from 0–12 h.
+
+#### 4.2 Parameter selections
+Select which NCA parameters to compute, grouped by study type. The names must
+match the study types that PKNCA assigns based on route and dosing:
+```{r parameters, eval = FALSE}
+parameters_selected_per_study <- list(
+  `Single Extravascular` = c(
+    "auclast", "cmax", "tmax", "half.life", "aucinf.obs",
+    "vz.obs", "cl.obs", "aumclast"
+  ),
+  `Single IV Bolus` = c(
+    "auclast", "cmax", "half.life", "aucinf.obs",
+    "vz.obs", "cl.obs"
+  )
+)
+```
+
+#### 4.3 Custom units
+Override the default units for specific parameters. Each row maps a PPTESTCD to
+the desired output unit:
+```{r units, eval = FALSE}
+units_table <- data.frame(
+  PPTESTCD = c("CMAX", "TMAX", "AUCLAST"),
+  PPSTRESU = c("ng/mL", "h", "ng*h/mL")
+)
+```
+Pass `NULL` to use the units derived from the data.
+
+#### 4.4 Flag rules
+Flag rules define quality thresholds. Parameters that violate a checked rule are
+flagged and excluded from descriptive statistics. Each rule has a checkbox
+(`is.checked`) and a numeric `threshold`:
+```{r flags, eval = FALSE}
+flag_rules <- list(
+  R2ADJ = list(is.checked = TRUE,  threshold = 0.7),
+  R2    = list(is.checked = FALSE, threshold = 0.7),
+  AUCPEO  = list(is.checked = TRUE,  threshold = 20),
+  AUCPEP  = list(is.checked = TRUE,  threshold = 20),
+  LAMZSPN = list(is.checked = TRUE,  threshold = 2)
+)
+```
+- **R2ADJ ≥ 0.7**: Minimum adjusted R² for the terminal elimination regression.
+- **AUCPEO ≤ 20**: Maximum % AUC extrapolated (observed).
+- **AUCPEP ≤ 20**: Maximum % AUC extrapolated (predicted).
+- **LAMZSPN ≥ 2**: Minimum half-life span ratio.
+
+#### 4.5 Slope rules
+Slope rules allow manual override of the lambda-z regression range for specific
+subjects or profiles. Pass an empty data frame if no manual adjustments are
+needed:
+```{r slope_rules, eval = FALSE}
+slope_rules <- data.frame(
+  USUBJID = character(0),
+  ATPTREF = character(0),
+  DOSNOA  = character(0),
+  TYPE    = character(0),
+  RANGE   = character(0),
+  REASON  = character(0)
+)
+```
+
+#### 4.6 Extra variables to keep
+These columns are carried through from the input data to the final results.
+They always include `DOSEA`, `ATPTREF`, and `ROUTE`, plus whatever you selected
+as `Grouping_Variables` in the mapping:
+```{r extra_vars, eval = FALSE}
+extra_vars_to_keep <- c(
+  mapping$Grouping_Variables, "DOSEA", "ATPTREF", "ROUTE"
+)
+```
+
+### 5. Create the PKNCA data object
+`PKNCA_create_data_object()` applies the column mapping, filters, and duplicate
+handling to produce a PKNCA-ready data object:
+```{r create_obj, eval = FALSE}
+pknca_obj <- adnca_data %>%
+  PKNCA_create_data_object(
+    mapping = mapping,
+    applied_filters = applied_filters,
+    time_duplicate_rows = NULL
+  )
+```
+`time_duplicate_rows` is a character vector of column names used to identify
+duplicate time points. Pass `NULL` to skip duplicate handling.
+
+### 6. Configure the data object
+`PKNCA_update_data_object()` sets the NCA method, selects the analyte/profile/
+specimen, configures intervals, parameters, and units:
+```{r update_obj, eval = FALSE}
+pknca_obj <- pknca_obj %>%
+  PKNCA_update_data_object(
+    method = "lin up/log down",
+    selected_analytes = "DrugA",
+    selected_profile = "DOSE 1",
+    selected_pcspec = "SERUM",
+    start_impute = "yes",
+    exclusion_list = list(),
+    hl_adj_rules = slope_rules,
+    keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE")),
+    min_hl_points = 3,
+    parameter_selections = parameters_selected_per_study,
+    int_parameters = int_parameters,
+    custom_units_table = units_table
+  )
+```
+Key arguments:
+- **`method`**: AUC calculation method. Options: `"linear"`, `"lin up/log down"`,
+  `"linear up/log down"`.
+- **`selected_analytes`**: Which PARAM value(s) to analyze.
+- **`selected_profile`**: Which ATPTREF (dosing period) to analyze.
+- **`selected_pcspec`**: Which specimen type to use.
+- **`start_impute`**: Whether to impute C0 (`"yes"` or `"no"`).
+- **`exclusion_list`**: Subject-level exclusions (list of USUBJID values).
+- **`min_hl_points`**: Minimum number of points for lambda-z regression.
+- **`keep_interval_cols`**: Extra columns to carry into PKNCA intervals (the
+  grouping variables, minus the three that are always included).
+
+### 7. Run NCA calculations
+```{r run_nca, eval = FALSE}
+pknca_res <- pknca_obj %>%
+  # Run PKNCA and join subject/dose information to results
+  PKNCA_calculate_nca(
+    blq_rule = list(first = "keep", middle = "keep", last = "keep")
+  ) %>%
+  # Add bioavailability if requested (NULL = skip)
+  add_f_to_pknca_results(NULL) %>%
+  # Translate PKNCA parameter names to CDISC PPTESTCD codes
+  mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+```
+- **`blq_rule`**: How to handle BLQ (below limit of quantification) values at
+  different positions in the concentration-time profile. Options for each
+  position: `"keep"`, `"0"`, `"loq/2"`.
+- **`add_f_to_pknca_results()`**: Pass a bioavailability AUC type
+  (e.g., `"f_aucinf.obs"`) to compute F, or `NULL` to skip.
+
+### 8. Apply flag rules
+Flag rules mark parameters that fail quality thresholds. Flagged parameters
+get an exclusion reason and are dropped from descriptive statistics:
+```{r flag, eval = FALSE}
+pknca_res <- pknca_res %>%
+  PKNCA_hl_rules_exclusion(
+    rules = flag_rules %>%
+      purrr::keep(\(x) x$is.checked) %>%
+      purrr::map(\(x) x$threshold)
+  )
+```
+This filters `flag_rules` to only the checked rules, extracts their thresholds,
+and passes them to PKNCA's exclusion logic.
+
+  ### 9. Calculate ratio parameters
+The ratio table derives secondary parameters by dividing one NCA result by
+another across groups. Here we compute a metabolite-to-parent Cmax ratio:
+```{r ratios, eval = FALSE}
+ratio_table <- data.frame(
+  TestParameter = "CMAX",
+  RefParameter  = "CMAX",
+  RefGroups     = "PARAM: DrugA",
+  TestGroups    = "(all other levels)",
+  AggregateSubject = "no",
+  AdjustingFactor  = 1,
+  PPTESTCD = "MRCMAX"
+)
+pknca_res <- pknca_res %>%
+  calculate_table_ratios(ratio_table)
+```
+Pass `NULL` or an empty data frame if no ratios are needed.
+
+### 10. Filter to requested parameters
+Remove any parameters that were computed by PKNCA but not explicitly selected
+in `parameters_selected_per_study`:
+```{r filter_params, eval = FALSE}
+pknca_res <- pknca_res %>%
+  remove_pp_not_requested()
+```
+
+### 11. Export CDISC datasets
+`export_cdisc()` produces PP, ADPP, and ADNCA datasets from the NCA results.
+Flag rules are formatted into CRITy/CRITyFL/PPSUMFL columns in ADPP:
+```{r cdisc, eval = FALSE}
+# Build flag rule messages for ADPP criterion columns
+flag_operators <- c(
+  R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < "
+)
+checked_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
+flag_rule_msgs <- if (length(checked_flags) > 0) {
+  vapply(names(checked_flags), function(nm) {
+    paste0(nm, flag_operators[nm], checked_flags[[nm]]$threshold)
+  }, character(1), USE.NAMES = FALSE)
+} else {
+  NULL
+}
+cdisc_datasets <- pknca_res %>%
+  export_cdisc(
+    grouping_vars = extra_vars_to_keep,
+    flag_rules = flag_rule_msgs
+  )
+```
+`cdisc_datasets` is a named list with three data frames:
+- **`cdisc_datasets$pp`**: PP domain — one row per parameter per subject.
+- **`cdisc_datasets$adpp`**: ADPP — PP with ADaM-style flags and criterion
+  columns (CRITy, CRITyFL, PPSUMFL, PPSUMRSN).
+- **`cdisc_datasets$adnca`**: ADNCA — the full analysis dataset with results
+  joined back to the concentration-time data.
+
+### 12. Pivot results
+`pivot_wider_pknca_results()` reshapes the long-format NCA results into a
+wide table with one row per subject and one column per parameter — the same
+view shown in the app's Results tab:
+```{r pivot, eval = FALSE}
+pivoted_results <- pivot_wider_pknca_results(
+  myres = pknca_res,
+  flag_rules = flag_rules,
+  extra_vars_to_keep = extra_vars_to_keep
+)
+```
+Flagged parameters (those excluded by flag rules) are marked in the output
+and excluded from summary statistics.
+
+## Path B: generate the same script from YAML with get_settings_code()
+If you prefer managing configuration as YAML, you can generate the same runnable
+R script with `get_settings_code()`.
+
+### Example YAML (same analysis setup)
+Save this as `example_settings.yaml`, and feel free to edit based on preferences:
+
+```yaml
+mapping:
+  STUDYID: STUDYID
+  USUBJID: USUBJID
+  DOSEA: DOSEA
+  DOSEU: DOSEU
+  DOSETRT: DOSETRT
+  PARAM: PARAM
+  Metabolites: Metab-DrugA
+  ARRLT: ARRLT
+  NRRLT: NRRLT
+  AFRLT: AFRLT
+  NCAwXRS: [NCA1XRS, NCA2XRS]
+  NFRLT: NFRLT
+  PCSPEC: PCSPEC
+  ROUTE: ROUTE
+  TRTRINT: TRTRINT
+  ADOSEDUR: ADOSEDUR
+  Grouping_Variables: [TRT01A, RACE, SEX]
+  RRLTU: RRLTU
+  VOLUME: VOLUME
+  VOLUMEU: VOLUMEU
+  AVAL: AVAL
+  AVALU: AVALU
+  ATPTREF: ATPTREF
+
+filters:
+  - column: PARAM
+    value: [DrugA]
+  - column: PCSPEC
+    value: [SERUM]
+
+settings:
+  method: lin up/log down
+  selected_analytes: [DrugA]
+  selected_profile: [DOSE 1]
+  selected_pcspec: [SERUM]
+  start_impute: yes
+  min_hl_points: 3
+  int_parameters:
+    parameter: [AUCINT, CAVGINT]
+    start_auc: [0, 0]
+    end_auc: [12, 12]
+  ratio_table:
+    TestParameter: [CMAX]
+    RefParameter: [CMAX]
+    RefGroups: ["PARAM: DrugA"]
+    TestGroups: ["(all other levels)"]
+    AggregateSubject: [no]
+    AdjustingFactor: [1]
+    PPTESTCD: [MRCMAX]
+  units:
+    PPTESTCD: [CMAX, TMAX, AUCLAST]
+    PPSTRESU: [ng/mL, h, ng*h/mL]
+
+slope_rules:
+  USUBJID: []
+  ATPTREF: []
+  DOSNOA: []
+  TYPE: []
+  RANGE: []
+  REASON: []
+
+time_duplicate_keys: null
+```
+
+### Generate the script from YAML
+```{r yaml-to-script, eval = FALSE}
+library(aNCA)
+
+get_settings_code(
+  settings_file_path = "example_settings.yaml",
+  data_path = "adnca_example.csv",
+  output_path = "settings_code.R"
+)
+```
+
+This writes a runnable script to `settings_code.R` using your YAML settings (check the [Full script](#full-script) section below). It will have some comments explaining each step, but for more details refer back to [Path A: run the full script directly](#path-a-run-the-full-script-directly).
+
+## Path C: generate from the aNCA app
+If you prefer a guided UI workflow, it is very simple:
+
+```{r run-app, eval = FALSE}
+aNCA::run_app()
+```
+
+From the app, configure mapping, filters, and NCA settings, then export pressing the `Save` button:
+- Settings YAML file
+- Reproducible R script
+- All the generated outputs of your interest
+
+For a YAML-driven reproducible workflow after app export, see [Path B: generate the same script from YAML with get_settings_code()](#path-b-generate-the-same-script-from-yaml-with-get_settings_code).
+
+
+## Full script
+Below is the complete script assembled from the steps above. This is what the
+app generates when you export settings — with all placeholders filled in.
+```{r full_script, eval = FALSE}
+# Load the package
+library(aNCA)
+library(dplyr)
+# 1. Load data
+adnca_data <- adnca_example
+# 2. Column mapping
+mapping <- list(
+  STUDYID = "STUDYID",
+  USUBJID = "USUBJID",
+  DOSEA   = "DOSEA",
+  DOSEU   = "DOSEU",
+  DOSETRT = "DOSETRT",
+  PARAM   = "PARAM",
+  Metabolites = "Metab-DrugA",
+  ARRLT   = "ARRLT",
+  NRRLT   = "NRRLT",
+  AFRLT   = "AFRLT",
+  NCAwXRS = c("NCA1XRS", "NCA2XRS"),
+  NFRLT   = "NFRLT",
+  PCSPEC  = "PCSPEC",
+  ROUTE   = "ROUTE",
+  TRTRINT = "TRTRINT",
+  ADOSEDUR = "ADOSEDUR",
+  Grouping_Variables = c("TRT01A", "RACE", "SEX"),
+  RRLTU   = "RRLTU",
+  VOLUME  = "VOLUME",
+  VOLUMEU = "VOLUMEU",
+  AVAL    = "AVAL",
+  AVALU   = "AVALU",
+  ATPTREF = "ATPTREF"
+)
+# 3. Filters
+applied_filters <- list(
+  list(column = "PARAM",  value = c("DrugA")),
+  list(column = "PCSPEC", value = c("SERUM"))
+)
+# 4. NCA settings
+int_parameters <- data.frame(
+  parameter = c("AUCINT", "CAVGINT"),
+  start_auc = c(0, 0),
+  end_auc   = c(12, 12)
+)
+parameters_selected_per_study <- list(
+  `Single Extravascular` = c(
+    "auclast", "cmax", "tmax", "half.life", "aucinf.obs",
+    "vz.obs", "cl.obs", "aumclast"
+  ),
+  `Single IV Bolus` = c(
+    "auclast", "cmax", "half.life", "aucinf.obs",
+    "vz.obs", "cl.obs"
+  )
+)
+units_table <- data.frame(
+  PPTESTCD = c("CMAX", "TMAX", "AUCLAST"),
+  PPSTRESU = c("ng/mL", "h", "ng*h/mL")
+)
+flag_rules <- list(
+  R2ADJ   = list(is.checked = TRUE,  threshold = 0.7),
+  R2      = list(is.checked = FALSE, threshold = 0.7),
+  AUCPEO  = list(is.checked = TRUE,  threshold = 20),
+  AUCPEP  = list(is.checked = TRUE,  threshold = 20),
+  LAMZSPN = list(is.checked = TRUE,  threshold = 2)
+)
+slope_rules <- data.frame(
+  USUBJID = character(0),
+  ATPTREF = character(0),
+  DOSNOA  = character(0),
+  TYPE    = character(0),
+  RANGE   = character(0),
+  REASON  = character(0)
+)
+extra_vars_to_keep <- c(
+  mapping$Grouping_Variables, "DOSEA", "ATPTREF", "ROUTE"
+)
+ratio_table <- data.frame(
+  TestParameter = "CMAX",
+  RefParameter  = "CMAX",
+  RefGroups     = "PARAM: DrugA",
+  TestGroups    = "(all other levels)",
+  AggregateSubject = "no",
+  AdjustingFactor  = 1,
+  PPTESTCD = "MRCMAX"
+)
+# 5. Create PKNCA data object
+pknca_obj <- adnca_data %>%
+  PKNCA_create_data_object(
+    mapping = mapping,
+    applied_filters = applied_filters,
+    time_duplicate_rows = NULL
+  )
+# 6. Configure intervals, parameters, and units
+pknca_obj <- pknca_obj %>%
+  PKNCA_update_data_object(
+    method = "lin up/log down",
+    selected_analytes = "DrugA",
+    selected_profile = "DOSE 1",
+    selected_pcspec = "SERUM",
+    start_impute = "yes",
+    exclusion_list = list(),
+    hl_adj_rules = slope_rules,
+    keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE")),
+    min_hl_points = 3,
+    parameter_selections = parameters_selected_per_study,
+    int_parameters = int_parameters,
+    custom_units_table = units_table
+  )
+# 7. Run NCA
+pknca_res <- pknca_obj %>%
+  PKNCA_calculate_nca(
+    blq_rule = list(first = "keep", middle = "keep", last = "keep")
+  ) %>%
+  add_f_to_pknca_results(NULL) %>%
+  mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+# 8. Apply flag rules
+pknca_res <- pknca_res %>%
+  PKNCA_hl_rules_exclusion(
+    rules = flag_rules %>%
+      purrr::keep(\(x) x$is.checked) %>%
+      purrr::map(\(x) x$threshold)
+  )
+# 9. Calculate ratios
+pknca_res <- pknca_res %>%
+  calculate_table_ratios(ratio_table)
+# 10. Filter to requested parameters
+pknca_res <- pknca_res %>%
+  remove_pp_not_requested()
+# 11. Export CDISC datasets
+flag_operators <- c(
+  R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < "
+)
+checked_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
+flag_rule_msgs <- if (length(checked_flags) > 0) {
+  vapply(names(checked_flags), function(nm) {
+    paste0(nm, flag_operators[nm], checked_flags[[nm]]$threshold)
+  }, character(1), USE.NAMES = FALSE)
+} else {
+  NULL
+}
+cdisc_datasets <- pknca_res %>%
+  export_cdisc(
+    grouping_vars = extra_vars_to_keep,
+    flag_rules = flag_rule_msgs
+  )
+# 12. Pivot results
+pivoted_results <- pivot_wider_pknca_results(
+  myres = pknca_res,
+  flag_rules = flag_rules,
+  extra_vars_to_keep = extra_vars_to_keep
+)
+```
