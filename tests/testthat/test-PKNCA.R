@@ -520,13 +520,30 @@ describe("PKNCA_calculate_nca", {
 })
 
 describe("remove_pp_not_requested", {
-  it("returns a PKNCAresults object with filtered parameters", {
-    nca_res <- PKNCA_calculate_nca(pknca_data)
-    nca_res$data$intervals$impute <- NA_character_
-    result <- remove_pp_not_requested(nca_res)
-    expect_s3_class(result, "PKNCAresults")
-    expect_true("result" %in% names(result))
-    expect_true("data" %in% names(result))
+  it("returns a PKNCAresults object without parameters not explicitly defined in intervals", {
+    res <- FIXTURE_PKNCA_RES
+
+    # Indirect parameters should be present before filtering
+    indirect_params <- c("LAMZ", "LAMZLL", "LAMZNPT", "R2ADJ", "SPANR")
+    params_before <- unique(res$result$PPTESTCD)
+    has_indirect <- intersect(indirect_params, params_before)
+    expect_true(length(has_indirect) > 0)
+
+    result <- remove_pp_not_requested(res)
+
+    # Requested params should still be present
+    requested_cdisc <- c("LAMZHL", "CMAX", "AUCLST", "AUCIFOB")
+    params_after <- unique(result$result$PPTESTCD)
+    for (p in requested_cdisc) {
+      if (p %in% params_before) {
+        expect_true(p %in% params_after, info = paste(p, "should be kept"))
+      }
+    }
+
+    # Indirect params should be removed
+    for (p in has_indirect) {
+      expect_false(p %in% params_after, info = paste(p, "should be removed"))
+    }
   })
 })
 
