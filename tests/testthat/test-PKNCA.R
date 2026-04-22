@@ -474,7 +474,7 @@ describe("PKNCA_update_data_object", {
     expect_true(all(!updated_data$intervals$cmax))
   })
 
-  it("applies half-life adjustment rules when hl_adj_rules is provided", {
+  it("returns the same object type (PKNCAdata) with the exclude_half.life column", {
     rules <- data.frame(
       STUDYID = "STUDY001",
       USUBJID = "SUBJ001",
