@@ -12,12 +12,14 @@
 #'    and display, including modules like `nca_results.R`, `parameter_datasets.R`,
 #'    `descriptive_statistics.R` and `additional_analysis.R`
 #'
+#' @param id Module ID.
+#' @param pknca_data Reactive PKNCAdata object from the data tab.
+#' @param extra_group_vars Reactive with additional grouping variable names.
+#' @param settings_override Reactive with uploaded settings list (or NULL).
+#' @param auto_replay_ready ReactiveVal that signals when auto-replay
+#'   data processing is complete and NCA can be auto-triggered.
 #'
-#' @param id           ID of the module.
-#' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
-#' @param extra_group_vars Column name(s) of the additional variable options for input widgets
-#'
-#' @returns `res_nca` reactive with results data object.
+#' @returns List with `res_nca` and `processed_pknca_data` reactives.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
 
@@ -75,7 +77,8 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) {
+tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
+                           auto_replay_ready) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -124,6 +127,44 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
                      reactive(slope_rules()),
                      columns = NULL)
 
+    # Auto-replay: trigger NCA run once settings are applied and data is ready.
+    # Debounces processed_pknca_data to wait for the full settings cascade
+    # (analyte → pcspec → profile → parameters → data object) to settle.
+    auto_nca_pending <- reactiveVal(FALSE)
+    auto_nca_running <- reactiveVal(FALSE)
+    pknca_data_debounced <- processed_pknca_data %>% debounce(1000)
+
+    observeEvent(auto_replay_ready(), {
+      req(auto_replay_ready())
+      target <- session$userData$auto_replay_target_tab %||% ""
+      nca_ran <- isTRUE(session$userData$auto_replay_nca_ran)
+      if (target == "nca" && nca_ran) {
+        auto_nca_pending(TRUE)
+        # Safety: if NCA auto-run doesn't trigger within 10s, dismiss popup
+        shinyjs::delay(10000, {
+          if (auto_nca_pending()) {
+            auto_nca_pending(FALSE)
+            session$userData$auto_replay_active <- FALSE
+            shiny::removeModal()
+            log_warn("Auto-replay: NCA auto-run timed out.")
+            showNotification(
+              "Session restored but NCA could not be auto-run. Please run NCA manually.",
+              type = "warning", duration = 10
+            )
+          }
+        })
+      }
+    })
+
+    # Trigger NCA once the debounced data object has settled.
+    observeEvent(pknca_data_debounced(), {
+      if (!auto_nca_pending()) return()
+      auto_nca_pending(FALSE)
+      log_info("Auto-replay: triggering NCA calculation.")
+      auto_nca_running(TRUE)
+      shinyjs::click("run_nca")
+    })
+
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
@@ -131,13 +172,33 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
                                                               is.logical)]))) {
         log_error("Invalid parameters")
-        showNotification("No suitable parameters selected for NCA calculation.
-         Please go back and select parameters suitable for the data.",
-                         type = "error", duration = NULL)
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
+          shiny::removeModal()
+          showNotification(
+            paste(
+              "Session restored but NCA could not be auto-run:",
+              "no suitable parameters for this dataset.",
+              "Please adjust settings and run NCA manually."
+            ),
+            type = "warning", duration = 10
+          )
+        } else {
+          showNotification(
+            paste(
+              "No suitable parameters selected for NCA calculation.",
+              "Please go back and select parameters suitable for the data."
+            ),
+            type = "error", duration = NULL
+          )
+        }
         return(NULL)
       }
 
-      loading_popup("Calculating NCA results...")
+      if (!auto_nca_running()) {
+        loading_popup("Calculating NCA results...")
+      }
 
       log_info("Calculating NCA results...")
 
@@ -213,8 +274,16 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
         NULL
       }, finally = {
-        # Delay the removal of loading modal to give it enough time to render
-        later::later(~shiny::removeModal(session = session), delay = 0.5)
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
+          # Dismiss the "Restoring session..." popup
+          shiny::removeModal()
+          log_success("Auto-replay: session restored with NCA results.")
+        } else {
+          # Delay the removal of loading modal to give it enough time to render
+          later::later(~shiny::removeModal(session = session), delay = 0.5)
+        }
       })
     }) %>%
       bindEvent(input$run_nca)
@@ -228,6 +297,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     observe({
       req(res_nca())
       session$userData$final_units <- res_nca()$data$units
+      session$userData$nca_ran <- TRUE
     })
 
     #' Show slopes results

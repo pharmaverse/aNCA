@@ -139,7 +139,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         shinyjs::hide(selector = ".bioavailability-picker")
       }
 
-      if (nrow(final_data$intervals) == 0) {
+      if (nrow(final_data$intervals) == 0 &&
+            !isTRUE(session$userData$auto_replay_active)) {
         showNotification(
           "All intervals were filtered. Please revise your settings",
           type = "warning",
@@ -151,11 +152,13 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     })
 
     # Keep the post processing ratio calculations requested by the user
+    int_parameters <- reactive(settings()$int_parameters)
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data,
       extra_group_vars = extra_group_vars,
-      imported_ratios = imported_ratios
+      imported_ratios = imported_ratios,
+      int_parameters = int_parameters
     )
 
     # Automatically update the units table when settings are uploaded.
@@ -255,7 +258,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           mapping = session$userData$mapping,
           slope_rules = slope_rules(),
           filters = session$userData$applied_filters,
-          time_duplicate_keys = session$userData$time_duplicate_keys
+          time_duplicate_keys = session$userData$time_duplicate_keys,
+          nca_ran = isTRUE(session$userData$nca_ran)
         )
 
         dataset_name <- session$userData$dataset_filename %||% ""

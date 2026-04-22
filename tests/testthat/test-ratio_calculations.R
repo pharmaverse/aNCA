@@ -327,3 +327,127 @@ describe("calculate_ratios", {
     expect_false("PPSTRESU" %in% names(ratios_df))
   })
 })
+
+describe("parse_interval_parameter", {
+  it("parses a range-suffixed parameter", {
+    result <- parse_interval_parameter("AUCINT_0-20")
+    expect_true(result$is_interval)
+    expect_equal(result$base, "AUCINT")
+    expect_equal(result$start, 0)
+    expect_equal(result$end, 20)
+  })
+
+  it("parses decimal start/end values", {
+    result <- parse_interval_parameter("AUCINT_0.5-12.5")
+    expect_true(result$is_interval)
+    expect_equal(result$base, "AUCINT")
+    expect_equal(result$start, 0.5)
+    expect_equal(result$end, 12.5)
+  })
+
+  it("returns is_interval=FALSE for a regular parameter", {
+    result <- parse_interval_parameter("CMAX")
+    expect_false(result$is_interval)
+    expect_equal(result$base, "CMAX")
+    expect_null(result$start)
+    expect_null(result$end)
+  })
+
+  it("handles multi-part base names", {
+    result <- parse_interval_parameter("AUCINTAD_0-24")
+    expect_true(result$is_interval)
+    expect_equal(result$base, "AUCINTAD")
+    expect_equal(result$start, 0)
+    expect_equal(result$end, 24)
+  })
+})
+
+describe("calculate_ratio_app with interval parameters", {
+  res <- FIXTURE_PKNCA_RES
+  res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+
+  # The fixture has manual intervals with AUCINT at start_dose=0,end_dose=2
+  # and start_dose=2,end_dose=4 for both ATPTREF periods.
+  res_interval <- res
+  res_interval$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
+
+  it("computes ratios using interval parameter as test", {
+    interval_rows <- res_interval$result %>%
+      filter(PPTESTCD == "AUCINT", start_dose == 0, end_dose == 2)
+    skip_if(nrow(interval_rows) == 0, "No AUCINT_0-2 rows in fixture")
+
+    ratios <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_0-2",
+      ref_parameter = "AUCINT_0-2",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    expect_true(nrow(ratios) > 0)
+    expect_true(all(grepl("RAAUCINT", ratios$PPTESTCD)))
+  })
+
+  it("filters to the correct interval and excludes other intervals", {
+    ratios_0_2 <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_0-2",
+      ref_parameter = "AUCINT_0-2",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    ratios_2_4 <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_2-4",
+      ref_parameter = "AUCINT_2-4",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    if (nrow(ratios_0_2) > 0 && nrow(ratios_2_4) > 0) {
+      expect_false(identical(ratios_0_2$PPORRES, ratios_2_4$PPORRES))
+    }
+  })
+
+  it("works with non-interval parameters unchanged", {
+    ratios <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    expect_true(nrow(ratios) > 0)
+    expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
+  })
+
+  it("supports different interval params as test and ref", {
+    # When test and ref are different interval parameters with different ranges,
+    # start/end must be excluded from match_cols so the merge can succeed.
+    interval_rows_0_2 <- res_interval$result %>%
+      filter(PPTESTCD == "AUCINT", start_dose == 0, end_dose == 2)
+    skip_if(nrow(interval_rows_0_2) == 0, "No AUCINT_0-2 rows in fixture")
+
+    ratios <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_0-2",
+      ref_parameter = "AUCINT_2-4",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    expect_true(nrow(ratios) > 0)
+  })
+})

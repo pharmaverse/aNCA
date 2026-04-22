@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#1225)
+* Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
 * Added "Min. Points for Half-life" setting in NCA > Settings > General Settings, allowing users to configure PKNCA's `min.hl.points` option (range 2–10, default 3) (#1155)
@@ -55,9 +57,12 @@
   line plots, box plots, individual plots/parameters, additional analysis) to include in
   PPTX and HTML exports; box plot parameters are also configurable (#972)
 * Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (#1195)
+* Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters). Includes Select all, Defaults, and Clear all buttons.
+
 
 ## Bugs fixed
 * R script and settings export now include volume unit simplifications. Unit change detection uses value comparison (`PPSTRESU != PPORRESU`) instead of an edit-tracking flag, so automatic simplifications (e.g. `mg*L/mL` → `mg`) are captured alongside user edits (#1190)
+* `get_settings_code()` now reads mapping, filters, ratio table, and units from the settings YAML instead of using hardcoded defaults. Legacy YAML files without these fields still work via fallback. The `mapping` parameter has been removed (#1189)
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
 * Updated TMAX label from Time of CMAX to Time of CMAX Observation (#787)
