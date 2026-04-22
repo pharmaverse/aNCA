@@ -61,7 +61,6 @@
 
 
 ## Bugs fixed
-* Specimen and profile pickers no longer revert to defaults after settings upload. The bidirectional analyte/specimen cascade was clearing the imported values before the full cascade settled (#1227)
 * `get_settings_code()` now reads mapping, filters, ratio table, and units from the settings YAML instead of using hardcoded defaults. Legacy YAML files without these fields still work via fallback. The `mapping` parameter has been removed (#1189)
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
