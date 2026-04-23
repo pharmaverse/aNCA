@@ -258,21 +258,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # A guard flag prevents infinite observer loops.
     updating_filters <- reactiveVal(FALSE)
 
-    # settings_override is consumed once during the first cascade after
-    # settings upload. After that, pending_settings is set to NULL so
-    # subsequent user-driven changes are not overridden by stale values.
+    # pending_settings holds the imported settings during the filter cascade.
+    # The analyte observer reads it without clearing; the pcspec observer
+    # consumes it (reads + clears). This ensures the override is available
+    # throughout the cascade and cleared once it settles (#1227).
     pending_settings <- reactiveVal(NULL)
 
     observeEvent(settings_override(), {
       pending_settings(settings_override())
     })
-
-    # Helper: consume pending settings (returns them once, then clears)
-    .consume_settings <- function() {
-      s <- pending_settings()
-      pending_settings(NULL)
-      s
-    }
 
     # Helper: update profile choices based on current analyte + pcspec
     .update_profile <- function(settings = NULL) {
@@ -301,7 +295,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
-      settings <- .consume_settings()
+      settings <- pending_settings()
 
       all_pcspec <- unique(data()$PCSPEC) %>% na.omit()
       available_pcspec <- data() %>%
@@ -328,14 +322,17 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       .update_profile(settings)
     })
 
-    # When pcspec changes: unselect unavailable analyte items, then update profile
+    # When pcspec changes: unselect unavailable analyte items, then update profile.
+    # This observer consumes (clears) pending_settings since it is the last
+    # observer in the cascade that needs the override values.
     observeEvent(input$select_pcspec, {
       req(data(), input$select_pcspec)
       if (updating_filters()) return()
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
-      settings <- .consume_settings()
+      settings <- pending_settings()
+      pending_settings(NULL)
 
       all_analyte <- unique(data()$PARAM) %>% na.omit()
       available_analyte <- data() %>%
