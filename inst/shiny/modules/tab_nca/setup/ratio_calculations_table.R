@@ -23,16 +23,13 @@ ratios_table_ui <- function(id) {
             p("For each ratio you need to specify:"),
             tags$ul(
               tags$li(
-                tags$b("RefParameter"),
-                ": The parameter to use for the reference (denominator)."
+                tags$b("PPTESTCD"),
+                ": Code name for the ratio. By default, unique
+                CDISC style names are generated."
               ),
               tags$li(
                 tags$b("TestParameter"),
                 ": The parameter to use for the test (numerator)."
-              ),
-              tags$li(
-                tags$b("RefGroups"),
-                ": The level/value to use as reference (denominator)."
               ),
               tags$li(
                 tags$b("TestGroups"),
@@ -42,19 +39,22 @@ ratios_table_ui <- function(id) {
               ),
               tags$li(
                 tags$b("Aggregate Subject"),
-                ": `yes` aggregates reference values using the mean of all subjects,
-                `no` does not, and
-                `if-needed` only when ratios cannot be performed within the same subject."
+                ": Shown as \u03a3 in the denominator. `yes` (\u03a3) aggregates reference
+                values using the mean of all subjects, `no` (\u2014) does not, and
+                `if-needed` (\u03a3?) only when ratios cannot be performed within the same subject."
+              ),
+              tags$li(
+                tags$b("RefParameter"),
+                ": The parameter to use for the reference (denominator)."
+              ),
+              tags$li(
+                tags$b("RefGroups"),
+                ": The level/value to use as reference (denominator)."
               ),
               tags$li(
                 tags$b("Adjusting Factor"),
                 ": Factor to multiply the ratio with i.e, for molecular weight ratios
                 (MW_ref / MW_test)."
-              ),
-              tags$li(
-                tags$b("PPTESTCD"),
-                ": Code name for the ratio. By default, unique
-                CDISC style names are generated."
               )
             ),
             tags$div(
