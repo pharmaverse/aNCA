@@ -258,6 +258,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # A guard flag prevents infinite observer loops.
     updating_filters <- reactiveVal(FALSE)
 
+    # Guard to suppress log noise during initial data load / settings restore.
+    # Set to TRUE after the first analyte cascade completes.
+    filters_initialized <- reactiveVal(FALSE)
+
     # settings_override is consumed once during the first cascade after
     # settings upload. After that, pending_settings is set to NULL so
     # subsequent user-driven changes are not overridden by stale values.
@@ -288,9 +292,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         available_choices = profile_choices,
         override_val = settings$profile
       )
-      if (length(target_profile) > 0 && !anyNA(target_profile)) {
-        log_info("NCA profile selection changed: ", paste(target_profile, collapse = ", "))
-      }
       updatePickerInput(
         session, "select_profile",
         choices = profile_choices, selected = target_profile
@@ -302,9 +303,14 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       req(data(), input$select_analyte)
       if (updating_filters()) return()
       updating_filters(TRUE)
-      on.exit(updating_filters(FALSE))
+      on.exit({
+        updating_filters(FALSE)
+        if (!filters_initialized()) filters_initialized(TRUE)
+      })
 
-      log_info("Analyte selection changed: ", paste(input$select_analyte, collapse = ", "))
+      if (filters_initialized()) {
+        log_info("Analyte selection changed: ", paste(input$select_analyte, collapse = ", "))
+      }
 
       settings <- .consume_settings()
 
@@ -340,7 +346,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
-      log_info("Specimen selection changed: ", paste(input$select_pcspec, collapse = ", "))
+      if (filters_initialized()) {
+        log_info("Specimen selection changed: ", paste(input$select_pcspec, collapse = ", "))
+      }
 
       settings <- .consume_settings()
 
@@ -363,7 +371,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       .update_profile(settings)
     })
 
-    # Log method and min half-life points changes
+    # Log profile, method, and min half-life points changes
+    observeEvent(input$select_profile, {
+      if (filters_initialized()) {
+        log_info("NCA profile changed: ", paste(input$select_profile, collapse = ", "))
+      }
+    }, ignoreInit = TRUE)
+
     observeEvent(input$method, {
       log_info("Extrapolation method changed: ", input$method)
     }, ignoreInit = TRUE)

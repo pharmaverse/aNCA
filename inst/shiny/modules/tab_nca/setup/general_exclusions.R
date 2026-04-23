@@ -157,21 +157,6 @@ general_exclusions_server <- function(
 
     # Add a new exclusion when the Add button is pressed
     observeEvent(input$add_exclusion_reason, {
-      rows_sel <- getReactableState("conc_table-table", "selected")
-      reason <- input$exclusion_reason
-      nca_checked <- isTRUE(input$cb_manual_nca)
-      tlg_checked <- isTRUE(input$cb_tlg)
-
-      if (length(rows_sel) > 0 && nzchar(reason) && (nca_checked || tlg_checked)) {
-        type_label <- if (nca_checked && tlg_checked) "NCA + TLG"
-          else if (nca_checked) "NCA"
-          else "TLG"
-        log_info(
-          "Exclusion added: ", length(rows_sel), " rows, type=", type_label,
-          ", reason='", reason, "'"
-        )
-      }
-
       .handle_add_exclusion(
         input, session, exclusion_list, xbtn_counter
       )
