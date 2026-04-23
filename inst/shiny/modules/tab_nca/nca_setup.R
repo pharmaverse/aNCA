@@ -20,7 +20,7 @@ nca_setup_ui <- function(id) {
   navset_pill_list(
     widths = c(2, 10),
     nav_panel(
-      "General Settings",
+      "NCA Settings",
       fluidRow(
         actionButton(
           ns("open_save_settings_modal"),
