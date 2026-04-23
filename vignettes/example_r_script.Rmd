@@ -1,5 +1,5 @@
 ---
-title: "anca_code_example"
+title: "Running NCA with aNCA: R Script Walkthrough"
 author: 
 date: "2026-04-22"
 output:
@@ -21,6 +21,12 @@ reproduce the analysis outside the app. This vignette walks through that R
 script step by step, using the built-in `adnca_example` dataset with concrete
 values for every setting.
 
+By the end you will have:
+- A PKNCAdata object with mapped columns, filters and intervals
+- NCA results with flag rules, interval parameters and ratio calculations applied
+- CDISC-compliant PP, ADPP, and ADNCA datasets
+- A pivoted results table ready for review
+
 ## Start here: choose your workflow
 Use this section to decide how you want to run NCA, based on your background and preferred workflow.
 
@@ -30,15 +36,15 @@ Use this section to decide how you want to run NCA, based on your background and
 | Working from settings YAML files (e.g., from app exports or versioned config files) | [Path B: generate the same script from YAML](#path-b-generate-the-same-script-from-yaml-with-get_settings_code) | Reproducible script generation with `get_settings_code()` |
 | Prefer playing with an App and an interface | [Path C: generate from the app](#path-c-generate-from-the-anca-app) | Build settings interactively, then export YAML and script |
 
-## Install the development version first
-This feature is currently available on the development branch. It will be soon released on CRAN as well.
+## Install aNCA
+Install the package from GitHub (the CRAN version still does not have the features shown here):
 
 ```{r install-dev-version, eval = FALSE}
 # Option 1
-remotes::install_github("pharmaverse/aNCA@1090-enhancement-website-for-r-script")
+remotes::install_github("pharmaverse/aNCA")
 
 # Option 2
-pak::pak("pharmaverse/aNCA@1090-enhancement-website-for-r-script")
+pak::pak("pharmaverse/aNCA")
 ```
 
 Then restart your R session and confirm the installed version:
@@ -46,12 +52,6 @@ Then restart your R session and confirm the installed version:
 ```{r check-version, eval = FALSE}
 packageVersion("aNCA")
 ```
-
-By the end you will have:
-- A PKNCAdata object with mapped columns, filters and intervals
-- NCA results with flag rules, interval parameters and ratio calculations applied
-- CDISC-compliant PP, ADPP, and ADNCA datasets
-- A pivoted results table ready for review
 
 ## Path A: run the full script directly
 
@@ -62,7 +62,7 @@ library(dplyr)
 # The example dataset ships with the package.
 # In practice this would be: adnca_data <- read_pk("path/to/your/data.csv")
 adnca_data <- adnca_example
-head(adnca_data, 300)
+head(adnca_data)
 ```
 `adnca_example` is a 76-row ADNCA dataset with two analytes (DrugA and its
 metabolite Metab-DrugA), two specimen types (SERUM and URINE), and two dosing
@@ -281,7 +281,7 @@ pknca_res <- pknca_res %>%
 This filters `flag_rules` to only the checked rules, extracts their thresholds,
 and passes them to PKNCA's exclusion logic.
 
-  ### 9. Calculate ratio parameters
+### 9. Calculate ratio parameters
 The ratio table derives secondary parameters by dividing one NCA result by
 another across groups. Here we compute a metabolite-to-parent Cmax ratio:
 ```{r ratios, eval = FALSE}
@@ -391,9 +391,9 @@ filters:
 
 settings:
   method: lin up/log down
-  selected_analytes: [DrugA]
-  selected_profile: [DOSE 1]
-  selected_pcspec: [SERUM]
+  analyte: DrugA
+  profile: DOSE 1
+  pcspec: SERUM
   start_impute: yes
   min_hl_points: 3
   int_parameters:
@@ -454,6 +454,10 @@ For a YAML-driven reproducible workflow after app export, see [Path B: generate 
 ## Full script
 Below is the complete script assembled from the steps above. This is what the
 app generates when you export settings — with all placeholders filled in.
+
+<details>
+<summary>Show full reproducible script</summary>
+
 ```{r full_script, eval = FALSE}
 # Load the package
 library(aNCA)
@@ -605,3 +609,5 @@ pivoted_results <- pivot_wider_pknca_results(
   extra_vars_to_keep = extra_vars_to_keep
 )
 ```
+
+</details>
