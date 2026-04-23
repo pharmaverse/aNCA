@@ -243,7 +243,7 @@ ratios_table_server <- function(
           idx <- i
           # Observe select inputs for this row
           for (field in c("TestParameter", "RefParameter", "RefGroups",
-                          "TestGroups")) {
+                          "TestGroups", "AggregateSubject")) {
             local({
               fld <- field
               input_id <- paste0(fld, "_", idx)
@@ -258,25 +258,13 @@ ratios_table_server <- function(
                     )
                   }
                   ratio_table(current)
-                  refresh_cards(refresh_cards() + 1)
+                  if (fld != "AggregateSubject") {
+                    refresh_cards(refresh_cards() + 1)
+                  }
                 }
               }, ignoreInit = TRUE)
             })
           }
-          # Sigma toggle: cycle through no -> yes -> if-needed -> no
-          observeEvent(input[[paste0("toggle_agg_", idx)]], {
-            current <- ratio_table()
-            if (idx <= nrow(current)) {
-              current[idx, "AggregateSubject"] <- switch(
-                current[idx, "AggregateSubject"],
-                "no" = "yes",
-                "yes" = "if-needed",
-                "no"
-              )
-              ratio_table(current)
-              refresh_cards(refresh_cards() + 1)
-            }
-          }, ignoreInit = TRUE)
           # Numeric: AdjustingFactor
           observeEvent(input[[paste0("AdjustingFactor_", idx)]], {
             val <- input[[paste0("AdjustingFactor_", idx)]]
@@ -313,16 +301,11 @@ ratios_table_server <- function(
 #  ☐  PPTESTCD  =  ─────────────────────────  ×  AdjFactor
 #                  Σ  RefParam [RefGroup]
 .ratio_formula_card <- function(ns, i, row, param_opts, ref_opts, group_opts) {
-  # Sigma label for aggregate mode
-  agg_label <- switch(row$AggregateSubject,
-    "yes" = "\u03a3",
-    "if-needed" = "\u03a3?",
-    "\u2014"
-  )
-  agg_title <- switch(row$AggregateSubject,
-    "yes" = "Aggregate: yes (mean of reference subjects)",
-    "if-needed" = "Aggregate: if-needed (fallback to mean)",
-    "Aggregate: no (within-subject)"
+  # Map aggregate values to symbol labels for the dropdown
+  agg_choices <- c(
+    "\u2014"  = "no",
+    "\u03a3"  = "yes",
+    "\u03a3?" = "if-needed"
   )
 
   tags$div(
@@ -376,11 +359,11 @@ ratios_table_server <- function(
         class = "ratio-denominator",
         tags$div(
           class = "ratio-sigma",
-          title = agg_title,
-          actionLink(
-            ns(paste0("toggle_agg_", i)),
-            label = agg_label,
-            class = "ratio-sigma-btn"
+          title = "Aggregate: \u2014 = no, \u03a3 = yes, \u03a3? = if-needed",
+          selectInput(
+            ns(paste0("AggregateSubject_", i)), label = NULL,
+            choices = agg_choices, selected = row$AggregateSubject,
+            width = "55px"
           )
         ),
         tags$div(

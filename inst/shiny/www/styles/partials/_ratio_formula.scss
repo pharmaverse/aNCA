@@ -10,6 +10,7 @@
   margin-bottom: 8px;
   background: #fafafa;
   overflow: visible;
+  flex-wrap: wrap;
 
   &:hover {
     background: #f0f0f0;
@@ -57,12 +58,13 @@
   flex-shrink: 0;
 }
 
-// Center: fraction block
+// Center: fraction block — takes available space
 .ratio-fraction {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: 200px;
   overflow: visible;
 }
 
@@ -72,6 +74,8 @@
   align-items: center;
   gap: 2px;
   padding: 2px 0;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .ratio-numerator {
@@ -104,32 +108,15 @@
   overflow: visible;
 }
 
-// Sigma toggle button
+// Sigma dropdown (aggregate mode)
 .ratio-sigma {
   flex-shrink: 0;
-  margin-right: 4px;
-}
+  margin-right: 2px;
 
-.ratio-sigma-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #555;
-  background: #e8e8e8;
-  border-radius: 4px;
-  text-decoration: none;
-  cursor: pointer;
-  padding: 0;
-
-  &:hover,
-  &:focus {
-    background: #d0d0d0;
-    color: #333;
-    text-decoration: none;
+  select {
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 2px;
   }
 }
 

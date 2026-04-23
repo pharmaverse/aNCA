@@ -1052,6 +1052,7 @@ h4.modal-title:has(#loading-title) {
   margin-bottom: 8px;
   background: #fafafa;
   overflow: visible;
+  flex-wrap: wrap;
 }
 .ratio-formula-card:hover {
   background: #f0f0f0;
@@ -1091,7 +1092,8 @@ h4.modal-title:has(#loading-title) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: 200px;
   overflow: visible;
 }
 .ratio-numerator,
@@ -1100,6 +1102,8 @@ h4.modal-title:has(#loading-title) {
   align-items: center;
   gap: 2px;
   padding: 2px 0;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .ratio-numerator select {
   border-color: #5cb85c;
@@ -1124,28 +1128,12 @@ h4.modal-title:has(#loading-title) {
 }
 .ratio-sigma {
   flex-shrink: 0;
-  margin-right: 4px;
+  margin-right: 2px;
 }
-.ratio-sigma-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
+.ratio-sigma select {
   font-weight: 700;
-  color: #555;
-  background: #e8e8e8;
-  border-radius: 4px;
-  text-decoration: none;
-  cursor: pointer;
-  padding: 0;
-}
-.ratio-sigma-btn:hover,
-.ratio-sigma-btn:focus {
-  background: #d0d0d0;
-  color: #333;
-  text-decoration: none;
+  text-align: center;
+  padding: 4px 2px;
 }
 .ratio-right {
   display: flex;
