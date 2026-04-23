@@ -15,44 +15,50 @@ ratios_table_ui <- function(id) {
         dropdown(
           div(
             tags$h2("Ratio Calculations Help"),
-            p(
-              "Add a ratio calculation for each comparison you need.",
-              "Each entry is displayed as a formula:"
-            ),
-            tags$div(
-              class = "ratio-formula-example",
-              tags$span(class = "ratio-pptestcd", "PPTESTCD"),
-              tags$span(class = "ratio-eq", "="),
-              tags$span(class = "ratio-numerator", "Parameter [Test Group]"),
-              tags$span(class = "ratio-div", "/"),
-              tags$span(class = "ratio-denominator", "Parameter [Ref Group]"),
-              tags$span(class = "ratio-mult", "\u00d7"),
-              tags$span("AdjFactor")
-            ),
-            tags$hr(),
+            p("
+            This section is to perform ratio calculations within the allowed parameters
+            that you previously selected. Add a new row for each ratio calculation to
+            compute. You can also select and remove rows.
+            "),
+            p("For each ratio you need to specify:"),
             tags$ul(
               tags$li(
-                tags$b("Test / Ref Parameter"),
-                ": The PK parameter for numerator / denominator."
+                tags$b("RefParameter"),
+                ": The parameter to use for the reference (denominator)."
               ),
               tags$li(
-                tags$b("Test / Ref Groups"),
-                ": The group level for numerator / denominator.",
-                "'(all other levels)' computes ratios against all non-reference levels."
+                tags$b("TestParameter"),
+                ": The parameter to use for the test (numerator)."
               ),
               tags$li(
-                tags$b("Aggregate"),
-                ": 'yes' averages reference across subjects,",
-                "'no' matches within subject, 'if-needed' falls back to aggregation."
+                tags$b("RefGroups"),
+                ": The level/value to use as reference (denominator)."
               ),
               tags$li(
-                tags$b("Adj. Factor"),
-                ": Multiplier (e.g. MW ratio). Default 1."
+                tags$b("TestGroups"),
+                ": The level/value to use as test (numerator). If you select 'all other levels,'
+                the ratio is calculated using the reference level (e.g., Group = A) against all
+                other values of the variable (e.g., Groups = B, C, D)"
+              ),
+              tags$li(
+                tags$b("Aggregate Subject"),
+                ": `yes` aggregates reference values using the mean of all subjects,
+                `no` does not, and
+                `if-needed` only when ratios cannot be performed within the same subject."
+              ),
+              tags$li(
+                tags$b("Adjusting Factor"),
+                ": Factor to multiply the ratio with i.e, for molecular weight ratios
+                (MW_ref / MW_test)."
               ),
               tags$li(
                 tags$b("PPTESTCD"),
-                ": Auto-generated CDISC code. Editable."
+                ": Code name for the ratio. By default, unique
+                CDISC style names are generated."
               )
+            ),
+            tags$div(
+              withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
             )
           ),
           style = "unite",
@@ -359,7 +365,7 @@ ratios_table_server <- function(
         class = "ratio-denominator",
         tags$div(
           class = "ratio-sigma",
-          title = "Aggregate: \u2014 = no, \u03a3 = yes, \u03a3? = if-needed",
+          title = "Aggregate Subject: \u2014 = no, \u03a3 = yes, \u03a3? = if-needed",
           selectInput(
             ns(paste0("AggregateSubject_", i)), label = NULL,
             choices = agg_choices, selected = row$AggregateSubject,

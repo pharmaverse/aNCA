@@ -139,43 +139,4 @@
   flex-shrink: 0;
 }
 
-// Help panel example formula
-.ratio-formula-example {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  margin: 8px 0;
-  font-size: 14px;
-  flex-wrap: wrap;
 
-  .ratio-pptestcd {
-    font-weight: 700;
-    font-family: monospace;
-  }
-
-  .ratio-eq {
-    font-size: 16px;
-  }
-
-  .ratio-numerator {
-    color: #5cb85c;
-    font-weight: 600;
-  }
-
-  .ratio-div {
-    font-size: 16px;
-    font-weight: 700;
-  }
-
-  .ratio-denominator {
-    color: #f0ad4e;
-    font-weight: 600;
-  }
-
-  .ratio-mult {
-    font-size: 16px;
-  }
-}
