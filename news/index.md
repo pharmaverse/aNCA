@@ -178,6 +178,10 @@
 
 ### Bugs fixed
 
+- Last dose interval end time now extends to the last observed sample
+  instead of being cut off at TRTRINT (tau), ensuring all collected data
+  points are included in NCA calculations
+  ([\#1235](https://github.com/pharmaverse/aNCA/issues/1235))
 - Fixed NA `PPSTRESU` handling across NCA results: descriptive
   statistics no longer crash when a parameter group has all-NA units,
   and manual interval parameters (e.g., RCAMINT) no longer get `NA`
