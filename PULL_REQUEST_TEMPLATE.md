@@ -36,6 +36,9 @@ Settings upload works with the new implementation (if applicable)
 
 If any `.scss` change was done, run `data-raw/compile_css.R`
 
+If a package dependency was added/changed, run
+`data-raw/test_suggests_hidden.R`
+
 ## Notes to reviewer
 
 Anything that the reviewer should know before tacking the pull request?
