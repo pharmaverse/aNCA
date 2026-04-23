@@ -1040,3 +1040,121 @@ h4.modal-title:has(#loading-title) {
   background-color: #9b9b9b;
   border-color: #9b9b9b;
 }
+
+/* Formula-style ratio calculation cards */
+.ratio-formula-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  background: #fafafa;
+}
+.ratio-formula-card:hover {
+  background: #f0f0f0;
+}
+.ratio-formula-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ratio-formula-row .form-group {
+  margin-bottom: 0;
+}
+.ratio-formula-row .shiny-input-container {
+  margin-bottom: 0;
+}
+.ratio-formula-row select,
+.ratio-formula-row input[type="text"],
+.ratio-formula-row input[type="number"] {
+  padding: 4px 6px;
+  height: auto;
+  font-size: 13px;
+}
+.ratio-select {
+  flex-shrink: 0;
+}
+.ratio-select .checkbox {
+  margin: 0;
+}
+.ratio-pptestcd-input {
+  flex-shrink: 0;
+}
+.ratio-pptestcd-input input {
+  font-weight: 600;
+  font-family: monospace;
+  text-align: center;
+}
+.ratio-eq,
+.ratio-div,
+.ratio-mult {
+  font-size: 18px;
+  font-weight: 700;
+  color: #555;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+.ratio-bracket {
+  font-size: 16px;
+  font-weight: 600;
+  color: #888;
+  padding: 0 1px;
+}
+.ratio-term {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.ratio-numerator select {
+  border-color: #5cb85c;
+}
+.ratio-denominator select {
+  border-color: #f0ad4e;
+}
+.ratio-adj-factor {
+  flex-shrink: 0;
+}
+.ratio-aggregate {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+.ratio-agg-label {
+  font-size: 12px;
+  color: #777;
+  white-space: nowrap;
+}
+.ratio-formula-example {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin: 8px 0;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+.ratio-formula-example .ratio-pptestcd {
+  font-weight: 700;
+  font-family: monospace;
+}
+.ratio-formula-example .ratio-eq {
+  font-size: 16px;
+}
+.ratio-formula-example .ratio-numerator {
+  color: #5cb85c;
+  font-weight: 600;
+}
+.ratio-formula-example .ratio-div {
+  font-size: 16px;
+}
+.ratio-formula-example .ratio-denominator {
+  color: #f0ad4e;
+  font-weight: 600;
+}
+.ratio-formula-example .ratio-mult {
+  font-size: 16px;
+}

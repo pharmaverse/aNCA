@@ -3,75 +3,68 @@
 
 ratios_table_ui <- function(id) {
   ns <- NS(id)
-  fluidRow(
-    column(
-      width = 10,
-      # Main widgets for the ratio table
-      actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
-      actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
-    ),
-    # Help button
-    column(
-      width = 2,
-      dropdown(
-        div(
-          tags$h2("Ratio Calculations Help"),
-          p("
-            This section is to perform ratio calculations within the allowed parameters
-            that you previously selected. Add a new row for each ratio calculation to
-            compute. You can also select and remove rows.
-            "),
-          p("For each ratio you need to specify:"),
-          tags$ul(
-            tags$li(
-              tags$b("RefParameter"),
-              ": The parameter to use for the reference (denominator)."
+  tagList(
+    fluidRow(
+      column(
+        width = 10,
+        actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
+        actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h2("Ratio Calculations Help"),
+            p(
+              "Add a ratio calculation for each comparison you need.",
+              "Each entry is displayed as a formula:"
             ),
-            tags$li(
-              tags$b("TestParameter"),
-              ": The parameter to use for the test (numerator)."
+            tags$div(
+              class = "ratio-formula-example",
+              tags$span(class = "ratio-pptestcd", "PPTESTCD"),
+              tags$span(class = "ratio-eq", "="),
+              tags$span(class = "ratio-numerator", "Parameter [Test Group]"),
+              tags$span(class = "ratio-div", "/"),
+              tags$span(class = "ratio-denominator", "Parameter [Ref Group]"),
+              tags$span(class = "ratio-mult", "\u00d7"),
+              tags$span("AdjFactor")
             ),
-            tags$li(
-              tags$b("RefGroups"),
-              ": The level/value to use as reference (denominator)."
-            ),
-            tags$li(
-              tags$b("TestGroups"),
-              ": The level/value to use as test (numerator). If you select 'all other levels,'
-              the ratio is calculated using the reference level (e.g., Group = A) against all
-              other values of the variable (e.g., Groups = B, C, D)"
-            ),
-            tags$li(
-              tags$b("Aggregate Subject"),
-              ": `yes` aggregates reference values using the mean of all subjects,
-              `no` does not, and
-              `if-needed` only when ratios cannot be performed within the same subject."
-            ),
-            tags$li(
-              tags$b("Adjusting Factor"),
-              ": Factor to multiply the ratio with i.e, for molecular weight ratios
-              (MW_ref / MW_test)."
-            ),
-            tags$li(
-              tags$b("PPTESTCD"),
-              ": Code name for the ratio. By default, unique
-              CDISC style names are generated."
+            tags$hr(),
+            tags$ul(
+              tags$li(
+                tags$b("Test / Ref Parameter"),
+                ": The PK parameter for numerator / denominator."
+              ),
+              tags$li(
+                tags$b("Test / Ref Groups"),
+                ": The group level for numerator / denominator.",
+                "'(all other levels)' computes ratios against all non-reference levels."
+              ),
+              tags$li(
+                tags$b("Aggregate"),
+                ": 'yes' averages reference across subjects,",
+                "'no' matches within subject, 'if-needed' falls back to aggregation."
+              ),
+              tags$li(
+                tags$b("Adj. Factor"),
+                ": Multiplier (e.g. MW ratio). Default 1."
+              ),
+              tags$li(
+                tags$b("PPTESTCD"),
+                ": Auto-generated CDISC code. Editable."
+              )
             )
           ),
-          tags$div(
-            withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
-          )
-        ),
-        style = "unite",
-        right = TRUE,
-        icon = icon("question"),
-        status = "primary",
-        width = "500px"
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "500px"
+        )
       )
     ),
-    reactableOutput(ns("ratio_calculations"))
+    uiOutput(ns("ratio_cards"))
   )
-
 }
 
 #' Validate imported ratio rows against available options.
@@ -127,12 +120,6 @@ ratios_table_server <- function(
       unique(c(main_params, interval_params))
     })
 
-    # Table columns
-    table_columns <- c(
-      "TestParameter", "RefParameter", "RefGroups", "TestGroups",
-      "AggregateSubject", "AdjustingFactor", "PPTESTCD"
-    )
-
     # Store table data
     ratio_table <- reactiveVal({
       data.frame(
@@ -184,8 +171,7 @@ ratios_table_server <- function(
 
       if (any(result$keep)) {
         ratio_table(ratio_df[result$keep, , drop = FALSE])
-        reset_reactable_memory()
-        refresh_reactable(refresh_reactable() + 1)
+        refresh_cards(refresh_cards() + 1)
       }
     })
 
@@ -214,125 +200,168 @@ ratios_table_server <- function(
 
       updated <- rbind(ratio_table(), new_row)
       ratio_table(updated)
-      reset_reactable_memory()
-      refresh_reactable(refresh_reactable() + 1)
+      refresh_cards(refresh_cards() + 1)
     })
 
     # Remove selected rows
     observeEvent(input$remove_row, {
-      selected <- getReactableState("ratio_calculations", "selected")
-      req(selected)
-      updated <- ratio_table()[-selected, ]
-      ratio_table(updated)
-      reset_reactable_memory()
-      refresh_reactable(refresh_reactable() + 1)
+      tbl <- ratio_table()
+      req(nrow(tbl) > 0)
+      selected <- which(vapply(seq_len(nrow(tbl)), function(i) {
+        isTRUE(input[[paste0("select_row_", i)]])
+      }, logical(1)))
+      req(length(selected) > 0)
+      ratio_table(tbl[-selected, , drop = FALSE])
+      refresh_cards(refresh_cards() + 1)
     })
 
-    # Render table
-    refresh_reactable <- reactiveVal(1)
-    output$ratio_calculations <- renderReactable({
-      # Update column names for display in the UI
-      col_defs <- list(
-        TestParameter = colDef(
-          name = "Test Parameter",
-          cell = dropdown_extra(
-            id = ns("edit_TestParameter"),
-            choices = ratio_param_options(),
-            class = "dropdown-extra"
-          ),
-          width = 180
-        ),
-        RefParameter = colDef(
-          name = "Ref Parameter",
-          cell = dropdown_extra(
-            id = ns("edit_RefParameter"),
-            choices = ratio_param_options(),
-            class = "dropdown-extra"
-          ),
-          width = 180
-        ),
-        RefGroups = colDef(
-          name = "Ref Groups",
-          cell = dropdown_extra(
-            id = ns("edit_RefGroups"),
-            choices = ratio_reference_options(),
-            class = "dropdown-extra"
-          ),
-          width = 180
-        ),
-        TestGroups = colDef(
-          name = "Test Groups",
-          cell = dropdown_extra(
-            id = ns("edit_TestGroups"),
-            choices = c(ratio_reference_options(), "(all other levels)"),
-            class = "dropdown-extra"
-          ),
-          width = 180
-        ),
-        AggregateSubject = colDef(
-          name = "Aggregate Subject?",
-          cell = dropdown_extra(
-            id = ns("edit_AggregateSubject"),
-            choices = c("yes", "no", "if-needed"),
-            class = "dropdown-extra"
-          ),
-          width = 120
-        ),
-        AdjustingFactor = colDef(
-          name = "Adj. Factor",
-          cell = text_extra(
-            id = ns("edit_AdjustingFactor")
-          ),
-          width = 120
-        ),
-        PPTESTCD = colDef(
-          name = "PPTESTCD",
-          cell = text_extra(
-            id = ns("edit_PPTESTCD")
-          ),
-          width = 140
-        )
-      )
-      reactable(
-        data = ratio_table(),
-        defaultColDef = colDef(align = "center"),
-        columns = col_defs,
-        selection = "multiple",
-        defaultExpanded = TRUE,
-        borderless = TRUE,
-        theme = reactableTheme(
-          rowSelectedStyle = list(backgroundColor = "#eee", boxShadow = "inset 2px 0 0 0 #ffa62d")
-        )
-      )
-    }) %>%
-      shiny::bindEvent(refresh_reactable())
+    # Render formula cards
+    refresh_cards <- reactiveVal(1)
+    output$ratio_cards <- renderUI({
+      refresh_cards()
+      tbl <- ratio_table()
+      if (nrow(tbl) == 0) return(NULL)
 
-    # Update table on edit
-    observe({
-      purrr::walk(table_columns, function(colname) {
-        observeEvent(input[[paste0("edit_", colname)]], {
-          edit <- input[[paste0("edit_", colname)]]
-          tbl <- ratio_table()
-          tbl[edit$row, edit$column] <- edit$value
+      param_opts <- ratio_param_options()
+      ref_opts <- ratio_reference_options()
+      group_opts <- c(ref_opts, "(all other levels)")
 
-          # If Parameter or Reference changed, update PPTESTCD for that row
-          if (colname %in% c("TestParameter", "RefGroups", "TestGroups")) {
-            ref <- tbl[edit$row, "RefGroups"]
-            param <- tbl[edit$row, "TestParameter"]
-            automatic_tbl <- .generate_pptestcd_for_ratios(tbl, adnca_data = adnca_data())
-            tbl[edit$row, ] <- automatic_tbl[edit$row, ]
-
-            reset_reactable_memory()
-            refresh_reactable(refresh_reactable() + 1)
-          }
-          ratio_table(tbl)
-        })
+      card_list <- lapply(seq_len(nrow(tbl)), function(i) {
+        row <- tbl[i, ]
+        .ratio_formula_card(ns, i, row, param_opts, ref_opts, group_opts)
       })
+      tagList(card_list)
+    })
+
+    # Update table when any card input changes
+    observe({
+      tbl <- ratio_table()
+      if (nrow(tbl) == 0) return()
+
+      for (i in seq_len(nrow(tbl))) {
+        local({
+          idx <- i
+          # Observe each field for this row
+          for (field in c("TestParameter", "RefParameter", "RefGroups",
+                          "TestGroups", "AggregateSubject")) {
+            local({
+              fld <- field
+              input_id <- paste0(fld, "_", idx)
+              observeEvent(input[[input_id]], {
+                val <- input[[input_id]]
+                current <- ratio_table()
+                if (idx <= nrow(current) && !identical(current[idx, fld], val)) {
+                  current[idx, fld] <- val
+                  if (fld %in% c("TestParameter", "RefGroups", "TestGroups")) {
+                    current <- .generate_pptestcd_for_ratios(
+                      current, adnca_data = adnca_data()
+                    )
+                  }
+                  ratio_table(current)
+                  refresh_cards(refresh_cards() + 1)
+                }
+              }, ignoreInit = TRUE)
+            })
+          }
+          # Numeric: AdjustingFactor
+          observeEvent(input[[paste0("AdjustingFactor_", idx)]], {
+            val <- input[[paste0("AdjustingFactor_", idx)]]
+            current <- ratio_table()
+            if (idx <= nrow(current) && !identical(current[idx, "AdjustingFactor"], val)) {
+              current[idx, "AdjustingFactor"] <- val
+              ratio_table(current)
+            }
+          }, ignoreInit = TRUE)
+          # Text: PPTESTCD
+          observeEvent(input[[paste0("PPTESTCD_", idx)]], {
+            val <- input[[paste0("PPTESTCD_", idx)]]
+            current <- ratio_table()
+            if (idx <= nrow(current) && !identical(current[idx, "PPTESTCD"], val)) {
+              current[idx, "PPTESTCD"] <- val
+              ratio_table(current)
+            }
+          }, ignoreInit = TRUE)
+        })
+      }
     })
 
     # Return the table as a reactive
     ratio_table
   })
+}
+
+# Build a single formula card for ratio row i.
+# Layout: [checkbox] PPTESTCD = TestParam [TestGroup] / RefParam [RefGroup] x AdjFactor
+#         Aggregate: [dropdown]
+.ratio_formula_card <- function(ns, i, row, param_opts, ref_opts, group_opts) {
+  tags$div(
+    class = "ratio-formula-card",
+    # Selection checkbox + PPTESTCD
+    tags$div(
+      class = "ratio-formula-row",
+      tags$div(
+        class = "ratio-select",
+        checkboxInput(
+          ns(paste0("select_row_", i)), label = NULL, value = FALSE
+        )
+      ),
+      tags$div(
+        class = "ratio-pptestcd-input",
+        textInput(
+          ns(paste0("PPTESTCD_", i)), label = NULL,
+          value = row$PPTESTCD, width = "100px"
+        )
+      ),
+      tags$span(class = "ratio-eq", "="),
+      # Numerator: TestParameter [TestGroups]
+      tags$div(
+        class = "ratio-term ratio-numerator",
+        selectInput(
+          ns(paste0("TestParameter_", i)), label = NULL,
+          choices = param_opts, selected = row$TestParameter, width = "130px"
+        ),
+        tags$span(class = "ratio-bracket", "["),
+        selectInput(
+          ns(paste0("TestGroups_", i)), label = NULL,
+          choices = group_opts, selected = row$TestGroups, width = "180px"
+        ),
+        tags$span(class = "ratio-bracket", "]")
+      ),
+      tags$span(class = "ratio-div", "/"),
+      # Denominator: RefParameter [RefGroups]
+      tags$div(
+        class = "ratio-term ratio-denominator",
+        selectInput(
+          ns(paste0("RefParameter_", i)), label = NULL,
+          choices = param_opts, selected = row$RefParameter, width = "130px"
+        ),
+        tags$span(class = "ratio-bracket", "["),
+        selectInput(
+          ns(paste0("RefGroups_", i)), label = NULL,
+          choices = ref_opts, selected = row$RefGroups, width = "180px"
+        ),
+        tags$span(class = "ratio-bracket", "]")
+      ),
+      tags$span(class = "ratio-mult", "\u00d7"),
+      tags$div(
+        class = "ratio-adj-factor",
+        numericInput(
+          ns(paste0("AdjustingFactor_", i)), label = NULL,
+          value = row$AdjustingFactor, width = "70px", step = 0.1
+        )
+      ),
+      # Aggregate dropdown (compact)
+      tags$div(
+        class = "ratio-aggregate",
+        tags$span(class = "ratio-agg-label", "Agg:"),
+        selectInput(
+          ns(paste0("AggregateSubject_", i)), label = NULL,
+          choices = c("yes", "no", "if-needed"),
+          selected = row$AggregateSubject, width = "90px"
+        )
+      )
+    )
+  )
 }
 
 # Build interval parameter options with range suffix from int_parameters table.
