@@ -609,5 +609,4 @@ pivoted_results <- pivot_wider_pknca_results(
   extra_vars_to_keep = extra_vars_to_keep
 )
 ```
-
 </details>
