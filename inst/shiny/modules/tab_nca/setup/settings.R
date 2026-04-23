@@ -106,6 +106,7 @@ settings_ui <- function(id) {
           column(
             width = 10,
             actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
+            actionButton(ns("removeRow"), "(-) Remove Row/s", class = "btn-warning")
           ),
           column(
             width = 2,
@@ -376,9 +377,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     int_parameters <- reactiveVal(
       tibble(
-        parameter = PARTIAL_INT_PARAMS$PPTESTCD[1],
-        start_auc = rep(NA_real_, 2),
-        end_auc = rep(NA_real_, 2)
+        parameter = character(),
+        start_auc = numeric(),
+        end_auc = numeric()
       )
     )
 
@@ -407,6 +408,14 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             cell = text_extra(id = ns("edit_end_auc")),
             align = "center"
           )
+        ),
+        selection = "multiple",
+        borderless = TRUE,
+        theme = reactableTheme(
+          rowSelectedStyle = list(
+            backgroundColor = "#eee",
+            boxShadow = "inset 2px 0 0 0 #ffa62d"
+          )
         )
       )
     }) %>%
@@ -417,12 +426,21 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       int_parameters() %>%
         bind_rows(
           tibble(
-            parameter = PARTIAL_INT_PARAMS$PPTESTCD[2],
+            parameter = PARTIAL_INT_PARAMS$PPTESTCD[1],
             start_auc = NA_real_,
             end_auc = NA_real_
           )
         ) %>%
         int_parameters()
+      reset_reactable_memory()
+      refresh_reactable(refresh_reactable() + 1)
+    })
+
+    # Remove selected rows
+    observeEvent(input$removeRow, {
+      selected <- getReactableState("int_parameters_table", "selected")
+      req(selected)
+      int_parameters(int_parameters()[-selected, ])
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
