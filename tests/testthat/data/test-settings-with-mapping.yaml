@@ -1,0 +1,100 @@
+settings:
+  analyte: Analyte01
+  profile: DOSE 1
+  pcspec: SERUM
+  method: lin up/log down
+  bioavailability: ~
+  data_imputation:
+    impute_c0: yes
+    blq_strategy: No BLQ handling
+    blq_imputation_rule:
+      first: keep
+      middle: keep
+      last: keep
+  int_parameters:
+    parameter:
+    - AUCINT
+    - AUCINTD
+    start_auc:
+    - 0.0
+    - 0.0
+    end_auc:
+    - 24.0
+    - 24.0
+  flags:
+    R2ADJ:
+      is.checked: yes
+      threshold: 0.7
+    R2:
+      is.checked: no
+      threshold: 0.7
+    AUCPEO:
+      is.checked: yes
+      threshold: 20
+    AUCPEP:
+      is.checked: yes
+      threshold: 20
+    LAMZSPN:
+      is.checked: yes
+      threshold: 2
+  ratio_table:
+  - TestParameter: CMAX
+    RefParameter: CMAX
+    RefGroups: 'ANALYTE: DrugA'
+    TestGroups: '(all other levels)'
+    AggregateSubject: 'no'
+    AdjustingFactor: 1
+    PPTESTCD: MRCMAX
+  units:
+  - PPTESTCD: cmax
+    PPSTRESU: ng/mL
+  - PPTESTCD: tmax
+    PPSTRESU: days
+  general_exclusions: []
+  parameters:
+    selections:
+      Multiple IV Infusion:
+      - auclast
+      - cmax
+      - half.life
+      - tmax
+mapping:
+  select_STUDYID: STUDYID
+  select_USUBJID: USUBJID
+  select_DOSEA: DOSE_AMT
+  select_DOSEU: DOSE_UNIT
+  select_DOSETRT: DOSETRT
+  select_PARAM: PARAM
+  select_Metabolites: Metab-DrugA
+  select_ARRLT: ARRLT
+  select_NRRLT: NRRLT
+  select_AFRLT: AFRLT
+  select_NCAwXRS:
+  - NCA1XRS
+  - NCA2XRS
+  select_NFRLT: NFRLT
+  select_PCSPEC: PCSPEC
+  select_ROUTE: ROUTE
+  select_TRTRINT: TRTRINT
+  select_ADOSEDUR: ADOSEDUR
+  select_Grouping_Variables:
+  - COHORT
+  - SEX
+  select_RRLTU: RRLTU
+  select_VOLUME: VOLUME
+  select_VOLUMEU: VOLUMEU
+  select_AVAL: AVAL
+  select_AVALU: AVALU
+  select_ATPTREF: ATPTREF
+slope_rules:
+  USUBJID: []
+  ATPTREF: []
+  DOSNOA: []
+  TYPE: []
+  RANGE: []
+  REASON: []
+filters:
+- column: PARAM
+  value:
+  - Analyte01
+  - Analyte02
