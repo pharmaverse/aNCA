@@ -146,11 +146,11 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  it("warns when CONCDUR has negative values", {
+  it("errors when CONCDUR has negative values", {
     adnca <- ADNCA %>%
       mutate(AEFRLT = AFRLT - 1)  # AEFRLT < AFRLT => negative CONCDUR
 
-    expect_warning(
+    expect_error(
       format_pkncaconc_data(adnca,
                             group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                               "DOSETRT", "PARAM"),
@@ -162,11 +162,11 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  it("warns when CONCDUR has infinite values", {
+  it("errors when CONCDUR has infinite values", {
     adnca <- ADNCA %>%
       mutate(AEFRLT = ifelse(row_number() == 1, Inf, AFRLT))
 
-    expect_warning(
+    expect_error(
       format_pkncaconc_data(adnca,
                             group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                               "DOSETRT", "PARAM"),
@@ -178,15 +178,26 @@ describe("format_pkncaconc_data", {
     )
   })
 
-  it("does not warn when CONCDUR values are valid", {
+  it("does not error when CONCDUR values are valid", {
     adnca <- ADNCA %>%
       mutate(AEFRLT = AFRLT + 0.5)  # valid: AEFRLT > AFRLT
 
-    expect_no_warning(
+    expect_no_error(
       format_pkncaconc_data(adnca,
                             group_columns = c("STUDYID", "USUBJID", "PCSPEC",
                                               "DOSETRT", "PARAM"),
                             time_end_column = "AEFRLT",
+                            time_column = "AFRLT",
+                            rrlt_column = "ARRLT",
+                            dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
+    )
+  })
+
+  it("does not error when no time_end_column is provided (no CONCDUR created)", {
+    expect_no_error(
+      format_pkncaconc_data(ADNCA,
+                            group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                              "DOSETRT", "PARAM"),
                             time_column = "AFRLT",
                             rrlt_column = "ARRLT",
                             dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))

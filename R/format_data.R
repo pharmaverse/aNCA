@@ -87,7 +87,7 @@ format_pkncaconc_data <- function(ADNCA,
       (ADNCA[["CONCDUR"]] < 0 | is.infinite(ADNCA[["CONCDUR"]]))
     if (any(invalid_concdur)) {
       n_invalid <- sum(invalid_concdur)
-      warning(
+      stop(
         n_invalid, " record(s) have invalid sampling duration (CONCDUR): ",
         "values are negative or infinite. ",
         "CONCDUR is calculated as '", time_end_column, "' - '", time_column, "'. ",
