@@ -26,16 +26,6 @@ Description: An interactive 'shiny' application for performing non-compartmental
   Noncompartmental Analysis: The PKNCA R Package" <doi:10.1007/s10928-015-9432-2>.
 License: Apache License (>= 2)
 Imports: 
-    bslib,
-    dplyr,
-    formatters,
-    ggplot2,
-    glue,
-    htmltools,
-    htmlwidgets,
-    logger,
-    magrittr,
-    PKNCA (>= 0.12.1),Imports: 
     dplyr,
     formatters,
     ggplot2,
