@@ -383,7 +383,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
   # so this warning may need to be rephrased or removed.
   if (grepl("Units are provided for some but not all parameters; missing for: ae", msg)) {
     msg <- paste0(
-      "Urine Parameters (FREXINT, RCAMINT) calculated for non-urine samples",
+      "Urine Parameters (FREXINT, RCAMINT) calculated for non-urine samples ",
       "will return NA values and units"
     )
   }
