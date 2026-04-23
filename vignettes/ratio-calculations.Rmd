@@ -1,0 +1,300 @@
+---
+title: "Ratio Calculations"
+description: >
+  How to configure and interpret ratio calculations in aNCA.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Ratio Calculations}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Overview
+
+Ratio calculations compare PK parameters between groups — across analytes, dose
+profiles, specimen types, or routes of administration. In aNCA, ratios are
+configured in **NCA > Setup > Settings > Ratio Calculations**.
+
+Each ratio is defined by:
+
+| Field | Description |
+|---|---|
+| **Test Parameter** | PK parameter for the numerator (e.g. `CMAX`, `AUCLST`) |
+| **Ref Parameter** | PK parameter for the denominator (defaults to same as test) |
+| **Test Groups** | Group level for the numerator. `(all other levels)` uses every level except the reference. |
+| **Ref Groups** | Group level for the denominator (e.g. `PARAM: ParentDrug`) |
+| **Aggregate** | `no` = within-subject ratio; `yes` = mean of reference across subjects; `if-needed` = falls back to aggregation when within-subject matching is not possible |
+| **Adj. Factor** | Multiplier applied to the ratio (e.g. molecular weight correction) |
+| **PPTESTCD** | Auto-generated CDISC code; editable |
+
+The general formula is:
+
+$$\text{Ratio} = \frac{\text{TestParameter}[\text{TestGroup}]}{\text{RefParameter}[\text{RefGroup}]} \times \text{AdjFactor}$$
+
+aNCA auto-generates a PPTESTCD based on which grouping variable is used as the
+reference. The sections below describe each ratio type.
+
+---
+
+# Metabolite Ratio (MR)
+
+**When:** The reference group column is the **analyte** column (e.g. `PARAM`).
+
+**PPTESTCD:** `MR{param}` — e.g. `MRCMAX`, `MRAUCLST`
+
+**Use case:** Compare a metabolite to its parent compound.
+
+### Formula
+
+$$MR_{CMAX} = \frac{CMAX_{\text{metabolite}}}{CMAX_{\text{parent}}} \times AdjFactor$$
+
+### Setup
+
+| Field | Value |
+|---|---|
+| Test Parameter | `CMAX` |
+| Ref Parameter | `CMAX` |
+| Ref Groups | `PARAM: ParentDrug` |
+| Test Groups | `(all other levels)` or `PARAM: Metabolite1` |
+| Adj. Factor | MW~parent~ / MW~metabolite~ (if units differ) |
+
+### Notes
+
+- When test and reference use different molecular weight units, set the
+  adjusting factor to `MW_ref / MW_test` to normalize.
+- `(all other levels)` computes a ratio for every analyte except the reference.
+
+---
+
+# Accumulation Ratio (AR)
+
+**When:** The reference group column is the **dose profile** column (`ATPTREF`).
+
+**PPTESTCD:** `AR{param}` — e.g. `ARCMAX`, `ARAUCLST`
+
+**Use case:** Compare steady-state exposure to single-dose exposure.
+
+### Formula
+
+$$AR_{CMAX} = \frac{CMAX_{\text{steady-state}}}{CMAX_{\text{single dose}}}$$
+
+### Setup
+
+| Field | Value |
+|---|---|
+| Test Parameter | `CMAX` |
+| Ref Parameter | `CMAX` |
+| Ref Groups | `ATPTREF: 1` (single dose profile) |
+| Test Groups | `(all other levels)` or `ATPTREF: 5` |
+| Adj. Factor | 1 |
+
+### Notes
+
+- `ATPTREF` identifies the dose number / profile. The reference is typically the
+  first dose (single dose), and the test is a later dose (e.g. at steady state).
+- Accumulation ratios > 1 indicate drug accumulation.
+
+---
+
+# Renal Clearance (RENALCL)
+
+**When:** The test specimen is **urine**, the reference specimen is **plasma**,
+the test parameter starts with `RCAMINT` (recovered amount in interval), and the
+reference parameter starts with `AUC`.
+
+**PPTESTCD:** `RENALCL`
+
+**Use case:** Estimate renal clearance from urinary recovery and plasma AUC.
+
+### Formula
+
+$$CL_R = \frac{Ae_{0-\tau}}{AUC_{0-\tau}}$$
+
+Where $Ae_{0-\tau}$ is the cumulative amount excreted in urine over the
+interval, and $AUC_{0-\tau}$ is the corresponding plasma AUC.
+
+### Setup
+
+| Field | Value |
+|---|---|
+| Test Parameter | `RCAMINT` (or interval-specific, e.g. `RCAMINT_0-24`) |
+| Ref Parameter | `AUCLST` (or matching interval AUC) |
+| Ref Groups | `PCSPEC: Plasma` |
+| Test Groups | `PCSPEC: URINE` |
+| Adj. Factor | 1 |
+
+### Notes
+
+- The time intervals for urine collection and plasma AUC should match.
+- Units: if amount is in mg and AUC is in ng·h/mL, adjust the factor
+  accordingly (e.g. 1000 to convert mg to µg).
+
+---
+
+# Absolute Bioavailability (FABS)
+
+**When:** The reference group is an **intravascular** route (e.g. `ROUTE: INTRAVASCULAR`).
+
+**PPTESTCD:** `FABS`
+
+**Use case:** Compare extravascular (e.g. oral) to intravascular (IV)
+bioavailability, typically dose-normalized.
+
+### Formula
+
+$$F_{abs} = \frac{AUC_{\text{oral}} / Dose_{\text{oral}}}{AUC_{\text{IV}} / Dose_{\text{IV}}}$$
+
+### Setup
+
+| Field | Value |
+|---|---|
+| Test Parameter | `AUCLST` (or `AUCIFOB`) |
+| Ref Parameter | `AUCLST` (or `AUCIFOB`) |
+| Ref Groups | `ROUTE: INTRAVASCULAR` |
+| Test Groups | `(all other levels)` |
+| Adj. Factor | Dose~IV~ / Dose~oral~ (if not already dose-normalized) |
+
+### Notes
+
+- If the parameters are already dose-normalized (e.g. `AUCLST/D`), set the
+  adjusting factor to 1.
+- `FABS` values close to 1 indicate complete absorption.
+- The auto-detection matches both the mapped `ROUTE` column and the raw `ROUTE`
+  column, looking for values starting with `INTRA`.
+
+---
+
+# Relative Bioavailability (FREL)
+
+**When:** The reference group is a **route** column but NOT intravascular.
+
+**PPTESTCD:** `FREL`
+
+**Use case:** Compare bioavailability between two extravascular formulations or
+routes (e.g. tablet vs. capsule, oral vs. subcutaneous).
+
+### Formula
+
+$$F_{rel} = \frac{AUC_{\text{test formulation}}}{AUC_{\text{ref formulation}}} \times \frac{Dose_{\text{ref}}}{Dose_{\text{test}}}$$
+
+### Setup
+
+| Field | Value |
+|---|---|
+| Test Parameter | `AUCLST` |
+| Ref Parameter | `AUCLST` |
+| Ref Groups | `ROUTE: EXTRAVASCULAR` (reference formulation) |
+| Test Groups | `(all other levels)` or specific route |
+| Adj. Factor | Dose~ref~ / Dose~test~ (if not dose-normalized) |
+
+### Notes
+
+- The distinction between `FABS` and `FREL` is automatic: if the reference
+  route is intravascular, aNCA assigns `FABS`; otherwise `FREL`.
+- For crossover studies, use `Aggregate: no` to compute within-subject ratios.
+
+---
+
+# Generic Ratio (RA)
+
+**When:** The reference group column does not match any of the specific patterns
+above (not analyte, not dose profile, not specimen, not route).
+
+**PPTESTCD:** `RA{param}` — e.g. `RACMAX`
+
+**Use case:** Any other grouping variable — cohort, treatment arm, dose level,
+period, etc.
+
+### Formula
+
+$$RA_{CMAX} = \frac{CMAX_{\text{test group}}}{CMAX_{\text{ref group}}} \times AdjFactor$$
+
+### Setup
+
+| Field | Value |
+|---|---|
+| Test Parameter | Any PK parameter |
+| Ref Parameter | Any PK parameter (usually same as test) |
+| Ref Groups | Any grouping variable and level (e.g. `COHORT: Low Dose`) |
+| Test Groups | `(all other levels)` or specific level |
+| Adj. Factor | 1 (or as needed) |
+
+### Notes
+
+- This is the fallback category. If aNCA cannot determine a more specific ratio
+  type from the reference group column, it assigns `RA{param}`.
+- Common uses: dose proportionality (across `DOSEA` or `COHORT`), food effect
+  (across `FASTED/FED` groups), period comparisons.
+
+---
+
+# Aggregation Modes
+
+The **Aggregate** setting controls how reference values are handled when
+subjects differ between test and reference groups:
+
+| Mode | Behavior |
+|---|---|
+| `no` | Strict within-subject matching. Fails if a subject is missing from the reference group. |
+| `yes` | Computes the geometric mean of reference values across all subjects, then divides each test subject's value by that mean. |
+| `if-needed` | Tries within-subject first. For subjects without a matching reference, falls back to the aggregated mean. |
+
+**Recommendation:** Use `no` for crossover designs where every subject has both
+test and reference. Use `if-needed` for parallel designs or when some subjects
+lack reference data.
+
+---
+
+# PPTESTCD Auto-Generation
+
+aNCA auto-generates PPTESTCD codes based on the reference group column:
+
+| Reference column matches | PPTESTCD pattern | Example |
+|---|---|---|
+| Analyte column (`PARAM`) | `MR{param}` | `MRCMAX` |
+| Dose profile (`ATPTREF`) | `AR{param}` | `ARAUCLST` |
+| Specimen + urine/plasma + RCAMINT/AUC | `RENALCL` | `RENALCL` |
+| Route = intravascular | `FABS` | `FABS` |
+| Route (other) | `FREL` | `FREL` |
+| Anything else | `RA{param}` | `RACMAX` |
+
+When multiple ratios produce the same code, a numeric suffix is appended
+(e.g. `MRCMAX`, `MRCMAX1`).
+
+The PPTESTCD field is editable — you can override the auto-generated code with
+any custom name.
+
+---
+
+# Using the R Script
+
+Ratio calculations can also be run outside the Shiny app using `calculate_ratios()`:
+```r
+library(aNCA)
+
+# Assuming `nca_results` is a PKNCAresults object
+ratios <- calculate_ratios(
+  data = nca_results,
+  test_parameter = "CMAX",
+  ref_parameter = "CMAX",
+  match_cols = c("USUBJID", "start", "end"),
+  ref_groups = data.frame(PARAM = "ParentDrug"),
+  adjusting_factor = 1,
+  custom_pptestcd = "MRCMAX"
+)
+```
+
+For the app-level wrapper that processes a full ratio table:
+```r
+# ratio_table is a data.frame with columns:
+# TestParameter, RefParameter, RefGroups, TestGroups,
+# AggregateSubject, AdjustingFactor, PPTESTCD
+results <- calculate_table_ratios(nca_results, ratio_table)
+```
