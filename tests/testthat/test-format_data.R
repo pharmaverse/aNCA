@@ -180,7 +180,7 @@ describe("format_pkncaconc_data", {
 
   it("does not error when CONCDUR values are valid", {
     adnca <- ADNCA %>%
-      mutate(AEFRLT = AFRLT + 0.5)  # valid: AEFRLT > AFRLT
+      mutate(AEFRLT = AFRLT + 0.5)
 
     expect_no_error(
       format_pkncaconc_data(adnca,
