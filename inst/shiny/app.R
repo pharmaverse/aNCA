@@ -16,7 +16,7 @@ require(shinyjs)
 require(shinyjqui)
 require(shinyWidgets)
 require(stats)
-require(stringi)
+
 require(tidyr)
 require(tools)
 require(utils)
