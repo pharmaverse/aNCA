@@ -146,6 +146,53 @@ describe("format_pkncaconc_data", {
     )
   })
 
+  it("warns when CONCDUR has negative values", {
+    adnca <- ADNCA %>%
+      mutate(AEFRLT = AFRLT - 1)  # AEFRLT < AFRLT => negative CONCDUR
+
+    expect_warning(
+      format_pkncaconc_data(adnca,
+                            group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                              "DOSETRT", "PARAM"),
+                            time_end_column = "AEFRLT",
+                            time_column = "AFRLT",
+                            rrlt_column = "ARRLT",
+                            dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")),
+      regexp = "record\\(s\\) have invalid sampling duration \\(CONCDUR\\)"
+    )
+  })
+
+  it("warns when CONCDUR has infinite values", {
+    adnca <- ADNCA %>%
+      mutate(AEFRLT = ifelse(row_number() == 1, Inf, AFRLT))
+
+    expect_warning(
+      format_pkncaconc_data(adnca,
+                            group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                              "DOSETRT", "PARAM"),
+                            time_end_column = "AEFRLT",
+                            time_column = "AFRLT",
+                            rrlt_column = "ARRLT",
+                            dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")),
+      regexp = "record\\(s\\) have invalid sampling duration \\(CONCDUR\\)"
+    )
+  })
+
+  it("does not warn when CONCDUR values are valid", {
+    adnca <- ADNCA %>%
+      mutate(AEFRLT = AFRLT + 0.5)  # valid: AEFRLT > AFRLT
+
+    expect_no_warning(
+      format_pkncaconc_data(adnca,
+                            group_columns = c("STUDYID", "USUBJID", "PCSPEC",
+                                              "DOSETRT", "PARAM"),
+                            time_end_column = "AEFRLT",
+                            time_column = "AFRLT",
+                            rrlt_column = "ARRLT",
+                            dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT"))
+    )
+  })
+
   test_that("using nca_exclude_reason_columns concatenates exclusion reasons correctly", {
     test_df <- ADNCA
     nrows <- nrow(ADNCA)
