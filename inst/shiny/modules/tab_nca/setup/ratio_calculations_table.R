@@ -241,9 +241,9 @@ ratios_table_server <- function(
       for (i in seq_len(nrow(tbl))) {
         local({
           idx <- i
-          # Observe each field for this row
+          # Observe select inputs for this row
           for (field in c("TestParameter", "RefParameter", "RefGroups",
-                          "TestGroups", "AggregateSubject")) {
+                          "TestGroups")) {
             local({
               fld <- field
               input_id <- paste0(fld, "_", idx)
@@ -263,6 +263,20 @@ ratios_table_server <- function(
               }, ignoreInit = TRUE)
             })
           }
+          # Sigma toggle: cycle through no -> yes -> if-needed -> no
+          observeEvent(input[[paste0("toggle_agg_", idx)]], {
+            current <- ratio_table()
+            if (idx <= nrow(current)) {
+              current[idx, "AggregateSubject"] <- switch(
+                current[idx, "AggregateSubject"],
+                "no" = "yes",
+                "yes" = "if-needed",
+                "no"
+              )
+              ratio_table(current)
+              refresh_cards(refresh_cards() + 1)
+            }
+          }, ignoreInit = TRUE)
           # Numeric: AdjustingFactor
           observeEvent(input[[paste0("AdjustingFactor_", idx)]], {
             val <- input[[paste0("AdjustingFactor_", idx)]]
@@ -293,71 +307,112 @@ ratios_table_server <- function(
 # Build a single formula card for ratio row i.
 # Layout: [checkbox] PPTESTCD = TestParam [TestGroup] / RefParam [RefGroup] x AdjFactor
 #         Aggregate: [dropdown]
+# Build a single formula card for ratio row i.
+# Fraction layout:
+#                     TestParam [TestGroup]
+#  ☐  PPTESTCD  =  ─────────────────────────  ×  AdjFactor
+#                  Σ  RefParam [RefGroup]
 .ratio_formula_card <- function(ns, i, row, param_opts, ref_opts, group_opts) {
+  # Sigma label for aggregate mode
+  agg_label <- switch(row$AggregateSubject,
+    "yes" = "\u03a3",
+    "if-needed" = "\u03a3?",
+    "\u2014"
+  )
+  agg_title <- switch(row$AggregateSubject,
+    "yes" = "Aggregate: yes (mean of reference subjects)",
+    "if-needed" = "Aggregate: if-needed (fallback to mean)",
+    "Aggregate: no (within-subject)"
+  )
+
   tags$div(
     class = "ratio-formula-card",
-    # Selection checkbox + PPTESTCD
+    # Left side: checkbox + PPTESTCD + equals
     tags$div(
-      class = "ratio-formula-row",
+      class = "ratio-left",
       tags$div(
         class = "ratio-select",
-        checkboxInput(
-          ns(paste0("select_row_", i)), label = NULL, value = FALSE
-        )
+        checkboxInput(ns(paste0("select_row_", i)), label = NULL, value = FALSE)
       ),
       tags$div(
         class = "ratio-pptestcd-input",
+        title = "PPTESTCD (editable)",
         textInput(
           ns(paste0("PPTESTCD_", i)), label = NULL,
-          value = row$PPTESTCD, width = "100px"
+          value = row$PPTESTCD, width = "110px"
         )
       ),
-      tags$span(class = "ratio-eq", "="),
-      # Numerator: TestParameter [TestGroups]
+      tags$span(class = "ratio-eq", "=")
+    ),
+    # Center: fraction (numerator / line / denominator)
+    tags$div(
+      class = "ratio-fraction",
+      # Numerator
       tags$div(
-        class = "ratio-term ratio-numerator",
-        selectInput(
-          ns(paste0("TestParameter_", i)), label = NULL,
-          choices = param_opts, selected = row$TestParameter, width = "130px"
+        class = "ratio-numerator",
+        tags$div(
+          class = "ratio-input-wrap",
+          title = "Test Parameter (numerator)",
+          selectInput(
+            ns(paste0("TestParameter_", i)), label = NULL,
+            choices = param_opts, selected = row$TestParameter, width = "130px"
+          )
         ),
         tags$span(class = "ratio-bracket", "["),
-        selectInput(
-          ns(paste0("TestGroups_", i)), label = NULL,
-          choices = group_opts, selected = row$TestGroups, width = "180px"
+        tags$div(
+          class = "ratio-input-wrap",
+          title = "Test Group (numerator level)",
+          selectInput(
+            ns(paste0("TestGroups_", i)), label = NULL,
+            choices = group_opts, selected = row$TestGroups, width = "180px"
+          )
         ),
         tags$span(class = "ratio-bracket", "]")
       ),
-      tags$span(class = "ratio-div", "/"),
-      # Denominator: RefParameter [RefGroups]
+      # Fraction line
+      tags$hr(class = "ratio-line"),
+      # Denominator
       tags$div(
-        class = "ratio-term ratio-denominator",
-        selectInput(
-          ns(paste0("RefParameter_", i)), label = NULL,
-          choices = param_opts, selected = row$RefParameter, width = "130px"
+        class = "ratio-denominator",
+        tags$div(
+          class = "ratio-sigma",
+          title = agg_title,
+          actionLink(
+            ns(paste0("toggle_agg_", i)),
+            label = agg_label,
+            class = "ratio-sigma-btn"
+          )
+        ),
+        tags$div(
+          class = "ratio-input-wrap",
+          title = "Reference Parameter (denominator)",
+          selectInput(
+            ns(paste0("RefParameter_", i)), label = NULL,
+            choices = param_opts, selected = row$RefParameter, width = "130px"
+          )
         ),
         tags$span(class = "ratio-bracket", "["),
-        selectInput(
-          ns(paste0("RefGroups_", i)), label = NULL,
-          choices = ref_opts, selected = row$RefGroups, width = "180px"
+        tags$div(
+          class = "ratio-input-wrap",
+          title = "Reference Group (denominator level)",
+          selectInput(
+            ns(paste0("RefGroups_", i)), label = NULL,
+            choices = ref_opts, selected = row$RefGroups, width = "180px"
+          )
         ),
         tags$span(class = "ratio-bracket", "]")
-      ),
+      )
+    ),
+    # Right side: multiply + adjusting factor
+    tags$div(
+      class = "ratio-right",
       tags$span(class = "ratio-mult", "\u00d7"),
       tags$div(
         class = "ratio-adj-factor",
+        title = "Adjusting Factor (multiplier)",
         numericInput(
           ns(paste0("AdjustingFactor_", i)), label = NULL,
           value = row$AdjustingFactor, width = "70px", step = 0.1
-        )
-      ),
-      # Aggregate dropdown (compact)
-      tags$div(
-        class = "ratio-aggregate",
-        tags$span(class = "ratio-agg-label", "Agg:"),
-        selectInput(
-          ns(paste0("AggregateSubject_", i)), label = NULL,
-          choices = c("yes", "no", "if-needed"),
-          selected = row$AggregateSubject, width = "90px"
         )
       )
     )

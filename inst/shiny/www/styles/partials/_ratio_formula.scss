@@ -1,78 +1,77 @@
-// Formula-style ratio calculation cards
+// Formula-style ratio calculation cards — fraction layout
 
 .ratio-formula-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  padding: 8px 12px;
-  margin-bottom: 6px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
   background: #fafafa;
+  overflow: visible;
 
   &:hover {
     background: #f0f0f0;
   }
-}
-
-.ratio-formula-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
 
   // Remove default margins from Shiny inputs inside cards
-  .form-group {
-    margin-bottom: 0;
-  }
-
+  .form-group,
   .shiny-input-container {
     margin-bottom: 0;
   }
 
-  select, input[type="text"], input[type="number"] {
+  select,
+  input[type="text"],
+  input[type="number"] {
     padding: 4px 6px;
     height: auto;
     font-size: 13px;
   }
 }
 
-.ratio-select {
+// Left side: checkbox + PPTESTCD + equals
+.ratio-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
+}
 
+.ratio-select {
   .checkbox {
     margin: 0;
   }
 }
 
-.ratio-pptestcd-input {
-  flex-shrink: 0;
-
-  input {
-    font-weight: 600;
-    font-family: monospace;
-    text-align: center;
-  }
+.ratio-pptestcd-input input {
+  font-weight: 600;
+  font-family: monospace;
+  text-align: center;
 }
 
-.ratio-eq,
-.ratio-div,
-.ratio-mult {
-  font-size: 18px;
+.ratio-eq {
+  font-size: 20px;
   font-weight: 700;
   color: #555;
-  padding: 0 2px;
   flex-shrink: 0;
 }
 
-.ratio-bracket {
-  font-size: 16px;
-  font-weight: 600;
-  color: #888;
-  padding: 0 1px;
+// Center: fraction block
+.ratio-fraction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  overflow: visible;
 }
 
-.ratio-term {
+.ratio-numerator,
+.ratio-denominator {
   display: flex;
   align-items: center;
   gap: 2px;
+  padding: 2px 0;
 }
 
 .ratio-numerator {
@@ -87,22 +86,70 @@
   }
 }
 
-.ratio-adj-factor {
-  flex-shrink: 0;
+.ratio-line {
+  width: 100%;
+  border: none;
+  border-top: 2px solid #333;
+  margin: 2px 0;
 }
 
-.ratio-aggregate {
+.ratio-bracket {
+  font-size: 16px;
+  font-weight: 600;
+  color: #888;
+  padding: 0 1px;
+}
+
+.ratio-input-wrap {
+  overflow: visible;
+}
+
+// Sigma toggle button
+.ratio-sigma {
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.ratio-sigma-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #555;
+  background: #e8e8e8;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover,
+  &:focus {
+    background: #d0d0d0;
+    color: #333;
+    text-decoration: none;
+  }
+}
+
+// Right side: multiply + adjusting factor
+.ratio-right {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-left: 8px;
   flex-shrink: 0;
 }
 
-.ratio-agg-label {
-  font-size: 12px;
-  color: #777;
-  white-space: nowrap;
+.ratio-mult {
+  font-size: 20px;
+  font-weight: 700;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.ratio-adj-factor {
+  flex-shrink: 0;
 }
 
 // Help panel example formula
@@ -133,6 +180,7 @@
 
   .ratio-div {
     font-size: 16px;
+    font-weight: 700;
   }
 
   .ratio-denominator {
