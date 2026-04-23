@@ -43,7 +43,9 @@ ERTMAX
 EV
 EVID
 EXSTDTC
+EXTRAVASCULAR
 Extravascular
+INTRAVASCULAR
 Kezia
 Kobana
 LAMZ
@@ -54,6 +56,7 @@ METABFL
 MRTMDO
 MRTMDP
 MSCW
+Metab
 NCA
 NCAwXRS
 NFRLT
@@ -123,6 +126,7 @@ VSSMDO
 VSSMDP
 WTBL
 WTBLU
+Walkthrough
 XPT
 YAML
 aNCA's
@@ -138,6 +142,7 @@ cdisc
 cmax
 colour
 conc
+config
 customizable
 customizations
 dataformat
