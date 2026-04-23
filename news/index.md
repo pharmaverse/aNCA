@@ -178,6 +178,11 @@
 
 ### Bugs fixed
 
+- Fixed NA `PPSTRESU` handling across NCA results: descriptive
+  statistics no longer crash when a parameter group has all-NA units,
+  and manual interval parameters (e.g., RCAMINT) no longer get `NA`
+  appended to their column names
+  ([\#1216](https://github.com/pharmaverse/aNCA/issues/1216))
 - [`get_settings_code()`](https://pharmaverse.github.io/aNCA/reference/get_settings_code.md)
   now reads mapping, filters, ratio table, and units from the settings
   YAML instead of using hardcoded defaults. Legacy YAML files without
