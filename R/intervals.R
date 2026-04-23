@@ -90,7 +90,7 @@ format_pkncadata_intervals <- function(pknca_conc,
   ) %>%
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
-    # max_end is the last sample time relative to this dose 
+    # max_end is the last sample time relative to this dose
     mutate(max_end = max(ARRLT, na.rm = TRUE)) %>%
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
