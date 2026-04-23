@@ -77,6 +77,12 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   }
   ############################################################################################
   if ("PPANMETH" %in% names(myres$result)) myres$result <- select(myres$result, -PPANMETH)
+  # Drop rows with NA PPTESTCD before pivoting. These come from PKNCA
+  # dependency parameters that have no CDISC mapping and carry no useful
+  # output (both PPTESTCD and PPSTRES are NA).
+  myres$result <- myres$result %>%
+    filter(!is.na(PPTESTCD))
+
   # Pivot main interval columns by Parameter and consider each exclude column separately
   main_intervals_vals <- myres$result %>%
     distinct() %>%
