@@ -90,7 +90,10 @@ format_pkncadata_intervals <- function(pknca_conc,
   ) %>%
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
-    mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
+    # max_end is the last sample time relative to this dose (max ARRLT per dose group).
+    # start + max_end gives the absolute time of the last sample for this dose,
+    # which differs from max(AFRLT) when doses have different sampling windows.
+    mutate(max_end = max(ARRLT, na.rm = TRUE)) %>%
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
     slice(1) %>% # slice one row per conc group
     ungroup() %>%
@@ -106,7 +109,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     mutate(end = if (has_trtrint) {
       case_when(
         !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
-        is.na(TRTRINT) & is_one_dose ~ Inf, #TAU = NA assumes single dose
+        is.na(TRTRINT) & is_one_dose ~ Inf, # TAU = NA assumes single dose
         TRUE ~ start + max_end
       )
     } else {
