@@ -266,7 +266,9 @@ Key arguments:
 - **`selected_profile`**: Which ATPTREF (dosing period) to analyze.
 - **`selected_pcspec`**: Which specimen type to use.
 - **`start_impute`**: Whether to impute C0 (`"yes"` or `"no"`).
-- **`exclusion_list`**: Subject-level exclusions (list of USUBJID values).
+- **`exclusion_list`**: Subject-level exclusions. Pass a list of USUBJID values
+  to drop specific subjects before NCA calculations, e.g.,
+  `list("S1-003", "S1-007")`. Pass an empty `list()` to include all subjects.
 - **`min_hl_points`**: Minimum number of points for lambda-z regression.
 - **`keep_interval_cols`**: Extra columns to carry into PKNCA intervals (the
   grouping variables, minus the three that are always included).
