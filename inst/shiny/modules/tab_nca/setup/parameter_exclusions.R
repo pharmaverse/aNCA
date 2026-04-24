@@ -88,7 +88,7 @@ parameter_exclusions_ui <- function(id) {
     exclude_vals <- rep("", nrow(df))
   }
 
-  excl_info <- .build_exclusion_reasons(manual_exclusions)
+  excl_info <- .build_exclusion_reasons(manual_exclusions, n_rows = nrow(df))
   if (length(excl_info$indices) > 0) {
     for (j in seq_along(excl_info$indices)) {
       idx <- excl_info$indices[j]
@@ -107,9 +107,17 @@ parameter_exclusions_ui <- function(id) {
 
 # Build a reason-per-index vector from an exclusion list.
 # Concatenates with "; " when multiple exclusions cover the same row.
-.build_exclusion_reasons <- function(lst) {
+# @param lst List of exclusion entries (each with $rows and $reason).
+# @param n_rows Total number of rows in the data. Indices beyond this are ignored.
+.build_exclusion_reasons <- function(lst, n_rows = NULL) {
   all_indices <- sort(unique(unlist(lapply(lst, function(x) x$rows))))
-  reasons <- rep(NA_character_, max(c(all_indices, 0L)))
+  if (!is.null(n_rows)) {
+    all_indices <- all_indices[all_indices <= n_rows]
+  }
+  if (length(all_indices) == 0) {
+    return(list(indices = integer(0), reasons = character(0)))
+  }
+  reasons <- rep(NA_character_, max(all_indices))
   for (entry in lst) {
     for (idx in entry$rows) {
       if (idx <= length(reasons)) {
@@ -208,8 +216,9 @@ parameter_exclusions_server <- function(id, res_nca) {
       onClick = "select",
       borderless = TRUE,
       rowStyle = function(x) {
+        ppsumfl <- x$PPSUMFL
         function(index) {
-          if (param_data()$PPSUMFL[index] == "Y") {
+          if (ppsumfl[index] == "Y") {
             return(list(background = PARAM_EXCL_COLOR))
           }
           NULL
@@ -230,7 +239,7 @@ parameter_exclusions_server <- function(id, res_nca) {
         ))
         exclusion_list(append(current, new_entry))
         updateTextInput(session, "exclusion_reason", value = "")
-        updateReactable("param_table-table", selected = NA)
+        updateReactable(ns("param_table-table"), selected = NA)
       }
     })
 
@@ -262,7 +271,17 @@ parameter_exclusions_server <- function(id, res_nca) {
       if (is.null(tbl)) return(NULL)
       tagList(
         tbl,
-        tags$script("setTimeout(function(){ Shiny.bindAll(); }, 100);")
+        tags$script(HTML("
+          (function() {
+            var target = document.currentScript.parentElement;
+            var observer = new MutationObserver(function(mutations, obs) {
+              Shiny.bindAll(target);
+              obs.disconnect();
+            });
+            observer.observe(target, { childList: true, subtree: true });
+            Shiny.bindAll(target);
+          })();
+        "))
       )
     })
 

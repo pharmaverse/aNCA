@@ -564,13 +564,16 @@ describe("export_cdisc", {
   })
 
   it("PPSUMFL is always present and empty when no exclusions and no flag rules", {
-    result <- export_cdisc(test_pknca_res)
+    clean_res <- test_pknca_res
+    clean_res$result$exclude <- NA_character_
+    result <- export_cdisc(clean_res)
     expect_true("PPSUMFL" %in% names(result$adpp))
     expect_true(all(result$adpp$PPSUMFL == ""))
   })
 
   it("sets PPSUMFL to Y for excluded rows via .pp_excl marker", {
     tagged_res <- test_pknca_res
+    tagged_res$result$exclude <- NA_character_
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
@@ -591,6 +594,7 @@ describe("export_cdisc", {
 
   it("PPSUMFL handles multiple excluded rows", {
     tagged_res <- test_pknca_res
+    tagged_res$result$exclude <- NA_character_
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, TRUE, TRUE, rep(FALSE, n - 3))
     result <- export_cdisc(tagged_res)
@@ -626,7 +630,9 @@ describe("export_cdisc", {
   })
 
   it("PPSUMRSN is always present and empty when no exclusions and no flag rules", {
-    result <- export_cdisc(test_pknca_res)
+    clean_res <- test_pknca_res
+    clean_res$result$exclude <- NA_character_
+    result <- export_cdisc(clean_res)
     expect_true("PPSUMRSN" %in% names(result$adpp))
     expect_true(all(result$adpp$PPSUMRSN == ""))
   })
@@ -656,6 +662,7 @@ describe("export_cdisc", {
 
   it("PPSUMFL works correctly with grouping_vars", {
     tagged_res <- test_pknca_res
+    tagged_res$result$exclude <- NA_character_
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
     tagged_res$data$conc$data$GROUP <- "GroupA"
@@ -771,23 +778,24 @@ describe("export_cdisc PKSUM1F derivation", {
   })
 })
 
-describe("export_cdisc: flag_rules NULL or empty produces no flag columns", {
+describe("export_cdisc: flag_rules NULL or empty produces no CRITy columns", {
 
-  it("produces no CRITy or PPSUMFL columns when flag_rules is NULL", {
+  it("produces no CRITy columns when flag_rules is NULL, but PPSUMFL/PPSUMRSN are present", {
     result <- export_cdisc(test_pknca_res, flag_rules = NULL)
     adpp <- result$adpp
     crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
     expect_length(crit_cols, 0)
-    expect_false("PPSUMFL" %in% names(adpp))
-    expect_false("PPSUMRSN" %in% names(adpp))
+    expect_true("PPSUMFL" %in% names(adpp))
+    expect_true("PPSUMRSN" %in% names(adpp))
   })
 
-  it("produces no CRITy or PPSUMFL columns when flag_rules is empty", {
+  it("produces no CRITy columns when flag_rules is empty, but PPSUMFL/PPSUMRSN are present", {
     result <- export_cdisc(test_pknca_res, flag_rules = character(0))
     adpp <- result$adpp
     crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
     expect_length(crit_cols, 0)
-    expect_false("PPSUMFL" %in% names(adpp))
+    expect_true("PPSUMFL" %in% names(adpp))
+    expect_true("PPSUMRSN" %in% names(adpp))
   })
 })
 
