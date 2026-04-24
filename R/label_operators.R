@@ -164,9 +164,9 @@ add_label_attribute <- function(df, myres) {
       PPTESTCD_unit = case_when(
         type_interval == "manual" ~ paste0(
           PPTESTCD, "_", start, "-", end,
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
         ),
-        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
+        !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
         TRUE ~ PPTESTCD
       ),
       PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")

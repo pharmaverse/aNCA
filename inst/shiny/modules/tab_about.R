@@ -202,10 +202,24 @@ tab_about_server <- function(id) {
     })
 
     # Session info — computed once per session (doesn't change at runtime)
-    session_info_text <- paste(
-      utils::capture.output(utils::sessionInfo()),
-      collapse = "\n"
-    )
+    # Build manually to handle missing/broken package DESCRIPTION files
+    session_info_text <- tryCatch({
+      si <- utils::sessionInfo()
+      lines <- c(
+        si$R.version$version.string,
+        paste("Platform:", si$platform),
+        paste("Running under:", si$running),
+        ""
+      )
+      # Attached packages — skip any with broken metadata
+      attached <- vapply(si$otherPkgs, function(p) {
+        tryCatch(paste0(p$Package, "_", p$Version), error = function(e) p$Package)
+      }, "")
+      if (length(attached) > 0) {
+        lines <- c(lines, "Attached packages:", paste(" ", sort(attached)), "")
+      }
+      paste(lines, collapse = "\n")
+    }, error = function(e) paste("Session info unavailable:", e$message))
 
     output$session_info <- renderText({
       session_info_text

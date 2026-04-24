@@ -212,6 +212,7 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 
 ## Anti-patterns
 
+- Do not use `git push --force` or `git push --force-with-lease` — always use separate commits instead of amending and force-pushing
 - Do not edit `man/` or `NAMESPACE` files manually
 - Do not add unused globalVariables to `R/zzz.R`
 - Do not push without running `devtools::document()` first
