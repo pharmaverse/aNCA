@@ -379,11 +379,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     }, ignoreInit = TRUE)
 
     observeEvent(input$method, {
-      log_info("Extrapolation method changed: ", input$method)
+      if (filters_initialized()) {
+        log_info("Extrapolation method changed: ", input$method)
+      }
     }, ignoreInit = TRUE)
 
     observeEvent(input$min_hl_points, {
-      log_info("Min. half-life points changed: ", input$min_hl_points)
+      if (filters_initialized()) {
+        log_info("Min. half-life points changed: ", input$min_hl_points)
+      }
     }, ignoreInit = TRUE)
 
     # Include keyboard limits for the settings GUI display

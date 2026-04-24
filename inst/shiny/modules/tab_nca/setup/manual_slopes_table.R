@@ -138,7 +138,7 @@ manual_slopes_table_server <- function(
     # Render the manual slopes table (reactable)
     output$manual_slopes <- renderReactable({
       req(manual_slopes())
-      log_trace("{id}: rendering slope edit data table")
+      log_trace(id, ": rendering slope edit data table")
       isolate({
         data <- manual_slopes()
       })
