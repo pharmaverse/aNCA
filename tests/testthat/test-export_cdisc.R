@@ -563,9 +563,10 @@ describe("export_cdisc", {
     )))
   })
 
-  it("does not add PPSUMFL when no exclusions and no flag rules", {
+  it("PPSUMFL is always present and empty when no exclusions and no flag rules", {
     result <- export_cdisc(test_pknca_res)
-    expect_false("PPSUMFL" %in% names(result$adpp))
+    expect_true("PPSUMFL" %in% names(result$adpp))
+    expect_true(all(result$adpp$PPSUMFL == ""))
   })
 
   it("sets PPSUMFL to Y for excluded rows via .pp_excl marker", {
@@ -624,9 +625,10 @@ describe("export_cdisc", {
     expect_true("PPSUMRSN" %in% names(result$adpp))
   })
 
-  it("does not add PPSUMRSN when no exclusions and no flag rules", {
+  it("PPSUMRSN is always present and empty when no exclusions and no flag rules", {
     result <- export_cdisc(test_pknca_res)
-    expect_false("PPSUMRSN" %in% names(result$adpp))
+    expect_true("PPSUMRSN" %in% names(result$adpp))
+    expect_true(all(result$adpp$PPSUMRSN == ""))
   })
 
   it("PPSUMRSN contains exclusion reason from .pp_excl_reason", {

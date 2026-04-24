@@ -307,22 +307,28 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       excl_indices <- excl_info$indices
       excl_reasons <- excl_info$reasons
 
-      # Tagged: .pp_excl and .pp_excl_reason markers for CDISC export
-      res_tagged <- res
-      n <- nrow(res$result)
-      res_tagged$result$.pp_excl <- seq_len(n) %in% excl_indices
+      # Tagged: add .pp_excl and .pp_excl_reason markers for CDISC export.
+      # Copy result explicitly so the original res$result is never modified.
+      tagged_result <- res$result
+      n <- nrow(tagged_result)
+      tagged_result$.pp_excl <- seq_len(n) %in% excl_indices
       reason_vec <- rep(NA_character_, n)
       if (length(excl_indices) > 0) {
         reason_vec[excl_indices] <- excl_reasons
       }
-      res_tagged$result$.pp_excl_reason <- reason_vec
+      tagged_result$.pp_excl_reason <- reason_vec
 
-      # Filtered: derive from tagged to avoid a third copy of res$result
-      res_filtered <- res_tagged
-      keep <- !res_tagged$result$.pp_excl
-      res_filtered$result <- res_tagged$result[keep, , drop = FALSE]
-      res_filtered$result$.pp_excl <- NULL
-      res_filtered$result$.pp_excl_reason <- NULL
+      res_tagged <- res
+      res_tagged$result <- tagged_result
+
+      # Filtered: remove excluded rows and strip internal markers
+      keep <- !tagged_result$.pp_excl
+      filtered_result <- tagged_result[keep, , drop = FALSE]
+      filtered_result$.pp_excl <- NULL
+      filtered_result$.pp_excl_reason <- NULL
+
+      res_filtered <- res
+      res_filtered$result <- filtered_result
 
       list(tagged = res_tagged, filtered = res_filtered)
     })

@@ -34,11 +34,15 @@ parameter_exclusions_ui <- function(id) {
             tags$li("Select rows in the table below and provide a reason."),
             tags$li(tags$b("Yellow"), ": excluded (PPSUMFL = \"Y\" in ADPP)"),
             tags$li(
-              "Excluded rows remain in the dataset but are",
-              "filtered from summary tables and mean plots."
+              "Rows excluded by flag rules are shown with PPSUMFL/PPSUMRSN",
+              "but remain in summary tables and plots."
+            ),
+            tags$li(
+              "Manually added exclusions are filtered from",
+              "summary tables and mean plots."
             )
           ),
-          p("Remove exclusions anytime by clicking the X button.")
+          p("Remove manual exclusions anytime by clicking the X button.")
         ),
         style = "unite",
         right = TRUE,
@@ -96,7 +100,7 @@ parameter_exclusions_ui <- function(id) {
 
   has_exclusions <- exclude_vals != ""
   df$PPSUMFL <- ifelse(has_exclusions, "Y", "")
-  df$PPSUMRSN <- ifelse(has_exclusions, exclude_vals, NA_character_)
+  df$PPSUMRSN <- exclude_vals
 
   apply_labels(df, type = "ADPP")
 }
