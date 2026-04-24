@@ -153,74 +153,25 @@ ratios_table_server <- function(
 
     observe({
       req(pending_ratios(), ratio_param_options(), ratio_reference_options())
-
       ratio_df <- isolate(pending_ratios())
       pending_ratios(NULL)
-
-      ratio_df <- .coerce_ratio_df(ratio_df)
-      if (is.null(ratio_df) || nrow(ratio_df) == 0) return()
-
-      if (!.has_required_ratio_cols(ratio_df)) {
-        showNotification("Skipped ratio import: missing required columns",
-                         type = "warning", duration = 10)
-        return()
-      }
-
-      result <- .validate_ratio_table(
-        ratio_df, ratio_param_options(), ratio_reference_options()
+      .import_ratio_table(
+        ratio_df, ratio_param_options(), ratio_reference_options(),
+        ratio_table, refresh_cards
       )
-
-      if (length(result$skipped) > 0) {
-        showNotification(
-          paste0("Skipped ratio rows:\n", paste(result$skipped, collapse = "\n")),
-          type = "warning", duration = 10
-        )
-      }
-
-      if (any(result$keep)) {
-        ratio_table(ratio_df[result$keep, , drop = FALSE])
-        refresh_cards(refresh_cards() + 1)
-      }
     })
 
     # Add row
     observeEvent(input$add_row, {
-      if (length(ratio_param_options()) == 0 || length(ratio_reference_options()) == 0) {
-        showNotification(
-          "No parameters or group variables available to add a row.",
-          type = "warning"
-        )
-        return()
-      }
-
-      # Add a new row with default values
-      new_row <- data.frame(
-        TestParameter = ratio_param_options()[1],
-        RefParameter = ratio_param_options()[1],
-        RefGroups = ratio_reference_options()[1],
-        TestGroups = "(all other levels)",
-        AggregateSubject = "no",
-        AdjustingFactor = 1,
-        PPTESTCD = "",
-        stringsAsFactors = FALSE
-      ) %>%
-        .generate_pptestcd_for_ratios(adnca_data = adnca_data())
-
-      updated <- rbind(ratio_table(), new_row)
-      ratio_table(updated)
-      refresh_cards(refresh_cards() + 1)
+      .add_ratio_row(
+        ratio_param_options(), ratio_reference_options(),
+        adnca_data(), ratio_table, refresh_cards
+      )
     })
 
     # Remove selected rows
     observeEvent(input$remove_row, {
-      tbl <- ratio_table()
-      req(nrow(tbl) > 0)
-      selected <- which(vapply(seq_len(nrow(tbl)), function(i) {
-        isTRUE(input[[paste0("select_row_", i)]])
-      }, logical(1)))
-      req(length(selected) > 0)
-      ratio_table(tbl[-selected, , drop = FALSE])
-      refresh_cards(refresh_cards() + 1)
+      .remove_selected_ratio_rows(input, ratio_table, refresh_cards)
     })
 
     # Render formula cards
@@ -253,6 +204,70 @@ ratios_table_server <- function(
     # Return the table as a reactive
     ratio_table
   })
+}
+
+# Remove rows selected via checkboxes.
+.remove_selected_ratio_rows <- function(input, ratio_table, refresh_cards) {
+  tbl <- ratio_table()
+  req(nrow(tbl) > 0)
+  selected <- which(vapply(seq_len(nrow(tbl)), function(i) {
+    isTRUE(input[[paste0("select_row_", i)]])
+  }, logical(1)))
+  req(length(selected) > 0)
+  ratio_table(tbl[-selected, , drop = FALSE])
+  refresh_cards(refresh_cards() + 1)
+}
+
+# Add a new ratio row with default values.
+.add_ratio_row <- function(param_opts, ref_opts, adnca_data,
+                           ratio_table, refresh_cards) {
+  if (length(param_opts) == 0 || length(ref_opts) == 0) {
+    showNotification(
+      "No parameters or group variables available to add a row.",
+      type = "warning"
+    )
+    return()
+  }
+  new_row <- data.frame(
+    TestParameter = param_opts[1],
+    RefParameter = param_opts[1],
+    RefGroups = ref_opts[1],
+    TestGroups = "(all other levels)",
+    AggregateSubject = "no",
+    AdjustingFactor = 1,
+    PPTESTCD = "",
+    stringsAsFactors = FALSE
+  ) %>%
+    .generate_pptestcd_for_ratios(adnca_data = adnca_data)
+  ratio_table(rbind(ratio_table(), new_row))
+  refresh_cards(refresh_cards() + 1)
+}
+
+# Import and validate a ratio table from settings.
+.import_ratio_table <- function(ratio_df, param_opts, ref_opts,
+                                ratio_table, refresh_cards) {
+  ratio_df <- .coerce_ratio_df(ratio_df)
+  if (is.null(ratio_df) || nrow(ratio_df) == 0) return()
+
+  if (!.has_required_ratio_cols(ratio_df)) {
+    showNotification("Skipped ratio import: missing required columns",
+                     type = "warning", duration = 10)
+    return()
+  }
+
+  result <- .validate_ratio_table(ratio_df, param_opts, ref_opts)
+
+  if (length(result$skipped) > 0) {
+    showNotification(
+      paste0("Skipped ratio rows:\n", paste(result$skipped, collapse = "\n")),
+      type = "warning", duration = 10
+    )
+  }
+
+  if (any(result$keep)) {
+    ratio_table(ratio_df[result$keep, , drop = FALSE])
+    refresh_cards(refresh_cards() + 1)
+  }
 }
 
 # Register input observers for a single ratio row.
