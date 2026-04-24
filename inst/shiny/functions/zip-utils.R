@@ -125,7 +125,7 @@ format_to_xpt_compatible <- function(data) {
 #' @param statistics Character vector of summary statistics to include (default: "Mean").
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
-#' @param boxplot_parameter Character string of the parameter to use for boxplot.
+#' @param boxplot_parameters Character vector of parameters to use for boxplots.
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
 #'
@@ -135,18 +135,19 @@ get_dose_esc_results <- function(
   statistics = "Mean",
   facet_vars = "DOSEA",
   stats_parameters = c("CMAX", "TMAX", "VSSO", "CLSTP", "LAMZHL", "AUCIFO", "AUCLST", "FABS"),
-  boxplot_parameter = "AUCIFO",
+  ind_stats_parameters     = stats_parameters,
+  summary_stats_parameters = stats_parameters,
+  boxplot_parameters = c("AUCIFO"),
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
   labels_df = metadata_nca_variables
 ) {
   # Define column names
-  studyid_col <- "STUDYID"
   subj_col <- o_nca$data$conc$columns$subject
   analyte_col <- o_nca$data$conc$columns$groups$group_analyte
   pcspec_col <- "PCSPEC"
   profile_col <- "ATPTREF"
 
-  groups <- unique(o_nca$data$intervals[, c(group_by_vars, profile_col)])
+  groups <- unique(o_nca$result[, c(group_by_vars, profile_col)])
   output_list <- list()
   o_nca_i <- o_nca
   # Loop over each of the groups
@@ -182,6 +183,8 @@ get_dose_esc_results <- function(
       sd_max = TRUE
     )
 
+    # TODO: Filter out excluded records (where `exclude` is populated) before
+    # calculating summary statistics, consistent with descriptive_statistics.R
     stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
@@ -191,7 +194,7 @@ get_dose_esc_results <- function(
       ) %>%
       select(
         any_of(c(facet_vars, "Statistic")),
-        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% stats_parameters])
+        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% summary_stats_parameters])
       ) %>%
       unique()
 
@@ -210,19 +213,28 @@ get_dose_esc_results <- function(
       pull(group) %>%
       unique()
 
-    boxplot_i <- flexible_violinboxplot(
-      res_nca = o_nca_i,
-      parameter = boxplot_parameter,
-      xvars = facet_vars,
-      colorvars = analyte_col,
-      varvalstofilter = NULL,
-      box = TRUE,
-      tooltip_vars = NULL,
-      plotly = FALSE
+    boxplots_i <- setNames(
+      lapply(boxplot_parameters, function(bp) {
+        if (bp %in% unique(o_res_i$PPTESTCD)) {
+          flexible_violinboxplot(
+            res_nca = o_nca_i,
+            parameter = bp,
+            xvars = facet_vars,
+            colorvars = analyte_col,
+            varvalstofilter = NULL,
+            box = TRUE,
+            tooltip_vars = NULL,
+            plotly = FALSE
+          )
+        } else {
+          NULL
+        }
+      }),
+      boxplot_parameters
     )
 
     ind_params <- merge(o_nca$result, group_i) %>%
-      filter(PPTESTCD %in% stats_parameters) %>%
+      filter(PPTESTCD %in% ind_stats_parameters) %>%
       mutate(parameter_unit = paste0(PPTESTCD, "[", PPSTRESU, "]")) %>%
       select(any_of(
         c(
@@ -253,7 +265,7 @@ get_dose_esc_results <- function(
       linplot = linplot_i,
       meanplot = meanplot_i,
       statistics = stats_i,
-      boxplot = boxplot_i,
+      boxplot = boxplots_i,
       info = info_i,
       ind_params = ind_params,
       ind_plots = ind_plots,
@@ -303,6 +315,29 @@ get_tree_leaf_ids <- function(tree) {
   ids
 }
 
+#' Convert tree node text values to their corresponding node IDs
+#' @param tree A tree list (output of create_tree_from_list_names)
+#' @param texts Character vector of node text values to look up
+#' @return Character vector of matching node IDs
+get_tree_ids_for_texts <- function(tree, texts) {
+  result <- character(0)
+  for (node in tree) {
+    has_children <- !is.null(node$children) && length(node$children) > 0
+    if (has_children) {
+      if (node$text %in% texts) {
+        # Parent fully selected: add all leaf descendants, never the parent ID
+        result <- c(result, get_tree_leaf_ids(node$children))
+      } else {
+        # Check children individually
+        result <- c(result, get_tree_ids_for_texts(node$children, texts))
+      }
+    } else if (node$text %in% texts) {
+      result <- c(result, node$id)
+    }
+  }
+  result
+}
+
 #' Prepare export files
 #'
 #' @param target_dir Path to the directory where files will be written.
@@ -317,7 +352,8 @@ prepare_export_files <- function(target_dir,
                                  grouping_vars,
                                  input,
                                  session,
-                                 progress) {
+                                 progress,
+                                 slide_config = NULL) {
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
@@ -352,12 +388,33 @@ prepare_export_files <- function(target_dir,
 
   progress$inc(0.2)
 
-  if ("results_slides" %in% input$res_tree) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving slideshow...")
-    .export_slides(target_dir, res_nca, grouping_vars, input, session)
+  if (!is.null(res_nca)) {
+    if ("results_slides" %in% input$res_tree) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving slideshow...")
+      .export_slides(target_dir, res_nca, grouping_vars, input, session,
+                     slide_config = slide_config)
+    }
+    progress$inc(0.4)
+
+    # Export pre-specification files for selected CDISC datasets
+    selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
+    if (length(selected_cdisc) > 0) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving CDISC pre-specifications...")
+      .export_pre_specs(target_dir, selected_cdisc,
+                        cdisc_data = session$userData$results$CDISC)
+    }
+
+    if ("r_script" %in% input$res_tree) {
+      progress$set(message = "Creating exports...",
+                   detail = "Saving R script...")
+      saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
+      .export_script(target_dir, session)
+    }
+  } else {
+    progress$inc(0.4)
   }
-  progress$inc(0.4)
 
   if ("settings_file" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
@@ -365,23 +422,6 @@ prepare_export_files <- function(target_dir,
     .export_settings(target_dir, session)
   }
   progress$inc(0.6)
-
-  # Export pre-specification files for selected CDISC datasets
-  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
-  if (length(selected_cdisc) > 0) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving CDISC pre-specifications...")
-    .export_pre_specs(target_dir, selected_cdisc,
-                      cdisc_data = session$userData$results$CDISC)
-  }
-
-  saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
-
-  if ("r_script" %in% input$res_tree) {
-    progress$set(message = "Creating exports...",
-                 detail = "Saving R script...")
-    .export_script(target_dir, session)
-  }
 
   if ("session_info" %in% input$res_tree) {
     progress$set(message = "Creating exports...",
@@ -402,15 +442,40 @@ prepare_export_files <- function(target_dir,
 #' @param session Shiny session object.
 #' @keywords internal
 #' @noRd
-.export_slides <- function(target_dir, res_nca, grouping_vars, input, session) {
+.export_slides <- function(target_dir, res_nca, grouping_vars, input, session,
+                           slide_config = NULL) {
+  slide_sections           <- slide_config$slide_sections
+  ind_stats_parameters <- rlang::`%||%`(
+    slide_config$ind_stats_parameters, DEFAULT_STATS_PARAMETERS
+  )
+  summary_stats_parameters <- rlang::`%||%`(
+    slide_config$summary_stats_parameters, DEFAULT_STATS_PARAMETERS
+  )
+  boxplot_parameters       <- slide_config$boxplot_parameters
+  if (length(boxplot_parameters) == 0) boxplot_parameters <- c("CMAX", "AUCIFO", "LAMZHL")
+
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
     facet_vars = "DOSEA",
     statistics = "Mean",
-    stats_parameters = c("CMAX", "TMAX", "VSSO", "CLO", "LAMZHL", "AUCIFO", "AUCLST", "FABS_IFO"),
+    stats_parameters         = union(ind_stats_parameters, summary_stats_parameters),
+    ind_stats_parameters     = ind_stats_parameters,
+    summary_stats_parameters = summary_stats_parameters,
+    boxplot_parameters        = boxplot_parameters,
     info_vars = grouping_vars
   )
+
+  # Attach additional_analysis from session results
+  additional_analysis <- session$userData$results$additional_analysis
+  if (is.null(additional_analysis)) additional_analysis <- list()
+  attr(res_dose_slides, "additional_analysis") <- Filter(
+    function(x) is.data.frame(x) && nrow(x) > 0,
+    additional_analysis
+  )
+
+  # Attach slide section selection (NULL means all sections)
+  attr(res_dose_slides, "slide_sections") <- slide_sections
 
   path <- file.path(target_dir, "presentations")
   dir.create(path, showWarnings = FALSE)
@@ -427,12 +492,26 @@ prepare_export_files <- function(target_dir,
     )
   }
   if ("pptx" %in% input$slide_formats) {
-    create_pptx_dose_slides(
-      res_dose_slides,
-      file.path(path, "results_slides.pptx"),
-      slide_title,
-      system.file("www/templates/template.pptx", package = "aNCA")
-    )
+    if (
+      !requireNamespace("officer", quietly = TRUE) ||
+        !requireNamespace("flextable", quietly = TRUE)
+    ) {
+      showNotification(
+        paste(
+          "The 'officer' and 'flextable' packages are required to export PowerPoint slides.",
+          "Install them with: install.packages(c('officer', 'flextable'))"
+        ),
+        type = "error",
+        duration = 10
+      )
+    } else {
+      create_pptx_dose_slides(
+        res_dose_slides,
+        file.path(path, "results_slides.pptx"),
+        slide_title,
+        system.file("www/templates/template.pptx", package = "aNCA")
+      )
+    }
   }
 }
 
@@ -452,15 +531,41 @@ prepare_export_files <- function(target_dir,
 
   settings_list$ratio_table <- session$userData$ratio_table()
 
-  settings_to_save <- list(
-    mapping = session$userData$mapping,
-    filters = session$userData$applied_filters,
+  payload <- list(
     settings = settings_list,
-    slope_rules = session$userData$slope_rules()
+    mapping = session$userData$mapping,
+    slope_rules = session$userData$slope_rules(),
+    filters = session$userData$applied_filters,
+    time_duplicate_keys = session$userData$time_duplicate_keys,
+    nca_ran = isTRUE(session$userData$nca_ran)
   )
-  yaml::write_yaml(
-    settings_to_save, file.path(target_dir, "settings.yaml")
+
+  dataset_name <- session$userData$dataset_filename %||% ""
+
+  active_tab <- tryCatch(
+    session$userData$active_tab(),
+    error = function(e) ""
   )
+
+  save_comment <- session$userData$settings_save_comment %||% ""
+
+  new_version <- create_settings_version(
+    settings_data = payload,
+    comment = save_comment,
+    dataset = dataset_name,
+    tab = active_tab
+  )
+
+  existing <- tryCatch(
+    session$userData$settings_versions(),
+    error = function(e) list()
+  )
+  if (is.null(existing)) existing <- list()
+
+  versions <- add_settings_version(existing, new_version)
+  session$userData$settings_versions(versions)
+
+  write_versioned_settings(versions, file.path(target_dir, "settings.yaml"))
 }
 
 #' Helper to export a single pre-specification xlsx file for CDISC datasets.
@@ -507,32 +612,43 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_session_info <- function(target_dir) {
-  si <- utils::sessionInfo()
-  lines <- c(
-    paste("R version:", si$R.version$version.string),
-    paste("Platform: ", si$platform),
-    paste("Running under:", si$running),
-    "",
-    "aNCA and attached packages:",
-    ""
-  )
-
-  # Collect attached packages (base + other) with versions, sorted alphabetically
-
-  attached <- c(
-    vapply(si$otherPkgs, function(p) paste0("  ", p$Package, " ", p$Version), ""),
-    vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
-  )
-  lines <- c(lines, sort(attached))
-
-  # Loaded-only (namespace) packages
-  if (length(si$loadedOnly) > 0) {
-    loaded <- vapply(
-      si$loadedOnly,
-      function(p) paste0("  ", p$Package, " ", p$Version), ""
+  lines <- tryCatch({
+    si <- utils::sessionInfo()
+    hdr <- c(
+      paste("R version:", si$R.version$version.string),
+      paste("Platform: ", si$platform),
+      paste("Running under:", si$running),
+      "",
+      "aNCA and attached packages:",
+      ""
     )
-    lines <- c(lines, "", "Loaded via namespace (not attached):", "", sort(loaded))
-  }
+
+    # Collect attached packages (base + other) with versions, sorted alphabetically
+    attached <- c(
+      vapply(si$otherPkgs, function(p) {
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
+      }, ""),
+      vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
+    )
+    hdr <- c(hdr, sort(attached))
+
+    # Loaded-only (namespace) packages
+    if (length(si$loadedOnly) > 0) {
+      loaded <- vapply(si$loadedOnly, function(p) {
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
+      }, "")
+      hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
+    }
+    hdr
+  }, error = function(e) {
+    c("Session info unavailable:", e$message)
+  })
 
   writeLines(lines, file.path(target_dir, "session_info.txt"))
 }
@@ -546,8 +662,11 @@ prepare_export_files <- function(target_dir,
   all_files <- list.files(target_dir, recursive = TRUE, full.names = TRUE)
 
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
+  if ("qmd" %in% input$slide_formats) exts <- c(exts, "rda")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
   fnames <- unique(c(input$res_tree, names(custom_names)))
+  if ("results_slides" %in% fnames) fnames <- c(fnames, "results_slides_outputs")
+
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
   fnames <- ifelse(fnames == "settings_file", "settings", fnames)
   fnames_patt <- paste0(
@@ -558,6 +677,10 @@ prepare_export_files <- function(target_dir,
   pattern <- paste0("/", fnames_patt, "\\.", exts_patt)
   files_req <- grep(pattern, all_files, value = TRUE)
   files_req <- c(files_req, grep("data\\.rds$", all_files, value = TRUE))
+  if ("qmd" %in% input$slide_formats) {
+    files_req <- c(files_req, grep("results_slides_outputs\\.rda$", all_files, value = TRUE))
+  }
+
   # Preserve pre-specs only when at least one CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,

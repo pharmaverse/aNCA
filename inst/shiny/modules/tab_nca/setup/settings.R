@@ -13,6 +13,83 @@
 #'
 #' @returns A reactive with a list with all settings.
 
+#' Partial Interval Calculations UI
+#'
+#' Extracted so it can be placed in the Parameter Selection tab
+#' while keeping its server logic in settings_server.
+#'
+#' @param id The settings module namespace ID (same as settings_ui).
+partial_intervals_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    fluidRow(
+      column(
+        width = 10,
+        actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h2("Partial Interval Calculations Help"),
+            p(
+              "Define custom time intervals for calculating partial area",
+              "and related parameters. Add a row for each interval you need."
+            ),
+            p("For each row, specify:"),
+            tags$ul(
+              tags$li(
+                tags$b("Parameter"),
+                ": The interval calculation to perform (e.g., AUCINT, AUCINTA, CAVGINT)."
+              ),
+              tags$li(
+                tags$b("Start"),
+                ": Start time of the interval."
+              ),
+              tags$li(
+                tags$b("End"),
+                ": End time of the interval."
+              )
+            ),
+            p(
+              tags$b("Note:"),
+              " Rows with missing Start or End values will be ignored."
+            ),
+            tags$table(
+              class = "imputation-help-table",
+              tags$thead(
+                tags$tr(
+                  tags$th("Parameter"),
+                  tags$th("Description")
+                )
+              ),
+              tags$tbody(
+                tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
+                tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
+                tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
+                tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
+                tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
+                tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
+                tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
+                tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
+                tr("CAVGINT", "Average Concentration from T1 to T2"),
+                tr("RCAMINT", "Amount Recovered from T1 to T2"),
+                tr("FREXINT", "Fraction Excreted from T1 to T2")
+              )
+            )
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "600px"
+        )
+      )
+    ),
+    reactableOutput(ns("int_parameters_table"))
+  )
+}
+
 settings_ui <- function(id) {
   ns <- NS(id)
 
@@ -65,6 +142,17 @@ settings_ui <- function(id) {
             )
           ),
           column(
+            4,
+            numericInput(
+              ns("min_hl_points"),
+              "Min. Points for Half-life:",
+              value = 3,
+              min = 2,
+              max = 10,
+              step = 1
+            )
+          ),
+          column(
             4, # pickerinput only enabled when IV and EX data present
             shinyjs::hidden(
               div(
@@ -90,75 +178,35 @@ settings_ui <- function(id) {
         data_imputation_ui(ns("data_imputation"))
       ),
       accordion_panel(
-        title = "Partial Interval Calculations",
+        title = "Flag Rule Sets",
         fluidRow(
           column(
-            width = 10,
-            actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
+            width = 10
           ),
           column(
             width = 2,
             dropdown(
               div(
-                tags$h2("Partial Interval Calculations Help"),
+                tags$h2("Flag Rule Sets Help"),
                 p(
-                  "Define custom time intervals for calculating partial area",
-                  "and related parameters. Add a row for each interval you need."
-                ),
-                p("For each row, specify:"),
-                tags$ul(
-                  tags$li(
-                    tags$b("Parameter"),
-                    ": The interval calculation to perform (e.g., AUCINT, AUCINTA, CAVGINT)."
-                  ),
-                  tags$li(
-                    tags$b("Start"),
-                    ": Start time of the interval."
-                  ),
-                  tags$li(
-                    tags$b("End"),
-                    ": End time of the interval."
-                  )
+                  "Flag rules define quality thresholds for NCA results.",
+                  "Parameters that violate a checked rule are flagged in the",
+                  "results table and excluded from descriptive statistics."
                 ),
                 p(
-                  tags$b("Note:"),
-                  " Rows with missing Start or End values will be ignored."
-                ),
-                tags$table(
-                  class = "imputation-help-table",
-                  tags$thead(
-                    tags$tr(
-                      tags$th("Parameter"),
-                      tags$th("Description")
-                    )
-                  ),
-                  tags$tbody(
-                    tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
-                    tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
-                    tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
-                    tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
-                    tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
-                    tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
-                    tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
-                    tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
-                    tr("CAVGINT", "Average Concentration from T1 to T2"),
-                    tr("RCAMINT", "Amount Recovered from T1 to T2"),
-                    tr("FREXINT", "Fraction Excreted from T1 to T2")
-                  )
+                  "Each checked rule also generates criterion columns",
+                  "(CRITy / CRITyFL) and a summary analysis flag (PPSUMFL)",
+                  "in the ADPP dataset."
                 )
               ),
               style = "unite",
               right = TRUE,
               icon = icon("question"),
               status = "primary",
-              width = "600px"
+              width = "400px"
             )
           )
         ),
-        reactableOutput(ns("int_parameters_table"))
-      ),
-      accordion_panel(
-        title = "Flag Rule Sets",
         .rule_input(
           ns("R2ADJ"), "R2ADJ >=", 0.7, 0.05, 0, 1,
           tooltip = "Minimum adjusted R-squared threshold for lambda-z related parameters"
@@ -181,7 +229,7 @@ settings_ui <- function(id) {
           tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
         )
       ),
-      open = c("General Settings", "Parameter Selection")
+      open = "General Settings"
     )
   )
 }
@@ -193,7 +241,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     conc_data <- reactive(adnca_data()$conc$data)
 
     # Modules for Data Imputation
-    data_imputation <- data_imputation_server("data_imputation")
+    data_imputation <- data_imputation_server("data_imputation", settings_override)
 
     # File Upload Handling
     observeEvent(c(data(), settings_override()), {
@@ -219,21 +267,15 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     # A guard flag prevents infinite observer loops.
     updating_filters <- reactiveVal(FALSE)
 
-    # settings_override is consumed once during the first cascade after
-    # settings upload. After that, pending_settings is set to NULL so
-    # subsequent user-driven changes are not overridden by stale values.
+    # pending_settings holds the imported settings during the filter cascade.
+    # The analyte observer reads it without clearing; the pcspec observer
+    # consumes it (reads + clears). This ensures the override is available
+    # throughout the cascade and cleared once it settles (#1227).
     pending_settings <- reactiveVal(NULL)
 
     observeEvent(settings_override(), {
       pending_settings(settings_override())
     })
-
-    # Helper: consume pending settings (returns them once, then clears)
-    .consume_settings <- function() {
-      s <- pending_settings()
-      pending_settings(NULL)
-      s
-    }
 
     # Helper: update profile choices based on current analyte + pcspec
     .update_profile <- function(settings = NULL) {
@@ -262,7 +304,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
-      settings <- .consume_settings()
+      settings <- pending_settings()
 
       all_pcspec <- unique(data()$PCSPEC) %>% na.omit()
       available_pcspec <- data() %>%
@@ -289,14 +331,17 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       .update_profile(settings)
     })
 
-    # When pcspec changes: unselect unavailable analyte items, then update profile
+    # When pcspec changes: unselect unavailable analyte items, then update profile.
+    # This observer consumes (clears) pending_settings since it is the last
+    # observer in the cascade that needs the override values.
     observeEvent(input$select_pcspec, {
       req(data(), input$select_pcspec)
       if (updating_filters()) return()
       updating_filters(TRUE)
       on.exit(updating_filters(FALSE))
 
-      settings <- .consume_settings()
+      settings <- pending_settings()
+      pending_settings(NULL)
 
       all_analyte <- unique(data()$PARAM) %>% na.omit()
       available_analyte <- data() %>%
@@ -324,6 +369,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     limit_input_value(input, session, "AUCPEO_threshold", max = 100, min = 0, lab = "AUCPEO")
     limit_input_value(input, session, "AUCPEP_threshold", max = 100, min = 0, lab = "AUCPEP")
     limit_input_value(input, session, "LAMZSPN_threshold", min = 0, lab = "LAMZSPN")
+    limit_input_value(input, session, "min_hl_points", max = 10, min = 2, lab = "Min. HL Points")
 
     # Reactive value to store the partial intervals data table
     # Define the parameters that can be used for partial area calculations
@@ -412,9 +458,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         profile = input$select_profile,
         pcspec = input$select_pcspec,
         method = input$method,
+        min_hl_points = input$min_hl_points,
         bioavailability = input$bioavailability,
         data_imputation = list(
           impute_c0 = data_imputation$should_impute_c0(),
+          blq_strategy = data_imputation$blq_strategy(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
         int_parameters = int_parameters(),
@@ -531,6 +579,13 @@ settings_server <- function(id, data, adnca_data, settings_override) {
                                          int_parameters, refresh_reactable) {
   updateSelectInput(session, inputId = "method", selected = settings$method)
 
+  if (!is.null(settings$min_hl_points)) {
+    updateNumericInput(
+      session, inputId = "min_hl_points",
+      value = settings$min_hl_points
+    )
+  }
+
   dose_routes <- unique(adnca_data()$dose$data$std_route)
   if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
     updateSelectInput(
@@ -539,7 +594,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     )
   }
 
-  update_switch("should_impute_c0", value = settings$data_imputation$impute_c0)
+  # Data imputation is restored by data_imputation_server via settings_override
 
   if (!is.null(settings$int_parameters)) {
     int_parameters(settings$int_parameters)

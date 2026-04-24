@@ -280,7 +280,7 @@ describe("PKNCA_update_data_object", {
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      should_impute_c0 = TRUE
+      start_impute = TRUE
     )
     expect_s3_class(updated_data, "PKNCAdata")
   })
@@ -292,7 +292,7 @@ describe("PKNCA_update_data_object", {
       selected_analytes = "AnalyteX",
       selected_profile = 1,
       selected_pcspec = "Plasma",
-      should_impute_c0 = FALSE
+      start_impute = FALSE
     )
     intervals <- updated_data$intervals
     expect_true(all(intervals$PARAM == "AnalyteX"))
@@ -307,11 +307,253 @@ describe("PKNCA_update_data_object", {
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
-      should_impute_c0 = TRUE
+      start_impute = TRUE
     )
     expect_equal(updated_data$options$auc.method, "lin up log down")
     expect_equal(updated_data$options$min.hl.r.squared, 0.01)
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
+  })
+
+  it("uses default min.hl.points of 3 when not specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE
+    )
+    expect_equal(updated_data$options$min.hl.points, 3)
+  })
+
+  it("sets custom min.hl.points when specified", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE,
+      min_hl_points = 5
+    )
+    expect_equal(updated_data$options$min.hl.points, 5)
+  })
+
+  it("calls update_main_intervals internally when parameter_selections is provided", {
+    # study_types_df is derived internally via detect_study_types().
+    # simple_data has ADOSEDUR=0.5 (infusion) and single dose -> "Single IV Infusion"
+    parameter_selections <- list(
+      `Single IV Infusion` = c("cmax", "tmax", "auclast")
+    )
+
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = FALSE,
+      parameter_selections = parameter_selections,
+      int_parameters = data.frame(
+        parameter = character(), start_auc = numeric(), end_auc = numeric()
+      )
+    )
+    expect_s3_class(updated_data, "PKNCAdata")
+    expect_true(all(updated_data$intervals$cmax))
+    expect_true(all(updated_data$intervals$tmax))
+    expect_true(all(updated_data$intervals$auclast))
+  })
+
+  it("applies custom_units_table when provided", {
+    custom_units <- data.frame(
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      custom_units_table = custom_units
+    )
+    cmax_row <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                     updated_data$units$PPORRESU == "ng/mL", ]
+    expect_equal(nrow(cmax_row), 1)
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+  })
+
+  it("applies custom_units_table correctly when units table has group columns", {
+    # Inject a PARAM-grouped units table into ma_data to simulate the scenario
+    # where different analytes have different units (e.g. from PKNCA_build_units_table
+    # when PARAM is the minimal grouping column).
+    ma_analytes <- unique(multiple_data$PARAM)
+    ma_dosnos <- unique(multiple_data$ATPTREF)
+    ma_pcspecs <- unique(multiple_data$PCSPEC)
+
+    grouped_ma_data <- ma_data
+    grouped_ma_data$units <- rbind(
+      PKNCA::pknca_units_table(
+        concu = "ng/mL", timeu = "hr", doseu = "mg"
+      ) %>% dplyr::mutate(PARAM = "AnalyteX", PPSTRESU = PPORRESU, conversion_factor = 1),
+      PKNCA::pknca_units_table(
+        concu = "mg/mL", timeu = "hr", doseu = "mg"
+      ) %>% dplyr::mutate(PARAM = "AnalyteY", PPSTRESU = PPORRESU, conversion_factor = 1)
+    )
+
+    # Update only AnalyteX's cmax unit, leaving AnalyteY unchanged
+    custom_units <- data.frame(
+      PARAM = "AnalyteX",
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = grouped_ma_data,
+      method = method,
+      selected_analytes = ma_analytes,
+      selected_profile = ma_dosnos,
+      selected_pcspec = ma_pcspecs,
+      custom_units_table = custom_units
+    )
+
+    # AnalyteX cmax should be updated
+    cmax_x <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                   updated_data$units$PARAM == "AnalyteX", ]
+    expect_equal(nrow(cmax_x), 1)
+    expect_equal(cmax_x$PPSTRESU, "ug/mL")
+    expect_equal(cmax_x$conversion_factor, 0.001)
+
+    # AnalyteY cmax should remain unchanged (default: PPSTRESU == PPORRESU)
+    cmax_y <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                   updated_data$units$PARAM == "AnalyteY", ]
+    expect_equal(nrow(cmax_y), 1)
+    expect_equal(cmax_y$PPSTRESU, cmax_y$PPORRESU)
+    expect_equal(cmax_y$conversion_factor, 1)
+  })
+
+  it("handles custom_units_table with extra columns not in data$units", {
+    # custom_units_table may have columns (e.g. PARAM) that don't exist in
+    # data$units — these should be dropped gracefully.
+    custom_units <- data.frame(
+      PARAM = "AnalyteA",
+      PPTESTCD = "cmax",
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ug/mL",
+      conversion_factor = 0.001
+    )
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      custom_units_table = custom_units
+    )
+    cmax_row <- updated_data$units[updated_data$units$PPTESTCD == "cmax" &
+                                     updated_data$units$PPORRESU == "ng/mL", ]
+    expect_equal(nrow(cmax_row), 1)
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+  })
+
+  it("skips update_main_intervals when neither parameter_selections nor int_parameters is set", {
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = FALSE
+    )
+    # Without parameter_selections or int_parameters, all parameter flags remain FALSE
+    expect_true(all(!updated_data$intervals$cmax))
+  })
+
+  it("returns the same object type (PKNCAdata) with the exclude_half.life column", {
+    rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Exclusion",
+      RANGE = "1:4",
+      REASON = "Manual Outlier",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = rules
+    )
+    expect_s3_class(updated, "PKNCAdata")
+    expect_true(any(updated$conc$data$exclude_half.life))
+  })
+  it("flags exclude_half.life on matching points via hl_adj_rules Exclusion", {
+    excl_rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Exclusion",
+      RANGE = "3:3",
+      REASON = "Outlier",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = excl_rules
+    )
+    conc <- updated$conc$data
+    at_t3 <- conc$AFRLT == 3
+    # t=3 should be flagged for exclusion with the specified reason
+    expect_true(all(conc$exclude_half.life[at_t3]))
+    expect_true(all(grepl("Outlier", conc$REASON[at_t3])))
+    # Other points should remain unflagged
+    expect_false(any(conc$exclude_half.life[!at_t3]))
+  })
+
+  it("flags include_half.life on matching points via hl_adj_rules Selection", {
+    # Force-include t=2 to t=4 in the half-life regression
+    sel_rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Selection",
+      RANGE = "2:4",
+      REASON = "Manual selection",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = sel_rules
+    )
+    conc <- updated$conc$data
+    in_range <- conc$AFRLT >= 2 & conc$AFRLT <= 4
+    # t=2, t=3, t=4 should be flagged for inclusion with the specified reason
+    expect_true(all(conc$include_half.life[in_range]))
+    expect_true(all(grepl("Manual selection", conc$REASON[in_range])))
+    # Points outside the range should remain unflagged
+    expect_true(all(is.na(conc$include_half.life[!in_range])))
   })
 })
 
@@ -331,6 +573,34 @@ describe("PKNCA_calculate_nca", {
 
     # Check that only two items have been added to the list
     expect_equal(length(colnames(nca_results$result)), 15)
+  })
+})
+
+describe("remove_pp_not_requested", {
+  it("returns a PKNCAresults object without parameters not explicitly defined in intervals", {
+    res <- FIXTURE_PKNCA_RES
+
+    # Indirect parameters should be present before filtering
+    indirect_params <- c("LAMZ", "LAMZLL", "LAMZNPT", "R2ADJ", "SPANR")
+    params_before <- unique(res$result$PPTESTCD)
+    has_indirect <- intersect(indirect_params, params_before)
+    expect_true(length(has_indirect) > 0)
+
+    result <- remove_pp_not_requested(res)
+
+    # Requested params should still be present
+    requested_cdisc <- c("LAMZHL", "CMAX", "AUCLST", "AUCIFOB")
+    params_after <- unique(result$result$PPTESTCD)
+    for (p in requested_cdisc) {
+      if (p %in% params_before) {
+        expect_true(p %in% params_after, info = paste(p, "should be kept"))
+      }
+    }
+
+    # Indirect params should be removed
+    for (p in has_indirect) {
+      expect_false(p %in% params_after, info = paste(p, "should be removed"))
+    }
   })
 })
 

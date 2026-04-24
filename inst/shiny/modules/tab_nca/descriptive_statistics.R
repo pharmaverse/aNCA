@@ -84,28 +84,34 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
-      results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
+      results_to_join <- res_nca()$data$conc$data %>%
+        select(any_of(cols_to_join)) %>%
+        distinct()
       stats_data <- inner_join(
         results$result,
         results_to_join,
         by = intersect(names(results$result), names(results_to_join)),
         relationship = "many-to-many"
       ) %>%
-        # Rename manual interval parameters to include the interval range
+        # Exclude flagged records from summary statistics
+        filter(is.na(exclude) | exclude == "") %>%
+        # Rename manual interval parameters to include the range suffix
         # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
-        mutate(PPTESTCD = ifelse(
-          type_interval == "manual",
-          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
-          PPTESTCD
-        ))
+        rename_interval_params()
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, input$summary_groupby)
     })
 
     summary_stats_filtered <- reactive({
+      # Map clean parameter names (e.g. "CMAX") back to actual column names
+      # that include units (e.g. "CMAX[ng/mL]")
+      all_cols <- colnames(summary_stats())
+      selected_params <- input$select_display_parameters
+      matched_cols <- all_cols[gsub("\\[.*", "", all_cols) %in% selected_params]
+
       summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic", input$select_display_parameters))) %>%
+        select(any_of(c(input$summary_groupby, "Statistic", matched_cols))) %>%
         filter(Statistic %in% input$select_display_statistic)
     })
 

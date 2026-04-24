@@ -81,7 +81,7 @@ ratios_table_ui <- function(id) {
 #' @returns List with `valid` (data.frame) and `skipped` (character vector of reasons).
 #' @noRd
 ratios_table_server <- function(
-    id, adnca_data, extra_group_vars, imported_ratios) {
+    id, adnca_data, extra_group_vars, imported_ratios, int_parameters) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -104,23 +104,11 @@ ratios_table_server <- function(
     })
 
     ratio_reference_options <- reactive({
-      # We paste the column name and value to use as a specified input
-      if (ncol(ratio_groups()) == 0) {
-        return(NULL)
-      }
-
-      ratio_groups() %>%
-        # Convert all columns to character
-        mutate(across(everything(), as.character)) %>%
-        pivot_longer(cols = everything()) %>%
-        mutate(input_name = paste0(name, ": ", value)) %>%
-        pull(input_name) %>%
-        unique() %>%
-        sort()
+      .build_ratio_reference_options(ratio_groups())
     })
 
     ratio_param_options <- reactive({
-      adnca_data()$intervals %>%
+      main_params <- adnca_data()$intervals %>%
         # Only consider main intervals for ratios
         filter(type_interval == "main") %>%
         select(
@@ -133,6 +121,10 @@ ratios_table_server <- function(
         names() %>%
         purrr::keep(~ grepl("^(auc[itl\\.]|cmax|ae)", ., ignore.case = TRUE)) %>%
         translate_terms("PKNCA", "PPTESTCD")
+
+      # Append interval parameters with range suffix (e.g. AUCINT_0-20)
+      interval_params <- .build_interval_param_options(int_parameters())
+      unique(c(main_params, interval_params))
     })
 
     # Table columns
@@ -170,11 +162,10 @@ ratios_table_server <- function(
       ratio_df <- isolate(pending_ratios())
       pending_ratios(NULL)
 
-      required_cols <- c(
-        "TestParameter", "RefParameter", "RefGroups", "TestGroups",
-        "AggregateSubject", "AdjustingFactor", "PPTESTCD"
-      )
-      if (!all(required_cols %in% names(ratio_df))) {
+      ratio_df <- .coerce_ratio_df(ratio_df)
+      if (is.null(ratio_df) || nrow(ratio_df) == 0) return()
+
+      if (!.has_required_ratio_cols(ratio_df)) {
         showNotification("Skipped ratio import: missing required columns",
                          type = "warning", duration = 10)
         return()
@@ -344,6 +335,35 @@ ratios_table_server <- function(
   })
 }
 
+# Build interval parameter options with range suffix from int_parameters table.
+# Rows with NA start/end are excluded since they represent incomplete definitions.
+# Returns e.g. c("AUCINT_0-20", "AUCINT_0-30").
+.build_interval_param_options <- function(int_params) {
+  if (is.null(int_params) || nrow(int_params) == 0) {
+    return(character(0))
+  }
+  complete <- !is.na(int_params$start_auc) & !is.na(int_params$end_auc)
+  if (!any(complete)) {
+    return(character(0))
+  }
+  int_params <- int_params[complete, , drop = FALSE]
+  paste0(int_params$parameter, "_", int_params$start_auc, "-", int_params$end_auc)
+}
+
+# Build reference options from ratio group columns.
+.build_ratio_reference_options <- function(groups_df) {
+  if (ncol(groups_df) == 0) {
+    return(NULL)
+  }
+  groups_df %>%
+    mutate(across(everything(), as.character)) %>%
+    pivot_longer(cols = everything()) %>%
+    mutate(input_name = paste0(name, ": ", value)) %>%
+    pull(input_name) %>%
+    unique() %>%
+    sort()
+}
+
 .generate_pptestcd_for_ratios <- function(tbl, adnca_data) {
   analyte_col <- adnca_data$conc$columns$groups$group_analyte
   profile_col <- "ATPTREF"
@@ -373,6 +393,24 @@ ratios_table_server <- function(
       ),
       PPTESTCD = make.unique(PPTESTCD, sep = "")
     )
+}
+
+# Coerce imported ratio data to a data frame, handling YAML empty arrays.
+.coerce_ratio_df <- function(ratio_df) {
+  if (!is.data.frame(ratio_df)) {
+    ratio_df <- tryCatch(as.data.frame(ratio_df, stringsAsFactors = FALSE),
+                         error = function(e) NULL)
+  }
+  ratio_df
+}
+
+# Check that a ratio data frame has all required columns.
+.has_required_ratio_cols <- function(ratio_df) {
+  required_cols <- c(
+    "TestParameter", "RefParameter", "RefGroups", "TestGroups",
+    "AggregateSubject", "AdjustingFactor", "PPTESTCD"
+  )
+  all(required_cols %in% names(ratio_df))
 }
 
 # Validate all rows in a ratio table. Returns list(keep, skipped).

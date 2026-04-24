@@ -4,16 +4,20 @@
 \alias{export_cdisc}
 \title{Export CDISC Data}
 \usage{
-export_cdisc(res_nca, grouping_vars = character(0))
+export_cdisc(res_nca, grouping_vars = character(0), flag_rules = NULL)
 }
 \arguments{
 \item{res_nca}{Object with results of the NCA analysis. If
 \code{res_nca$result} contains a \code{.pp_excl} column (logical), excluded rows
-(\code{TRUE}) get \code{PPSUM1F = "Y"} in ADPP; included rows get \code{PPSUM1F = ""}.
-If \code{.pp_excl_reason} (character) is also present, it populates \code{PPSUM1R}.}
+are merged into the \code{exclude} column so they appear in \code{PPSUMFL}/\code{PPSUMRSN}.
+If \code{.pp_excl_reason} (character) is also present, it populates \code{PPSUMRSN}.}
 
 \item{grouping_vars}{Character vector of non-standard grouping variable names to include
 as additional columns in ADNCA, ADPP, and PP outputs. Defaults to \code{character(0)}.}
+
+\item{flag_rules}{Character vector of flag rule exclusion messages applied during NCA
+(e.g., \code{c("R2ADJ < 0.8", "AUCPEO > 20")}). Each entry generates a CRITy/CRITyFL
+column pair in ADPP, plus PPSUMFL and PPSUMRSN columns. Defaults to \code{NULL} (no flags).}
 }
 \value{
 A list with two data frames:

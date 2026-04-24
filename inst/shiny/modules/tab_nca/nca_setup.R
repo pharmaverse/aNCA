@@ -20,25 +20,26 @@ nca_setup_ui <- function(id) {
   navset_pill_list(
     widths = c(2, 10),
     nav_panel(
-      "Settings",
+      "NCA Settings",
       fluidRow(
-        downloadButton(
-          ns("settings_download"),
+        actionButton(
+          ns("open_save_settings_modal"),
           label = "Download settings",
+          icon = icon("download"),
           class = "btn-primary"
         )
       ),
-      fluidRow(units_table_ui(ns("units_table"))),
-      settings_ui(ns("nca_settings")),
-      accordion(
-        accordion_panel(
-          title = "Ratio Calculations",
-          ratios_table_ui(ns("ratio_calculations_table"))
-        ),
-        open = c("General Settings", "Parameter Selection")
+      settings_ui(ns("nca_settings"))
+    ),
+    nav_panel(
+      "Parameter Selection",
+      parameter_selection_ui(
+        ns("nca_setup_parameter"),
+        units_ui = units_table_ui(ns("units_table")),
+        intervals_ui = partial_intervals_ui(ns("nca_settings")),
+        ratios_ui = ratios_table_ui(ns("ratio_calculations_table"))
       )
     ),
-    nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
     nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
     nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
   )
@@ -46,6 +47,7 @@ nca_setup_ui <- function(id) {
 
 nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_override) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
     imported_settings <- reactive(settings_override()$settings)
     imported_slopes <- reactive(settings_override()$slope_rules)
@@ -107,40 +109,38 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     # Update pknca data object and intervals using summary output
     processed_pknca_data <- reactive({
       req(adnca_data(), settings(),
-          parameters_output$selections(), parameters_output$types_df())
+          parameters_output$selections())
 
       log_trace("Updating PKNCA::data object.")
 
-      base_pknca_data <- PKNCA_update_data_object(
+      final_data <- PKNCA_update_data_object(
         adnca_data = adnca_data(),
         method = settings()$method,
         selected_analytes = settings()$analyte,
         selected_profile = settings()$profile,
         selected_pcspec = settings()$pcspec,
-        should_impute_c0 = settings()$data_imputation$impute_c0,
+        start_impute = settings()$data_imputation$impute_c0,
         hl_adj_rules = slope_rules(),
         exclusion_list = general_exclusions(),
-        keep_interval_cols = extra_group_vars()
+        keep_interval_cols = extra_group_vars(),
+        min_hl_points = settings()$min_hl_points,
+        parameter_selections = parameters_output$selections(),
+        int_parameters = settings()$int_parameters,
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
+      # Wait for study types to settle during reactive transitions
+      req(nrow(parameters_output$types_df()) > 0)
+
       # Show bioavailability widget if it is possible to calculate
-      if (base_pknca_data$dose$data$std_route %>% unique() %>% length() == 2) {
+      if (final_data$dose$data$std_route %>% unique() %>% length() == 2) {
         shinyjs::show(selector = ".bioavailability-picker")
       } else {
         shinyjs::hide(selector = ".bioavailability-picker")
       }
 
-      # Call the updated function with the direct inputs
-      final_data <- update_main_intervals(
-        data = base_pknca_data,
-        parameter_selections = parameters_output$selections(),
-        study_types_df = parameters_output$types_df(),
-        int_parameters = settings()$int_parameters,
-        impute = settings()$data_imputation$impute_c0,
-        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
-      )
-
-      if (nrow(final_data$intervals) == 0) {
+      if (nrow(final_data$intervals) == 0 &&
+            !isTRUE(session$userData$auto_replay_active)) {
         showNotification(
           "All intervals were filtered. Please revise your settings",
           type = "warning",
@@ -152,11 +152,13 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     })
 
     # Keep the post processing ratio calculations requested by the user
+    int_parameters <- reactive(settings()$int_parameters)
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data,
       extra_group_vars = extra_group_vars,
-      imported_ratios = imported_ratios
+      imported_ratios = imported_ratios,
+      int_parameters = int_parameters
     )
 
     # Automatically update the units table when settings are uploaded.
@@ -202,25 +204,73 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       imported_slopes
     )
 
+    # Open comment modal before downloading settings
+    observeEvent(input$open_save_settings_modal, {
+      showModal(modalDialog(
+        title = "Save Settings",
+        textInput(
+          ns("settings_save_comment"),
+          label = "Comment (optional)",
+          placeholder = "e.g. final NCA, first draft"
+        ),
+        footer = tagList(
+          downloadButton(ns("settings_download"), "Save", class = "btn-primary"),
+          modalButton("Cancel")
+        ),
+        easyClose = TRUE,
+        size = "m"
+      ))
+    })
+
     output$settings_download <- downloadHandler(
       filename = function() {
-        paste0(session$userData$project_prefix("_"), "settings_", Sys.Date(), ".yaml")
+        paste0(
+          session$userData$project_prefix("_"),
+          "settings_", Sys.Date(), ".yaml"
+        )
       },
       content = function(con) {
         export_settings <- final_settings()
         if (!is.null(export_settings$units)) {
           export_settings$units <- export_settings$units %>%
-            dplyr::filter(!default) %>%
-            dplyr::select(-default)
+            filter(!default) %>%
+            select(-default)
         }
         export_settings$ratio_table <- ratio_table()
-        settings_to_save <- list(
-          mapping = session$userData$mapping,
-          filters = session$userData$applied_filters,
+        payload <- list(
           settings = export_settings,
-          slope_rules = slope_rules()
+          mapping = session$userData$mapping,
+          slope_rules = slope_rules(),
+          filters = session$userData$applied_filters,
+          time_duplicate_keys = session$userData$time_duplicate_keys,
+          nca_ran = isTRUE(session$userData$nca_ran)
         )
-        yaml::write_yaml(settings_to_save, file = con)
+
+        dataset_name <- session$userData$dataset_filename %||% ""
+
+        active_tab <- tryCatch(
+          session$userData$active_tab(),
+          error = function(e) ""
+        )
+
+        new_version <- create_settings_version(
+          settings_data = payload,
+          comment = input$settings_save_comment %||% "",
+          dataset = dataset_name,
+          tab = active_tab
+        )
+
+        existing <- tryCatch(
+          session$userData$settings_versions(),
+          error = function(e) list()
+        )
+        if (is.null(existing)) existing <- list()
+
+        versions <- add_settings_version(existing, new_version)
+        session$userData$settings_versions(versions)
+
+        write_versioned_settings(versions, con)
+        removeModal()
       }
     )
 

@@ -115,6 +115,11 @@ h5 {
   text-align: center;
 }
 
+.modal-footer {
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+}
+
 .modal-intro {
   font-family: "Arial";
   /* Elegant font type for intro text */
@@ -208,19 +213,140 @@ h5 {
   display: inline-block !important;
 }
 
-/* parameter selection gird */
-.nca-pill-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
+/* Parameter selection matrix — rows: study types, columns: parameters */
+.param-matrix-wrapper {
+  margin-top: 0.5em;
 }
 
-.nca-pill {
-  background-color: #e0ecff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.9em;
+.param-matrix-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 60vh;
+  border: 1px solid #dadada;
+  border-radius: 4px;
+}
+
+.param-matrix-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.75em;
+  width: max-content;
+  min-width: 100%;
+}
+
+.param-matrix-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.param-matrix-corner,
+.param-matrix-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #ffffff;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-weight: 600;
+  text-align: left;
+  border-right: 2px solid #cdcdcd;
+}
+
+.param-matrix-corner {
+  z-index: 4;
+}
+
+thead .param-matrix-row-header {
+  z-index: 4;
+}
+
+.param-matrix-group-header {
+  background: #007bc2;
+  color: #ffffff;
   text-align: center;
+  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 0.95em;
+  border-left: 2px solid #ffffff;
+  border-bottom: 1px solid #006aa8;
+}
+
+.param-matrix-group-header:first-of-type {
+  border-left: none;
+}
+
+.param-matrix-group-header[data-type="standard"] {
+  background: #3a7cc2;
+  border-bottom-color: #2e6399;
+}
+
+.param-matrix-group-header[data-type="urine"] {
+  background: #c2a03a;
+  border-bottom-color: #9b802e;
+}
+
+.param-matrix-group-header[data-type="sparse"] {
+  background: #7a5cb0;
+  border-bottom-color: #61498d;
+}
+
+.param-matrix-col-header {
+  background: #E7ECFA;
+  text-align: center;
+  padding: 4px 6px;
+  font-weight: 500;
+  font-size: 0.85em;
+  white-space: nowrap;
+  cursor: help;
+  border-right: 1px solid #dadada;
+  border-bottom: 2px solid #cdcdcd;
+  min-width: 55px;
+}
+
+.param-matrix-col-header:hover {
+  background: #d4daf0;
+}
+
+.param-matrix-table tbody tr:nth-child(even) {
+  background: #f0f0f0;
+}
+
+.param-matrix-table tbody tr:hover {
+  background: #edf0fc;
+}
+
+td.param-matrix-row-header {
+  background: #ffffff;
+  font-size: 0.9em;
+  border-bottom: 1px solid #dadada;
+}
+
+tbody tr:nth-child(even) td.param-matrix-row-header {
+  background: #f0f0f0;
+}
+
+tbody tr:hover td.param-matrix-row-header {
+  background: #edf0fc;
+}
+
+.param-matrix-cell {
+  text-align: center;
+  padding: 4px;
+  border-right: 1px solid #dadada;
+  border-bottom: 1px solid #dadada;
+  cursor: pointer;
+}
+
+.param-matrix-cell.checked {
+  background: #ebf0fc;
+}
+
+.param-matrix-checkbox {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: #007bc2;
 }
 
 .tlg-module {
@@ -310,16 +436,62 @@ div[data-value="Settings"] > div.row a {
   padding: 0;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
+/* Left nav sidebar only (Data / Exploration / NCA / TLG / About) */
+.bslib-page-sidebar > .bslib-sidebar-layout {
+  --_sidebar-width: 150px !important;
 }
 
-.sidebar .sidebar-content {
+/* Left nav sidebar: no padding (nav pills handle their own spacing) */
+.bslib-page-sidebar > .bslib-sidebar-layout > .sidebar .sidebar-content {
   padding-left: 0 !important;
   padding-right: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
+}
+
+/* Right-side sidebars: width and padding */
+.sidebar-right {
+  --_sidebar-width: 250px !important;
+}
+
+/* Drag handle for resizing right-side sidebars */
+.sidebar-right > .sidebar > .sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.sidebar-right > .sidebar > .sidebar-resize-handle:hover,
+.sidebar-right > .sidebar > .sidebar-resize-handle.dragging {
+  background: #007bc2;
+}
+
+.sidebar-right > .sidebar {
+  position: relative;
+}
+
+.sidebar-right > .sidebar .sidebar-content {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  overflow-x: hidden !important;
+}
+
+/* Prevent dropdowns/inputs from overflowing the sidebar */
+.sidebar-right .shiny-input-container {
+  max-width: 100% !important;
+}
+
+.sidebar-right .bootstrap-select .dropdown-toggle .filter-option-inner-inner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar .sidebar-content .row > :nth-child(2) {
@@ -444,6 +616,18 @@ div[data-value="Settings"] > div.row a {
 .slope-selector-module .inline-select-input > div {
   width: 5em !important;
   text-align: left !important;
+}
+
+.slope-selector-module .slope-selector-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2em;
+  margin: 2em 0;
+  color: #a7a7a7;
+  font-style: italic;
+  text-align: center;
 }
 
 .slope-selector-module .slope-plots-container {
@@ -655,62 +839,6 @@ div[data-value="Settings"] > div.row a {
   background-color: #E7ECFA;
 }
 
-.bslib-sidebar-layout {
-  --_sidebar-width: 170px !important;
-}
-
-.sidebar .sidebar-content {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100% !important;
-}
-
-.sidebar .sidebar-content .row > :nth-child(2) {
-  display: none;
-}
-
-.sidebar .sidebar-content .row {
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.sidebar .sidebar-content .row > :first-child {
-  width: 100%;
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul {
-  flex: 1;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li:last-child {
-  margin-top: auto;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a {
-  padding-left: 30px;
-  padding-right: 30px;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.active {
-  background-color: #E7ECFA;
-  color: #21201f;
-}
-
-.sidebar .sidebar-content .row > :first-child > ul > li > a.disabled {
-  color: #c0c0c0;
-}
-
 .stepper-wrapper {
   max-width: 100%;
   margin-bottom: 40px;
@@ -911,24 +1039,4 @@ h4.modal-title:has(#loading-title) {
 .ratio-pair-row .ratio-remove-btn-wrapper .btn:hover {
   background-color: #9b9b9b;
   border-color: #9b9b9b;
-}
-
-/* NCA setup: fix pill-list nav column to 200px */
-.page-container .row:has(> [class*="col-sm"] > .nav-pills) {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-}
-
-.page-container .row > [class*="col-sm"]:has(.nav-pills) {
-  width: 200px !important;
-  min-width: 200px !important;
-  max-width: 200px !important;
-  flex: 0 0 200px !important;
-  padding-right: 0 !important;
-}
-
-.page-container .row > [class*="col-sm"]:has(.nav-pills) ~ [class*="col-sm"] {
-  flex: 1 1 auto !important;
-  width: calc(100% - 200px) !important;
-  max-width: calc(100% - 200px) !important;
 }

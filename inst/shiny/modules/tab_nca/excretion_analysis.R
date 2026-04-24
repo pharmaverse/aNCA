@@ -86,12 +86,13 @@ excretion_server <- function(id, input_pknca_data) {
                      output = output,
                      session = session,
                      choices = available_cols,
-                     initial_selection = NULL,
+                     initial_selection = if ("AEFRLT" %in% available_cols) "AEFRLT" else NULL,
                      selector_ui_wrapper = "map_end_col_ui_wrapper",
                      id = "end_time_col",
                      label = "Map End Time Column:",
                      metadata_type = "variable",
-                     pknca_data = NULL)
+                     pknca_data = NULL,
+                     multiple = FALSE)
 
       urine_params_to_select <- metadata_nca_parameters %>%
         filter(TYPE == "Urine")

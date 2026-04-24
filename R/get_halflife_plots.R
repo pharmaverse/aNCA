@@ -9,10 +9,11 @@
 #'   concentration data with NCA results, even when they have only one
 #'   unique level.  Columns not present in the data are silently ignored.
 #' @returns A list with plotly objects and data
-#' @importFrom dplyr filter select mutate group_by ungroup group_split %>% any_of
+#' @importFrom dplyr filter select mutate group_by ungroup group_split
+#' @importFrom dplyr %>% any_of across all_of if_any
 #' @importFrom stats lm predict as.formula
-#' @importFrom plotly plot_ly add_lines layout add_trace plotly_build
-#' @importFrom PKNCA pk.nca
+#' @importFrom plotly plot_ly add_lines layout add_trace plotly_build event_register
+#' @importFrom PKNCA pk.nca get.parameter.deps
 #' @export
 get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
                                title_vars = NULL) {
@@ -48,9 +49,32 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 
   # Adjust the input to compute half-life & show original row number
   pknca_data$conc$data$ROWID <- seq_len(nrow(pknca_data$conc$data))
+
+  # Keep intervals where half.life or any dependent parameter is selected,
+  # then reduce them to only compute half.life (which yields lambda.z,
+  # r.squared, etc. as side-effects). This avoids imputation and duplicate-key
+  # issues from other parameters.
+  hl_dep_params <- intersect(
+    PKNCA::get.parameter.deps("half.life"),
+    names(pknca_data$intervals)
+  )
+  all_params <- intersect(
+    setdiff(names(PKNCA::get.interval.cols()), c("start", "end")),
+    names(pknca_data$intervals)
+  )
+  other_params <- setdiff(all_params, "half.life")
+
   pknca_data$intervals <- pknca_data$intervals %>%
-    filter(type_interval == "main", half.life) %>%
+    filter(type_interval == "main") %>%
+    filter(half.life | if_any(all_of(hl_dep_params))) %>%
+    mutate(half.life = TRUE, across(all_of(other_params), ~FALSE)) %>%
+    mutate(impute = NA_character_) %>%
     unique()
+  pknca_data$impute <- NA_character_
+
+  if (nrow(pknca_data$intervals) == 0) {
+    return(list(plots = list(), data = list()))
+  }
 
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,
@@ -191,6 +215,11 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
       o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
     }
   }
+  # pk.nca() with units can return 0-row results containing PPSTRES but not
+  # PPORRES. Ensure PPORRES exists so as.data.frame(out_format="wide") works.
+  if (!"PPORRES" %in% names(o_nca$result)) {
+    o_nca$result$PPORRES <- o_nca$result$PPSTRES
+  }
 
   wide_output <- o_nca
   wide_output$result <- wide_output$result %>%
@@ -201,6 +230,26 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
 
+  # If no half-life results were produced (e.g. no conc data in interval range),
+  # return a 0-row data frame with all expected columns so callers can proceed
+  # without special-casing empty results.
+  if (nrow(wide_output$result) == 0) {
+    conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
+                          timeu_col, concu_col, exclude_hl_col, "ROWID")
+    return(
+      pknca_data$conc$data %>%
+        select(!!!syms(conc_select_cols)) %>%
+        filter(FALSE) %>%
+        mutate(
+          start = numeric(0), end = numeric(0),
+          lambda.z = numeric(0), adj.r.squared = numeric(0),
+          span.ratio = numeric(0), lambda.z.time.first = numeric(0),
+          lambda.z.time.last = numeric(0), tlast = numeric(0),
+          exclude = character(0)
+        )
+    )
+  }
+
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()
 
@@ -208,6 +257,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
                         timeu_col, concu_col, exclude_hl_col, "ROWID")
   merge_by <- c(group_vars(pknca_data))
   extra <- intersect(extra_vars, names(pknca_data$conc$data))
+  extra <- intersect(extra, names(wide_output))
   conc_select_cols <- c(conc_select_cols, extra)
   merge_by <- c(merge_by, extra)
 
@@ -262,7 +312,8 @@ get_halflife_plots_single <- function(
       "(", plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
     )
   }
-  plotly::plot_ly() %>%
+  plotly::plot_ly(source = "A") %>%
+    plotly::event_register("plotly_click") %>%
     plotly::add_lines(
       data = fit_line_data,
       x = ~get(time_col),
