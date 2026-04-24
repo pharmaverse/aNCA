@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* Global font */
 body {
   font-family: "Arial";
@@ -213,140 +214,19 @@ h5 {
   display: inline-block !important;
 }
 
-/* Parameter selection matrix — rows: study types, columns: parameters */
-.param-matrix-wrapper {
-  margin-top: 0.5em;
+/* parameter selection gird */
+.nca-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
 }
 
-.param-matrix-container {
-  overflow-x: auto;
-  overflow-y: auto;
-  max-height: 60vh;
-  border: 1px solid #dadada;
-  border-radius: 4px;
-}
-
-.param-matrix-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 0.75em;
-  width: max-content;
-  min-width: 100%;
-}
-
-.param-matrix-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-}
-
-.param-matrix-corner,
-.param-matrix-row-header {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: #ffffff;
-  white-space: nowrap;
-  padding: 6px 12px;
-  font-weight: 600;
-  text-align: left;
-  border-right: 2px solid #cdcdcd;
-}
-
-.param-matrix-corner {
-  z-index: 4;
-}
-
-thead .param-matrix-row-header {
-  z-index: 4;
-}
-
-.param-matrix-group-header {
-  background: #007bc2;
-  color: #ffffff;
-  text-align: center;
-  padding: 4px 8px;
-  font-weight: 600;
-  font-size: 0.95em;
-  border-left: 2px solid #ffffff;
-  border-bottom: 1px solid #006aa8;
-}
-
-.param-matrix-group-header:first-of-type {
-  border-left: none;
-}
-
-.param-matrix-group-header[data-type="standard"] {
-  background: #3a7cc2;
-  border-bottom-color: #2e6399;
-}
-
-.param-matrix-group-header[data-type="urine"] {
-  background: #c2a03a;
-  border-bottom-color: #9b802e;
-}
-
-.param-matrix-group-header[data-type="sparse"] {
-  background: #7a5cb0;
-  border-bottom-color: #61498d;
-}
-
-.param-matrix-col-header {
-  background: #E7ECFA;
-  text-align: center;
-  padding: 4px 6px;
-  font-weight: 500;
-  font-size: 0.85em;
-  white-space: nowrap;
-  cursor: help;
-  border-right: 1px solid #dadada;
-  border-bottom: 2px solid #cdcdcd;
-  min-width: 55px;
-}
-
-.param-matrix-col-header:hover {
-  background: #d4daf0;
-}
-
-.param-matrix-table tbody tr:nth-child(even) {
-  background: #f0f0f0;
-}
-
-.param-matrix-table tbody tr:hover {
-  background: #edf0fc;
-}
-
-td.param-matrix-row-header {
-  background: #ffffff;
+.nca-pill {
+  background-color: #e0ecff;
+  padding: 6px 10px;
+  border-radius: 6px;
   font-size: 0.9em;
-  border-bottom: 1px solid #dadada;
-}
-
-tbody tr:nth-child(even) td.param-matrix-row-header {
-  background: #f0f0f0;
-}
-
-tbody tr:hover td.param-matrix-row-header {
-  background: #edf0fc;
-}
-
-.param-matrix-cell {
   text-align: center;
-  padding: 4px;
-  border-right: 1px solid #dadada;
-  border-bottom: 1px solid #dadada;
-  cursor: pointer;
-}
-
-.param-matrix-cell.checked {
-  background: #ebf0fc;
-}
-
-.param-matrix-checkbox {
-  cursor: pointer;
-  width: 15px;
-  height: 15px;
-  accent-color: #007bc2;
 }
 
 .tlg-module {
@@ -1041,7 +921,149 @@ h4.modal-title:has(#loading-title) {
   border-color: #9b9b9b;
 }
 
-/* Formula-style ratio calculation cards — fraction layout */
+/* Parameter selection matrix — rows: study types, columns: parameters */
+.param-matrix-wrapper {
+  margin-top: 0.5em;
+}
+
+.param-matrix-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 60vh;
+  border: 1px solid #dadada;
+  border-radius: 4px;
+}
+
+.param-matrix-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.75em;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* Sticky first column and header rows */
+.param-matrix-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.param-matrix-corner,
+.param-matrix-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #ffffff;
+  white-space: nowrap;
+  padding: 6px 12px;
+  font-weight: 600;
+  text-align: left;
+  border-right: 2px solid #cdcdcd;
+}
+
+/* Ensure corner cell is above both sticky axes */
+.param-matrix-corner {
+  z-index: 4;
+}
+
+thead .param-matrix-row-header {
+  z-index: 4;
+}
+
+/* Group header row (TYPE names spanning columns) */
+.param-matrix-group-header {
+  background: #007bc2;
+  color: #ffffff;
+  text-align: center;
+  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 0.95em;
+  border-left: 2px solid #ffffff;
+  border-bottom: 1px solid #005b8f;
+}
+
+.param-matrix-group-header:first-of-type {
+  border-left: none;
+}
+
+.param-matrix-group-header[data-type="standard"] {
+  background: #3a7cc2;
+  border-bottom-color: #2e639b;
+}
+
+.param-matrix-group-header[data-type="urine"] {
+  background: #c2a03a;
+  border-bottom-color: #9b802e;
+}
+
+.param-matrix-group-header[data-type="sparse"] {
+  background: #7a5cb0;
+  border-bottom-color: #624792;
+}
+
+/* Individual parameter column headers */
+.param-matrix-col-header {
+  background: #E7ECFA;
+  text-align: center;
+  padding: 4px 6px;
+  font-weight: 500;
+  font-size: 0.85em;
+  white-space: nowrap;
+  cursor: help;
+  border-right: 1px solid #dadada;
+  border-bottom: 2px solid #cdcdcd;
+  min-width: 55px;
+}
+
+.param-matrix-col-header:hover {
+  background: #c5d1f3;
+}
+
+/* Body rows */
+.param-matrix-table tbody tr:nth-child(even) {
+  background: #e7e7e7;
+}
+
+.param-matrix-table tbody tr:hover {
+  background: #f4f6fd;
+}
+
+/* Body row header (study type label) */
+td.param-matrix-row-header {
+  background: #ffffff;
+  font-size: 0.9em;
+  border-bottom: 1px solid #dadada;
+}
+
+tbody tr:nth-child(even) td.param-matrix-row-header {
+  background: #e7e7e7;
+}
+
+tbody tr:hover td.param-matrix-row-header {
+  background: #f4f6fd;
+}
+
+/* Checkbox cells */
+.param-matrix-cell {
+  text-align: center;
+  padding: 4px;
+  border-right: 1px solid #dadada;
+  border-bottom: 1px solid #dadada;
+  cursor: pointer;
+}
+
+.param-matrix-cell.checked {
+  background: #eff3fc;
+}
+
+.param-matrix-checkbox {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: #007bc2;
+}
+
 .ratio-formula-card {
   display: flex;
   align-items: center;
@@ -1054,13 +1076,16 @@ h4.modal-title:has(#loading-title) {
   overflow: visible;
   flex-wrap: wrap;
 }
+
 .ratio-formula-card:hover {
   background: #f0f0f0;
 }
+
 .ratio-formula-card .form-group,
 .ratio-formula-card .shiny-input-container {
   margin-bottom: 0;
 }
+
 .ratio-formula-card select,
 .ratio-formula-card input[type="text"],
 .ratio-formula-card input[type="number"] {
@@ -1068,26 +1093,31 @@ h4.modal-title:has(#loading-title) {
   height: auto;
   font-size: 13px;
 }
+
 .ratio-left {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
 }
+
 .ratio-select .checkbox {
   margin: 0;
 }
+
 .ratio-pptestcd-input input {
   font-weight: 600;
   font-family: monospace;
   text-align: center;
 }
+
 .ratio-eq {
   font-size: 20px;
   font-weight: 700;
   color: #555;
   flex-shrink: 0;
 }
+
 .ratio-fraction {
   display: flex;
   flex-direction: column;
@@ -1096,6 +1126,7 @@ h4.modal-title:has(#loading-title) {
   min-width: 200px;
   overflow: visible;
 }
+
 .ratio-numerator,
 .ratio-denominator {
   display: flex;
@@ -1105,49 +1136,58 @@ h4.modal-title:has(#loading-title) {
   flex-wrap: wrap;
   justify-content: center;
 }
+
 .ratio-numerator select {
   border-color: #5cb85c;
 }
+
 .ratio-denominator select {
   border-color: #f0ad4e;
 }
+
 .ratio-line {
   width: 100%;
   border: none;
   border-top: 2px solid #333;
   margin: 2px 0;
 }
+
 .ratio-bracket {
   font-size: 16px;
   font-weight: 600;
   color: #888;
   padding: 0 1px;
 }
+
 .ratio-input-wrap {
   overflow: visible;
 }
+
 .ratio-sigma {
   flex-shrink: 0;
   margin-right: 2px;
 }
+
 .ratio-sigma select {
   font-weight: 700;
   text-align: center;
   padding: 4px 2px;
 }
+
 .ratio-right {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
 }
+
 .ratio-mult {
   font-size: 20px;
   font-weight: 700;
   color: #555;
   flex-shrink: 0;
 }
+
 .ratio-adj-factor {
   flex-shrink: 0;
 }
-
