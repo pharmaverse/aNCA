@@ -1,11 +1,12 @@
 ---
 title: "Running NCA with aNCA: R Script Walkthrough"
-author: 
-date: "2026-04-22"
-output:
-  html_document:
-    toc: true
-    toc_depth: 3
+description: >
+  Step-by-step guide to running NCA analyses with aNCA via R scripts, YAML settings, or the Shiny app.
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Running NCA with aNCA: R Script Walkthrough}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 
