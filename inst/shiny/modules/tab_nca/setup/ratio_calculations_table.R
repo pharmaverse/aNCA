@@ -45,9 +45,9 @@ ratios_table_ui <- function(id) {
         ),
         tags$li(
           tags$b("Aggregate Subject"),
-          ": Shown as \u03a3 in the denominator. `yes` (\u03a3) aggregates reference
+          ": Shown in the denominator. `yes` (x\u0304) aggregates reference
           values using the mean of all subjects, `no` (\u2014) does not, and
-          `if-needed` (\u03a3?) only when ratios cannot be performed within the same subject."
+          `if-needed` (x\u0304?) only when ratios cannot be performed within the same subject."
         ),
         tags$li(
           tags$b("RefParameter"),
@@ -328,8 +328,8 @@ ratios_table_server <- function(
   # Map aggregate values to symbol labels for the dropdown
   agg_choices <- c(
     "\u2014"  = "no",
-    "\u03a3"  = "yes",
-    "\u03a3?" = "if-needed"
+    "x\u0304"  = "yes",
+    "x\u0304?" = "if-needed"
   )
 
   tags$div(
@@ -382,7 +382,7 @@ ratios_table_server <- function(
         class = "ratio-denominator",
         tags$div(
           class = "ratio-sigma",
-          title = "Aggregate Subject: \u2014 = no, \u03a3 = yes, \u03a3? = if-needed",
+          title = "Aggregate Subject: \u2014 = no, x\u0304 = yes (mean), x\u0304? = if-needed",
           selectInput(
             ns(paste0("AggregateSubject_", i)), label = NULL,
             choices = agg_choices, selected = row$AggregateSubject,
