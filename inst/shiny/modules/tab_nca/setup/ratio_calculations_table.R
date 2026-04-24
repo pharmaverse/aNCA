@@ -10,66 +10,68 @@ ratios_table_ui <- function(id) {
         actionButton(ns("add_row"), "(+) Add Row", class = "btn-success"),
         actionButton(ns("remove_row"), "(-) Remove Row/s", class = "btn-warning")
       ),
-      column(
-        width = 2,
-        dropdown(
-          div(
-            tags$h2("Ratio Calculations Help"),
-            p("
-            This section is to perform ratio calculations within the allowed parameters
-            that you previously selected. Add a new row for each ratio calculation to
-            compute. You can also select and remove rows.
-            "),
-            p("For each ratio you need to specify:"),
-            tags$ul(
-              tags$li(
-                tags$b("PPTESTCD"),
-                ": Code name for the ratio. By default, unique
-                CDISC style names are generated."
-              ),
-              tags$li(
-                tags$b("TestParameter"),
-                ": The parameter to use for the test (numerator)."
-              ),
-              tags$li(
-                tags$b("TestGroups"),
-                ": The level/value to use as test (numerator). If you select 'all other levels,'
-                the ratio is calculated using the reference level (e.g., Group = A) against all
-                other values of the variable (e.g., Groups = B, C, D)"
-              ),
-              tags$li(
-                tags$b("Aggregate Subject"),
-                ": Shown as \u03a3 in the denominator. `yes` (\u03a3) aggregates reference
-                values using the mean of all subjects, `no` (\u2014) does not, and
-                `if-needed` (\u03a3?) only when ratios cannot be performed within the same subject."
-              ),
-              tags$li(
-                tags$b("RefParameter"),
-                ": The parameter to use for the reference (denominator)."
-              ),
-              tags$li(
-                tags$b("RefGroups"),
-                ": The level/value to use as reference (denominator)."
-              ),
-              tags$li(
-                tags$b("Adjusting Factor"),
-                ": Factor to multiply the ratio with i.e, for molecular weight ratios
-                (MW_ref / MW_test)."
-              )
-            ),
-            tags$div(
-              withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
-            )
-          ),
-          style = "unite",
-          right = TRUE,
-          icon = icon("question"),
-          status = "primary",
-          width = "500px"
-        )
-      )
+      column(width = 2, .ratio_help_dropdown())
     ),
     uiOutput(ns("ratio_cards"))
+  )
+}
+
+# Help dropdown for the ratio calculations panel.
+.ratio_help_dropdown <- function() {
+  dropdown(
+    div(
+      tags$h2("Ratio Calculations Help"),
+      p("
+        This section is to perform ratio calculations within the allowed parameters
+        that you previously selected. Add a new row for each ratio calculation to
+        compute. You can also select and remove rows.
+      "),
+      p("For each ratio you need to specify:"),
+      tags$ul(
+        tags$li(
+          tags$b("PPTESTCD"),
+          ": Code name for the ratio. By default, unique
+          CDISC style names are generated."
+        ),
+        tags$li(
+          tags$b("TestParameter"),
+          ": The parameter to use for the test (numerator)."
+        ),
+        tags$li(
+          tags$b("TestGroups"),
+          ": The level/value to use as test (numerator). If you select 'all other levels,'
+          the ratio is calculated using the reference level (e.g., Group = A) against all
+          other values of the variable (e.g., Groups = B, C, D)"
+        ),
+        tags$li(
+          tags$b("Aggregate Subject"),
+          ": Shown as \u03a3 in the denominator. `yes` (\u03a3) aggregates reference
+          values using the mean of all subjects, `no` (\u2014) does not, and
+          `if-needed` (\u03a3?) only when ratios cannot be performed within the same subject."
+        ),
+        tags$li(
+          tags$b("RefParameter"),
+          ": The parameter to use for the reference (denominator)."
+        ),
+        tags$li(
+          tags$b("RefGroups"),
+          ": The level/value to use as reference (denominator)."
+        ),
+        tags$li(
+          tags$b("Adjusting Factor"),
+          ": Factor to multiply the ratio with i.e, for molecular weight ratios
+          (MW_ref / MW_test)."
+        )
+      ),
+      tags$div(
+        withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
+      )
+    ),
+    style = "unite",
+    right = TRUE,
+    icon = icon("question"),
+    status = "primary",
+    width = "500px"
   )
 }
 
@@ -243,53 +245,8 @@ ratios_table_server <- function(
     observe({
       tbl <- ratio_table()
       if (nrow(tbl) == 0) return()
-
       for (i in seq_len(nrow(tbl))) {
-        local({
-          idx <- i
-          # Observe select inputs for this row
-          for (field in c("TestParameter", "RefParameter", "RefGroups",
-                          "TestGroups", "AggregateSubject")) {
-            local({
-              fld <- field
-              input_id <- paste0(fld, "_", idx)
-              observeEvent(input[[input_id]], {
-                val <- input[[input_id]]
-                current <- ratio_table()
-                if (idx <= nrow(current) && !identical(current[idx, fld], val)) {
-                  current[idx, fld] <- val
-                  if (fld %in% c("TestParameter", "RefGroups", "TestGroups")) {
-                    current <- .generate_pptestcd_for_ratios(
-                      current, adnca_data = adnca_data()
-                    )
-                  }
-                  ratio_table(current)
-                  if (fld != "AggregateSubject") {
-                    refresh_cards(refresh_cards() + 1)
-                  }
-                }
-              }, ignoreInit = TRUE)
-            })
-          }
-          # Numeric: AdjustingFactor
-          observeEvent(input[[paste0("AdjustingFactor_", idx)]], {
-            val <- input[[paste0("AdjustingFactor_", idx)]]
-            current <- ratio_table()
-            if (idx <= nrow(current) && !identical(current[idx, "AdjustingFactor"], val)) {
-              current[idx, "AdjustingFactor"] <- val
-              ratio_table(current)
-            }
-          }, ignoreInit = TRUE)
-          # Text: PPTESTCD
-          observeEvent(input[[paste0("PPTESTCD_", idx)]], {
-            val <- input[[paste0("PPTESTCD_", idx)]]
-            current <- ratio_table()
-            if (idx <= nrow(current) && !identical(current[idx, "PPTESTCD"], val)) {
-              current[idx, "PPTESTCD"] <- val
-              ratio_table(current)
-            }
-          }, ignoreInit = TRUE)
-        })
+        .observe_ratio_row(i, input, ratio_table, adnca_data, refresh_cards)
       }
     })
 
@@ -298,9 +255,55 @@ ratios_table_server <- function(
   })
 }
 
-# Build a single formula card for ratio row i.
-# Layout: [checkbox] PPTESTCD = TestParam [TestGroup] / RefParam [RefGroup] x AdjFactor
-#         Aggregate: [dropdown]
+# Register input observers for a single ratio row.
+# Handles select fields, numeric AdjustingFactor, and text PPTESTCD.
+.observe_ratio_row <- function(idx, input, ratio_table, adnca_data, refresh_cards) {
+  local({
+    i <- idx
+    # Select inputs (dropdowns)
+    for (field in c("TestParameter", "RefParameter", "RefGroups",
+                    "TestGroups", "AggregateSubject")) {
+      local({
+        fld <- field
+        observeEvent(input[[paste0(fld, "_", i)]], {
+          val <- input[[paste0(fld, "_", i)]]
+          current <- ratio_table()
+          if (i <= nrow(current) && !identical(current[i, fld], val)) {
+            current[i, fld] <- val
+            if (fld %in% c("TestParameter", "RefGroups", "TestGroups")) {
+              current <- .generate_pptestcd_for_ratios(
+                current, adnca_data = adnca_data()
+              )
+            }
+            ratio_table(current)
+            if (fld != "AggregateSubject") {
+              refresh_cards(refresh_cards() + 1)
+            }
+          }
+        }, ignoreInit = TRUE)
+      })
+    }
+    # Numeric input
+    observeEvent(input[[paste0("AdjustingFactor_", i)]], {
+      val <- input[[paste0("AdjustingFactor_", i)]]
+      current <- ratio_table()
+      if (i <= nrow(current) && !identical(current[i, "AdjustingFactor"], val)) {
+        current[i, "AdjustingFactor"] <- val
+        ratio_table(current)
+      }
+    }, ignoreInit = TRUE)
+    # Text input
+    observeEvent(input[[paste0("PPTESTCD_", i)]], {
+      val <- input[[paste0("PPTESTCD_", i)]]
+      current <- ratio_table()
+      if (i <= nrow(current) && !identical(current[i, "PPTESTCD"], val)) {
+        current[i, "PPTESTCD"] <- val
+        ratio_table(current)
+      }
+    }, ignoreInit = TRUE)
+  })
+}
+
 # Build a single formula card for ratio row i.
 # Fraction layout:
 #                     TestParam [TestGroup]
