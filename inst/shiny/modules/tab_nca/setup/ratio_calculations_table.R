@@ -306,7 +306,7 @@ ratios_table_server <- function(
 
 # Build a single formula card for ratio row i.
 # Fraction layout:
-#                     TestParam [TestGroup]
+#                     TestParam [TestGroup]                 #nolint
 #  ☐  PPTESTCD  =  ─────────────────────────  ×  AdjFactor
 #                  Σ  RefParam [RefGroup]
 .ratio_formula_card <- function(ns, i, row, param_opts, ref_opts, group_opts) {
@@ -336,7 +336,6 @@ ratios_table_server <- function(
       ),
       tags$span(class = "ratio-eq", "=")
     ),
-    # Center: fraction (numerator / line / denominator)
     tags$div(
       class = "ratio-fraction",
       # Numerator
