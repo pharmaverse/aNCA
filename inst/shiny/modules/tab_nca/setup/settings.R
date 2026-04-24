@@ -13,6 +13,83 @@
 #'
 #' @returns A reactive with a list with all settings.
 
+#' Partial Interval Calculations UI
+#'
+#' Extracted so it can be placed in the Parameter Selection tab
+#' while keeping its server logic in settings_server.
+#'
+#' @param id The settings module namespace ID (same as settings_ui).
+partial_intervals_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    fluidRow(
+      column(
+        width = 10,
+        actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h2("Partial Interval Calculations Help"),
+            p(
+              "Define custom time intervals for calculating partial area",
+              "and related parameters. Add a row for each interval you need."
+            ),
+            p("For each row, specify:"),
+            tags$ul(
+              tags$li(
+                tags$b("Parameter"),
+                ": The interval calculation to perform (e.g., AUCINT, AUCINTA, CAVGINT)."
+              ),
+              tags$li(
+                tags$b("Start"),
+                ": Start time of the interval."
+              ),
+              tags$li(
+                tags$b("End"),
+                ": End time of the interval."
+              )
+            ),
+            p(
+              tags$b("Note:"),
+              " Rows with missing Start or End values will be ignored."
+            ),
+            tags$table(
+              class = "imputation-help-table",
+              tags$thead(
+                tags$tr(
+                  tags$th("Parameter"),
+                  tags$th("Description")
+                )
+              ),
+              tags$tbody(
+                tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
+                tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
+                tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
+                tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
+                tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
+                tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
+                tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
+                tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
+                tr("CAVGINT", "Average Concentration from T1 to T2"),
+                tr("RCAMINT", "Amount Recovered from T1 to T2"),
+                tr("FREXINT", "Fraction Excreted from T1 to T2")
+              )
+            )
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "600px"
+        )
+      )
+    ),
+    reactableOutput(ns("int_parameters_table"))
+  )
+}
+
 settings_ui <- function(id) {
   ns <- NS(id)
 
@@ -101,74 +178,6 @@ settings_ui <- function(id) {
         data_imputation_ui(ns("data_imputation"))
       ),
       accordion_panel(
-        title = "Partial Interval Calculations",
-        fluidRow(
-          column(
-            width = 10,
-            actionButton(ns("addRow"), "(+) Add Row", class = "btn-success"),
-          ),
-          column(
-            width = 2,
-            dropdown(
-              div(
-                tags$h2("Partial Interval Calculations Help"),
-                p(
-                  "Define custom time intervals for calculating partial area",
-                  "and related parameters. Add a row for each interval you need."
-                ),
-                p("For each row, specify:"),
-                tags$ul(
-                  tags$li(
-                    tags$b("Parameter"),
-                    ": The interval calculation to perform (e.g., AUCINT, AUCINTA, CAVGINT)."
-                  ),
-                  tags$li(
-                    tags$b("Start"),
-                    ": Start time of the interval."
-                  ),
-                  tags$li(
-                    tags$b("End"),
-                    ": End time of the interval."
-                  )
-                ),
-                p(
-                  tags$b("Note:"),
-                  " Rows with missing Start or End values will be ignored."
-                ),
-                tags$table(
-                  class = "imputation-help-table",
-                  tags$thead(
-                    tags$tr(
-                      tags$th("Parameter"),
-                      tags$th("Description")
-                    )
-                  ),
-                  tags$tbody(
-                    tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
-                    tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
-                    tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
-                    tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
-                    tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
-                    tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
-                    tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
-                    tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
-                    tr("CAVGINT", "Average Concentration from T1 to T2"),
-                    tr("RCAMINT", "Amount Recovered from T1 to T2"),
-                    tr("FREXINT", "Fraction Excreted from T1 to T2")
-                  )
-                )
-              ),
-              style = "unite",
-              right = TRUE,
-              icon = icon("question"),
-              status = "primary",
-              width = "600px"
-            )
-          )
-        ),
-        reactableOutput(ns("int_parameters_table"))
-      ),
-      accordion_panel(
         title = "Flag Rule Sets",
         fluidRow(
           column(
@@ -220,7 +229,7 @@ settings_ui <- function(id) {
           tooltip = "Minimum required half-life span ratio for lambda-z related parameters"
         )
       ),
-      open = c("General Settings", "Parameter Selection")
+      open = "General Settings"
     )
   )
 }
