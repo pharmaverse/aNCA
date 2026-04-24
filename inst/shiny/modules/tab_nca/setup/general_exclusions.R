@@ -131,6 +131,7 @@ general_exclusions_server <- function(
 
         xbtn_counter(max(new_ids))
         exclusion_list(rehydrated_list)
+        log_info("Exclusions restored from settings: ", length(overrides), " rules loaded")
       }
     })
 
@@ -167,6 +168,7 @@ general_exclusions_server <- function(
       lapply(lst, function(item) {
         xbtn_id <- item$xbtn_id
         observeEvent(input[[xbtn_id]], {
+          log_info("Exclusion removed: reason='", item$reason, "'")
           current <- exclusion_list()
           exclusion_list(
             Filter(function(x) x$xbtn_id != xbtn_id, current)

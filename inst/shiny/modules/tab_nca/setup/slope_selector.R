@@ -272,6 +272,11 @@ slope_selector_server <- function( # nolint
     observeEvent(manual_slopes(), {
       req(manual_slopes())
 
+      n_rules <- nrow(manual_slopes())
+      n_excl <- sum(manual_slopes()$TYPE == "Exclusion", na.rm = TRUE)
+      n_incl <- n_rules - n_excl
+      log_info("Slope rules updated: ", n_rules, " total (", n_incl, " selections, ", n_excl, " exclusions)")
+
       # Update reactable with rules
       reactable::updateReactable(
         outputId = "manual_slopes",
