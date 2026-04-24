@@ -152,7 +152,8 @@ parameter_exclusions_server <- function(id, res_nca) {
     })
 
     # Build a wide-format results table for display.
-    # Includes PPSUMFL/PPSUMRSN columns for display.
+    # PPSUMFL/PPSUMRSN are auto-populated from the PKNCA `exclude` column
+    # (same logic as ADPP), then manual exclusions are layered on top.
     param_data <- reactive({
       req(res_nca())
       lst <- exclusion_list()
@@ -164,21 +165,34 @@ parameter_exclusions_server <- function(id, res_nca) {
       display_cols <- c(
         group_cols, "ATPTREF",
         "PPTESTCD", "PPTEST", "PPORRES", "PPORRESU",
-        "PPSTRESN", "PPSTRESU", "exclude"
+        "PPSTRESN", "PPSTRESU"
       )
       available_cols <- intersect(display_cols, names(result_df))
       df <- result_df[, available_cols, drop = FALSE]
 
-      excl_info <- .build_exclusion_reasons(lst)
-      n <- nrow(df)
-      is_excl <- seq_len(n) %in% excl_info$indices
-      reason_vec <- rep(NA_character_, n)
-      if (length(excl_info$indices) > 0) {
-        reason_vec[excl_info$indices] <- excl_info$reasons
+      # Auto-populate PPSUMFL/PPSUMRSN from the PKNCA exclude column
+      exclude_vals <- result_df[["exclude"]]
+      if (!is.null(exclude_vals)) {
+        exclude_vals[is.na(exclude_vals)] <- ""
+      } else {
+        exclude_vals <- rep("", nrow(df))
       }
 
-      df$PPSUMFL <- ifelse(is_excl, "Y", "")
-      df$PPSUMRSN <- reason_vec
+      # Layer manual exclusions on top of auto-populated reasons
+      excl_info <- .build_exclusion_reasons(lst)
+      n <- nrow(df)
+      if (length(excl_info$indices) > 0) {
+        for (j in seq_along(excl_info$indices)) {
+          idx <- excl_info$indices[j]
+          reason <- excl_info$reasons[j]
+          existing <- exclude_vals[idx]
+          exclude_vals[idx] <- if (existing == "") reason else paste(existing, reason, sep = "; ")
+        }
+      }
+
+      has_exclusions <- exclude_vals != ""
+      df$PPSUMFL <- ifelse(has_exclusions, "Y", "")
+      df$PPSUMRSN <- ifelse(has_exclusions, exclude_vals, NA_character_)
       df
     })
 
