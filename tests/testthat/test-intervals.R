@@ -449,4 +449,3 @@ describe("rm_impute_obs_params", {
     expect_equal(result$intervals, intervals_before)
   })
 })
-

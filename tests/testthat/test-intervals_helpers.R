@@ -603,4 +603,3 @@ describe("has_requested_params", {
     expect_false(has_requested_params(intervals, c("cmax", "half.life")))
   })
 })
-

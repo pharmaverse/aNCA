@@ -1000,4 +1000,3 @@ describe("remove_pp_not_requested", {
     expect_true("impute" %in% names(result$data$intervals))
   })
 })
-
