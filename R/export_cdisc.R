@@ -241,10 +241,14 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
     select(-any_of(c("exclude", ".pp_excl", ".pp_excl_reason"))) %>%
     # Apply labels to columns added by .add_crit_flags()
     {
-      new_cols <- intersect(names(.), names(labels_map))
-      unlabeled <- new_cols[vapply(new_cols, function(col) is.null(attr(.[[col]], "label")), logical(1))]
-      if (length(unlabeled) > 0) var_labels(.)[unlabeled] <- labels_map[unlabeled]
-      .
+      adpp_df <- . # nolint: object_name_linter
+      new_cols <- intersect(names(adpp_df), names(labels_map))
+      needs_label <- function(col) is.null(attr(adpp_df[[col]], "label"))
+      unlabeled <- new_cols[vapply(new_cols, needs_label, logical(1))]
+      if (length(unlabeled) > 0) {
+        var_labels(adpp_df)[unlabeled] <- labels_map[unlabeled]
+      }
+      adpp_df
     }
 
   adnca <- res_nca$data$conc$data %>%
