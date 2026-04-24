@@ -65,6 +65,42 @@ parameter_exclusions_ui <- function(id) {
   )
 }
 
+# Build the display data frame for the parameter exclusions table.
+# Derives PPSUMFL/PPSUMRSN from the PKNCA exclude column, then layers
+# manual exclusions on top.
+.build_param_display <- function(result_df, group_cols, manual_exclusions) {
+  display_cols <- c(
+    group_cols, "ATPTREF",
+    "PPTESTCD", "PPTEST", "PPORRES", "PPORRESU",
+    "PPSTRESN", "PPSTRESU"
+  )
+  available_cols <- intersect(display_cols, names(result_df))
+  df <- result_df[, available_cols, drop = FALSE]
+
+  exclude_vals <- result_df[["exclude"]]
+  if (!is.null(exclude_vals)) {
+    exclude_vals[is.na(exclude_vals)] <- ""
+  } else {
+    exclude_vals <- rep("", nrow(df))
+  }
+
+  excl_info <- .build_exclusion_reasons(manual_exclusions)
+  if (length(excl_info$indices) > 0) {
+    for (j in seq_along(excl_info$indices)) {
+      idx <- excl_info$indices[j]
+      reason <- excl_info$reasons[j]
+      existing <- exclude_vals[idx]
+      exclude_vals[idx] <- if (existing == "") reason else paste(existing, reason, sep = "; ")
+    }
+  }
+
+  has_exclusions <- exclude_vals != ""
+  df$PPSUMFL <- ifelse(has_exclusions, "Y", "")
+  df$PPSUMRSN <- ifelse(has_exclusions, exclude_vals, NA_character_)
+
+  apply_labels(df, type = "ADPP")
+}
+
 # Build a reason-per-index vector from an exclusion list.
 # Concatenates with "; " when multiple exclusions cover the same row.
 .build_exclusion_reasons <- function(lst) {
@@ -151,52 +187,12 @@ parameter_exclusions_server <- function(id, res_nca) {
       }
     })
 
-    # Build a wide-format results table for display.
-    # PPSUMFL/PPSUMRSN are auto-populated from the PKNCA `exclude` column
-    # (same logic as ADPP), then manual exclusions are layered on top.
     param_data <- reactive({
       req(res_nca())
-      lst <- exclusion_list()
-      result_df <- res_nca()$result
-
       group_cols <- unique(unlist(unname(
         res_nca()$data$conc$columns$groups
       )))
-      display_cols <- c(
-        group_cols, "ATPTREF",
-        "PPTESTCD", "PPTEST", "PPORRES", "PPORRESU",
-        "PPSTRESN", "PPSTRESU"
-      )
-      available_cols <- intersect(display_cols, names(result_df))
-      df <- result_df[, available_cols, drop = FALSE]
-
-      # Auto-populate PPSUMFL/PPSUMRSN from the PKNCA exclude column
-      exclude_vals <- result_df[["exclude"]]
-      if (!is.null(exclude_vals)) {
-        exclude_vals[is.na(exclude_vals)] <- ""
-      } else {
-        exclude_vals <- rep("", nrow(df))
-      }
-
-      # Layer manual exclusions on top of auto-populated reasons
-      excl_info <- .build_exclusion_reasons(lst)
-      n <- nrow(df)
-      if (length(excl_info$indices) > 0) {
-        for (j in seq_along(excl_info$indices)) {
-          idx <- excl_info$indices[j]
-          reason <- excl_info$reasons[j]
-          existing <- exclude_vals[idx]
-          exclude_vals[idx] <- if (existing == "") reason else paste(existing, reason, sep = "; ")
-        }
-      }
-
-      has_exclusions <- exclude_vals != ""
-      df$PPSUMFL <- ifelse(has_exclusions, "Y", "")
-      df$PPSUMRSN <- ifelse(has_exclusions, exclude_vals, NA_character_)
-
-      # Apply ADPP labels so tooltips work for PP-specific columns
-      # (PPORRES, PPORRESU, PPTESTCD, PPTEST, PPSUMFL, PPSUMRSN, etc.)
-      apply_labels(df, type = "ADPP")
+      .build_param_display(res_nca()$result, group_cols, exclusion_list())
     })
 
     # Render the reactable with row coloring for all rows where PPSUMFL = "Y"
