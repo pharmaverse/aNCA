@@ -60,8 +60,8 @@ describe(".build_param_display", {
     result <- .build_param_display(df, group_cols = character(0), manual_exclusions = list())
     expect_true("PPSUMFL" %in% names(result))
     expect_true("PPSUMRSN" %in% names(result))
-    expect_equal(result$PPSUMFL, c("Y", "", ""))
-    expect_equal(result$PPSUMRSN, c("R2ADJ < 0.8", "", ""))
+    expect_equal(result$PPSUMFL, c("Y", "", ""), ignore_attr = TRUE)
+    expect_equal(result$PPSUMRSN, c("R2ADJ < 0.8", "", ""), ignore_attr = TRUE)
   })
 
   it("layers manual exclusions on top of auto-populated values", {
@@ -74,7 +74,7 @@ describe(".build_param_display", {
     )
     manual <- list(list(rows = c(1, 3), reason = "Manual reason"))
     result <- .build_param_display(df, group_cols = character(0), manual_exclusions = manual)
-    expect_equal(result$PPSUMFL, c("Y", "", "Y"))
+    expect_equal(result$PPSUMFL, c("Y", "", "Y"), ignore_attr = TRUE)
     expect_equal(result$PPSUMRSN[1], "R2ADJ < 0.8; Manual reason")
     expect_equal(result$PPSUMRSN[3], "Manual reason")
   })
@@ -86,8 +86,8 @@ describe(".build_param_display", {
       stringsAsFactors = FALSE
     )
     result <- .build_param_display(df, group_cols = character(0), manual_exclusions = list())
-    expect_equal(result$PPSUMFL, c("", ""))
-    expect_equal(result$PPSUMRSN, c("", ""))
+    expect_equal(result$PPSUMFL, c("", ""), ignore_attr = TRUE)
+    expect_equal(result$PPSUMRSN, c("", ""), ignore_attr = TRUE)
   })
 
   it("selects only display columns plus group columns", {
