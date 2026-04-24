@@ -1123,8 +1123,7 @@ tbody tr:hover td.param-matrix-row-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1 1 auto;
-  min-width: 200px;
+  flex: 0 1 auto;
   overflow: visible;
 }
 
