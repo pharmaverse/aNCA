@@ -193,11 +193,14 @@ parameter_exclusions_server <- function(id, res_nca) {
       has_exclusions <- exclude_vals != ""
       df$PPSUMFL <- ifelse(has_exclusions, "Y", "")
       df$PPSUMRSN <- ifelse(has_exclusions, exclude_vals, NA_character_)
-      df
+
+      # Apply ADPP labels so tooltips work for PP-specific columns
+      # (PPORRES, PPORRESU, PPTESTCD, PPTEST, PPSUMFL, PPSUMRSN, etc.)
+      apply_labels(df, type = "ADPP")
     })
 
-    # Render the reactable with row coloring via exclusion_list() closure
-    # (same pattern as general_exclusions.R).
+    # Render the reactable with row coloring for all rows where PPSUMFL = "Y"
+    # (auto-populated from flag rules + manual exclusions).
     param_table_state <- reactable_server(
       "param_table",
       param_data,
@@ -206,10 +209,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       borderless = TRUE,
       rowStyle = function(x) {
         function(index) {
-          excl_indices <- unlist(lapply(
-            exclusion_list(), function(excl) excl$rows
-          ))
-          if (index %in% excl_indices) {
+          if (param_data()$PPSUMFL[index] == "Y") {
             return(list(background = PARAM_EXCL_COLOR))
           }
           NULL
