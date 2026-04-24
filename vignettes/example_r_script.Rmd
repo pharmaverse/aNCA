@@ -180,18 +180,39 @@ flag_rules <- list(
 - **LAMZSPN ≥ 2**: Minimum half-life span ratio.
 
 #### 4.5 Slope rules
-Slope rules allow manual override of the lambda-z regression range for specific
-subjects or profiles. Pass an empty data frame if no manual adjustments are
-needed:
+Slope rules let you manually override which points PKNCA uses for the
+terminal elimination (lambda-z) regression. This is useful when the automatic
+best-fit selects an inappropriate range — for example, when a secondary
+absorption peak or an outlier distorts the slope.
+
+Each row targets one subject/profile combination:
+
+- **`USUBJID`**: Subject identifier.
+- **`ATPTREF`**: Dosing period (e.g., `"DOSE 1"`).
+- **`DOSNOA`**: Dose number within the period (use `"*"` for all doses).
+- **`TYPE`**: Either `"points"` (select individual time points) or `"range"`
+  (select a start–end window).
+- **`RANGE`**: The time points or window, e.g., `"4, 8, 12, 24"` for points
+  or `"4-24"` for a range.
+- **`REASON`**: Free-text justification for the override.
+
 ```{r slope_rules, eval = FALSE}
+# Example: force lambda-z to use 4–24 h for subject S1-001 in DOSE 1
 slope_rules <- data.frame(
-  USUBJID = character(0),
-  ATPTREF = character(0),
-  DOSNOA  = character(0),
-  TYPE    = character(0),
-  RANGE   = character(0),
-  REASON  = character(0)
+  USUBJID = "S1-001",
+  ATPTREF = "DOSE 1",
+  DOSNOA  = "*",
+  TYPE    = "range",
+  RANGE   = "4-24",
+  REASON  = "Exclude early absorption phase from terminal slope"
 )
+
+# If no manual adjustments are needed, pass an empty data frame:
+# slope_rules <- data.frame(
+#   USUBJID = character(0), ATPTREF = character(0),
+#   DOSNOA  = character(0), TYPE    = character(0),
+#   RANGE   = character(0), REASON  = character(0)
+# )
 ```
 
 #### 4.6 Extra variables to keep
@@ -523,13 +544,14 @@ flag_rules <- list(
   AUCPEP  = list(is.checked = TRUE,  threshold = 20),
   LAMZSPN = list(is.checked = TRUE,  threshold = 2)
 )
+# Slope rules: manual lambda-z overrides (empty = no overrides)
 slope_rules <- data.frame(
-  USUBJID = character(0),
-  ATPTREF = character(0),
-  DOSNOA  = character(0),
-  TYPE    = character(0),
-  RANGE   = character(0),
-  REASON  = character(0)
+  USUBJID = "S1-001",
+  ATPTREF = "DOSE 1",
+  DOSNOA  = "*",
+  TYPE    = "range",
+  RANGE   = "4-24",
+  REASON  = "Exclude early absorption phase from terminal slope"
 )
 extra_vars_to_keep <- c(
   mapping$Grouping_Variables, "DOSEA", "ATPTREF", "ROUTE"
