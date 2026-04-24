@@ -3,9 +3,16 @@ title: "suggestions.md"
 format: html
 ---
 
-as of 23 APR 2026
+as of 24 APR 2026
 
-DRAFT 
+ DRAFT 
+
+## Contents
+* Purpose
+* Audience
+* Set goals
+* Proposed Changes (long list)
+* Notes, TODOs  (not well-organized)
 
 ## PURPOSE
 The purpose of **suggestions.md** is to collect suggestions, ideas, snippets of code that might improve or extend the vignette "What is aNCA?" in the file **background.rmd**.  **suggestions.md** exisits only on branch [#1247](https://github.com/pharmaverse/aNCA/issues/1247) in the directory **inst/** and will be removed before final merge to main.
@@ -28,6 +35,10 @@ Please see LLM chat (below)
 
 ## NEXT?
 
+<hr>
+
+## WIP (not yet organized)
+
 ## Big List for Discussion ...
 Possible inclusions?
 - link to official CDISC documentation (https://www.cdisc.org/system/files/members/standard/foundational/ADaMIG_for_Non-compartmental_Analysis_Input_Data_v1.0_1.pdf)
@@ -43,39 +54,43 @@ Conversation with Gemini
 
 **Please explain ADNCA format in non-compartmental analysis (NCA). Give simiple example of a dataset in ADNCA format. No more than 5 rows.**
 
-In the world of clinical data standards, specifically CDISC ADaM, the ADNCA (Analysis Data for Non-Compartmental Analysis) dataset serves as the bridge between raw concentration-time data and the final calculated PK parameters (like Cmax​ or AUC).
+>In the world of clinical data standards, specifically CDISC ADaM, the ADNCA (Analysis Data for Non-Compartmental Analysis) dataset serves as the bridge between raw concentration-time data and the final calculated PK parameters (like Cmax​ or AUC).
 
-Its primary purpose is to organize clinical trial data into a structure that NCA software (like WinNonlin or R packages like nca) can ingest to perform calculations.
-Key Characteristics of ADNCA
+> Its primary purpose is to organize clinical trial data into a structure that NCA software (like WinNonlin or R packages like nca) can ingest to perform calculations.
 
-    One Record per Timepoint: Each row represents a single blood draw or observation for a specific subject at a specific time.
+>Key Characteristics of ADNCA
 
-    Traceability: It maintains a clear link back to the source SDTM datasets (usually PC for Pharmacokinetics Concentrations and EX for Exposure).
+>    One Record per Timepoint: Each row represents a single blood draw or observation for a specific subject at a specific time.
 
-    Ready for Calculation: It includes "Analysis" variables (prefixed with A) that have been cleaned—for example, handling values below the limit of quantification (BLQ) or converting actual sampling times into relative time from dose.
+>   Traceability: It maintains a clear link back to the source SDTM datasets (usually PC for Pharmacokinetics Concentrations and EX for Exposure).
 
-Simple Example: ADNCA Dataset
+>    Ready for Calculation: It includes "Analysis" variables (prefixed with A) that have been cleaned—for example, handling values below the limit of quantification (BLQ) or converting actual sampling times into relative time from dose.
 
-Below is a simplified example showing a single subject receiving a single dose.
-USUBJID	EXTRT	ATIME	AVAL	AVALU	AVALCAT1
-001-01	Drug X	0	0	ng/mL	BLQ
-001-01	Drug X	0.5	12.5	ng/mL	Analyzed
-001-01	Drug X	1.0	25.2	ng/mL	Analyzed
-001-01	Drug X	2.0	18.7	ng/mL	Analyzed
-001-01	Drug X	4.0	8.3	ng/mL	Analyzed
-Core Variables Explained
+>Simple Example: ADNCA Dataset
 
-    USUBJID: Unique Subject Identifier.
+>Below is a simplified example showing a single subject receiving a single dose.
 
-    EXTRT: The treatment/drug name.
+USUBJID	   EXTRT	ATIME	AVAL	AVALU	AVALCAT1
+-------    ----     ----    ----    ----    --------
+| 001-01 | Drug X	| 0	   |  0	     | ng/mL	BLQ
+| 001-01 | Drug X	| 0.5  |12.5	 | ng/mL	Analyzed
+| 001-01 | Drug X	| 1.0  |	25.2 |	ng/mL	Analyzed
+| 001-01	Drug X	|2.0   | 18.7	    ng/mL	Analyzed
+| 001-01	Drug X	|4.0   |	8.3	    ng/mL	Analyzed
 
-    ATIME (Analysis Time): The relative time from the dose (e.g., hours). This is crucial for calculating the area under the curve (AUC).
+>Core Variables Explained
 
-    AVAL (Analysis Value): The numerical concentration result used for the math.
+>    USUBJID: Unique Subject Identifier.
 
-    AVALU: The unit for the concentration (e.g., ng/mL).
+>    EXTRT: The treatment/drug name.
 
-    AVALCAT1: Often used to flag values like "BLQ" (Below Limit of Quantitation), which tells the software whether to treat the value as zero or missing.
+>    ATIME (Analysis Time): The relative time from the dose (e.g., hours). This is crucial for calculating the area under the curve (AUC).
+
+>    VAL (Analysis Value): The numerical concentration result used for the math.
+
+>    AVALU: The unit for the concentration (e.g., ng/mL).
+
+>    AVALCAT1: Often used to flag values like "BLQ" (Below Limit of Quantitation), which tells the software whether to treat the value as zero or missing.
 
 **Where did you find "ATIME", "AVAL" as core variables and their purpose?**
 
