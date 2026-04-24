@@ -242,7 +242,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
     # Apply labels to columns added by .add_crit_flags()
     {
       new_cols <- intersect(names(.), names(labels_map))
-      unlabeled <- new_cols[vapply(new_cols, function(c) is.null(attr(.[[c]], "label")), logical(1))]
+      unlabeled <- new_cols[vapply(new_cols, function(col) is.null(attr(.[[col]], "label")), logical(1))]
       if (length(unlabeled) > 0) var_labels(.)[unlabeled] <- labels_map[unlabeled]
       .
     }
@@ -578,11 +578,39 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 
   # PPSUMFL/PPSUMRSN: derived from whether exclude is populated
   # (covers both flag-rule and manual exclusions)
-  has_exclusions <- exclude_vals != ""
-  data[["PPSUMFL"]] <- ifelse(has_exclusions, "Y", "")
-  data[["PPSUMRSN"]] <- exclude_vals
+  ppsum <- .derive_ppsum_flags(exclude_vals)
+  data[["PPSUMFL"]] <- ppsum$PPSUMFL
+  data[["PPSUMRSN"]] <- ppsum$PPSUMRSN
 
   data
+}
+
+#' Derive PPSUMFL and PPSUMRSN from an exclude-values vector
+#'
+#' Single source of truth for the PPSUMFL/PPSUMRSN derivation used by both
+#' the CDISC export pipeline and the parameter exclusions UI preview.
+#'
+#' @param exclude_vals Character vector where non-empty entries indicate exclusion.
+#'   NA values are treated as no exclusion.
+#' @param max_reason_len Maximum character length for PPSUMRSN. Values exceeding
+#'   this are truncated with a trailing ellipsis. Default 200 (from ADPP metadata).
+#' @returns A list with `PPSUMFL` (character) and `PPSUMRSN` (character).
+#' @noRd
+#' @keywords internal
+.derive_ppsum_flags <- function(exclude_vals, max_reason_len = 200L) {
+  exclude_vals[is.na(exclude_vals)] <- ""
+  has_exclusions <- exclude_vals != ""
+  # Truncate long reasons to respect ADPP field length
+  too_long <- nchar(exclude_vals) > max_reason_len
+  if (any(too_long)) {
+    exclude_vals[too_long] <- paste0(
+      substr(exclude_vals[too_long], 1, max_reason_len - 3), "..."
+    )
+  }
+  list(
+    PPSUMFL = ifelse(has_exclusions, "Y", ""),
+    PPSUMRSN = exclude_vals
+  )
 }
 
 #' Merge manual parameter exclusions into the exclude column

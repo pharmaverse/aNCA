@@ -313,7 +313,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       n <- nrow(tagged_result)
       tagged_result$.pp_excl <- seq_len(n) %in% excl_indices
       reason_vec <- rep(NA_character_, n)
-      if (length(excl_indices) > 0) {
+      if (length(excl_indices) > 0 && length(excl_indices) == length(excl_reasons)) {
         reason_vec[excl_indices] <- excl_reasons
       }
       tagged_result$.pp_excl_reason <- reason_vec

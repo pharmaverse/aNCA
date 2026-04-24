@@ -98,9 +98,9 @@ parameter_exclusions_ui <- function(id) {
     }
   }
 
-  has_exclusions <- exclude_vals != ""
-  df$PPSUMFL <- ifelse(has_exclusions, "Y", "")
-  df$PPSUMRSN <- exclude_vals
+  ppsum <- .derive_ppsum_flags(exclude_vals)
+  df$PPSUMFL <- ppsum$PPSUMFL
+  df$PPSUMRSN <- ppsum$PPSUMRSN
 
   apply_labels(df, type = "ADPP")
 }
@@ -271,17 +271,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       if (is.null(tbl)) return(NULL)
       tagList(
         tbl,
-        tags$script(HTML("
-          (function() {
-            var target = document.currentScript.parentElement;
-            var observer = new MutationObserver(function(mutations, obs) {
-              Shiny.bindAll(target);
-              obs.disconnect();
-            });
-            observer.observe(target, { childList: true, subtree: true });
-            Shiny.bindAll(target);
-          })();
-        "))
+        tags$script("setTimeout(function(){ Shiny.bindAll(); }, 100);")
       )
     })
 
