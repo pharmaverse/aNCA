@@ -11,7 +11,6 @@
     ":=",
     "ADOSEDUR",
     "AFRLT",
-    "ANL01FL",
     "ARRLT",
     "ATPT",
     "ATPTN",

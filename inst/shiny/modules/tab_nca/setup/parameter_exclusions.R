@@ -4,7 +4,7 @@
 #' Users select rows from the NCA results table and mark them for exclusion.
 #' Excluded rows are flagged via PPSUMFL = "Y" in ADPP.
 #'
-#' - Yellow: Manually excluded parameter rows
+#' - Yellow: Excluded parameter rows (auto from flag rules + manual)
 
 # Color constant for excluded parameter rows
 PARAM_EXCL_COLOR <- "#FFF3CD"  # yellow
