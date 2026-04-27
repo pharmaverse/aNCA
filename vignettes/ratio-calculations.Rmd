@@ -41,13 +41,15 @@ $$\text{Ratio} = \frac{\text{TestParameter}[\text{TestGroup}]}{\text{RefParamete
 aNCA auto-generates a PPTESTCD based on which grouping variable is used as the
 reference. The sections below describe each ratio type.
 
+Note: Ratio calculations are only available for parameters that have been requested via the **Parameters** tab. If a parameter is not requested, it will not be available for ratio calculations.
+
 ---
 
 # Metabolite Ratio (MR)
 
 **When:** The reference group column is the **analyte** column (e.g. `PARAM`).
 
-**PPTESTCD:** `MR{param}` — e.g. `MRCMAX`, `MRAUCLST`
+**PPTESTCD:** `MR{param}` — e.g. `MRCMAX`
 
 **Use case:** Compare a metabolite to its parent compound.
 
@@ -77,7 +79,7 @@ $$MR_{CMAX} = \frac{CMAX_{\text{metabolite}}}{CMAX_{\text{parent}}} \times AdjFa
 
 **When:** The reference group column is the **dose profile** column (`ATPTREF`).
 
-**PPTESTCD:** `AR{param}` — e.g. `ARCMAX`, `ARAUCLST`
+**PPTESTCD:** `AR{param}` — e.g. `ARCMAX`
 
 **Use case:** Compare steady-state exposure to single-dose exposure.
 
@@ -91,8 +93,8 @@ $$AR_{CMAX} = \frac{CMAX_{\text{steady-state}}}{CMAX_{\text{single dose}}}$$
 |---|---|
 | Test Parameter | `CMAX` |
 | Ref Parameter | `CMAX` |
-| Ref Groups | `ATPTREF: 1` (single dose profile) |
-| Test Groups | `(all other levels)` or `ATPTREF: 5` |
+| Ref Groups | `ATPTREF: DOSE 1` (single dose profile) |
+| Test Groups | `(all other levels)` or specific e.g. `ATPTREF: DOSE 5` |
 | Adj. Factor | 1 |
 
 ### Notes
@@ -155,15 +157,15 @@ $$F_{abs} = \frac{AUC_{\text{oral}} / Dose_{\text{oral}}}{AUC_{\text{IV}} / Dose
 
 | Field | Value |
 |---|---|
-| Test Parameter | `AUCLST` (or `AUCIFOB`) |
-| Ref Parameter | `AUCLST` (or `AUCIFOB`) |
+| Test Parameter | `AUCLST` (or `AUCIFO`) |
+| Ref Parameter | `AUCLST` (or `AUCIFO`) |
 | Ref Groups | `ROUTE: INTRAVASCULAR` |
 | Test Groups | `(all other levels)` |
 | Adj. Factor | Dose~IV~ / Dose~oral~ (if not already dose-normalized) |
 
 ### Notes
 
-- If the parameters are already dose-normalized (e.g. `AUCLST/D`), set the
+- If the parameters are already dose-normalized (e.g. `AUCLSTD`) or with the same dose, set the
   adjusting factor to 1.
 - `FABS` values close to 1 indicate complete absorption.
 - The auto-detection matches both the mapped `ROUTE` column and the raw `ROUTE`
