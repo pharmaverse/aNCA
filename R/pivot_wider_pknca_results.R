@@ -87,7 +87,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
-    mutate(PPTESTCD = ifelse(PPSTRESU != "",
+    mutate(PPTESTCD = ifelse(!is.na(PPSTRESU) & PPSTRESU != "",
                              paste0(PPTESTCD, "[", PPSTRESU, "]"),
                              PPTESTCD)) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
@@ -115,7 +115,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       mutate(
         interval_name = paste0(
           signif(start_dose), "-", signif(end_dose),
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
         ),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
@@ -129,7 +129,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       mutate(
         interval_name = paste0(
           signif(start_dose), "-", signif(end_dose),
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
         ),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
@@ -222,9 +222,9 @@ add_label_attribute <- function(df, myres) {
       PPTESTCD_unit = case_when(
         type_interval == "manual" ~ paste0(
           PPTESTCD, "_", start, "-", end,
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
         ),
-        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
+        !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
         TRUE ~ PPTESTCD
       ),
       PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
