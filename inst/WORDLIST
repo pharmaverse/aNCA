@@ -16,10 +16,12 @@ AUClast
 AVAL
 AVALU
 AdjustingFactor
+Ae
 AggregateSubject
 Analyte
 Analytes
 BLQ
+Bioavailability
 Buckeridge
 CDISC
 CMAX
@@ -44,6 +46,8 @@ EV
 EVID
 EXSTDTC
 Extravascular
+FABS
+FREL
 Kezia
 Kobana
 LAMZ
@@ -152,6 +156,7 @@ dm
 doi
 dropdowns
 extravascular
+frac
 ggplot
 ggplots
 hardcoded
@@ -178,6 +183,7 @@ pharmacodynamics
 pharmacokinetic
 pharmacokinetics
 pkcg
+pkgdown
 pknca
 plotly
 pptest
