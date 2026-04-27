@@ -169,30 +169,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     res_nca <- reactive({
       req(processed_pknca_data())
 
-      if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
-                                                              is.logical)]))) {
+      if (.has_no_valid_parameters(processed_pknca_data())) {
         log_error("Invalid parameters")
-        if (auto_nca_running()) {
-          auto_nca_running(FALSE)
-          session$userData$auto_replay_active <- FALSE
-          shiny::removeModal()
-          showNotification(
-            paste(
-              "Session restored but NCA could not be auto-run:",
-              "no suitable parameters for this dataset.",
-              "Please adjust settings and run NCA manually."
-            ),
-            type = "warning", duration = 10
-          )
-        } else {
-          showNotification(
-            paste(
-              "No suitable parameters selected for NCA calculation.",
-              "Please go back and select parameters suitable for the data."
-            ),
-            type = "error", duration = NULL
-          )
-        }
+        .notify_invalid_parameters(auto_nca_running(), session)
+        auto_nca_running(FALSE)
         return(NULL)
       }
 
@@ -203,87 +183,22 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       log_info("Calculating NCA results...")
 
       tryCatch({
-        # Create env for storing PKNCA run warnings, so that warning messages can be appended
-        # from within warning handler without bleeding to global env.
-        pknca_warn_env <- new.env()
-        pknca_warn_env$warnings <- c()
-
-        # Update units table
-        processed_pknca_data <- processed_pknca_data()
-        if (!is.null(session$userData$units_table())) {
-          custom_units <- session$userData$units_table()
-          by_cols <- intersect(names(processed_pknca_data$units), names(custom_units))
-          by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
-          processed_pknca_data$units <- rows_update(
-            processed_pknca_data$units,
-            custom_units,
-            by = by_cols,
-            unmatched = "ignore"
-          )
-        }
-
-        #' Calculate results
-        res <- withCallingHandlers({
-          processed_pknca_data %>%
-            # Check if there are exclusions that contains a filled reason
-            check_valid_pknca_data() %>%
-            # Perform PKNCA parameter calculations
-            PKNCA_calculate_nca(
-              blq_rule = settings()$data_imputation$blq_imputation_rule
-            ) %>%
-            # Add bioavailability results if requested
-            add_f_to_pknca_results(settings()$bioavailability) %>%
-            # Apply standard CDISC names
-            mutate(
-              PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
-            ) %>%
-            # Apply flag rules to mark results in the `exclude` column
-            PKNCA_hl_rules_exclusion(
-              rules = isolate(settings()$flags) %>%
-                purrr::keep(\(x) x$is.checked) %>%
-                purrr::map(\(x) x$threshold)
-            ) %>%
-            # Add parameter ratio calculations
-            calculate_table_ratios(ratio_table = ratio_table()) %>%
-            # Keep only parameters requested by the user
-            remove_pp_not_requested()
-        },
-        warning = function(w) {
-          parsed <- .parse_pknca_warning(w)
-          if (!is.null(parsed)) {
-            log_warn("Warning during NCA calculation: {conditionMessage(w)}")
-            pknca_warn_env$warnings <- append(pknca_warn_env$warnings, parsed)
-          }
-          invokeRestart("muffleWarning")
-        })
-
-        # Display unique warnings thrown by PKNCA run.
-        purrr::walk(unique(pknca_warn_env$warnings), function(w) {
-          w_message <- paste0("PKNCA run produced a warning: ", w)
-          log_warn(w_message)
-          showNotification(w_message, type = "warning", duration = 5)
-        })
+        res <- .run_nca_calculation(
+          processed_pknca_data(), settings, ratio_table,
+          session$userData$units_table()
+        )
 
         updateTabsetPanel(session, "nca_navset", selected = "Results")
-
         log_success("NCA results calculated.")
 
         res
       }, error = function(e) {
-        log_error("Error calculating NCA results:\n{conditionMessage(e)}")
+        log_error("Error calculating NCA results:\n", conditionMessage(e))
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
         NULL
       }, finally = {
-        if (auto_nca_running()) {
-          auto_nca_running(FALSE)
-          session$userData$auto_replay_active <- FALSE
-          # Dismiss the "Restoring session..." popup
-          shiny::removeModal()
-          log_success("Auto-replay: session restored with NCA results.")
-        } else {
-          # Delay the removal of loading modal to give it enough time to render
-          later::later(~shiny::removeModal(session = session), delay = 0.5)
-        }
+        .finalize_nca_run(auto_nca_running(), session)
+        auto_nca_running(FALSE)
       })
     }) %>%
       bindEvent(input$run_nca)
@@ -342,6 +257,116 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     # return results for use in other modules
     list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
   })
+}
+
+#' Check whether the PKNCAdata intervals contain any selected (TRUE) parameters.
+#' @param pknca_data A PKNCAdata object.
+#' @returns TRUE if no valid parameters are selected.
+#' @noRd
+.has_no_valid_parameters <- function(pknca_data) {
+  all(!unlist(pknca_data$intervals[sapply(pknca_data$intervals, is.logical)]))
+}
+
+#' Show the appropriate notification when NCA has no valid parameters.
+#' @param is_auto_replay Logical, whether this is an auto-replay run.
+#' @param session Shiny session object.
+#' @noRd
+.notify_invalid_parameters <- function(is_auto_replay, session) {
+  if (is_auto_replay) {
+    session$userData$auto_replay_active <- FALSE
+    shiny::removeModal()
+    showNotification(
+      paste(
+        "Session restored but NCA could not be auto-run:",
+        "no suitable parameters for this dataset.",
+        "Please adjust settings and run NCA manually."
+      ),
+      type = "warning", duration = 10
+    )
+  } else {
+    showNotification(
+      paste(
+        "No suitable parameters selected for NCA calculation.",
+        "Please go back and select parameters suitable for the data."
+      ),
+      type = "error", duration = NULL
+    )
+  }
+}
+
+#' Run the NCA calculation pipeline with warning capture.
+#' @param processed_pknca_data A processed PKNCAdata object.
+#' @param settings Reactive returning the current settings list.
+#' @param ratio_table Reactive returning the ratio calculations table.
+#' @param custom_units Optional custom units table (or NULL).
+#' @returns NCA results data frame.
+#' @noRd
+.run_nca_calculation <- function(processed_pknca_data, settings, ratio_table,
+                                 custom_units) {
+  pknca_warn_env <- new.env()
+  pknca_warn_env$warnings <- c()
+
+  # Apply custom units if available
+  if (!is.null(custom_units)) {
+    by_cols <- intersect(names(processed_pknca_data$units), names(custom_units))
+    by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
+    processed_pknca_data$units <- rows_update(
+      processed_pknca_data$units,
+      custom_units,
+      by = by_cols,
+      unmatched = "ignore"
+    )
+  }
+
+  res <- withCallingHandlers({
+    processed_pknca_data %>%
+      check_valid_pknca_data() %>%
+      PKNCA_calculate_nca(
+        blq_rule = settings()$data_imputation$blq_imputation_rule
+      ) %>%
+      add_f_to_pknca_results(settings()$bioavailability) %>%
+      mutate(
+        PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
+      ) %>%
+      PKNCA_hl_rules_exclusion(
+        rules = isolate(settings()$flags) %>%
+          purrr::keep(\(x) x$is.checked) %>%
+          purrr::map(\(x) x$threshold)
+      ) %>%
+      calculate_table_ratios(ratio_table = ratio_table()) %>%
+      remove_pp_not_requested()
+  },
+  warning = function(w) {
+    parsed <- .parse_pknca_warning(w)
+    if (!is.null(parsed)) {
+      log_warn("Warning during NCA calculation: ", conditionMessage(w))
+      pknca_warn_env$warnings <- append(pknca_warn_env$warnings, parsed)
+    }
+    invokeRestart("muffleWarning")
+  })
+
+  # Display unique warnings thrown by PKNCA run.
+  purrr::walk(unique(pknca_warn_env$warnings), function(w) {
+    w_message <- paste0("PKNCA run produced a warning: ", w)
+    log_warn(w_message)
+    showNotification(w_message, type = "warning", duration = 5)
+  })
+
+  res
+}
+
+#' Clean up after NCA run (dismiss modals, reset auto-replay state).
+#' @param is_auto_replay Logical, whether this is an auto-replay run.
+#' @param session Shiny session object.
+#' @noRd
+.finalize_nca_run <- function(is_auto_replay, session) {
+  if (is_auto_replay) {
+    session$userData$auto_replay_active <- FALSE
+    shiny::removeModal()
+    log_success("Auto-replay: session restored with NCA results.")
+  } else {
+    later::later(~shiny::removeModal(session = session), delay = 0.5)
+  }
 }
 
 #'
