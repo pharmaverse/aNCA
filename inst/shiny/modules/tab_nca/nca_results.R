@@ -71,7 +71,6 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       }
 
       #' Transform results
-      # Calculate bioavailability if available
       results <- res_nca()
 
       # Transform results

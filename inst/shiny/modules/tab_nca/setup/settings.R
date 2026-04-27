@@ -152,23 +152,7 @@ settings_ui <- function(id) {
               step = 1
             )
           ),
-          column(
-            4, # pickerinput only enabled when IV and EX data present
-            shinyjs::hidden(
-              div(
-                class = "bioavailability-picker",
-                pickerInput(
-                  ns("bioavailability"),
-                  "Calculate Bioavailability:",
-                  choices = metadata_nca_parameters %>%
-                    filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
-                    pull(PKNCA, PPTESTCD),
-                  multiple = TRUE,
-                  selected = NULL
-                )
-              )
-            )
-          )
+
         )
       ),
       accordion_panel(
@@ -459,7 +443,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         pcspec = input$select_pcspec,
         method = input$method,
         min_hl_points = input$min_hl_points,
-        bioavailability = input$bioavailability,
         data_imputation = list(
           impute_c0 = data_imputation$should_impute_c0(),
           blq_strategy = data_imputation$blq_strategy(),
@@ -569,7 +552,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   list(selected = selected)
 }
 
-#' Restore non-filter settings (method, bioavailability, flags, etc.)
+#' Restore non-filter settings (method, flags, etc.)
 #' @param settings Settings list.
 #' @param adnca_data Reactive returning PKNCAdata object.
 #' @param session Shiny session.
@@ -583,14 +566,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     updateNumericInput(
       session, inputId = "min_hl_points",
       value = settings$min_hl_points
-    )
-  }
-
-  dose_routes <- unique(adnca_data()$dose$data$std_route)
-  if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
-    updateSelectInput(
-      session, inputId = "bioavailability",
-      selected = settings$bioavailability
     )
   }
 
