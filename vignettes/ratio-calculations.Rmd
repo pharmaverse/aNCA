@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 Ratio calculations compare PK parameters between groups — across analytes, dose
 profiles, specimen types, or routes of administration. In aNCA, ratios are
-configured in **NCA > Setup > Settings > Ratio Calculations**.
+configured in **NCA > Setup > Parameter Selection > Ratio Calculations**.
 
 Each ratio is defined by:
 
@@ -41,7 +41,7 @@ $$\text{Ratio} = \frac{\text{TestParameter}[\text{TestGroup}]}{\text{RefParamete
 aNCA auto-generates a PPTESTCD based on which grouping variable is used as the
 reference. The sections below describe each ratio type.
 
-Note: Ratio calculations are only available for parameters that have been requested via the **Parameters** tab. If a parameter is not requested, it will not be available for ratio calculations.
+Note: Ratio calculations are only available for parameters selected in the **Parameter Selection** section. If a parameter is not selected, it will not be available for ratio calculations.
 
 ---
 
