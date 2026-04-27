@@ -75,10 +75,19 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     summary_stats <- reactive({
       req(res_nca())
 
+      subj_col <- res_nca()$data$conc$columns$subject
+      group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
+                            subj_col)
       classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
+
+      # Fall back to default grouping when the picker hasn't rendered yet
+      selected_groupby <- input$summary_groupby
+      if (is.null(selected_groupby)) {
+        selected_groupby <- unique(c(group_cols, classification_cols))
+      }
 
       results <- res_nca()
 
@@ -100,7 +109,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         rename_interval_params()
 
       # Calculate summary stats and filter by selected parameters
-      calculate_summary_stats(stats_data, input$summary_groupby)
+      calculate_summary_stats(stats_data, selected_groupby)
     })
 
     summary_stats_filtered <- reactive({
