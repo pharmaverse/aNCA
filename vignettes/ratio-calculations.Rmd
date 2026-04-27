@@ -5,7 +5,7 @@ description: >
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Ratio Calculations}
-  %\VignetteEngine{knitr::knitr}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -40,6 +40,10 @@ $$\text{Ratio} = \frac{\text{Test Parameter}[\text{Test Group}]}{\text{Ref Param
 
 aNCA auto-generates a PPTESTCD based on which grouping variable is used as the
 reference. The sections below describe each ratio type.
+
+Ratio calculations are implemented in aNCA independently of PKNCA. They operate
+on the computed NCA results — dividing one parameter value by another across
+groups — rather than being part of the core NCA engine.
 
 Note: Ratio calculations are only available for parameters selected in the **Parameter Selection** section. If a parameter is not selected, it will not be available for ratio calculations.
 

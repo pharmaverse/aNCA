@@ -15,6 +15,8 @@ navbar:
       menu:
         - text: Manual
           href: articles/manual.html
+        - text: Ratio Calculations
+          href: articles/ratio-calculations.html
         - text: NCA Concepts
           href: articles/background.html
         - text: FAQs
