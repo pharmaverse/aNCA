@@ -36,7 +36,7 @@ Each ratio is defined by:
 
 The general formula is:
 
-$$\text{Ratio} = \frac{\text{TestParameter}[\text{TestGroup}]}{\text{RefParameter}[\text{RefGroup}]} \times \text{AdjFactor}$$
+$$\text{Ratio} = \frac{\text{Test Parameter}[\text{Test Group}]}{\text{Ref Parameter}[\text{Ref Group}]} \times \text{Adj. Factor}$$
 
 aNCA auto-generates a PPTESTCD based on which grouping variable is used as the
 reference. The sections below describe each ratio type.
@@ -55,7 +55,7 @@ Note: Ratio calculations are only available for parameters selected in the **Par
 
 ### Formula
 
-$$MR_{CMAX} = \frac{CMAX_{\text{metabolite}}}{CMAX_{\text{parent}}} \times AdjFactor$$
+$$MR_{CMAX} = \frac{CMAX_{\text{metabolite}}}{CMAX_{\text{parent}}} \times \text{Adj. Factor}$$
 
 ### Setup
 
@@ -216,7 +216,7 @@ period, etc.
 
 ### Formula
 
-$$RA_{CMAX} = \frac{CMAX_{\text{test group}}}{CMAX_{\text{ref group}}} \times AdjFactor$$
+$$RA_{CMAX} = \frac{CMAX_{\text{test group}}}{CMAX_{\text{ref group}}} \times \text{Adj. Factor}$$
 
 ### Setup
 
