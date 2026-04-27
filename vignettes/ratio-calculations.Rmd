@@ -5,7 +5,7 @@ description: >
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Ratio Calculations}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{knitr::knitr}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -249,7 +249,7 @@ subjects differ between test and reference groups:
 | Mode | Behavior |
 |---|---|
 | `no` | Strict within-subject matching. Fails if a subject is missing from the reference group. |
-| `yes` | Computes the geometric mean of reference values across all subjects, then divides each test subject's value by that mean. |
+| `yes` | Computes the arithmetic mean of reference values across all subjects, then divides each test subject's value by that mean. |
 | `if-needed` | Tries within-subject first. For subjects without a matching reference, falls back to the aggregated mean. |
 
 **Recommendation:** Use `no` for crossover designs where every subject has both
