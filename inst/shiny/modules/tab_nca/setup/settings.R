@@ -451,20 +451,17 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       refresh_reactable(refresh_reactable() + 1)
     })
 
-    #' For each of the columns in partial aucs data frame, attach an event that will read
-    #' edits for that column made in the reactable.
-    observe({
-      req(int_parameters())
-      # Dynamically attach observers for each column
-      edit_inputs <- intersect(names(input), paste0("edit_", names(int_parameters())))
-      purrr::walk(edit_inputs, function(edit_input) {
-        observeEvent(input[[edit_input]], {
-          edit <- input[[edit_input]]
-          partial_aucs <- int_parameters()
+    #' Attach edit observers once (not inside observe() to avoid accumulating
+    #' duplicate handlers on every int_parameters() change).
+    purrr::walk(c("edit_parameter", "edit_start_auc", "edit_end_auc"), function(edit_input) {
+      observeEvent(input[[edit_input]], {
+        edit <- input[[edit_input]]
+        partial_aucs <- int_parameters()
+        if (edit$row <= nrow(partial_aucs)) {
           val <- if (edit$column != "parameter") as.numeric(edit$value) else edit$value
           partial_aucs[edit$row, edit$column] <- val
           int_parameters(partial_aucs)
-        })
+        }
       })
     })
 
