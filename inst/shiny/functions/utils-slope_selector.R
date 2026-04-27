@@ -143,6 +143,7 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
 #' @export
 check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   slope_groups <- setdiff(names(new), c("TYPE", "RANGE", "REASON"))
+  if (is.null(existing)) return(as.data.frame(new))
   existing <- filter(existing, !is.na(TYPE))
 
   # Helper to match group columns between existing and new
