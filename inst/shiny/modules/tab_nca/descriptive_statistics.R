@@ -52,7 +52,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       ]
 
       grouping_vars <- c(group_cols, classification_cols, subj_col)
-      initial_selection <- group_cols
+      initial_selection <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
 
       # Rendering the group by selector
       selector_label(input = input,
@@ -67,7 +67,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
       updatePickerInput(session, "summary_groupby",
                         choices = unique(c(group_cols, classification_cols, subj_col)),
-                        selected = unique(group_cols))
+                        selected = unique(c(group_cols, intersect("ATPTREF", classification_cols))))
 
     })
 
@@ -86,7 +86,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       # Fall back to default grouping when the picker hasn't rendered yet
       selected_groupby <- input$summary_groupby
       if (is.null(selected_groupby)) {
-        selected_groupby <- unique(group_cols)
+        selected_groupby <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
       }
 
       results <- res_nca()
