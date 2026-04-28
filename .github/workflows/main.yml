@@ -68,6 +68,13 @@ jobs:
     with:
       r-version: "${{ needs.get_r_version.outputs.r-version }}"
 
+  data-raw:
+    name: Data Raw
+    uses: ./.github/workflows/data-raw-check.yml
+    needs: get_r_version
+    with:
+      r-version: "${{ needs.get_r_version.outputs.r-version }}"
+
   check:
     name: Check
     uses: ./.github/workflows/r-cmd-check.yml
