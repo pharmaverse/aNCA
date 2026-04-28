@@ -108,17 +108,13 @@ describe("read_settings", {
     res <- read_settings(path)
 
     expect_type(res, "list")
-    expect_equal(names(res), c("settings", "slope_rules"))
+    expect_true("settings" %in% names(res))
 
   })
 
-  ##################################################
-  # TODO: Once the new implementation is integrated,
-  # change the tests for slope rules
-  ##################################################
-  it("converts slope_rules to a data.frame", {
+  it("returns NULL slope_rules when the YAML contains an empty table", {
     res <- read_settings(path)
-    expect_s3_class(res$slope_rules, "data.frame")
+    expect_null(res$slope_rules)
   })
 
   it("converts int_parameters to a data frame when present", {
