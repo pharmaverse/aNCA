@@ -79,7 +79,7 @@ describe("format_pkncadata_intervals", {
     )
   })
 
-  it("correctly uses tau if column is available", {
+  it("sets last time to end AFRLT for last dose when TRTRINT available", {
     df_conc_tau <- df_conc %>%
       mutate(TRTRINT = 5) # Add a tau column for testing
 
@@ -92,7 +92,43 @@ describe("format_pkncadata_intervals", {
 
     result_tau <- format_pkncadata_intervals(pknca_conc_tau, pknca_dose)
 
-    expect_equal(result_tau$end[4], 10)
+    expect_equal(result_tau$end[4], 9)
+  })
+
+  it("ends at last sample time even when samples stop before tau", {
+    # TRTRINT = 10 but last sample at ARRLT = 4
+    # → end should be start + max_end = 5 + 4 = 9, not start + TRTRINT = 5 + 10 = 15
+    df_conc_long_tau <- df_conc %>%
+      mutate(TRTRINT = 10)
+
+    pknca_conc_long_tau <- PKNCA::PKNCAconc(
+      df_conc_long_tau,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+
+    result <- format_pkncadata_intervals(pknca_conc_long_tau, pknca_dose)
+
+    expect_equal(result$end[4], 9)
+  })
+
+  it("ends at last sample time even when samples extend beyond tau", {
+    # TRTRINT = 2 but last sample at ARRLT = 4
+    # → end should be start + max_end = 5 + 4 = 9, not start + TRTRINT = 5 + 2 = 7
+    df_conc_short_tau <- df_conc %>%
+      mutate(TRTRINT = 2)
+
+    pknca_conc_short_tau <- PKNCA::PKNCAconc(
+      df_conc_short_tau,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+
+    result <- format_pkncadata_intervals(pknca_conc_short_tau, pknca_dose)
+
+    expect_equal(result$end[4], 9)
   })
 
   it("sets last time to end AFRLT if no TRTRINT available", {

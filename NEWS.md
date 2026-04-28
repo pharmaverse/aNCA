@@ -62,6 +62,8 @@
 
 ## Bugs fixed
 * R script and settings export now include volume unit simplifications. Unit change detection uses value comparison (`PPSTRESU != PPORRESU`) instead of an edit-tracking flag, so automatic simplifications (e.g. `mg*L/mL` → `mg`) are captured alongside user edits (#1190)
+* Last dose interval end time now extends to the last observed sample instead of being cut off at TRTRINT (tau), ensuring all collected data points are included in NCA calculations (#1235)
+* Fixed NA `PPSTRESU` handling across NCA results: descriptive statistics no longer crash when a parameter group has all-NA units, and manual interval parameters (e.g., RCAMINT) no longer get `NA` appended to their column names (#1216)
 * `get_settings_code()` now reads mapping, filters, ratio table, and units from the settings YAML instead of using hardcoded defaults. Legacy YAML files without these fields still work via fallback. The `mapping` parameter has been removed (#1189)
 * SASS compilation moved from runtime (`app.R`) to a `data-raw/compile_css.R` script, fixing startup crashes on read-only deployments (#1107)
 * ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (#794)
