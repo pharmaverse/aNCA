@@ -224,33 +224,51 @@ slope_selector_server <- function( # nolint
       pknca_data(new_pknca_data)
     })
 
+    # Apply flag-based filtering when the checkbox is checked
+    filtered_plot_outputs <- reactive({
+      plots <- plot_outputs()
+      req(!is.null(plots))
+      if (!isTRUE(input$filter_flagged) || is.null(flag_rules())) return(plots)
+
+      profile_data <- plot_profile_data()
+      if (is.null(profile_data) || length(profile_data) == 0) return(plots)
+
+      flagged_ids <- .get_flagged_profile_ids(profile_data, flag_rules())
+      plots[names(plots) %in% flagged_ids]
+    })
+
     # Call the pagination/searcher module to:
     # - Providing indices of plots for the selected subject(s)
     # - Providing indices for which plots to display based on pagination
     page_search <- page_and_searcher_server(
       id = "page_and_searcher",
       search_subject = reactive(input$search_subject),
-      plot_outputs = plot_outputs,
+      plot_outputs = filtered_plot_outputs,
       plots_per_page = reactive(input$plots_per_page)
     )
 
     observe({
-      req(!is.null(plot_outputs()))
+      req(!is.null(filtered_plot_outputs()))
       output$slope_plots_ui <- renderUI({
-        if (length(plot_outputs()) == 0) {
-          div(
-            class = "slope-selector-empty-state",
-            icon("info-circle"),
-            tags$p(
+        if (length(filtered_plot_outputs()) == 0) {
+          msg <- if (isTRUE(input$filter_flagged)) {
+            "No flagged profiles to display. All half-life fits satisfy the flag rules."
+          } else {
+            paste(
               "No slope plots to display.",
               "Half-life plots require at least one half-life",
               "related parameter to be selected",
               "(e.g., LAMZHL, LAMZ, R2ADJ, LAMZNPT)."
             )
+          }
+          div(
+            class = "slope-selector-empty-state",
+            icon("info-circle"),
+            tags$p(msg)
           )
         } else {
           shinyjs::enable(selector = ".btn-page")
-          plot_outputs() %>%
+          filtered_plot_outputs() %>%
             # Filter plots based on user search
             .[page_search$is_plot_searched()] %>%
             # Arrange plots by the specified group order
