@@ -198,10 +198,12 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
 
     # Collect all half life manual adjustments done in the `Slope Selector` section
     # and controls the half life plots that are displayed
+    flag_rules <- reactive(settings()$flags)
     slope_rules <- slope_selector_server(
       "slope_selector",
       processed_pknca_data,
-      imported_slopes
+      imported_slopes,
+      flag_rules
     )
 
     # Open comment modal before downloading settings

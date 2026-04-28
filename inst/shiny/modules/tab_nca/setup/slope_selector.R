@@ -17,6 +17,8 @@
 #' @param id Character. Shiny module id.
 #' @param processed_pknca_data Reactive. PKNCAdata object for plotting and table context.
 #' @param manual_slopes_override Reactive. Optional custom settings override for the slopes table.
+#' @param flag_rules Reactive. Named list of flag rules from NCA settings
+#'   (e.g. R2ADJ, R2, LAMZSPN), each with `is.checked` and `threshold`.
 #' @return manual_slopes (data.frame of user slope inclusions/exclusions)
 #'
 #' @details
@@ -126,7 +128,7 @@ slope_selector_ui <- function(id) {
 }
 
 slope_selector_server <- function( # nolint
-  id, processed_pknca_data, manual_slopes_override
+  id, processed_pknca_data, manual_slopes_override, flag_rules = reactive(NULL)
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
