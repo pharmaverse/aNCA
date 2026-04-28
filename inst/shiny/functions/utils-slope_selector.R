@@ -257,3 +257,91 @@ arrange_plots_by_groups <- function(named_list, group_cols) {
   named_list[arranged_df$PLOTID]
 }
 
+#' Identify profile IDs whose half-life results violate flag rules
+#'
+#' Evaluates each profile's NCA results against the checked flag rules
+#' and returns the IDs of profiles that are flagged (i.e. at least one
+#' rule is violated) or where lambda.z is NA (failed fit).
+#'
+#' @param profile_data Named list of per-profile data frames from
+#'   `get_halflife_plots()`. Each data frame contains columns like
+#'   `adj.r.squared`, `r.squared`, `span.ratio`, `lambda.z`.
+#' @param flags Named list of flag rules from NCA settings. Each element
+#'   has `is.checked` (logical) and `threshold` (numeric).
+#' @return Character vector of flagged profile IDs (names from profile_data).
+.get_flagged_profile_ids <- function(profile_data, flags) {
+  # Map flag names to the corresponding column in profile data
+  flag_col_map <- c(
+    R2ADJ = "adj.r.squared",
+    R2 = "r.squared",
+    LAMZSPN = "span.ratio"
+  )
+
+  # Only evaluate checked flags that have a matching column
+  active_flags <- purrr::keep(flags, function(f) isTRUE(f$is.checked))
+  active_flags <- active_flags[names(active_flags) %in% names(flag_col_map)]
+
+  if (length(active_flags) == 0) return(names(profile_data))
+
+  vapply(names(profile_data), function(pid) {
+    df <- profile_data[[pid]]
+    # Always show profiles where lambda.z failed
+    if (all(is.na(df$lambda.z))) return(TRUE)
+
+    # Check each active flag: value below threshold means flagged
+    any(vapply(names(active_flags), function(flag_name) {
+      col <- flag_col_map[[flag_name]]
+      if (!col %in% names(df)) return(FALSE)
+      val <- df[[col]][1]
+      if (is.na(val)) return(TRUE)
+      val < active_flags[[flag_name]]$threshold
+    }, logical(1)))
+  }, logical(1)) |>
+    Filter(isTRUE, x = _) |>
+    names()
+}
+
+#' Identify profile IDs whose half-life results violate flag rules
+#'
+#' Evaluates each profile's NCA results against the checked flag rules
+#' and returns the IDs of profiles that are flagged (i.e. at least one
+#' rule is violated) or where lambda.z is NA (failed fit).
+#'
+#' @param profile_data Named list of per-profile data frames from
+#'   `get_halflife_plots()`. Each data frame contains columns like
+#'   `adj.r.squared`, `r.squared`, `span.ratio`, `lambda.z`.
+#' @param flags Named list of flag rules from NCA settings. Each element
+#'   has `is.checked` (logical) and `threshold` (numeric).
+#' @return Character vector of flagged profile IDs (names from profile_data).
+.get_flagged_profile_ids <- function(profile_data, flags) {
+  # Map flag names to the corresponding column in profile data
+  flag_col_map <- c(
+    R2ADJ = "adj.r.squared",
+    R2 = "r.squared",
+    LAMZSPN = "span.ratio"
+  )
+
+  # Only evaluate checked flags that have a matching column
+  active_flags <- purrr::keep(flags, function(f) isTRUE(f$is.checked))
+  active_flags <- active_flags[names(active_flags) %in% names(flag_col_map)]
+
+  if (length(active_flags) == 0) return(names(profile_data))
+
+  vapply(names(profile_data), function(pid) {
+    df <- profile_data[[pid]]
+    # Always show profiles where lambda.z failed
+    if (all(is.na(df$lambda.z))) return(TRUE)
+
+    # Check each active flag: value below threshold means flagged
+    any(vapply(names(active_flags), function(flag_name) {
+      col <- flag_col_map[[flag_name]]
+      if (!col %in% names(df)) return(FALSE)
+      val <- df[[col]][1]
+      if (is.na(val)) return(TRUE)
+      val < active_flags[[flag_name]]$threshold
+    }, logical(1)))
+  }, logical(1)) |>
+    Filter(isTRUE, x = _) |>
+    names()
+}
+
