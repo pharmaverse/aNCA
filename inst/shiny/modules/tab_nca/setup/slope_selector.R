@@ -143,6 +143,23 @@ slope_selector_server <- function( # nolint
 
     ns <- session$ns
 
+    # Disable the flag filter checkbox when no half-life flag rules are checked
+    observe({
+      flags <- flag_rules()
+      hl_flags <- c("R2ADJ", "R2", "LAMZSPN")
+      has_active <- any(vapply(
+        flags[intersect(names(flags), hl_flags)],
+        function(f) isTRUE(f$is.checked),
+        logical(1)
+      ))
+      if (has_active) {
+        shinyjs::enable("filter_flagged")
+      } else {
+        updateCheckboxInput(session, "filter_flagged", value = FALSE)
+        shinyjs::disable("filter_flagged")
+      }
+    })
+
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
     plot_profile_data <- reactiveVal(NULL)
