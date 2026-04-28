@@ -13,6 +13,7 @@ excluded <- c("rebuild.R", "test_suggests_hidden.R")
 scripts <- list.files("data-raw", pattern = "\\.R$", full.names = TRUE)
 scripts <- scripts[!basename(scripts) %in% excluded]
 
+library(dplyr)
 for (script in scripts) {
   message(">> Running ", script)
   source(script, local = new.env(parent = globalenv()))
