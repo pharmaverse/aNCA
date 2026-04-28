@@ -107,6 +107,14 @@ slope_selector_ui <- function(id) {
           choices = NULL,
           multiple = TRUE
         ),
+      ),
+      div(
+        class = "plot-widget-group",
+        checkboxInput(
+          ns("filter_flagged"),
+          label = "Show only flagged profiles",
+          value = FALSE
+        )
       )
     ),
     fluidRow(
