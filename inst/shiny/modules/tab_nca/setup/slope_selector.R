@@ -135,6 +135,7 @@ slope_selector_server <- function( # nolint
 
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
+    plot_profile_data <- reactiveVal(NULL)
 
     observeEvent(processed_pknca_data(), {
       req(processed_pknca_data())
@@ -160,15 +161,25 @@ slope_selector_server <- function( # nolint
 
       if (changes$in_data || changes$in_options) {
         # New data or options changes (e.g. min.hl.points): regenerate all plots
-        plot_outputs(get_halflife_plots(
+        hl_result <- get_halflife_plots(
           new_pknca_data, title_vars = "ATPTREF"
-        )[["plots"]])
+        )
+        plot_outputs(hl_result[["plots"]])
+        plot_profile_data(hl_result[["data"]])
       } else if (changes$in_hl_adj) {
         # Modify plots with new half-life adjustments (inclusions/exclusions)
-        plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
+        hl_result <- handle_hl_adj_change(
+          new_pknca_data, pknca_data(), plot_outputs(), plot_profile_data()
+        )
+        plot_outputs(hl_result$plots)
+        plot_profile_data(hl_result$data)
       } else if (changes$in_selected_intervals) {
         # Add/remove plots based on intervals (selection from nca_setup.R)
-        plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
+        hl_result <- handle_interval_change(
+          new_pknca_data, pknca_data(), plot_outputs(), plot_profile_data()
+        )
+        plot_outputs(hl_result$plots)
+        plot_profile_data(hl_result$data)
       }
 
       # Update the searching widget choices based on the new data
