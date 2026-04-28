@@ -256,4 +256,3 @@ arrange_plots_by_groups <- function(named_list, group_cols) {
     arrange(across(all_of(group_cols)))
   named_list[arranged_df$PLOTID]
 }
-
