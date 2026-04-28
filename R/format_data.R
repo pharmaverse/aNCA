@@ -82,6 +82,20 @@ format_pkncaconc_data <- function(ADNCA,
 
   if (!is.null(time_end_column)) {
     ADNCA[["CONCDUR"]] <- ADNCA[[time_end_column]] - ADNCA[[time_column]]
+
+    invalid_concdur <- !is.na(ADNCA[["CONCDUR"]]) &
+      (ADNCA[["CONCDUR"]] < 0 | is.infinite(ADNCA[["CONCDUR"]]))
+    if (any(invalid_concdur)) {
+      n_invalid <- sum(invalid_concdur)
+      stop(
+        n_invalid, " record(s) have invalid sampling duration (CONCDUR): ",
+        "values are negative or infinite. ",
+        "CONCDUR is calculated as '", time_end_column, "' - '", time_column, "'. ",
+        "Please check that '", time_end_column, "' and '", time_column,
+        "' are correct in your data.",
+        call. = FALSE
+      )
+    }
   }
 
   if (!is.null(nca_exclude_reason_columns)) {
