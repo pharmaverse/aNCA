@@ -6,8 +6,7 @@
 #'
 #' - Yellow: Excluded parameter rows (auto from flag rules + manual)
 
-# Color constant for excluded parameter rows
-PARAM_EXCL_COLOR <- "#FFF3CD"  # yellow
+# Color constant defined in utils-exclusions.R as EXCL_COLOR_PARAM
 
 parameter_exclusions_ui <- function(id) {
   ns <- NS(id)
@@ -56,14 +55,7 @@ parameter_exclusions_ui <- function(id) {
       style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
       div(style = "font-weight:600; font-size:0.95em; margin-right:8px;",
           "Row Colors:"),
-      div(style = "display:flex; align-items:center; gap:6px;",
-        div(style = paste0(
-          "width:14px; height:14px; background:", PARAM_EXCL_COLOR,
-          "; border:1px solid #ddd;"
-        )),
-        span("TLG exclusion",
-             style = "font-size:0.9em;")
-      )
+      .legend_swatch(EXCL_COLOR_PARAM, "TLG exclusion")
     ),
     card(reactable_ui(ns("param_table")), class = "border-0 shadow-none")
   )
@@ -105,79 +97,8 @@ parameter_exclusions_ui <- function(id) {
   apply_labels(df, type = "ADPP")
 }
 
-# Build a reason-per-index vector from an exclusion list.
-# Concatenates with "; " when multiple exclusions cover the same row.
-# @param lst List of exclusion entries (each with $rows and $reason).
-# @param n_rows Total number of rows in the data. Indices beyond this are ignored.
-.build_exclusion_reasons <- function(lst, n_rows = NULL) {
-  all_indices <- sort(unique(unlist(lapply(lst, function(x) x$rows))))
-  if (!is.null(n_rows)) {
-    all_indices <- all_indices[all_indices <= n_rows]
-  }
-  if (length(all_indices) == 0) {
-    return(list(indices = integer(0), reasons = character(0)))
-  }
-  reasons <- rep(NA_character_, max(all_indices))
-  for (entry in lst) {
-    for (idx in entry$rows) {
-      if (idx <= length(reasons)) {
-        reasons[idx] <- if (is.na(reasons[idx])) {
-          entry$reason
-        } else {
-          paste(reasons[idx], entry$reason, sep = "; ")
-        }
-      }
-    }
-  }
-  list(indices = all_indices, reasons = reasons[all_indices])
-}
-
-# Render the exclusion list as a reactable with remove buttons.
-.render_exclusion_table <- function(lst, ns) {
-  if (length(lst) == 0) return(NULL)
-
-  df <- data.frame(
-    Rows = vapply(lst, function(item) {
-      paste(item$rows, collapse = ", ")
-    }, character(1)),
-    Reason = vapply(lst, "[[", character(1), "reason"),
-    xbtn_id = vapply(lst, "[[", character(1), "xbtn_id"),
-    stringsAsFactors = FALSE
-  )
-
-  reactable::reactable(
-    df,
-    compact = TRUE,
-    bordered = TRUE,
-    highlight = TRUE,
-    pagination = FALSE,
-    defaultPageSize = nrow(df),
-    theme = reactable::reactableTheme(
-      headerStyle = list(background = "#e9e9e9")
-    ),
-    columns = list(
-      Rows = reactable::colDef(name = "Rows"),
-      Reason = reactable::colDef(name = "Reason"),
-      xbtn_id = reactable::colDef(
-        name = "",
-        width = 50,
-        sortable = FALSE,
-        cell = function(value) {
-          as.character(
-            actionButton(
-              ns(value),
-              label = NULL,
-              icon = shiny::icon("times"),
-              class = "btn btn-link btn-sm",
-              style = "padding:2px 6px;"
-            )
-          )
-        },
-        html = TRUE
-      )
-    )
-  )
-}
+# .build_exclusion_reasons and .render_exclusion_table are defined in
+# inst/shiny/functions/utils-exclusions.R and shared with general_exclusions.
 
 parameter_exclusions_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
@@ -219,7 +140,7 @@ parameter_exclusions_server <- function(id, res_nca) {
         ppsumfl <- x$PPSUMFL
         function(index) {
           if (ppsumfl[index] == "Y") {
-            return(list(background = PARAM_EXCL_COLOR))
+            return(list(background = EXCL_COLOR_PARAM))
           }
           NULL
         }
@@ -246,24 +167,9 @@ parameter_exclusions_server <- function(id, res_nca) {
     # Track which remove buttons already have observers to avoid duplicates
     registered_xbtns <- reactiveVal(character(0))
 
-    # Register observers only for new remove buttons
+    # Register observers for new remove buttons (shared helper)
     observe({
-      lst <- exclusion_list()
-      already <- registered_xbtns()
-      new_ids <- setdiff(
-        vapply(lst, function(x) x$xbtn_id, character(1)),
-        already
-      )
-      for (xbtn_id in new_ids) {
-        local({
-          local_id <- xbtn_id
-          observeEvent(input[[local_id]], {
-            current <- exclusion_list()
-            exclusion_list(Filter(function(x) x$xbtn_id != local_id, current))
-          }, ignoreInit = TRUE, once = TRUE)
-        })
-      }
-      registered_xbtns(union(already, new_ids))
+      .register_remove_observers(exclusion_list, registered_xbtns, input)
     })
 
     output$exclusion_list_ui <- renderUI({

@@ -81,35 +81,7 @@ tab_nca_ui <- function(id) {
   )
 }
 
-# Build tagged and filtered views of NCA results based on parameter exclusions.
-# Tagged view adds .pp_excl/.pp_excl_reason markers for CDISC export.
-# Filtered view removes excluded rows for summary tables and plots.
-.apply_param_exclusions <- function(res, excl_info) {
-  excl_indices <- excl_info$indices
-  excl_reasons <- excl_info$reasons
-
-  tagged_result <- res$result
-  n <- nrow(tagged_result)
-  tagged_result$.pp_excl <- seq_len(n) %in% excl_indices
-  reason_vec <- rep(NA_character_, n)
-  if (length(excl_indices) > 0 && length(excl_indices) == length(excl_reasons)) {
-    reason_vec[excl_indices] <- excl_reasons
-  }
-  tagged_result$.pp_excl_reason <- reason_vec
-
-  res_tagged <- res
-  res_tagged$result <- tagged_result
-
-  keep <- !tagged_result$.pp_excl
-  filtered_result <- tagged_result[keep, , drop = FALSE]
-  filtered_result$.pp_excl <- NULL
-  filtered_result$.pp_excl_reason <- NULL
-
-  res_filtered <- res
-  res_filtered$result <- filtered_result
-
-  list(tagged = res_tagged, filtered = res_filtered)
-}
+# .apply_param_exclusions is defined in inst/shiny/functions/utils-exclusions.R
 
 tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
                            auto_replay_ready) {
