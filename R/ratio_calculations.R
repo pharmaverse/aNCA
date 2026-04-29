@@ -313,12 +313,37 @@ calculate_table_ratios <- function(res, ratio_table) {
   res
 }
 
+#' Parse an interval parameter name with range suffix
+#'
+#' Detects whether a parameter string contains a range suffix (e.g. `AUCINT_0-20`)
+#' and extracts the base PPTESTCD, start, and end values.
+#'
+#' @param param Character. Parameter name, possibly with range suffix.
+#' @returns A list with `base` (character), `start` (numeric), `end` (numeric),
+#'   and `is_interval` (logical). When `is_interval` is FALSE, `start` and `end`
+#'   are NULL.
+#' @noRd
+parse_interval_parameter <- function(param) {
+  m <- regmatches(param, regexec("^(.+)_(\\d+\\.?\\d*)-(\\d+\\.?\\d*)$", param))[[1]]
+  if (length(m) == 4) {
+    list(
+      base = m[2],
+      start = as.numeric(m[3]),
+      end = as.numeric(m[4]),
+      is_interval = TRUE
+    )
+  } else {
+    list(base = param, start = NULL, end = NULL, is_interval = FALSE)
+  }
+}
+
 #' Links the table ratio of the App with the ratio calculations via PKNCA results
 #'
 #' @param res A PKNCAresult object.
 #' @param test_parameter Character. The PPTESTCD value to use as test (numerator).
+#'   May include a range suffix for interval parameters (e.g. `AUCINT_0-20`).
 #' @param ref_parameter Character. The PPTESTCD value to use as reference (denominator).
-#' Defaults to test_parameter.
+#'   Defaults to test_parameter. May include a range suffix.
 #' @param test_group Character. The test group (numerator). Default is "(all other levels)".
 #' @param ref_group Character. The reference group (denominator).
 #' @param aggregate_subject Character. Aggregation mode: "yes", "no", or "if-needed".
@@ -334,6 +359,22 @@ calculate_ratio_app <- function(
     aggregate_subject = "no",
     adjusting_factor = 1,
     custom_pptestcd = NULL) {
+  # Parse interval parameters (e.g. AUCINT_0-20 -> base=AUCINT, start=0, end=20)
+  test_parsed <- parse_interval_parameter(test_parameter)
+  ref_parsed <- parse_interval_parameter(ref_parameter)
+
+  # Pre-filter result data for interval parameters by their specific start/end
+  result_data <- res$result
+  if (test_parsed$is_interval || ref_parsed$is_interval) {
+    result_data <- .filter_interval_results(
+      result_data, test_parsed, ref_parsed
+    )
+  }
+
+  # Use base PPTESTCD for matching against the result data
+  test_parameter <- test_parsed$base
+  ref_parameter <- ref_parsed$base
+
   reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
 
@@ -341,6 +382,13 @@ calculate_ratio_app <- function(
   atptref_exists <- "ATPTREF" %in% reference_colname
   route_and_aggregate <- "ROUTE" %in% reference_colname && aggregate_subject == "no"
   if (atptref_exists || route_and_aggregate) {
+    match_cols <- setdiff(match_cols, c("start", "end"))
+  }
+
+  # Interval parameters have different start/end values per parameter, so they
+  # cannot be used as join keys. The correct rows are already selected by
+  # .filter_interval_results() above.
+  if (test_parsed$is_interval || ref_parsed$is_interval) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
   #####################################################
@@ -393,7 +441,7 @@ calculate_ratio_app <- function(
 
   ratio_list <- lapply(seq_along(match_cols), function(ix) {
     calculate_ratios(
-      data = res$result,
+      data = result_data,
       test_parameter = test_parameter,
       ref_parameter = ref_parameter,
       match_cols = match_cols[[ix]],
@@ -415,4 +463,56 @@ calculate_ratio_app <- function(
       ),
       .keep_all = TRUE
     )
+}
+
+#' Filter result data to keep only the specific interval rows for interval parameters.
+#'
+#' For non-interval parameters, all rows are kept. For interval parameters,
+#' only rows matching the base PPTESTCD and the specific start/end are retained.
+#' Uses `start_dose`/`end_dose` (dose-relative times) when available, since
+#' `int_parameters` defines intervals relative to dose time. Falls back to
+#' absolute `start`/`end` when dose-relative columns are absent.
+#'
+#' @param result_data Data.frame of PKNCA results.
+#' @param test_parsed Parsed test parameter (from parse_interval_parameter).
+#' @param ref_parsed Parsed ref parameter (from parse_interval_parameter).
+#' @returns Filtered data.frame.
+#' @noRd
+.filter_interval_results <- function(result_data, test_parsed, ref_parsed) {
+  # Use dose-relative times when available (int_parameters defines relative offsets)
+  has_dose_cols <- all(c("start_dose", "end_dose") %in% names(result_data))
+  start_col <- if (has_dose_cols) result_data$start_dose else result_data$start
+  end_col <- if (has_dose_cols) result_data$end_dose else result_data$end
+
+  # Build a logical vector of rows to remove: rows that share a base PPTESTCD
+
+  # with an interval parameter but don't match any of the requested ranges.
+  # When test and ref share the same base (e.g. AUCINT_0-2 vs AUCINT_2-4),
+  # both ranges must be kept.
+  rows_to_remove <- rep(FALSE, nrow(result_data))
+
+  if (test_parsed$is_interval) {
+    is_test_base <- result_data$PPTESTCD == test_parsed$base
+    matches_test <- start_col == test_parsed$start & end_col == test_parsed$end
+
+    if (ref_parsed$is_interval && ref_parsed$base == test_parsed$base) {
+      # Same base PPTESTCD: keep rows matching either range
+      matches_ref <- start_col == ref_parsed$start & end_col == ref_parsed$end
+      rows_to_remove <- rows_to_remove | (is_test_base & !matches_test & !matches_ref)
+    } else {
+      rows_to_remove <- rows_to_remove | (is_test_base & !matches_test)
+    }
+  }
+
+  if (ref_parsed$is_interval) {
+    is_ref_base <- result_data$PPTESTCD == ref_parsed$base
+    matches_ref <- start_col == ref_parsed$start & end_col == ref_parsed$end
+
+    # Skip if already handled above (same base as test)
+    if (!(test_parsed$is_interval && test_parsed$base == ref_parsed$base)) {
+      rows_to_remove <- rows_to_remove | (is_ref_base & !matches_ref)
+    }
+  }
+
+  result_data[!rows_to_remove, , drop = FALSE]
 }

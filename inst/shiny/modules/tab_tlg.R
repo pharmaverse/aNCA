@@ -252,8 +252,7 @@ tab_tlg_server <- function(id, data) {
           g_def <- .TLG_DEFINITIONS[[g_id]]
           module_id <- paste0(
             g_id,
-            paste0(sample(c(letters, 0:9), 5, replace = TRUE),
-                   collapse = "")
+            paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
           )
 
           if (exists(g_def$fun)) {
@@ -294,8 +293,7 @@ tab_tlg_server <- function(id, data) {
             g_def <- .TLG_DEFINITIONS[[g_id]]
             module_id <- paste0(
               g_id,
-              paste0(sample(c(letters, 0:9), 5, replace = TRUE),
-                     collapse = "")
+              paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
             )
 
             if (exists(g_def$fun)) {

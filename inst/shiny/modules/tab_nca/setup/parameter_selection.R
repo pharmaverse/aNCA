@@ -1,9 +1,9 @@
 #' Parameter Selection module
 #'
-#' This module dynamically generates `accordion_panel`s for each study type
-#' detected in the data. It manages the master state of all parameter
-#' selections, handles default values, file overrides, and ensures synchronization
-#' between the UI and the internal state.
+#' Renders a matrix UI where rows are study types and columns are NCA
+#' parameters (PPTESTCD), grouped by TYPE. Each cell is a checkbox
+#' indicating whether a parameter should be calculated for that study type.
+#' Hovering a column header shows the full parameter name (PPTEST).
 #'
 #' @param id A unique namespace ID for the module.
 #' @param processed_pknca_data A `reactive` expression returning a
@@ -17,7 +17,10 @@
 #'     `list("Study Type A" = c("p1", "p2"))`.}
 #'   \item{types_df}{A `reactive` data frame containing the study type detection results.}
 
-parameter_selection_ui <- function(id) {
+parameter_selection_ui <- function(id,
+                                   units_ui = NULL,
+                                   intervals_ui = NULL,
+                                   ratios_ui = NULL) {
   ns <- NS(id)
   tagList(
     # Header row with help button
@@ -31,10 +34,14 @@ parameter_selection_ui <- function(id) {
       ),
       column(
         width = 8,
-        actionButton(ns("show_param_ref"),
-          label = "PK parameter details",
-          icon = icon("book"),
-          class = "btn-sm btn-outline-primary"
+        div(
+          class = "d-flex gap-2",
+          actionButton(ns("show_param_ref"),
+            label = "PK parameter details",
+            icon = icon("book"),
+            class = "btn-sm btn-outline-primary"
+          ),
+          units_ui
         )
       ),
       column(
@@ -43,21 +50,32 @@ parameter_selection_ui <- function(id) {
           div(
             tags$h2("Parameter Selection Help"),
             p(
-              "Selections are independent for each study type and can be customized as needed. ",
+              "Selections are independent for each study type ",
+              "and can be customized as needed. ",
               "From top-to-bottom, this page shows:"
             ),
             tags$ul(
               tags$li(
-                tags$b("Study types table"),
-                ": Detected study types and the number of subjects associated with it."
+                tags$b("Parameter matrix"),
+                ": Rows are study types, columns are PK parameters. ",
+                "Click a cell to toggle whether a parameter is calculated ",
+                "for that study type. Hover a column header to see the ",
+                "full parameter name."
               ),
               tags$li(
-                tags$b("Current selections table"),
-                ": Display of PK parameters selected for each study type."
+                tags$b("Partial interval calculations"),
+                ": Define custom time intervals for partial AUC ",
+                "and related parameters."
               ),
               tags$li(
-                tags$b("Input widgets"),
-                ": Search and select the PK parameters to calculate for each study type."
+                tags$b("Ratio calculations"),
+                ": Configure parameter ratio calculations ",
+                "between analytes."
+              ),
+              tags$li(
+                tags$b("Detected study types"),
+                ": Study types detected in the data ",
+                "and the number of subjects."
               )
             )
           ),
@@ -69,20 +87,69 @@ parameter_selection_ui <- function(id) {
         ),
       ),
     ),
-    p("The following study types were detected in the data:"),
-    card(reactable_ui(ns("study_types")), class = "border-0 shadow-none"),
-
-    br(),
-    p("The following parameters are currently selected:"),
-    card(reactable_ui(ns("selected_parameters_table")), class = "border-0 shadow-none"),
-
-    br(),
-    p(
-      "Select the parameters to calculate for each study type.",
-      "Selections can be overridden by uploading a settings file."
+    fluidRow(
+      column(
+        width = 10,
+        p(
+          "Select the parameters to calculate for each study type. ",
+          "Hover column headers for full parameter names. ",
+          "Selections can be overridden by uploading a settings file."
+        )
+      ),
+      column(
+        width = 2,
+        div(
+          class = "d-flex gap-1 justify-content-end",
+          style = "margin-top: 0.5em;",
+          actionButton(
+            ns("select_all"),
+            label = "Select all",
+            icon = icon("check-double"),
+            class = "btn-sm btn-outline-primary"
+          ),
+          actionButton(
+            ns("reset_defaults"),
+            label = "Defaults",
+            icon = icon("rotate-left"),
+            class = "btn-sm btn-outline-secondary"
+          ),
+          actionButton(
+            ns("clear_all"),
+            label = "Clear all",
+            icon = icon("eraser"),
+            class = "btn-sm btn-outline-danger"
+          )
+        )
+      )
     ),
 
-    uiOutput(ns("dynamic_study_accordion"))
+    div(
+      class = "param-matrix-wrapper",
+      withSpinner(uiOutput(ns("param_matrix_ui")))
+    ),
+
+    br(),
+    accordion(
+      accordion_panel(
+        title = "Partial Interval Calculations",
+        icon = icon("clock"),
+        intervals_ui
+      ),
+      accordion_panel(
+        title = "Ratio Calculations",
+        icon = icon("divide"),
+        ratios_ui
+      ),
+      accordion_panel(
+        title = "Detected Study Types",
+        icon = icon("microscope"),
+        card(
+          reactable_ui(ns("study_types")),
+          class = "border-0 shadow-none"
+        )
+      ),
+      open = FALSE
+    )
   )
 }
 
@@ -90,9 +157,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    initialised_modules <- new.env()
-
-    # Define parameters to be selected by default
+    # Default parameters selected on first load
     DEFAULT_PARAMS <- c(
       "aucinf.obs", "aucinf.obs.dn",
       "auclast", "auclast.dn",
@@ -157,13 +222,12 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         })
 
       study_types_df() %>%
-        # summarise each unique type and group with number of subjects
         group_by(type, !!!syms(groups)) %>%
         summarise(`Subjects Count` = n_distinct(USUBJID), .groups = "drop") %>%
         rename("Study Type" = type)
     })
 
-    # ReactiveVal for parameter selection state
+    # ReactiveVal for parameter selection state (wide df with boolean columns)
     selections_state <- reactiveVal()
 
     # Build the base state from data or overrides
@@ -171,52 +235,85 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       req(study_types_df())
       study_type_names <- unique(study_types_df()$type)
 
-      # Get override file
       selections_override <- tryCatch({
         parameter_override()
       }, error = function(e) {
         NULL
       })
 
-      # Update parameter selection using override and considering study types
       .apply_parameter_selections(
         selection_df = all_params,
         study_type_names = study_type_names,
         default_params = DEFAULT_PARAMS,
         selections_override = selections_override
       ) %>%
-        # Remove unneeded columns
         select(-starts_with("can_"))
-    })
-
-    # Sync the base state to the live state
-    observeEvent(base_selections(), {
-      selections_state(base_selections())
     })
 
     # Get a simple reactive list of study type names
     study_types_list <- reactive(unique(study_types_df()$type))
 
-    # Render the main accordion
-    output$dynamic_study_accordion <- renderUI({
-      req(study_types_list())
+    # Sync the base state to the live state.
+    # Always updates selections_state; the renderUI below handles
+    # when to re-render vs when to JS-sync.
+    observeEvent(base_selections(), {
+      selections_state(base_selections())
+    })
 
-      all_main_panels <- map(study_types_list(), function(study_type) {
-        # Unique ID for each module
-        module_id <- gsub("[^A-Za-z0-9]", "_", study_type)
+    # --- Matrix UI rendering ---
+    # Depends on base_selections() so it re-renders on structural
+    # changes (initial load, data change, override upload).
+    # Checkbox clicks only modify selections_state() — they do NOT
+    # change base_selections(), so the table is not re-rendered.
+    output$param_matrix_ui <- renderUI({
+      state <- base_selections()
+      req(state)
+      study_types <- study_types_list()
 
-        accordion_panel(
-          title = study_type,
-          # Call the sub-module UI
-          param_selector_panel_ui(ns(module_id))
-        )
-      })
+      .build_matrix_html(state, study_types, ns)
+    })
 
-      accordion(
-        !!!all_main_panels,
-        id = ns("main_study_accordion"),
-        multiple = TRUE, # Allow multiple studies open
-        open = FALSE
+    # --- Handle checkbox clicks ---
+    # Updates internal state only; the checkbox is already toggled in the
+    # browser so no re-render is needed.
+    observeEvent(input$matrix_click, {
+      click <- input$matrix_click
+      req(click$study_type, click$param)
+
+      state <- selections_state()
+      st <- click$study_type
+      pknca_code <- click$param
+
+      if (st %in% names(state) && pknca_code %in% state$PKNCA) {
+        row_idx <- which(state$PKNCA == pknca_code)
+        state[[st]][row_idx] <- isTRUE(click$checked)
+        selections_state(state)
+      }
+    })
+
+    # --- Select all / Clear all ---
+    observeEvent(input$select_all, {
+      state <- selections_state()
+      req(state)
+      study_type_names <- study_types_list()
+      for (st in study_type_names) {
+        state[[st]] <- TRUE
+      }
+      selections_state(state)
+      .sync_checkboxes_js(session, state, study_type_names)
+    })
+
+    observeEvent(input$reset_defaults, {
+      req(study_types_df())
+      default_state <- .apply_parameter_selections(
+        selection_df = all_params,
+        study_type_names = unique(study_types_df()$type),
+        default_params = DEFAULT_PARAMS
+      ) %>%
+        select(-starts_with("can_"))
+      selections_state(default_state)
+      .sync_checkboxes_js(
+        session, default_state, unique(study_types_df()$type)
       )
     })
 
@@ -294,6 +391,17 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       })
     })
 
+    observeEvent(input$clear_all, {
+      state <- selections_state()
+      req(state)
+      study_type_names <- study_types_list()
+      for (st in study_type_names) {
+        state[[st]] <- FALSE
+      }
+      selections_state(state)
+      .sync_checkboxes_js(session, state, study_type_names)
+    })
+
     # Reactable for summary of study types
     reactable_server(
       "study_types",
@@ -301,19 +409,15 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       height = "28vh"
     )
 
-    # Transform the TRUE/FALSE data frame into a named list
-    # of parameter vectors
+    # Transform the TRUE/FALSE data frame into a named list of parameter vectors
     parameter_lists_by_type <- reactive({
       req(selections_state())
-      # Get base data frame
       df <- selections_state()
       study_type_names <- unique(study_types_df()$type)
 
-      # Validation checks
       if (length(study_type_names) == 0) return(list())
       req(all(study_type_names %in% names(df)))
-      # Convert from wide to long, filter for selected rows,
-      # and then split the result into a list by study_type.
+
       df %>%
         tidyr::pivot_longer(
           cols = any_of(study_type_names),
@@ -326,57 +430,8 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         purrr::map(~ .x$PKNCA)
     })
 
-    # Generate dataset of unique parameters across study types
-    selected_parameters_df <- reactive({
-      req(parameter_lists_by_type())
-
-      .prepare_selection_table(
-        selections_list = parameter_lists_by_type(),
-        all_params = all_params,
-        study_types_list = study_types_list()
-      )
-    })
-
-    # Render the reactable
-    reactable_server(
-      "selected_parameters_table",
-      selected_parameters_df,
-      height = "35vh",
-      columns = function(data) {
-        # Handle empty table
-        if ("Message" %in% names(data)) {
-          return(list(Message = colDef(name = "")))
-        }
-
-        # Define Fixed Sticky Columns
-        fixed_cols <- list(
-          TYPE = colDef(sticky = "left", minWidth = 100),
-          PPTESTCD = colDef(sticky = "left", minWidth = 100),
-          PPTEST = colDef(sticky = "left", minWidth = 200),
-          PKNCA = colDef(show = FALSE)
-        )
-
-        # Define Dynamic Columns for Study Types
-        study_type_cols <- setdiff(names(data), names(fixed_cols))
-
-        dynamic_cols <- purrr::map(study_type_cols, function(col_name) {
-          colDef(
-            name = col_name,
-            align = "center",
-            cell = function(value) if (isTRUE(value)) "\u2714" else "",
-            minWidth = 150
-          )
-        })
-
-        names(dynamic_cols) <- study_type_cols
-
-        # Combine
-        c(fixed_cols, dynamic_cols)
-      }
-    )
-
-    # On all changes, disable NCA button for given period of time to prevent the
-    # user from running the NCA before settings are applied
+    # On all changes, disable NCA button briefly to prevent running NCA
+    # before settings are applied
     observeEvent(parameter_lists_by_type(), {
       runjs(glue::glue(
         "buttonTimeout(
@@ -391,7 +446,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # PK parameter reference modal
     observeEvent(input$show_param_ref, .show_param_ref_modal())
 
-    # Return list
+    # Return list — same interface as before
     list(
       selections = parameter_lists_by_type,
       types_df = study_types_df
@@ -399,49 +454,6 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
   })
 }
 
-
-#' Helper: Transforms the selection list into a formatted, sorted, wide dataframe
-#' for the Reactable display.
-#'
-#' @param selections_list List of selected parameters by study type
-#' @param all_params Metadata dataframe for parameters
-#' @param study_types_list Vector of study type names
-#' @return A formatted dataframe or a dataframe with a "Message" column
-.prepare_selection_table <- function(selections_list, all_params, study_types_list) {
-
-  # Get all unique parameters selected
-  all_params_selected <- unique(unlist(selections_list))
-
-  # Guard clauses for empty states
-  if (length(all_params_selected) == 0) {
-    return(data.frame(Message = "No parameters are selected."))
-  }
-  if (length(study_types_list) == 0) {
-    return(data.frame(Message = "No study types found."))
-  }
-
-  # Create wide data frame (True/False columns)
-  wide_df <- map_dfc(study_types_list, ~ {
-    setNames(data.frame(all_params_selected %in% selections_list[[.x]]), .x)
-  })
-  wide_df$PKNCA <- all_params_selected
-
-  if (nrow(wide_df) == 0) {
-    return(data.frame(Message = "No parameters are selected."))
-  }
-
-  # Join metadata and sort
-  metadata_df <- all_params %>%
-    select(TYPE, PKNCA, PPTESTCD, PPTEST, sort_order) %>%
-    distinct(PKNCA, .keep_all = TRUE)
-
-  wide_df %>%
-    left_join(metadata_df, by = "PKNCA") %>%
-    arrange(sort_order) %>%
-    # Reorder columns
-    select(TYPE, PPTESTCD, PPTEST, PKNCA, any_of(study_types_list))
-
-}
 
 #' Show the PK parameter reference modal with a searchable reactable.
 #' @noRd
@@ -519,7 +531,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       can_exc <- params$can_excretion[i]
       locs <- character(0)
       if (type %in% c("Standard", "IV")) {
-        locs <- c(locs, "Setup > Parameter Selection")
+        locs <- c(locs, "Parameter Selection > Matrix")
       }
       if (type == "Urine" || identical(can_exc, "T")) {
         locs <- c(
@@ -528,15 +540,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       }
       if (type == "PKNCA-not-covered" && cat == "Ratio") {
         locs <- c(
-          locs, "Additional Analysis > Ratios"
+          locs, "Parameter Selection > Ratio Calculations"
         )
       }
-      # if (type == "Sparse") {
-      #   locs <- c(
-      #     locs, "Setup > Parameter Selection (sparse)"
-      #   )
-      # }
-      if (length(locs) == 0) "Setup > Parameter Selection"
+      if (length(locs) == 0) "Parameter Selection > Matrix"
       else paste(locs, collapse = "; ")
     },
     character(1)
@@ -623,4 +630,155 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     }
   }
   selection_df
+}
+
+#' Build the parameter matrix HTML table.
+#'
+#' Pure function that generates the HTML `<table>` with checkboxes.
+#' Extracted so `renderUI` stays concise.
+#'
+#' @param state The current selections_state data frame.
+#' @param study_types Character vector of study type names.
+#' @param ns The module namespace function.
+#' @return A `tags$div` containing the matrix table.
+#' @noRd
+.build_matrix_html <- function(state, study_types, ns) {
+  params_meta <- state %>%
+    select(PKNCA, PPTESTCD, PPTEST, TYPE, sort_order) %>%
+    distinct(PKNCA, .keep_all = TRUE) %>%
+    arrange(sort_order)
+
+  type_groups <- split(
+    params_meta,
+    factor(params_meta$TYPE, levels = unique(params_meta$TYPE))
+  )
+
+  # Reorder params_meta to match column order (grouped by TYPE)
+  params_ordered <- do.call(rbind, type_groups)
+  rownames(params_ordered) <- NULL
+
+  # Two header rows: TYPE group spans + individual param columns
+
+  group_header_cells <- list(tags$th(
+    class = "param-matrix-corner", ""
+  ))
+  param_header_cells <- list(tags$th(
+    class = "param-matrix-row-header", "Study Type"
+  ))
+
+  for (type_name in names(type_groups)) {
+    grp <- type_groups[[type_name]]
+    group_header_cells <- c(group_header_cells, list(
+      tags$th(
+        class = "param-matrix-group-header",
+        colspan = nrow(grp),
+        `data-type` = tolower(type_name),
+        type_name
+      )
+    ))
+    for (i in seq_len(nrow(grp))) {
+      param_header_cells <- c(param_header_cells, list(
+        tags$th(
+          class = "param-matrix-col-header",
+          title = grp$PPTEST[i],
+          `data-pknca` = grp$PKNCA[i],
+          grp$PPTESTCD[i]
+        )
+      ))
+    }
+  }
+
+  # Body rows — one per study type
+  # Iterate params_ordered so cells match the column header order.
+
+  body_rows <- lapply(study_types, function(st) {
+    cells <- list(tags$td(
+      class = "param-matrix-row-header", st
+    ))
+    for (i in seq_len(nrow(params_ordered))) {
+      pknca_code <- params_ordered$PKNCA[i]
+      is_checked <- isTRUE(state[[st]][state$PKNCA == pknca_code])
+      cb_id <- paste0(
+        "cb__",
+        gsub("[^A-Za-z0-9]", "_", st),
+        "__",
+        gsub("[^A-Za-z0-9]", "_", pknca_code)
+      )
+      cells <- c(cells, list(
+        tags$td(
+          class = paste0(
+            "param-matrix-cell",
+            if (is_checked) " checked" else ""
+          ),
+          tags$input(
+            type = "checkbox",
+            class = "param-matrix-checkbox",
+            id = ns(cb_id),
+            checked = if (is_checked) NA else NULL,
+            `data-study-type` = st,
+            `data-pknca` = pknca_code,
+            onclick = paste0(
+              "Shiny.setInputValue('", ns("matrix_click"), "',",
+              "{study_type: this.dataset.studyType,",
+              " param: this.dataset.pknca,",
+              " checked: this.checked,",
+              " ts: Date.now()});"
+            )
+          )
+        )
+      ))
+    }
+    tags$tr(cells)
+  })
+
+  tags$div(
+    class = "param-matrix-container",
+    tags$table(
+      class = "param-matrix-table",
+      tags$thead(
+        tags$tr(group_header_cells),
+        tags$tr(param_header_cells)
+      ),
+      tags$tbody(body_rows)
+    )
+  )
+}
+
+#' Sync all checkboxes in the matrix to match the current state via JS.
+#'
+#' Used when the state changes externally (overrides, clear-all) to
+#' update the DOM without re-rendering the table.
+#'
+#' @param session The Shiny session object.
+#' @param state The current selections_state data frame.
+#' @param study_type_names Character vector of study type names.
+#' @noRd
+.sync_checkboxes_js <- function(session, state, study_type_names) {
+  js_lines <- character(0)
+  for (st in study_type_names) {
+    for (i in seq_len(nrow(state))) {
+      is_checked <- isTRUE(state[[st]][i])
+      cb_id <- paste0(
+        "cb__",
+        gsub("[^A-Za-z0-9]", "_", st),
+        "__",
+        gsub("[^A-Za-z0-9]", "_", state$PKNCA[i])
+      )
+      full_id <- session$ns(cb_id)
+      checked_str <- if (is_checked) "true" else "false"
+      checked_class <- if (is_checked) {
+        "el.parentElement.classList.add('checked');"
+      } else {
+        "el.parentElement.classList.remove('checked');"
+      }
+      js_lines <- c(js_lines, paste0(
+        "(function(){var el=document.getElementById('",
+        full_id, "');if(el){el.checked=", checked_str, ";",
+        checked_class, "}})();"
+      ))
+    }
+  }
+  if (length(js_lines) > 0) {
+    runjs(paste(js_lines, collapse = "\n"))
+  }
 }

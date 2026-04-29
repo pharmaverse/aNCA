@@ -7,6 +7,7 @@ AEFRLT
 AFRLT
 ARRLT
 ATPTREF
+AUCINT
 AUCPEO
 AUCPEP
 AUCall
@@ -87,6 +88,7 @@ Pharmaverse
 Plotly
 Pre
 QMD
+RCAMINT
 README
 RENALCL
 RFXSTDTC
@@ -148,6 +150,7 @@ devtools
 df
 dm
 doi
+dropdowns
 extravascular
 ggplot
 ggplots
@@ -190,6 +193,7 @@ roadmap
 rpptx
 runnable
 scrollable
+selectable
 signif
 src
 standardizations

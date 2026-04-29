@@ -146,6 +146,28 @@ describe("add_label_attribute", {
     expect_equal(attr(df_result_mod[["AUCINT_0-2"]], "label"), "AUC from T1 to T2")
   })
 
+  it("handles manual intervals with NA PPSTRESU without appending NA to names", {
+    myres_na <- myres_base
+    na_rows <- myres_na$result %>%
+      filter(type_interval == "manual") %>%
+      slice(1) %>%
+      mutate(
+        PPTESTCD = "RCAMINT",
+        PPSTRESU = NA_character_,
+        PPORRESU = NA_character_,
+        start = 0, end = 20
+      )
+    myres_na$result <- bind_rows(myres_na$result, na_rows)
+
+    df_input <- data.frame(x = 1)
+    names(df_input) <- "RCAMINT_0-20"
+
+    df_result <- add_label_attribute(df_input, myres_na)
+
+    # Column should match and get a label, not be named RCAMINT_0-20NA
+    expect_true("RCAMINT_0-20" %in% names(df_result))
+  })
+
   it("validates specific expected labels list", {
     expected_labels_map <- c(
       `CMAX[ng/mL]` = "Max Conc",
