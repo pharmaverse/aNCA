@@ -344,8 +344,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     #' Parameter datasets module
     parameter_datasets_server("parameter_datasets", res_nca_tagged, extra_group_vars, settings)
 
-    #' Parameter plots module (uses filtered results)
-    parameter_plots_server("parameter_plots", res_nca_filtered)
+    #' Parameter plots module (uses tagged results so show_excluded toggle works)
+    parameter_plots_server("parameter_plots", res_nca_tagged)
 
     # return results for use in other modules
     list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
