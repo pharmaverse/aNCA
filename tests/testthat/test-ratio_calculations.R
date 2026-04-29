@@ -363,6 +363,51 @@ describe("calculate_ratios", {
     expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
   })
 
+  it("aggregates reference values with if-needed when no individual match exists", {
+    # 2 test subjects (EX) and 3 ref subjects (IV) — no subject has both routes,
+    # so individual matching fails and aggregation should kick in
+    base <- data.frame(
+      USUBJID = c("T1", "T2", "R1", "R2", "R3"),
+      PPTESTCD = "CMAX",
+      PPTEST = "Cmax",
+      PPORRES = c(10, 20, 2, 4, 6),
+      PPORRESU = "ng/mL",
+      PPSTRES = c(10, 20, 2, 4, 6),
+      PPSTRESU = "ng/mL",
+      GROUP = c("EX", "EX", "IV", "IV", "IV"),
+      start = 0,
+      end = 24,
+      type_interval = "main",
+      exclude = "",
+      PPANMETH = "",
+      stringsAsFactors = FALSE
+    )
+
+    # Build a minimal PKNCAresults-like object with group_vars and $data
+    mock_res <- list(result = base)
+    class(mock_res) <- "PKNCAresults"
+    mock_conc <- list(data = base, columns = list(
+      groups = list(group = "USUBJID"),
+      subject = "USUBJID"
+    ))
+    class(mock_conc) <- "PKNCAconc"
+    mock_res$data <- list(conc = mock_conc)
+
+    ratios <- calculate_ratio_app(
+      res = mock_res,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "GROUP: IV",
+      aggregate_subject = "if-needed"
+    )
+
+    expect_equal(nrow(ratios), 2)
+    # mean ref = mean(2,4,6) = 4
+    expect_equal(sort(ratios$PPORRES), c(2.5, 5.0))
+    expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+  })
+
   it("does not aggregate when USUBJID is in match_cols", {
     # Same data but with USUBJID in match_cols — only matching subjects produce ratios
     base <- data.frame(

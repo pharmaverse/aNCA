@@ -404,10 +404,11 @@ calculate_ratio_app <- function(
       list(match_cols)
     },
     "if-needed" = {
+      has_usubjid <- "USUBJID" %in% match_cols
       match_cols <- list(match_cols)
-      if ("USUBJID" %in% match_cols) {
+      if (has_usubjid) {
         # Perform both individual & aggregated calculations, then eliminate duplicates
-        match_cols <- c(match_cols, list(setdiff(match_cols, "USUBJID")))
+        match_cols <- c(match_cols, list(setdiff(match_cols[[1]], "USUBJID")))
       }
       match_cols
     }
