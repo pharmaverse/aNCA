@@ -337,10 +337,20 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
+  # If the impute column doesn't exist, initialize it so downstream access is safe
+  if (!"impute" %in% names(data$intervals)) {
+    data$intervals$impute <- NA_character_
+  }
+
   all_impute_methods <- na.omit(unique(data$intervals$impute))
-  if (length(all_impute_methods) == 0) {
+
+  # If none of the target params are TRUE in any interval, there's nothing to
+  # remove imputation from, and if no impute methods, nothin to impute.
+  if (length(all_impute_methods) == 0 || !has_requested_params(data$intervals,
+                                                               params_not_to_impute)) {
     return(data)
   }
+
   all_impute_methods <- all_impute_methods %>%
     strsplit(split = ",") %>%
     unlist() %>%
