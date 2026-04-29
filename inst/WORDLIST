@@ -75,6 +75,7 @@ PKNCAdose
 PKNCAresult
 PKNCAresults
 PKSUM
+PPSUM
 PPORRES
 PPSTRES
 PPSTRESU
@@ -132,6 +133,7 @@ XPT
 YAML
 aNCA's
 adnca
+amountu
 analysing
 analyte
 analytes
@@ -192,6 +194,7 @@ pred
 px
 qmd
 rds
+readxl
 renderable
 reproducibility
 reupload
@@ -216,6 +219,8 @@ ug
 unmapped
 utilise
 visualizable
+writexl
+xlsx
 yaml
 µg
 Ĉlast

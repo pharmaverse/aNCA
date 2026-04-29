@@ -3,6 +3,8 @@
 ## Features added
 
 * Added pkgdown vignette documenting all ratio calculation types: metabolite ratios, accumulation ratios, renal clearance, absolute/relative bioavailability, and generic ratios (#1251)
+* Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
+* Partial Interval Calculations table now starts empty by default and includes a `(-) Remove Row/s` button matching the Ratio Calculations style (#1249)
 * Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#1225)
 * Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
