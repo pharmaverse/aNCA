@@ -4,10 +4,14 @@
 \alias{PKNCA_calculate_nca}
 \title{Calculates results for PKNCA analysis.}
 \usage{
-PKNCA_calculate_nca(pknca_data, blq_rule = NULL)
+PKNCA_calculate_nca(pknca_data, na_rule = NULL, blq_rule = NULL)
 }
 \arguments{
 \item{pknca_data}{Data object created using PKNCA::PKNCAdata() function.}
+
+\item{na_rule}{A string defining the NA imputation rule using PKNCA format.
+It can be a numeric value (substituting the NA value), or a string "drop" to
+ignore the value.}
 
 \item{blq_rule}{A list defining the Below Limit of Quantification (BLQ)
 imputation rule using PKNCA format. The list should either contain three elements named:

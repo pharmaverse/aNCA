@@ -9,6 +9,7 @@ update_main_intervals(
   parameter_selections = NULL,
   int_parameters = NULL,
   impute = TRUE,
+  na_imputation_rule = NULL,
   blq_imputation_rule = NULL
 )
 }
