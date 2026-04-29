@@ -1,0 +1,97 @@
+# Check that data-raw outputs are up to date.
+#
+# Runs data-raw/rebuild.R and fails if any tracked files changed,
+# meaning the committed outputs are stale.
+
+name: Data Raw Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: choice
+        options:
+          - devel
+          - latest
+  workflow_call:
+    inputs:
+      r-version:
+        description: "The version of R to use"
+        default: "release"
+        required: false
+        type: string
+
+concurrency:
+  group: data-raw-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data-raw-check:
+    name: Data Raw
+    runs-on: ubuntu-latest
+    container:
+      image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
+    if: >
+      !contains(github.event.commits[0].message, '[skip data-raw]')
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      ##################### BEGIN boilerplate steps #####################
+      - name: Get branch names
+        id: branch-name
+        uses: tj-actions/branch-names@v8
+
+      - name: Checkout repo (PR) 🛎
+        uses: actions/checkout@v4.2.2
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        if: github.event_name != 'pull_request'
+        with:
+          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install R Dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            local::.
+            any::usethis
+            any::sass
+
+      ##################### END boilerplate steps #####################
+
+      - name: Run data-raw/rebuild.R
+        run: source("data-raw/rebuild.R")
+        shell: Rscript {0}
+
+      - name: Set-up safe dir
+        run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+        shell: bash
+
+      - name: Check outputs are up to date
+        run: |
+          git status -s
+          if [[ -n $(git status -s) ]]; then
+            echo "::error::data-raw outputs are stale. Run 'Rscript data-raw/rebuild.R' and commit the results."
+            echo ""
+            echo "The following files differ:"
+            git diff --stat
+            echo ""
+            git diff
+            exit 1
+          else
+            echo "data-raw outputs are up to date."
+          fi
+        shell: bash
