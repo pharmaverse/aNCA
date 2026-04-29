@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Partial Interval Calculations table now starts empty by default and
+  includes a `(-) Remove Row/s` button matching the Ratio Calculations
+  style ([\#1249](https://github.com/pharmaverse/aNCA/issues/1249))
 - Settings upload now auto-restores the previous session: auto-applies
   mapping, filters, and data processing, navigates to the saved tab, and
   auto-runs NCA if it was previously run. Incompatible settings degrade
