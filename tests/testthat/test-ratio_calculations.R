@@ -326,6 +326,74 @@ describe("calculate_ratios", {
     expect_equal(ratios_df$PPORRESU, rep("fraction", 2))
     expect_false("PPSTRESU" %in% names(ratios_df))
   })
+
+  it("aggregates reference values when USUBJID is not in match_cols", {
+    # Create a minimal result data.frame with 2 test subjects and 3 ref subjects
+    # all sharing the same start/end interval and units
+    base <- data.frame(
+      USUBJID = c("T1", "T2", "R1", "R2", "R3"),
+      PPTESTCD = "CMAX",
+      PPTEST = "Cmax",
+      PPORRES = c(10, 20, 2, 4, 6),
+      PPORRESU = "ng/mL",
+      PPSTRES = c(10, 20, 2, 4, 6),
+      PPSTRESU = "ng/mL",
+      GROUP = c("EX", "EX", "IV", "IV", "IV"),
+      start = 0,
+      end = 24,
+      type_interval = "main",
+      exclude = "",
+      stringsAsFactors = FALSE
+    )
+
+    # aggregate: USUBJID not in match_cols, mean ref = mean(2,4,6) = 4
+    ratios <- calculate_ratios.data.frame(
+      base,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end"),
+      ref_groups = data.frame(GROUP = "IV"),
+      test_groups = data.frame(GROUP = "EX")
+    )
+
+    expect_equal(nrow(ratios), 2)
+    # T1: 10 / mean(2,4,6) = 10/4 = 2.5
+    # T2: 20 / mean(2,4,6) = 20/4 = 5.0
+    expect_equal(sort(ratios$PPORRES), c(2.5, 5.0))
+    expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+  })
+
+  it("does not aggregate when USUBJID is in match_cols", {
+    # Same data but with USUBJID in match_cols — only matching subjects produce ratios
+    base <- data.frame(
+      USUBJID = c("S1", "S1"),
+      PPTESTCD = "CMAX",
+      PPTEST = "Cmax",
+      PPORRES = c(10, 4),
+      PPORRESU = "ng/mL",
+      PPSTRES = c(10, 4),
+      PPSTRESU = "ng/mL",
+      GROUP = c("EX", "IV"),
+      start = 0,
+      end = 24,
+      type_interval = "main",
+      exclude = "",
+      stringsAsFactors = FALSE
+    )
+
+    ratios <- calculate_ratios.data.frame(
+      base,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = data.frame(GROUP = "IV"),
+      test_groups = data.frame(GROUP = "EX")
+    )
+
+    expect_equal(nrow(ratios), 1)
+    expect_equal(ratios$PPORRES, 10 / 4)
+    expect_false(grepl("\\(mean\\)", ratios$PPTESTCD))
+  })
 })
 
 describe("parse_interval_parameter", {

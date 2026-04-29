@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Fixed ratio calculations with `Aggregate Subject = yes` never aggregating reference values. The `group_by` in `calculate_ratios()` included ref-side columns (`_ref` suffixes), preventing the mean from being computed across reference subjects. Ratios now correctly use the mean reference value when aggregating (#1271)
+
 ## Features added
 
 * Partial Interval Calculations table now starts empty by default and includes a `(-) Remove Row/s` button matching the Ratio Calculations style (#1249)

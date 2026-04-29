@@ -163,7 +163,7 @@ calculate_ratios.data.frame <- function(
         NULL
       }
     ) %>%
-    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD", paste0(group_cols, "_ref"))))) %>%
+    group_by(across(any_of(c(match_cols, group_cols, "PPTESTCD")))) %>%
     unique() %>%
     # Use mean values in case of multiple denominator rows per test
     mutate(
