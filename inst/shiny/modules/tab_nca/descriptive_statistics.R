@@ -78,7 +78,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       subj_col <- res_nca()$data$conc$columns$subject
       group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
                             subj_col)
-      classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose))
+      classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose, "ATPTREF"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
