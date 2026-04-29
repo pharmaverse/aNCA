@@ -380,15 +380,13 @@ calculate_ratio_app <- function(
 
   ########### This is very App specific ###############
   atptref_exists <- "ATPTREF" %in% reference_colname
-  route_and_aggregate <- "ROUTE" %in% reference_colname && aggregate_subject == "no"
-  if (atptref_exists || route_and_aggregate) {
-    match_cols <- setdiff(match_cols, c("start", "end"))
-  }
 
-  # Interval parameters have different start/end values per parameter, so they
-  # cannot be used as join keys. The correct rows are already selected by
-  # .filter_interval_results() above.
-  if (test_parsed$is_interval || ref_parsed$is_interval) {
+  # Remove start/end from match_cols when they cannot serve as reliable join keys:
+  # - ATPTREF ratios: test and ref have different intervals by definition
+  # - Aggregating across subjects: each subject has unique sample times
+  # - Interval parameters: different start/end values per parameter
+  if (atptref_exists || aggregate_subject != "no" ||
+      test_parsed$is_interval || ref_parsed$is_interval) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
   #####################################################
