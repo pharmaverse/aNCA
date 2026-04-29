@@ -546,7 +546,8 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #'
 #' For each flag rule message, creates a CRITy column (criterion description)
 #' and CRITyFL column ("Y" if satisfied, "N" if violated) by grepping the
-#' `exclude` column. PPSUMFL is "Y" when all criteria are satisfied.
+#' `exclude` column. PPSUMFL is "Y" when the record is included in summaries
+#' (no exclusions), empty when excluded.
 #'
 #' @param data A data.frame with an `exclude` column from PKNCA results.
 #' @param flag_rules Character vector of exclusion messages applied during NCA
@@ -612,7 +613,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     )
   }
   list(
-    PPSUMFL = ifelse(has_exclusions, "Y", ""),
+    PPSUMFL = ifelse(has_exclusions, "", "Y"),
     PPSUMRSN = exclude_vals
   )
 }
