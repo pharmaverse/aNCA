@@ -452,6 +452,7 @@ calculate_ratio_app <- function(
       custom_pptestcd = custom_pptestcd
     )
   })
+  ratio_list <- Filter(function(x) nrow(x) > 0, ratio_list)
   all_ratios <- bind_rows(ratio_list)
 
   # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
