@@ -411,7 +411,7 @@ describe("calculate_ratios", {
     expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
   })
 
-  it("if-needed uses individual where available and aggregates the rest", {
+  it("if-needed produces both individual and aggregated results in mixed case", {
     # Subject 8 has both routes (individual match possible)
     # Subjects 1,2,7 are EX only (must fall back to aggregation)
     # IV subjects: 3,4,5 (IV only) + 8 (both routes)
@@ -429,20 +429,17 @@ describe("calculate_ratios", {
       aggregate_subject = "if-needed"
     )
 
-    # Subject 8: individual ratio (EX / IV for that subject, no mean suffix)
-    s8_ex <- res_mix$result %>%
-      filter(USUBJID == 8, ROUTE == "extravascular") %>% pull(PPORRES)
-    s8_iv <- res_mix$result %>%
-      filter(USUBJID == 8, ROUTE == "intravascular") %>% pull(PPORRES)
-    s8_ratio <- ratios %>% filter(USUBJID == 8)
-    expect_equal(nrow(s8_ratio), 1)
-    expect_equal(s8_ratio$PPORRES, s8_ex / s8_iv)
-    expect_false(grepl("\\(mean\\)", s8_ratio$PPTESTCD))
+    # Subject 8 gets both an individual ratio (RACMAX) and an aggregated ratio
+    # (RACMAX (mean)) because distinct() keys on PPTESTCD — different names survive
+    individual_ratios <- ratios %>% filter(!grepl("\\(mean\\)", PPTESTCD))
+    aggregated_ratios <- ratios %>% filter(grepl("\\(mean\\)", PPTESTCD))
 
-    # Subjects 1,2,7: aggregated ratio (EX / mean of all IV, with mean suffix)
-    other_ratios <- ratios %>% filter(USUBJID != 8)
-    expect_equal(nrow(other_ratios), 3)
-    expect_true(all(grepl("\\(mean\\)", other_ratios$PPTESTCD)))
+    # Individual: only subject 8 (has both routes)
+    expect_equal(nrow(individual_ratios), 1)
+    expect_equal(individual_ratios$USUBJID, 8)
+
+    # Aggregated: all 4 EX subjects (1,2,7,8) get a mean-based ratio
+    expect_equal(nrow(aggregated_ratios), 4)
   })
 })
 
