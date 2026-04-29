@@ -87,6 +87,107 @@ data_filtering_ui <- function(id) {
   filter_counter(0)
 }
 
+#' Set up observers to restore imported filters and auto-submit them.
+#' @param input Shiny input.
+#' @param session Shiny session.
+#' @param filters ReactiveValues storing filter modules.
+#' @param filter_counter ReactiveVal with current filter count.
+#' @param filters_metadata Reactive with column metadata.
+#' @param imported_filters Reactive with imported filter list.
+#' @keywords internal
+#' @noRd
+.setup_filter_import <- function(input, session, filters, filter_counter,
+                                 filters_metadata, imported_filters) {
+  pending_import <- reactiveVal(NULL)
+  awaiting_columns <- reactiveVal(NULL)
+
+  observeEvent(imported_filters(), {
+    req(imported_filters())
+    pending_import(imported_filters())
+  })
+
+  # Restore filter panels once metadata is available.
+  observe({
+    req(pending_import(), filters_metadata())
+
+    filters_to_restore <- isolate(pending_import())
+    pending_import(NULL)
+
+    .clear_filter_panels(session, filters, filter_counter)
+
+    meta <- filters_metadata()
+    valid_filters <- Filter(
+      function(filt) {
+        col <- filt$column
+        if (!col %in% names(meta)) return(FALSE)
+        if (meta[[col]]$type != "numeric") {
+          any(filt$value %in% meta[[col]]$choices)
+        } else {
+          TRUE
+        }
+      },
+      filters_to_restore
+    )
+
+    for (filt in valid_filters) {
+      .insert_filter_panel(
+        session, filters, filter_counter, filters_metadata, filt
+      )
+    }
+
+    awaiting_columns(
+      vapply(valid_filters, `[[`, character(1), "column")
+    )
+  })
+
+  # Auto-submit once all restored filters report the expected columns.
+  observe({
+    req(awaiting_columns())
+
+    current <- lapply(
+      reactiveValuesToList(filters), function(x) x()
+    ) %>% purrr::keep(\(x) !is.null(x))
+
+    current_cols <- vapply(
+      current, function(f) f$column %||% "", character(1)
+    )
+
+    if (all(awaiting_columns() %in% current_cols)) {
+      awaiting_columns(NULL)
+      shinyjs::click("submit_filters")
+    }
+  })
+}
+
+#' Set up the filter reminder notification observer.
+#' @param session Shiny session.
+#' @param filters ReactiveValues storing filter modules.
+#' @returns ReactiveVal holding the current notification ID.
+#' @keywords internal
+#' @noRd
+.setup_filter_reminder <- function(session, filters) {
+  notification_id <- reactiveVal(NULL)
+
+  observe({
+    applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
+      purrr::keep(\(x) !is.null(x))
+    if (length(applied_filters) == 0 ||
+          isTRUE(session$userData$auto_replay_active)) {
+      removeNotification(notification_id())
+    } else {
+      showNotification(
+        "Remember to submit filters before continuing.",
+        id = session$ns("filter_submit_reminder"),
+        duration = 0,
+        closeButton = FALSE,
+        type = "message"
+      ) %>% notification_id()
+    }
+  })
+
+  notification_id
+}
+
 data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
   moduleServer(id, function(input, output, session) {
     filters <- reactiveValues()
@@ -113,87 +214,11 @@ data_filtering_server <- function(id, raw_adnca_data, imported_filters) {
       .insert_filter_panel(session, filters, filter_counter, filters_metadata)
     })
 
-    # Restore filters from uploaded settings.
-    # pending_import stores filters until metadata is ready.
-    # awaiting_columns stores expected columns for auto-submit;
-    # cleared after submit so the observer becomes a no-op.
-    pending_import <- reactiveVal(NULL)
-    awaiting_columns <- reactiveVal(NULL)
+    .setup_filter_import(
+      input, session, filters, filter_counter, filters_metadata, imported_filters
+    )
 
-    observeEvent(imported_filters(), {
-      req(imported_filters())
-      pending_import(imported_filters())
-    })
-
-    # Restore filter panels once metadata is available.
-    observe({
-      req(pending_import(), filters_metadata())
-
-      filters_to_restore <- isolate(pending_import())
-      pending_import(NULL)
-
-      .clear_filter_panels(session, filters, filter_counter)
-
-      meta <- filters_metadata()
-      valid_filters <- Filter(
-        function(filt) {
-          col <- filt$column
-          if (!col %in% names(meta)) return(FALSE)
-          # For categorical columns, check that at least one value exists
-          if (meta[[col]]$type != "numeric") {
-            any(filt$value %in% meta[[col]]$choices)
-          } else {
-            TRUE
-          }
-        },
-        filters_to_restore
-      )
-
-      for (filt in valid_filters) {
-        .insert_filter_panel(
-          session, filters, filter_counter, filters_metadata, filt
-        )
-      }
-
-      awaiting_columns(
-        vapply(valid_filters, `[[`, character(1), "column")
-      )
-    })
-
-    # Auto-submit once all restored filters report the expected columns.
-    observe({
-      req(awaiting_columns())
-
-      current <- lapply(
-        reactiveValuesToList(filters), function(x) x()
-      ) %>% purrr::keep(\(x) !is.null(x))
-
-      current_cols <- vapply(
-        current, function(f) f$column %||% "", character(1)
-      )
-
-      if (all(awaiting_columns() %in% current_cols)) {
-        awaiting_columns(NULL)
-        shinyjs::click("submit_filters")
-      }
-    })
-
-    filter_reminder_notification <- reactiveVal(NULL)
-    observe({
-      applied_filters <- lapply(reactiveValuesToList(filters), function(x) x()) %>%
-        purrr::keep(\(x) !is.null(x))
-      if (length(applied_filters) == 0) {
-        removeNotification(filter_reminder_notification())
-      } else {
-        showNotification(
-          "Remember to submit filters before continuing.",
-          id = session$ns("filter_submit_reminder"),
-          duration = 0,
-          closeButton = FALSE,
-          type = "message"
-        ) %>% filter_reminder_notification()
-      }
-    })
+    filter_reminder_notification <- .setup_filter_reminder(session, filters)
 
     filtered_data <- reactive({
       removeNotification(filter_reminder_notification())

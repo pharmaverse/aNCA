@@ -17,7 +17,10 @@
 #'     `list("Study Type A" = c("p1", "p2"))`.}
 #'   \item{types_df}{A `reactive` data frame containing the study type detection results.}
 
-parameter_selection_ui <- function(id) {
+parameter_selection_ui <- function(id,
+                                   units_ui = NULL,
+                                   intervals_ui = NULL,
+                                   ratios_ui = NULL) {
   ns <- NS(id)
   tagList(
     # Header row with help button
@@ -31,10 +34,14 @@ parameter_selection_ui <- function(id) {
       ),
       column(
         width = 8,
-        actionButton(ns("show_param_ref"),
-          label = "PK parameter details",
-          icon = icon("book"),
-          class = "btn-sm btn-outline-primary"
+        div(
+          class = "d-flex gap-2",
+          actionButton(ns("show_param_ref"),
+            label = "PK parameter details",
+            icon = icon("book"),
+            class = "btn-sm btn-outline-primary"
+          ),
+          units_ui
         )
       ),
       column(
@@ -56,8 +63,18 @@ parameter_selection_ui <- function(id) {
                 "full parameter name."
               ),
               tags$li(
+                tags$b("Partial interval calculations"),
+                ": Define custom time intervals for partial AUC ",
+                "and related parameters."
+              ),
+              tags$li(
+                tags$b("Ratio calculations"),
+                ": Configure parameter ratio calculations ",
+                "between analytes."
+              ),
+              tags$li(
                 tags$b("Detected study types"),
-                ": Expandable section showing detected study types ",
+                ": Study types detected in the data ",
                 "and the number of subjects."
               )
             )
@@ -113,6 +130,16 @@ parameter_selection_ui <- function(id) {
 
     br(),
     accordion(
+      accordion_panel(
+        title = "Partial Interval Calculations",
+        icon = icon("clock"),
+        intervals_ui
+      ),
+      accordion_panel(
+        title = "Ratio Calculations",
+        icon = icon("divide"),
+        ratios_ui
+      ),
       accordion_panel(
         title = "Detected Study Types",
         icon = icon("microscope"),
@@ -430,7 +457,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       can_exc <- params$can_excretion[i]
       locs <- character(0)
       if (type %in% c("Standard", "IV")) {
-        locs <- c(locs, "Setup > Parameter Selection")
+        locs <- c(locs, "Parameter Selection > Matrix")
       }
       if (type == "Urine" || identical(can_exc, "T")) {
         locs <- c(
@@ -439,10 +466,10 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       }
       if (type == "PKNCA-not-covered" && cat == "Ratio") {
         locs <- c(
-          locs, "Additional Analysis > Ratios"
+          locs, "Parameter Selection > Ratio Calculations"
         )
       }
-      if (length(locs) == 0) "Setup > Parameter Selection"
+      if (length(locs) == 0) "Parameter Selection > Matrix"
       else paste(locs, collapse = "; ")
     },
     character(1)

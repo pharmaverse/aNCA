@@ -266,6 +266,7 @@ data_upload_server <- function(id) {
   )
   if (is.null(content)) return()
 
+  content$tab <- chosen$tab %||% ""
   settings_override(content)
 
   session$userData$settings_versions(versioned$versions)
@@ -373,6 +374,7 @@ data_upload_server <- function(id) {
         }
       )
       if (!is.null(content)) {
+        content$tab <- v$tab %||% ""
         settings_override(content)
         session$userData$settings_versions(versioned_attr$versions)
         log_success("Settings successfully loaded from ", latest$name)

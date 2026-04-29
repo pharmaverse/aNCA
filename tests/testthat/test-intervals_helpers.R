@@ -569,3 +569,37 @@ describe("remove_impute_method", {
     expect_equal(remove_impute_method(character(), "new_impute"), character())
   })
 })
+
+describe("has_requested_params", {
+  it("returns TRUE when at least one param is TRUE", {
+    intervals <- data.frame(
+      start = 0, end = 24,
+      cmax = TRUE, half.life = FALSE
+    )
+    expect_true(has_requested_params(intervals, c("cmax", "half.life")))
+  })
+
+  it("returns FALSE when all params are FALSE", {
+    intervals <- data.frame(
+      start = 0, end = 24,
+      cmax = FALSE, half.life = FALSE
+    )
+    expect_false(has_requested_params(intervals, c("cmax", "half.life")))
+  })
+
+  it("returns FALSE when none of the requested params exist as columns", {
+    intervals <- data.frame(
+      start = 0, end = 24,
+      cmax = TRUE
+    )
+    expect_false(has_requested_params(intervals, c("auclast", "half.life")))
+  })
+
+  it("treats NA as FALSE", {
+    intervals <- data.frame(
+      start = 0, end = 24,
+      cmax = NA, half.life = FALSE
+    )
+    expect_false(has_requested_params(intervals, c("cmax", "half.life")))
+  })
+})

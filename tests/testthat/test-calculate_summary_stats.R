@@ -154,4 +154,50 @@ describe("calculate_summary_stats", {
 
     expect_equal(result, expected_result)
   })
+
+  it("handles groups where all PPSTRESU values are NA", {
+    # Simulates partial AUC parameters (e.g., RCAMINT) where no result was
+    # computed for any subject, so PPSTRESU is set to NA by export_cdisc
+    test_data_all_na_units <- data.frame(
+      ATPTREF = c(1, 1, 1, 1),
+      PPTESTCD = c("CMAX", "CMAX", "RCAMINT_0-6", "RCAMINT_0-6"),
+      PPORRES = c(10, 20, NA, NA),
+      PPORRESU = c("ng/mL", "ng/mL", NA_character_, NA_character_),
+      PPSTRES = c(10, 20, NA, NA),
+      PPSTRESU = c("ng/mL", "ng/mL", NA_character_, NA_character_)
+    )
+
+    result <- calculate_summary_stats(test_data_all_na_units)
+
+    expect_s3_class(result, "data.frame")
+    # CMAX should have units, RCAMINT should not
+    expect_true("CMAX[ng/mL]" %in% colnames(result))
+    expect_true("RCAMINT_0-6" %in% colnames(result))
+    expect_equal(
+      as.numeric(result %>% filter(Statistic == "Mean") %>% pull(`CMAX[ng/mL]`)),
+      15
+    )
+  })
+})
+
+describe(".mode_unit", {
+  it("returns the most frequent unit", {
+    expect_equal(.mode_unit(c("mg/L", "mg/L", "ng/mL")), "mg/L")
+  })
+
+  it("returns NA_character_ when all values are NA", {
+    result <- .mode_unit(c(NA_character_, NA_character_))
+    expect_true(is.na(result))
+    expect_type(result, "character")
+  })
+
+  it("returns NA_character_ for an empty vector", {
+    result <- .mode_unit(character(0))
+    expect_true(is.na(result))
+    expect_type(result, "character")
+  })
+
+  it("ignores NAs and returns the mode of non-NA values", {
+    expect_equal(.mode_unit(c("mg/L", NA, "mg/L", NA)), "mg/L")
+  })
 })
