@@ -389,14 +389,6 @@ calculate_ratio_app <- function(
       test_parsed$is_interval || ref_parsed$is_interval) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
-
-  # When aggregating across subjects, add ATPTREF and DOSNOA to match_cols
-  # so that ratios are computed within the same dose occasion, not across them.
-  if (aggregate_subject != "no") {
-    interval_id_cols <- intersect(c("ATPTREF", "DOSNOA"), colnames(result_data))
-    interval_id_cols <- setdiff(interval_id_cols, reference_colname)
-    match_cols <- unique(c(match_cols, interval_id_cols))
-  }
   #####################################################
 
   match_cols <- switch(aggregate_subject,
