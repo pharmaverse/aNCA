@@ -246,6 +246,9 @@ slope_selector_server <- function( # nolint
     manual_slopes <- slopes_table$manual_slopes
     refresh_reactable <- slopes_table$refresh_reactable
 
+    # Track user-initiated slope changes (buttons, plotly clicks)
+    user_changed_slopes <- reactiveVal(FALSE)
+
     # Define the click events for the point exclusion and selection in the slope plots
     last_click_data <- reactiveVal(NULL)
     observeEvent(event_data("plotly_click", priority = "event"), {
@@ -259,6 +262,7 @@ slope_selector_server <- function( # nolint
       )
       # Update reactive values: last click & manual slopes table
       last_click_data(click_result$last_click_data)
+      user_changed_slopes(TRUE)
       manual_slopes(click_result$manual_slopes)
 
       # render rectable anew #
@@ -266,11 +270,24 @@ slope_selector_server <- function( # nolint
       refresh_reactable(refresh_reactable() + 1)
     })
 
+    # Also flag user-initiated changes from add/remove buttons
+    observeEvent(slopes_table$refresh_reactable(), {
+      user_changed_slopes(TRUE)
+    }, ignoreInit = TRUE)
+
     #' Separate event handling updating displayed reactable upon every change (adding and removing
     #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
     #' the table would mean losing focus on text inputs when entering values.
     observeEvent(manual_slopes(), {
       req(manual_slopes())
+
+      if (user_changed_slopes()) {
+        n_rules <- nrow(manual_slopes())
+        n_excl <- sum(manual_slopes()$TYPE == "Exclusion", na.rm = TRUE)
+        n_incl <- n_rules - n_excl
+        log_info("Slope rules updated: ", n_rules, " total (", n_incl, " selections, ", n_excl, " exclusions)")
+        user_changed_slopes(FALSE)
+      }
 
       # Update reactable with rules
       reactable::updateReactable(
