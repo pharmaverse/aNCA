@@ -457,16 +457,18 @@ calculate_ratio_app <- function(
     return(all_ratios)
   }
 
-  # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
-  # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed
+  # If aggregate_subject = 'if-needed', prefer individual over aggregated results.
+  # Strip " (mean)" suffix so individual and aggregated rows for the same subject
+  # are treated as duplicates, with the individual result kept (it comes first).
   all_ratios %>%
-    # Make sure there are no duplicate rows for: parameter, contrast_var, and match_cols
+    mutate(.base_pptestcd = gsub(" \\(mean\\)$", "", PPTESTCD)) %>%
     distinct(
       across(
-        all_of(c("PPTESTCD", group_vars(res$data), "end"))
+        all_of(c(".base_pptestcd", group_vars(res$data), "end"))
       ),
       .keep_all = TRUE
-    )
+    ) %>%
+    select(-".base_pptestcd")
 }
 
 #' Filter result data to keep only the specific interval rows for interval parameters.
