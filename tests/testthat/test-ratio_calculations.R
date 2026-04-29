@@ -357,8 +357,6 @@ describe("calculate_ratios", {
     )
 
     expect_equal(nrow(ratios), 2)
-    # T1: 10 / mean(2,4,6) = 10/4 = 2.5
-    # T2: 20 / mean(2,4,6) = 20/4 = 5.0
     expect_equal(sort(ratios$PPORRES), c(2.5, 5.0))
     expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
   })
