@@ -364,47 +364,40 @@ describe("calculate_ratios", {
   })
 
   it("aggregates reference values with if-needed when no individual match exists", {
-    # 2 test subjects (EX) and 3 ref subjects (IV) — no subject has both routes,
-    # so individual matching fails and aggregation should kick in
-    base <- data.frame(
-      USUBJID = c("T1", "T2", "R1", "R2", "R3"),
-      PPTESTCD = "CMAX",
-      PPTEST = "Cmax",
-      PPORRES = c(10, 20, 2, 4, 6),
-      PPORRESU = "ng/mL",
-      PPSTRES = c(10, 20, 2, 4, 6),
-      PPSTRESU = "ng/mL",
-      GROUP = c("EX", "EX", "IV", "IV", "IV"),
-      start = 0,
-      end = 24,
-      type_interval = "main",
-      exclude = "",
-      PPANMETH = "",
-      stringsAsFactors = FALSE
-    )
+    # Use fixture data: subjects 1,2 are EX and subjects 3,4,5 are IV for PARAM A
+    # No subject has both routes, so individual matching fails and aggregation kicks in
+    res_if_needed <- res
+    res_if_needed$result <- res$result %>%
+      filter(PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
+      mutate(
+        PPORRESU = "ng/mL",
+        PPSTRESU = "ng/mL"
+      )
 
-    # Build a minimal PKNCAresults-like object with group_vars and $data
-    mock_res <- list(result = base)
-    class(mock_res) <- "PKNCAresults"
-    mock_conc <- list(data = base, columns = list(
-      groups = list(group = "USUBJID"),
-      subject = "USUBJID"
-    ))
-    class(mock_conc) <- "PKNCAconc"
-    mock_res$data <- list(conc = mock_conc)
+    # Only proceed if we have both EX and IV subjects
+    routes <- unique(res_if_needed$result$ROUTE)
+    skip_if(!all(c("extravascular", "intravascular") %in% routes),
+            "Fixture data missing required routes")
+
+    iv_mean <- mean(
+      res_if_needed$result$PPORRES[res_if_needed$result$ROUTE == "intravascular"],
+      na.rm = TRUE
+    )
+    ex_values <- res_if_needed$result$PPORRES[
+      res_if_needed$result$ROUTE == "extravascular"
+    ]
 
     ratios <- calculate_ratio_app(
-      res = mock_res,
+      res = res_if_needed,
       test_parameter = "CMAX",
       ref_parameter = "CMAX",
       test_group = "(all other levels)",
-      ref_group = "GROUP: IV",
+      ref_group = "ROUTE: intravascular",
       aggregate_subject = "if-needed"
     )
 
-    expect_equal(nrow(ratios), 2)
-    # mean ref = mean(2,4,6) = 4
-    expect_equal(sort(ratios$PPORRES), c(2.5, 5.0))
+    expect_equal(nrow(ratios), length(ex_values))
+    expect_equal(sort(ratios$PPORRES), sort(ex_values / iv_mean))
     expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
   })
 
