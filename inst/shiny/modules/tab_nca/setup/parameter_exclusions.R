@@ -2,7 +2,7 @@
 #'
 #' UI and server logic for excluding PK parameter rows from TLG summary tables.
 #' Users select rows from the NCA results table and mark them for exclusion.
-#' Excluded rows have PPSUMFL = "" (empty) in ADPP; included rows have "Y".
+#' Excluded rows are flagged via PPSUMFL = "Y" in ADPP.
 #'
 #' - Yellow: Excluded parameter rows (auto from flag rules + manual)
 
@@ -31,7 +31,7 @@ parameter_exclusions_ui <- function(id) {
           p("Exclude PK parameter rows from tables, listings, and graphs."),
           tags$ul(
             tags$li("Select rows in the table below and provide a reason."),
-            tags$li(tags$b("Yellow"), ": excluded from summaries (PPSUMFL empty in ADPP)"),
+            tags$li(tags$b("Yellow"), ": excluded (PPSUMFL = \"Y\" in ADPP)"),
             tags$li(
               "Rows excluded by flag rules are shown with PPSUMFL/PPSUMRSN",
               "but remain in summary tables and plots."
@@ -128,8 +128,8 @@ parameter_exclusions_server <- function(id, res_nca) {
       .build_param_display(res_nca()$result, group_cols, exclusion_list())
     })
 
-    # Render the reactable with row coloring for excluded rows (PPSUMFL != "Y").
-    # PPSUMFL = "Y" means included in summaries; empty means excluded.
+    # Render the reactable with row coloring for excluded rows (PPSUMFL == "Y").
+    # PPSUMFL = "Y" means excluded from summaries; empty means included.
     param_table_state <- reactable_server(
       "param_table",
       param_data,
@@ -139,7 +139,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       rowStyle = function(x) {
         ppsumfl <- x$PPSUMFL
         function(index) {
-          if (ppsumfl[index] != "Y") {
+          if (ppsumfl[index] == "Y") {
             return(list(background = EXCL_COLOR_PARAM))
           }
           NULL

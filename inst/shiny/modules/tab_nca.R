@@ -295,7 +295,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     })
 
     # Parameter exclusions: users can exclude individual PK parameter rows
-    # from summary tables and mean plots. Excluded rows get PPSUMFL = "" in ADPP.
+    # from summary tables and mean plots. Excluded rows get PPSUMFL = "Y" in ADPP.
     param_excl_rows <- parameter_exclusions_server(
       "parameter_exclusions", res_nca
     )

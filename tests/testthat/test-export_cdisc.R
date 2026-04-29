@@ -563,23 +563,23 @@ describe("export_cdisc", {
     )))
   })
 
-  it("PPSUMFL is Y for all rows when no exclusions and no flag rules", {
+  it("PPSUMFL is always present and empty when no exclusions and no flag rules", {
     clean_res <- test_pknca_res
     clean_res$result$exclude <- NA_character_
     result <- export_cdisc(clean_res)
     expect_true("PPSUMFL" %in% names(result$adpp))
-    expect_true(all(result$adpp$PPSUMFL == "Y"))
+    expect_true(all(result$adpp$PPSUMFL == ""))
   })
 
-  it("sets PPSUMFL to empty for excluded rows via .pp_excl marker", {
+  it("sets PPSUMFL to Y for excluded rows via .pp_excl marker", {
     tagged_res <- test_pknca_res
     tagged_res$result$exclude <- NA_character_
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
     expect_true("PPSUMFL" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PPSUMFL == ""), 1)
-    expect_equal(sum(result$adpp$PPSUMFL == "Y"), n - 1)
+    expect_equal(sum(result$adpp$PPSUMFL == "Y"), 1)
+    expect_equal(sum(result$adpp$PPSUMFL == ""), n - 1)
     expect_false(".pp_excl" %in% names(result$adpp))
     expect_false(".pp_excl_reason" %in% names(result$adpp))
   })
@@ -598,8 +598,8 @@ describe("export_cdisc", {
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, TRUE, TRUE, rep(FALSE, n - 3))
     result <- export_cdisc(tagged_res)
-    expect_equal(sum(result$adpp$PPSUMFL == ""), 3)
-    expect_equal(sum(result$adpp$PPSUMFL == "Y"), n - 3)
+    expect_equal(sum(result$adpp$PPSUMFL == "Y"), 3)
+    expect_equal(sum(result$adpp$PPSUMFL == ""), n - 3)
   })
 
   it("PPSUMFL handles all rows excluded", {
@@ -607,8 +607,8 @@ describe("export_cdisc", {
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- rep(TRUE, n)
     result <- export_cdisc(tagged_res)
-    expect_true(all(result$adpp$PPSUMFL == ""))
-    expect_equal(sum(result$adpp$PPSUMFL == "Y"), 0)
+    expect_true(all(result$adpp$PPSUMFL == "Y"))
+    expect_equal(sum(result$adpp$PPSUMFL == ""), 0)
   })
 
   it("PPSUMFL and PPSUMRSN do not appear in PP output", {
@@ -670,7 +670,7 @@ describe("export_cdisc", {
     result <- export_cdisc(tagged_res, grouping_vars = "GROUP")
     expect_true("PPSUMFL" %in% names(result$adpp))
     expect_true("GROUP" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PPSUMFL == ""), 1)
+    expect_equal(sum(result$adpp$PPSUMFL == "Y"), 1)
   })
 
   it("includes non-standard grouping_vars columns in ADNCA and ADPP outputs", {
@@ -876,14 +876,14 @@ describe("export_cdisc: PPSUMFL and PPSUMRSN derivation", {
   clean_res <- test_pknca_res
   clean_res$result <- clean_res$result %>% mutate(exclude = NA_character_)
 
-  it("sets PPSUMFL to Y when no exclusions exist", {
+  it("sets PPSUMFL to empty when no exclusions exist", {
     result <- export_cdisc(clean_res, flag_rules = c("R2ADJ < 0.7"))
     adpp <- result$adpp
     expect_true("PPSUMFL" %in% names(adpp))
-    expect_true(all(adpp$PPSUMFL == "Y"))
+    expect_true(all(adpp$PPSUMFL == ""))
   })
 
-  it("sets PPSUMFL to empty for records with any exclusion", {
+  it("sets PPSUMFL to Y for records with any exclusion", {
     modified <- clean_res
     modified$result <- modified$result %>%
       mutate(
@@ -899,8 +899,8 @@ describe("export_cdisc: PPSUMFL and PPSUMRSN derivation", {
       filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
     unflagged <- adpp %>%
       filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
-    expect_true(all(flagged$PPSUMFL == ""))
-    expect_true(all(unflagged$PPSUMFL == "Y"))
+    expect_true(all(flagged$PPSUMFL == "Y"))
+    expect_true(all(unflagged$PPSUMFL == ""))
   })
 
   it("populates PPSUMRSN with the exclusion reasons", {
