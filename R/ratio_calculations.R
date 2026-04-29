@@ -455,6 +455,10 @@ calculate_ratio_app <- function(
   ratio_list <- Filter(function(x) nrow(x) > 0, ratio_list)
   all_ratios <- bind_rows(ratio_list)
 
+  if (nrow(all_ratios) == 0) {
+    return(all_ratios)
+  }
+
   # Assuming there cannot be more than 1 reference + PPTESTCD combination for the same group...
   # If aggregate_subject = 'if-needed', then this will remove cases when subject is not needed
   all_ratios %>%

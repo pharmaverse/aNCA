@@ -361,42 +361,58 @@ describe("calculate_ratios", {
     expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
   })
 
-  it("aggregates reference values with if-needed when no individual match exists", {
-    # Use fixture data: subjects 1,2 are EX and subjects 3,4,5 are IV for PARAM A
-    # No subject has both routes, so individual matching fails and aggregation kicks in
-    res_if_needed <- res
-    res_if_needed$result <- res$result %>%
-      filter(PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
-      mutate(
-        PPORRESU = "ng/mL",
-        PPSTRESU = "ng/mL"
-      )
-
-    # Only proceed if we have both EX and IV subjects
-    routes <- unique(res_if_needed$result$ROUTE)
-    skip_if(!all(c("extravascular", "intravascular") %in% routes),
-            "Fixture data missing required routes")
-
-    iv_mean <- mean(
-      res_if_needed$result$PPORRES[res_if_needed$result$ROUTE == "intravascular"],
-      na.rm = TRUE
+  it("aggregates reference values with if-needed (no individual match)", {
+    # 2 test subjects (EX) and 3 ref subjects (IV) — no subject has both groups,
+    # so individual matching fails and aggregation should kick in.
+    # Uses calculate_ratios.data.frame with two match_cols sets to simulate if-needed.
+    base <- data.frame(
+      USUBJID = c("T1", "T2", "R1", "R2", "R3"),
+      PPTESTCD = "CMAX",
+      PPTEST = "Cmax",
+      PPORRES = c(10, 20, 2, 4, 6),
+      PPORRESU = "ng/mL",
+      PPSTRES = c(10, 20, 2, 4, 6),
+      PPSTRESU = "ng/mL",
+      GROUP = c("EX", "EX", "IV", "IV", "IV"),
+      start = 0,
+      end = 24,
+      type_interval = "main",
+      exclude = "",
+      stringsAsFactors = FALSE
     )
-    ex_values <- res_if_needed$result$PPORRES[
-      res_if_needed$result$ROUTE == "extravascular"
-    ]
 
-    ratios <- calculate_ratio_app(
-      res = res_if_needed,
+    ref_groups <- data.frame(GROUP = "IV")
+    test_groups <- data.frame(GROUP = "EX")
+
+    # Individual match (with USUBJID) — returns 0 rows since no subject has both
+    individual <- calculate_ratios.data.frame(
+      base,
       test_parameter = "CMAX",
       ref_parameter = "CMAX",
-      test_group = "(all other levels)",
-      ref_group = "ROUTE: intravascular",
-      aggregate_subject = "if-needed"
+      match_cols = c("start", "end", "USUBJID"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
     )
+    expect_equal(nrow(individual), 0)
 
-    expect_equal(nrow(ratios), length(ex_values))
-    expect_equal(sort(ratios$PPORRES), sort(ex_values / iv_mean))
-    expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+    # Aggregated match (without USUBJID) — should produce results
+    aggregated <- calculate_ratios.data.frame(
+      base,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      match_cols = c("start", "end"),
+      ref_groups = ref_groups,
+      test_groups = test_groups
+    )
+    expect_equal(nrow(aggregated), 2)
+    expect_equal(sort(aggregated$PPORRES), c(2.5, 5.0))
+    expect_true(all(grepl("\\(mean\\)", aggregated$PPTESTCD)))
+
+    # Simulate if-needed: bind_rows + distinct keeps aggregated when individual is empty
+    ratio_list <- Filter(function(x) nrow(x) > 0, list(individual, aggregated))
+    combined <- dplyr::bind_rows(ratio_list)
+    expect_equal(nrow(combined), 2)
+    expect_equal(sort(combined$PPORRES), c(2.5, 5.0))
   })
 
   it("does not aggregate when USUBJID is in match_cols", {
