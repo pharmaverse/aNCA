@@ -4,6 +4,9 @@
 
 ### Features added
 
+- Parameter Exclusions: exclude individual PK parameter rows from
+  descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags
+  ([\#1040](https://github.com/pharmaverse/aNCA/issues/1040))
 - Partial Interval Calculations table now starts empty by default and
   includes a `(-) Remove Row/s` button matching the Ratio Calculations
   style ([\#1249](https://github.com/pharmaverse/aNCA/issues/1249))

@@ -14,7 +14,11 @@ export_cdisc(res_nca, grouping_vars = character(0), flag_rules = NULL)
 
 - res_nca:
 
-  Object with results of the NCA analysis.
+  Object with results of the NCA analysis. If `res_nca$result` contains
+  a `.pp_excl` column (logical), excluded rows are merged into the
+  `exclude` column so they appear in `PPSUMFL`/`PPSUMRSN`. If
+  `.pp_excl_reason` (character) is also present, it populates
+  `PPSUMRSN`.
 
 - grouping_vars:
 

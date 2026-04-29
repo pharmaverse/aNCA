@@ -9,7 +9,7 @@ Attention: All parameters that do no match pptest dataframe will be lost in this
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9161</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9162</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,10 @@ Attention: All parameters that do no match pptest dataframe will be lost in this
 
 
 <dl><dt id="arg-res-nca">res_nca<a class="anchor" aria-label="anchor" href="#arg-res-nca"></a></dt>
-<dd><p>Object with results of the NCA analysis.</p></dd>
+<dd><p>Object with results of the NCA analysis. If
+<code>res_nca$result</code> contains a <code>.pp_excl</code> column (logical), excluded rows
+are merged into the <code>exclude</code> column so they appear in <code>PPSUMFL</code>/<code>PPSUMRSN</code>.
+If <code>.pp_excl_reason</code> (character) is also present, it populates <code>PPSUMRSN</code>.</p></dd>
 
 
 <dt id="arg-grouping-vars">grouping_vars<a class="anchor" aria-label="anchor" href="#arg-grouping-vars"></a></dt>
