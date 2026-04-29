@@ -1,4 +1,11 @@
-# Source the parameter exclusions module to test pure helper functions
+# Source shared exclusion helpers and the parameter exclusions module
+source(
+  file.path(
+    system.file("shiny", package = "aNCA"),
+    "functions", "utils-exclusions.R"
+  ),
+  local = TRUE
+)
 source(
   file.path(
     system.file("shiny", package = "aNCA"),
