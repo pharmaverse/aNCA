@@ -90,6 +90,12 @@ EXCL_COLOR_BOTH <- "#FFD9B3"  # orange — NCA + TLG
     exclusion_list(append(current, list_new_reason))
     updateTextInput(session, "exclusion_reason", value = "")
     updateReactable(table_id, selected = NA)
+
+    type_label <- .exclusion_type_label(nca_checked, tlg_checked)
+    log_info(
+      "Exclusion added: ", length(rows_sel), " rows, type=", type_label,
+      ", reason='", reason, "'"
+    )
   }
 }
 
