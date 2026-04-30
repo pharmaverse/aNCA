@@ -14,5 +14,5 @@ The PKNCA results object with non requested parameters removed from $result.
 }
 \description{
 This function removes parameters from the PKNCA results that were not requested by the user,
-using a pivoted approach that also handles bioavailability settings.
+using a pivoted approach.
 }

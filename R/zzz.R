@@ -15,8 +15,6 @@
     "ATPT",
     "ATPTN",
     "ATPTREF",
-    "AUCdn_IV",
-    "AUCdn_IV_prof",
     "AVAL",
     "AVALC",
     "AVALU",
@@ -115,8 +113,7 @@
     "Variable",
     "adj.r.squared",
     "aucs",
-    "aucs_extravascular",
-    "aucs_intravascular",
+
     "calculate_ratio_app",
     "color",
     "color_var",
@@ -126,8 +123,7 @@
     "data",
     "digits",
     "dose",
-    "dose_extravascular",
-    "dose_intravascular",
+
     "dose_time",
     "end",
     "end_auc",
@@ -183,7 +179,7 @@
     "ppanmeth_test_groups",
     "predict",
     "prev_dosno",
-    "route_names",
+
     "single_dose_present",
     "span.ratio",
     "start",

@@ -132,13 +132,6 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       # Wait for study types to settle during reactive transitions
       req(nrow(parameters_output$types_df()) > 0)
 
-      # Show bioavailability widget if it is possible to calculate
-      if (final_data$dose$data$std_route %>% unique() %>% length() == 2) {
-        shinyjs::show(selector = ".bioavailability-picker")
-      } else {
-        shinyjs::hide(selector = ".bioavailability-picker")
-      }
-
       if (nrow(final_data$intervals) == 0 &&
             !isTRUE(session$userData$auto_replay_active)) {
         showNotification(

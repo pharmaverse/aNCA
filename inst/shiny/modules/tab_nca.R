@@ -225,8 +225,6 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
             PKNCA_calculate_nca(
               blq_rule = settings()$data_imputation$blq_imputation_rule
             ) %>%
-            # Add bioavailability results if requested
-            add_f_to_pknca_results(settings()$bioavailability) %>%
             # Apply standard CDISC names
             mutate(
               PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")
