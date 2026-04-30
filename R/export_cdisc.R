@@ -114,6 +114,11 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
       PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")
     ) %>%
 
+    # Parameters whose metadata defines PPANMETH (e.g. dose-aware AUCint)
+    # get their PPTESTCD consolidated to the base form (strip lowercase
+    # suffix) and PPANMETH populated from the metadata.
+    .apply_metadata_ppanmeth() %>%
+
     # Parameters with a one-to-many mapping in PKNCA / CDISC
     mutate(
       # Column for one-to-many criteria
@@ -564,4 +569,52 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   data[["PPSUMRSN"]] <- exclude_vals
 
   data
+}
+
+#' Apply PPANMETH from parameter metadata during CDISC export
+#'
+#' Parameters whose metadata row has a non-empty PPANMETH column (e.g.
+#' dose-aware AUCint variants) get their PPTESTCD consolidated to the
+#' base form by stripping the trailing lowercase suffix, and PPANMETH
+#' is populated from the metadata. If PPANMETH already has a value
+#' (e.g. from ratio calculations), the metadata value is prepended.
+#'
+#' @param df Data frame with at least a PPTESTCD column.
+#' @returns The data frame with PPANMETH set and PPTESTCDs consolidated.
+#' @keywords internal
+#' @noRd
+.apply_metadata_ppanmeth <- function(df) {
+  # Build lookup from metadata: PPTESTCD -> PPANMETH (only non-empty)
+  ppanmeth_lookup <- metadata_nca_parameters[
+    nzchar(metadata_nca_parameters$PPANMETH) &
+      !is.na(metadata_nca_parameters$PPANMETH),
+    c("PPTESTCD", "PPANMETH")
+  ]
+  if (nrow(ppanmeth_lookup) == 0) return(df)
+
+  has_method <- df$PPTESTCD %in% ppanmeth_lookup$PPTESTCD
+  if (!any(has_method)) return(df)
+
+  if (!"PPANMETH" %in% names(df)) df$PPANMETH <- NA_character_
+
+  # Look up the method for each matching row
+  method_vals <- ppanmeth_lookup$PPANMETH[
+    match(df$PPTESTCD[has_method], ppanmeth_lookup$PPTESTCD)
+  ]
+
+  # Prepend to existing PPANMETH if already populated
+  existing <- df$PPANMETH[has_method]
+  df$PPANMETH[has_method] <- ifelse(
+    is.na(existing) | existing == "",
+    method_vals,
+    paste(method_vals, existing, sep = "; ")
+  )
+
+  # Derive CDISC PPTESTCD by stripping trailing lowercase suffix
+  df$PPTESTCD[has_method] <- gsub("[a-z]+$", "", df$PPTESTCD[has_method])
+  df$PPTEST[has_method] <- translate_terms(
+    df$PPTESTCD[has_method], "PPTESTCD", "PPTEST"
+  )
+
+  df
 }

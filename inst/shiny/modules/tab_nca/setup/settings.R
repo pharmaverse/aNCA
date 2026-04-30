@@ -65,13 +65,13 @@ partial_intervals_ui <- function(id) {
               ),
               tags$tbody(
                 tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
-                tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
+                tr("AUCINTda", "AUC from T1 to T2 (dose-aware)"),
                 tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
-                tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
+                tr("AUCINTAda", "AUCint (based on AUCall extrapolation, dose-aware)"),
                 tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
-                tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
+                tr("AUCINTISda", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
                 tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
-                tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
+                tr("AUCINTIPda", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
                 tr("CAVGINT", "Average Concentration from T1 to T2"),
                 tr("RCAMINT", "Amount Recovered from T1 to T2"),
                 tr("FREXINT", "Fraction Excreted from T1 to T2")

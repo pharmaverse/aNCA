@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Dose-aware AUCint parameters now share the same PPTESTCD as their non-dose-aware counterparts in CDISC exports, with `PPANMETH` indicating the analytical method. Internal PPTESTCDs renamed from misleading `D` suffix (e.g. `AUCINTD`) to lowercase `da` suffix (e.g. `AUCINTda`). Fixed wrong PPTEST label for `AUCINTD` which said "Normalized by Dose" (#1242)
+
 ## Features added
 
 * Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#1225)
