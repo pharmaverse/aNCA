@@ -1,6 +1,28 @@
 # The Exploration Navbar tab loads the data from the Data tab, and results from NCA tab
 # The user can then explore the data using various visualisation tools
 
+#' Compute plotly height that scales with the number of facet panels.
+#' Returns NULL (plotly default) when there are few panels, so small
+#' plots are unaffected.
+#' @param p A ggplot object, possibly with facet_wrap.
+#' @param row_height Pixel height per row of facet panels.
+#' @param min_height Minimum height in pixels.
+#' @noRd
+.facet_plot_height <- function(p, row_height = 300, min_height = 500) {
+  facet <- p$facet
+  if (!inherits(facet, "FacetWrap")) {
+    return(NULL)
+  }
+  facet_vars <- names(facet$params$facets)
+  n_facets <- nrow(unique(p$data[facet_vars]))
+  if (is.null(n_facets) || n_facets <= 4) {
+    return(NULL)
+  }
+  ncol <- facet$params$ncol %||% ceiling(sqrt(n_facets))
+  nrow <- ceiling(n_facets / ncol)
+  max(min_height, nrow * row_height)
+}
+
 # EXPLORATION ----
 tab_explore_ui <- function(id) {
   ns <- NS(id)
@@ -17,8 +39,8 @@ tab_explore_ui <- function(id) {
           is_mean_plot = FALSE,
           extra_ui = saved_outputs_ui(ns("saved_outputs_indiv"))
         ),
-        fillable = TRUE,
-        plotlyOutput(ns("individualplot"), height = "100%"),
+        fillable = FALSE,
+        plotlyOutput(ns("individualplot")),
         br(), br()
       )
     ),
@@ -30,8 +52,8 @@ tab_explore_ui <- function(id) {
           is_mean_plot = TRUE,
           extra_ui = saved_outputs_ui(ns("saved_outputs_mean"))
         ),
-        fillable = TRUE,
-        plotlyOutput(ns("mean_plot"), height = "100%"),
+        fillable = FALSE,
+        plotlyOutput(ns("mean_plot")),
         br(), br()
       )
     ),
@@ -108,7 +130,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Render the individual plot in plotly
     output$individualplot <- renderPlotly({
       req(individualplot())
-      ggplotly(individualplot(), tooltip = "tooltip_text")
+      height <- .facet_plot_height(individualplot())
+      ggplotly(individualplot(), tooltip = "tooltip_text", height = height)
     })
 
     meanplot <- reactive({
@@ -161,7 +184,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     # Render the mean plot output in plotly
     output$mean_plot <- renderPlotly({
       req(meanplot())
-      ggplotly(meanplot(), tooltip = "tooltip_text")
+      height <- .facet_plot_height(meanplot())
+      ggplotly(meanplot(), tooltip = "tooltip_text", height = height)
     })
 
     qc_plot_outputs <- pk_dose_qc_plot_server(
