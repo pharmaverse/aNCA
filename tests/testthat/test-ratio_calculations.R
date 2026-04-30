@@ -326,6 +326,129 @@ describe("calculate_ratios", {
     expect_equal(ratios_df$PPORRESU, rep("fraction", 2))
     expect_false("PPSTRESU" %in% names(ratios_df))
   })
+
+  it("aggregates reference values with aggregate_subject='yes'", {
+    # Fixture: subjects 1,2,7 are EX PARAM A; subjects 3,4,5 are IV PARAM A
+    # No subject has both routes, so aggregate uses mean of IV subjects
+    res_agg <- res
+    res_agg$result <- res$result %>%
+      filter(PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_agg,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "yes"
+    )
+
+    ex_subjects <- res_agg$result %>% filter(ROUTE == "extravascular")
+    iv_mean <- mean(
+      res_agg$result$PPORRES[res_agg$result$ROUTE == "intravascular"],
+      na.rm = TRUE
+    )
+
+    expect_equal(nrow(ratios), nrow(ex_subjects))
+    expect_equal(sort(ratios$PPORRES), sort(ex_subjects$PPORRES / iv_mean))
+    expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+  })
+
+  it("if-needed uses individual match when available", {
+    # Subject 8 has both EX (ATPTREF=1) and IV (ATPTREF=2) for PARAM A
+    # With if-needed, subject 8 gets an individual ratio (no aggregation needed)
+    res_ifn <- res
+    res_ifn$result <- res$result %>%
+      filter(USUBJID == 8, PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_ifn,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "if-needed"
+    )
+
+    ex_val <- res_ifn$result %>%
+      filter(ROUTE == "extravascular") %>%
+      pull(PPORRES)
+    iv_val <- res_ifn$result %>%
+      filter(ROUTE == "intravascular") %>%
+      pull(PPORRES)
+
+    expect_equal(nrow(ratios), 1)
+    expect_equal(ratios$PPORRES, ex_val / iv_val)
+    expect_false(grepl("\\(mean\\)", ratios$PPTESTCD))
+  })
+
+  it("if-needed falls back to aggregation when no individual match exists", {
+    # Subjects 1,2,7 are EX only; subjects 3,4,5 are IV only (PARAM A)
+    # No subject has both routes, so if-needed must fall back to aggregation
+    res_ifn <- res
+    res_ifn$result <- res$result %>%
+      filter(PARAM == "A", PPTESTCD == "CMAX", type_interval == "main",
+             USUBJID %in% c(1, 2, 3, 4, 5, 7)) %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_ifn,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "if-needed"
+    )
+
+    ex_subjects <- res_ifn$result %>% filter(ROUTE == "extravascular")
+    iv_mean <- mean(
+      res_ifn$result$PPORRES[res_ifn$result$ROUTE == "intravascular"],
+      na.rm = TRUE
+    )
+
+    expect_equal(nrow(ratios), nrow(ex_subjects))
+    expect_equal(sort(ratios$PPORRES), sort(ex_subjects$PPORRES / iv_mean))
+    expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+  })
+
+  it("if-needed uses individual where available and aggregates the rest", {
+    # Subject 8 has both routes (individual match possible)
+    # Subjects 1,2,7 are EX only (must fall back to aggregation)
+    # IV subjects: 3,4,5 (IV only) + 8 (both routes)
+    res_mix <- res
+    res_mix$result <- res$result %>%
+      filter(PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_mix,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "if-needed"
+    )
+
+    # Subject 8: individual ratio (EX / IV for that subject, no mean suffix)
+    s8_ex <- res_mix$result %>%
+      filter(USUBJID == 8, ROUTE == "extravascular") %>%
+      pull(PPORRES)
+    s8_iv <- res_mix$result %>%
+      filter(USUBJID == 8, ROUTE == "intravascular") %>%
+      pull(PPORRES)
+    s8_ratio <- ratios %>% filter(USUBJID == 8)
+    expect_equal(nrow(s8_ratio), 1)
+    expect_equal(s8_ratio$PPORRES, s8_ex / s8_iv)
+    expect_false(grepl("\\(mean\\)", s8_ratio$PPTESTCD))
+
+    # Subjects 1,2,7: aggregated ratio (EX / mean of all IV, with mean suffix)
+    # Subject 2 has 2 ATPTREFs (both EX), so 4 rows total
+    other_ratios <- ratios %>% filter(USUBJID != 8)
+    expect_equal(nrow(other_ratios), 4)
+    expect_true(all(grepl("\\(mean\\)", other_ratios$PPTESTCD)))
+  })
 })
 
 describe("parse_interval_parameter", {
