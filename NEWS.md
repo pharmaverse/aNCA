@@ -64,6 +64,7 @@
 
 
 ## Bugs fixed
+* Exploration plots no longer shrink middle-row subplots when faceting by many levels (e.g. USUBJID). Plot height now scales dynamically with the number of facet panels (#1283)
 * Last dose interval end time now extends to the last observed sample instead of being cut off at TRTRINT (tau), ensuring all collected data points are included in NCA calculations (#1235)
 * Fixed NA `PPSTRESU` handling across NCA results: descriptive statistics no longer crash when a parameter group has all-NA units, and manual interval parameters (e.g., RCAMINT) no longer get `NA` appended to their column names (#1216)
 * `get_settings_code()` now reads mapping, filters, ratio table, and units from the settings YAML instead of using hardcoded defaults. Legacy YAML files without these fields still work via fallback. The `mapping` parameter has been removed (#1189)
