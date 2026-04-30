@@ -17,6 +17,8 @@
 #' @param id Character. Shiny module id.
 #' @param processed_pknca_data Reactive. PKNCAdata object for plotting and table context.
 #' @param manual_slopes_override Reactive. Optional custom settings override for the slopes table.
+#' @param flag_rules Reactive. Named list of flag rules from NCA settings
+#'   (e.g. R2ADJ, R2, LAMZSPN), each with `is.checked` and `threshold`.
 #' @return manual_slopes (data.frame of user slope inclusions/exclusions)
 #'
 #' @details
@@ -105,6 +107,14 @@ slope_selector_ui <- function(id) {
           choices = NULL,
           multiple = TRUE
         ),
+      ),
+      div(
+        class = "plot-widget-group",
+        checkboxInput(
+          ns("filter_flagged"),
+          label = "Show only flagged profiles",
+          value = FALSE
+        )
       )
     ),
     fluidRow(
@@ -126,15 +136,33 @@ slope_selector_ui <- function(id) {
 }
 
 slope_selector_server <- function( # nolint
-  id, processed_pknca_data, manual_slopes_override
+  id, processed_pknca_data, manual_slopes_override, flag_rules = reactive(NULL)
 ) {
   moduleServer(id, function(input, output, session) {
     log_trace("{id}: Attaching server")
 
     ns <- session$ns
 
+    # Disable the flag filter checkbox when no half-life flag rules are checked
+    observe({
+      flags <- flag_rules()
+      hl_flags <- c("R2ADJ", "R2", "LAMZSPN")
+      has_active <- any(vapply(
+        flags[intersect(names(flags), hl_flags)],
+        function(f) isTRUE(f$is.checked),
+        logical(1)
+      ))
+      if (has_active) {
+        shinyjs::enable("filter_flagged")
+      } else {
+        updateCheckboxInput(session, "filter_flagged", value = FALSE)
+        shinyjs::disable("filter_flagged")
+      }
+    })
+
     pknca_data <- reactiveVal(NULL)
     plot_outputs <- reactiveVal(NULL)
+    plot_profile_data <- reactiveVal(NULL)
 
     observeEvent(processed_pknca_data(), {
       req(processed_pknca_data())
@@ -160,15 +188,25 @@ slope_selector_server <- function( # nolint
 
       if (changes$in_data || changes$in_options) {
         # New data or options changes (e.g. min.hl.points): regenerate all plots
-        plot_outputs(get_halflife_plots(
+        hl_result <- get_halflife_plots(
           new_pknca_data, title_vars = "ATPTREF"
-        )[["plots"]])
+        )
+        plot_outputs(hl_result[["plots"]])
+        plot_profile_data(hl_result[["data"]])
       } else if (changes$in_hl_adj) {
         # Modify plots with new half-life adjustments (inclusions/exclusions)
-        plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
+        hl_result <- handle_hl_adj_change(
+          new_pknca_data, pknca_data(), plot_outputs(), plot_profile_data()
+        )
+        plot_outputs(hl_result$plots)
+        plot_profile_data(hl_result$data)
       } else if (changes$in_selected_intervals) {
         # Add/remove plots based on intervals (selection from nca_setup.R)
-        plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
+        hl_result <- handle_interval_change(
+          new_pknca_data, pknca_data(), plot_outputs(), plot_profile_data()
+        )
+        plot_outputs(hl_result$plots)
+        plot_profile_data(hl_result$data)
       }
 
       # Update the searching widget choices based on the new data
@@ -203,33 +241,51 @@ slope_selector_server <- function( # nolint
       pknca_data(new_pknca_data)
     })
 
+    # Apply flag-based filtering when the checkbox is checked
+    filtered_plot_outputs <- reactive({
+      plots <- plot_outputs()
+      req(!is.null(plots))
+      if (!isTRUE(input$filter_flagged) || is.null(flag_rules())) return(plots)
+
+      profile_data <- plot_profile_data()
+      if (is.null(profile_data) || length(profile_data) == 0) return(plots)
+
+      flagged_ids <- .get_flagged_profile_ids(profile_data, flag_rules())
+      plots[names(plots) %in% flagged_ids]
+    })
+
     # Call the pagination/searcher module to:
     # - Providing indices of plots for the selected subject(s)
     # - Providing indices for which plots to display based on pagination
     page_search <- page_and_searcher_server(
       id = "page_and_searcher",
       search_subject = reactive(input$search_subject),
-      plot_outputs = plot_outputs,
+      plot_outputs = filtered_plot_outputs,
       plots_per_page = reactive(input$plots_per_page)
     )
 
     observe({
-      req(!is.null(plot_outputs()))
+      req(!is.null(filtered_plot_outputs()))
       output$slope_plots_ui <- renderUI({
-        if (length(plot_outputs()) == 0) {
-          div(
-            class = "slope-selector-empty-state",
-            icon("info-circle"),
-            tags$p(
+        if (length(filtered_plot_outputs()) == 0) {
+          msg <- if (isTRUE(input$filter_flagged)) {
+            "No flagged profiles to display. All half-life fits satisfy the flag rules."
+          } else {
+            paste(
               "No slope plots to display.",
               "Half-life plots require at least one half-life",
               "related parameter to be selected",
               "(e.g., LAMZHL, LAMZ, R2ADJ, LAMZNPT)."
             )
+          }
+          div(
+            class = "slope-selector-empty-state",
+            icon("info-circle"),
+            tags$p(msg)
           )
         } else {
           shinyjs::enable(selector = ".btn-page")
-          plot_outputs() %>%
+          filtered_plot_outputs() %>%
             # Filter plots based on user search
             .[page_search$is_plot_searched()] %>%
             # Arrange plots by the specified group order
