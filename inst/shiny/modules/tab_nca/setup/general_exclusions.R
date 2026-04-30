@@ -161,23 +161,17 @@ general_exclusions_server <- function(
       )
     })
 
-    # Dynamically observe all remove buttons for exclusion reasons
+    # Track which remove buttons already have observers to avoid duplicates
+    registered_xbtns <- reactiveVal(character(0))
+
+    # Register observers for new remove buttons (shared helper)
     observe({
-      lst <- exclusion_list()
-      lapply(lst, function(item) {
-        xbtn_id <- item$xbtn_id
-        observeEvent(input[[xbtn_id]], {
-          current <- exclusion_list()
-          exclusion_list(
-            Filter(function(x) x$xbtn_id != xbtn_id, current)
-          )
-        }, ignoreInit = TRUE, once = TRUE)
-      })
+      .register_remove_observers(exclusion_list, registered_xbtns, input)
     })
 
     # Render the exclusions table (not shown if empty)
     output$exclusion_list_ui <- renderUI({
-      tbl <- .render_exclusion_list_table(exclusion_list(), ns)
+      tbl <- .render_exclusion_table(exclusion_list(), ns, show_type = TRUE)
       if (is.null(tbl)) return(NULL)
       tagList(
         tbl,
