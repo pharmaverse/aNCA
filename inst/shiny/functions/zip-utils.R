@@ -523,10 +523,10 @@ prepare_export_files <- function(target_dir,
 .export_settings <- function(target_dir, session) {
   settings_list <- session$userData$settings()
 
+  # Only export units that differ from defaults (PPSTRESU != PPORRESU)
   if (!is.null(settings_list$units)) {
     settings_list$units <- settings_list$units %>%
-      dplyr::filter(!default) %>%
-      dplyr::select(-default)
+      dplyr::filter(!is.na(PPSTRESU), !is.na(PPORRESU), PPSTRESU != PPORRESU)
   }
 
   settings_list$ratio_table <- session$userData$ratio_table()

@@ -93,6 +93,27 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
 
+    # Keep units_table synchronized with the current dataset. Store the full
+    # units table so downstream code never receives a partial units table, and
+    # clear it when no units are available to avoid stale values persisting
+    # across uploads.
+    # Skip when settings are being imported with units — the import observer
+    # in nca_setup.R will merge imported overrides into the data-derived table.
+    observeEvent(pknca_data(), {
+      current_pknca_data <- pknca_data()
+
+      if (is.null(current_pknca_data) || is.null(current_pknca_data$units)) {
+        session$userData$units_table(NULL)
+        return()
+      }
+
+      imported <- settings_override()
+      has_imported_units <- !is.null(imported$units) && nrow(imported$units) > 0
+      if (has_imported_units) return()
+
+      session$userData$units_table(current_pknca_data$units)
+    }, ignoreNULL = FALSE)
+
     adnca_data <- reactive(pknca_data()$conc$data)
 
     # #' NCA Setup module
@@ -203,9 +224,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         # Update units table
         processed_pknca_data <- processed_pknca_data()
         if (!is.null(session$userData$units_table())) {
-          custom_units <- select(
-            session$userData$units_table(), -any_of("default")
-          )
+          custom_units <- session$userData$units_table()
           by_cols <- intersect(names(processed_pknca_data$units), names(custom_units))
           by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
           processed_pknca_data$units <- rows_update(
