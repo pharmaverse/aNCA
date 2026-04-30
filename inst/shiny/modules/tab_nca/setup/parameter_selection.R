@@ -317,79 +317,17 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       )
     })
 
-    observeEvent(study_types_list(), {
-      req(selections_state())
-
-      current_types <- study_types_list()
-
-      # Define grouped structure of parameters for the sub-module
-      all_params_grouped <- all_params %>%
-        # Split the data frame into a list of data frames, one per TYPE
-        split(.$TYPE)
-
-      # Loop and create servers
-      map(current_types, function(study_type) {
-        # Define module ID
-        module_id <- gsub("[^A-Za-z0-9]", "_", study_type)
-
-        if (exists(module_id, envir = initialised_modules)) {
-          # If it exists, exit this iteration
-          return()
-        }
-
-        # If not, mark it as initialized
-        assign(module_id, TRUE, envir = initialised_modules)
-
-        current_type_selections <- reactive({
-          state <- selections_state()
-          req(state)
-          # Return vector of PKNCA codes where this study type is TRUE
-          state$PKNCA[state[[study_type]] == TRUE]
-        })
-
-        # Call the parameter selector panel server
-        selection_single_type_grouped <- param_selector_panel_server(
-          module_id,
-          all_params_grouped = all_params_grouped,
-          current_selection = current_type_selections
-        )
-
-        # Watch the module's return value
-        observeEvent(selection_single_type_grouped(), {
-          # Get the full master state
-          selections_df <- selections_state()
-
-          # Get the selected names from the module
-          selected_params <- selection_single_type_grouped()
-
-          # If the input is NULL (empty selection), treat it as an empty character vector
-          if (is.null(selected_params)) {
-            selected_params <- character(0)
-          }
-
-          # We compare the current state to the new state to avoid infinite loops
-          current_col <- selections_df[[study_type]]
-          new_col <- selections_df$PKNCA %in% selected_params
-
-          if (!identical(current_col, new_col)) {
-            selections_df[[study_type]] <- new_col
-            selections_state(selections_df)
-          }
-        }, ignoreNULL = FALSE, ignoreInit = TRUE)
-
-        selection_debounce <- debounce(selection_single_type_grouped, 2000)
-
-        observeEvent(selection_debounce(), {
-          params <- selection_debounce()
-          n_params <- if (is.null(params)) 0 else length(params)
-
-          log_info("Parameter selection for '", study_type, "': ", n_params, " parameters selected.")
-          if (n_params > 0) {
-            log_debug("Parameters for '", study_type, "': ", paste(params, collapse = ", "))
-          }
-        }, ignoreNULL = FALSE, ignoreInit = TRUE)
-      })
-    })
+    # Log parameter selection changes (debounced to avoid noise from rapid clicks)
+    selections_debounced <- debounce(selections_state, 2000)
+    observeEvent(selections_debounced(), {
+      state <- selections_debounced()
+      req(state)
+      study_types <- study_types_list()
+      for (st in study_types) {
+        n_params <- sum(state[[st]], na.rm = TRUE)
+        log_info("Parameter selection for '", st, "': ", n_params, " parameters selected.")
+      }
+    }, ignoreInit = TRUE)
 
     observeEvent(input$clear_all, {
       state <- selections_state()

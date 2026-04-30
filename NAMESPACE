@@ -143,7 +143,7 @@ importFrom(glue,glue)
 importFrom(grid,convertUnit)
 importFrom(htmltools,tags)
 importFrom(htmlwidgets,onRender)
-importFrom(logger,log_info)
+
 importFrom(magrittr,`%>%`)
 importFrom(plotly,add_lines)
 importFrom(plotly,add_trace)

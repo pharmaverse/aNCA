@@ -115,7 +115,6 @@ organized by the stage of the workflow where they occur.
 | Event | Level |
 |---|---|
 | Parameter count per study type | INFO |
-| Full parameter list per study type | DEBUG |
 
 ### Slope Selector
 
