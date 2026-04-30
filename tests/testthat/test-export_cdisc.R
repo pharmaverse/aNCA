@@ -142,7 +142,7 @@ describe("export_cdisc", {
   })
 
   it("derives PPSTINT and PPENINT for interval (INT) parameters", {
-    for (int_param in c("AUCINT", "CAVGINT", "AUCINTD", "AUCINTPD", "RCAMINT")) {
+    for (int_param in c("AUCINT", "CAVGINT", "RCAMINT")) {
       modified_test_pknca_res <- test_pknca_res
       modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
         mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
@@ -160,6 +160,38 @@ describe("export_cdisc", {
       expect_equal(
         result$pp$PPENINT[which(result$pp$PPTESTCD == int_param)],
         rep(c("PT2H", "PT4H"), times = 3)
+      )
+    }
+  })
+
+  it("consolidates dose-aware AUCint PPTESTCDs and sets PPANMETH", {
+    da_params <- list(
+      AUCINTda   = "AUCINT",
+      AUCINTIPda = "AUCINTIP"
+    )
+    for (da_cd in names(da_params)) {
+      expected_cd <- da_params[[da_cd]]
+      modified_test_pknca_res <- test_pknca_res
+      modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
+        mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
+        mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", da_cd, PPTESTCD))
+
+      result <- export_cdisc(modified_test_pknca_res)
+
+      # Dose-aware params should be consolidated to their base PPTESTCD
+      int_rows <- which(grepl("INT", result$pp$PPTESTCD))
+      expect_true(all(result$pp$PPTESTCD[int_rows] == expected_cd))
+
+      # PPANMETH should be set for consolidated rows
+      expect_true("PPANMETH" %in% names(result$pp))
+      expect_true(all(
+        result$pp$PPANMETH[int_rows] == "Interpolation truncated at next dose time"
+      ))
+
+      # PPSTINT/PPENINT should still be derived correctly
+      expect_equal(
+        result$pp$PPSTINT[int_rows],
+        rep(c("PT0H", "PT2H"), times = 3)
       )
     }
   })

@@ -477,9 +477,9 @@ describe("parse_interval_parameter", {
   })
 
   it("handles multi-part base names", {
-    result <- parse_interval_parameter("AUCINTAD_0-24")
+    result <- parse_interval_parameter("AUCINTAda_0-24")
     expect_true(result$is_interval)
-    expect_equal(result$base, "AUCINTAD")
+    expect_equal(result$base, "AUCINTAda")
     expect_equal(result$start, 0)
     expect_equal(result$end, 24)
   })

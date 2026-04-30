@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Dose-aware AUCint parameters now share the same PPTESTCD as their non-dose-aware counterparts in CDISC exports, with `PPANMETH` indicating the analytical method. Internal PPTESTCDs renamed from misleading `D` suffix (e.g. `AUCINTD`) to lowercase `da` suffix (e.g. `AUCINTda`). Fixed wrong PPTEST label for `AUCINTD` which said "Normalized by Dose" (#1242)
+
 ## Features added
 
 * Ratio Calculations UI replaced with formula-style cards showing `PPTESTCD = Test [Group] / Ref [Group] × Factor` layout (#1250)
