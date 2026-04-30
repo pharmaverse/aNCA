@@ -107,7 +107,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         return()
       }
 
-      imported <- settings_override()
+      imported <- isolate(settings_override())
       has_imported_units <- !is.null(imported$units) && nrow(imported$units) > 0
       if (has_imported_units) return()
 
