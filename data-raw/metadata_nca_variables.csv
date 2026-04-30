@@ -358,3 +358,5 @@ ADNCA,160,WBCBL,WBC Count at Baseline,float,Synonym Qualifier,Perm,TRUE,FALSE,12
 ADNCA,161,WBCBLU,WBC Count at baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,264,PKSUM1F,PK Summary Exclusion Flag 1,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,265,PKSUM1FN,PK Summary Exclusion Flag 1 (N),integer,Record Qualifier,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,193,PPSUMFL,PP Summary Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,194,PPSUMRSN,PP Summary Exclusion Reason,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE

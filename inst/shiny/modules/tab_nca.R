@@ -12,12 +12,14 @@
 #'    and display, including modules like `nca_results.R`, `parameter_datasets.R`,
 #'    `descriptive_statistics.R` and `additional_analysis.R`
 #'
+#' @param id Module ID.
+#' @param pknca_data Reactive PKNCAdata object from the data tab.
+#' @param extra_group_vars Reactive with additional grouping variable names.
+#' @param settings_override Reactive with uploaded settings list (or NULL).
+#' @param auto_replay_ready ReactiveVal that signals when auto-replay
+#'   data processing is complete and NCA can be auto-triggered.
 #'
-#' @param id           ID of the module.
-#' @param adnca_data   Raw ADNCA data uploaded by the user, with any mapping and filters applied.
-#' @param extra_group_vars Column name(s) of the additional variable options for input widgets
-#'
-#' @returns `res_nca` reactive with results data object.
+#' @returns List with `res_nca` and `processed_pknca_data` reactives.
 tab_nca_ui <- function(id) {
   ns <- NS(id)
 
@@ -62,7 +64,11 @@ tab_nca_ui <- function(id) {
               "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
             ),
             nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
+            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots"))),
+            nav_panel(
+              "Parameter Exclusions",
+              parameter_exclusions_ui(ns("parameter_exclusions"))
+            )
           )
         )
       )
@@ -75,7 +81,10 @@ tab_nca_ui <- function(id) {
   )
 }
 
-tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) {
+# .apply_param_exclusions is defined in inst/shiny/functions/utils-exclusions.R
+
+tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
+                           auto_replay_ready) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -88,6 +97,8 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     # units table so downstream code never receives a partial units table, and
     # clear it when no units are available to avoid stale values persisting
     # across uploads.
+    # Skip when settings are being imported with units — the import observer
+    # in nca_setup.R will merge imported overrides into the data-derived table.
     observeEvent(pknca_data(), {
       current_pknca_data <- pknca_data()
 
@@ -95,6 +106,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         session$userData$units_table(NULL)
         return()
       }
+
+      imported <- settings_override()
+      has_imported_units <- !is.null(imported$units) && nrow(imported$units) > 0
+      if (has_imported_units) return()
 
       session$userData$units_table(current_pknca_data$units)
     }, ignoreNULL = FALSE)
@@ -125,6 +140,44 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
                      reactive(slope_rules()),
                      columns = NULL)
 
+    # Auto-replay: trigger NCA run once settings are applied and data is ready.
+    # Debounces processed_pknca_data to wait for the full settings cascade
+    # (analyte → pcspec → profile → parameters → data object) to settle.
+    auto_nca_pending <- reactiveVal(FALSE)
+    auto_nca_running <- reactiveVal(FALSE)
+    pknca_data_debounced <- processed_pknca_data %>% debounce(1000)
+
+    observeEvent(auto_replay_ready(), {
+      req(auto_replay_ready())
+      target <- session$userData$auto_replay_target_tab %||% ""
+      nca_ran <- isTRUE(session$userData$auto_replay_nca_ran)
+      if (target == "nca" && nca_ran) {
+        auto_nca_pending(TRUE)
+        # Safety: if NCA auto-run doesn't trigger within 10s, dismiss popup
+        shinyjs::delay(10000, {
+          if (auto_nca_pending()) {
+            auto_nca_pending(FALSE)
+            session$userData$auto_replay_active <- FALSE
+            shiny::removeModal()
+            log_warn("Auto-replay: NCA auto-run timed out.")
+            showNotification(
+              "Session restored but NCA could not be auto-run. Please run NCA manually.",
+              type = "warning", duration = 10
+            )
+          }
+        })
+      }
+    })
+
+    # Trigger NCA once the debounced data object has settled.
+    observeEvent(pknca_data_debounced(), {
+      if (!auto_nca_pending()) return()
+      auto_nca_pending(FALSE)
+      log_info("Auto-replay: triggering NCA calculation.")
+      auto_nca_running(TRUE)
+      shinyjs::click("run_nca")
+    })
+
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
       req(processed_pknca_data())
@@ -132,13 +185,33 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
                                                               is.logical)]))) {
         log_error("Invalid parameters")
-        showNotification("No suitable parameters selected for NCA calculation.
-         Please go back and select parameters suitable for the data.",
-                         type = "error", duration = NULL)
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
+          shiny::removeModal()
+          showNotification(
+            paste(
+              "Session restored but NCA could not be auto-run:",
+              "no suitable parameters for this dataset.",
+              "Please adjust settings and run NCA manually."
+            ),
+            type = "warning", duration = 10
+          )
+        } else {
+          showNotification(
+            paste(
+              "No suitable parameters selected for NCA calculation.",
+              "Please go back and select parameters suitable for the data."
+            ),
+            type = "error", duration = NULL
+          )
+        }
         return(NULL)
       }
 
-      loading_popup("Calculating NCA results...")
+      if (!auto_nca_running()) {
+        loading_popup("Calculating NCA results...")
+      }
 
       log_info("Calculating NCA results...")
 
@@ -214,8 +287,16 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
         showNotification(.parse_pknca_error(e), type = "error", duration = NULL)
         NULL
       }, finally = {
-        # Delay the removal of loading modal to give it enough time to render
-        later::later(~shiny::removeModal(session = session), delay = 0.5)
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
+          # Dismiss the "Restoring session..." popup
+          shiny::removeModal()
+          log_success("Auto-replay: session restored with NCA results.")
+        } else {
+          # Delay the removal of loading modal to give it enough time to render
+          later::later(~shiny::removeModal(session = session), delay = 0.5)
+        }
       })
     }) %>%
       bindEvent(input$run_nca)
@@ -229,7 +310,22 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
     observe({
       req(res_nca())
       session$userData$final_units <- res_nca()$data$units
+      session$userData$nca_ran <- TRUE
     })
+
+    # Parameter exclusions: users can exclude individual PK parameter rows
+    # from summary tables and mean plots. Excluded rows get PPSUMFL = "Y" in ADPP.
+    param_excl_rows <- parameter_exclusions_server(
+      "parameter_exclusions", res_nca
+    )
+
+    res_nca_excl <- reactive({
+      req(res_nca())
+      .apply_param_exclusions(res_nca(), param_excl_rows())
+    })
+
+    res_nca_tagged <- reactive(res_nca_excl()$tagged)
+    res_nca_filtered <- reactive(res_nca_excl()$filtered)
 
     #' Show slopes results
     pivoted_slopes <- reactive({
@@ -258,17 +354,19 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
       "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
     )
 
-    #' Descriptive statistics module
-    descriptive_statistics_server("descriptive_stats", res_nca, extra_group_vars)
+    #' Descriptive statistics module (uses filtered results)
+    descriptive_statistics_server("descriptive_stats", res_nca_filtered, extra_group_vars)
 
     #' Additional analysis module
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca, extra_group_vars, settings)
+    parameter_datasets_server("parameter_datasets", res_nca_tagged, extra_group_vars, settings)
 
     #' Parameter plots module
-    parameter_plots_server("parameter_plots", res_nca)
+    #' res_nca: base results for picker initialization (stable across exclusion changes)
+    #' res_nca_tagged: tagged results with .pp_excl markers for the show-excluded toggle
+    parameter_plots_server("parameter_plots", res_nca, res_nca_tagged)
 
     # return results for use in other modules
     list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
@@ -326,7 +424,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override) 
   # so this warning may need to be rephrased or removed.
   if (grepl("Units are provided for some but not all parameters; missing for: ae", msg)) {
     msg <- paste0(
-      "Urine Parameters (FREXINT, RCAMINT) calculated for non-urine samples",
+      "Urine Parameters (FREXINT, RCAMINT) calculated for non-urine samples ",
       "will return NA values and units"
     )
   }
