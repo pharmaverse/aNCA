@@ -126,7 +126,7 @@ describe("read_settings", {
     expect_s3_class(res$settings$int_parameters, "data.frame")
     expect_equal(nrow(res$settings$int_parameters), 2)
     expect_named(res$settings$int_parameters, c("parameter", "start_auc", "end_auc"))
-    expect_equal(res$settings$int_parameters$parameter, c("AUCINT", "AUCINTD"))
+    expect_equal(res$settings$int_parameters$parameter, c("AUCINT", "AUCINTda"))
     expect_equal(res$settings$int_parameters$start_auc, c(0, 0))
     expect_equal(res$settings$int_parameters$end_auc, c(24, 24))
   })
