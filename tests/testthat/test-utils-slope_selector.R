@@ -1,3 +1,4 @@
+library(dplyr)
 source(
   file.path(
     system.file("shiny", package = "aNCA"),
