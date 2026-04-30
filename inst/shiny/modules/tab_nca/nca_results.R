@@ -98,9 +98,11 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
         unname(formatters::var_labels(final_results())),
         unique(c(metadata_nca_parameters$PPTEST, ratio_table()$PPTESTCD))
       )
-      param_inputnames <- metadata_nca_parameters$PPTESTCD[
-        match(param_pptest_cols, metadata_nca_parameters$PPTEST)
-      ]
+      param_inputnames <- ifelse(
+        param_pptest_cols %in% metadata_nca_parameters$PPTEST,
+        metadata_nca_parameters$PPTESTCD[match(param_pptest_cols, metadata_nca_parameters$PPTEST)],
+        param_pptest_cols
+      )
 
       # Add manual interval parameters (e.g. AUCINT_0-12) to the selector
       col_names <- names(final_results())
