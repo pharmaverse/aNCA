@@ -30,6 +30,12 @@
   design decisions for the aNCA package and its embedded Shiny
   application.
 
+- [Running NCA with aNCA: R Script
+  Walkthrough](https://pharmaverse.github.io/aNCA/articles/example_r_script.md):
+
+  Step-by-step guide to running NCA analyses with aNCA via R scripts,
+  YAML settings, or the Shiny app.
+
 - [FAQs - Frequently Asked
   Questions](https://pharmaverse.github.io/aNCA/articles/FAQs.md):
 

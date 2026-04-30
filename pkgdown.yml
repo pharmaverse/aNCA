@@ -7,12 +7,13 @@ articles:
   background: background.html
   contributing: contributing.html
   design: design.html
+  example_r_script: example_r_script.html
   FAQs: FAQs.html
   governance: governance.html
   manual: manual.html
   roadmap: roadmap.html
   validations: validations.html
-last_built: 2026-04-30T08:39Z
+last_built: 2026-04-30T10:04Z
 urls:
   reference: https://pharmaverse.github.io/aNCA/reference
   article: https://pharmaverse.github.io/aNCA/articles
