@@ -373,9 +373,11 @@ describe("calculate_ratios", {
     )
 
     ex_val <- res_ifn$result %>%
-      filter(ROUTE == "extravascular") %>% pull(PPORRES)
+      filter(ROUTE == "extravascular") %>%
+      pull(PPORRES)
     iv_val <- res_ifn$result %>%
-      filter(ROUTE == "intravascular") %>% pull(PPORRES)
+      filter(ROUTE == "intravascular") %>%
+      pull(PPORRES)
 
     expect_equal(nrow(ratios), 1)
     expect_equal(ratios$PPORRES, ex_val / iv_val)
@@ -431,9 +433,11 @@ describe("calculate_ratios", {
 
     # Subject 8: individual ratio (EX / IV for that subject, no mean suffix)
     s8_ex <- res_mix$result %>%
-      filter(USUBJID == 8, ROUTE == "extravascular") %>% pull(PPORRES)
+      filter(USUBJID == 8, ROUTE == "extravascular") %>%
+      pull(PPORRES)
     s8_iv <- res_mix$result %>%
-      filter(USUBJID == 8, ROUTE == "intravascular") %>% pull(PPORRES)
+      filter(USUBJID == 8, ROUTE == "intravascular") %>%
+      pull(PPORRES)
     s8_ratio <- ratios %>% filter(USUBJID == 8)
     expect_equal(nrow(s8_ratio), 1)
     expect_equal(s8_ratio$PPORRES, s8_ex / s8_iv)

@@ -421,7 +421,7 @@ calculate_ratio_app <- function(
   # Remove start/end when they cannot serve as reliable join keys
   atptref_exists <- "ATPTREF" %in% reference_colname
   if (atptref_exists || aggregate_subject != "no" ||
-      test_parsed$is_interval || ref_parsed$is_interval) {
+        test_parsed$is_interval || ref_parsed$is_interval) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
 
