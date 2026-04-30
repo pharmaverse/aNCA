@@ -1,0 +1,142 @@
+// Formula-style ratio calculation cards — fraction layout
+
+.ratio-formula-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: #fafafa;
+  overflow: visible;
+  flex-wrap: wrap;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+
+  // Remove default margins from Shiny inputs inside cards
+  .form-group,
+  .shiny-input-container {
+    margin-bottom: 0;
+  }
+
+  select,
+  input[type="text"],
+  input[type="number"] {
+    padding: 4px 6px;
+    height: auto;
+    font-size: 13px;
+  }
+}
+
+// Left side: checkbox + PPTESTCD + equals
+.ratio-left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.ratio-select {
+  .checkbox {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.ratio-pptestcd-input input {
+  font-weight: 600;
+  font-family: monospace;
+  text-align: center;
+}
+
+.ratio-eq {
+  font-size: 20px;
+  font-weight: 700;
+  color: #555;
+  flex-shrink: 0;
+}
+
+// Center: fraction block — sized to content
+.ratio-fraction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 1 auto;
+  overflow: visible;
+}
+
+.ratio-numerator,
+.ratio-denominator {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ratio-numerator {
+  select {
+    border-color: #5cb85c;
+  }
+}
+
+.ratio-denominator {
+  select {
+    border-color: #f0ad4e;
+  }
+}
+
+.ratio-line {
+  width: 100%;
+  border: none;
+  border-top: 2px solid #333;
+  margin: 2px 0;
+}
+
+.ratio-bracket {
+  font-size: 16px;
+  font-weight: 600;
+  color: #888;
+  padding: 0 1px;
+}
+
+.ratio-input-wrap {
+  overflow: visible;
+}
+
+// Sigma dropdown (aggregate mode)
+.ratio-sigma {
+  flex-shrink: 0;
+  margin-right: 2px;
+
+  select {
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 2px;
+  }
+}
+
+// Right side: multiply + adjusting factor
+.ratio-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ratio-mult {
+  font-size: 20px;
+  font-weight: 700;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.ratio-adj-factor {
+  flex-shrink: 0;
+}
+
+
