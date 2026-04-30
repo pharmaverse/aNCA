@@ -55,30 +55,30 @@ step.
 
 Click here to view a table describing each variable
 
-|                          | Variable   | Description                                                        | Format            |
-|:-------------------------|:-----------|:-------------------------------------------------------------------|:------------------|
-| **Grouping Identifiers** | STUDYID \* | Study Identifier                                                   | character         |
-|                          | USUBJID \* | Unique Subject Identifier                                          | character/numeric |
-|                          | ATPTREF \* | Can be any column, and used to filter data for NCA calculations    | any               |
-|                          | TRT01A     | Treatment Group Identifier (Actual)                                | character         |
-|                          | TRT01P     | Treatment Group Identifier (Planned)                               | character         |
-|                          | AGE        | Age of Subject                                                     | numeric           |
-|                          | RACE       | Race of Subject                                                    | character         |
-|                          | SEX        | Sex of Subject                                                     | character         |
-| **Sample Variables**     | PARAM \*   | Analyte studied in the sample                                      | character         |
-|                          | PCSPEC \*  | Specimen Material Type                                             | character         |
-|                          | AVAL \*    | Analysis Value                                                     | numeric           |
-| **Dose Variables**       | DOSETRT \* | Drug/Treatment compound. When relevant, should match with PARAM    | character         |
-|                          | ROUTE \*   | Route of Administration, either {intravascular} or {extravascular} | character         |
-|                          | DOSEA \*   | Actual Treatment Dose                                              | numeric           |
-|                          | ADOSEDUR   | Actual Treatment Dose                                              | numeric           |
-| **Time Variables**       | AFRLT \*   | Actual Relative Time from Analyte First Dose                       | numeric           |
-|                          | ARRLT \*   | Actual Relative Time from Reference Dose                           | numeric           |
-|                          | NFRLT \*   | Nominal Relative Time from Analyte First Dose                      | numeric           |
-|                          | NRRLT \*   | Nominal Relative Time from Reference Dose                          | numeric           |
-| **Time Variables**       | AVALU      | Analysis Value Unit                                                | character         |
-|                          | DOSEU      | Treatment Dose Units                                               | character         |
-|                          | RRLTU      | Relative Time from Reference Dose Unit                             | character         |
+|  | Variable | Description | Format |
+|:---|:---|:---|:---|
+| **Grouping Identifiers** | STUDYID \* | Study Identifier | character |
+|  | USUBJID \* | Unique Subject Identifier | character/numeric |
+|  | ATPTREF \* | Can be any column, and used to filter data for NCA calculations | any |
+|  | TRT01A | Treatment Group Identifier (Actual) | character |
+|  | TRT01P | Treatment Group Identifier (Planned) | character |
+|  | AGE | Age of Subject | numeric |
+|  | RACE | Race of Subject | character |
+|  | SEX | Sex of Subject | character |
+| **Sample Variables** | PARAM \* | Analyte studied in the sample | character |
+|  | PCSPEC \* | Specimen Material Type | character |
+|  | AVAL \* | Analysis Value | numeric |
+| **Dose Variables** | DOSETRT \* | Drug/Treatment compound. When relevant, should match with PARAM | character |
+|  | ROUTE \* | Route of Administration, either {intravascular} or {extravascular} | character |
+|  | DOSEA \* | Actual Treatment Dose | numeric |
+|  | ADOSEDUR | Actual Treatment Dose | numeric |
+| **Time Variables** | AFRLT \* | Actual Relative Time from Analyte First Dose | numeric |
+|  | ARRLT \* | Actual Relative Time from Reference Dose | numeric |
+|  | NFRLT \* | Nominal Relative Time from Analyte First Dose | numeric |
+|  | NRRLT \* | Nominal Relative Time from Reference Dose | numeric |
+| **Time Variables** | AVALU | Analysis Value Unit | character |
+|  | DOSEU | Treatment Dose Units | character |
+|  | RRLTU | Relative Time from Reference Dose Unit | character |
 
 #### 4. Preview
 

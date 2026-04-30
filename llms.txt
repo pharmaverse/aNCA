@@ -35,6 +35,7 @@ possess, the App can:
 The stable version of the package can be easily downloaded:
 
 ``` r
+
 install.packages("aNCA")
 ```
 
@@ -47,6 +48,7 @@ installation, along with all system dependencies. If you do not have
 `pak` available, you will need to set it up first:
 
 ``` r
+
 install.packages("pak")
 ```
 
@@ -54,6 +56,7 @@ then you can install [aNCA](https://pharmaverse.github.io/aNCA/) by
 running:
 
 ``` r
+
 pak::pak("pharmaverse/aNCA")
 ```
 
@@ -75,6 +78,7 @@ and then loading it directly using
 console:
 
 ``` r
+
 devtools::load_all()
 ```
 
@@ -83,6 +87,7 @@ devtools::load_all()
 To run the application, simply invoke:
 
 ``` r
+
 aNCA::run_app()
 ```
 

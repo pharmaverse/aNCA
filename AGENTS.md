@@ -93,6 +93,7 @@ Developers can run `devtools::document()` to do this automatically.
 ### Documentation (roxygen2)
 
 ``` r
+
 #' Calculate mean of positive values
 #'
 #' @param x A numeric vector.
@@ -114,6 +115,7 @@ positive_mean <- function(x, na.rm = TRUE) {
 Use for non-standard evaluation (NSE) column references:
 
 ``` r
+
 utils::globalVariables(c("DOSEA", "TRT01A", "GROUP"))
 ```
 
@@ -180,6 +182,7 @@ To change it, modify the value in `styles/partials/_sidebar.scss` (and
 Example:
 
 ``` r
+
 describe("g_lineplot: structure and arguments", {
   it("returns a ggplot object with individual labels", {
     p <- g_lineplot(

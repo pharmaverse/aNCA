@@ -49,7 +49,7 @@ overall drug behavior. These include: - **AUC (Area Under the Curve)**:
 A measure of total drug exposure over time.  
 - **Cmax**: The peak concentration of the drug in the blood.  
 - **Tmax**: The time it takes to reach peak concentration.  
-- **Half-life ($t_{1/2}$)**: The time required for the drug
+- **Half-life ($`t_{1/2}`$)**: The time required for the drug
 concentration to drop by half, which helps calculate elimination rates.
 
 Because NCA calculations are **model-independent**, they make fewer
@@ -72,12 +72,12 @@ results.
     beyond the last measurable point (requires estimating a slope from
     the terminal phase).
 
-#### **2. Half-Life ($t_{1/2}$):**
+#### **2. Half-Life ($`t_{1/2}`$):**
 
 - Derived from the terminal slope of the concentration-time curve.
 - Half-life impacts key PK calculations, including AUCinf and clearance,
   making it critical to get this value right.
-- Analysts may allow **customization** of $t_{1/2}$ using methods like
+- Analysts may allow **customization** of $`t_{1/2}`$ using methods like
   manual slope selection to exclude outliers or focus on more reliable
   data points.
 

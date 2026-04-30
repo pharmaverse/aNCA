@@ -113,6 +113,7 @@ present in both `data_conc` and `data_dose`.
 ## Examples
 
 ``` r
+
 # Sample concentration data
 conc_data <- data.frame(
   USUBJID = rep(paste0("S-", 1:2), each = 2),

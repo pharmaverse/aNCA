@@ -46,11 +46,11 @@ The workflow is orchestrated internally by:
 
 ### 1.1 Required Columns
 
-| Variable     | Label                        | Description                                                                            | CDISC Reference |
-|--------------|------------------------------|----------------------------------------------------------------------------------------|-----------------|
-| `STUDYID` \* | Study Identifier             | Character column to identify the study                                                 | CDISC Standard  |
-| `USUBJID` \* | Unique Subject Identifier    | Character/numeric column to identify a subject across studies                          | CDISC Standard  |
-| `ATPTREF` \* | Analysis Timepoint Reference | Can be any column, used to filter data for NCA calculations (e.g., visit, dose number) | CDISC ADNCA     |
+| Variable | Label | Description | CDISC Reference |
+|----|----|----|----|
+| `STUDYID` \* | Study Identifier | Character column to identify the study | CDISC Standard |
+| `USUBJID` \* | Unique Subject Identifier | Character/numeric column to identify a subject across studies | CDISC Standard |
+| `ATPTREF` \* | Analysis Timepoint Reference | Can be any column, used to filter data for NCA calculations (e.g., visit, dose number) | CDISC ADNCA |
 
 The sample identifiers help define what records are used for NCA
 calculations. At minimum, you need a parameter (PARAM), specimen type
@@ -62,11 +62,11 @@ measured and allows for multi-analyte assays to be processed in the same
 dataset. - Both generally together also help specifying the correct unit
 (AVALU) for the concentration values (AVAL).
 
-| Variable    | Label                  | Description                                                               | CDISC Reference |
-|-------------|------------------------|---------------------------------------------------------------------------|-----------------|
-| `PARAM` \*  | Parameter              | Name of the measured analyte                                              | CDISC Standard  |
-| `PCSPEC` \* | Specimen Material Type | Sample matrix (PLASMA, SERUM, URINE, etc.)                                | CDISC Standard  |
-| `AVAL` \*   | Analysis Value         | Numeric analyte concentration (BLQ values assumed to be 0 if not imputed) | CDISC Standard  |
+| Variable | Label | Description | CDISC Reference |
+|----|----|----|----|
+| `PARAM` \* | Parameter | Name of the measured analyte | CDISC Standard |
+| `PCSPEC` \* | Specimen Material Type | Sample matrix (PLASMA, SERUM, URINE, etc.) | CDISC Standard |
+| `AVAL` \* | Analysis Value | Numeric analyte concentration (BLQ values assumed to be 0 if not imputed) | CDISC Standard |
 
 #### 1.1.1 Additional Optional Variables
 
@@ -97,16 +97,16 @@ dataset. - Both generally together also help specifying the correct unit
   regardless of the route of administration or the availability of dose
   duration information.
 
-| Variable   | Label                                    | Description                                     | Use Case             |
-|------------|------------------------------------------|-------------------------------------------------|----------------------|
-| `AEFRLT`   | Actual Relative End Time from First Dose | End time of sample collection                   | Urine/feces samples  |
-| `ADOSEDUR` | Actual Duration of Treatment Dose        | Dose infusion duration                          | IV infusions         |
-| `VOLUME`   | Volume Value                             | Collected sample volume                         | Excretion studies    |
-| `VOLUMEU`  | Volume Value Unit                        | Unit of VOLUME                                  | Excretion studies    |
-| `WTBL`     | Weight at Baseline                       | Subject’s weight                                | Excretion studies    |
-| `WTBLU`    | Weight at Baseline Unit                  | Unit of WTBL                                    | Excretion studies    |
-| `TRTRINT`  | Planned Treatment Interval               | Time between doses (τ) in multiple dose studies | Multiple dosing      |
-| `METABFL`  | Metabolite Flag                          | “Y” if PARAM is a metabolite                    | Multi-analyte assays |
+| Variable | Label | Description | Use Case |
+|----|----|----|----|
+| `AEFRLT` | Actual Relative End Time from First Dose | End time of sample collection | Urine/feces samples |
+| `ADOSEDUR` | Actual Duration of Treatment Dose | Dose infusion duration | IV infusions |
+| `VOLUME` | Volume Value | Collected sample volume | Excretion studies |
+| `VOLUMEU` | Volume Value Unit | Unit of VOLUME | Excretion studies |
+| `WTBL` | Weight at Baseline | Subject’s weight | Excretion studies |
+| `WTBLU` | Weight at Baseline Unit | Unit of WTBL | Excretion studies |
+| `TRTRINT` | Planned Treatment Interval | Time between doses (τ) in multiple dose studies | Multiple dosing |
+| `METABFL` | Metabolite Flag | “Y” if PARAM is a metabolite | Multi-analyte assays |
 
 ### 1.2 Data Format Example
 
@@ -123,11 +123,11 @@ necessary for NCA calculations.
   if the user selects that option or the `...DN` parameters, apart from
   other parameters that are always dose-normalized (e.g., clearance).
 
-| Variable     | Label                   | Description                                                    | CDISC Reference |
-|--------------|-------------------------|----------------------------------------------------------------|-----------------|
-| `DOSETRT` \* | Name of Treatment       | Protocol-specified study treatment                             | CDISC Standard  |
-| `ROUTE` \*   | Route of Administration | Either “intravascular” or “extravascular” (or specific routes) | C66729          |
-| `DOSEA` \*   | Actual Treatment Dose   | Actual dose amount given                                       | CDISC Standard  |
+| Variable | Label | Description | CDISC Reference |
+|----|----|----|----|
+| `DOSETRT` \* | Name of Treatment | Protocol-specified study treatment | CDISC Standard |
+| `ROUTE` \* | Route of Administration | Either “intravascular” or “extravascular” (or specific routes) | C66729 |
+| `DOSEA` \* | Actual Treatment Dose | Actual dose amount given | CDISC Standard |
 
 ------------------------------------------------------------------------
 
@@ -156,12 +156,12 @@ special cases: - If `DOSETRT` not mapped, sets `DOSETRT = PARAM` - If
 Time variables relate dose administrations to sample collection times.
 These are essential for proper interval calculations in NCA.
 
-| Variable   | Label                                         | Description                   |
-|------------|-----------------------------------------------|-------------------------------|
-| `AFRLT` \* | Actual Relative Time from Analyte First Dose  | Actual time since first dose  |
-| `ARRLT` \* | Actual Relative Time from Reference Dose      | Actual time since last dose   |
+| Variable | Label | Description |
+|----|----|----|
+| `AFRLT` \* | Actual Relative Time from Analyte First Dose | Actual time since first dose |
+| `ARRLT` \* | Actual Relative Time from Reference Dose | Actual time since last dose |
 | `NFRLT` \* | Nominal Relative Time from Analyte First Dose | Planned time since first dose |
-| `NRRLT` \* | Nominal Relative Time from Reference Dose     | Planned time since last dose  |
+| `NRRLT` \* | Nominal Relative Time from Reference Dose | Planned time since last dose |
 
 ### 2.3 Units
 
@@ -194,6 +194,7 @@ to be tracked separately
 **Example**:
 
 ``` r
+
 ADNCA$NCA1XRS <- ifelse(ADNCA$AVAL > 10000, "Concentration too high", "")
 ADNCA$NCA2XRS <- ifelse(ADNCA$ARRLT < 0, "Negative time point", "")
 ```
@@ -276,15 +277,15 @@ extravascular) - Dose duration (bolus vs infusion) - Analyte type
 (parent drug vs metabolite) - Data availability (e.g., concentration at
 dose available, pre-dose concentrations close to dose…)
 
-| Condition                                    | Imputation Method | Description                                  |
-|----------------------------------------------|-------------------|----------------------------------------------|
-| C₀ measured                                  | `NA`              | No imputation needed                         |
-| 1st dose, not IV bolus                       | `start_conc0`     | C₀ = 0                                       |
-| 1st dose, metabolite                         | `start_conc0`     | C₀ = 0                                       |
-| Later dose, not IV bolus                     | `start_predose`   | C₀ = pre-dose concentration                  |
-| Later dose, metabolite                       | `start_predose`   | C₀ = pre-dose concentration                  |
-| IV bolus, parent drug, logslope possible     | `start_logslope`  | Back-extrapolate using log-linear regression |
-| IV bolus, parent drug, logslope not possible | `start_c1`        | Use first measured concentration             |
+| Condition | Imputation Method | Description |
+|----|----|----|
+| C₀ measured | `NA` | No imputation needed |
+| 1st dose, not IV bolus | `start_conc0` | C₀ = 0 |
+| 1st dose, metabolite | `start_conc0` | C₀ = 0 |
+| Later dose, not IV bolus | `start_predose` | C₀ = pre-dose concentration |
+| Later dose, metabolite | `start_predose` | C₀ = pre-dose concentration |
+| IV bolus, parent drug, logslope possible | `start_logslope` | Back-extrapolate using log-linear regression |
+| IV bolus, parent drug, logslope not possible | `start_c1` | Use first measured concentration |
 
 **PKNCA Method**: `pk.calc.c0()` from PKNCA package
 
@@ -312,6 +313,7 @@ dose available, pre-dose concentrations close to dose…)
 **Example**:
 
 ``` r
+
 blq_rule <- list(
   first = "0",        # Set first BLQ to 0
   middle = "drop",    # Drop middle BLQ values
@@ -341,11 +343,11 @@ control how the area under the concentration-time curve is calculated.
 aNCA supports three methods for interpolating AUC between two
 concentration measurements:
 
-| Method                           | Interpolation Rules                                         | Best For                                                   |
-|----------------------------------|-------------------------------------------------------------|------------------------------------------------------------|
+| Method | Interpolation Rules | Best For |
+|----|----|----|
 | **Linear-up/log-down** (default) | Linear for rising, logarithmic for declining concentrations | Standard/exogenous substances with first-order elimination |
-| **Linear**                       | Linear trapezoidal rule for all segments                    | Endogenous substances or non-first-order elimination       |
-| **Lin-log**                      | Linear before Tmax, logarithmic after Tmax                  | Infrequently used; specific modeling scenarios             |
+| **Linear** | Linear trapezoidal rule for all segments | Endogenous substances or non-first-order elimination |
+| **Lin-log** | Linear before Tmax, logarithmic after Tmax | Infrequently used; specific modeling scenarios |
 
 **Details**: - **Linear-up/log-down**: Most commonly used in PK. Applies
 linear interpolation when concentrations increase or when either
@@ -360,11 +362,11 @@ interpolation after Tmax.
 After the last measurable concentration (Tlast), AUC can be extrapolated
 using different approaches:
 
-| Method      | Description                              | Use Case                                                                           |
-|-------------|------------------------------------------|------------------------------------------------------------------------------------|
-| **AUClast** | No extrapolation; extrapolated AUC = 0   | When full profile to negligible concentrations is available                        |
-| **AUCall**  | Linear triangle from Tlast to zero       | When Tlast is not the final measurement; interpolates missing data                 |
-| **AUCinf**  | Extrapolates to infinity using: Clast/λz | When terminal elimination is well-characterized; common for regulatory submissions |
+| Method | Description | Use Case |
+|----|----|----|
+| **AUClast** | No extrapolation; extrapolated AUC = 0 | When full profile to negligible concentrations is available |
+| **AUCall** | Linear triangle from Tlast to zero | When Tlast is not the final measurement; interpolates missing data |
+| **AUCinf** | Extrapolates to infinity using: Clast/λz | When terminal elimination is well-characterized; common for regulatory submissions |
 
 **Important Note**: - `aucinf.obs` uses **observed** Clast (last
 measured concentration) - `aucinf.pred` uses **predicted** Clast
@@ -373,13 +375,13 @@ may indicate poor terminal phase characterization
 
 #### 3.3.3 AUC Types Available
 
-| Parameter     | Description                               | Extrapolation        | Formula                     |
-|---------------|-------------------------------------------|----------------------|-----------------------------|
-| `auclast`     | AUC to last measurable concentration      | None                 | Sum of trapezoids to Tlast  |
-| `aucall`      | AUC to infinity with linear extrapolation | Linear triangle      | AUClast + triangle(Tlast→0) |
-| `aucinf.obs`  | AUC to infinity (observed Clast)          | Using Clast directly | AUClast + Clast/λz          |
-| `aucinf.pred` | AUC to infinity (predicted Clast)         | Using regression fit | AUClast + Ĉlast/λz          |
-| `aucint`      | Partial AUC over specified interval       | User-defined         | AUC(time1, time2)           |
+| Parameter | Description | Extrapolation | Formula |
+|----|----|----|----|
+| `auclast` | AUC to last measurable concentration | None | Sum of trapezoids to Tlast |
+| `aucall` | AUC to infinity with linear extrapolation | Linear triangle | AUClast + triangle(Tlast→0) |
+| `aucinf.obs` | AUC to infinity (observed Clast) | Using Clast directly | AUClast + Clast/λz |
+| `aucinf.pred` | AUC to infinity (predicted Clast) | Using regression fit | AUClast + Ĉlast/λz |
+| `aucint` | Partial AUC over specified interval | User-defined | AUC(time1, time2) |
 
 ------------------------------------------------------------------------
 
@@ -474,10 +476,10 @@ methods helps interpret results.
 
 ### 5.1 Data Object Creation
 
-| Function                                                                        | Purpose                          | aNCA Wrapper                                                                                             |
-|---------------------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------------------------------------------|
-| [`PKNCA::PKNCAconc()`](http://humanpred.github.io/pknca/reference/PKNCAconc.md) | Creates concentration object     | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
-| [`PKNCA::PKNCAdose()`](http://humanpred.github.io/pknca/reference/PKNCAdose.md) | Creates dose object              | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
+| Function | Purpose | aNCA Wrapper |
+|----|----|----|
+| [`PKNCA::PKNCAconc()`](http://humanpred.github.io/pknca/reference/PKNCAconc.md) | Creates concentration object | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
+| [`PKNCA::PKNCAdose()`](http://humanpred.github.io/pknca/reference/PKNCAdose.md) | Creates dose object | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
 | [`PKNCA::PKNCAdata()`](http://humanpred.github.io/pknca/reference/PKNCAdata.md) | Combines conc + dose + intervals | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
 
 ### 5.2 NCA Calculations
@@ -498,6 +500,7 @@ Reference](https://billdenney.github.io/pknca/reference/index.html)
 ### 5.3 NCA Execution
 
 ``` r
+
 # Simplified workflow
 pknca_data <- PKNCAdata(conc, dose, intervals)
 results <- pk.nca(pknca_data)
@@ -712,21 +715,21 @@ AUCinf, clearance) will inherit those flags.
 
 ## 10. Glossary
 
-| Term               | Definition                                                     |
-|--------------------|----------------------------------------------------------------|
-| **ADNCA**          | Analysis Dataset for Non-Compartmental Analysis (CDISC format) |
-| **ADPP**           | Analysis Dataset for Pharmacokinetic Parameters                |
-| **AUC**            | Area Under the Curve - measure of drug exposure                |
-| **BLQ**            | Below Limit of Quantification                                  |
-| **CDISC**          | Clinical Data Interchange Standards Consortium                 |
-| **Cmax**           | Maximum observed concentration                                 |
-| **Half-life (t½)** | Time for concentration to decrease by 50%                      |
-| **NCA**            | Non-Compartmental Analysis                                     |
-| **PKNCA**          | R package for pharmacokinetic non-compartmental analysis       |
-| **PP**             | Pharmacokinetic Parameters domain                              |
-| **TLG**            | Tables, Listings, and Graphs                                   |
-| **Tmax**           | Time of maximum concentration                                  |
-| **λz**             | Terminal elimination rate constant                             |
+| Term | Definition |
+|----|----|
+| **ADNCA** | Analysis Dataset for Non-Compartmental Analysis (CDISC format) |
+| **ADPP** | Analysis Dataset for Pharmacokinetic Parameters |
+| **AUC** | Area Under the Curve - measure of drug exposure |
+| **BLQ** | Below Limit of Quantification |
+| **CDISC** | Clinical Data Interchange Standards Consortium |
+| **Cmax** | Maximum observed concentration |
+| **Half-life (t½)** | Time for concentration to decrease by 50% |
+| **NCA** | Non-Compartmental Analysis |
+| **PKNCA** | R package for pharmacokinetic non-compartmental analysis |
+| **PP** | Pharmacokinetic Parameters domain |
+| **TLG** | Tables, Listings, and Graphs |
+| **Tmax** | Time of maximum concentration |
+| **λz** | Terminal elimination rate constant |
 
 ------------------------------------------------------------------------
 
