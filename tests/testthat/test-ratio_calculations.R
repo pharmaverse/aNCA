@@ -440,8 +440,9 @@ describe("calculate_ratios", {
     expect_false(grepl("\\(mean\\)", s8_ratio$PPTESTCD))
 
     # Subjects 1,2,7: aggregated ratio (EX / mean of all IV, with mean suffix)
+    # Subject 2 has 2 ATPTREFs (both EX), so 4 rows total
     other_ratios <- ratios %>% filter(USUBJID != 8)
-    expect_equal(nrow(other_ratios), 3)
+    expect_equal(nrow(other_ratios), 4)
     expect_true(all(grepl("\\(mean\\)", other_ratios$PPTESTCD)))
   })
 })
