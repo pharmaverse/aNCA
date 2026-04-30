@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are now normalized to `NULL` when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (#1262)
+
 ## Features added
 
 * Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
