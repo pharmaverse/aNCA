@@ -375,68 +375,13 @@ calculate_ratio_app <- function(
   test_parameter <- test_parsed$base
   ref_parameter <- ref_parsed$base
 
-  reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
-  match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
-
-  ########### This is very App specific ###############
-  atptref_exists <- "ATPTREF" %in% reference_colname
-
-  # Remove start/end from match_cols when they cannot serve as reliable join keys:
-  # - ATPTREF ratios: test and ref have different intervals by definition
-  # - Aggregating across subjects: each subject has unique sample times
-  # - Interval parameters: different start/end values per parameter
-  if (atptref_exists || aggregate_subject != "no" ||
-      test_parsed$is_interval || ref_parsed$is_interval) {
-    match_cols <- setdiff(match_cols, c("start", "end"))
-  }
-  #####################################################
-
-  match_cols <- switch(aggregate_subject,
-    "yes" = {
-      list(setdiff(match_cols, "USUBJID"))
-    },
-    "no" = {
-      if (!"USUBJID" %in% match_cols) {
-        stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
-      }
-      list(match_cols)
-    },
-    "if-needed" = {
-      has_usubjid <- "USUBJID" %in% match_cols
-      match_cols <- list(match_cols)
-      if (has_usubjid) {
-        # Perform both individual & aggregated calculations, then eliminate duplicates
-        match_cols <- c(match_cols, list(setdiff(match_cols[[1]], "USUBJID")))
-      }
-      match_cols
-    }
+  match_cols <- .build_ratio_match_cols(
+    res, ref_group, aggregate_subject, test_parsed, ref_parsed
   )
 
-  if (test_group == "(all other levels)") {
-    test_groups <- NULL
-  } else {
-    num_colname <- gsub("(.*): (.*)", "\\1", test_group)
-    num_value <- gsub("(.*): (.*)", "\\2", test_group)
-    test_groups <- data.frame(
-      matrix(
-        num_value,
-        nrow = 1,
-        ncol = length(num_colname),
-        dimnames = list(NULL, num_colname)
-      )
-    )
-  }
-
-  reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
-  reference_value <- gsub("(.*): (.*)", "\\2", ref_group)
-  ref_groups <- data.frame(
-    matrix(
-      reference_value,
-      nrow = 1,
-      ncol = length(reference_colname),
-      dimnames = list(NULL, reference_colname)
-    )
-  )
+  parsed_groups <- .parse_ratio_groups(ref_group, test_group)
+  test_groups <- parsed_groups$test_groups
+  ref_groups <- parsed_groups$ref_groups
 
   ratio_list <- lapply(seq_along(match_cols), function(ix) {
     calculate_ratios(
@@ -457,18 +402,70 @@ calculate_ratio_app <- function(
     return(all_ratios)
   }
 
-  # If aggregate_subject = 'if-needed', prefer individual over aggregated results.
-  # Strip " (mean)" suffix so individual and aggregated rows for the same subject
-  # are treated as duplicates, with the individual result kept (it comes first).
+  # For if-needed: individual results (first in ratio_list) are preferred over
+  # aggregated ones. Dedup by subject + group without PPTESTCD so that individual
+  # (RACMAX) and aggregated (RACMAX (mean)) rows are treated as duplicates.
   all_ratios %>%
-    mutate(.base_pptestcd = gsub(" \\(mean\\)$", "", PPTESTCD)) %>%
     distinct(
-      across(
-        all_of(c(".base_pptestcd", group_vars(res$data), "end"))
-      ),
+      across(all_of(c(group_vars(res$data), "end"))),
       .keep_all = TRUE
-    ) %>%
-    select(-".base_pptestcd")
+    )
+}
+
+#' Build match_cols for ratio calculation based on grouping, aggregation, and interval settings
+#' @noRd
+.build_ratio_match_cols <- function(res, ref_group, aggregate_subject, test_parsed, ref_parsed) {
+  reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
+  match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
+
+  # Remove start/end when they cannot serve as reliable join keys
+  atptref_exists <- "ATPTREF" %in% reference_colname
+  if (atptref_exists || aggregate_subject != "no" ||
+      test_parsed$is_interval || ref_parsed$is_interval) {
+    match_cols <- setdiff(match_cols, c("start", "end"))
+  }
+
+  switch(aggregate_subject,
+    "yes" = list(setdiff(match_cols, "USUBJID")),
+    "no" = {
+      if (!"USUBJID" %in% match_cols) {
+        stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
+      }
+      list(match_cols)
+    },
+    "if-needed" = {
+      has_usubjid <- "USUBJID" %in% match_cols
+      match_cols <- list(match_cols)
+      if (has_usubjid) {
+        match_cols <- c(match_cols, list(setdiff(match_cols[[1]], "USUBJID")))
+      }
+      match_cols
+    }
+  )
+}
+
+#' Parse ref_group and test_group strings into data frames for ratio merging
+#' @noRd
+.parse_ratio_groups <- function(ref_group, test_group) {
+  ref_colname <- gsub("(.*): (.*)", "\\1", ref_group)
+  ref_value <- gsub("(.*): (.*)", "\\2", ref_group)
+  ref_groups <- data.frame(
+    matrix(ref_value, nrow = 1, ncol = length(ref_colname),
+           dimnames = list(NULL, ref_colname))
+  )
+
+  if (test_group == "(all other levels)") {
+    test_groups <- NULL
+  } else {
+    test_colname <- gsub("(.*): (.*)", "\\1", test_group)
+    test_value <- gsub("(.*): (.*)", "\\2", test_group)
+    test_groups <- data.frame(
+      matrix(test_value, nrow = 1, ncol = length(test_colname),
+             dimnames = list(NULL, test_colname))
+    )
+  }
+
+  list(test_groups = test_groups, ref_groups = ref_groups)
 }
 
 #' Filter result data to keep only the specific interval rows for interval parameters.
