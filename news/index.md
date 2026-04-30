@@ -187,6 +187,10 @@
 
 ### Bugs fixed
 
+- Fixed ratio calculations with `Aggregate Subject = yes` or `if-needed`
+  not aggregating reference values, and ratio parameter columns (FABS,
+  FREL, etc.) not appearing in NCA Results
+  ([\#1273](https://github.com/pharmaverse/aNCA/issues/1273))
 - Last dose interval end time now extends to the last observed sample
   instead of being cut off at TRTRINT (tau), ensuring all collected data
   points are included in NCA calculations
