@@ -185,7 +185,7 @@ describe("export_cdisc", {
       # PPANMETH should be set for consolidated rows
       expect_true("PPANMETH" %in% names(result$pp))
       expect_true(all(
-        result$pp$PPANMETH[int_rows] == "DOSE-AWARE INTERPOLATION"
+        result$pp$PPANMETH[int_rows] == "Interpolation truncated at next dose time"
       ))
 
       # PPSTINT/PPENINT should still be derived correctly
