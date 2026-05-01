@@ -45,7 +45,11 @@ ERTMAX
 EV
 EVID
 EXSTDTC
+EXTRAVASCULAR
 Extravascular
+FABS
+FREL
+INTRAVASCULAR
 Kezia
 Kobana
 LAMZ
@@ -56,6 +60,7 @@ METABFL
 MRTMDO
 MRTMDP
 MSCW
+Metab
 NCA
 NCAwXRS
 NFRLT
@@ -73,6 +78,7 @@ PKNCAdose
 PKNCAresult
 PKNCAresults
 PKSUM
+PPSUM
 PPORRES
 PPSTRES
 PPSTRESU
@@ -125,9 +131,11 @@ VSSMDO
 VSSMDP
 WTBL
 WTBLU
+Walkthrough
 XPT
 aNCA's
 adnca
+amountu
 analysing
 analyte
 analytes
@@ -139,6 +147,8 @@ cdisc
 cmax
 colour
 conc
+config
+customizable
 customizations
 dataformat
 dateTime
@@ -184,6 +194,7 @@ pred
 px
 qmd
 rds
+readxl
 renderable
 reupload
 roadmap
@@ -203,6 +214,8 @@ ug
 unmapped
 utilise
 visualizable
+writexl
+xlsx
 yaml
 µg
 Ĉlast
