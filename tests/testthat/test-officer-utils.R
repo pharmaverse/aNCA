@@ -203,7 +203,8 @@ describe(".add_pptx_dose_norm_slide", {
     )
     in_plot_only <- function(id) id == "dose_norm_plot"
     result <- .add_pptx_dose_norm_slide(pptx, group_data, in_plot_only)
-    expect_equal(length(result), initial_count + 1L)
+    expect_equal(length(result$pptx), initial_count + 1L)
+    expect_equal(result$n_slides, 1L)
   })
 
   it("adds stats-only slide when dose_norm_statistics selected", {
@@ -217,7 +218,8 @@ describe(".add_pptx_dose_norm_slide", {
     )
     in_stats_only <- function(id) id == "dose_norm_statistics"
     result <- .add_pptx_dose_norm_slide(pptx, group_data, in_stats_only)
-    expect_equal(length(result), initial_count + 1L)
+    expect_equal(length(result$pptx), initial_count + 1L)
+    expect_equal(result$n_slides, 1L)
   })
 
   it("adds combined slide when both sections selected", {
@@ -231,7 +233,8 @@ describe(".add_pptx_dose_norm_slide", {
     )
     in_both <- function(id) id %in% c("dose_norm_plot", "dose_norm_statistics")
     result <- .add_pptx_dose_norm_slide(pptx, group_data, in_both)
-    expect_equal(length(result), initial_count + 1L)
+    expect_equal(length(result$pptx), initial_count + 1L)
+    expect_equal(result$n_slides, 1L)
   })
 
   it("skips when neither section is selected", {
@@ -245,7 +248,8 @@ describe(".add_pptx_dose_norm_slide", {
     )
     in_none <- function(id) FALSE
     result <- .add_pptx_dose_norm_slide(pptx, group_data, in_none)
-    expect_equal(length(result), initial_count)
+    expect_equal(length(result$pptx), initial_count)
+    expect_equal(result$n_slides, 0L)
   })
 
   it("skips when dose_norm_meanplot is NULL", {
@@ -257,6 +261,7 @@ describe(".add_pptx_dose_norm_slide", {
       dose_norm_statistics = data.frame(DOSEA = "10mg", Statistic = "Mean")
     )
     result <- .add_pptx_dose_norm_slide(pptx, group_data, in_all)
-    expect_equal(length(result), initial_count)
+    expect_equal(length(result$pptx), initial_count)
+    expect_equal(result$n_slides, 0L)
   })
 })

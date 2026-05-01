@@ -146,9 +146,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
                                      in_sections) {
   show_plot  <- in_sections("dose_norm_plot")
   show_stats <- in_sections("dose_norm_statistics")
-  has_dn_stats <- show_stats &&
-    !is.null(res_dose_slides[[i]]$dose_norm_statistics) &&
-    ncol(res_dose_slides[[i]]$dose_norm_statistics) > 2
+  has_dn_stats <- show_stats && .has_dose_norm_data(res_dose_slides[[i]]$dose_norm_statistics)
   add_qmd_sl_plottabletable(
     quarto_path = quarto_path,
     df1 = if (has_dn_stats) {
