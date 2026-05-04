@@ -53,6 +53,7 @@ jobs:
       - name: Install R Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          install-sysreqs: false
           extra-packages: |
             local::.
             any::devtools
