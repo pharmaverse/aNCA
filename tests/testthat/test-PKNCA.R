@@ -474,6 +474,87 @@ describe("PKNCA_update_data_object", {
     expect_true(all(!updated_data$intervals$cmax))
   })
 
+  it("returns the same object type (PKNCAdata) with the exclude_half.life column", {
+    rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Exclusion",
+      RANGE = "1:4",
+      REASON = "Manual Outlier",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = rules
+    )
+    expect_s3_class(updated, "PKNCAdata")
+    expect_true(any(updated$conc$data$exclude_half.life))
+  })
+  it("flags exclude_half.life on matching points via hl_adj_rules Exclusion", {
+    excl_rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Exclusion",
+      RANGE = "3:3",
+      REASON = "Outlier",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = excl_rules
+    )
+    conc <- updated$conc$data
+    at_t3 <- conc$AFRLT == 3
+    # t=3 should be flagged for exclusion with the specified reason
+    expect_true(all(conc$exclude_half.life[at_t3]))
+    expect_true(all(grepl("Outlier", conc$REASON[at_t3])))
+    # Other points should remain unflagged
+    expect_false(any(conc$exclude_half.life[!at_t3]))
+  })
+
+  it("flags include_half.life on matching points via hl_adj_rules Selection", {
+    # Force-include t=2 to t=4 in the half-life regression
+    sel_rules <- data.frame(
+      STUDYID = "STUDY001",
+      USUBJID = "SUBJ001",
+      PARAM = "AnalyteA",
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      TYPE = "Selection",
+      RANGE = "2:4",
+      REASON = "Manual selection",
+      stringsAsFactors = FALSE
+    )
+    updated <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = "lin up log down",
+      selected_analytes = unique(simple_data$PARAM),
+      selected_profile = unique(simple_data$ATPTREF),
+      selected_pcspec = unique(simple_data$PCSPEC),
+      hl_adj_rules = sel_rules
+    )
+    conc <- updated$conc$data
+    in_range <- conc$AFRLT >= 2 & conc$AFRLT <= 4
+    # t=2, t=3, t=4 should be flagged for inclusion with the specified reason
+    expect_true(all(conc$include_half.life[in_range]))
+    expect_true(all(grepl("Manual selection", conc$REASON[in_range])))
+    # Points outside the range should remain unflagged
+    expect_true(all(is.na(conc$include_half.life[!in_range])))
+  })
 })
 
 
@@ -492,6 +573,34 @@ describe("PKNCA_calculate_nca", {
 
     # Check that only two items have been added to the list
     expect_equal(length(colnames(nca_results$result)), 15)
+  })
+})
+
+describe("remove_pp_not_requested", {
+  it("returns a PKNCAresults object without parameters not explicitly defined in intervals", {
+    res <- FIXTURE_PKNCA_RES
+
+    # Indirect parameters should be present before filtering
+    indirect_params <- c("LAMZ", "LAMZLL", "LAMZNPT", "R2ADJ", "SPANR")
+    params_before <- unique(res$result$PPTESTCD)
+    has_indirect <- intersect(indirect_params, params_before)
+    expect_true(length(has_indirect) > 0)
+
+    result <- remove_pp_not_requested(res)
+
+    # Requested params should still be present
+    requested_cdisc <- c("LAMZHL", "CMAX", "AUCLST", "AUCIFOB")
+    params_after <- unique(result$result$PPTESTCD)
+    for (p in requested_cdisc) {
+      if (p %in% params_before) {
+        expect_true(p %in% params_after, info = paste(p, "should be kept"))
+      }
+    }
+
+    # Indirect params should be removed
+    for (p in has_indirect) {
+      expect_false(p %in% params_after, info = paste(p, "should be removed"))
+    }
   })
 })
 
@@ -876,5 +985,18 @@ describe("add_exclusion_reasons", {
 
     # No TLG exclusion (exclude_tlg not set)
     expect_equal(result$conc$data$PKSUM1F[5], "")
+  })
+})
+
+describe("remove_pp_not_requested", {
+  it("initializes impute column when missing and completes without error", {
+    pknca_res <- FIXTURE_PKNCA_RES
+    pknca_res$data$intervals <- pknca_res$data$intervals[,
+      !names(pknca_res$data$intervals) %in% "impute"
+    ]
+    expect_false("impute" %in% names(pknca_res$data$intervals))
+
+    result <- remove_pp_not_requested(pknca_res)
+    expect_true("impute" %in% names(result$data$intervals))
   })
 })

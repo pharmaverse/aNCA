@@ -536,7 +536,8 @@ prepare_export_files <- function(target_dir,
     mapping = session$userData$mapping,
     slope_rules = session$userData$slope_rules(),
     filters = session$userData$applied_filters,
-    time_duplicate_keys = session$userData$time_duplicate_keys
+    time_duplicate_keys = session$userData$time_duplicate_keys,
+    nca_ran = isTRUE(session$userData$nca_ran)
   )
 
   dataset_name <- session$userData$dataset_filename %||% ""
@@ -611,32 +612,43 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_session_info <- function(target_dir) {
-  si <- utils::sessionInfo()
-  lines <- c(
-    paste("R version:", si$R.version$version.string),
-    paste("Platform: ", si$platform),
-    paste("Running under:", si$running),
-    "",
-    "aNCA and attached packages:",
-    ""
-  )
-
-  # Collect attached packages (base + other) with versions, sorted alphabetically
-
-  attached <- c(
-    vapply(si$otherPkgs, function(p) paste0("  ", p$Package, " ", p$Version), ""),
-    vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
-  )
-  lines <- c(lines, sort(attached))
-
-  # Loaded-only (namespace) packages
-  if (length(si$loadedOnly) > 0) {
-    loaded <- vapply(
-      si$loadedOnly,
-      function(p) paste0("  ", p$Package, " ", p$Version), ""
+  lines <- tryCatch({
+    si <- utils::sessionInfo()
+    hdr <- c(
+      paste("R version:", si$R.version$version.string),
+      paste("Platform: ", si$platform),
+      paste("Running under:", si$running),
+      "",
+      "aNCA and attached packages:",
+      ""
     )
-    lines <- c(lines, "", "Loaded via namespace (not attached):", "", sort(loaded))
-  }
+
+    # Collect attached packages (base + other) with versions, sorted alphabetically
+    attached <- c(
+      vapply(si$otherPkgs, function(p) {
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
+      }, ""),
+      vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
+    )
+    hdr <- c(hdr, sort(attached))
+
+    # Loaded-only (namespace) packages
+    if (length(si$loadedOnly) > 0) {
+      loaded <- vapply(si$loadedOnly, function(p) {
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
+      }, "")
+      hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
+    }
+    hdr
+  }, error = function(e) {
+    c("Session info unavailable:", e$message)
+  })
 
   writeLines(lines, file.path(target_dir, "session_info.txt"))
 }
