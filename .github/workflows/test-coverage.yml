@@ -6,37 +6,20 @@ on:
       - R/**
       - tests/**
   workflow_dispatch:
-    
+
 name: Code Coverage
 
 jobs:
   coverage:
     name: Test Coverage
     runs-on: ubuntu-latest
-    container:
-      image: "ghcr.io/pharmaverse/admiralci-release:latest"
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     outputs:
       coverage-percent: ${{ steps.set-coverage-percentage.outputs.coverage-percentage }}
     steps:
-      ##################### BEGIN boilerplate steps #####################
-      - name: Get branch names
-        id: branch-name
-        uses: tj-actions/branch-names@v8
-
-      - name: Checkout repo (PR) 🛎
-        uses: actions/checkout@v4.2.2
-        if: github.event_name == 'pull_request'
-        with:
-          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
-          repository: ${{ github.event.repository }}
-
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
-        if: github.event_name != 'pull_request'
-        with:
-          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
 
       - name: Setup Pandoc
         uses: r-lib/actions/setup-pandoc@v2
@@ -49,9 +32,9 @@ jobs:
       - name: Install R Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          needs: tests
-          extra-packages: local::.
-      ##################### END boilerplate steps #####################
+          extra-packages: |
+            local::.
+            any::covr
 
       - name: Run coverage 👟
         run: |
