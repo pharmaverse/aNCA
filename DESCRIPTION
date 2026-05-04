@@ -1,6 +1,10 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
+<<<<<<< 1272-bug/int-parameters-settings-upload
 Version: 0.1.0.9163
+=======
+Version: 0.1.0.9164
+>>>>>>> main
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
