@@ -2,6 +2,8 @@
 
 ## Features added
 
+* Ratio Calculations UI replaced with formula-style cards showing `PPTESTCD = Test [Group] / Ref [Group] × Factor` layout (#1250)
+* Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
 * Partial Interval Calculations table now starts empty by default and includes a `(-) Remove Row/s` button matching the Ratio Calculations style (#1249)
 * Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#1225)
 * Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
@@ -62,6 +64,7 @@
 
 
 ## Bugs fixed
+* Fixed ratio calculations with `Aggregate Subject = yes` or `if-needed` not aggregating reference values, and ratio parameter columns (FABS, FREL, etc.) not appearing in NCA Results (#1273)
 * Last dose interval end time now extends to the last observed sample instead of being cut off at TRTRINT (tau), ensuring all collected data points are included in NCA calculations (#1235)
 * Fixed NA `PPSTRESU` handling across NCA results: descriptive statistics no longer crash when a parameter group has all-NA units, and manual interval parameters (e.g., RCAMINT) no longer get `NA` appended to their column names (#1216)
 * `get_settings_code()` now reads mapping, filters, ratio table, and units from the settings YAML instead of using hardcoded defaults. Legacy YAML files without these fields still work via fallback. The `mapping` parameter has been removed (#1189)
