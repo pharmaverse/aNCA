@@ -1,6 +1,7 @@
 #' Creates a `PKNCA::PKNCAdata` object.
 #'
 #' @details
+#' Hello World
 #' This function creates a standard PKNCAdata object from raw or pre-processed
 #' ADNCA data.
 #'
