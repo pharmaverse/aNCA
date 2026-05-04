@@ -331,6 +331,24 @@ remove_impute_method <- function(impute_vals, target_impute) {
   ifelse(impute_vals == "", NA_character_, impute_vals)
 }
 
+#' Check whether any interval rows have at least one requested parameter
+#'
+#' Inspects the logical parameter columns in an intervals data frame and returns
+#' `TRUE` if any row has at least one of the specified parameters set to `TRUE`.
+#'
+#' @param intervals A data frame of PKNCA intervals.
+#' @param params Character vector of parameter column names to check.
+#' @returns A single logical value.
+#' @keywords internal
+has_requested_params <- function(intervals, params) {
+  present_params <- intersect(params, names(intervals))
+  if (length(present_params) == 0) {
+    return(FALSE)
+  }
+  param_data <- intervals[, present_params, drop = FALSE]
+  any(rowSums(replace(param_data, is.na(param_data), FALSE)) > 0)
+}
+
 #' Identify target rows based on groups, parameters, and impute method
 #'
 #' This is an internal helper function used to identify the target rows in the data frame
