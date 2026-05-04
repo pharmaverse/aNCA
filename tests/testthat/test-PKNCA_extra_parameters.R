@@ -70,6 +70,10 @@ test_that("generate_missing_messages", {
   )
 })
 
+test_that("CI-tests fails when there is a failing test", {
+  expect_true(FALSE)
+})
+
 ###################################################################
 
 test_that("pk.calc.volpk", {
