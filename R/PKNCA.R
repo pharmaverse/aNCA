@@ -1,7 +1,6 @@
 #' Creates a `PKNCA::PKNCAdata` object.
 #'
 #' @details
-#' Hello World
 #' This function creates a standard PKNCAdata object from raw or pre-processed
 #' ADNCA data.
 #'
@@ -982,4 +981,3 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   }
   pknca_data
 }
-# print("Hello World")
