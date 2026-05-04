@@ -62,7 +62,7 @@ by study type (forwarded to \code{\link[=update_main_intervals]{update_main_inte
 (forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}}).}
 
 \item{custom_units_table}{Optional data frame with PPSTRESU overrides.
-When provided, applied via \code{\link[dplyr:rows_update]{dplyr::rows_update()}} on the PKNCAdata units table.}
+When provided, applied via \code{\link[dplyr:rows]{dplyr::rows_update()}} on the PKNCAdata units table.}
 }
 \value{
 A fully configured \code{PKNCAdata} object.

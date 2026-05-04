@@ -50,7 +50,7 @@ jobs:
           install-sysreqs: false
           extra-packages: |
             local::.
-            any::roxygen2
+            roxygen2@7.3.3
 
       - name: Generate man pages
         run: roxygen2::roxygenize('.', roclets = c('rd', 'collate', 'namespace'))
