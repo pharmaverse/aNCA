@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9165</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9166</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,8 +112,8 @@
 <h3 id="key-constraints">Key constraints<a class="anchor" aria-label="anchor" href="#key-constraints"></a></h3>
 <ul><li>No <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> or <code><a href="https://rdrr.io/r/base/library.html" class="external-link">require()</a></code> in package code</li>
 <li>All exported functions must have roxygen2 docs (<code>@param</code>, <code>@returns</code>, <code>@export</code>)</li>
-<li>Run <code>devtools::document()</code> after modifying roxygen comments</li>
-<li>Run <code>devtools::test()</code> before committing</li>
+<li>Run <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> after modifying roxygen comments</li>
+<li>Run <code><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">devtools::test()</a></code> before committing</li>
 </ul></div>
 <div class="section level3">
 <h3 id="file-naming">File naming<a class="anchor" aria-label="anchor" href="#file-naming"></a></h3>
@@ -136,7 +136,7 @@
 <strong>Imports packages</strong> (listed in <code>DESCRIPTION</code> Imports): use <code>@importFrom pkg fun</code> in the function’s roxygen docstring and call <code>fun()</code> directly in code. Do not use <code>pkg::fun()</code> for Imports packages.</li>
 <li>
 <strong>Suggests packages</strong> (listed in <code>DESCRIPTION</code> Suggests): use <code>pkg::fun()</code> inline. Do not use <code>@importFrom</code> for Suggests packages.</li>
-</ul><p>When adding or changing <code>@importFrom</code> tags, agents must also manually update <code>NAMESPACE</code> (add/remove the corresponding <code>importFrom()</code> directive) and verify the package is listed in <code>DESCRIPTION</code> Imports. Developers can run <code>devtools::document()</code> to do this automatically.</p>
+</ul><p>When adding or changing <code>@importFrom</code> tags, agents must also manually update <code>NAMESPACE</code> (add/remove the corresponding <code>importFrom()</code> directive) and verify the package is listed in <code>DESCRIPTION</code> Imports. Developers can run <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> to do this automatically.</p>
 </div>
 <div class="section level3">
 <h3 id="documentation-roxygen2">Documentation (roxygen2)<a class="anchor" aria-label="anchor" href="#documentation-roxygen2"></a></h3>
@@ -267,7 +267,7 @@
 </ul></div>
 <div class="section level2">
 <h2 id="working-with-code">Working with Code<a class="anchor" aria-label="anchor" href="#working-with-code"></a></h2>
-<p>Before committing: - <code>devtools::document()</code> — regenerate man pages and NAMESPACE - <code><a href="https://lintr.r-lib.org/reference/lint.html" class="external-link">lintr::lint_package()</a></code> — check code style - <code>devtools::test()</code> — run tests - <code>devtools::check()</code> — full package check</p>
+<p>Before committing: - <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> — regenerate man pages and NAMESPACE - <code><a href="https://lintr.r-lib.org/reference/lint.html" class="external-link">lintr::lint_package()</a></code> — check code style - <code><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">devtools::test()</a></code> — run tests - <code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> — full package check</p>
 </div>
 <div class="section level2">
 <h2 id="issues">Issues<a class="anchor" aria-label="anchor" href="#issues"></a></h2>
@@ -294,7 +294,7 @@
 <li>Do not edit <code>man/</code> or <code>NAMESPACE</code> files manually</li>
 <li>Do not add unused globalVariables to <code>R/zzz.R</code>
 </li>
-<li>Do not push without running <code>devtools::document()</code> first</li>
+<li>Do not push without running <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> first</li>
 <li>Do not skip tests or lintr checks</li>
 <li>Do not assume R is available in dev container (it may not be)</li>
 <li>Do not edit <code>main.css</code> without updating the corresponding <code>.scss</code> source</li>
