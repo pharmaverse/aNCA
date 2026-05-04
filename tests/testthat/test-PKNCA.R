@@ -987,3 +987,16 @@ describe("add_exclusion_reasons", {
     expect_equal(result$conc$data$PKSUM1F[5], "")
   })
 })
+
+describe("remove_pp_not_requested", {
+  it("initializes impute column when missing and completes without error", {
+    pknca_res <- FIXTURE_PKNCA_RES
+    pknca_res$data$intervals <- pknca_res$data$intervals[,
+      !names(pknca_res$data$intervals) %in% "impute"
+    ]
+    expect_false("impute" %in% names(pknca_res$data$intervals))
+
+    result <- remove_pp_not_requested(pknca_res)
+    expect_true("impute" %in% names(result$data$intervals))
+  })
+})

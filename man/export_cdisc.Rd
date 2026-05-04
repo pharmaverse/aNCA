@@ -7,7 +7,10 @@
 export_cdisc(res_nca, grouping_vars = character(0), flag_rules = NULL)
 }
 \arguments{
-\item{res_nca}{Object with results of the NCA analysis.}
+\item{res_nca}{Object with results of the NCA analysis. If
+\code{res_nca$result} contains a \code{.pp_excl} column (logical), excluded rows
+are merged into the \code{exclude} column so they appear in \code{PPSUMFL}/\code{PPSUMRSN}.
+If \code{.pp_excl_reason} (character) is also present, it populates \code{PPSUMRSN}.}
 
 \item{grouping_vars}{Character vector of non-standard grouping variable names to include
 as additional columns in ADNCA, ADPP, and PP outputs. Defaults to \code{character(0)}.}
