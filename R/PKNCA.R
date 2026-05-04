@@ -892,6 +892,12 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
 #' @export
 remove_pp_not_requested <- function(pknca_res) {
   params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+
+  # If the impute column doesn't exist, initialize it so the group_by exclusion works
+  if (!"impute" %in% names(pknca_res$data$intervals)) {
+    pknca_res$data$intervals$impute <- NA_character_
+  }
+
   # Reshape intervals, filter
   params_not_requested <- pknca_res$data$intervals %>%
     pivot_longer(
