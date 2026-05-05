@@ -480,7 +480,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           blq_strategy = data_imputation$blq_strategy(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
-        int_parameters = int_parameters(),
+        int_parameters = if (nrow(int_parameters()) > 0) int_parameters() else NULL,
         flags = list(
           R2ADJ = list(
             is.checked = input$R2ADJ_rule,
