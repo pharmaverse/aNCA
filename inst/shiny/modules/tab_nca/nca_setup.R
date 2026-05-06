@@ -71,14 +71,22 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     )
 
     # Lightweight filtered data for parameter selection — only depends on
-    # analyte/pcspec, not on method, slopes, flags, or exclusions.
+    # analyte/pcspec/profile, not on method, slopes, flags, or exclusions.
     # Filters conc$data directly instead of building a full PKNCA data object.
     param_selection_data <- reactive({
       req(adnca_data(), settings_output$analyte(), settings_output$pcspec())
       log_trace("Updating parameter selection data.")
 
       pknca_data <- adnca_data()
+
+      # Preserve max DOSNOA per dose group before filtering by profile,
+      # so detect_study_types still identifies multi-dose studies correctly
+      # even when TRTRINT is NA.
+      dose_groups <- group_vars(pknca_data$dose)
       pknca_data$conc$data <- pknca_data$conc$data %>%
+        dplyr::group_by(dplyr::across(dplyr::all_of(dose_groups))) %>%
+        dplyr::mutate(DOSNOA = max(DOSNOA, na.rm = TRUE)) %>%
+        dplyr::ungroup() %>%
         dplyr::filter(
           PARAM %in% settings_output$analyte(),
           PCSPEC %in% settings_output$pcspec(),
