@@ -60,17 +60,14 @@ jobs:
 
       - name: Check outputs are up to date
         run: |
-          # .rda files are excluded because R's save()/usethis::use_data()
-          # serialization is not deterministic across R versions and
-          # platforms — identical data can produce different binary output.
-          git status -s -- ':!data/*.rda'
-          if [[ -n $(git status -s -- ':!data/*.rda') ]]; then
+          git status -s
+          if [[ -n $(git status -s) ]]; then
             echo "::error::data-raw outputs are stale. Run 'Rscript data-raw/rebuild.R' and commit the results."
             echo ""
             echo "The following files differ:"
-            git diff --stat -- ':!data/*.rda'
+            git diff --stat
             echo ""
-            git diff -- ':!data/*.rda'
+            git diff
             exit 1
           else
             echo "data-raw outputs are up to date."
