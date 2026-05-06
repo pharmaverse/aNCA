@@ -7,6 +7,10 @@
 * Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
 * Partial Interval Calculations table now starts empty by default and includes a `(-) Remove Row/s` button matching the Ratio Calculations style (#1249)
 * Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#1225)
+* Added dose-normalised slides to the PPT/QMD export. Each group now includes an optional
+  "Dose-Normalized Plots" summary slide (dose-normalised mean plot + parameter table) and
+  an optional "Dose-Normalized PK Parameters" individual slide. Both are controlled via the
+  Customize Slides modal and default to CMAXD, AUCLSTD, and AUCIFOD (#1054).
 * Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)

@@ -126,6 +126,8 @@ format_to_xpt_compatible <- function(data) {
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
 #' @param boxplot_parameters Character vector of parameters to use for boxplots.
+#' @param dose_norm_parameters Character vector of dose-normalized parameter codes to include
+#'   (default: `c("CMAXD", "AUCLSTD", "AUCIFOD")`).
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
 #'
@@ -139,6 +141,7 @@ get_dose_esc_results <- function(
   summary_stats_parameters = stats_parameters,
   boxplot_parameters = c("AUCIFO"),
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  dose_norm_parameters = c("CMAXD", "AUCLSTD", "AUCIFOD"),
   labels_df = metadata_nca_variables
 ) {
   # Define column names
@@ -183,18 +186,39 @@ get_dose_esc_results <- function(
       sd_max = TRUE
     )
 
+    dose_norm_meanplot_i <- exploration_meanplot(
+      pknca_data = o_nca_i$data,
+      color_by = group_by_vars,
+      facet_by = facet_vars,
+      filtering_list = list(
+        PARAM = unique(d_conc_i[[analyte_col]]),
+        PCSPEC = unique(d_conc_i[[pcspec_col]]),
+        ATPTREF = unique(d_conc_i[[profile_col]])
+      ),
+      ylog_scale = FALSE,
+      sd_max = TRUE,
+      line_type = "dose-normalized"
+    )
+
     # TODO: Filter out excluded records (where `exclude` is populated) before
     # calculating summary statistics, consistent with descriptive_statistics.R
-    stats_i <- calculate_summary_stats(
+    all_stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
     ) %>%
-      filter(
-        Statistic %in% statistics
-      ) %>%
+      filter(Statistic %in% statistics)
+
+    stats_i <- all_stats_i %>%
       select(
         any_of(c(facet_vars, "Statistic")),
         any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% summary_stats_parameters])
+      ) %>%
+      unique()
+
+    dose_norm_stats_i <- all_stats_i %>%
+      select(
+        any_of(c(facet_vars, "Statistic")),
+        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% dose_norm_parameters])
       ) %>%
       unique()
 
@@ -264,7 +288,9 @@ get_dose_esc_results <- function(
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
+      dose_norm_meanplot = dose_norm_meanplot_i,
       statistics = stats_i,
+      dose_norm_statistics = dose_norm_stats_i,
       boxplot = boxplots_i,
       info = info_i,
       ind_params = ind_params,
@@ -454,6 +480,11 @@ prepare_export_files <- function(target_dir,
   boxplot_parameters       <- slide_config$boxplot_parameters
   if (length(boxplot_parameters) == 0) boxplot_parameters <- c("CMAX", "AUCIFO", "LAMZHL")
 
+  dose_norm_parameters <- rlang::`%||%`(
+    slide_config$dose_norm_parameters, c("CMAXD", "AUCLSTD", "AUCIFOD")
+  )
+  if (length(dose_norm_parameters) == 0) dose_norm_parameters <- c("CMAXD", "AUCLSTD", "AUCIFOD")
+
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
@@ -463,7 +494,8 @@ prepare_export_files <- function(target_dir,
     ind_stats_parameters     = ind_stats_parameters,
     summary_stats_parameters = summary_stats_parameters,
     boxplot_parameters        = boxplot_parameters,
-    info_vars = grouping_vars
+    info_vars = grouping_vars,
+    dose_norm_parameters = dose_norm_parameters
   )
 
   # Attach additional_analysis from session results

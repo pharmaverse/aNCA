@@ -7,6 +7,8 @@ AEFRLT
 AFRLT
 ARRLT
 ATPTREF
+AUCIFOD
+AUCLSTD
 AUCINT
 AUCPEO
 AUCPEP
@@ -25,12 +27,12 @@ Bioavailability
 Buckeridge
 CDISC
 CMAX
+CMAXD
 CRITy
 CRITyFL
 Clast
 Cmax
 Cond
-Customizable
 DM
 DOSEA
 DOSETRT
@@ -84,6 +86,7 @@ PPSTRES
 PPSTRESU
 PPSUMFL
 PPSUMRSN
+PPT
 PPTEST
 PPTESTCD
 PPTX
@@ -120,10 +123,8 @@ TRT
 TRTRINT
 TestGroups
 TestParameter
-Timepoint
 Tlast
 Tmax
-Tooltip
 UI
 USUBJID
 UX
@@ -134,7 +135,6 @@ WTBL
 WTBLU
 Walkthrough
 XPT
-YAML
 aNCA's
 adnca
 amountu
@@ -154,8 +154,6 @@ customizable
 customizations
 dataformat
 dateTime
-datetime
-datetimes
 deduplicated
 devtools
 df
@@ -182,6 +180,7 @@ multidose
 nav
 nca
 ng
+normalised
 oligo
 pak
 pc
@@ -201,7 +200,6 @@ qmd
 rds
 readxl
 renderable
-reproducibility
 reupload
 roadmap
 rpptx
@@ -209,17 +207,13 @@ runnable
 scrollable
 selectable
 signif
-src
 standardizations
 synthesised
 th
 tibble
 tidyverse
 timeframe
-timepoint
 tlg
-tooltip
-tooltips
 ug
 unmapped
 utilise
