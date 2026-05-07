@@ -6,6 +6,7 @@
 
 ## Features added
 
+* Added pkgdown vignette documenting all ratio calculation types: metabolite ratios, accumulation ratios, renal clearance, absolute/relative bioavailability, and generic ratios (#1251)
 * Ratio Calculations UI replaced with formula-style cards showing `PPTESTCD = Test [Group] / Ref [Group] × Factor` layout (#1250)
 * Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
 * Partial Interval Calculations table now starts empty by default and includes a `(-) Remove Row/s` button matching the Ratio Calculations style (#1249)
