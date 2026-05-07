@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are now normalized to `NULL` when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (#1262)
+
 ## Features added
 
 * Ratio Calculations UI replaced with formula-style cards showing `PPTESTCD = Test [Group] / Ref [Group] × Factor` layout (#1250)

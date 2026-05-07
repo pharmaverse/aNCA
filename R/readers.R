@@ -147,11 +147,11 @@ read_settings <- function(path, version = 1L) {
     )
   }
 
-  obj$slope_rules <- .convert_list_to_df(obj$slope_rules)
+  obj$slope_rules <- .normalize_optional_df(obj$slope_rules)
   obj$settings$units <- .convert_list_to_df(obj$settings$units)
-  obj$settings$int_parameters <- .convert_list_to_df(obj$settings$int_parameters)
+  obj$settings$int_parameters <- .normalize_optional_df(obj$settings$int_parameters)
   obj$filters <- .convert_filter_values(obj$filters)
-  obj$settings$ratio_table <- .convert_list_to_df(obj$settings$ratio_table)
+  obj$settings$ratio_table <- .normalize_optional_df(obj$settings$ratio_table)
   obj$time_duplicate_keys <- .convert_list_to_df(obj$time_duplicate_keys)
 
   obj
@@ -232,6 +232,16 @@ read_settings <- function(path, version = 1L) {
 #' @noRd
 .convert_list_to_df <- function(x) {
   if (!is.null(x) && is.list(x)) as.data.frame(bind_rows(x)) else x
+}
+
+#' Convert a list to a data frame, returning NULL when the result is empty.
+#' @param x A list, data frame, or NULL.
+#' @returns A data frame with rows, or NULL.
+#' @keywords internal
+#' @noRd
+.normalize_optional_df <- function(x) {
+  df <- .convert_list_to_df(x)
+  if (is.data.frame(df) && nrow(df) == 0) NULL else df
 }
 
 #' Convert filter values from YAML lists to vectors.
