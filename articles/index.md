@@ -54,6 +54,11 @@
   User guide and technical reference for aNCA: data, workflow, settings,
   and outputs.
 
+- [Ratio
+  Calculations](https://pharmaverse.github.io/aNCA/articles/ratio-calculations.md):
+
+  How to configure and interpret ratio calculations in aNCA.
+
 - [Roadmap
   Goals](https://pharmaverse.github.io/aNCA/articles/roadmap.md):
 
