@@ -61,6 +61,10 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
 <div class="section level3">
+<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>Optional settings (<code>slope_rules</code>, <code>int_parameters</code>, <code>ratio_table</code>) are now normalized to <code>NULL</code> when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (<a href="https://github.com/pharmaverse/aNCA/issues/1262" class="external-link">#1262</a>)</li>
+</ul></div>
+<div class="section level3">
 <h3 id="features-added-development-version">Features added<a class="anchor" aria-label="anchor" href="#features-added-development-version"></a></h3>
 <ul><li>Ratio Calculations UI replaced with formula-style cards showing <code>PPTESTCD = Test [Group] / Ref [Group] × Factor</code> layout (<a href="https://github.com/pharmaverse/aNCA/issues/1250" class="external-link">#1250</a>)</li>
 <li>Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (<a href="https://github.com/pharmaverse/aNCA/issues/1040" class="external-link">#1040</a>)</li>
