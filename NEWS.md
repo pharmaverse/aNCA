@@ -1,12 +1,24 @@
 # aNCA (development version)
 
+## Bug fixes
+
+* Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are now normalized to `NULL` when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (#1262)
+
 ## Features added
 
+<<<<<<< 728-enhancement/remove-bioavailability-special-case
 * Removed dedicated bioavailability calculation pipeline — FABS/FREL are now computed exclusively via the ratio calculations table (#1260)
+=======
+* Added pkgdown vignette documenting all ratio calculation types: metabolite ratios, accumulation ratios, renal clearance, absolute/relative bioavailability, and generic ratios (#1251)
+>>>>>>> main
 * Ratio Calculations UI replaced with formula-style cards showing `PPTESTCD = Test [Group] / Ref [Group] × Factor` layout (#1250)
 * Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
 * Partial Interval Calculations table now starts empty by default and includes a `(-) Remove Row/s` button matching the Ratio Calculations style (#1249)
 * Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (#1225)
+* Added dose-normalised slides to the PPT/QMD export. Each group now includes an optional
+  "Dose-Normalized Plots" summary slide (dose-normalised mean plot + parameter table) and
+  an optional "Dose-Normalized PK Parameters" individual slide. Both are controlled via the
+  Customize Slides modal and default to CMAXD, AUCLSTD, and AUCIFOD (#1054).
 * Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (#1135)
 * `run_app()` now accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Exploration sidebars: "View Exports" button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (#1137)
