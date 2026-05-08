@@ -81,17 +81,9 @@ tab_nca_ui <- function(id) {
   )
 }
 
-# Populate units_table from pknca_data, skipping during settings import.
-.sync_units_table <- function(pknca_data, settings_override, units_table) {
-  if (is.null(pknca_data) || is.null(pknca_data$units)) {
-    units_table(NULL)
-    return()
-  }
-
-  imported <- isolate(settings_override())
-  has_imported_units <- !is.null(imported$units) && nrow(imported$units) > 0
-  if (has_imported_units) return()
-
+# Populate units_table from pknca_data, skipping during auto-replay.
+.sync_units_table <- function(pknca_data, units_table, session) {
+  if (isTRUE(session$userData$auto_replay_active)) return()
   units_table(pknca_data$units)
 }
 
@@ -108,10 +100,10 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     session$userData$units_table <- reactiveVal(NULL)
 
     # Keep units_table synchronized with the current dataset.
-    # Skips during settings import — nca_setup.R handles the merge instead.
+    # Skips during auto-replay — nca_setup.R handles the merge instead.
     observeEvent(pknca_data(), {
-      .sync_units_table(pknca_data(), settings_override, session$userData$units_table)
-    }, ignoreNULL = FALSE)
+      .sync_units_table(pknca_data(), session$userData$units_table, session)
+    })
 
     adnca_data <- reactive(pknca_data()$conc$data)
 
