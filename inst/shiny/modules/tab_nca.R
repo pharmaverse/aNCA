@@ -81,12 +81,6 @@ tab_nca_ui <- function(id) {
   )
 }
 
-# Populate units_table from pknca_data, skipping during auto-replay.
-.sync_units_table <- function(pknca_data, units_table, session) {
-  if (isTRUE(session$userData$auto_replay_active)) return()
-  units_table(pknca_data$units)
-}
-
 # .apply_param_exclusions is defined in inst/shiny/functions/utils-exclusions.R
 
 tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
@@ -98,12 +92,6 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     #' various steps of the workflow (pre- and post-NCA calculation) and the whole application
     #' should respect the units, regardless of location.
     session$userData$units_table <- reactiveVal(NULL)
-
-    # Keep units_table synchronized with the current dataset.
-    # Skips during auto-replay — nca_setup.R handles the merge instead.
-    observeEvent(pknca_data(), {
-      .sync_units_table(pknca_data(), session$userData$units_table, session)
-    })
 
     adnca_data <- reactive(pknca_data()$conc$data)
 
@@ -224,6 +212,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
             by = by_cols,
             unmatched = "ignore"
           )
+        } else {
+          # First NCA run: populate units_table from the data so settings
+          # export includes volume-simplified units even if the user never
+          # opens the Units modal.
+          session$userData$units_table(processed_pknca_data$units)
         }
 
         #' Calculate results
