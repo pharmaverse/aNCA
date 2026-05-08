@@ -523,9 +523,11 @@ prepare_export_files <- function(target_dir,
 .export_settings <- function(target_dir, session) {
   settings_list <- session$userData$settings()
 
-  # Only export units that differ from defaults (PPSTRESU != PPORRESU)
-  if (!is.null(settings_list$units)) {
-    settings_list$units <- settings_list$units %>%
+  # Units are stored separately from settings() to avoid triggering
+  # the settings debounce cascade. Read directly for export.
+  units_snapshot <- session$userData$units_table()
+  if (!is.null(units_snapshot)) {
+    settings_list$units <- units_snapshot %>%
       dplyr::filter(!is.na(PPSTRESU), !is.na(PPORRESU), PPSTRESU != PPORRESU)
   }
 
