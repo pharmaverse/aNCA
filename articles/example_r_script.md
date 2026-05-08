@@ -325,9 +325,8 @@ pknca_res <- pknca_obj %>%
 - **`blq_rule`**: How to handle BLQ (below limit of quantification)
   values at different positions in the concentration-time profile.
   Options for each position: `"keep"`, `"0"`, `"loq/2"`.
-- **[`add_f_to_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.md)**:
-  Pass a bioavailability AUC type (e.g., `"f_aucinf.obs"`) to compute F,
-  or `NULL` to skip.
+- **`add_f_to_pknca_results()`**: Pass a bioavailability AUC type (e.g.,
+  `"f_aucinf.obs"`) to compute F, or `NULL` to skip.
 
 ### 8. Apply flag rules
 

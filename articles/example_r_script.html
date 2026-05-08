@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9167</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9168</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -160,7 +160,7 @@ the app</a></td>
 the features shown here):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Option 1</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"pharmaverse/aNCA"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"pharmaverse/aNCA"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Option 2</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"pharmaverse/aNCA"</span><span class="op">)</span></span></code></pre></div>
@@ -446,7 +446,7 @@ always included).</p>
 <span>    blq_rule <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>first <span class="op">=</span> <span class="st">"keep"</span>, middle <span class="op">=</span> <span class="st">"keep"</span>, last <span class="op">=</span> <span class="st">"keep"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="co"># Add bioavailability if requested (NULL = skip)</span></span>
-<span>  <span class="fu"><a href="../reference/add_f_to_pknca_results.html">add_f_to_pknca_results</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">add_f_to_pknca_results</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="co"># Translate PKNCA parameter names to CDISC PPTESTCD codes</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>PPTESTCD <span class="op">=</span> <span class="fu"><a href="../reference/translate_terms.html">translate_terms</a></span><span class="op">(</span><span class="va">PPTESTCD</span>, <span class="st">"PKNCA"</span>, <span class="st">"PPTESTCD"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <ul>
@@ -456,7 +456,7 @@ limit of quantification) values at different positions in the
 concentration-time profile. Options for each position:
 <code>"keep"</code>, <code>"0"</code>, <code>"loq/2"</code>.</li>
 <li>
-<strong><code><a href="../reference/add_f_to_pknca_results.html">add_f_to_pknca_results()</a></code></strong>: Pass a
+<strong><code>add_f_to_pknca_results()</code></strong>: Pass a
 bioavailability AUC type (e.g., <code>"f_aucinf.obs"</code>) to compute
 F, or <code>NULL</code> to skip.</li>
 </ul>
@@ -783,7 +783,7 @@ Show full reproducible script
 <span>  <span class="fu"><a href="../reference/PKNCA_calculate_nca.html">PKNCA_calculate_nca</a></span><span class="op">(</span></span>
 <span>    blq_rule <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>first <span class="op">=</span> <span class="st">"keep"</span>, middle <span class="op">=</span> <span class="st">"keep"</span>, last <span class="op">=</span> <span class="st">"keep"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/add_f_to_pknca_results.html">add_f_to_pknca_results</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">add_f_to_pknca_results</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>PPTESTCD <span class="op">=</span> <span class="fu"><a href="../reference/translate_terms.html">translate_terms</a></span><span class="op">(</span><span class="va">PPTESTCD</span>, <span class="st">"PKNCA"</span>, <span class="st">"PPTESTCD"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co"># 8. Apply flag rules</span></span>
 <span><span class="va">pknca_res</span> <span class="op">&lt;-</span> <span class="va">pknca_res</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>

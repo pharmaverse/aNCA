@@ -1,8 +1,7 @@
 # Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 
 This function removes parameters from the PKNCA results that were not
-requested by the user, using a pivoted approach that also handles
-bioavailability settings.
+requested by the user, using a pivoted approach.
 
 ## Usage
 

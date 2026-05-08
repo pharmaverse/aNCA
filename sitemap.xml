@@ -30,7 +30,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_impute_method_start_logslope.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/PKNCA_update_data_object.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_exclusion_reasons.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_impute_method.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_label_attribute.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/add_pptx_sl_plot.html</loc></url>
@@ -50,7 +49,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_mapping.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_single_filter.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/apply_unit_defaults.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratio_app.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_ratios.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/calculate_summary_stats.html</loc></url>
@@ -120,7 +118,6 @@
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg01.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg02.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/pkcg03.html</loc></url>
-<url><loc>https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_pk.html</loc></url>
 <url><loc>https://pharmaverse.github.io/aNCA/reference/read_settings.html</loc></url>

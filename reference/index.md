@@ -34,9 +34,6 @@
 - [`add_exclusion_reasons()`](https://pharmaverse.github.io/aNCA/reference/add_exclusion_reasons.md)
   : Add Exclusion Reasons to PKNCAdata Object
 
-- [`add_f_to_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/add_f_to_pknca_results.md)
-  : Add bioavailability results to PKNCA results
-
 - [`add_label_attribute()`](https://pharmaverse.github.io/aNCA/reference/add_label_attribute.md)
   : Helper function to add "label" attribute to columns based on
   parameter names.
@@ -84,9 +81,6 @@
 
 - [`apply_unit_defaults()`](https://pharmaverse.github.io/aNCA/reference/apply_unit_defaults.md)
   : Apply default target units onto a data-derived units table
-
-- [`calculate_f()`](https://pharmaverse.github.io/aNCA/reference/calculate_f.md)
-  : Calculate bioavailability with pivoted output
 
 - [`calculate_ratio_app()`](https://pharmaverse.github.io/aNCA/reference/calculate_ratio_app.md)
   : Links the table ratio of the App with the ratio calculations via
@@ -301,9 +295,6 @@
 
 - [`pkcg03()`](https://pharmaverse.github.io/aNCA/reference/pkcg03.md) :
   Generate PK Concentration-Time Profile Plots
-
-- [`pknca_calculate_f()`](https://pharmaverse.github.io/aNCA/reference/pknca_calculate_f.md)
-  : Calculate bioavailability for intravascular vs extravascular aucs
 
 - [`prepare_plot_data()`](https://pharmaverse.github.io/aNCA/reference/prepare_plot_data.md)
   : Prepare Data for PK Dose QC Plotting
