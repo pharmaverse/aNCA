@@ -1,10 +1,15 @@
-#' TODO: add proper documentation
+#' Module UI for the NCA Parameter Units table
+#'
+#' Displays a button that opens a modal dialog where users can customize the
+#' units and conversion factors of NCA parameter results.
 #'
 #' @details
 #' Module requires session-wide object for storing units table: `session$userData$units_table`.
 #' All copies of the module will modify this single source of truth. This is so that the units
 #' selection is respected across the whole application, regardless of where the user decides
 #' to set the units.
+#'
+#' @param id Module namespace ID.
 #'
 units_table_ui <- function(id) {
   ns <- NS(id)
