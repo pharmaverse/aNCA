@@ -77,6 +77,7 @@
 
 
 ## Bugs fixed
+* R script and settings export now include volume unit simplifications. Unit change detection uses value comparison (`PPSTRESU != PPORRESU`) instead of an edit-tracking flag, so automatic simplifications (e.g. `mg*L/mL` → `mg`) are captured alongside user edits (#1190)
 * Fixed ratio calculations with `Aggregate Subject = yes` or `if-needed` not aggregating reference values, and ratio parameter columns (FABS, FREL, etc.) not appearing in NCA Results (#1273)
 * Last dose interval end time now extends to the last observed sample instead of being cut off at TRTRINT (tau), ensuring all collected data points are included in NCA calculations (#1235)
 * Fixed NA `PPSTRESU` handling across NCA results: descriptive statistics no longer crash when a parameter group has all-NA units, and manual interval parameters (e.g., RCAMINT) no longer get `NA` appended to their column names (#1216)

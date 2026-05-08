@@ -485,8 +485,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             is.checked = input$LAMZSPN_rule,
             threshold = input$LAMZSPN_threshold
           )
-        ),
-        units = session$userData$units_table()
+        )
       )
     })
 
