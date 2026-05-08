@@ -459,7 +459,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       if (type %in% c("Standard", "IV")) {
         locs <- c(locs, "Parameter Selection > Matrix")
       }
-      if (type == "Urine" || identical(can_exc, "T")) {
+      if (type == "Urine" || isTRUE(can_exc)) {
         locs <- c(
           locs, "Additional Analysis > Excretion"
         )
