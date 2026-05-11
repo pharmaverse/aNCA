@@ -189,6 +189,17 @@
 - DOSNOA computation fixed for specimen-level grouping — urine-only data
   no longer gets incorrect dose numbering
   ([\#1116](https://github.com/pharmaverse/aNCA/issues/1116))
+- Dose-aware AUCint parameters now share the same PPTESTCD as their
+  non-dose-aware counterparts in CDISC exports, with `PPANMETH`
+  indicating the analytical method. Internal PPTESTCDs renamed from
+  misleading `D` suffix (e.g. `AUCINTD`) to lowercase `da` suffix
+  (e.g. `AUCINTda`). Fixed wrong PPTEST label for `AUCINTD` which said
+  “Normalized by Dose”
+  ([\#1242](https://github.com/pharmaverse/aNCA/issues/1242))
+- Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are
+  now normalized to `NULL` when empty, instead of persisting as 0-row
+  data frames throughout the app and settings pipeline
+  ([\#1262](https://github.com/pharmaverse/aNCA/issues/1262))
 
 #### Ratio Calculations
 

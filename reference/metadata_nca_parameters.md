@@ -19,6 +19,11 @@ A data frame with 123 rows and 6 variables:
 
   PKNCA term
 
+- PPANMETH:
+
+  PPANMETH term, specifying when relevant the calculation method for
+  PPTESTCD
+
 - PPTESTCD:
 
   CDISC term
