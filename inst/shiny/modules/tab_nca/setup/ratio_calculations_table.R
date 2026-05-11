@@ -65,6 +65,12 @@ ratios_table_ui <- function(id) {
       ),
       tags$div(
         withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
+      ),
+      tags$hr(),
+      tags$a(
+        href = "https://pharmaverse.github.io/aNCA/articles/ratio-calculations.html",
+        target = "_blank",
+        icon("book"), "Full documentation"
       )
     ),
     style = "unite",
