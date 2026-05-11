@@ -256,6 +256,7 @@ PP,9,PPSCAT,Parameter Subcategory,Char,Grouping Qualifier,Perm,FALSE,TRUE,100,,T
 ADPP,2.51,PPSEQ,Sequence Number,integer,Identifier,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 PP,4,PPSEQ,Sequence Number,Num,Identifier,Req,FALSE,TRUE,12,,TRUE,,FALSE,,,,NA,FALSE
 ADPP,2.597,PPSPEC,Specimen Material Type,text,Topic,Perm,FALSE,FALSE,40,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,2.5975,PPANMETH,Analysis Method,Char,Record Qualifier,Perm,FALSE,TRUE,200,,TRUE,,FALSE,,,,NA,FALSE
 PP,17,PPSPEC,Specimen Material Type,Char,Record Qualifier,Exp,FALSE,TRUE,40,,TRUE,,FALSE,,,,NA,FALSE
 ADPP,2.53,PPSPID,Sponsor-Defined Identifier,text,Identifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,2.595,PPSTAT,Completion Status,text,Synonym Qualifier,Cond,FALSE,FALSE,8,C66789,FALSE,,FALSE,,,,NA,FALSE
