@@ -7,11 +7,14 @@ AEFRLT
 AFRLT
 ARRLT
 ATPTREF
+AUCIFOD
 AUCINT
+AUCLSTD
 AUCPEO
 AUCPEP
 AUCall
 AUCinf
+AUCint
 AUClast
 AVAL
 AVALU
@@ -25,6 +28,7 @@ Bioavailability
 Buckeridge
 CDISC
 CMAX
+CMAXD
 CRITy
 CRITyFL
 Clast
@@ -80,6 +84,7 @@ PKNCAdose
 PKNCAresult
 PKNCAresults
 PKSUM
+PPANMETH
 PPORRES
 PPSTRES
 PPSTRESU
@@ -88,6 +93,7 @@ PPSUMRSN
 PPT
 PPTEST
 PPTESTCD
+PPTESTCDs
 PPTX
 PRs
 Pharma
@@ -142,6 +148,7 @@ adnca
 analysing
 analyte
 analytes
+aucint
 aucpext
 aucs
 bioavailability
@@ -179,12 +186,15 @@ logslope
 mL
 macroparameters
 md
+multidose
+nav
 nca
 ng
 normalised
 oligo
 pak
 pc
+pcspec
 pharmacodynamics
 pharmacokinetic
 pharmacokinetics
@@ -193,10 +203,12 @@ pkgdown
 pknca
 plotly
 pptest
+pptestcd
 pre
 pred
 px
 qmd
+rds
 renderable
 reproducibility
 resizable
@@ -204,6 +216,7 @@ reupload
 roadmap
 rpptx
 runnable
+scrollable
 selectable
 signif
 src
