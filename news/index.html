@@ -62,106 +62,141 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
 <div class="section level3">
+<h3 id="features-development-version">Features<a class="anchor" aria-label="anchor" href="#features-development-version"></a></h3>
+<div class="section level4">
+<h4 id="settings--configuration-development-version">Settings &amp; Configuration<a class="anchor" aria-label="anchor" href="#settings--configuration-development-version"></a></h4>
+<ul><li>Settings upload auto-restores the full session: mapping, filters, data processing, tab navigation, and auto-runs NCA if previously run. Incompatible settings degrade gracefully with notifications (<a href="https://github.com/pharmaverse/aNCA/issues/1225" class="external-link">#1225</a>)</li>
+<li>Settings version control: YAML file stores multiple versions with metadata. Save button in header, version selection on upload, version delete support (<a href="https://github.com/pharmaverse/aNCA/issues/1103" class="external-link">#1103</a>)</li>
+<li>Settings file converted from RDS to YAML for readability and manual editing (<a href="https://github.com/pharmaverse/aNCA/issues/901" class="external-link">#901</a>)</li>
+<li>Settings are uploaded on initial opening of the app in the data tab and applied to the next steps (<a href="https://github.com/pharmaverse/aNCA/issues/860" class="external-link">#860</a>)</li>
+<li>Column mapping, data filters, ratio table, units, and time-duplicate exclusions are now included in settings YAML export/import (<a href="https://github.com/pharmaverse/aNCA/issues/1082" class="external-link">#1082</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1091" class="external-link">#1091</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1104" class="external-link">#1104</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1195" class="external-link">#1195</a>)</li>
+<li>
+<code><a href="../reference/run_app.html">run_app()</a></code> accepts a <code>settings</code> parameter to pre-load a YAML settings file on startup (<a href="https://github.com/pharmaverse/aNCA/issues/514" class="external-link">#514</a>)</li>
+<li>Settings upload is flexible — non-data-specific template settings can be uploaded (<a href="https://github.com/pharmaverse/aNCA/issues/993" class="external-link">#993</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="nca-setup-development-version">NCA Setup<a class="anchor" aria-label="anchor" href="#nca-setup-development-version"></a></h4>
+<ul><li>Parameter Selection tab now contains Partial Intervals, Ratio Calculations, and Units alongside the parameter matrix. The former Settings tab is renamed to General Settings (<a href="https://github.com/pharmaverse/aNCA/issues/1239" class="external-link">#1239</a>)</li>
+<li>Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters) with Select All, Defaults, and Clear All buttons (<a href="https://github.com/pharmaverse/aNCA/issues/795" class="external-link">#795</a>)</li>
+<li>Partial interval parameters section supports calculations beyond <code>AUCINT</code>: <code>RCAMINT</code>, <code>AUCINTD</code>, <code>CAVGINT</code>, and others. Table starts empty by default with a Remove Row button (<a href="https://github.com/pharmaverse/aNCA/issues/524" class="external-link">#524</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1249" class="external-link">#1249</a>)</li>
+<li>“Min. Points for Half-life” setting added (range 2–10, default 3) (<a href="https://github.com/pharmaverse/aNCA/issues/1155" class="external-link">#1155</a>)</li>
+<li>BLQ imputation rules via <code>NCA Setup &gt; Data Imputation</code> (<a href="https://github.com/pharmaverse/aNCA/issues/139" class="external-link">#139</a>)</li>
+<li>General Exclusions section for in-app NCA exclusions, with “Excl. TLG” checkbox per entry (<a href="https://github.com/pharmaverse/aNCA/issues/851" class="external-link">#851</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1018" class="external-link">#1018</a>)</li>
+<li>Parameter Exclusions tab: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (<a href="https://github.com/pharmaverse/aNCA/issues/1040" class="external-link">#1040</a>)</li>
+<li>NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are excluded from NCA (<a href="https://github.com/pharmaverse/aNCA/issues/752" class="external-link">#752</a>)</li>
+<li>New flagging rule for lambda-z based on R² (<a href="https://github.com/pharmaverse/aNCA/issues/834" class="external-link">#834</a>)</li>
+<li>Filter pickers reordered to Analyte → Specimen → NCA Profile with bidirectional cascading (<a href="https://github.com/pharmaverse/aNCA/issues/1114" class="external-link">#1114</a>)</li>
+<li>Optional settings (<code>slope_rules</code>, <code>int_parameters</code>, <code>ratio_table</code>) normalized to <code>NULL</code> when empty (<a href="https://github.com/pharmaverse/aNCA/issues/1262" class="external-link">#1262</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="ratio-calculations-development-version">Ratio Calculations<a class="anchor" aria-label="anchor" href="#ratio-calculations-development-version"></a></h4>
+<ul><li>Bioavailability removed as a dedicated pipeline — FABS/FREL now computed exclusively via the ratio table (<a href="https://github.com/pharmaverse/aNCA/issues/1260" class="external-link">#1260</a>)</li>
+<li>Ratio Calculations UI replaced with formula-style fraction cards (<a href="https://github.com/pharmaverse/aNCA/issues/1250" class="external-link">#1250</a>)</li>
+<li>Interval/partial parameters (e.g. AUCINT_0-20) selectable in ratio Test/Ref Parameter dropdowns (<a href="https://github.com/pharmaverse/aNCA/issues/1135" class="external-link">#1135</a>)</li>
+<li>Additional grouping variables available for ratio calculations (<a href="https://github.com/pharmaverse/aNCA/issues/868" class="external-link">#868</a>)</li>
+<li>Webpage documentation available in help button for further explanations on how to do ratio calculations (<a href="https://github.com/pharmaverse/aNCA/issues/1300" class="external-link">#1300</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="exploration--plots-development-version">Exploration &amp; Plots<a class="anchor" aria-label="anchor" href="#exploration--plots-development-version"></a></h4>
+<ul><li>Dose-normalised exploration plots: toggle between default, dose-normalised, or both overlaid on individual and mean plots (<a href="https://github.com/pharmaverse/aNCA/issues/986" class="external-link">#986</a>)</li>
+<li>Exploration sidebars: “Add to Exports” saves named plot snapshots to ZIP; “View Exports” shows a gallery modal (<a href="https://github.com/pharmaverse/aNCA/issues/1002" class="external-link">#1002</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1137" class="external-link">#1137</a>)</li>
+<li>Toggle legend visibility, improved tooltips, correct axis/legend labels (<a href="https://github.com/pharmaverse/aNCA/issues/988" class="external-link">#988</a>)</li>
+<li>X/Y axis limits for exploration plots, facet titles with subject count (<a href="https://github.com/pharmaverse/aNCA/issues/817" class="external-link">#817</a>, <a href="https://github.com/pharmaverse/aNCA/issues/894" class="external-link">#894</a>, <a href="https://github.com/pharmaverse/aNCA/issues/984" class="external-link">#984</a>)</li>
+<li>Individual and Mean plots use the same function for consistent layout and themes (<a href="https://github.com/pharmaverse/aNCA/issues/712" class="external-link">#712</a>)</li>
+<li>Right-side sidebars resizable by dragging; default width 250px (<a href="https://github.com/pharmaverse/aNCA/issues/1156" class="external-link">#1156</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="export--output-development-version">Export &amp; Output<a class="anchor" aria-label="anchor" href="#export--output-development-version"></a></h4>
+<ul><li>General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (<a href="https://github.com/pharmaverse/aNCA/issues/638" class="external-link">#638</a>)</li>
+<li>Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (<a href="https://github.com/pharmaverse/aNCA/issues/1054" class="external-link">#1054</a>)</li>
+<li>Export modal allows selecting which slide sections to include in PPTX/HTML exports (<a href="https://github.com/pharmaverse/aNCA/issues/972" class="external-link">#972</a>)</li>
+<li>CDISC ZIP includes <code>Pre_Specs.xlsx</code> with variable-level metadata and session info (<a href="https://github.com/pharmaverse/aNCA/issues/998" class="external-link">#998</a>, <a href="https://github.com/pharmaverse/aNCA/issues/829" class="external-link">#829</a>)</li>
+<li>ADPP includes CRITy/CRITyFL columns for flag rules and PPSUMFL/PPSUMRSN for summary exclusion status (<a href="https://github.com/pharmaverse/aNCA/issues/1141" class="external-link">#1141</a>)</li>
+<li>Non-standard grouping variables included in ADPP and ADNCA outputs (<a href="https://github.com/pharmaverse/aNCA/issues/1077" class="external-link">#1077</a>)</li>
+<li>R script exported in ZIP to replicate app outputs (<a href="https://github.com/pharmaverse/aNCA/issues/789" class="external-link">#789</a>)</li>
+<li>Save button enabled after data mapping with progressive content (<a href="https://github.com/pharmaverse/aNCA/issues/1136" class="external-link">#1136</a>)</li>
+<li>Export filenames use STUDYID as fallback; project name auto-populated from STUDYID (<a href="https://github.com/pharmaverse/aNCA/issues/1000" class="external-link">#1000</a>)</li>
+<li>Slide outputs grouped by PKNCA groups, dose profile, and additional grouping variables (<a href="https://github.com/pharmaverse/aNCA/issues/791" class="external-link">#791</a>)</li>
+<li>Mean plots added to TLGs section with BLQ handling (<a href="https://github.com/pharmaverse/aNCA/issues/555" class="external-link">#555</a>)</li>
+<li>CMAX auto-selected in box plots if available (<a href="https://github.com/pharmaverse/aNCA/issues/890" class="external-link">#890</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="data--mapping-development-version">Data &amp; Mapping<a class="anchor" aria-label="anchor" href="#data--mapping-development-version"></a></h4>
+<ul><li>Upload multiple input files, bound into a single ADNCA dataset (<a href="https://github.com/pharmaverse/aNCA/issues/821" class="external-link">#821</a>)</li>
+<li>Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (<a href="https://github.com/pharmaverse/aNCA/issues/745" class="external-link">#745</a>)</li>
+<li>WTBL/WTBLU columns for dose-to-body-weight conversion in excretion calculations (<a href="https://github.com/pharmaverse/aNCA/issues/959" class="external-link">#959</a>)</li>
+<li>Custom numeric input values for ADOSEDUR and TRTRINT instead of column mapping (<a href="https://github.com/pharmaverse/aNCA/issues/1051" class="external-link">#1051</a>)</li>
+<li>SelectInputs updated to include variable labels (<a href="https://github.com/pharmaverse/aNCA/issues/899" class="external-link">#899</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="documentation--ui-development-version">Documentation &amp; UI<a class="anchor" aria-label="anchor" href="#documentation--ui-development-version"></a></h4>
+<ul><li>Searchable PK parameter reference table in NCA &gt; Setup (<a href="https://github.com/pharmaverse/aNCA/issues/1023" class="external-link">#1023</a>)</li>
+<li>R Script Walkthrough vignette added to pkgdown website (<a href="https://github.com/pharmaverse/aNCA/issues/1090" class="external-link">#1090</a>)</li>
+<li>Ratio Calculations vignette documenting all ratio types (<a href="https://github.com/pharmaverse/aNCA/issues/1251" class="external-link">#1251</a>)</li>
+<li>“About” tab with links, citation, authors, license, version, and “Copy session info” button (<a href="https://github.com/pharmaverse/aNCA/issues/1015" class="external-link">#1015</a>)</li>
+<li>Help buttons added/updated for Parameter Selection, Slope Selector, Additional Analysis, and Partial Interval Calculations (<a href="https://github.com/pharmaverse/aNCA/issues/975" class="external-link">#975</a>)</li>
+<li>Slope selector table uses time-based selection with improved aesthetics and grouping options (<a href="https://github.com/pharmaverse/aNCA/issues/956" class="external-link">#956</a>, <a href="https://github.com/pharmaverse/aNCA/issues/333" class="external-link">#333</a>)</li>
+</ul></div>
+</div>
+<div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
-<ul><li>Optional settings (<code>slope_rules</code>, <code>int_parameters</code>, <code>ratio_table</code>) are now normalized to <code>NULL</code> when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (<a href="https://github.com/pharmaverse/aNCA/issues/1262" class="external-link">#1262</a>)</li>
+<div class="section level4">
+<h4 id="nca-calculations-development-version">NCA Calculations<a class="anchor" aria-label="anchor" href="#nca-calculations-development-version"></a></h4>
+<ul><li>Renal clearance (RENALCL) removed from direct PK calculations (inaccurate in PKNCA) — use ratio table instead (<a href="https://github.com/pharmaverse/aNCA/issues/781" class="external-link">#781</a>)</li>
+<li>Multidose parameters (MRTMDO, MRTMDP, VSSMDO, VSSMDP, TAT) removed from direct calculations (<a href="https://github.com/pharmaverse/aNCA/issues/869" class="external-link">#869</a>)</li>
+<li>Last dose interval end time extends to last observed sample instead of being cut off at tau (<a href="https://github.com/pharmaverse/aNCA/issues/1235" class="external-link">#1235</a>)</li>
+<li>Interval creation reworked to prevent doses being combined when no post-dose samples exist (<a href="https://github.com/pharmaverse/aNCA/issues/963" class="external-link">#963</a>)</li>
+<li>DOSNOA computation fixed for specimen-level grouping — urine-only data no longer gets incorrect dose numbering (<a href="https://github.com/pharmaverse/aNCA/issues/1116" class="external-link">#1116</a>)</li>
 </ul></div>
-<div class="section level3">
-<h3 id="features-added-development-version">Features added<a class="anchor" aria-label="anchor" href="#features-added-development-version"></a></h3>
-<ul><li>Ratio Calculations help button now links to the full documentation vignette (<a href="https://github.com/pharmaverse/aNCA/issues/1300" class="external-link">#1300</a>)</li>
-<li>Removed dedicated bioavailability calculation pipeline — FABS/FREL are now computed exclusively via the ratio calculations table (<a href="https://github.com/pharmaverse/aNCA/issues/1260" class="external-link">#1260</a>)</li>
-<li>Added pkgdown vignette documenting all ratio calculation types: metabolite ratios, accumulation ratios, renal clearance, absolute/relative bioavailability, and generic ratios (<a href="https://github.com/pharmaverse/aNCA/issues/1251" class="external-link">#1251</a>)</li>
-<li>Ratio Calculations UI replaced with formula-style cards showing <code>PPTESTCD = Test [Group] / Ref [Group] × Factor</code> layout (<a href="https://github.com/pharmaverse/aNCA/issues/1250" class="external-link">#1250</a>)</li>
-<li>Parameter Exclusions: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (<a href="https://github.com/pharmaverse/aNCA/issues/1040" class="external-link">#1040</a>)</li>
-<li>Partial Interval Calculations table now starts empty by default and includes a <code>(-) Remove Row/s</code> button matching the Ratio Calculations style (<a href="https://github.com/pharmaverse/aNCA/issues/1249" class="external-link">#1249</a>)</li>
-<li>Settings upload now auto-restores the previous session: auto-applies mapping, filters, and data processing, navigates to the saved tab, and auto-runs NCA if it was previously run. Incompatible settings degrade gracefully with user notifications (<a href="https://github.com/pharmaverse/aNCA/issues/1225" class="external-link">#1225</a>)</li>
-<li>Added dose-normalised slides to the PPT/QMD export. Each group now includes an optional “Dose-Normalized Plots” summary slide (dose-normalised mean plot + parameter table) and an optional “Dose-Normalized PK Parameters” individual slide. Both are controlled via the Customize Slides modal and default to CMAXD, AUCLSTD, and AUCIFOD (<a href="https://github.com/pharmaverse/aNCA/issues/1054" class="external-link">#1054</a>).</li>
-<li>Interval/partial parameters (e.g. AUCINT_0-20) are now selectable in the ratio calculations Test/Ref Parameter dropdowns, with correct start/end filtering in the ratio computation (<a href="https://github.com/pharmaverse/aNCA/issues/1135" class="external-link">#1135</a>)</li>
-<li>
-<code><a href="../reference/run_app.html">run_app()</a></code> now accepts a <code>settings</code> parameter to pre-load a YAML settings file on startup (<a href="https://github.com/pharmaverse/aNCA/issues/514" class="external-link">#514</a>)</li>
-<li>Exploration sidebars: “View Exports” button opens a scrollable gallery modal showing all saved plots inline with name, type, timestamp headers and a remove option (<a href="https://github.com/pharmaverse/aNCA/issues/1137" class="external-link">#1137</a>)</li>
-<li>Added “Min. Points for Half-life” setting in NCA &gt; Settings &gt; General Settings, allowing users to configure PKNCA’s <code>min.hl.points</code> option (range 2–10, default 3) (<a href="https://github.com/pharmaverse/aNCA/issues/1155" class="external-link">#1155</a>)</li>
-<li>Settings version control: single YAML file stores multiple versions with metadata (timestamp, comment, dataset, aNCA version, active tab). Save button in header, version selection modal on upload, version delete support (<a href="https://github.com/pharmaverse/aNCA/issues/1103" class="external-link">#1103</a>)</li>
-<li>ADPP now includes CRITy/CRITyFL columns for each checked flag rule and PPSUMFL/PPSUMRSN columns indicating summary exclusion status. Flagged records are excluded from descriptive statistics and parameter plot statistics, with an optional toggle to overlay excluded points as crosses (<a href="https://github.com/pharmaverse/aNCA/issues/1141" class="external-link">#1141</a>)</li>
-<li>Right-side sidebars (Exploration, NCA Parameter Plots, TLG) can now be resized by dragging the left edge. Default width increased to 250px, left nav sidebar reduced to 150px (<a href="https://github.com/pharmaverse/aNCA/issues/1156" class="external-link">#1156</a>)</li>
-<li>Moved <code>rlistings</code>, <code>officer</code>, and <code>flextable</code> from Imports to Suggests with user-facing notifications when missing (<a href="https://github.com/pharmaverse/aNCA/issues/1106" class="external-link">#1106</a>)</li>
-<li>Save button is now enabled after data mapping with progressive content: exploration plots and settings before NCA, full export after NCA (<a href="https://github.com/pharmaverse/aNCA/issues/1136" class="external-link">#1136</a>)</li>
-<li>General Exclusions: “Excl. TLG” checkbox per exclusion entry sets PKSUM1F to “Y”, filtering those rows from TLGs (<a href="https://github.com/pharmaverse/aNCA/issues/1018" class="external-link">#1018</a>)</li>
-<li>NCA Setup filter pickers reordered to Analyte, Specimen, NCA Profile with bidirectional cascading updates between Analyte and Specimen (<a href="https://github.com/pharmaverse/aNCA/issues/1114" class="external-link">#1114</a>)</li>
-<li>Column mapping is now included in settings YAML export and restored on upload, with validation against available columns (<a href="https://github.com/pharmaverse/aNCA/issues/1104" class="external-link">#1104</a>)</li>
-<li>Ratio calculations table is now included in settings YAML export and restored on upload, with validation against available parameters and groups (<a href="https://github.com/pharmaverse/aNCA/issues/1091" class="external-link">#1091</a>)</li>
-<li>Data tab filters are now included in the settings YAML file and restored on upload, for both standalone settings download and ZIP export (<a href="https://github.com/pharmaverse/aNCA/issues/1082" class="external-link">#1082</a>)</li>
-<li>Non-standard grouping variables (chosen in the data mapping) are now included as columns in ADPP and ADNCA outputs (<a href="https://github.com/pharmaverse/aNCA/issues/1077" class="external-link">#1077</a>)</li>
-<li>Searchable PK parameter reference table added to NCA &gt; Setup, showing metadata, app location, and PKNCA function for each parameter (<a href="https://github.com/pharmaverse/aNCA/issues/1023" class="external-link">#1023</a>)</li>
-<li>Settings YAML units can now contain just <code>PPTESTCD</code> and <code>PPSTRESU</code> (default target units). (<a href="https://github.com/pharmaverse/aNCA/issues/1027" class="external-link">#1027</a>)</li>
-<li>Exploration plots: toggle legend visibility, improved tooltips with color-by variable, and correct axis/legend labels (<a href="https://github.com/pharmaverse/aNCA/issues/988" class="external-link">#988</a>)</li>
-<li>Exploration plots: “Add to Exports” button saves named plot snapshots to the ZIP export. When custom snapshots exist for a plot type, only the snapshots are exported (the default plot is omitted). QC plot also included in the export tree (<a href="https://github.com/pharmaverse/aNCA/issues/1002" class="external-link">#1002</a>)</li>
-<li>CDISC ZIP export now includes a <code>Pre_Specs.xlsx</code> file with variable-level metadata for each selected dataset (<a href="https://github.com/pharmaverse/aNCA/issues/998" class="external-link">#998</a>) and a session information file (<a href="https://github.com/pharmaverse/aNCA/issues/829" class="external-link">#829</a>)</li>
-<li>New “About” tab in the app sidebar with links, citation, authors, license, version info, and a “Copy session info” button (<a href="https://github.com/pharmaverse/aNCA/issues/1015" class="external-link">#1015</a>)</li>
-<li>Export filenames use STUDYID as fallback when no project name is set, date suffix removed (<a href="https://github.com/pharmaverse/aNCA/issues/1000" class="external-link">#1000</a>)</li>
-<li>Project name auto-populated from STUDYID on data upload (<a href="https://github.com/pharmaverse/aNCA/issues/1000" class="external-link">#1000</a>)</li>
-<li>Enhancements to the slides outputs including grouping by PKNCA groups, dose profile, and additional grouping variables (<a href="https://github.com/pharmaverse/aNCA/issues/791" class="external-link">#791</a>)</li>
-<li>Option to include and apply NCA flag rules with reasons (NCAwXRS) as defined by ADNCA standards. Any record populated within these columns will be excluded for the NCA (<a href="https://github.com/pharmaverse/aNCA/issues/752" class="external-link">#752</a>)</li>
-<li>R script exported in ZIP folder to re-run and replicate App outputs (<a href="https://github.com/pharmaverse/aNCA/issues/789" class="external-link">#789</a>)</li>
-<li>Individual and Mean plots tabs now created using the same function, so the layout and plot themes are consistent across both plots (<a href="https://github.com/pharmaverse/aNCA/issues/712" class="external-link">#712</a>)</li>
-<li>New flagging rule for lambda-z calculations based on r-squared, R2 (<a href="https://github.com/pharmaverse/aNCA/issues/834" class="external-link">#834</a>)</li>
-<li>New Parameter Selection section in NCA tab allowing to select parameters by study type (<a href="https://github.com/pharmaverse/aNCA/issues/795" class="external-link">#795</a>)</li>
-<li>The App optionally maps end of sample collection (AEFRLT) for excretion rate parameter calculations: ERTLST, ERTMAX. (<a href="https://github.com/pharmaverse/aNCA/issues/745" class="external-link">#745</a>)</li>
-<li>Option to upload multiple input files, which will be bound together to form a single ADNCA data set (<a href="https://github.com/pharmaverse/aNCA/issues/821" class="external-link">#821</a>)</li>
-<li>BLQ imputation rules can be applied to the NCA via <code>NCA Setup &gt; Data Imputation</code> (<a href="https://github.com/pharmaverse/aNCA/issues/139" class="external-link">#139</a>)</li>
-<li>Section <code>General Exclusions</code> allowing to perform in-App NCA exclusions (<a href="https://github.com/pharmaverse/aNCA/issues/851" class="external-link">#851</a>)</li>
-<li>Mean plots have been added in the TLGs section, with BLQ handling (<a href="https://github.com/pharmaverse/aNCA/issues/555" class="external-link">#555</a>)</li>
-<li>CMAX automatically selected in box plots if available (<a href="https://github.com/pharmaverse/aNCA/issues/890" class="external-link">#890</a>)</li>
-<li>Allow user to select additional <code>grouping variables</code> (chosen in the mapping) for ratio calculations (<a href="https://github.com/pharmaverse/aNCA/issues/868" class="external-link">#868</a>)</li>
-<li>General button at top page to save all NCA results, settings &amp; draft slides as a ZIP file (<a href="https://github.com/pharmaverse/aNCA/issues/638" class="external-link">#638</a>)</li>
-<li>Settings are now uploaded on initial opening of the app in the data tab, and applied to the next steps (<a href="https://github.com/pharmaverse/aNCA/issues/860" class="external-link">#860</a>)</li>
-<li>Settings file has been converted from rds to yaml, allowing better readability and editing for users. (<a href="https://github.com/pharmaverse/aNCA/issues/901" class="external-link">#901</a>)</li>
-<li>WTBL and WTBLU columns added to the data mapping, for optional conversion of dose to adjust to body weight for excretion calculations (<a href="https://github.com/pharmaverse/aNCA/issues/959" class="external-link">#959</a>)</li>
-<li>Slope selector table for half life adjustments uses time to choose the point of interest. Also it is aesthetics have been polished (<a href="https://github.com/pharmaverse/aNCA/issues/956" class="external-link">#956</a>)</li>
-<li>Partial interval parameters section now allows other calculations than <code>AUCINT</code>, such as <code>RCAMINT</code>, <code>AUCINTD</code> or <code>CAVGINT</code> among others (<a href="https://github.com/pharmaverse/aNCA/issues/524" class="external-link">#524</a>)</li>
-<li>Slope selector plots count with grouping options (<a href="https://github.com/pharmaverse/aNCA/issues/333" class="external-link">#333</a>)</li>
-<li>Add x/y axis limits for the exploration plots (<a href="https://github.com/pharmaverse/aNCA/issues/817" class="external-link">#817</a>) and facet titles including subject count (<a href="https://github.com/pharmaverse/aNCA/issues/894" class="external-link">#894</a>)</li>
-<li>Settings upload and processing is flexible, so non-data specific template settings can be uploaded (<a href="https://github.com/pharmaverse/aNCA/issues/993" class="external-link">#993</a>)</li>
-<li>Mapping will allow custom numeric input values instead of columns for <code>ADOSEDUR</code> and <code>TRTRINT</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1051" class="external-link">#1051</a>)</li>
-<li>Help buttons have been included/updated for most App sections: <code>Parameter Selection</code>, <code>Slope Selector</code>, <code>Additional Analysis</code> and <code>Partial Interval calculations</code> (<a href="https://github.com/pharmaverse/aNCA/issues/975" class="external-link">#975</a>)</li>
-<li>Removed <code>methods</code>, <code>scales</code>, and <code>stringr</code> from package dependencies, replacing all usages with base R equivalents (<a href="https://github.com/pharmaverse/aNCA/issues/1108" class="external-link">#1108</a>)</li>
-<li>SelectInputs updated using a new function to ensure all widgets include variable labels. (<a href="https://github.com/pharmaverse/aNCA/issues/899" class="external-link">#899</a>)</li>
-<li>Export modal now allows users to select which slide sections (mean plots, statistics, line plots, box plots, individual plots/parameters, additional analysis) to include in PPTX and HTML exports; box plot parameters are also configurable (<a href="https://github.com/pharmaverse/aNCA/issues/972" class="external-link">#972</a>)</li>
-<li>Settings file now outputs and time duplicate exclusions and processes them automatically upon settings upload (<a href="https://github.com/pharmaverse/aNCA/issues/1195" class="external-link">#1195</a>)</li>
-<li>Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters). Includes Select all, Defaults, and Clear all buttons.</li>
+<div class="section level4">
+<h4 id="ratio-calculations-development-version-1">Ratio Calculations<a class="anchor" aria-label="anchor" href="#ratio-calculations-development-version-1"></a></h4>
+<ul><li>Fixed <code>Aggregate Subject = yes/if-needed</code> not aggregating reference values, and ratio columns not appearing in results (<a href="https://github.com/pharmaverse/aNCA/issues/1273" class="external-link">#1273</a>)</li>
 </ul></div>
-<div class="section level3">
-<h3 id="bugs-fixed-development-version">Bugs fixed<a class="anchor" aria-label="anchor" href="#bugs-fixed-development-version"></a></h3>
-<ul><li>Fixed ratio calculations with <code>Aggregate Subject = yes</code> or <code>if-needed</code> not aggregating reference values, and ratio parameter columns (FABS, FREL, etc.) not appearing in NCA Results (<a href="https://github.com/pharmaverse/aNCA/issues/1273" class="external-link">#1273</a>)</li>
-<li>Last dose interval end time now extends to the last observed sample instead of being cut off at TRTRINT (tau), ensuring all collected data points are included in NCA calculations (<a href="https://github.com/pharmaverse/aNCA/issues/1235" class="external-link">#1235</a>)</li>
-<li>Fixed NA <code>PPSTRESU</code> handling across NCA results: descriptive statistics no longer crash when a parameter group has all-NA units, and manual interval parameters (e.g., RCAMINT) no longer get <code>NA</code> appended to their column names (<a href="https://github.com/pharmaverse/aNCA/issues/1216" class="external-link">#1216</a>)</li>
+<div class="section level4">
+<h4 id="nca-results--export-development-version">NCA Results &amp; Export<a class="anchor" aria-label="anchor" href="#nca-results--export-development-version"></a></h4>
+<ul><li>Descriptive statistics were silently ungrouped when exported before visiting the tab — now falls back to default grouping columns (<a href="https://github.com/pharmaverse/aNCA/issues/1264" class="external-link">#1264</a>)</li>
+<li>Fixed NA <code>PPSTRESU</code> handling: descriptive statistics no longer crash on all-NA unit groups, and manual interval parameters no longer get <code>NA</code> in column names (<a href="https://github.com/pharmaverse/aNCA/issues/1216" class="external-link">#1216</a>)</li>
 <li>
-<code><a href="../reference/get_settings_code.html">get_settings_code()</a></code> now reads mapping, filters, ratio table, and units from the settings YAML instead of using hardcoded defaults. Legacy YAML files without these fields still work via fallback. The <code>mapping</code> parameter has been removed (<a href="https://github.com/pharmaverse/aNCA/issues/1189" class="external-link">#1189</a>)</li>
-<li>SASS compilation moved from runtime (<code>app.R</code>) to a <code>data-raw/compile_css.R</code> script, fixing startup crashes on read-only deployments (<a href="https://github.com/pharmaverse/aNCA/issues/1107" class="external-link">#1107</a>)</li>
-<li>ZIP folder with results will now include the exploration tab outputs: individual plots, mean plots (<a href="https://github.com/pharmaverse/aNCA/issues/794" class="external-link">#794</a>)</li>
-<li>Updated TMAX label from Time of CMAX to Time of CMAX Observation (<a href="https://github.com/pharmaverse/aNCA/issues/787" class="external-link">#787</a>)</li>
-<li>Bug fix for box/violin plots that were crashing when violin option selected (<a href="https://github.com/pharmaverse/aNCA/issues/786" class="external-link">#786</a>)</li>
-<li>Summary statistic table changes in grouping variables won’t remove previous summary settings (<a href="https://github.com/pharmaverse/aNCA/issues/840" class="external-link">#840</a>)</li>
-<li>No longer offering direct PK calculations for renal clearance (RENALCL) parameters. PKNCA is currently inaccurate. Instead, the ratios table should be used (<a href="https://github.com/pharmaverse/aNCA/issues/781" class="external-link">#781</a>)</li>
-<li>No longer offering PK calculations for PKNCA multidose parameters; mean residence time (MRTMDO, MRTMDP), steady state volume of distribution (VSSMDP, VSSMDO) and time above (TAT). They are not really able to be calculated using PKNCA (<a href="https://github.com/pharmaverse/aNCA/issues/869" class="external-link">#869</a>)</li>
-<li>Bug fix for settings upload via zip file output (<a href="https://github.com/pharmaverse/aNCA/issues/832" class="external-link">#832</a>)</li>
-<li>Bug fix for plotting section where if there is &gt;1 unit the axis label will contain both unique units. (<a href="https://github.com/pharmaverse/aNCA/issues/818" class="external-link">#818</a>)</li>
-<li>Units table bugs fixed, so it is filtered based on NCA setup and the table is searchable for each column (<a href="https://github.com/pharmaverse/aNCA/issues/870" class="external-link">#870</a>)</li>
-<li>Bug fix to allow for unrecognized units to be used in AVALU and DOSEU (<a href="https://github.com/pharmaverse/aNCA/issues/861" class="external-link">#861</a>)</li>
-<li>Bug fix so NA units are allowed in the data (as per CDISC guidelines for NA samples) and not treated as a unique unit (<a href="https://github.com/pharmaverse/aNCA/issues/907" class="external-link">#907</a>)</li>
-<li>Bug fix so app doesn’t crash if NCA is rerun with an error (e.g. No exclusion REASON) (<a href="https://github.com/pharmaverse/aNCA/issues/913" class="external-link">#913</a>)</li>
-<li>NCA results flagging logic updated to include Missing column and correctly identify difference between missing and not requested (<a href="https://github.com/pharmaverse/aNCA/issues/934" class="external-link">#934</a>)</li>
-<li>Pagination controls in the slope selector and the interactivity of the plots is less buggy (<a href="https://github.com/pharmaverse/aNCA/issues/956" class="external-link">#956</a>)</li>
-<li>Creation of intervals reworked to prevent doses being combined if no samples are taken post dose (<a href="https://github.com/pharmaverse/aNCA/issues/963" class="external-link">#963</a>)</li>
-<li>Parameter selection no longer resets after changes to NCA setup and slope selector- apart from changes to analyte and pcspec that change the study types detected (<a href="https://github.com/pharmaverse/aNCA/issues/1008" class="external-link">#1008</a>)</li>
-<li>Prevent a crash when selecting already defined identity variables (i.e, <code>DOSETRT</code>) for the <code>Additional Grouping Variables</code> in the <code>Mapping Tab</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1060" class="external-link">#1060</a>)</li>
-<li>Filtering will now correctly also affect all the input widgets in NCA setup (<a href="https://github.com/pharmaverse/aNCA/issues/1092" class="external-link">#1092</a>)</li>
-<li>All Results input widgets now shows each manual interval parameter with its range suffix (e.g. <code>AUCINT_0-12</code>, <code>CAVGINT_0-24</code>) instead of collapsing them into a single entry (<a href="https://github.com/pharmaverse/aNCA/issues/1146" class="external-link">#1146</a>)</li>
-<li>Boxplot parameter selector and excretion end time column selector now restrict to single selection, preventing errors when downstream code expects a single value. Boxplot selector also shows each manual interval parameter with its range suffix (e.g. <code>AUCINT_0-12</code>, <code>CAVGINT_0-24</code>) instead of collapsing them into a single entry (<a href="https://github.com/pharmaverse/aNCA/issues/1148" class="external-link">#1148</a>)</li>
-<li>Manual interval parameter renaming now uses dose-relative times (<code>start_dose</code>/<code>end_dose</code>) consistently across descriptive statistics, parameter plots, and boxplots, matching <code>pivot_wider_pknca_results</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1169" class="external-link">#1169</a>)</li>
-<li>Descriptive statistics parameter columns are now correctly displayed when using the <code>selector_label</code> widget, and duplicate rows from the concentration data join are deduplicated (<a href="https://github.com/pharmaverse/aNCA/issues/1169" class="external-link">#1169</a>)</li>
-<li>Fixed <code>PKNCA_update_data_object</code> custom units table join using hardcoded <code>by = c("PPTESTCD", "PPORRESU")</code> instead of dynamic keys, which failed when the units table included group columns like <code>PARAM</code> or <code>PCSPEC</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1159" class="external-link">#1159</a>)</li>
-<li>Fixed <code>DOSNOA</code> computation using specimen-level grouping (including PCSPEC/PARAM), causing urine-only Day 10 data to get <code>DOSNOA=1</code> instead of <code>DOSNOA=2</code>, leading to incorrect dose time matching (<a href="https://github.com/pharmaverse/aNCA/issues/1116" class="external-link">#1116</a>)</li>
-<li>Fixed “Summarise by” selector in Matrix Ratios having no effect due to input ID mismatch (<code>summarygroups</code> vs <code>summary_groups</code>) (<a href="https://github.com/pharmaverse/aNCA/issues/1198" class="external-link">#1198</a>)</li>
+<code><a href="../reference/get_settings_code.html">get_settings_code()</a></code> reads mapping, filters, ratio table, and units from YAML instead of hardcoded defaults (<a href="https://github.com/pharmaverse/aNCA/issues/1189" class="external-link">#1189</a>)</li>
+<li>All Results widgets show interval parameters with range suffix (e.g. <code>AUCINT_0-12</code>) instead of collapsing into one entry (<a href="https://github.com/pharmaverse/aNCA/issues/1146" class="external-link">#1146</a>)</li>
+<li>Interval parameter renaming uses dose-relative times consistently across statistics, plots, and boxplots (<a href="https://github.com/pharmaverse/aNCA/issues/1169" class="external-link">#1169</a>)</li>
+<li>Descriptive statistics columns display correctly with <code>selector_label</code> widget; duplicate rows deduplicated (<a href="https://github.com/pharmaverse/aNCA/issues/1169" class="external-link">#1169</a>)</li>
+<li>NCA results flagging correctly distinguishes missing vs not-requested parameters (<a href="https://github.com/pharmaverse/aNCA/issues/934" class="external-link">#934</a>)</li>
+<li>Custom units table join uses correct keys instead of hardcoded columns (<a href="https://github.com/pharmaverse/aNCA/issues/1159" class="external-link">#1159</a>)</li>
+<li>“Summarise by” selector in Matrix Ratios fixed (input ID mismatch) (<a href="https://github.com/pharmaverse/aNCA/issues/1198" class="external-link">#1198</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="settings--upload-development-version">Settings &amp; Upload<a class="anchor" aria-label="anchor" href="#settings--upload-development-version"></a></h4>
+<ul><li>SASS compilation moved from runtime to build-time script, fixing startup crashes on read-only deployments (<a href="https://github.com/pharmaverse/aNCA/issues/1107" class="external-link">#1107</a>)</li>
+<li>Settings upload via ZIP file fixed (<a href="https://github.com/pharmaverse/aNCA/issues/832" class="external-link">#832</a>)</li>
+<li>App no longer crashes if NCA is rerun with an error (<a href="https://github.com/pharmaverse/aNCA/issues/913" class="external-link">#913</a>)</li>
+<li>Parameter selection no longer resets after NCA setup changes (except analyte/specimen changes) (<a href="https://github.com/pharmaverse/aNCA/issues/1008" class="external-link">#1008</a>)</li>
+<li>Filtering correctly affects all NCA setup input widgets (<a href="https://github.com/pharmaverse/aNCA/issues/1092" class="external-link">#1092</a>)</li>
+<li>Selecting already-defined identity variables for Additional Grouping Variables no longer crashes (<a href="https://github.com/pharmaverse/aNCA/issues/1060" class="external-link">#1060</a>)</li>
+<li>Summary statistic grouping variable changes no longer remove previous settings (<a href="https://github.com/pharmaverse/aNCA/issues/840" class="external-link">#840</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="exploration--plots-development-version-1">Exploration &amp; Plots<a class="anchor" aria-label="anchor" href="#exploration--plots-development-version-1"></a></h4>
+<ul><li>ZIP export includes exploration tab outputs: individual and mean plots (<a href="https://github.com/pharmaverse/aNCA/issues/794" class="external-link">#794</a>)</li>
+<li>Box/violin plots no longer crash when violin option selected (<a href="https://github.com/pharmaverse/aNCA/issues/786" class="external-link">#786</a>)</li>
+<li>Boxplot parameter selector restricted to single selection; shows interval parameters with range suffix (<a href="https://github.com/pharmaverse/aNCA/issues/1148" class="external-link">#1148</a>)</li>
+<li>Axis labels show both unique units when &gt;1 unit exists (<a href="https://github.com/pharmaverse/aNCA/issues/818" class="external-link">#818</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="units--data-development-version">Units &amp; Data<a class="anchor" aria-label="anchor" href="#units--data-development-version"></a></h4>
+<ul><li>Units table filtered based on NCA setup; searchable per column (<a href="https://github.com/pharmaverse/aNCA/issues/870" class="external-link">#870</a>)</li>
+<li>Unrecognized units allowed in AVALU and DOSEU (<a href="https://github.com/pharmaverse/aNCA/issues/861" class="external-link">#861</a>)</li>
+<li>NA units allowed in data per CDISC guidelines (<a href="https://github.com/pharmaverse/aNCA/issues/907" class="external-link">#907</a>)</li>
+<li>TMAX label corrected from “Time of CMAX” to “Time of CMAX Observation” (<a href="https://github.com/pharmaverse/aNCA/issues/787" class="external-link">#787</a>)</li>
+<li>Pagination controls in the slope selector are less buggy (<a href="https://github.com/pharmaverse/aNCA/issues/956" class="external-link">#956</a>)</li>
+</ul></div>
+</div>
+<div class="section level3">
+<h3 id="dependency-changes-development-version">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-development-version"></a></h3>
+<ul><li>
+<code>rlistings</code>, <code>officer</code>, and <code>flextable</code> moved from Imports to Suggests — the app notifies users when these are missing (<a href="https://github.com/pharmaverse/aNCA/issues/1106" class="external-link">#1106</a>)</li>
+<li>Removed <code>methods</code>, <code>scales</code>, and <code>stringr</code> from package dependencies, replaced with base R equivalents (<a href="https://github.com/pharmaverse/aNCA/issues/1108" class="external-link">#1108</a>)</li>
+<li>Settings YAML units accept minimal format: just <code>PPTESTCD</code> and <code>PPSTRESU</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1027" class="external-link">#1027</a>)</li>
 </ul></div>
 </div>
     <div class="section level2">
