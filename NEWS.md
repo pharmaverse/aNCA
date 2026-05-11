@@ -29,6 +29,7 @@
 * Ratio Calculations UI replaced with formula-style fraction cards (#1250)
 * Interval/partial parameters (e.g. AUCINT_0-20) selectable in ratio Test/Ref Parameter dropdowns (#1135)
 * Additional grouping variables available for ratio calculations (#868)
+* Webpage documentation available in help button for further explanations on how to do ratio calculations (#1300)
 
 ### Exploration & Plots
 * Dose-normalised exploration plots: toggle between default, dose-normalised, or both overlaid on individual and mean plots (#986)
