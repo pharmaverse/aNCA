@@ -12,6 +12,7 @@
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
 
 ### NCA Setup
+* Parameter Selection tab now contains Partial Intervals, Ratio Calculations, and Units alongside the parameter matrix. The former Settings tab is renamed to General Settings (#1239)
 * Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters) with Select All, Defaults, and Clear All buttons (#795)
 * Partial interval parameters section supports calculations beyond `AUCINT`: `RCAMINT`, `AUCINTD`, `CAVGINT`, and others. Table starts empty by default with a Remove Row button (#524, #1249)
 * "Min. Points for Half-life" setting added (range 2–10, default 3) (#1155)
@@ -30,9 +31,10 @@
 * Additional grouping variables available for ratio calculations (#868)
 
 ### Exploration & Plots
+* Dose-normalised exploration plots: toggle between default, dose-normalised, or both overlaid on individual and mean plots (#986)
 * Exploration sidebars: "Add to Exports" saves named plot snapshots to ZIP; "View Exports" shows a gallery modal (#1002, #1137)
 * Toggle legend visibility, improved tooltips, correct axis/legend labels (#988)
-* X/Y axis limits for exploration plots, facet titles with subject count (#817, #894)
+* X/Y axis limits for exploration plots, facet titles with subject count (#817, #894, #984)
 * Individual and Mean plots use the same function for consistent layout and themes (#712)
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
@@ -78,6 +80,7 @@
 * Fixed `Aggregate Subject = yes/if-needed` not aggregating reference values, and ratio columns not appearing in results (#1273)
 
 ### NCA Results & Export
+* Descriptive statistics were silently ungrouped when exported before visiting the tab — now falls back to default grouping columns (#1264)
 * Fixed NA `PPSTRESU` handling: descriptive statistics no longer crash on all-NA unit groups, and manual interval parameters no longer get `NA` in column names (#1216)
 * `get_settings_code()` reads mapping, filters, ratio table, and units from YAML instead of hardcoded defaults (#1189)
 * All Results widgets show interval parameters with range suffix (e.g. `AUCINT_0-12`) instead of collapsing into one entry (#1146)
