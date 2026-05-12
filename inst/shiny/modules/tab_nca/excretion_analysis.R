@@ -185,8 +185,14 @@ excretion_server <- function(id, input_pknca_data) {
         distinct() %>%
         # Create logical columns with only TRUE for the NCA parameters requested by the user
         mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
-        mutate(across(any_of(input$param_select), ~ TRUE, .names = "{.col}"),
-               type_interval = "sample")
+        mutate(
+          across(
+            any_of(translate_terms(input$param_select, "PPTESTCD", "PKNCA")),
+            ~ TRUE,
+            .names = "{.col}"
+          ),
+          type_interval = "sample"
+        )
 
       # Combine dose profile intervals and excretion sample intervals
       data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
