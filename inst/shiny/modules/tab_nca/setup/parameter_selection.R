@@ -176,6 +176,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     # List of parameter data frames by type
     all_params <- metadata_nca_parameters %>%
       filter(!TYPE %in% c("PKNCA-not-covered", "IV")) %>%
+      filter(show_in_matrix_selection) %>%
       select(
         TYPE, PKNCA, PPTESTCD, PPTEST,
         can_excretion, can_non_excretion, can_single_dose,
