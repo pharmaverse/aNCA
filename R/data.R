@@ -28,6 +28,8 @@
 #'    Indicates if the parameter can be used in extravascular analysis}
 #'   \item{can_metabolite}{Logical.
 #'    Indicates if the parameter can be used in metabolite analysis}
+#'   \item{show_in_matrix_selection}{Logical.
+#'    Indicates if the parameter will be shown for general interval calculations}
 #' }
 #' @source Generated for use in the `translate_nomenclature` function.
 "metadata_nca_parameters"
