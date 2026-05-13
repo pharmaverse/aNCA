@@ -454,12 +454,11 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
     function(i) {
       type <- params$TYPE[i]
       cat <- params$CAT[i]
-      can_exc <- params$can_excretion[i]
       locs <- character(0)
       if (type %in% c("Standard", "IV")) {
         locs <- c(locs, "Parameter Selection > Matrix")
       }
-      if (type == "Urine" || isTRUE(can_exc)) {
+      if (type == "Urine") {
         locs <- c(
           locs, "Additional Analysis > Excretion"
         )
