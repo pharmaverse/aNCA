@@ -424,3 +424,28 @@ describe("update_main_intervals", {
     expect_equal(res_both %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
   })
 })
+
+describe("rm_impute_obs_params", {
+  it("initializes impute column and returns data unchanged when column is missing", {
+    data <- FIXTURE_PKNCA_DATA
+    data$intervals <- data$intervals[, !names(data$intervals) %in% "impute"]
+    expect_false("impute" %in% names(data$intervals))
+
+    result <- rm_impute_obs_params(data, metadata_nca_parameters)
+    expect_true("impute" %in% names(result$intervals))
+    expect_true(all(is.na(result$intervals$impute)))
+  })
+
+  it("returns early when no target params are TRUE", {
+    data <- FIXTURE_PKNCA_DATA
+    all_params <- setdiff(
+      names(PKNCA::get.interval.cols()), c("start", "end")
+    )
+    present_params <- intersect(all_params, names(data$intervals))
+    data$intervals[, present_params] <- FALSE
+    intervals_before <- data$intervals
+
+    result <- rm_impute_obs_params(data, metadata_nca_parameters)
+    expect_equal(result$intervals, intervals_before)
+  })
+})

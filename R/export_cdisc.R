@@ -8,7 +8,10 @@
 #'  * pknca_result_raw Output from function call `pk.nca()` (needs to be merged with upper later
 #'                      on but now we avoid merge conflict)
 #'
-#' @param res_nca Object with results of the NCA analysis.
+#' @param res_nca Object with results of the NCA analysis. If
+#'   `res_nca$result` contains a `.pp_excl` column (logical), excluded rows
+#'   are merged into the `exclude` column so they appear in `PPSUMFL`/`PPSUMRSN`.
+#'   If `.pp_excl_reason` (character) is also present, it populates `PPSUMRSN`.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #' @param flag_rules Character vector of flag rule exclusion messages applied during NCA
@@ -114,6 +117,11 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
       PPTEST = translate_terms(PPTESTCD, "PPTESTCD", "PPTEST")
     ) %>%
 
+    # Parameters whose metadata defines PPANMETH (e.g. dose-aware AUCint)
+    # get their PPTESTCD consolidated to the base form (strip lowercase
+    # suffix) and PPANMETH populated from the metadata.
+    .apply_metadata_ppanmeth() %>%
+
     # Parameters with a one-to-many mapping in PKNCA / CDISC
     mutate(
       # Column for one-to-many criteria
@@ -164,8 +172,11 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
     ungroup() %>%
 
     # Select only columns needed for PP, ADPP, ADNCA
-    # Keep "exclude" for ADPP flag derivation; it is dropped later
-    select(any_of(c(metadata_nca_variables[["Variable"]], "exclude", grouping_vars))) %>%
+    # Keep "exclude" and manual exclusion markers for ADPP flag derivation
+    select(any_of(c(
+      metadata_nca_variables[["Variable"]], "exclude", grouping_vars,
+      ".pp_excl", ".pp_excl_reason"
+    ))) %>%
     # Make character expected columns NA_character_ if missing
     mutate(
       across(
@@ -195,7 +206,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
     # Adjust class and length to the standards
     adjust_class_and_length(metadata_nca_variables)
 
-  # Add labels to the columns
+  # Add labels to the columns (skip internal columns not in metadata)
   labels_map <- metadata_nca_variables %>%
     filter(!duplicated(Variable)) %>%
     pull(Label, Variable)
@@ -215,7 +226,10 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
     )
 
   adpp <- cdisc_info %>%
-    select(any_of(c(CDISC_COLS$ADPP$Variable, "exclude", grouping_vars))) %>%
+    select(any_of(c(
+      CDISC_COLS$ADPP$Variable, "exclude", grouping_vars,
+      ".pp_excl", ".pp_excl_reason"
+    ))) %>%
     # Deselect permitted columns with only NAs
     select(
       -which(
@@ -224,9 +238,23 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
           !names(.) %in% c("EPOCH") # here are exceptions not justified by CDISC
       )
     ) %>%
+    # Merge manual exclusions (.pp_excl) into the exclude column
+    # so .add_crit_flags() picks them up for PPSUMFL/PPSUMRSN
+    .merge_manual_exclusions() %>%
     # Add CRITy/CRITyFL flags and PPSUMFL/PPSUMRSN based on flag rules
     .add_crit_flags(flag_rules) %>%
-    select(-any_of("exclude"))
+    select(-any_of(c("exclude", ".pp_excl", ".pp_excl_reason"))) %>%
+    # Apply labels to columns added by .add_crit_flags()
+    {
+      adpp_df <- . # nolint: object_name_linter
+      new_cols <- intersect(names(adpp_df), names(labels_map))
+      needs_label <- function(col) is.null(attr(adpp_df[[col]], "label"))
+      unlabeled <- new_cols[vapply(new_cols, needs_label, logical(1))]
+      if (length(unlabeled) > 0) {
+        var_labels(adpp_df)[unlabeled] <- labels_map[unlabeled]
+      }
+      adpp_df
+    }
 
   adnca <- res_nca$data$conc$data %>%
     left_join(dose_info,
@@ -523,7 +551,8 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #'
 #' For each flag rule message, creates a CRITy column (criterion description)
 #' and CRITyFL column ("Y" if satisfied, "N" if violated) by grepping the
-#' `exclude` column. PPSUMFL is "Y" when all criteria are satisfied.
+#' `exclude` column. PPSUMFL is "Y" when the record is excluded from summaries,
+#' empty when included.
 #'
 #' @param data A data.frame with an `exclude` column from PKNCA results.
 #' @param flag_rules Character vector of exclusion messages applied during NCA
@@ -533,35 +562,151 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #' @noRd
 #' @keywords internal
 .add_crit_flags <- function(data, flag_rules) {
-  if (is.null(flag_rules) || length(flag_rules) == 0) {
-    return(data)
-  }
-
   exclude_vals <- data[["exclude"]]
   # Treat NA as no exclusion
   exclude_vals[is.na(exclude_vals)] <- ""
 
-  for (i in seq_along(flag_rules)) {
-    rule_msg <- flag_rules[i]
-    crit_col <- paste0("CRIT", i)
-    critfl_col <- paste0("CRIT", i, "FL")
+  # Add CRITy/CRITyFL columns for each flag rule
+  if (!is.null(flag_rules) && length(flag_rules) > 0) {
+    for (i in seq_along(flag_rules)) {
+      rule_msg <- flag_rules[i]
+      crit_col <- paste0("CRIT", i)
+      critfl_col <- paste0("CRIT", i, "FL")
 
-    # CRITy: the criterion description (constant for all rows)
-    data[[crit_col]] <- rule_msg
+      # CRITy: the criterion description (constant for all rows)
+      data[[crit_col]] <- rule_msg
 
-    # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
-    # Split on "; " (PKNCA separator) and do exact element matching to avoid
-    # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
-    is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
-      rule_msg %in% parts
-    }, logical(1))
-    data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
+      # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
+      # Split on "; " (PKNCA separator) and do exact element matching to avoid
+      # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
+      is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
+        rule_msg %in% parts
+      }, logical(1))
+      data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
+    }
   }
 
-  # PPSUMFL/PPSUMRSN: derived directly from whether exclude is populated
-  has_exclusions <- exclude_vals != ""
-  data[["PPSUMFL"]] <- ifelse(has_exclusions, "Y", "")
-  data[["PPSUMRSN"]] <- exclude_vals
+  # PPSUMFL/PPSUMRSN: derived from whether exclude is populated
+  # (covers both flag-rule and manual exclusions)
+  ppsum <- .derive_ppsum_flags(exclude_vals)
+  data[["PPSUMFL"]] <- ppsum$PPSUMFL
+  data[["PPSUMRSN"]] <- ppsum$PPSUMRSN
 
   data
+}
+
+#' Derive PPSUMFL and PPSUMRSN from an exclude-values vector
+#'
+#' Single source of truth for the PPSUMFL/PPSUMRSN derivation used by both
+#' the CDISC export pipeline and the parameter exclusions UI preview.
+#'
+#' @param exclude_vals Character vector where non-empty entries indicate exclusion.
+#'   NA values are treated as no exclusion.
+#' @param max_reason_len Maximum character length for PPSUMRSN. Values exceeding
+#'   this are truncated with a trailing ellipsis. Default 200 (from ADPP metadata).
+#' @returns A list with `PPSUMFL` (character) and `PPSUMRSN` (character).
+#' @noRd
+#' @keywords internal
+.derive_ppsum_flags <- function(exclude_vals, max_reason_len = 200L) {
+  exclude_vals[is.na(exclude_vals)] <- ""
+  has_exclusions <- exclude_vals != ""
+  # Truncate long reasons to respect ADPP field length
+  too_long <- nchar(exclude_vals) > max_reason_len
+  if (any(too_long)) {
+    exclude_vals[too_long] <- paste0(
+      substr(exclude_vals[too_long], 1, max_reason_len - 3), "..."
+    )
+  }
+  list(
+    PPSUMFL = ifelse(has_exclusions, "Y", ""),
+    PPSUMRSN = exclude_vals
+  )
+}
+
+#' Merge manual parameter exclusions into the exclude column
+#'
+#' If `.pp_excl` (logical) and `.pp_excl_reason` (character) columns are present,
+#' appends the manual exclusion reason to the `exclude` column so that
+#' `.add_crit_flags()` picks them up for PPSUMFL/PPSUMRSN.
+#'
+#' @param data A data.frame with optional `.pp_excl` and `.pp_excl_reason` columns.
+#' @returns The input data with manual exclusions merged into `exclude`.
+#' @noRd
+#' @keywords internal
+.merge_manual_exclusions <- function(data) {
+  if (!".pp_excl" %in% names(data)) return(data)
+
+  excl_flag <- data[[".pp_excl"]]
+  excl_reason <- if (".pp_excl_reason" %in% names(data)) {
+    data[[".pp_excl_reason"]]
+  } else {
+    rep(NA_character_, nrow(data))
+  }
+
+  # Ensure exclude column exists
+  if (!"exclude" %in% names(data)) {
+    data[["exclude"]] <- NA_character_
+  }
+
+  # Append manual exclusion reason to exclude for flagged rows
+  for (i in which(excl_flag)) {
+    reason <- excl_reason[i]
+    if (is.na(reason) || reason == "") reason <- "Manual exclusion"
+    existing <- data[["exclude"]][i]
+    data[["exclude"]][i] <- if (is.na(existing) || existing == "") {
+      reason
+    } else {
+      paste(existing, reason, sep = "; ")
+    }
+  }
+
+  data
+}
+
+#' Apply PPANMETH from parameter metadata during CDISC export
+#'
+#' Parameters whose metadata row has a non-empty PPANMETH column (e.g.
+#' dose-aware AUCint variants) get their PPTESTCD consolidated to the
+#' base form by stripping the trailing lowercase suffix, and PPANMETH
+#' is populated from the metadata. If PPANMETH already has a value
+#' (e.g. from ratio calculations), the metadata value is prepended.
+#'
+#' @param df Data frame with at least a PPTESTCD column.
+#' @returns The data frame with PPANMETH set and PPTESTCDs consolidated.
+#' @keywords internal
+#' @noRd
+.apply_metadata_ppanmeth <- function(df) {
+  # Build lookup from metadata: PPTESTCD -> PPANMETH (only non-empty)
+  ppanmeth_lookup <- metadata_nca_parameters[
+    nzchar(metadata_nca_parameters$PPANMETH) &
+      !is.na(metadata_nca_parameters$PPANMETH),
+    c("PPTESTCD", "PPANMETH")
+  ]
+  if (nrow(ppanmeth_lookup) == 0) return(df)
+
+  has_method <- df$PPTESTCD %in% ppanmeth_lookup$PPTESTCD
+  if (!any(has_method)) return(df)
+
+  if (!"PPANMETH" %in% names(df)) df$PPANMETH <- NA_character_
+
+  # Look up the method for each matching row
+  method_vals <- ppanmeth_lookup$PPANMETH[
+    match(df$PPTESTCD[has_method], ppanmeth_lookup$PPTESTCD)
+  ]
+
+  # Prepend to existing PPANMETH if already populated
+  existing <- df$PPANMETH[has_method]
+  df$PPANMETH[has_method] <- ifelse(
+    is.na(existing) | existing == "",
+    method_vals,
+    paste(method_vals, existing, sep = "; ")
+  )
+
+  # Derive CDISC PPTESTCD by stripping trailing lowercase suffix
+  df$PPTESTCD[has_method] <- gsub("[a-z]+$", "", df$PPTESTCD[has_method])
+  df$PPTEST[has_method] <- translate_terms(
+    df$PPTESTCD[has_method], "PPTESTCD", "PPTEST"
+  )
+
+  df
 }

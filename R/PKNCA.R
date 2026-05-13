@@ -885,13 +885,19 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
 #' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 #'
 #' This function removes parameters from the PKNCA results that were not requested by the user,
-#' using a pivoted approach that also handles bioavailability settings.
+#' using a pivoted approach.
 #'
 #' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
 #' @return The PKNCA results object with non requested parameters removed from $result.
 #' @export
 remove_pp_not_requested <- function(pknca_res) {
   params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+
+  # If the impute column doesn't exist, initialize it so the group_by exclusion works
+  if (!"impute" %in% names(pknca_res$data$intervals)) {
+    pknca_res$data$intervals$impute <- NA_character_
+  }
+
   # Reshape intervals, filter
   params_not_requested <- pknca_res$data$intervals %>%
     pivot_longer(

@@ -115,7 +115,13 @@ flexible_violinboxplot <- function(res_nca,
   filtered <- boxplotdata %>%
     filter(!!filter_expr, PPTESTCD == parameter)
 
+  # Rows excluded by PKNCA flag rules (populated exclude column)
   is_excluded <- !is.na(filtered[["exclude"]]) & filtered[["exclude"]] != ""
+  # Rows excluded manually via parameter exclusions (.pp_excl marker)
+  if (".pp_excl" %in% names(filtered)) {
+    pp_excl <- filtered[[".pp_excl"]]
+    is_excluded <- is_excluded | (!is.na(pp_excl) & pp_excl)
+  }
   list(
     included = filtered[!is_excluded, , drop = FALSE],
     excluded = filtered[is_excluded, , drop = FALSE]

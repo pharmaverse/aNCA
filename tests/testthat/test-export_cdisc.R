@@ -142,7 +142,7 @@ describe("export_cdisc", {
   })
 
   it("derives PPSTINT and PPENINT for interval (INT) parameters", {
-    for (int_param in c("AUCINT", "CAVGINT", "AUCINTD", "AUCINTPD", "RCAMINT")) {
+    for (int_param in c("AUCINT", "CAVGINT", "RCAMINT")) {
       modified_test_pknca_res <- test_pknca_res
       modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
         mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
@@ -160,6 +160,38 @@ describe("export_cdisc", {
       expect_equal(
         result$pp$PPENINT[which(result$pp$PPTESTCD == int_param)],
         rep(c("PT2H", "PT4H"), times = 3)
+      )
+    }
+  })
+
+  it("consolidates dose-aware AUCint PPTESTCDs and sets PPANMETH", {
+    da_params <- list(
+      AUCINTda   = "AUCINT",
+      AUCINTIPda = "AUCINTIP"
+    )
+    for (da_cd in names(da_params)) {
+      expected_cd <- da_params[[da_cd]]
+      modified_test_pknca_res <- test_pknca_res
+      modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
+        mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
+        mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", da_cd, PPTESTCD))
+
+      result <- export_cdisc(modified_test_pknca_res)
+
+      # Dose-aware params should be consolidated to their base PPTESTCD
+      int_rows <- which(grepl("INT", result$pp$PPTESTCD))
+      expect_true(all(result$pp$PPTESTCD[int_rows] == expected_cd))
+
+      # PPANMETH should be set for consolidated rows
+      expect_true("PPANMETH" %in% names(result$pp))
+      expect_true(all(
+        result$pp$PPANMETH[int_rows] == "Interpolation truncated at next dose time"
+      ))
+
+      # PPSTINT/PPENINT should still be derived correctly
+      expect_equal(
+        result$pp$PPSTINT[int_rows],
+        rep(c("PT0H", "PT2H"), times = 3)
       )
     }
   })
@@ -563,6 +595,116 @@ describe("export_cdisc", {
     )))
   })
 
+  it("PPSUMFL is always present and empty when no exclusions and no flag rules", {
+    clean_res <- test_pknca_res
+    clean_res$result$exclude <- NA_character_
+    result <- export_cdisc(clean_res)
+    expect_true("PPSUMFL" %in% names(result$adpp))
+    expect_true(all(result$adpp$PPSUMFL == ""))
+  })
+
+  it("sets PPSUMFL to Y for excluded rows via .pp_excl marker", {
+    tagged_res <- test_pknca_res
+    tagged_res$result$exclude <- NA_character_
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
+    result <- export_cdisc(tagged_res)
+    expect_true("PPSUMFL" %in% names(result$adpp))
+    expect_equal(sum(result$adpp$PPSUMFL == "Y"), 1)
+    expect_equal(sum(result$adpp$PPSUMFL == ""), n - 1)
+    expect_false(".pp_excl" %in% names(result$adpp))
+    expect_false(".pp_excl_reason" %in% names(result$adpp))
+  })
+
+  it("PPSUMFL is character type when exclusions present", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
+    result <- export_cdisc(tagged_res)
+    expect_type(result$adpp$PPSUMFL, "character")
+  })
+
+  it("PPSUMFL handles multiple excluded rows", {
+    tagged_res <- test_pknca_res
+    tagged_res$result$exclude <- NA_character_
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- c(TRUE, TRUE, TRUE, rep(FALSE, n - 3))
+    result <- export_cdisc(tagged_res)
+    expect_equal(sum(result$adpp$PPSUMFL == "Y"), 3)
+    expect_equal(sum(result$adpp$PPSUMFL == ""), n - 3)
+  })
+
+  it("PPSUMFL handles all rows excluded", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- rep(TRUE, n)
+    result <- export_cdisc(tagged_res)
+    expect_true(all(result$adpp$PPSUMFL == "Y"))
+    expect_equal(sum(result$adpp$PPSUMFL == ""), 0)
+  })
+
+  it("PPSUMFL and PPSUMRSN do not appear in PP output", {
+    tagged_res <- test_pknca_res
+    tagged_res$result$.pp_excl <- rep(FALSE, nrow(tagged_res$result))
+    result <- export_cdisc(tagged_res)
+    expect_false("PPSUMFL" %in% names(result$pp))
+    expect_false("PPSUMRSN" %in% names(result$pp))
+    expect_false(".pp_excl" %in% names(result$pp))
+  })
+
+  it("PPSUMFL and PPSUMRSN are present when exclusions exist", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
+    result <- export_cdisc(tagged_res)
+    expect_true("PPSUMFL" %in% names(result$adpp))
+    expect_true("PPSUMRSN" %in% names(result$adpp))
+  })
+
+  it("PPSUMRSN is always present and empty when no exclusions and no flag rules", {
+    clean_res <- test_pknca_res
+    clean_res$result$exclude <- NA_character_
+    result <- export_cdisc(clean_res)
+    expect_true("PPSUMRSN" %in% names(result$adpp))
+    expect_true(all(result$adpp$PPSUMRSN == ""))
+  })
+
+  it("PPSUMRSN contains exclusion reason from .pp_excl_reason", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- c(TRUE, TRUE, rep(FALSE, n - 2))
+    tagged_res$result$.pp_excl_reason <- c(
+      "Outlier", "Protocol deviation", rep(NA_character_, n - 2)
+    )
+    result <- export_cdisc(tagged_res)
+    reasons <- result$adpp$PPSUMRSN
+    expect_true(any(grepl("Outlier", reasons)))
+    expect_true(any(grepl("Protocol deviation", reasons)))
+    expect_false(".pp_excl_reason" %in% names(result$adpp))
+  })
+
+  it("PPSUMRSN is character type when exclusions present", {
+    tagged_res <- test_pknca_res
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
+    tagged_res$result$.pp_excl_reason <- c("Outlier", rep(NA_character_, n - 1))
+    result <- export_cdisc(tagged_res)
+    expect_type(result$adpp$PPSUMRSN, "character")
+  })
+
+  it("PPSUMFL works correctly with grouping_vars", {
+    tagged_res <- test_pknca_res
+    tagged_res$result$exclude <- NA_character_
+    n <- nrow(tagged_res$result)
+    tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
+    tagged_res$data$conc$data$GROUP <- "GroupA"
+    tagged_res$result$GROUP <- "GroupA"
+    result <- export_cdisc(tagged_res, grouping_vars = "GROUP")
+    expect_true("PPSUMFL" %in% names(result$adpp))
+    expect_true("GROUP" %in% names(result$adpp))
+    expect_equal(sum(result$adpp$PPSUMFL == "Y"), 1)
+  })
+
   it("includes non-standard grouping_vars columns in ADNCA and ADPP outputs", {
     test_with_grpvars <- test_pknca_res
     test_with_grpvars$data$conc$data$GROUP <- "GroupA"
@@ -668,23 +810,24 @@ describe("export_cdisc PKSUM1F derivation", {
   })
 })
 
-describe("export_cdisc: flag_rules NULL or empty produces no flag columns", {
+describe("export_cdisc: flag_rules NULL or empty produces no CRITy columns", {
 
-  it("produces no CRITy or PPSUMFL columns when flag_rules is NULL", {
+  it("produces no CRITy columns when flag_rules is NULL, but PPSUMFL/PPSUMRSN are present", {
     result <- export_cdisc(test_pknca_res, flag_rules = NULL)
     adpp <- result$adpp
     crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
     expect_length(crit_cols, 0)
-    expect_false("PPSUMFL" %in% names(adpp))
-    expect_false("PPSUMRSN" %in% names(adpp))
+    expect_true("PPSUMFL" %in% names(adpp))
+    expect_true("PPSUMRSN" %in% names(adpp))
   })
 
-  it("produces no CRITy or PPSUMFL columns when flag_rules is empty", {
+  it("produces no CRITy columns when flag_rules is empty, but PPSUMFL/PPSUMRSN are present", {
     result <- export_cdisc(test_pknca_res, flag_rules = character(0))
     adpp <- result$adpp
     crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
     expect_length(crit_cols, 0)
-    expect_false("PPSUMFL" %in% names(adpp))
+    expect_true("PPSUMFL" %in% names(adpp))
+    expect_true("PPSUMRSN" %in% names(adpp))
   })
 })
 
