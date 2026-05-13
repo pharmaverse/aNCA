@@ -92,6 +92,11 @@ A data frame with 123 rows and 6 variables:
 
   Logical. Indicates if the parameter can be used in metabolite analysis
 
+- show_in_matrix_selection:
+
+  Logical. Indicates if the parameter will be shown for general interval
+  calculations
+
 ## Source
 
 Generated for use in the `translate_nomenclature` function.

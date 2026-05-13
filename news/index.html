@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9170</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9171</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -149,6 +149,7 @@
 <li>DOSNOA computation fixed for specimen-level grouping — urine-only data no longer gets incorrect dose numbering (<a href="https://github.com/pharmaverse/aNCA/issues/1116" class="external-link">#1116</a>)</li>
 <li>Dose-aware AUCint parameters now share the same PPTESTCD as their non-dose-aware counterparts in CDISC exports, with <code>PPANMETH</code> indicating the analytical method. Internal PPTESTCDs renamed from misleading <code>D</code> suffix (e.g. <code>AUCINTD</code>) to lowercase <code>da</code> suffix (e.g. <code>AUCINTda</code>). Fixed wrong PPTEST label for <code>AUCINTD</code> which said “Normalized by Dose” (<a href="https://github.com/pharmaverse/aNCA/issues/1242" class="external-link">#1242</a>)</li>
 <li>Optional settings (<code>slope_rules</code>, <code>int_parameters</code>, <code>ratio_table</code>) are now normalized to <code>NULL</code> when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (<a href="https://github.com/pharmaverse/aNCA/issues/1262" class="external-link">#1262</a>)</li>
+<li>Interval-specific parameters (<code>aucint.*</code>, <code>cav.int.*</code>) excluded from the Parameter Selection matrix — they require finite sub-intervals and must be configured via Partial Interval Calculations (<a href="https://github.com/pharmaverse/aNCA/issues/1309" class="external-link">#1309</a>)</li>
 </ul></div>
 <div class="section level4">
 <h4 id="ratio-calculations-development-version-1">Ratio Calculations<a class="anchor" aria-label="anchor" href="#ratio-calculations-development-version-1"></a></h4>

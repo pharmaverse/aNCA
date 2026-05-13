@@ -200,6 +200,10 @@
   now normalized to `NULL` when empty, instead of persisting as 0-row
   data frames throughout the app and settings pipeline
   ([\#1262](https://github.com/pharmaverse/aNCA/issues/1262))
+- Interval-specific parameters (`aucint.*`, `cav.int.*`) excluded from
+  the Parameter Selection matrix — they require finite sub-intervals and
+  must be configured via Partial Interval Calculations
+  ([\#1309](https://github.com/pharmaverse/aNCA/issues/1309))
 
 #### Ratio Calculations
 
