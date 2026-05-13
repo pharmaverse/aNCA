@@ -17,7 +17,7 @@ This document will help you understand the fundamentals of Non-Compartmental Ana
 
 Drug development is not just studying how drugs act on the body (*pharmacodynamics*); it’s equally important to understand how the body interacts with drugs. This is what we call **pharmacokinetics (PK)**—the study of how drugs are absorbed, distributed, metabolized, and excreted over time.
 
-To visualize this, we use PK curves: graphs showing drug concentration plotted against time after dosing. These curves tell us how long a drug stays in the patient's system, helping us determine the optimal dose that balances efficacy and safety. The sweet spot—where drug levels are high enough to have an effect but not so high as to cause toxicity—is called the **therapeutic window**. 
+To visualize this, we use **PK curves**: graphs showing drug concentration plotted against time after dosing. These curves tell us how long a drug stays in the patient's system, helping us determine the optimal dose that balances efficacy and safety. The sweet spot—where drug levels are high enough to have an effect but not so high as to cause toxicity—is called the **therapeutic window**. 
 
 **One of the main goals of PK analysis is to calculate the dose that achieves this window for the longest and safest period.**
 
@@ -25,7 +25,7 @@ To visualize this, we use PK curves: graphs showing drug concentration plotted a
 
 ## What Is Non-Compartmental Analysis (NCA)?
 
-When it comes to evaluating PK data, analysis approaches can range from simple to highly complex. On one end, you have **compartmental models**, where drug movement between body compartments (like blood, liver, or muscle) is described mathematically using differential equations. On the other end, you have **Non-Compartmental Analysis (NCA)**, which simplifies the process by treating the body as a "black box."
+When it comes to evaluating PK data, analysis approaches can range from simple to highly complex. On one end, **compartmental models**, treats the body as discrete compartments (like blood, liver, or muscle), and models the drug flow mathematically using differential equations. On the other end, you have **Non-Compartmental Analysis (NCA)**, which simplifies the process by treating the body as a "black box."
 
 In NCA, instead of modeling how a drug moves between compartments, we focus only on the *macroparameters*—high-level PK metrics that describe overall drug behavior. These include: \
 - **AUC (Area Under the Curve)**: A measure of total drug exposure over time.  
@@ -57,6 +57,9 @@ Because NCA calculations are **model-independent**, they make fewer assumptions 
 - **Clearance and Volume of Distribution:** Derived from AUC and half-life, these parameters help understand how efficiently the body eliminates the drug and how widely it distributes.
 
 ---
+(Add: historically was messy, ad-hoc process.  This new workflow is mostly done silently by software, but now requires  strict adherence to standards.)
+
+(Suggestion: Simple diagram to show flow of data  and glossary of new terms.)
 
 ## Challenges and Common Actions in NCA Analysis
 
