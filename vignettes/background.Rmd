@@ -43,7 +43,7 @@ Because NCA calculations are **model-independent**, they make fewer assumptions 
 - AUC represents the total drug exposure in the body.
 - It’s calculated by summing up the areas under the concentration-time curve using methods like the trapezoidal rule.
 - Two common AUC calculations are:
-  - **AUClast**: Exposure up to the last measurable concentration (the one before concentrations falling below quantifiable levels, BLQ).
+  - **AUClast**: Exposure up to the last measurable concentration (the one before concentrations falling below quantifiable levels, **BLQ**).
   - **AUCinf**: Total exposure to infinity, including extrapolated data beyond the last measurable point (requires estimating a slope from the terminal phase).
 
 ### **2. Half-Life ($t_{1/2}$):**
