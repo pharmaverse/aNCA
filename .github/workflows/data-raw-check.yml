@@ -64,8 +64,10 @@ jobs:
             echo ""
             echo "::error::data-raw outputs are stale. Run 'Rscript data-raw/rebuild.R' and commit the results."
             grep "^MISMATCH:" rebuild_output.log
+            rm -f rebuild_output.log
             exit 1
           fi
+          rm -f rebuild_output.log
         shell: bash
 
       - name: Check non-data outputs are up to date
