@@ -54,18 +54,29 @@ jobs:
             any::usethis
             any::sass
 
-      - name: Run data-raw/rebuild.R
-        run: source("data-raw/rebuild.R")
-        shell: Rscript {0}
-
-      - name: Check outputs are up to date
+      - name: Run data-raw/rebuild.R and check for data mismatches
         run: |
-          # Exclude data/*.rda — R's save() serialization is not
-          # deterministic across versions/platforms. Data staleness is
-          # checked by tests/testthat/test-data-raw.R instead.
+          # rebuild.R prints "MISMATCH: ..." to stderr when a regenerated
+          # .rda dataset differs from the committed version. Capture stderr
+          # and fail if any mismatches are found.
+          Rscript data-raw/rebuild.R 2>&1 | tee rebuild_output.log
+          if grep -q "^MISMATCH:" rebuild_output.log; then
+            echo ""
+            echo "::error::data-raw outputs are stale. Run 'Rscript data-raw/rebuild.R' and commit the results."
+            grep "^MISMATCH:" rebuild_output.log
+            exit 1
+          fi
+        shell: bash
+
+      - name: Check non-data outputs are up to date
+        run: |
+          # Check text-based outputs (CSS, test CSVs) via git diff.
+          # data/*.rda is excluded — binary serialization is not
+          # deterministic across R versions/platforms. Data staleness
+          # is handled by rebuild.R's in-memory comparison above.
           git status -s -- ':!data/*.rda'
           if [[ -n $(git status -s -- ':!data/*.rda') ]]; then
-            echo "::error::data-raw outputs are stale. Run 'Rscript data-raw/rebuild.R' and commit the results."
+            echo "::error::Non-data outputs are stale. Run 'Rscript data-raw/rebuild.R' and commit the results."
             echo ""
             echo "The following files differ:"
             git diff --stat -- ':!data/*.rda'
@@ -73,6 +84,6 @@ jobs:
             git diff -- ':!data/*.rda'
             exit 1
           else
-            echo "data-raw outputs are up to date."
+            echo "All outputs are up to date."
           fi
         shell: bash
