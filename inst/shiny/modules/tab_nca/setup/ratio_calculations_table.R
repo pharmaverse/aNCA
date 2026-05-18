@@ -44,10 +44,11 @@ ratios_table_ui <- function(id) {
           other values of the variable (e.g., Groups = B, C, D)"
         ),
         tags$li(
-          tags$b("Aggregate Subject"),
-          ": Shown in the denominator. `yes` (x\u0304) aggregates reference
-          values using the mean of all subjects, `no` (\u2014) does not, and
-          `if-needed` (x\u0304?) only when ratios cannot be performed within the same subject."
+          tags$b("Mean across subjects"),
+          ": Controls whether reference values are averaged across subjects.
+          `no` (\u2014) matches within the same subject, `yes` (x\u0304) uses the
+          mean reference across all subjects, `if-needed` (x\u0304?) tries
+          individual matching first and falls back to mean."
         ),
         tags$li(
           tags$b("RefParameter"),
@@ -388,7 +389,7 @@ ratios_table_server <- function(
         class = "ratio-denominator",
         tags$div(
           class = "ratio-sigma",
-          title = "Aggregate Subject: \u2014 = no, x\u0304 = yes (mean), x\u0304? = if-needed",
+          title = "Mean across subjects: \u2014 = no, x\u0304 = yes, x\u0304? = if-needed",
           selectInput(
             ns(paste0("AggregateSubject_", i)), label = NULL,
             choices = agg_choices, selected = row$AggregateSubject,
