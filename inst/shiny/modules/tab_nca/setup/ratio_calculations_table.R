@@ -45,10 +45,11 @@ ratios_table_ui <- function(id) {
         ),
         tags$li(
           tags$b("Mean across subjects"),
-          ": Controls whether reference values are averaged across subjects.
-          `no` (\u2014) matches within the same subject, `yes` (x\u0304) uses the
-          mean reference across all subjects, `if-needed` (x\u0304?) tries
-          individual matching first and falls back to mean."
+          ": Controls how test and reference rows are paired. Ratios match
+          on grouping variables (e.g., USUBJID, PCSPEC, profile).
+          `no` (\u2014) includes USUBJID in matching (same subject's reference),
+          `yes` (x\u0304) removes USUBJID (mean reference across all subjects),
+          `if-needed` (x\u0304?) tries per-subject first, falls back to mean."
         ),
         tags$li(
           tags$b("RefParameter"),
