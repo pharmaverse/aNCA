@@ -6,10 +6,9 @@
 # test_suggests_hidden.R.
 #
 # After rebuilding, it compares the regenerated .rda datasets to the
-# previously committed versions. Any mismatch is printed as a warning.
-# CI uses these messages to detect stale outputs (the .rda binary files
-# themselves are not diffed because R's serialization is not deterministic
-# across versions/platforms).
+# previously committed versions. Any mismatch is reported. When running
+# in GitHub Actions (GITHUB_ACTIONS=true), mismatches cause the script
+# to stop() so the CI step fails automatically.
 #
 # Usage:
 #   Rscript data-raw/rebuild.R
@@ -62,11 +61,16 @@ for (f in new_rda) {
 }
 
 if (length(mismatches) > 0) {
-  message(
-    "\n>> ", length(mismatches), " dataset(s) changed: ",
+  msg <- paste0(
+    length(mismatches), " dataset(s) changed: ",
     paste(mismatches, collapse = ", "),
-    "\n>> Run 'Rscript data-raw/rebuild.R' and commit the updated .rda files."
+    "\nRun 'Rscript data-raw/rebuild.R' and commit the updated .rda files."
   )
+  message("\n>> ", msg)
+
+  if (identical(Sys.getenv("GITHUB_ACTIONS"), "true")) {
+    stop(msg, call. = FALSE)
+  }
 } else {
   message(">> All datasets are up to date.")
 }

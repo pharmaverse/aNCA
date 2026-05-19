@@ -54,21 +54,9 @@ jobs:
             any::usethis
             any::sass
 
-      - name: Run data-raw/rebuild.R and check for data mismatches
-        run: |
-          # rebuild.R prints "MISMATCH: ..." to stderr when a regenerated
-          # .rda dataset differs from the committed version. Capture stderr
-          # and fail if any mismatches are found.
-          Rscript data-raw/rebuild.R 2>&1 | tee rebuild_output.log
-          if grep -q "^MISMATCH:" rebuild_output.log; then
-            echo ""
-            echo "::error::data-raw outputs are stale. Run 'Rscript data-raw/rebuild.R' and commit the results."
-            grep "^MISMATCH:" rebuild_output.log
-            rm -f rebuild_output.log
-            exit 1
-          fi
-          rm -f rebuild_output.log
-        shell: bash
+      - name: Run data-raw/rebuild.R
+        run: source("data-raw/rebuild.R")
+        shell: Rscript {0}
 
       - name: Check non-data outputs are up to date
         run: |
