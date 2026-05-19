@@ -48,11 +48,6 @@ jobs:
 
       - name: Install R Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: |
-            local::.
-            any::usethis
-            any::sass
 
       - name: Run data-raw/rebuild.R
         run: source("data-raw/rebuild.R")
