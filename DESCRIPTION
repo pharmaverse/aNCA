@@ -80,6 +80,7 @@ Suggests:
     shinytest2,
     testthat (>= 3.0.0),
     tools,
+    usethis,
     quarto,
     vdiffr,
     withr
