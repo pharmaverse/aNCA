@@ -137,7 +137,7 @@ every level except the reference.</td>
 (e.g. <code>PARAM: ParentDrug</code>)</td>
 </tr>
 <tr class="odd">
-<td><strong>Aggregate</strong></td>
+<td><strong>Mean across subjects</strong></td>
 <td>
 <code>no</code> = within-subject ratio; <code>yes</code> = mean of
 reference across subjects; <code>if-needed</code> = falls back to
@@ -489,8 +489,8 @@ dose-normalized)</td>
 <li>The distinction between <code>FABS</code> and <code>FREL</code> is
 automatic: if the reference route is intravascular, aNCA assigns
 <code>FABS</code>; otherwise <code>FREL</code>.</li>
-<li>For crossover studies, use <code>Aggregate: no</code> to compute
-within-subject ratios.</li>
+<li>For crossover studies, use <code>Mean across subjects: no</code> to
+compute within-subject ratios.</li>
 </ul>
 <hr>
 </div>
@@ -563,10 +563,11 @@ groups), period comparisons.</li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="aggregation-modes">Aggregation Modes<a class="anchor" aria-label="anchor" href="#aggregation-modes"></a>
+<h2 id="mean-across-subjects">Mean Across Subjects<a class="anchor" aria-label="anchor" href="#mean-across-subjects"></a>
 </h2>
-<p>The <strong>Aggregate</strong> setting controls how reference values
-are handled when subjects differ between test and reference groups:</p>
+<p>The <strong>Mean across subjects</strong> setting controls how
+reference values are handled when subjects differ between test and
+reference groups:</p>
 <table class="table">
 <colgroup>
 <col width="50%">

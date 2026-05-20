@@ -33,6 +33,9 @@
 
 #### NCA Setup
 
+- Renamed “Aggregate Subject” label to “Mean across subjects” in ratio
+  calculations for clarity; updated help text to explain matching
+  mechanics ([\#1297](https://github.com/pharmaverse/aNCA/issues/1297))
 - Parameter Selection tab now contains Partial Intervals, Ratio
   Calculations, and Units alongside the parameter matrix. The former
   Settings tab is renamed to General Settings

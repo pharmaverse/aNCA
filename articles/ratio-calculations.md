@@ -15,7 +15,7 @@ Each ratio is defined by:
 | **Ref Parameter** | PK parameter for the denominator (defaults to same as test) |
 | **Test Groups** | Group level for the numerator. `(all other levels)` uses every level except the reference. |
 | **Ref Groups** | Group level for the denominator (e.g. `PARAM: ParentDrug`) |
-| **Aggregate** | `no` = within-subject ratio; `yes` = mean of reference across subjects; `if-needed` = falls back to aggregation when within-subject matching is not possible |
+| **Mean across subjects** | `no` = within-subject ratio; `yes` = mean of reference across subjects; `if-needed` = falls back to aggregation when within-subject matching is not possible |
 | **Adj. Factor** | Multiplier applied to the ratio (e.g. molecular weight correction) |
 | **PPTESTCD** | Auto-generated CDISC code; editable |
 
@@ -211,8 +211,8 @@ F_{rel} = \frac{AUC_{\text{test formulation}}}{AUC_{\text{ref formulation}}} \ti
 - The distinction between `FABS` and `FREL` is automatic: if the
   reference route is intravascular, aNCA assigns `FABS`; otherwise
   `FREL`.
-- For crossover studies, use `Aggregate: no` to compute within-subject
-  ratios.
+- For crossover studies, use `Mean across subjects: no` to compute
+  within-subject ratios.
 
 ------------------------------------------------------------------------
 
@@ -252,10 +252,10 @@ RA_{CMAX} = \frac{CMAX_{\text{test group}}}{CMAX_{\text{ref group}}} \times \tex
 
 ------------------------------------------------------------------------
 
-## Aggregation Modes
+## Mean Across Subjects
 
-The **Aggregate** setting controls how reference values are handled when
-subjects differ between test and reference groups:
+The **Mean across subjects** setting controls how reference values are
+handled when subjects differ between test and reference groups:
 
 | Mode | Behavior |
 |----|----|
