@@ -33,11 +33,11 @@ flexible_violinboxplot(
 
 - xvars:
 
-  Variables for the x axis.
+  Character vector of column names for the x-axis grouping.
 
 - colorvars:
 
-  Variables for the color aesthetic.
+  Character vector of column names for the color aesthetic.
 
 - varvalstofilter:
 
