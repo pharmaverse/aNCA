@@ -19,7 +19,7 @@ jobs:
       coverage-percent: ${{ steps.set-coverage-percentage.outputs.coverage-percentage }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
 
       - name: Setup Pandoc
         uses: r-lib/actions/setup-pandoc@v2
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout the badges branch in repo
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
         with:
           ref: badges
           path: badges
