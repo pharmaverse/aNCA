@@ -142,17 +142,19 @@ pkcg01 <- function(
     ) +
     coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
-  # Ensure x breaks labels do not overlap graphically
-  plot <- plot +
-    scale_x_continuous(
-      guide = guide_axis(n.dodge = 1),
-      breaks = filter_breaks(
-        plot_data[[xbreaks_var]],
-        min_cm_distance = xbreaks_mindist,
-        plot = plot
-      ),
-      labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
-    )
+  # Replace default x scale from tern::g_ipp with custom breaks
+  suppressWarnings(
+    plot <- plot +
+      scale_x_continuous(
+        guide = guide_axis(n.dodge = 1),
+        breaks = filter_breaks(
+          plot_data[[xbreaks_var]],
+          min_cm_distance = xbreaks_mindist,
+          plot = plot
+        ),
+        labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+      )
+  )
 
   # Add color when specified
   if (!is.null(color_var)) {
@@ -180,11 +182,13 @@ pkcg01 <- function(
     )
 
     if (!plotly) {
-      plot <- plot +
-        scale_y_continuous(
-          transform = "log10",
-          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
-        )
+      suppressWarnings(
+        plot <- plot +
+          scale_y_continuous(
+            transform = "log10",
+            labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+          )
+      )
     }
   }
 
@@ -479,15 +483,17 @@ pkcg02 <- function(
     ggplot2::coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
 
-  # Ensure x breaks labels do not overlap graphically
-  plot <- plot + ggplot2::scale_x_continuous(
-    guide = ggplot2::guide_axis(n.dodge = 1),
-    breaks = filter_breaks(
-      plot_data[[xbreaks_var]],
-      min_cm_distance = xbreaks_mindist,
-      plot = plot
-    ),
-    labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+  # Replace default x scale from tern::g_ipp with custom breaks
+  suppressWarnings(
+    plot <- plot + ggplot2::scale_x_continuous(
+      guide = ggplot2::guide_axis(n.dodge = 1),
+      breaks = filter_breaks(
+        plot_data[[xbreaks_var]],
+        min_cm_distance = xbreaks_mindist,
+        plot = plot
+      ),
+      labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+    )
   )
 
   # Add color when specified
@@ -512,11 +518,13 @@ pkcg02 <- function(
     )
 
     if (!plotly) {
-      plot <- plot +
-        scale_y_continuous(
-          transform = "log10",
-          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
-        )
+      suppressWarnings(
+        plot <- plot +
+          scale_y_continuous(
+            transform = "log10",
+            labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+          )
+      )
     }
   }
 
@@ -882,17 +890,19 @@ pkcg03 <- function(
       ) +
       coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
-    # Ensure x breaks labels do not overlap graphically
-    plot <- plot +
-      scale_x_continuous(
-        guide = guide_axis(n.dodge = 1),
-        breaks = filter_breaks(
-          plot_data[[xbreaks_var]],
-          min_cm_distance = xbreaks_mindist,
-          plot = plot
-        ),
-        labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
-      )
+    # Replace default x scale from tern::g_lineplot with custom breaks
+    suppressWarnings(
+      plot <- plot +
+        scale_x_continuous(
+          guide = guide_axis(n.dodge = 1),
+          breaks = filter_breaks(
+            plot_data[[xbreaks_var]],
+            min_cm_distance = xbreaks_mindist,
+            plot = plot
+          ),
+          labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+        )
+    )
 
 
     aval_stat <- mid_value
@@ -904,11 +914,13 @@ pkcg03 <- function(
       )
 
       if (!plotly) {
-        plot <- plot +
-          scale_y_continuous(
-            transform = "log10",
-            labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
-          )
+        suppressWarnings(
+          plot <- plot +
+            scale_y_continuous(
+              transform = "log10",
+              labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+            )
+        )
       }
     }
 
