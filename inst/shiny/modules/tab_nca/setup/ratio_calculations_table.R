@@ -44,10 +44,12 @@ ratios_table_ui <- function(id) {
           other values of the variable (e.g., Groups = B, C, D)"
         ),
         tags$li(
-          tags$b("Aggregate Subject"),
-          ": Shown in the denominator. `yes` (x\u0304) aggregates reference
-          values using the mean of all subjects, `no` (\u2014) does not, and
-          `if-needed` (x\u0304?) only when ratios cannot be performed within the same subject."
+          tags$b("Mean across subjects"),
+          ": Controls how test and reference rows are paired. Ratios match
+          on grouping variables (e.g., USUBJID, PCSPEC, profile).
+          `no` (\u2014) includes USUBJID in matching (same subject's reference),
+          `yes` (x\u0304) removes USUBJID (mean reference across all subjects),
+          `if-needed` (x\u0304?) tries per-subject first, falls back to mean."
         ),
         tags$li(
           tags$b("RefParameter"),
@@ -65,6 +67,12 @@ ratios_table_ui <- function(id) {
       ),
       tags$div(
         withMathJax("$$\\text(Parameter_{test} / Parameter_{reference(s)}) * AdjFactor$$")
+      ),
+      tags$hr(),
+      tags$a(
+        href = "https://pharmaverse.github.io/aNCA/articles/ratio-calculations.html",
+        target = "_blank",
+        icon("book"), "Full documentation"
       )
     ),
     style = "unite",
@@ -382,7 +390,7 @@ ratios_table_server <- function(
         class = "ratio-denominator",
         tags$div(
           class = "ratio-sigma",
-          title = "Aggregate Subject: \u2014 = no, x\u0304 = yes (mean), x\u0304? = if-needed",
+          title = "Mean across subjects: \u2014 = no, x\u0304 = yes, x\u0304? = if-needed",
           selectInput(
             ns(paste0("AggregateSubject_", i)), label = NULL,
             choices = agg_choices, selected = row$AggregateSubject,

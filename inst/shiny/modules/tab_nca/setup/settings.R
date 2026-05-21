@@ -66,13 +66,13 @@ partial_intervals_ui <- function(id) {
               ),
               tags$tbody(
                 tr("AUCINT", "AUC from T1 to T2 (based on AUClast extrapolation)"),
-                tr("AUCINTD", "AUC from T1 to T2 Normalized by Dose"),
+                tr("AUCINTda", "AUC from T1 to T2 (dose-aware)"),
                 tr("AUCINTA", "AUCint (based on AUCall extrapolation)"),
-                tr("AUCINTAD", "AUCint (based on AUCall extrapolation, dose-aware)"),
+                tr("AUCINTAda", "AUCint (based on AUCall extrapolation, dose-aware)"),
                 tr("AUCINTIS", "AUCint (based on AUCinf,obs extrapolation)"),
-                tr("AUCINTID", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
+                tr("AUCINTISda", "AUCint (based on AUCinf,obs extrapolation, dose-aware)"),
                 tr("AUCINTIP", "AUCint (based on AUCinf,pred extrapolation)"),
-                tr("AUCINTPD", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
+                tr("AUCINTIPda", "AUCint (based on AUCinf,pred extrapolation, dose-aware)"),
                 tr("CAVGINT", "Average Concentration from T1 to T2"),
                 tr("RCAMINT", "Amount Recovered from T1 to T2"),
                 tr("FREXINT", "Fraction Excreted from T1 to T2")
@@ -153,23 +153,7 @@ settings_ui <- function(id) {
               step = 1
             )
           ),
-          column(
-            4, # pickerinput only enabled when IV and EX data present
-            shinyjs::hidden(
-              div(
-                class = "bioavailability-picker",
-                pickerInput(
-                  ns("bioavailability"),
-                  "Calculate Bioavailability:",
-                  choices = metadata_nca_parameters %>%
-                    filter(startsWith(PPTESTCD, "FABS_") | startsWith(PPTESTCD, "FREL_")) %>%
-                    pull(PKNCA, PPTESTCD),
-                  multiple = TRUE,
-                  selected = NULL
-                )
-              )
-            )
-          )
+
         )
       ),
       accordion_panel(
@@ -521,13 +505,12 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         pcspec = input$select_pcspec,
         method = input$method,
         min_hl_points = input$min_hl_points,
-        bioavailability = input$bioavailability,
         data_imputation = list(
           impute_c0 = data_imputation$should_impute_c0(),
           blq_strategy = data_imputation$blq_strategy(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
-        int_parameters = int_parameters(),
+        int_parameters = if (nrow(int_parameters()) > 0) int_parameters() else NULL,
         flags = list(
           R2ADJ = list(
             is.checked = input$R2ADJ_rule,
@@ -631,7 +614,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   list(selected = selected)
 }
 
-#' Restore non-filter settings (method, bioavailability, flags, etc.)
+#' Restore non-filter settings (method, flags, etc.)
 #' @param settings Settings list.
 #' @param adnca_data Reactive returning PKNCAdata object.
 #' @param session Shiny session.
@@ -645,14 +628,6 @@ settings_server <- function(id, data, adnca_data, settings_override) {
     updateNumericInput(
       session, inputId = "min_hl_points",
       value = settings$min_hl_points
-    )
-  }
-
-  dose_routes <- unique(adnca_data()$dose$data$std_route)
-  if (!is.null(settings$bioavailability) && length(dose_routes) > 1) {
-    updateSelectInput(
-      session, inputId = "bioavailability",
-      selected = settings$bioavailability
     )
   }
 

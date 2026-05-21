@@ -17,6 +17,8 @@ navbar:
           href: articles/manual.html
         - text: R Script Walkthrough
           href: articles/example_r_script.html
+        - text: Ratio Calculations
+          href: articles/ratio-calculations.html
         - text: NCA Concepts
           href: articles/background.html
         - text: FAQs

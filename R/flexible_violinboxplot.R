@@ -5,10 +5,8 @@
 #'
 #' @param res_nca            A PKNCA results object containing the results and concentration data.
 #' @param parameter           A string specifying the parameter to be plotted.
-# TODO(mateusz): I have added the following three parameters as they were missing, this needs to
-#                be checked over.
-#' @param xvars               Variables for the x axis.
-#' @param colorvars           Variables for the color aesthetic.
+#' @param xvars               Character vector of column names for the x-axis grouping.
+#' @param colorvars           Character vector of column names for the color aesthetic.
 #' @param varvalstofilter     Character vector specifying which variable and value to pre-filter
 #'                            as `colname: value`. By default is NULL (no pre-filtering)
 #' @param tooltip_vars        A character vector indicating the column names from result_data that

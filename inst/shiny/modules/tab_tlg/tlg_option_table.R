@@ -3,7 +3,7 @@
 #' @param id      id of the input widget
 #' @param opt_def list consisting of definition of the option, as specified in the `tlg.yaml` file,
 #'                should include `label` parameter for the button triggering the table
-#' @param data    data object used for parsing labels, strings, infering placeholder values or
+#' @param data    data object used for parsing labels, strings, inferring placeholder values or
 #'                choices etc.
 #' @returns UI for the input module
 tlg_option_table_ui <- function(id, opt_def, data) {
@@ -19,7 +19,7 @@ tlg_option_table_ui <- function(id, opt_def, data) {
 #' @param id            id of the input widget
 #' @param opt_def       list consisting of definition of the option, as specified in the `tlg.yaml`
 #'                      file, should include `cols` definition and `default_rows` for the table
-#' @param data          data frame used for parsing labels, strings, infering placeholder values or
+#' @param data          data frame used for parsing labels, strings, inferring placeholder values or
 #'                      choices etc.
 #' @param reset_trigger a reactive expression on which the module will restore its returned value
 #'                      to the default one.

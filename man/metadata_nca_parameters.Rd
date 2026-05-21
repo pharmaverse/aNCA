@@ -8,6 +8,7 @@
 A data frame with 123 rows and 6 variables:
 \describe{
 \item{PKNCA}{PKNCA term}
+\item{PPANMETH}{PPANMETH term, specifying when relevant the calculation method for PPTESTCD}
 \item{PPTESTCD}{CDISC term}
 \item{PPTEST}{Official CDISC term}
 \item{input_names}{Combination of PPTESTCD + ": " + PPTEST. Used for App inputs}
@@ -29,6 +30,8 @@ Indicates if the parameter can be used in multiple dose analysis}
 Indicates if the parameter can be used in extravascular analysis}
 \item{can_metabolite}{Logical.
 Indicates if the parameter can be used in metabolite analysis}
+\item{show_in_matrix_selection}{Logical.
+Indicates if the parameter will be shown for general interval calculations}
 }
 }
 \source{
