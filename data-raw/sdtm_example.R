@@ -57,7 +57,7 @@ pc_example <- data.frame(
                     "%Y-%m-%dT%H:%M:%S"),
   PCRFTDTC = format(subject_origin_pc + dose_time_from_first * 3600,
                     "%Y-%m-%dT%H:%M:%S"),
-  PCELTM   = sprintf("PT%gH", adnca_example$NFRLT),
+  PCELTM   = sprintf("PT%gH", adnca_example$NRRLT),
   VOLUME   = adnca_example$VOLUME,
   VOLUMEU  = adnca_example$VOLUMEU,
   stringsAsFactors = FALSE
