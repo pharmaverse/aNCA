@@ -386,11 +386,11 @@ EX,10,EXELTM,Planned Elapsed Time from First Dose,text,Timing,Perm,FALSE,FALSE,4
 EX,11,DOMAIN,Domain Abbreviation,text,Identifier,Req,FALSE,TRUE,2,,TRUE,,FALSE,,,,NA,FALSE
 DM,1,STUDYID,Study Identifier,text,Identifier,Req,FALSE,TRUE,8,,TRUE,,FALSE,,,,NA,FALSE
 DM,2,USUBJID,Unique Subject Identifier,text,Identifier,Req,FALSE,TRUE,50,,TRUE,,FALSE,,,,NA,FALSE
-DM,3,RFXSTDTC,Date/Time of First Study Treatment,dateTime,Timing,Exp,FALSE,FALSE,40,,TRUE,,TRUE,ISO 8601 datetime of first study treatment. Can be used as time origin when EX data is unavailable,Supplemental Variables,,16,FALSE
-DM,4,AGE,Age,float,Record Qualifier,Exp,FALSE,FALSE,12,,TRUE,,FALSE,,,,NA,FALSE
-DM,5,AGEU,Age Units,text,Variable Qualifier,Exp,FALSE,FALSE,10,,TRUE,,FALSE,,,,NA,FALSE
-DM,6,SEX,Sex,text,Record Qualifier,Req,FALSE,FALSE,10,C66731,TRUE,,FALSE,,,,NA,FALSE
-DM,7,RACE,Race,text,Record Qualifier,Exp,FALSE,FALSE,40,C74457,TRUE,,FALSE,,,,NA,FALSE
+DM,3,RFXSTDTC,Date/Time of First Study Treatment,dateTime,Timing,Perm,FALSE,FALSE,40,,TRUE,,TRUE,ISO 8601 datetime of first study treatment. Can be used as time origin when EX data is unavailable,Supplemental Variables,,16,FALSE
+DM,4,AGE,Age,float,Record Qualifier,Perm,FALSE,FALSE,12,,TRUE,,FALSE,,,,NA,FALSE
+DM,5,AGEU,Age Units,text,Variable Qualifier,Perm,FALSE,FALSE,10,,TRUE,,FALSE,,,,NA,FALSE
+DM,6,SEX,Sex,text,Record Qualifier,Perm,FALSE,FALSE,10,C66731,TRUE,,FALSE,,,,NA,FALSE
+DM,7,RACE,Race,text,Record Qualifier,Perm,FALSE,FALSE,40,C74457,TRUE,,FALSE,,,,NA,FALSE
 DM,8,ARM,Planned Arm,text,Record Qualifier,Perm,FALSE,FALSE,200,,TRUE,,FALSE,,,,NA,FALSE
 DM,9,ACTARM,Actual Arm,text,Record Qualifier,Perm,FALSE,FALSE,200,,TRUE,,FALSE,,,,NA,FALSE
 DM,10,DOMAIN,Domain Abbreviation,text,Identifier,Req,FALSE,TRUE,2,,TRUE,,FALSE,,,,NA,FALSE
