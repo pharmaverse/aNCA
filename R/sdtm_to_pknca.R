@@ -271,7 +271,7 @@ pc_to_PKNCAconc <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: o
   conc_data$PCSPEC <- if ("PCSPEC" %in% names(pc)) pc$PCSPEC else "UNKNOWN"
   conc_data$AVAL   <- as.numeric(pc$PCSTRESN)
   conc_data$AVALU  <- pc$PCSTRESU
-  conc_data$RRLTU  <- "hour"
+  conc_data$RRLTU  <- "Hours"
   conc_data$CONCDUR <- 0
   conc_data$ATPTREF <- paste("DOSE", conc_data$DOSNOA)
 
