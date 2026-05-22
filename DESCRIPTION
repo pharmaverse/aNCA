@@ -47,7 +47,6 @@ Imports:
     shinyjqui,
     shinyWidgets,
     stats,
-    tern,
     tidyr,
     units,
     utils,

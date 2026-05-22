@@ -47,7 +47,6 @@ g_pkcg01_log <- function(data, ...) {
 #' @returns A list of ggplot or plotly objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
-#' @importFrom tern g_ipp
 #' @importFrom stats setNames
 #' @importFrom plotly ggplotly layout
 #'
@@ -121,21 +120,22 @@ pkcg01 <- function(
   # Construct the reference ggplot object
   plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
 
-  plot <- tern::g_ipp(
-    df = plot_data,
-    xvar = xvar,
-    yvar = yvar,
-    xlab = paste0(parse_annotation(plot_data, xlab), collapse = ","),
-    ylab = paste0(parse_annotation(plot_data, ylab), collapse = ","),
-    id_var = "USUBJID",
-    add_baseline_hline = FALSE,
-    yvar_baseline = yvar,
-    plotting_choices = "separate_by_obs"
-  )[[1]]
+  plot <- ggplot2::ggplot(
+    data = plot_data,
+    mapping = aes(
+      x = .data[[xvar]],
+      y = .data[[yvar]]
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 0.4) +
+    ggplot2::geom_point(size = 2) +
+    labs(
+      x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
+      y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
+    )
 
   # Provide limits and additional potential future aesthetic customizations
   plot <- plot +
-    aes(color = NULL) +
     theme(
       plot.title = element_text(family = "sans", size = 14, color = "black"),
       plot.subtitle = element_text(family = "sans", size = 11, color = "black")
@@ -385,7 +385,6 @@ g_pkcg02_log <- function(data, ...) {
 #' @returns A list of ggplot or plotly objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
-#' @importFrom tern g_ipp
 #' @importFrom stats setNames
 
 #' @examples
@@ -458,17 +457,21 @@ pkcg02 <- function(
   # Construct the reference ggplot object
   plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
 
-  plot <- tern::g_ipp(
-    df = plot_data,
-    xvar = xvar,
-    yvar = yvar,
-    xlab = paste0(parse_annotation(plot_data, xlab), collapse = ","),
-    ylab = paste0(parse_annotation(plot_data, ylab), collapse = ","),
-    id_var = "USUBJID",
-    add_baseline_hline = FALSE,
-    yvar_baseline = yvar,
-    plotting_choices = "all_in_one"
-  )
+  plot <- ggplot2::ggplot(
+    data = plot_data,
+    mapping = ggplot2::aes(
+      x = .data[[xvar]],
+      y = .data[[yvar]],
+      group = .data[["USUBJID"]],
+      colour = .data[["USUBJID"]]
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 0.4) +
+    ggplot2::geom_point(size = 2) +
+    ggplot2::labs(
+      x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
+      y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
+    )
 
   # Provide limits and additional potential future aesthetic customizations
   plot <- plot +
@@ -685,10 +688,9 @@ g_pkcg03_log <- function(data, ...) {
 #' @param summary_method  A character string specifying the stat method to summarize observations.
 #' @param whiskers_lwr_upr A character string specifying the whisker type (upper, lower or both)
 #' @returns A list of ggplot objects for each unique group.
-#' @importFrom dplyr mutate across rowwise ungroup group_by n
-#' @importFrom ggplot2 aes scale_x_continuous labs
-#' @importFrom tern g_ipp
-#' @importFrom stats setNames
+#' @importFrom dplyr mutate across rowwise ungroup group_by n summarise n_distinct
+#' @importFrom ggplot2 aes scale_x_continuous labs geom_line geom_point geom_errorbar
+#' @importFrom stats setNames median sd qt
 
 #' @examples
 #' \dontrun{
@@ -849,28 +851,89 @@ pkcg03 <- function(
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
 
 
-    plot <- tern::g_lineplot(
-      df = plot_data,
-      variables =  tern::control_lineplot_vars(
-        x = xvar,
-        y = yvar,
-        group_var = mean_group_var,
-        paramcd = "PARAM",
-        y_unit = yvar_unit,
-        subject_var = "USUBJID",
-      ),
-      alt_counts_df = plot_data,
-      mid = mid_value,
-      interval = interval_value,
-      whiskers = whiskers_value,
-      x_lab = parse_annotation(plot_data, xlab),
-      y_lab = parse_annotation(plot_data, ylab),
-      y_lab_add_paramcd = FALSE,
-      y_lab_add_unit = FALSE,
-      title = "Plot of Mean and 95% Confidence Limits by Visit",
-      subtitle = "xxx",
-      caption = NULL
-    )
+    # Compute summary statistics per group and timepoint
+    df_stats <- plot_data %>%
+      group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+      summarise(
+        n = dplyr::n(),
+        mean = mean(.data[[yvar]], na.rm = TRUE),
+        sd = sd(.data[[yvar]], na.rm = TRUE),
+        se = sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+        median = median(.data[[yvar]], na.rm = TRUE),
+        mean_ci_lwr = mean(.data[[yvar]], na.rm = TRUE) -
+          qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+        mean_ci_upr = mean(.data[[yvar]], na.rm = TRUE) +
+          qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+        mean_sdi_lwr = mean(.data[[yvar]], na.rm = TRUE) - sd(.data[[yvar]], na.rm = TRUE),
+        mean_sdi_upr = mean(.data[[yvar]], na.rm = TRUE) + sd(.data[[yvar]], na.rm = TRUE),
+        mean_sei_lwr = mean(.data[[yvar]], na.rm = TRUE) -
+          sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+        mean_sei_upr = mean(.data[[yvar]], na.rm = TRUE) +
+          sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+        .groups = "drop"
+      )
+
+    # Compute median CI via wilcox.test when n >= 2
+    if (interval_value == "median_ci") {
+      median_ci <- plot_data %>%
+        group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+        summarise(
+          median_ci_lwr = tryCatch(
+            stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[1],
+            error = function(e) NA_real_
+          ),
+          median_ci_upr = tryCatch(
+            stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[2],
+            error = function(e) NA_real_
+          ),
+          .groups = "drop"
+        )
+      df_stats <- dplyr::left_join(df_stats, median_ci, by = c(mean_group_var, xvar))
+    }
+
+    # Add N-count labels to group variable
+    strata_n <- paste0(mean_group_var, "_N")
+    df_n <- plot_data %>%
+      group_by(.data[[mean_group_var]]) %>%
+      summarise(N = n_distinct(USUBJID), .groups = "drop") %>%
+      mutate(!!strata_n := paste0(.data[[mean_group_var]], " (N = ", N, ")"))
+    df_stats <- dplyr::left_join(df_stats, df_n[, c(mean_group_var, strata_n)],
+                                 by = mean_group_var)
+
+    # Remove rows where mid value is NA
+    df_stats <- df_stats[!is.na(df_stats[[mid_value]]), ]
+
+    plot <- ggplot2::ggplot(
+      data = df_stats,
+      mapping = aes(
+        x = .data[[xvar]],
+        y = .data[[mid_value]],
+        color = .data[[strata_n]],
+        shape = .data[[strata_n]],
+        group = .data[[strata_n]]
+      )
+    ) +
+      geom_point(size = 2, na.rm = TRUE) +
+      geom_line(na.rm = TRUE) +
+      geom_errorbar(
+        aes(
+          ymin = .data[[whiskers_value[1]]],
+          ymax = .data[[whiskers_value[max(1, length(whiskers_value))]]]
+        ),
+        width = 0.45
+      ) +
+      labs(
+        x = parse_annotation(plot_data, xlab),
+        y = parse_annotation(plot_data, ylab),
+        color = NULL,
+        shape = NULL
+      ) +
+      ggplot2::theme_bw() +
+      ggplot2::theme(
+        legend.key.width = grid::unit(1, "cm"),
+        legend.position = "bottom",
+        legend.direction = "horizontal"
+      )
 
 
 
