@@ -56,7 +56,6 @@ jobs:
 
       - name: Install R Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
-        with:
 
       - name: Run Spellcheck
         uses: insightsengineering/r-spellcheck-action@v3
