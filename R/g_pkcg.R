@@ -853,57 +853,10 @@ pkcg03 <- function(
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
 
 
-    # Compute summary statistics per group and timepoint
-    df_stats <- plot_data %>%
-      group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
-      summarise(
-        n = dplyr::n(),
-        mean = mean(.data[[yvar]], na.rm = TRUE),
-        sd = sd(.data[[yvar]], na.rm = TRUE),
-        se = sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-        median = median(.data[[yvar]], na.rm = TRUE),
-        mean_ci_lwr = mean(.data[[yvar]], na.rm = TRUE) -
-          qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-        mean_ci_upr = mean(.data[[yvar]], na.rm = TRUE) +
-          qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-        mean_sdi_lwr = mean(.data[[yvar]], na.rm = TRUE) - sd(.data[[yvar]], na.rm = TRUE),
-        mean_sdi_upr = mean(.data[[yvar]], na.rm = TRUE) + sd(.data[[yvar]], na.rm = TRUE),
-        mean_sei_lwr = mean(.data[[yvar]], na.rm = TRUE) -
-          sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-        mean_sei_upr = mean(.data[[yvar]], na.rm = TRUE) +
-          sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-        .groups = "drop"
-      )
-
-    # Compute median CI via wilcox.test when n >= 2
-    if (interval_value == "median_ci") {
-      median_ci <- plot_data %>%
-        group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
-        summarise(
-          median_ci_lwr = tryCatch(
-            stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[1],
-            error = function(e) NA_real_
-          ),
-          median_ci_upr = tryCatch(
-            stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[2],
-            error = function(e) NA_real_
-          ),
-          .groups = "drop"
-        )
-      df_stats <- dplyr::left_join(df_stats, median_ci, by = c(mean_group_var, xvar))
-    }
-
-    # Add N-count labels to group variable
+    df_stats <- compute_summary_stats(
+      plot_data, xvar, yvar, mean_group_var, interval_value, mid_value
+    )
     strata_n <- paste0(mean_group_var, "_N")
-    df_n <- plot_data %>%
-      group_by(.data[[mean_group_var]]) %>%
-      summarise(N = n_distinct(USUBJID), .groups = "drop") %>%
-      mutate(!!strata_n := paste0(.data[[mean_group_var]], " (N = ", N, ")"))
-    df_stats <- dplyr::left_join(df_stats, df_n[, c(mean_group_var, strata_n)],
-                                 by = mean_group_var)
-
-    # Remove rows where mid value is NA
-    df_stats <- df_stats[!is.na(df_stats[[mid_value]]), ]
 
     plot <- ggplot2::ggplot(
       data = df_stats,
@@ -1119,6 +1072,60 @@ generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgrou
   } else {
     parse_annotation(plot_data, subtitle)
   }
+}
+
+# Compute summary statistics per group and timepoint for pkcg03
+compute_summary_stats <- function(plot_data, xvar, yvar, mean_group_var,
+                                  interval_value, mid_value) {
+  df_stats <- plot_data %>%
+    group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+    summarise(
+      n = dplyr::n(),
+      mean = mean(.data[[yvar]], na.rm = TRUE),
+      sd = sd(.data[[yvar]], na.rm = TRUE),
+      se = sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+      median = median(.data[[yvar]], na.rm = TRUE),
+      mean_ci_lwr = mean(.data[[yvar]], na.rm = TRUE) -
+        qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+      mean_ci_upr = mean(.data[[yvar]], na.rm = TRUE) +
+        qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+      mean_sdi_lwr = mean(.data[[yvar]], na.rm = TRUE) - sd(.data[[yvar]], na.rm = TRUE),
+      mean_sdi_upr = mean(.data[[yvar]], na.rm = TRUE) + sd(.data[[yvar]], na.rm = TRUE),
+      mean_sei_lwr = mean(.data[[yvar]], na.rm = TRUE) -
+        sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+      mean_sei_upr = mean(.data[[yvar]], na.rm = TRUE) +
+        sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+      .groups = "drop"
+    )
+
+  if (interval_value == "median_ci") {
+    median_ci <- plot_data %>%
+      group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+      summarise(
+        median_ci_lwr = tryCatch(
+          stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[1],
+          error = function(e) NA_real_
+        ),
+        median_ci_upr = tryCatch(
+          stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[2],
+          error = function(e) NA_real_
+        ),
+        .groups = "drop"
+      )
+    df_stats <- dplyr::left_join(df_stats, median_ci, by = c(mean_group_var, xvar))
+  }
+
+  # Add N-count labels to group variable
+  strata_n <- paste0(mean_group_var, "_N")
+  df_n <- plot_data %>%
+    group_by(.data[[mean_group_var]]) %>%
+    summarise(N = n_distinct(USUBJID), .groups = "drop") %>%
+    mutate(!!strata_n := paste0(.data[[mean_group_var]], " (N = ", N, ")"))
+  df_stats <- dplyr::left_join(df_stats, df_n[, c(mean_group_var, strata_n)],
+                               by = mean_group_var)
+
+  # Remove rows where mid value is NA
+  df_stats[!is.na(df_stats[[mid_value]]), ]
 }
 
 # Helper function to assert package availability
