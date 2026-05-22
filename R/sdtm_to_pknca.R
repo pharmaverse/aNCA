@@ -4,7 +4,7 @@
 #' and date-only formats. Returns POSIXct in UTC.
 #'
 #' @param dtc Character vector of ISO 8601 date-time strings
-#' @return POSIXct vector in UTC
+#' @returns POSIXct vector in UTC
 #' @keywords internal
 std_dtc_to_rdate <- function(dtc) {
   formats <- c(
@@ -32,7 +32,7 @@ std_dtc_to_rdate <- function(dtc) {
 #'
 #' @param x Character vector of ISO 8601 duration strings (e.g. \code{"PT2H"},
 #'   \code{"PT1H30M"}, \code{"PT90M"})
-#' @return Numeric vector of durations in hours
+#' @returns Numeric vector of durations in hours
 #' @keywords internal
 parse_iso8601_duration <- function(x) {
   vapply(x, function(val) {
@@ -51,7 +51,7 @@ parse_iso8601_duration <- function(x) {
 #' Map CDISC route of administration to PKNCA route
 #'
 #' @param route Character vector of CDISC route values
-#' @return Character vector of \code{"intravascular"} or
+#' @returns Character vector of \code{"intravascular"} or
 #'   \code{"extravascular"}
 #' @keywords internal
 route_cdisc_to_pknca <- function(route) {
@@ -66,166 +66,465 @@ route_cdisc_to_pknca <- function(route) {
   )
 }
 
+
+# --- Dose table preparation --------------------------------------------------
+
+#' Prepare a dose lookup table from EX data
+#'
+#' Parses EX domain data into a standardised dose table with actual and nominal
+#' timing, dose numbering, duration, and route. Used internally by both
+#' \code{\link{pc_to_PKNCAconc}} and \code{\link{sdtm_to_PKNCAdata}}.
+#'
+#' @param ex A data.frame containing the EX (Exposure) SDTM domain.
+#' @returns A data.frame with one row per dose event and columns:
+#'   \code{STUDYID}, \code{USUBJID}, \code{DOSETRT}, \code{DOSEA},
+#'   \code{DOSEU}, \code{ROUTE}, \code{std_route}, \code{ADOSEDUR},
+#'   \code{AFRLT} (actual dose time from first dose, hours),
+#'   \code{NFRLT} (nominal dose time from first dose, hours),
+#'   \code{DOSNOA} (sequential dose number per subject),
+#'   \code{EXSTDTC_posix} (parsed dose start datetime).
+#'
+#' @importFrom dplyr mutate group_by ungroup arrange row_number
+#' @importFrom rlang .data
+#' @keywords internal
+.prepare_dose_table <- function(ex) {
+  # Parse dates
+  exstdtc_posix <- std_dtc_to_rdate(ex$EXSTDTC)
+
+  # Parse duration: from EXDUR (ISO 8601) or EXENDTC - EXSTDTC
+  if ("EXDUR" %in% names(ex)) {
+    adosedur <- if (is.character(ex$EXDUR)) {
+      parse_iso8601_duration(ex$EXDUR)
+    } else {
+      as.numeric(ex$EXDUR)
+    }
+  } else if ("EXENDTC" %in% names(ex)) {
+    end_posix <- std_dtc_to_rdate(ex$EXENDTC)
+    dur <- as.numeric(difftime(end_posix, exstdtc_posix, units = "hours"))
+    adosedur <- ifelse(is.na(dur), 0, dur)
+  } else {
+    adosedur <- rep(0, nrow(ex))
+  }
+
+  # Parse nominal elapsed time (EXELTM) if available
+  exeltm_hours <- NULL
+  if ("EXELTM" %in% names(ex)) {
+    exeltm_hours <- if (is.character(ex$EXELTM)) {
+      parse_iso8601_duration(ex$EXELTM)
+    } else {
+      as.numeric(ex$EXELTM)
+    }
+  }
+
+  # Build dose table with aNCA-standard column names
+  dose_tbl <- data.frame(
+    STUDYID       = ex$STUDYID,
+    USUBJID       = ex$USUBJID,
+    DOSETRT       = ex$EXTRT,
+    DOSEA         = as.numeric(ex$EXDOSE),
+    DOSEU         = ex$EXDOSU,
+    ROUTE         = ex$EXROUTE,
+    std_route     = route_cdisc_to_pknca(ex$EXROUTE),
+    ADOSEDUR      = adosedur,
+    EXSTDTC_posix = exstdtc_posix,
+    stringsAsFactors = FALSE
+  )
+
+  # AFRLT: actual dose time from first dose per subject
+  dose_tbl <- dose_tbl %>%
+    group_by(.data$USUBJID) %>%
+    mutate(
+      AFRLT = as.numeric(difftime(
+        .data$EXSTDTC_posix,
+        min(.data$EXSTDTC_posix, na.rm = TRUE),
+        units = "hours"
+      ))
+    ) %>%
+    ungroup() %>%
+    arrange(.data$USUBJID, .data$AFRLT)
+
+  # NFRLT: nominal dose time from first dose
+  if (!is.null(exeltm_hours)) {
+    dose_tbl$NFRLT <- exeltm_hours
+  } else {
+    # Fallback: use actual times as nominal
+    dose_tbl$NFRLT <- dose_tbl$AFRLT
+  }
+
+  # DOSNOA: sequential dose number per subject
+  dose_tbl <- dose_tbl %>%
+    group_by(.data$USUBJID) %>%
+    arrange(.data$AFRLT) %>%
+    mutate(DOSNOA = row_number()) %>%
+    ungroup()
+
+  dose_tbl
+}
+
+
+# --- PC to PKNCAconc ----------------------------------------------------------
+
+#' Convert PC and EX SDTM domains to a PKNCAconc object
+#'
+#' Transforms CDISC SDTM PC (concentrations) and EX (exposure) domain data
+#' frames into a \code{PKNCAconc} object with all columns required by the
+#' aNCA downstream pipeline.
+#'
+#' @section Timing derivation:
+#' \describe{
+#'   \item{AFRLT}{Actual time from first dose (hours).
+#'     \code{difftime(PCDTC, first_EXSTDTC_per_subject)}.}
+#'   \item{ARRLT}{Actual time from most recent dose (hours).
+#'     \code{difftime(PCDTC, most_recent_EXSTDTC <= PCDTC)}.
+#'     Negative only for samples before the very first dose.}
+#'   \item{NRRLT}{Nominal time from most recent dose (hours).
+#'     Parsed directly from \code{PCELTM} (ISO 8601 duration).}
+#'   \item{NFRLT}{Nominal time from first dose (hours).
+#'     \code{NRRLT + EXELTM_of_matched_dose}.}
+#' }
+#'
+#' @section Assumption:
+#' \code{PCELTM} / \code{PCRFTDTC} must reference the most recent dose for
+#' each sample. If the data provider used a different convention (e.g. the
+#' next scheduled dose for pre-dose samples), nominal times will be
+#' inconsistent.
+#'
+#' @param pc A data.frame containing the PC (Pharmacokinetic Concentrations)
+#'   SDTM domain. Required columns: STUDYID, USUBJID, PCTEST, PCSTRESN,
+#'   PCSTRESU, PCDTC. Optional: PCSPEC, PCELTM, PCRFTDTC, VOLUME, VOLUMEU.
+#' @param ex A data.frame containing the EX (Exposure) SDTM domain.
+#'   Required columns: STUDYID, USUBJID, EXTRT, EXDOSE, EXDOSU, EXROUTE,
+#'   EXSTDTC. Optional: EXENDTC, EXDUR, EXELTM.
+#' @param dm Optional data.frame containing the DM (Demographics) SDTM domain.
+#'   When provided, demographic columns (AGE, AGEU, SEX, RACE, ARM, ACTARM)
+#'   are joined by USUBJID.
+#' @param metabolites Optional character vector of PCTEST values to flag as
+#'   metabolites (\code{METABFL = "Y"}).
+#'
+#' @returns A \code{PKNCAconc} object with formula
+#'   \code{AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM}
+#'   and all columns required by the aNCA pipeline.
+#'
+#' @importFrom dplyr mutate group_by ungroup arrange left_join select any_of
+#'   filter bind_rows
+#' @importFrom rlang .data
+#' @importFrom stats as.formula
+#' @export
+pc_to_PKNCAconc <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: object_name_linter
+
+
+  # --- Validate inputs --------------------------------------------------------
+  pc_required <- c("STUDYID", "USUBJID", "PCTEST", "PCSTRESN", "PCSTRESU",
+                   "PCDTC")
+  ex_required <- c("STUDYID", "USUBJID", "EXTRT", "EXDOSE", "EXDOSU",
+                   "EXROUTE", "EXSTDTC")
+  .check_required_cols(pc, pc_required, "pc")
+  .check_required_cols(ex, ex_required, "ex")
+
+  # --- Build dose lookup table ------------------------------------------------
+  dose_tbl <- .prepare_dose_table(ex)
+
+  # --- Parse PC datetimes -----------------------------------------------------
+  pc$PCDTC_posix <- std_dtc_to_rdate(pc$PCDTC)
+
+  # First dose time per subject (from EX)
+  first_dose <- dose_tbl %>%
+    group_by(.data$USUBJID) %>%
+    filter(.data$DOSNOA == 1) %>%
+    ungroup() %>%
+    select("USUBJID", first_dose_time = "EXSTDTC_posix")
+
+  # --- AFRLT: actual time from first dose -------------------------------------
+  conc_data <- pc %>%
+    left_join(first_dose, by = "USUBJID") %>%
+    mutate(
+      AFRLT = as.numeric(difftime(
+        .data$PCDTC_posix, .data$first_dose_time, units = "hours"
+      ))
+    )
+
+  # --- Assign each PC record to its most recent prior dose --------------------
+  conc_data <- .assign_doses_to_conc(conc_data, dose_tbl)
+
+  # --- ARRLT: actual time from most recent dose -------------------------------
+  conc_data <- conc_data %>%
+    mutate(
+      ARRLT = as.numeric(difftime(
+        .data$PCDTC_posix, .data$ref_dose_time, units = "hours"
+      ))
+    )
+
+  # --- Nominal times ----------------------------------------------------------
+  # NRRLT: from PCELTM (nominal time from reference / most recent dose)
+  if ("PCELTM" %in% names(pc)) {
+    conc_data$NRRLT <- parse_iso8601_duration(pc$PCELTM)
+  } else {
+    # Fallback: use ARRLT as nominal
+    conc_data$NRRLT <- conc_data$ARRLT
+  }
+
+  # NFRLT: NRRLT + nominal dose time of matched dose from first dose
+  conc_data$NFRLT <- conc_data$NRRLT + conc_data$ref_dose_NFRLT
+
+  # --- Map remaining columns to aNCA standard names --------------------------
+  conc_data$PARAM  <- pc$PCTEST
+  conc_data$PCSPEC <- if ("PCSPEC" %in% names(pc)) pc$PCSPEC else "UNKNOWN"
+  conc_data$AVAL   <- as.numeric(pc$PCSTRESN)
+  conc_data$AVALU  <- pc$PCSTRESU
+  conc_data$RRLTU  <- "hour"
+  conc_data$CONCDUR <- 0
+  conc_data$ATPTREF <- paste("DOSE", conc_data$DOSNOA)
+
+  # Volume (for excretion analysis)
+  if ("VOLUME" %in% names(pc)) {
+    conc_data$VOLUME <- as.numeric(pc$VOLUME)
+  }
+  if ("VOLUMEU" %in% names(pc)) {
+    conc_data$VOLUMEU <- pc$VOLUMEU
+  }
+
+  # --- Metabolite flag --------------------------------------------------------
+  if (!is.null(metabolites) && length(metabolites) > 0) {
+    conc_data$METABFL <- ifelse(conc_data$PARAM %in% metabolites, "Y", "")
+  } else {
+    conc_data$METABFL <- ""
+  }
+
+  # --- Join DM demographics ---------------------------------------------------
+  if (!is.null(dm)) {
+    dm_cols <- c("USUBJID", "AGE", "AGEU", "SEX", "RACE", "ARM", "ACTARM")
+    dm_subset <- dm[, intersect(dm_cols, names(dm)), drop = FALSE]
+    # Deduplicate DM to one row per subject
+    dm_subset <- dm_subset[!duplicated(dm_subset$USUBJID), , drop = FALSE]
+    conc_data <- left_join(conc_data, dm_subset, by = "USUBJID")
+  }
+
+  # --- Initialise aNCA-specific columns ---------------------------------------
+  conc_data$nca_exclude       <- ""
+  conc_data$is.excluded.hl    <- FALSE
+  conc_data$is.included.hl    <- FALSE
+  conc_data$exclude_half.life <- FALSE
+  conc_data$REASON            <- ""
+
+  # --- Volume unit conversion (for excretion analysis) -------------------------
+  conc_data <- convert_volume_units(conc_data)
+
+  # --- Clean up internal columns ----------------------------------------------
+  conc_data <- conc_data %>%
+    select(-any_of(c(
+      "PCDTC_posix", "first_dose_time", "ref_dose_time", "ref_dose_NFRLT"
+    )))
+
+  # --- Build PKNCAconc object -------------------------------------------------
+  conc_formula <- AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM
+
+  args_list <- list(
+    data = conc_data,
+    formula = conc_formula,
+    exclude_half.life = "exclude_half.life",
+    include_half.life = "include_half.life",
+    time.nominal = "NFRLT",
+    duration = "CONCDUR",
+    concu = "AVALU",
+    timeu = "RRLTU",
+    exclude = "nca_exclude"
+  )
+
+  if ("VOLUME" %in% names(conc_data)) {
+    args_list$volume <- "VOLUME"
+  }
+  if ("AMOUNTU" %in% names(conc_data)) {
+    args_list$amountu <- "AMOUNTU"
+  }
+
+  do.call(PKNCA::PKNCAconc, args_list)
+}
+
+
 # --- EX to PKNCAdose ---------------------------------------------------------
 
 #' Convert an EX (Exposure) SDTM domain to a PKNCAdose object
 #'
 #' Transforms a CDISC SDTM EX domain data frame into a \code{PKNCAdose} object
-#' suitable for NCA analysis with PKNCA. Handles date-time parsing, duration
-#' derivation, elapsed time derivation, route mapping, and relative time
-#' computation.
+#' compatible with the aNCA pipeline. The dose formula uses
+#' \code{DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID}, matching the structure
+#' produced by \code{\link{PKNCA_create_data_object}}.
 #'
-#' @section NFRLT derivation:
-#' When \code{EXRFTDTC} and \code{EXELTM} are available, the function derives
-#' \code{NFRLT} (nominal time from reference) for each dose record:
-#' \enumerate{
-#'   \item \code{EXELTM} is parsed from ISO 8601 duration to numeric hours
-#'     (if character), or used as-is (if already numeric).
-#'   \item Per dose grouping (e.g. \code{EXTRT + USUBJID}):
-#'     \code{nominal_ref = min(EXRFTDTC)}
-#'   \item \code{NFRLT = (EXRFTDTC + EXELTM) - nominal_ref} (in hours)
-#' }
-#' \code{NFRLT} is used as \code{time.nominal} in the PKNCAdose object.
-#' If \code{EXRFTDTC} or \code{EXELTM} are not available, \code{NFRLT} is
-#' not derived and \code{time.nominal} is omitted.
+#' @param ex A data.frame containing the EX (Exposure) SDTM domain.
+#'   Required columns: STUDYID, USUBJID, EXTRT, EXDOSE, EXDOSU, EXROUTE,
+#'   EXSTDTC. Optional: EXENDTC, EXDUR, EXELTM.
 #'
-#' @param ex A data.frame containing the EX (Exposure) SDTM domain
-#' @param USUBJID Column name for the unique subject identifier
-#' @param EXTRT Column name for the treatment name
-#' @param EXSTDTC Column name for the start date/time of treatment (ISO 8601)
-#' @param EXDUR Column name for the duration of treatment. If the column is
-#'   absent, it is derived from \code{EXSTDTC} and \code{EXENDTC}.
-#' @param EXENDTC Column name for the end date/time of treatment (ISO 8601).
-#'   Used to derive \code{EXDUR} when not available.
-#' @param EXELTM Column name for the planned elapsed time since first dose.
-#'   Can be numeric (hours) or ISO 8601 duration (e.g. \code{"PT2H"}).
-#'   If absent, derived from \code{EXSTDTC} and \code{EXRFTDTC}.
-#' @param EXTPTNUM Column name for the planned time point number
-#' @param EXRFTDTC Column name for the reference date/time (ISO 8601).
-#'   Used to derive \code{EXELTM} when not available, and to compute
-#'   \code{NFRLT}.
-#' @param EXDOSE Column name for the dose per administration
-#' @param EXDOSU Column name for the dose units
-#' @param EXROUTE Column name for the route of administration
-#' @return A \code{PKNCAdose} object
-#' @importFrom dplyr mutate group_by ungroup coalesce
-#' @importFrom rlang sym
+#' @returns A \code{PKNCAdose} object with formula
+#'   \code{DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID}.
+#'
+#' @importFrom dplyr select any_of
+#' @importFrom stats as.formula
 #' @export
-ex_to_PKNCAdose <- function(
-    ex,
-    USUBJID = "USUBJID",
-    EXTRT = "EXTRT",
-    
-    # Time variables to determine dose
-    EXSTDTC = "EXSTDTC",
-    EXDUR = "EXDUR",
-    # In case EXDUR is not derived
-    EXENDTC = "EXENDTC",
-    
-    # Nominal time variables
-    EXELTM = "EXELTM",
-    # In case EXELTM is not derived
-    EXTPTNUM = "EXTPTNUM",
-    EXRFTDTC = "EXRFTDTC",
-    
-    EXDOSE = "EXDOSE",
-    EXDOSU = "EXDOSU",
-    EXROUTE = "EXROUTE"
-) {
-  
-  # Grouping variables for the dose formula
-  group_vars <- c(EXTRT, USUBJID)
-  
-  ex2 <- ex %>%
-    
-    # Standardise all dates to R date-time format
-    mutate(
-      !!sym(EXSTDTC) := if (!!EXSTDTC %in% names(ex)) {
-        std_dtc_to_rdate(!!sym(EXSTDTC))
-      } else {
-        as.POSIXct(NA)
-      },
-      !!sym(EXENDTC) := if (!!EXENDTC %in% names(ex)) {
-        std_dtc_to_rdate(!!sym(EXENDTC))
-      } else {
-        as.POSIXct(NA)
-      },
-      !!sym(EXRFTDTC) := if (!!EXRFTDTC %in% names(ex)) {
-        std_dtc_to_rdate(!!sym(EXRFTDTC))
-      } else {
-        NULL
-      }
-    ) %>%
-    # Derive EXDUR if missing
-    mutate(
-      !!sym(EXDUR) := if (!!EXDUR %in% names(ex)) {
-        !!sym(EXDUR)
-      } else {
-        dur <- as.numeric(difftime(
-          !!sym(EXENDTC),
-          !!sym(EXSTDTC),
-          units = "hours"
-        ))
-        # When EXENDTC is NA (e.g. oral/instantaneous doses), duration defaults to 0
-        ifelse(is.na(dur), 0, dur)
-      }
-    ) %>%
-    # Derive EXELTM if missing; parse ISO 8601 duration if character
-    mutate(
-      !!sym(EXELTM) := if (!!EXELTM %in% names(ex)) {
-        eltm <- !!sym(EXELTM)
-        if (is.character(eltm)) parse_iso8601_duration(eltm) else eltm
-      } else if (!!EXRFTDTC %in% names(ex)) {
-        as.numeric(difftime(
-          !!sym(EXSTDTC),
-          !!sym(EXRFTDTC),
-          units = "hours"
-        ))
-      } else {
-        NULL
-      }
-    ) %>%
-    # Determine for each subject the reference (first) dose date-time
-    group_by(!!sym(USUBJID)) %>%
-    mutate(
-      EX_reference = min(!!sym(EXSTDTC), na.rm = TRUE)
-    ) %>%
-    ungroup() %>%
-    # Determine dose time in hours from reference
-    mutate(
-      AFRLT = as.numeric(difftime(
-        !!sym(EXSTDTC),
-        EX_reference,
-        units = "hours"
-      ))
-    )
-  
-  # Derive NFRLT from EXRFTDTC + EXELTM when both are available
-  has_nfrlt <- EXRFTDTC %in% names(ex2) && EXELTM %in% names(ex2)
-  if (has_nfrlt) {
-    ex2 <- ex2 %>%
-      group_by(!!!syms(group_vars)) %>%
-      mutate(
-        NFRLT = as.numeric(difftime(
-          !!sym(EXRFTDTC) + !!sym(EXELTM) * 3600,
-          min(!!sym(EXRFTDTC), na.rm = TRUE),
-          units = "hours"
-        ))
-      ) %>%
-      ungroup()
-  }
-  
-  PKNCAdose_args <- list(
-    data = ex2,
-    formula = as.formula(
-      paste(EXDOSE, "~", "AFRLT", "|", paste(group_vars, collapse = "+"))
-    ),
-    route = if (EXROUTE %in% names(ex)) route_cdisc_to_pknca(ex2[[EXROUTE]]) else NULL,
-    time.nominal = if (has_nfrlt) "NFRLT" else NULL,
-    duration = if (EXDUR %in% names(ex2)) EXDUR else NULL,
-    doseu = if (EXDOSU %in% names(ex2)) EXDOSU else NULL
+ex_to_PKNCAdose <- function(ex) { # nolint: object_name_linter
+
+  ex_required <- c("STUDYID", "USUBJID", "EXTRT", "EXDOSE", "EXDOSU",
+                   "EXROUTE", "EXSTDTC")
+  .check_required_cols(ex, ex_required, "ex")
+
+  dose_tbl <- .prepare_dose_table(ex)
+
+  # Remove internal datetime column before passing to PKNCA
+  dose_tbl <- dose_tbl %>%
+    select(-any_of("EXSTDTC_posix"))
+
+  dose_formula <- DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID
+
+  PKNCA::PKNCAdose(
+    data = dose_tbl,
+    formula = dose_formula,
+    route = "std_route",
+    time.nominal = "NFRLT",
+    duration = "ADOSEDUR",
+    doseu = "DOSEU"
   )
-  # Remove NULL entries
-  PKNCAdose_args <- PKNCAdose_args[!sapply(PKNCAdose_args, is.null)]
-  do.call(PKNCA::PKNCAdose, PKNCAdose_args)
+}
+
+
+# --- Top-level wrapper --------------------------------------------------------
+
+#' Convert SDTM PC, EX, and DM domains to a PKNCAdata object
+#'
+#' Builds a \code{PKNCAdata} object from SDTM domain data frames, producing
+#' output compatible with the aNCA downstream pipeline
+#' (\code{\link{PKNCA_update_data_object}}, interval formatting, exploration
+#' plots, TLG export, etc.).
+#'
+#' @section Assumptions:
+#' \itemize{
+#'   \item \code{PCELTM} / \code{PCRFTDTC} must reference the most recent dose
+#'     for each sample. If the data provider used a different convention,
+#'     nominal times will be inconsistent.
+#'   \item Treatment interval (TRTRINT / tau) is not derived. The app falls
+#'     back to dose counting via DOSNOA for single-vs-multiple dose detection.
+#' }
+#'
+#' @param pc A data.frame containing the PC (Pharmacokinetic Concentrations)
+#'   SDTM domain.
+#' @param ex A data.frame containing the EX (Exposure) SDTM domain.
+#' @param dm Optional data.frame containing the DM (Demographics) SDTM domain.
+#' @param metabolites Optional character vector of PCTEST values to flag as
+#'   metabolites.
+#'
+#' @returns A \code{PKNCAdata} object with concentration, dose, and units,
+#'   ready for use with \code{\link{PKNCA_update_data_object}}.
+#'
+#' @examples
+#' \dontrun{
+#' pc <- read.csv("pc_example.csv")
+#' ex <- read.csv("ex_example.csv")
+#' dm <- read.csv("dm_example.csv")
+#' pknca_data <- sdtm_to_PKNCAdata(pc, ex, dm)
+#' }
+#'
+#' @export
+sdtm_to_PKNCAdata <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: object_name_linter
+
+  pknca_conc <- pc_to_PKNCAconc(pc, ex, dm, metabolites)
+  pknca_dose <- ex_to_PKNCAdose(ex)
+
+  # Basic intervals so PKNCAdata can be created
+  intervals <- data.frame(
+    start = 0, end = Inf,
+    cmax = TRUE,
+    tmax = TRUE,
+    auclast = FALSE,
+    aucinf.obs = FALSE
+  )
+
+  pknca_data <- PKNCA::PKNCAdata(
+    data.conc = pknca_conc,
+    data.dose = pknca_dose,
+    intervals = intervals,
+    units = PKNCA_build_units_table(pknca_conc, pknca_dose)
+  )
+
+  pknca_data
+}
+
+
+# --- Internal helpers ---------------------------------------------------------
+
+#' Assign each concentration record to its most recent prior dose
+#'
+#' For each row in \code{conc_data}, finds the dose from \code{dose_tbl} with
+#' the largest \code{EXSTDTC_posix <= PCDTC_posix} for the same subject.
+#' Pre-first-dose samples are assigned to dose 1.
+#'
+#' @param conc_data Data.frame with columns USUBJID, PCDTC_posix.
+#' @param dose_tbl Data.frame from \code{.prepare_dose_table}.
+#' @returns \code{conc_data} with added columns: DOSETRT, DOSEA, DOSEU, ROUTE,
+#'   std_route, ADOSEDUR, DOSNOA, ref_dose_time, ref_dose_NFRLT.
+#'
+#' @importFrom dplyr left_join filter group_by slice_tail ungroup select
+#'   bind_rows arrange
+#' @importFrom rlang .data
+#' @keywords internal
+.assign_doses_to_conc <- function(conc_data, dose_tbl) {
+  # Prepare dose lookup with only the columns we need
+  dose_lookup <- dose_tbl %>%
+    select("USUBJID", "DOSETRT", "DOSEA", "DOSEU", "ROUTE", "std_route",
+           "ADOSEDUR", "DOSNOA",
+           ref_dose_time = "EXSTDTC_posix",
+           ref_dose_NFRLT = "NFRLT")
+
+  # Tag each conc row for tracking
+
+  conc_data$.ROW_ID <- seq_len(nrow(conc_data))
+
+  # Cross-join conc with dose (same subject), keep only doses <= sample time,
+  # then pick the most recent dose per concentration record
+  matched <- conc_data %>%
+    select("USUBJID", "PCDTC_posix", ".ROW_ID") %>%
+    left_join(dose_lookup, by = "USUBJID", relationship = "many-to-many") %>%
+    filter(.data$ref_dose_time <= .data$PCDTC_posix) %>%
+    group_by(.data$.ROW_ID) %>%
+    arrange(.data$ref_dose_time) %>%
+    slice_tail(n = 1) %>%
+    ungroup() %>%
+    select(-"PCDTC_posix", -"USUBJID")
+
+  # Handle pre-first-dose samples: no dose matched, assign to dose 1
+  first_doses <- dose_lookup %>%
+    filter(.data$DOSNOA == 1)
+
+  unmatched_ids <- setdiff(conc_data$.ROW_ID, matched$.ROW_ID)
+  if (length(unmatched_ids) > 0) {
+    unmatched <- conc_data[conc_data$.ROW_ID %in% unmatched_ids, ] %>%
+      select("USUBJID", ".ROW_ID") %>%
+      left_join(first_doses, by = "USUBJID") %>%
+      select(-"USUBJID")
+    matched <- bind_rows(matched, unmatched)
+  }
+
+  # Join back to conc_data
+  conc_data <- conc_data %>%
+    left_join(matched, by = ".ROW_ID") %>%
+    select(-".ROW_ID")
+
+  conc_data
+}
+
+
+#' Check that required columns exist in a data.frame
+#'
+#' @param df Data.frame to check.
+#' @param required Character vector of required column names.
+#' @param df_name Name of the data.frame for error messages.
+#' @returns Invisible NULL. Raises an error if columns are missing.
+#' @keywords internal
+.check_required_cols <- function(df, required, df_name) {
+  missing <- setdiff(required, names(df))
+  if (length(missing) > 0) {
+    stop(
+      "Missing required columns in ", df_name, ": ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
 }
