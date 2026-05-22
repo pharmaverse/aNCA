@@ -132,7 +132,8 @@ pkcg01 <- function(
     labs(
       x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
       y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
-    )
+    ) +
+    ggplot2::theme_bw()
 
   # Provide limits and additional potential future aesthetic customizations
   plot <- plot +
@@ -471,7 +472,8 @@ pkcg02 <- function(
     ggplot2::labs(
       x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
       y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
-    )
+    ) +
+    ggplot2::theme_bw()
 
   # Provide limits and additional potential future aesthetic customizations
   plot <- plot +
