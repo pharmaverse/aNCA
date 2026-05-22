@@ -528,3 +528,137 @@ describe("sdtm_to_PKNCAdata with example datasets", {
     expect_true("RACE" %in% names(result$conc$data))
   })
 })
+
+
+describe("NCA round-trip: SDTM vs ADNCA produce equivalent results", {
+  skip_if_not(
+    file.exists(system.file("data", "pc_example.rda", package = "aNCA")),
+    message = "SDTM example .rda files not yet generated"
+  )
+
+  data("adnca_example", package = "aNCA", envir = environment())
+  data("pc_example", package = "aNCA", envir = environment())
+  data("ex_example", package = "aNCA", envir = environment())
+  data("dm_example", package = "aNCA", envir = environment())
+
+  # Build both PKNCAdata objects
+  pknca_adnca <- PKNCA_create_data_object(adnca_example)
+  pknca_sdtm  <- sdtm_to_PKNCAdata(pc_example, ex_example, dm_example)
+
+  it("produces identical formula groups", {
+    expect_equal(
+      dplyr::group_vars(pknca_sdtm$conc),
+      dplyr::group_vars(pknca_adnca$conc)
+    )
+    expect_equal(
+      dplyr::group_vars(pknca_sdtm$dose),
+      dplyr::group_vars(pknca_adnca$dose)
+    )
+  })
+
+  it("produces same number of concentration rows", {
+    expect_equal(nrow(pknca_sdtm$conc$data), nrow(pknca_adnca$conc$data))
+  })
+
+  it("produces identical AVAL values", {
+    # Sort by a stable key to avoid tie-breaking issues
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    # NA-safe comparison
+    expect_true(
+      all(adnca_sorted$AVAL == sdtm_sorted$AVAL, na.rm = TRUE) &&
+        all(is.na(adnca_sorted$AVAL) == is.na(sdtm_sorted$AVAL))
+    )
+  })
+
+  it("produces AFRLT within 1 second of ADNCA", {
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    max_diff_hours <- max(abs(adnca_sorted$AFRLT - sdtm_sorted$AFRLT))
+    # 1 second = 1/3600 hours
+    expect_lt(max_diff_hours, 1 / 3600)
+  })
+
+  it("produces identical intervals", {
+    adnca_int <- format_pkncadata_intervals(pknca_adnca$conc, pknca_adnca$dose)
+    sdtm_int  <- format_pkncadata_intervals(pknca_sdtm$conc, pknca_sdtm$dose)
+
+    key_cols <- c("PARAM", "PCSPEC", "DOSETRT", "USUBJID", "ATPTREF")
+    adnca_key <- adnca_int %>%
+      dplyr::select(dplyr::any_of(c("start", "end", key_cols))) %>%
+      dplyr::arrange(dplyr::across(dplyr::everything()))
+    sdtm_key <- sdtm_int %>%
+      dplyr::select(dplyr::any_of(c("start", "end", key_cols))) %>%
+      dplyr::arrange(dplyr::across(dplyr::everything()))
+
+    expect_equal(nrow(adnca_key), nrow(sdtm_key))
+    # Start/end should match within 1 second
+    expect_true(all(abs(adnca_key$start - sdtm_key$start) < 1 / 3600))
+    expect_true(all(abs(adnca_key$end - sdtm_key$end) < 1 / 3600))
+  })
+
+  it("produces NCA results within 1% of ADNCA path", {
+    nca_params <- c("cmax", "tmax", "half.life", "lambda.z")
+
+    # Set up intervals
+    adnca_int <- format_pkncadata_intervals(pknca_adnca$conc, pknca_adnca$dose)
+    sdtm_int  <- format_pkncadata_intervals(pknca_sdtm$conc, pknca_sdtm$dose)
+    for (p in nca_params) {
+      if (p %in% names(adnca_int)) adnca_int[[p]] <- TRUE
+      if (p %in% names(sdtm_int))  sdtm_int[[p]]  <- TRUE
+    }
+    pknca_adnca$intervals <- adnca_int
+    pknca_sdtm$intervals  <- sdtm_int
+    pknca_adnca$options <- list(progress = FALSE, allow_partial_missing_units = TRUE)
+    pknca_sdtm$options  <- list(progress = FALSE, allow_partial_missing_units = TRUE)
+
+    results_adnca <- PKNCA::pk.nca(pknca_adnca)
+    results_sdtm  <- PKNCA::pk.nca(pknca_sdtm)
+
+    # Join by full key
+    res_a <- as.data.frame(results_adnca$result) %>%
+      dplyr::filter(PPTESTCD %in% nca_params) %>%
+      dplyr::select(STUDYID, USUBJID, PARAM, PCSPEC, DOSETRT,
+                    PPTESTCD, PPSTRES, start, end)
+    res_s <- as.data.frame(results_sdtm$result) %>%
+      dplyr::filter(PPTESTCD %in% nca_params) %>%
+      dplyr::select(STUDYID, USUBJID, PARAM, PCSPEC, DOSETRT,
+                    PPTESTCD, PPSTRES, start, end)
+
+    comp <- dplyr::inner_join(
+      res_a, res_s,
+      by = c("STUDYID", "USUBJID", "PARAM", "PCSPEC", "DOSETRT",
+             "PPTESTCD", "start", "end"),
+      suffix = c("_a", "_s")
+    )
+
+    expect_true(nrow(comp) > 0, info = "Should have matched results")
+
+    # For numeric comparisons, check < 1% relative difference
+    numeric_comp <- comp %>%
+      dplyr::filter(!is.na(PPSTRES_a) & !is.na(PPSTRES_s) & PPSTRES_a != 0)
+
+    if (nrow(numeric_comp) > 0) {
+      rel_diffs <- abs(numeric_comp$PPSTRES_a - numeric_comp$PPSTRES_s) /
+        abs(numeric_comp$PPSTRES_a) * 100
+      expect_true(
+        all(rel_diffs < 1),
+        info = paste("Max relative diff:", max(rel_diffs), "%")
+      )
+    }
+
+    # NA consistency: if one is NA, the other should be too
+    na_comp <- comp %>%
+      dplyr::filter(is.na(PPSTRES_a) | is.na(PPSTRES_s))
+    if (nrow(na_comp) > 0) {
+      expect_true(
+        all(is.na(na_comp$PPSTRES_a) & is.na(na_comp$PPSTRES_s)),
+        info = "NA results should be consistent between paths"
+      )
+    }
+  })
+})
