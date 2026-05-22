@@ -46,7 +46,7 @@ jobs:
       !contains(github.event.commits[0].message, '[skip spellcheck]')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.3.0
+        uses: actions/checkout@v4.2.2
 
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
