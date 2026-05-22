@@ -541,9 +541,18 @@ describe("NCA round-trip: SDTM vs ADNCA produce equivalent results", {
   data("ex_example", package = "aNCA", envir = environment())
   data("dm_example", package = "aNCA", envir = environment())
 
+
+  # Identify metabolites from the ADNCA data so the SDTM path can set METABFL
+  metabolite_params <- unique(
+    adnca_example$PARAM[adnca_example$METABFL == "Y"]
+  )
+
   # Build both PKNCAdata objects
   pknca_adnca <- PKNCA_create_data_object(adnca_example)
-  pknca_sdtm  <- sdtm_to_PKNCAdata(pc_example, ex_example, dm_example)
+  pknca_sdtm  <- sdtm_to_PKNCAdata(
+    pc_example, ex_example, dm_example,
+    metabolites = metabolite_params
+  )
 
   it("produces identical formula groups", {
     expect_equal(
@@ -581,6 +590,241 @@ describe("NCA round-trip: SDTM vs ADNCA produce equivalent results", {
     max_diff_hours <- max(abs(adnca_sorted$AFRLT - sdtm_sorted$AFRLT))
     # 1 second = 1/3600 hours
     expect_lt(max_diff_hours, 1 / 3600)
+  })
+
+  # --- PKNCA object structure ---------------------------------------------------
+
+  it("produces identical units tables", {
+    expect_equal(pknca_sdtm$units, pknca_adnca$units)
+  })
+
+  it("produces identical conc and dose formulas", {
+    expect_equal(
+      deparse(pknca_sdtm$conc$formula),
+      deparse(pknca_adnca$conc$formula)
+    )
+    expect_equal(
+      deparse(pknca_sdtm$dose$formula),
+      deparse(pknca_adnca$dose$formula)
+    )
+  })
+
+  it("produces identical PKNCA column mappings", {
+    expect_equal(pknca_sdtm$conc$columns, pknca_adnca$conc$columns)
+    expect_equal(pknca_sdtm$dose$columns, pknca_adnca$dose$columns)
+  })
+
+  # --- Conc data: all shared columns that should be identical -----------------
+  # Columns that differ by design (pre-dose reference assignment) are tested
+  # separately below. Columns related to exclusion settings (NCA1XRS, NCA2XRS)
+  # are absent from SDTM and not compared.
+
+  it("produces identical conc values for PKNCA-mapped columns", {
+    # These are the columns referenced by PKNCAconc$columns — the ones PKNCA
+    # actually uses for computation. They must match exactly.
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+
+    # concentration (AVAL) — already tested above, but included for completeness
+    expect_equal(sdtm_sorted$AVAL, adnca_sorted$AVAL, label = "AVAL")
+    # volume (VOLUME)
+    expect_equal(sdtm_sorted$VOLUME, adnca_sorted$VOLUME, label = "VOLUME")
+    # time.nominal (NFRLT) differs for pre-dose samples; skip here
+    # duration (CONCDUR) differs for urine; skip here
+    # exclude (nca_exclude) — initialized column
+    expect_equal(sdtm_sorted$nca_exclude, adnca_sorted$nca_exclude,
+                 label = "nca_exclude")
+    # exclude_half.life, include_half.life — initialized columns
+    expect_equal(sdtm_sorted$exclude_half.life,
+                 adnca_sorted$exclude_half.life,
+                 label = "exclude_half.life")
+    expect_equal(sdtm_sorted$include_half.life,
+                 adnca_sorted$include_half.life,
+                 label = "include_half.life")
+    # unit columns (AVALU, RRLTU)
+    expect_equal(sdtm_sorted$AVALU, adnca_sorted$AVALU, label = "AVALU")
+    expect_equal(sdtm_sorted$RRLTU, adnca_sorted$RRLTU, label = "RRLTU")
+  })
+
+  it("produces identical conc grouping and demographic columns", {
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+
+    # Grouping columns from the formula
+    for (col in c("STUDYID", "PCSPEC", "DOSETRT", "USUBJID", "PARAM")) {
+      expect_equal(sdtm_sorted[[col]], adnca_sorted[[col]],
+                   label = paste("conc", col))
+    }
+    # Dosing columns carried into conc
+    expect_equal(sdtm_sorted$DOSEA, adnca_sorted$DOSEA, label = "DOSEA")
+    expect_equal(sdtm_sorted$DOSEU, adnca_sorted$DOSEU, label = "DOSEU")
+    expect_equal(sdtm_sorted$ROUTE, adnca_sorted$ROUTE, label = "ROUTE")
+    expect_equal(sdtm_sorted$std_route, adnca_sorted$std_route,
+                 label = "std_route")
+    # Demographics
+    for (col in c("AGE", "AGEU", "RACE", "SEX")) {
+      expect_equal(sdtm_sorted[[col]], adnca_sorted[[col]],
+                   label = paste("conc", col))
+    }
+    # Other shared columns
+    expect_equal(sdtm_sorted$VOLUMEU, adnca_sorted$VOLUMEU, label = "VOLUMEU")
+    expect_equal(sdtm_sorted$REASON, adnca_sorted$REASON, label = "REASON")
+    expect_equal(sdtm_sorted$is.excluded.hl, adnca_sorted$is.excluded.hl,
+                 label = "is.excluded.hl")
+    expect_equal(sdtm_sorted$is.included.hl, adnca_sorted$is.included.hl,
+                 label = "is.included.hl")
+  })
+
+  it("produces identical NRRLT in conc data", {
+    # NRRLT (nominal relative time to reference dose) should match because
+    # both paths derive it from the same source (PCELTM / NRRLT column).
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    expect_equal(sdtm_sorted$NRRLT, adnca_sorted$NRRLT, label = "NRRLT")
+  })
+
+  # --- Dose data: all shared columns -----------------------------------------
+
+  it("produces same number of dose rows", {
+    expect_equal(nrow(pknca_sdtm$dose$data), nrow(pknca_adnca$dose$data))
+  })
+
+  it("produces identical dose data for all shared columns", {
+    adnca_dose <- pknca_adnca$dose$data %>%
+      dplyr::arrange(STUDYID, USUBJID, DOSETRT, AFRLT)
+    sdtm_dose <- pknca_sdtm$dose$data %>%
+      dplyr::arrange(STUDYID, USUBJID, DOSETRT, AFRLT)
+
+    # PKNCA-mapped dose columns
+    expect_equal(sdtm_dose$DOSEA, adnca_dose$DOSEA, label = "dose DOSEA")
+    expect_equal(sdtm_dose$std_route, adnca_dose$std_route,
+                 label = "dose std_route")
+    expect_equal(sdtm_dose$ADOSEDUR, adnca_dose$ADOSEDUR,
+                 label = "dose ADOSEDUR")
+    expect_equal(sdtm_dose$DOSNOA, adnca_dose$DOSNOA, label = "dose DOSNOA")
+    expect_equal(sdtm_dose$DOSEU, adnca_dose$DOSEU, label = "dose DOSEU")
+
+    # Grouping columns
+    expect_equal(sdtm_dose$STUDYID, adnca_dose$STUDYID, label = "dose STUDYID")
+    expect_equal(sdtm_dose$USUBJID, adnca_dose$USUBJID, label = "dose USUBJID")
+    expect_equal(sdtm_dose$DOSETRT, adnca_dose$DOSETRT, label = "dose DOSETRT")
+    expect_equal(sdtm_dose$ROUTE, adnca_dose$ROUTE, label = "dose ROUTE")
+
+    # AFRLT within 1 second (datetime precision)
+    max_dose_afrlt_diff <- max(abs(adnca_dose$AFRLT - sdtm_dose$AFRLT))
+    expect_lt(max_dose_afrlt_diff, 1 / 3600, label = "dose AFRLT")
+  })
+
+  # --- Pre-dose normalization -------------------------------------------------
+  # ADNCA assigns pre-dose samples (NRRLT < 0) to the upcoming dose, while
+  # SDTM assigns them to the most recent previous dose. After normalizing both
+  # to the same convention (most recent previous dose), ARRLT, NFRLT, DOSNOA,
+  # ATPTREF, and ADOSEDUR should all match.
+
+  it("produces matching ARRLT after normalizing pre-dose reference", {
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+
+    # Build dose time lookup from dose data
+    dose_times <- pknca_adnca$dose$data %>%
+      dplyr::arrange(STUDYID, USUBJID, DOSETRT, AFRLT) %>%
+      dplyr::group_by(STUDYID, USUBJID, DOSETRT) %>%
+      dplyr::mutate(dn = dplyr::row_number()) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(USUBJID, dn, dose_afrlt = AFRLT)
+
+    # Normalize ADNCA: shift pre-dose from upcoming to previous dose
+    adnca_norm <- adnca_sorted %>%
+      dplyr::mutate(
+        norm_dosnoa = ifelse(NRRLT < 0 & DOSNOA > 1, DOSNOA - 1L, DOSNOA)
+      ) %>%
+      dplyr::left_join(dose_times, by = c("USUBJID", "norm_dosnoa" = "dn")) %>%
+      dplyr::mutate(norm_arrlt = AFRLT - dose_afrlt)
+
+    # SDTM: already references previous dose
+    sdtm_norm <- sdtm_sorted %>%
+      dplyr::mutate(norm_dosnoa = DOSNOA) %>%
+      dplyr::left_join(dose_times, by = c("USUBJID", "norm_dosnoa" = "dn")) %>%
+      dplyr::mutate(norm_arrlt = AFRLT - dose_afrlt)
+
+    # Normalized DOSNOA should be identical
+    expect_equal(adnca_norm$norm_dosnoa, sdtm_norm$norm_dosnoa,
+                 label = "normalized DOSNOA")
+
+    # Normalized ARRLT within 1 second
+    max_diff <- max(abs(adnca_norm$norm_arrlt - sdtm_norm$norm_arrlt),
+                    na.rm = TRUE)
+    expect_lt(max_diff, 1 / 3600, label = "normalized ARRLT")
+
+    # Normalized NFRLT (= TRTRINT * (norm_dosnoa - 1) + NRRLT) should match
+    trtrint <- if ("TRTRINT" %in% names(adnca_sorted)) {
+      adnca_sorted$TRTRINT[1]
+    } else {
+      24
+    }
+    adnca_nfrlt <- trtrint * (adnca_norm$norm_dosnoa - 1) + adnca_sorted$NRRLT
+    sdtm_nfrlt  <- trtrint * (sdtm_norm$norm_dosnoa - 1) + sdtm_sorted$NRRLT
+    expect_equal(adnca_nfrlt, sdtm_nfrlt, label = "normalized NFRLT")
+  })
+
+  it("produces matching ADOSEDUR after normalizing pre-dose reference", {
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+
+    # Dose info lookup
+    dose_info <- pknca_adnca$dose$data %>%
+      dplyr::arrange(STUDYID, USUBJID, DOSETRT, AFRLT) %>%
+      dplyr::group_by(STUDYID, USUBJID, DOSETRT) %>%
+      dplyr::mutate(dn = dplyr::row_number()) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(USUBJID, dn, dose_adosedur = ADOSEDUR)
+
+    adnca_norm <- adnca_sorted %>%
+      dplyr::mutate(
+        norm_dosnoa = ifelse(NRRLT < 0 & DOSNOA > 1, DOSNOA - 1L, DOSNOA)
+      ) %>%
+      dplyr::left_join(dose_info, by = c("USUBJID", "norm_dosnoa" = "dn"))
+
+    sdtm_norm <- sdtm_sorted %>%
+      dplyr::mutate(norm_dosnoa = DOSNOA) %>%
+      dplyr::left_join(dose_info, by = c("USUBJID", "norm_dosnoa" = "dn"))
+
+    expect_equal(adnca_norm$dose_adosedur, sdtm_norm$dose_adosedur,
+                 label = "normalized ADOSEDUR")
+  })
+
+  # --- CONCDUR and METABFL ---------------------------------------------------
+
+  it("produces identical CONCDUR for serum samples", {
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+
+    serum_idx <- adnca_sorted$PCSPEC != "URINE"
+    expect_equal(sdtm_sorted$CONCDUR[serum_idx],
+                 adnca_sorted$CONCDUR[serum_idx],
+                 label = "CONCDUR (serum)")
+  })
+
+  it("produces identical METABFL when metabolites are specified", {
+    adnca_sorted <- pknca_adnca$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+    sdtm_sorted <- pknca_sdtm$conc$data %>%
+      dplyr::arrange(STUDYID, USUBJID, PARAM, PCSPEC, AFRLT)
+
+    expect_equal(sdtm_sorted$METABFL, adnca_sorted$METABFL,
+                 label = "METABFL")
   })
 
   it("produces identical intervals", {
