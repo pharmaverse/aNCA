@@ -1,3 +1,5 @@
+# --- ADNCA mapping constants --------------------------------------------------
+
 # Add information for non-official CDISC mapping columns
 NON_STD_MAPPING_INFO <- data.frame(
   Variable = c("Grouping_Variables", "Metabolites"),
@@ -44,6 +46,57 @@ sections_order <- c(
   "Time Variables", "Unit Variables", "Supplemental Variables"
 )
 MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
+
+# --- SDTM mapping constants --------------------------------------------------
+
+SDTM_NON_STD_MAPPING_INFO <- data.frame(
+  Variable = c("Metabolites", "Grouping_Variables"),
+  Label = c(
+    "PCTEST values to flag as metabolites",
+    "Variables to group and summarise results"
+  ),
+  Values = c("", ""),
+  mapping_tooltip = c(
+    paste0(
+      "Choose the PCTEST values to flag as metabolites of the parent drug (METABFL = 'Y'). ",
+      "If empty, all PCTEST values are treated as parent drug (METABFL = '')"
+    ),
+    "Additional column(s) to use to group the data in the outputs (e.g. AGE, SEX, ARM)"
+  ),
+  mapping_section = c("PC Concentrations", "Supplemental Variables"),
+  mapping_alternatives = c("", paste0(
+    "ARM, ACTARM, AGE, SEX, RACE, GROUP, COHORT, PART, PERIOD, FEDSTATE"
+  )),
+  mapping_order = c(7.5, 21),
+  allow_create_numeric = c(FALSE, FALSE),
+  is_multiple_choice = c(TRUE, TRUE),
+  sdtm_domain = c("PC", "ALL"),
+  stringsAsFactors = FALSE
+)
+
+SDTM_MAPPING_INFO <- metadata_nca_variables %>%
+  filter(.data$is.mapped, .data$Dataset %in% c("PC", "EX", "DM")) %>%
+  select(
+    Variable, Label, Values, mapping_tooltip,
+    mapping_section, mapping_alternatives, mapping_order,
+    allow_create_numeric
+  ) %>%
+  mutate(
+    is_multiple_choice = FALSE,
+    sdtm_domain = metadata_nca_variables$Dataset[
+      metadata_nca_variables$is.mapped &
+        metadata_nca_variables$Dataset %in% c("PC", "EX", "DM")
+    ]
+  ) %>%
+  bind_rows(SDTM_NON_STD_MAPPING_INFO) %>%
+  arrange(.data$mapping_order)
+
+SDTM_MAPPING_BY_SECTION <- split(
+  SDTM_MAPPING_INFO, SDTM_MAPPING_INFO$mapping_section
+)
+SDTM_MAPPING_BY_SECTION <- SDTM_MAPPING_BY_SECTION[c(
+  "PC Concentrations", "EX Dosing", "Supplemental Variables"
+)]
 
 # Column order is the default in apply_mapping()
 
@@ -175,8 +228,9 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 #' @returns Error string if the mapping was skipped, or NULL on success.
 #' @keywords internal
 #' @noRd
-.apply_single_mapping <- function(var, val, column_names, session) {
-  var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
+.apply_single_mapping <- function(var, val, column_names, session,
+                                  mapping_info = MAPPING_INFO) {
+  var_info <- mapping_info[mapping_info$Variable == var, ]
   predefined <- strsplit(var_info$Values, ", ")[[1]]
   valid_values <- c(column_names, predefined)
 
@@ -215,16 +269,17 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   NULL
 }
 
-.process_imported_mapping <- function(mapping, adnca_data, session) {
+.process_imported_mapping <- function(mapping, adnca_data, session,
+                                     mapping_info = MAPPING_INFO) {
   if (is.null(mapping)) return(character(0))
 
   column_names <- names(adnca_data)
   skipped <- character(0)
 
-  for (var in MAPPING_INFO$Variable) {
+  for (var in mapping_info$Variable) {
     if (!var %in% names(mapping) || var == "Metabolites") next
     result <- .apply_single_mapping(
-      var, mapping[[var]], column_names, session
+      var, mapping[[var]], column_names, session, mapping_info
     )
     if (!is.null(result)) skipped <- c(skipped, result)
   }
@@ -293,38 +348,77 @@ data_mapping_ui <- function(id) {
     card(
       div(
         class = "data-mapping-container",
-        h3("Data Mapping"),
-        p(
-          "The following columns are required for data analysis.",
-          " Please ensure each of these columns",
-          " has been assigned a corresponding column from your dataset"
+        # ADNCA mapping UI
+        conditionalPanel(
+          condition = sprintf(
+            "!window.aNCA_input_mode || window.aNCA_input_mode == 'adnca'"
+          ),
+          id = ns("adnca_mapping_panel"),
+          h3("Data Mapping"),
+          p(
+            "The following columns are required for data analysis.",
+            " Please ensure each of these columns",
+            " has been assigned a corresponding column from your dataset"
+          ),
+          lapply(MAPPING_BY_SECTION, function(mapping_section) {
+            .column_mapping_section(ns, mapping_section)
+          })
         ),
-        # Define the input widgets for each variable to map
-        lapply(MAPPING_BY_SECTION, function(mapping_section) {
-          .column_mapping_section(ns, mapping_section)
-        })
+        # SDTM mapping UI
+        conditionalPanel(
+          condition = "false",
+          id = ns("sdtm_mapping_panel"),
+          h3("SDTM Data Mapping"),
+          p(
+            "Map columns from your PC, EX, and subject-level datasets.",
+            " Standard SDTM column names are auto-detected when present."
+          ),
+          lapply(SDTM_MAPPING_BY_SECTION, function(mapping_section) {
+            .column_mapping_section(ns, mapping_section)
+          })
+        )
       )
     )
   )
 }
 
-data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
+data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
+                               input_mode = reactive("adnca"),
+                               sdtm_raw = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     duplicates <- reactiveVal(NULL)
+    sdtm_pknca_data <- reactiveVal(NULL)
+
+    # --- Panel visibility (JS-based conditionalPanel can't read parent input) -
+    observe({
+      mode <- input_mode()
+      shinyjs::toggle("adnca_mapping_panel", condition = (mode == "adnca"))
+      shinyjs::toggle("sdtm_mapping_panel", condition = (mode == "sdtm"))
+    })
+
+    # --- ADNCA mapping constants ----------------------------------------------
     # Derive input IDs from column_groups
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
+    sdtm_input_ids <- paste0("select_", SDTM_MAPPING_INFO[["Variable"]])
 
     # Loop through each label and create the renderText outputs
-    purrr::walk(MAPPING_INFO$Variable, function(var) {
+    all_vars <- unique(c(MAPPING_INFO$Variable, SDTM_MAPPING_INFO$Variable))
+    all_info <- rbind(
+      MAPPING_INFO[, c("Variable", "Label")],
+      SDTM_MAPPING_INFO[!SDTM_MAPPING_INFO$Variable %in% MAPPING_INFO$Variable,
+                         c("Variable", "Label")]
+    )
+    purrr::walk(all_vars, function(var) {
       output[[paste0("label_", var)]] <- renderText(
-        MAPPING_INFO$Label[MAPPING_INFO$Variable == var]
+        all_info$Label[all_info$Variable == var][1]
       )
     })
 
-    # Populate the static inputs with column names
+    # --- ADNCA: Populate the static inputs with column names ------------------
     observeEvent(c(adnca_data(), imported_mapping()), {
+      req(input_mode() == "adnca")
       column_names <- names(adnca_data())
       update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
 
@@ -345,19 +439,62 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
         session$userData$mapping_skipped <- skipped
       }
     })
-    # Populate the dynamic input Metabolites
+
+    # --- SDTM: Populate inputs from domain data -------------------------------
+    observeEvent(c(sdtm_raw(), imported_mapping()), {
+      req(input_mode() == "sdtm")
+      sdtm <- sdtm_raw()
+      req(sdtm)
+
+      # Collect all available columns across domains
+      all_cols <- unique(c(
+        names(sdtm$pc), names(sdtm$ex),
+        if (!is.null(sdtm$dm)) names(sdtm$dm) else character(0)
+      ))
+
+      update_selectize_inputs(
+        session, sdtm_input_ids, all_cols, SDTM_MAPPING_INFO
+      )
+
+      # Clear optional fields if not present
+      if (!"VOLUME" %in% names(sdtm$pc)) {
+        updateSelectizeInput(session, "select_VOLUME", selected = "")
+        updateSelectizeInput(session, "select_VOLUMEU", selected = "")
+      }
+      if (is.null(sdtm$dm) || !"WTBL" %in% names(sdtm$dm)) {
+        updateSelectizeInput(session, "select_WTBL", selected = "")
+        updateSelectizeInput(session, "select_WTBLU", selected = "")
+      }
+
+      mapping <- imported_mapping()$mapping
+      if (!is.null(mapping)) {
+        skipped <- .process_imported_mapping(
+          mapping, sdtm$pc, session, SDTM_MAPPING_INFO
+        )
+        session$userData$mapping_skipped <- skipped
+      }
+    })
+
+    # Populate the dynamic input Metabolites (works for both modes)
     observe({
-      req(input$select_PARAM != "")
-      param_col <- input$select_PARAM
-      choices_metab <- unique(adnca_data()[[param_col]])
-      # Use pending import if available, otherwise fall back to METABFL default
-      selected_metab <- if (!is.null(imported_mapping()$mapping$Metabolites)) {
-        imported <- imported_mapping()$mapping$Metabolites
-        imported
-      } else if ("METABFL" %in% names(adnca_data())) {
-        unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
+      if (input_mode() == "adnca") {
+        req(input$select_PARAM != "")
+        param_col <- input$select_PARAM
+        choices_metab <- unique(adnca_data()[[param_col]])
+        selected_metab <- if (!is.null(imported_mapping()$mapping$Metabolites)) {
+          imported_mapping()$mapping$Metabolites
+        } else if ("METABFL" %in% names(adnca_data())) {
+          unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
+        } else {
+          NULL
+        }
       } else {
-        NULL
+        req(input$select_PCTEST != "")
+        sdtm <- sdtm_raw()
+        req(sdtm)
+        pctest_col <- input$select_PCTEST
+        choices_metab <- unique(sdtm$pc[[pctest_col]])
+        selected_metab <- imported_mapping()$mapping$Metabolites
       }
       updateSelectizeInput(
         session, "select_Metabolites",
@@ -368,30 +505,45 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     # Validate numeric inputs for variables with allow_create_numeric = TRUE
     .observe_numeric_inputs(input, session, adnca_data, MAPPING_INFO)
 
-    # Observe submit button click and update processed_data
+    # --- Collect current mapping values ---------------------------------------
     mapping <- reactive({
-      mapping_list <- setNames(lapply(input_ids, function(id) input[[id]]), input_ids)
-      supplemental_ids <- paste0("select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable)
+      if (input_mode() == "adnca") {
+        ids <- input_ids
+        suppl_ids <- paste0(
+          "select_", MAPPING_BY_SECTION$`Supplemental Variables`$Variable
+        )
+      } else {
+        ids <- sdtm_input_ids
+        suppl_ids <- paste0(
+          "select_", SDTM_MAPPING_BY_SECTION$`Supplemental Variables`$Variable
+        )
+      }
+
+      mapping_list <- setNames(lapply(ids, function(id) input[[id]]), ids)
 
       # Get the names to keep
       names_to_keep <- names(mapping_list) %>%
         keep(\(name) {
-          # The logical condition with the any() fix
-          !(name %in% supplemental_ids) || any(mapping_list[[name]] != "")
+          !(name %in% suppl_ids) || any(mapping_list[[name]] != "")
         })
 
-      # Subset the list with the final names
       mapping_list[names_to_keep]
     })
     observe({
       m <- mapping()
       names(m) <- gsub("^select_", "", names(m))
       session$userData$mapping <- m
+      # Store metabolites for SDTM script template
+      if (input_mode() == "sdtm") {
+        session$userData$sdtm_metabolites <- input$select_Metabolites
+      }
     })
 
+    # --- ADNCA: apply mapping and produce mapped data.frame -------------------
     mapped_data <- reactive({
+      req(input_mode() == "adnca")
       req(adnca_data())
-      log_info("Processing data mapping...")
+      log_info("Processing ADNCA data mapping...")
 
       mapping_ <- mapping()
       names(mapping_) <- gsub("^select_", "", names(mapping_))
@@ -422,6 +574,56 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
 
+    # --- SDTM: apply mapping and produce PKNCAdata ----------------------------
+    sdtm_mapped_data <- reactive({
+      req(input_mode() == "sdtm")
+      sdtm <- sdtm_raw()
+      req(sdtm)
+      log_info("Processing SDTM data mapping...")
+
+      mapping_ <- mapping()
+      names(mapping_) <- gsub("^select_", "", names(mapping_))
+
+      tryCatch(
+        withCallingHandlers(
+          {
+            # Rename PC columns per mapping
+            pc <- .apply_sdtm_column_rename(sdtm$pc, mapping_, "PC")
+            ex <- .apply_sdtm_column_rename(sdtm$ex, mapping_, "EX")
+            dm <- if (!is.null(sdtm$dm)) {
+              .apply_sdtm_column_rename(sdtm$dm, mapping_, "DM")
+            }
+
+            metabolites <- input$select_Metabolites
+            pknca_obj <- sdtm_to_PKNCAdata(
+              pc = pc, ex = ex, dm = dm, metabolites = metabolites
+            )
+            sdtm_pknca_data(pknca_obj)
+
+            # Return the concentration data for filtering/preview
+            conc_data <- pknca_obj$data.conc$data
+            conc_data
+          },
+          warning = function(w) {
+            log_warn(conditionMessage(w))
+            showNotification(conditionMessage(w), type = "warning", duration = 10)
+            invokeRestart("muffleWarning")
+          }
+        ),
+        error = function(e) {
+          log_error(conditionMessage(e))
+          showNotification(conditionMessage(e), type = "error", duration = NULL)
+          NULL
+        }
+      )
+    }) %>%
+      bindEvent(trigger(), ignoreInit = TRUE)
+
+    # --- Unified mapped data output -------------------------------------------
+    unified_mapped_data <- reactive({
+      if (input_mode() == "sdtm") sdtm_mapped_data() else mapped_data()
+    })
+
     # Check for blocking duplicates using annotate_duplicates()
     df_duplicates <- reactiveVal(NULL)
     resolved_time_duplicate_rows <- reactiveVal(NULL)
@@ -429,17 +631,17 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       session$userData$time_duplicate_rows <- resolved_time_duplicate_rows()
       # Store key-based representation for settings export
       session$userData$time_duplicate_keys <- extract_time_dup_keys(
-        mapped_data(), resolved_time_duplicate_rows()
+        unified_mapped_data(), resolved_time_duplicate_rows()
       )
     })
 
     processed_data <- reactive({
-      req(mapped_data())
+      req(unified_mapped_data())
 
       dup_rows <- resolved_time_duplicate_rows()
       if (is.null(dup_rows)) {
         restored <- .restore_duplicate_exclusions(
-          mapped_data(), imported_mapping()$time_duplicate_keys
+          unified_mapped_data(), imported_mapping()$time_duplicate_keys
         )
         if (!is.null(restored)) {
           resolved_time_duplicate_rows(restored)
@@ -449,8 +651,8 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
 
       tryCatch(
         {
-          result <- annotate_duplicates(mapped_data(), dup_rows)
-          select(result, any_of(c(names(mapped_data()), "DTYPE")))
+          result <- annotate_duplicates(unified_mapped_data(), dup_rows)
+          select(result, any_of(c(names(unified_mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
           df_duplicates(e$duplicate_data)
@@ -459,7 +661,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       )
     }) %>%
       bindEvent(
-        list(mapped_data(), resolved_time_duplicate_rows()),
+        list(unified_mapped_data(), resolved_time_duplicate_rows()),
         ignoreInit = FALSE
       )
 
@@ -480,7 +682,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       # Validate: check if the selection resolves all time duplicates
       tryCatch(
         {
-          annotate_duplicates(mapped_data(), new_exclusions)
+          annotate_duplicates(unified_mapped_data(), new_exclusions)
           # Selection resolves all duplicates — proceed
           resolved_time_duplicate_rows(new_exclusions)
           removeModal()
@@ -561,7 +763,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       processed_data = processed_data,
       mapping = cleaned_mapping,
       grouping_variables = reactive(input$select_Grouping_Variables),
-      time_duplicate_rows = resolved_time_duplicate_rows
+      time_duplicate_rows = resolved_time_duplicate_rows,
+      sdtm_pknca_data = sdtm_pknca_data
     )
   })
 }
+

@@ -1,28 +1,79 @@
-#' Module responsible for loading and validating raw ADNCA data.
+#' Module responsible for loading and validating raw PK data.
 #'
 #' @details
+#' Supports two input modes:
+#' - **ADNCA**: Upload a single ADNCA dataset (one or more files rbind-ed).
+#' - **SDTM**: Upload separate PC, EX, and optional subject-level files.
+#'
 #' Upon startup, when no data is provided by the user, the module will return dummy data
 #' available with the application. Upon upload, user data will be loaded from .csv or .rds files.
 #'
 #' @param id ID of the module.
 #'
-#' @returns A reactive with raw adnca data as provided by the user (or dummy dataset).
+#' @returns A list with reactives: `adnca_raw`, `settings_override`, `input_mode`, `sdtm_raw`.
 
 data_upload_ui <- function(id) {
+
   ns <- NS(id)
+
+  file_formats <- paste(names(aNCA:::readers), collapse = ", ")
 
   div(
     div(
       class = "upload-container",
       id = ns("upload_container"),
-      p("Upload your PK dataset and Settings file (optional)."),
-      fileInput(
-        ns("data_upload"),
-        width = "50%",
-        label = NULL,
-        multiple = TRUE,
-        placeholder = paste(names(aNCA:::readers), collapse = ", "),
-        buttonLabel = list(icon("folder"), "Upload File...")
+      radioButtons(
+        ns("input_mode"), "Input Format",
+        choices = c("ADNCA" = "adnca", "SDTM" = "sdtm"),
+        selected = "adnca",
+        inline = TRUE
+      ),
+      # ADNCA upload (default)
+      conditionalPanel(
+        condition = sprintf("input['%s'] == 'adnca'", ns("input_mode")),
+        p("Upload your PK dataset and Settings file (optional)."),
+        fileInput(
+          ns("data_upload"),
+          width = "50%",
+          label = NULL,
+          multiple = TRUE,
+          placeholder = file_formats,
+          buttonLabel = list(icon("folder"), "Upload File...")
+        )
+      ),
+      # SDTM upload
+      conditionalPanel(
+        condition = sprintf("input['%s'] == 'sdtm'", ns("input_mode")),
+        p("Upload SDTM domain files and Settings file (optional)."),
+        fileInput(
+          ns("sdtm_pc_upload"),
+          label = "PC domain (required)",
+          multiple = FALSE,
+          placeholder = file_formats,
+          buttonLabel = list(icon("folder"), "Browse...")
+        ),
+        fileInput(
+          ns("sdtm_ex_upload"),
+          label = "EX domain (required)",
+          multiple = FALSE,
+          placeholder = file_formats,
+          buttonLabel = list(icon("folder"), "Browse...")
+        ),
+        fileInput(
+          ns("sdtm_subj_upload"),
+          label = "Subject-level data (DM, LB, VS, ... optional)",
+          multiple = TRUE,
+          placeholder = file_formats,
+          buttonLabel = list(icon("folder"), "Browse...")
+        ),
+        fileInput(
+          ns("sdtm_settings_upload"),
+          label = "Settings file (optional)",
+          multiple = FALSE,
+          accept = c(".yml", ".yaml"),
+          placeholder = "yml, yaml",
+          buttonLabel = list(icon("folder"), "Browse...")
+        )
       ),
       uiOutput(ns("file_loading_message"))
     ),
@@ -31,6 +82,7 @@ data_upload_ui <- function(id) {
 }
 
 data_upload_server <- function(id) {
+
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -41,6 +93,7 @@ data_upload_server <- function(id) {
     file_loading_error <- reactiveVal(NULL)
     settings_override <- reactiveVal(NULL) # Store loaded settings
     pending_versioned <- reactiveVal(NULL) # Versioned settings awaiting selection
+    sdtm_data <- reactiveVal(NULL) # SDTM domain data (list of pc/ex/dm)
 
     output$file_loading_message <- renderUI({
       if (is.null(file_loading_error())) {
@@ -85,8 +138,10 @@ data_upload_server <- function(id) {
       })
     }
 
-    raw_data <- (
+    # --- ADNCA mode data loading (existing behavior) --------------------------
+    adnca_raw_data <- (
       reactive({
+        req(input$input_mode == "adnca")
         file_loading_error(NULL)
 
         upload_paths <- .resolve_upload_paths(
@@ -103,11 +158,56 @@ data_upload_server <- function(id) {
           file_loading_error, session, ns
         )
       }) %>%
-        bindEvent(input$data_upload, ignoreNULL = FALSE)
+        bindEvent(input$data_upload, input$input_mode, ignoreNULL = FALSE)
     )
+
+    # --- SDTM mode data loading -----------------------------------------------
+    sdtm_trigger <- reactive({
+      list(input$sdtm_pc_upload, input$sdtm_ex_upload,
+           input$sdtm_subj_upload, input$sdtm_settings_upload)
+    })
+
+    sdtm_raw_data <- (
+      reactive({
+        req(input$input_mode == "sdtm")
+        file_loading_error(NULL)
+
+        result <- .process_sdtm_uploads(
+          input$sdtm_pc_upload, input$sdtm_ex_upload,
+          input$sdtm_subj_upload, input$sdtm_settings_upload,
+          settings_override, pending_versioned,
+          file_loading_error, session, ns
+        )
+
+        sdtm_data(result$sdtm)
+        result$preview
+      }) %>%
+        bindEvent(sdtm_trigger(), input$input_mode, ignoreNULL = FALSE)
+    )
+
+    # --- Unified display data -------------------------------------------------
+    raw_data <- reactive({
+      if (input$input_mode == "sdtm") sdtm_raw_data() else adnca_raw_data()
+    })
 
     observeEvent(raw_data(), {
       session$userData$raw_data <- raw_data()
+    })
+
+    # Store input mode and SDTM data in session for downstream modules
+    observe({
+      session$userData$input_mode <- input$input_mode
+    })
+    observe({
+      session$userData$sdtm_raw <- sdtm_data()
+    })
+
+    # Switch input mode when settings specify it
+    observeEvent(settings_override(), {
+      override <- settings_override()
+      if (!is.null(override$input_mode) && override$input_mode == "sdtm") {
+        updateRadioButtons(session, "input_mode", selected = "sdtm")
+      }
     })
 
     reactable_server(
@@ -140,7 +240,9 @@ data_upload_server <- function(id) {
 
     list(
       adnca_raw = raw_data,
-      settings_override = settings_override
+      settings_override = settings_override,
+      input_mode = reactive(input$input_mode),
+      sdtm_raw = sdtm_data
     )
   })
 }
@@ -445,4 +547,154 @@ data_upload_server <- function(id) {
     easyClose = TRUE,
     size = "l"
   ))
+}
+
+#' Process SDTM file uploads (PC, EX, subject-level, settings).
+#'
+#' Reads each uploaded file, validates that PC and EX are present,
+#' merges subject-level files by STUDYID + USUBJID, and handles
+#' settings YAML.
+#'
+#' @param pc_upload fileInput value for PC domain.
+#' @param ex_upload fileInput value for EX domain.
+#' @param subj_upload fileInput value for subject-level files (multi).
+#' @param settings_upload fileInput value for settings YAML.
+#' @param settings_override reactiveVal for settings.
+#' @param pending_versioned reactiveVal for versioned settings.
+#' @param file_loading_error reactiveVal for error display.
+#' @param session Shiny session.
+#' @param ns Namespace function.
+#' @returns A list with `sdtm` (list of pc/ex/dm data.frames or NULL)
+#'   and `preview` (data.frame for the reactable display).
+#' @noRd
+.process_sdtm_uploads <- function(pc_upload, ex_upload, subj_upload,
+                                  settings_upload, settings_override,
+                                  pending_versioned, file_loading_error,
+                                  session, ns) {
+  errors <- list()
+
+  # --- Read PC domain ---------------------------------------------------------
+  pc <- NULL
+  if (!is.null(pc_upload$datapath)) {
+    tryCatch({
+      pc <- read_pk(pc_upload$datapath)
+      log_success("PC domain loaded: ", pc_upload$name)
+    }, error = function(e) {
+      errors[[length(errors) + 1]] <<- paste0("PC: ", e$message)
+    })
+  }
+
+  # --- Read EX domain ---------------------------------------------------------
+  ex <- NULL
+  if (!is.null(ex_upload$datapath)) {
+    tryCatch({
+      ex <- read_pk(ex_upload$datapath)
+      log_success("EX domain loaded: ", ex_upload$name)
+    }, error = function(e) {
+      errors[[length(errors) + 1]] <<- paste0("EX: ", e$message)
+    })
+  }
+
+  # --- Read and merge subject-level files -------------------------------------
+  dm <- NULL
+  if (!is.null(subj_upload$datapath)) {
+    subj_dfs <- list()
+    for (i in seq_along(subj_upload$datapath)) {
+      tryCatch({
+        df <- read_pk(subj_upload$datapath[i])
+        subj_dfs[[length(subj_dfs) + 1]] <- df
+        log_success("Subject-level file loaded: ", subj_upload$name[i])
+      }, error = function(e) {
+        errors[[length(errors) + 1]] <<- paste0(
+          subj_upload$name[i], ": ", e$message
+        )
+      })
+    }
+    if (length(subj_dfs) > 0) {
+      dm <- .merge_subject_level_data(subj_dfs)
+    }
+  }
+
+  # --- Handle settings YAML ---------------------------------------------------
+  if (!is.null(settings_upload$datapath)) {
+    settings_results <- list(list(
+      status = "success", type = "settings",
+      content = tryCatch(
+        read_settings(settings_upload$datapath),
+        error = function(e) {
+          errors[[length(errors) + 1]] <<- paste0(
+            "Settings: ", e$message
+          )
+          NULL
+        }
+      ),
+      name = settings_upload$name
+    ))
+    if (!is.null(settings_results[[1]]$content)) {
+      errors <- .apply_uploaded_settings(
+        settings_results, errors, settings_override,
+        pending_versioned, session, ns
+      )
+    }
+  }
+
+  # --- Build result -----------------------------------------------------------
+  sdtm <- NULL
+  preview <- adnca_example # fallback
+
+  if (!is.null(pc) && !is.null(ex)) {
+    sdtm <- list(pc = pc, ex = ex, dm = dm)
+    preview <- pc # show PC data in the preview table
+    filenames <- c(pc_upload$name, ex_upload$name)
+    if (!is.null(subj_upload$name)) {
+      filenames <- c(filenames, subj_upload$name)
+    }
+    session$userData$dataset_filename <- paste(filenames, collapse = ", ")
+  } else if (!is.null(pc) || !is.null(ex)) {
+    # One domain uploaded but not the other
+    missing <- if (is.null(pc)) "PC" else "EX"
+    errors[[length(errors) + 1]] <- paste0(
+      "Both PC and EX domains are required. Missing: ", missing
+    )
+    if (!is.null(pc)) preview <- pc
+    if (!is.null(ex)) preview <- ex
+  }
+
+  if (length(errors) > 0) {
+    file_loading_error(paste(errors, collapse = "<br>"))
+    log_error("SDTM upload errors: ", paste(errors, collapse = "; "))
+  }
+
+  list(sdtm = sdtm, preview = preview)
+}
+
+#' Merge multiple subject-level data.frames by STUDYID + USUBJID.
+#'
+#' Performs sequential left joins. The first data.frame is the base;
+#' subsequent data.frames add columns. Duplicate columns (other than
+#' the join keys) from later files are suffixed.
+#'
+#' @param dfs List of data.frames to merge.
+#' @returns A single merged data.frame, or the first data.frame if
+#'   only one is provided.
+#' @noRd
+.merge_subject_level_data <- function(dfs) {
+  if (length(dfs) == 1) return(dfs[[1]])
+
+  join_keys <- c("STUDYID", "USUBJID")
+  merged <- dfs[[1]]
+
+  for (i in seq(2, length(dfs))) {
+    df <- dfs[[i]]
+    # Use available join keys
+    available_keys <- intersect(join_keys, intersect(names(merged), names(df)))
+    if (length(available_keys) == 0) {
+      log_warn("Cannot merge subject-level file: no common join keys found.")
+      next
+    }
+    merged <- merge(merged, df, by = available_keys, all.x = TRUE,
+                    suffixes = c("", paste0(".", i)))
+  }
+
+  merged
 }

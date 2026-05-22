@@ -350,7 +350,9 @@ tab_data_server <- function(id) {
       id = "column_mapping",
       adnca_data = uploaded_data$adnca_raw,
       imported_mapping = imported_mapping,
-      trigger = trigger_mapping_submit
+      trigger = trigger_mapping_submit,
+      input_mode = uploaded_data$input_mode,
+      sdtm_raw = uploaded_data$sdtm_raw
     )
     #' Reactive value for the processed dataset
     adnca_mapped <- column_mapping$processed_data
@@ -419,12 +421,24 @@ tab_data_server <- function(id) {
       log_trace("Creating PKNCA::data object.")
 
       tryCatch({
-        pknca_object <- PKNCA_create_data_object(
-          adnca_data = uploaded_data$adnca_raw(),
-          mapping = column_mapping$mapping(),
-          applied_filters = filtering_result$applied_filters(),
-          time_duplicate_rows = column_mapping$time_duplicate_rows()
-        )
+        mode <- uploaded_data$input_mode()
+
+        if (mode == "sdtm") {
+          # SDTM: PKNCAdata was already created in the mapping step;
+          # update concentration data with filtered rows
+          pknca_object <- column_mapping$sdtm_pknca_data()
+          req(pknca_object)
+          pknca_object$data.conc$data <- processed_data()
+        } else {
+          # ADNCA: create PKNCAdata from mapped data
+          pknca_object <- PKNCA_create_data_object(
+            adnca_data = uploaded_data$adnca_raw(),
+            mapping = column_mapping$mapping(),
+            applied_filters = filtering_result$applied_filters(),
+            time_duplicate_rows = column_mapping$time_duplicate_rows()
+          )
+        }
+
         pknca_object$units <- .simplify_volume_units(pknca_object$units)
         log_success("PKNCA data object created.")
 
@@ -453,7 +467,8 @@ tab_data_server <- function(id) {
       adnca_raw = uploaded_data$adnca_raw,
       extra_group_vars = extra_group_vars,
       settings_override = uploaded_data$settings_override,
-      auto_replay_ready = auto_replay_ready
+      auto_replay_ready = auto_replay_ready,
+      input_mode = uploaded_data$input_mode
     )
   })
 }
