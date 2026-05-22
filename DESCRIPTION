@@ -68,7 +68,6 @@ Suggests:
     lintr (>= 3.2.0),
     markdown,
     mockery,
-    nestcolor,
     officer,
     pak,
     readxl,
