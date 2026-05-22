@@ -435,7 +435,19 @@ prepare_export_files <- function(target_dir,
     if ("r_script" %in% input$res_tree) {
       progress$set(message = "Creating exports...",
                    detail = "Saving R script...")
-      saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
+      mode <- session$userData$input_mode %||% "adnca"
+      if (mode == "sdtm") {
+        sdtm <- session$userData$sdtm_raw
+        if (!is.null(sdtm)) {
+          saveRDS(sdtm$pc, file.path(target_dir, "input_pc.rds"))
+          saveRDS(sdtm$ex, file.path(target_dir, "input_ex.rds"))
+          if (!is.null(sdtm$dm)) {
+            saveRDS(sdtm$dm, file.path(target_dir, "input_dm.rds"))
+          }
+        }
+      } else {
+        saveRDS(session$userData$raw_data, file.path(target_dir, "input_data.rds"))
+      }
       .export_script(target_dir, session)
     }
   } else {
@@ -569,8 +581,14 @@ prepare_export_files <- function(target_dir,
     slope_rules = session$userData$slope_rules(),
     filters = session$userData$applied_filters,
     time_duplicate_keys = session$userData$time_duplicate_keys,
-    nca_ran = isTRUE(session$userData$nca_ran)
+    nca_ran = isTRUE(session$userData$nca_ran),
+    input_mode = session$userData$input_mode %||% "adnca"
   )
+
+  # Store SDTM-specific settings
+  if (identical(payload$input_mode, "sdtm")) {
+    payload$sdtm_metabolites <- session$userData$sdtm_metabolites
+  }
 
   dataset_name <- session$userData$dataset_filename %||% ""
 
@@ -631,9 +649,14 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_script <- function(target_dir, session) {
-  template_path <- "www/templates/script_template.R"
+  mode <- session$userData$input_mode %||% "adnca"
+  template_file <- if (mode == "sdtm") {
+    "www/templates/script_template_sdtm.R"
+  } else {
+    "www/templates/script_template.R"
+  }
   get_session_code(
-    template_path = system.file(template_path, package = "aNCA"),
+    template_path = system.file(template_file, package = "aNCA"),
     session,
     file.path(target_dir, "session_code.R")
   )
