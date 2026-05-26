@@ -56,7 +56,7 @@ tlg_module_ui <- function(id, type, options) {
           ),
           style = "unite",
           right = TRUE,
-          icon = icon("question"),
+          icon = icon("question"), `aria-label` = "Help",
           status = "primary"
         ),
         actionButton(
@@ -69,7 +69,7 @@ tlg_module_ui <- function(id, type, options) {
     div(
       class = "tlg-widgets-container",
       div(
-        align = "left",
+        style = "text-align: left;",
         tags$span(
           class = "inline-select-input",
           style = "margin-right: 5em;",
@@ -83,7 +83,7 @@ tlg_module_ui <- function(id, type, options) {
         shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page", class = "btn-page"))
       ),
       div(
-        align = "center",
+        style = "text-align: center;",
         tags$span(
           class = "inline-select-input",
           tags$span("Page "),
@@ -96,7 +96,7 @@ tlg_module_ui <- function(id, type, options) {
           uiOutput(ns("page_number"), inline = TRUE),
         )
       ),
-      div(align = "right", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
+      div(style = "text-align: right;", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
     ),
     shinycssloaders::withSpinner(
       switch(
@@ -183,8 +183,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
         do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
       },
       error = function(e) {
-        log_error("Error in list rendering:")
-        print(e)
+        log_error("Error in list rendering: ", e$message)
         "Error: list rendering failed with current options.
         Check the R console for more information."
       })

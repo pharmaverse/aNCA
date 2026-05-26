@@ -23,7 +23,7 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         ns("add_to_exports"),
         label = "Add to Exports",
         icon = icon("plus"),
-        class = "btn btn-primary btn-sm",
+        class = "btn-primary btn-sm",
         width = "100%"
       ),
       extra_ui,

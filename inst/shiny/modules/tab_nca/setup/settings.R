@@ -81,7 +81,7 @@ partial_intervals_ui <- function(id) {
           ),
           style = "unite",
           right = TRUE,
-          icon = icon("question"),
+          icon = icon("question"), `aria-label` = "Help",
           status = "primary",
           width = "600px"
         )
@@ -186,7 +186,7 @@ settings_ui <- function(id) {
               ),
               style = "unite",
               right = TRUE,
-              icon = icon("question"),
+              icon = icon("question"), `aria-label` = "Help",
               status = "primary",
               width = "400px"
             )

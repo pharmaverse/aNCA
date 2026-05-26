@@ -18,7 +18,7 @@ zip_ui <- function(id) {
       inputId = ns("open_zip_modal"),
       label = "Save",
       icon = icon("download"),
-      class = "btn btn-primary",
+      class = "btn-primary",
       style = paste(
         "margin-left: 10px;",
         "padding: 8px 18px;",
@@ -228,7 +228,7 @@ zip_ui <- function(id) {
         actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
         div(
           modalButton("Cancel"),
-          downloadButton(ns("download_zip_configured"), "Export", class = "btn btn-primary")
+          downloadButton(ns("download_zip_configured"), "Export", class = "btn-primary")
         )
       )
     ),
@@ -450,7 +450,7 @@ zip_ui <- function(id) {
           ns("confirm_export"),
           label = "Export ZIP with Results",
           icon  = icon("download"),
-          class = "btn btn-primary"
+          class = "btn-primary"
         )
       ),
       easyClose = FALSE,
@@ -598,7 +598,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
               actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
               div(
                 modalButton("Cancel"),
-                downloadButton(ns("download_zip"), "Export", class = "btn btn-primary")
+                downloadButton(ns("download_zip"), "Export", class = "btn-primary")
               )
             )
           ),

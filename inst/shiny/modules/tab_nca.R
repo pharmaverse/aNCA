@@ -32,7 +32,7 @@ tab_nca_ui <- function(id) {
         inputId = ns("run_nca"),
         label = "Run NCA",
         icon = icon("play"),
-        class = "btn btn-primary",
+        class = "btn-primary",
         width = "100%"
       ),
       nca_setup_ui(ns("nca_setup")),

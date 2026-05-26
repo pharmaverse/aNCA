@@ -167,7 +167,8 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
             ns(value),
             label = NULL,
             icon = shiny::icon("times"),
-            class = "btn btn-link btn-sm",
+            `aria-label` = "Remove exclusion",
+            class = "btn-link btn-sm",
             style = "padding:2px 6px;"
           )
         )

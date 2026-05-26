@@ -232,7 +232,6 @@ tab_tlg_server <- function(id, data) {
     # Submit the TLG order, filter selected TLGs
     tlg_order_filtered <- reactive({
       req(data())
-      print(tlg_order())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 

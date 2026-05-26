@@ -59,7 +59,7 @@ saved_outputs_ui <- function(id) {
     ns("view_exports"),
     label = "View Exports",
     icon = icon("eye"),
-    class = "btn btn-primary btn-sm",
+    class = "btn-primary btn-sm",
     width = "100%"
   )
 }
@@ -209,6 +209,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
                 "color: #dc3545; font-size: 1.2em; ",
                 "text-decoration: none;"
               ),
+              `aria-label` = "Remove from exports",
               title = "Remove from exports",
               icon("times")
             )
