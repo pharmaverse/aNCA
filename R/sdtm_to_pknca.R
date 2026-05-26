@@ -299,6 +299,12 @@ pc_to_PKNCAconc <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: o
     conc_data <- left_join(conc_data, dm_subset, by = "USUBJID")
   }
 
+  # --- ADNCA-compatible aliases ------------------------------------------------
+  # Downstream modules (TLG, exploration plots) reference TRT01A.
+  if (!"TRT01A" %in% names(conc_data) && "DOSETRT" %in% names(conc_data)) {
+    conc_data$TRT01A <- conc_data$DOSETRT
+  }
+
   # --- Initialise aNCA-specific columns ---------------------------------------
   conc_data$nca_exclude       <- ""
   conc_data$is.excluded.hl    <- FALSE
