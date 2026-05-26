@@ -290,6 +290,13 @@ update_main_intervals <- function(
     data <- create_start_impute(data)
   }
 
+  # Ensure impute column exists so dplyr mutate below references the column
+  # rather than the function parameter (which could be FALSE from YAML settings,
+  # causing "PKNCA_impute_method_FALSE" not found error).
+  if (!"impute" %in% names(data$intervals)) {
+    data$intervals$impute <- NA_character_
+  }
+
   ############################################
   # Define a BLQ imputation method for PKNCA
   # and apply it only for non-observational parameters
