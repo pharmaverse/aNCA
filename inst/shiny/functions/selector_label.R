@@ -53,12 +53,24 @@ selector_label <- function(input, output, session,
     } else if (metadata_type == "parameter") {
       req(metadata_nca_parameters)
       choices_df <- data.frame(PPTESTCD = choices, stringsAsFactors = FALSE)
+
+      # Parse interval suffix (e.g. AUCINT_0-24 -> base=AUCINT) for label lookup
+      parsed_info <- lapply(choices_df$PPTESTCD, parse_interval_parameter)
+      choices_df$base_pptestcd <- vapply(parsed_info, `[[`, "base", FUN.VALUE = "")
+      choices_df$is_interval <- vapply(parsed_info, `[[`, "is_interval", FUN.VALUE = TRUE)
+
       choices_df <- choices_df %>%
         left_join(
           metadata_nca_parameters %>% select(PPTESTCD, PPTEST) %>% distinct(),
-          by = "PPTESTCD"
+          by = c("base_pptestcd" = "PPTESTCD")
         ) %>%
-        mutate(desc = ifelse(is.na(PPTEST), PPTESTCD, PPTEST)) %>%
+        mutate(
+          desc = ifelse(
+            is_interval & !is.na(PPTEST),
+            paste0(PPTEST, " (", sub(paste0("^", base_pptestcd, "_"), "", PPTESTCD), ")"),
+            ifelse(!is.na(PPTEST), PPTEST, PPTESTCD)
+          )
+        ) %>%
         rename(val = PPTESTCD)
     } else {
       data.frame(val = choices, desc = choices)
