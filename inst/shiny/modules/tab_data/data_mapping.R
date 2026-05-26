@@ -876,8 +876,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
 
   for (var in domain_vars) {
     selected <- mapping[[var]]
-    if (is.null(selected) || selected == "" || length(selected) != 1) next
-    if (selected != var && selected %in% names(df)) {
+    if (is.null(selected) || length(selected) != 1) next
+    if (selected == "" || selected == var) next
+    if (selected %in% names(df)) {
       names(df)[names(df) == selected] <- var
     }
   }
