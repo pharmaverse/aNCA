@@ -61,17 +61,17 @@
 <polyline points='544.60,492.55 544.60,38.83 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
 <polyline points='613.95,492.55 613.95,38.83 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
 <polyline points='683.31,492.55 683.31,38.83 ' style='stroke-width: 1.07; stroke: #EBEBEB; stroke-linecap: butt;' />
-<polyline points='59.11,59.46 128.46,116.64 197.82,190.37 267.18,294.29 336.53,471.93 405.89,59.46 475.24,116.64 544.60,190.37 613.95,294.29 683.31,471.93 ' style='stroke-width: 0.85; stroke: #343CFF; stroke-linecap: butt;' />
-<circle cx='59.11' cy='59.46' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='128.46' cy='116.64' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='197.82' cy='190.37' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='267.18' cy='294.29' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='336.53' cy='471.93' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='405.89' cy='59.46' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='475.24' cy='116.64' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='544.60' cy='190.37' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='613.95' cy='294.29' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
-<circle cx='683.31' cy='471.93' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
+<polyline points='59.11,59.46 128.46,116.64 197.82,190.37 267.18,294.29 336.53,471.93 405.89,59.46 475.24,116.64 544.60,190.37 613.95,294.29 683.31,471.93 ' style='stroke-width: 0.85; stroke: #F8766D; stroke-linecap: butt;' />
+<circle cx='59.11' cy='59.46' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='128.46' cy='116.64' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='197.82' cy='190.37' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='267.18' cy='294.29' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='336.53' cy='471.93' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='405.89' cy='59.46' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='475.24' cy='116.64' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='544.60' cy='190.37' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='613.95' cy='294.29' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
+<circle cx='683.31' cy='471.93' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
 <rect x='27.90' y='38.83' width='686.62' height='453.72' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
@@ -114,8 +114,8 @@
 <rect x='323.79' y='528.92' width='94.85' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
 <text x='329.27' y='546.82' style='font-size: 11.00px; font-family: sans;' textLength='50.75px' lengthAdjust='spacingAndGlyphs'>Subject ID</text>
 <rect x='385.50' y='534.40' width='17.28' height='17.28' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='387.23' y1='543.04' x2='401.05' y2='543.04' style='stroke-width: 0.85; stroke: #343CFF; stroke-linecap: butt;' />
-<circle cx='394.14' cy='543.04' r='2.49' style='stroke-width: 0.71; stroke: #343CFF; fill: #343CFF;' />
+<line x1='387.23' y1='543.04' x2='401.05' y2='543.04' style='stroke-width: 0.85; stroke: #F8766D; stroke-linecap: butt;' />
+<circle cx='394.14' cy='543.04' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
 <text x='408.26' y='546.07' style='font-size: 8.80px; font-family: sans;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>3</text>
 <text x='27.90' y='31.07' style='font-size: 11.00px; font-family: sans;' textLength='649.04px' lengthAdjust='spacingAndGlyphs'>Treatment Group: Dummy Treatment (N=10)&lt;br&gt;Route: intravascular, Specimen: SERUM, Analyte: A, Treatment: Dummy Treatment</text>
 <text x='27.90' y='15.11' style='font-size: 14.00px; font-family: sans;' textLength='434.23px' lengthAdjust='spacingAndGlyphs'>Plot of PK Concentration-Time Profile logarithmic scale, by Cohort: S1</text>
