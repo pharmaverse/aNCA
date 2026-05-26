@@ -33,7 +33,7 @@ nca_results_ui <- function(id) {
         span("MISSING", style = "font-size:0.9em;")
       ),
       div(style = "display:flex; align-items:center; gap:6px;",
-        div(style = "width:14px; height:14px; background:#ffffff; border:1px solid #ddd;"),
+        div(style = paste0("width:14px; height:14px; background:", ANCA_WHITE, "; border:1px solid ", BORDER_LIGHT, ";")),
         span("ACCEPTED", style = "font-size:0.9em;")
       )
     ),

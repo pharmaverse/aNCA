@@ -8,6 +8,7 @@
 * Standardized button CSS classes: removed redundant `btn` prefix where duplicate with `btn-*` (#1298)
 * Added `aria-label` attributes to 15 icon-only buttons for accessibility (#1298)
 * Removed redundant `disabled = FALSE` default from units table actionButton (#1298)
+* Extracted inline hex colors to shared `colors.R` constants and SCSS variables (#1298)
 
 ## Features
 

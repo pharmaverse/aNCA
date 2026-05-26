@@ -154,7 +154,7 @@ tab_about_server <- function(id) {
         }
       )
       tags$blockquote(
-        style = "border-left: 3px solid #ccc; padding-left: 1em; color: #555;",
+        style = paste0("border-left: 3px solid ", BORDER_MUTED, "; padding-left: 1em; color: ", TEXT_HEADING, ";"),
         tags$p(cit_text)
       )
     })
@@ -163,7 +163,7 @@ tab_about_server <- function(id) {
       cit <- utils::citation("PKNCA")
       cit_text <- paste(format(cit, style = "text"), collapse = "\n\n")
       tags$blockquote(
-        style = "border-left: 3px solid #ccc; padding-left: 1em; color: #555;",
+        style = paste0("border-left: 3px solid ", BORDER_MUTED, "; padding-left: 1em; color: ", TEXT_HEADING, ";"),
         tags$p(cit_text)
       )
     })
@@ -255,7 +255,7 @@ tab_about_server <- function(id) {
     style = "margin-bottom: 0.3em;",
     tags$a(href = url, target = "_blank", label),
     tags$span(
-      style = "color: #999; font-size: 0.85em; margin-left: 0.5em;",
+      style = paste0("color: ", TEXT_MUTED, "; font-size: 0.85em; margin-left: 0.5em;"),
       url
     )
   )

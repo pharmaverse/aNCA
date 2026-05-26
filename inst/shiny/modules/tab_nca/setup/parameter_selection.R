@@ -428,7 +428,7 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
                 href = func_url,
                 target = "_blank",
                 style = paste0(
-                  "color: #0d6efd;",
+                  "color: ", ACCENT_BLUE, ";",
                   "text-decoration: underline;"
                 ),
                 value

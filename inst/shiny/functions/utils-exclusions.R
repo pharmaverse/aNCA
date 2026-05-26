@@ -11,7 +11,7 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
     style = "display:flex; align-items:center; gap:6px;",
     div(style = paste0(
       "width:14px; height:14px; background:", color,
-      "; border:1px solid #ddd;"
+      "; border:1px solid ", BORDER_LIGHT, ";"
     )),
     span(label, style = "font-size:0.9em;")
   )
@@ -197,7 +197,7 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
     pagination = FALSE,
     defaultPageSize = nrow(df),
     theme = reactable::reactableTheme(
-      headerStyle = list(background = "#e9e9e9")
+      headerStyle = list(background = BG_GREY_HEADER)
     ),
     columns = cols
   )

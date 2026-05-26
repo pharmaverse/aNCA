@@ -149,7 +149,7 @@ zip_ui <- function(id) {
         width = 6,
         div(
           h4("PK Parameters", style = "margin-bottom: 0.25em;"),
-          p(style = "color: #777; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;",
+          p(style = paste0("color: ", TEXT_SUBTLE, "; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;"),
             "Parameters included in the slide tables")
         ),
         div(
@@ -310,8 +310,8 @@ zip_ui <- function(id) {
     span(
       style = paste(
         "display: inline-block;",
-        "background-color: #dc3545;",
-        "color: #fff;",
+        paste0("background-color: ", ACCENT_DANGER, ";"),
+        paste0("color: ", ANCA_WHITE, ";"),
         "border-radius: 20px;",
         "padding: 5px 14px;",
         "font-size: 0.85rem;",

@@ -403,8 +403,8 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         borderless = TRUE,
         theme = reactableTheme(
           rowSelectedStyle = list(
-            backgroundColor = "#eee",
-            boxShadow = "inset 2px 0 0 0 #ffa62d"
+            backgroundColor = BG_GREY_LIGHT,
+            boxShadow = paste0("inset 2px 0 0 0 ", ACCENT_ORANGE)
           )
         )
       )
