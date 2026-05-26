@@ -88,6 +88,7 @@ data_upload_server <- function(id) {
 
     #' Dummy data is automatically loaded on startup if no data path is provided
     DUMMY_DATA <- adnca_example
+    SDTM_DUMMY <- list(pc = pc_example, ex = ex_example, dm = dm_example)
 
     #' Display file loading error if any issues arise
     file_loading_error <- reactiveVal(NULL)
@@ -171,6 +172,13 @@ data_upload_server <- function(id) {
       reactive({
         req(input$input_mode == "sdtm")
         file_loading_error(NULL)
+
+        # If no files uploaded, use example data
+        if (is.null(input$sdtm_pc_upload) && is.null(input$sdtm_ex_upload)) {
+          sdtm_data(SDTM_DUMMY)
+          session$userData$dataset_filename <- "sdtm_example"
+          return(SDTM_DUMMY$pc)
+        }
 
         result <- .process_sdtm_uploads(
           input$sdtm_pc_upload, input$sdtm_ex_upload,
