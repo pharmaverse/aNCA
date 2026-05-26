@@ -117,7 +117,11 @@ SDTM_MAPPING_BY_SECTION <- SDTM_MAPPING_BY_SECTION[c(
 #'   tooltip_text = "Select the study identifier column."
 #' )
 .column_mapping_widget <- function(ns, id, tooltip_text, multiple = FALSE,
-                                   allow_create_numeric = FALSE) {
+                                   allow_create_numeric = FALSE,
+                                   id_prefix = "") {
+  input_id <- paste0("select_", id_prefix, id)
+  label_id <- paste0("label_", id_prefix, id)
+
   selectize_options <- if (allow_create_numeric) {
     list(
       create = TRUE,
@@ -131,7 +135,7 @@ SDTM_MAPPING_BY_SECTION <- SDTM_MAPPING_BY_SECTION[c(
     class = "column-mapping-row",
     tooltip(
       selectizeInput(
-        ns(paste0("select_", id)),
+        ns(input_id),
         "",
         choices = NULL,
         multiple = multiple,
@@ -147,12 +151,12 @@ SDTM_MAPPING_BY_SECTION <- SDTM_MAPPING_BY_SECTION[c(
     ),
     div(
       class = "column-mapping-label",
-      span(textOutput(ns(paste0("label_", id))))
+      span(textOutput(ns(label_id)))
     )
   )
 }
 
-.column_mapping_section <- function(ns, mapping_df) {
+.column_mapping_section <- function(ns, mapping_df, id_prefix = "") {
   section_title <- unique(mapping_df$mapping_section)
   if (length(section_title) != 1) {
     stop("mapping_df must contain exactly one unique mapping_section value.")
@@ -163,7 +167,8 @@ SDTM_MAPPING_BY_SECTION <- SDTM_MAPPING_BY_SECTION[c(
       row <- mapping_df[i, ]
       .column_mapping_widget(
         ns, row$Variable, row$mapping_tooltip, row$is_multiple_choice,
-        allow_create_numeric = isTRUE(row$allow_create_numeric)
+        allow_create_numeric = isTRUE(row$allow_create_numeric),
+        id_prefix = id_prefix
       )
     })
   )
@@ -348,11 +353,8 @@ data_mapping_ui <- function(id) {
     card(
       div(
         class = "data-mapping-container",
-        # ADNCA mapping UI
-        conditionalPanel(
-          condition = sprintf(
-            "!window.aNCA_input_mode || window.aNCA_input_mode == 'adnca'"
-          ),
+        # ADNCA mapping UI (visible by default)
+        div(
           id = ns("adnca_mapping_panel"),
           h3("Data Mapping"),
           p(
@@ -364,9 +366,8 @@ data_mapping_ui <- function(id) {
             .column_mapping_section(ns, mapping_section)
           })
         ),
-        # SDTM mapping UI
-        conditionalPanel(
-          condition = "false",
+        # SDTM mapping UI (hidden by default, prefixed IDs)
+        shinyjs::hidden(div(
           id = ns("sdtm_mapping_panel"),
           h3("SDTM Data Mapping"),
           p(
@@ -374,9 +375,9 @@ data_mapping_ui <- function(id) {
             " Standard SDTM column names are auto-detected when present."
           ),
           lapply(SDTM_MAPPING_BY_SECTION, function(mapping_section) {
-            .column_mapping_section(ns, mapping_section)
+            .column_mapping_section(ns, mapping_section, id_prefix = "sdtm_")
           })
-        )
+        ))
       )
     )
   )
@@ -391,28 +392,26 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     duplicates <- reactiveVal(NULL)
     sdtm_pknca_data <- reactiveVal(NULL)
 
-    # --- Panel visibility (JS-based conditionalPanel can't read parent input) -
+    # --- Panel visibility -----------------------------------------------------
     observe({
       mode <- input_mode()
       shinyjs::toggle("adnca_mapping_panel", condition = (mode == "adnca"))
       shinyjs::toggle("sdtm_mapping_panel", condition = (mode == "sdtm"))
     })
 
-    # --- ADNCA mapping constants ----------------------------------------------
-    # Derive input IDs from column_groups
+    # --- Input ID constants ---------------------------------------------------
     input_ids <- paste0("select_", MAPPING_INFO[["Variable"]])
-    sdtm_input_ids <- paste0("select_", SDTM_MAPPING_INFO[["Variable"]])
+    sdtm_input_ids <- paste0("select_sdtm_", SDTM_MAPPING_INFO[["Variable"]])
 
-    # Loop through each label and create the renderText outputs
-    all_vars <- unique(c(MAPPING_INFO$Variable, SDTM_MAPPING_INFO$Variable))
-    all_info <- rbind(
-      MAPPING_INFO[, c("Variable", "Label")],
-      SDTM_MAPPING_INFO[!SDTM_MAPPING_INFO$Variable %in% MAPPING_INFO$Variable,
-                         c("Variable", "Label")]
-    )
-    purrr::walk(all_vars, function(var) {
+    # --- Render labels for both panels ----------------------------------------
+    purrr::walk(MAPPING_INFO$Variable, function(var) {
       output[[paste0("label_", var)]] <- renderText(
-        all_info$Label[all_info$Variable == var][1]
+        MAPPING_INFO$Label[MAPPING_INFO$Variable == var][1]
+      )
+    })
+    purrr::walk(SDTM_MAPPING_INFO$Variable, function(var) {
+      output[[paste0("label_sdtm_", var)]] <- renderText(
+        SDTM_MAPPING_INFO$Label[SDTM_MAPPING_INFO$Variable == var][1]
       )
     })
 
@@ -452,52 +451,65 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
         if (!is.null(sdtm$dm)) names(sdtm$dm) else character(0)
       ))
 
-      update_selectize_inputs(
+      # Use the SDTM-aware update function that handles the sdtm_ prefix
+      .update_sdtm_selectize_inputs(
         session, sdtm_input_ids, all_cols, SDTM_MAPPING_INFO
       )
 
       # Clear optional fields if not present
       if (!"VOLUME" %in% names(sdtm$pc)) {
-        updateSelectizeInput(session, "select_VOLUME", selected = "")
-        updateSelectizeInput(session, "select_VOLUMEU", selected = "")
+        updateSelectizeInput(session, "select_sdtm_VOLUME", selected = "")
+        updateSelectizeInput(session, "select_sdtm_VOLUMEU", selected = "")
       }
       if (is.null(sdtm$dm) || !"WTBL" %in% names(sdtm$dm)) {
-        updateSelectizeInput(session, "select_WTBL", selected = "")
-        updateSelectizeInput(session, "select_WTBLU", selected = "")
+        updateSelectizeInput(session, "select_sdtm_WTBL", selected = "")
+        updateSelectizeInput(session, "select_sdtm_WTBLU", selected = "")
       }
 
       mapping <- imported_mapping()$mapping
       if (!is.null(mapping)) {
+        # Prefix the mapping info variables to match the sdtm_ input IDs
+        sdtm_info_for_import <- SDTM_MAPPING_INFO
+        sdtm_info_for_import$Variable <- paste0(
+          "sdtm_", sdtm_info_for_import$Variable
+        )
         skipped <- .process_imported_mapping(
-          mapping, sdtm$pc, session, SDTM_MAPPING_INFO
+          mapping, sdtm$pc, session, sdtm_info_for_import
         )
         session$userData$mapping_skipped <- skipped
       }
     })
 
-    # Populate the dynamic input Metabolites (works for both modes)
+    # Populate the dynamic input Metabolites for ADNCA
     observe({
-      if (input_mode() == "adnca") {
-        req(input$select_PARAM != "")
-        param_col <- input$select_PARAM
-        choices_metab <- unique(adnca_data()[[param_col]])
-        selected_metab <- if (!is.null(imported_mapping()$mapping$Metabolites)) {
-          imported_mapping()$mapping$Metabolites
-        } else if ("METABFL" %in% names(adnca_data())) {
-          unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
-        } else {
-          NULL
-        }
+      req(input_mode() == "adnca")
+      req(input$select_PARAM != "")
+      param_col <- input$select_PARAM
+      choices_metab <- unique(adnca_data()[[param_col]])
+      selected_metab <- if (!is.null(imported_mapping()$mapping$Metabolites)) {
+        imported_mapping()$mapping$Metabolites
+      } else if ("METABFL" %in% names(adnca_data())) {
+        unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
       } else {
-        req(input$select_PCTEST != "")
-        sdtm <- sdtm_raw()
-        req(sdtm)
-        pctest_col <- input$select_PCTEST
-        choices_metab <- unique(sdtm$pc[[pctest_col]])
-        selected_metab <- imported_mapping()$mapping$Metabolites
+        NULL
       }
       updateSelectizeInput(
         session, "select_Metabolites",
+        choices = choices_metab, selected = selected_metab
+      )
+    })
+
+    # Populate the dynamic input Metabolites for SDTM
+    observe({
+      req(input_mode() == "sdtm")
+      req(input$select_sdtm_PCTEST != "")
+      sdtm <- sdtm_raw()
+      req(sdtm)
+      pctest_col <- input$select_sdtm_PCTEST
+      choices_metab <- unique(sdtm$pc[[pctest_col]])
+      selected_metab <- imported_mapping()$mapping$Metabolites
+      updateSelectizeInput(
+        session, "select_sdtm_Metabolites",
         choices = choices_metab, selected = selected_metab
       )
     })
@@ -515,7 +527,8 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
       } else {
         ids <- sdtm_input_ids
         suppl_ids <- paste0(
-          "select_", SDTM_MAPPING_BY_SECTION$`Supplemental Variables`$Variable
+          "select_sdtm_",
+          SDTM_MAPPING_BY_SECTION$`Supplemental Variables`$Variable
         )
       }
 
@@ -531,11 +544,12 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     })
     observe({
       m <- mapping()
-      names(m) <- gsub("^select_", "", names(m))
+      # Strip both "select_" and "select_sdtm_" prefixes
+      names(m) <- gsub("^select_(sdtm_)?", "", names(m))
       session$userData$mapping <- m
       # Store metabolites for SDTM script template
       if (input_mode() == "sdtm") {
-        session$userData$sdtm_metabolites <- input$select_Metabolites
+        session$userData$sdtm_metabolites <- input$select_sdtm_Metabolites
       }
     })
 
@@ -582,19 +596,20 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
       log_info("Processing SDTM data mapping...")
 
       mapping_ <- mapping()
-      names(mapping_) <- gsub("^select_", "", names(mapping_))
+      # Strip both "select_" and "select_sdtm_" prefixes
+      names(mapping_) <- gsub("^select_(sdtm_)?", "", names(mapping_))
 
       tryCatch(
         withCallingHandlers(
           {
-            # Rename PC columns per mapping
+            # Rename columns per user mapping
             pc <- .apply_sdtm_column_rename(sdtm$pc, mapping_, "PC")
             ex <- .apply_sdtm_column_rename(sdtm$ex, mapping_, "EX")
             dm <- if (!is.null(sdtm$dm)) {
               .apply_sdtm_column_rename(sdtm$dm, mapping_, "DM")
             }
 
-            metabolites <- input$select_Metabolites
+            metabolites <- input$select_sdtm_Metabolites
             pknca_obj <- sdtm_to_PKNCAdata(
               pc = pc, ex = ex, dm = dm, metabolites = metabolites
             )
@@ -755,17 +770,98 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     # Cleaned mapping with select_ prefix removed
     cleaned_mapping <- reactive({
       m <- mapping()
-      names(m) <- gsub("^select_", "", names(m))
+      names(m) <- gsub("^select_(sdtm_)?", "", names(m))
       m
     })
 
     list(
       processed_data = processed_data,
       mapping = cleaned_mapping,
-      grouping_variables = reactive(input$select_Grouping_Variables),
+      grouping_variables = reactive({
+        if (input_mode() == "sdtm") {
+          input$select_sdtm_Grouping_Variables
+        } else {
+          input$select_Grouping_Variables
+        }
+      }),
       time_duplicate_rows = resolved_time_duplicate_rows,
       sdtm_pknca_data = sdtm_pknca_data
     )
   })
+}
+
+#' Update selectize inputs for SDTM mapping.
+#'
+#' Handles the sdtm_ prefix on input IDs: strips it before looking up
+#' the variable in the mapping info, then updates the prefixed input.
+#'
+#' @param session Shiny session.
+#' @param input_ids Prefixed input IDs (e.g. "select_sdtm_PCTEST").
+#' @param data_colnames Column names from the uploaded data.
+#' @param mapping_info SDTM_MAPPING_INFO (unprefixed Variable names).
+#' @noRd
+.update_sdtm_selectize_inputs <- function(session, input_ids, data_colnames,
+                                          mapping_info) {
+  info_list <- split(mapping_info, mapping_info$Variable)
+
+  for (input_id in input_ids) {
+    # Strip "select_sdtm_" to get the original variable name
+    var_name <- sub("^select_sdtm_", "", input_id)
+    input_info <- info_list[[var_name]]
+    if (is.null(input_info)) next
+
+    alternatives <- strsplit(input_info$mapping_alternatives, ", ")[[1]]
+    value_choices <- strsplit(input_info$Values, ", ")[[1]]
+
+    potential_mappings <- c(
+      intersect(c(var_name, alternatives), data_colnames),
+      value_choices
+    )
+
+    selected_vals <- if (length(potential_mappings) == 0) {
+      NULL
+    } else if (input_info$is_multiple_choice) {
+      potential_mappings
+    } else {
+      potential_mappings[[1]]
+    }
+
+    updateSelectizeInput(
+      session, input_id,
+      choices = list(
+        "Select Column" = "",
+        "Mapping Columns" = data_colnames,
+        "Mapping Values" = value_choices
+      ),
+      selected = selected_vals
+    )
+  }
+}
+
+#' Rename columns in an SDTM domain data.frame based on user mapping.
+#'
+#' For each SDTM variable in the mapping, if the user selected a
+#' non-standard column name, rename it to the expected SDTM name.
+#' Only renames columns belonging to the specified domain.
+#'
+#' @param df Data.frame to rename columns in.
+#' @param mapping Named list of mapping values (variable = selected column).
+#' @param domain Character, one of "PC", "EX", "DM".
+#' @returns The data.frame with renamed columns.
+#' @noRd
+.apply_sdtm_column_rename <- function(df, mapping, domain) {
+  domain_vars <- SDTM_MAPPING_INFO$Variable[
+    SDTM_MAPPING_INFO$sdtm_domain == domain
+  ]
+
+  for (var in domain_vars) {
+    selected <- mapping[[var]]
+    if (is.null(selected) || selected == "" || length(selected) != 1) next
+    if (selected != var && selected %in% names(df)) {
+      names(df)[names(df) == selected] <- var
+    }
+  }
+
+  df
 }
 
