@@ -12,6 +12,29 @@ pc_data <- read_pk("../input_pc.rds")
 ex_data <- read_pk("../input_ex.rds")
 dm_data <- read_pk("../input_dm.rds")
 
+## Apply column mapping from session settings ##################
+# If the user mapped non-standard column names in the app,
+# rename them back to expected SDTM names before conversion.
+sdtm_mapping <- settings_list$mapping
+sdtm_mapping <- sdtm_mapping[
+  !names(sdtm_mapping) %in% c("Metabolites", "Grouping_Variables")
+]
+
+rename_cols <- function(df, mapping) {
+  for (var in names(mapping)) {
+    selected <- mapping[[var]]
+    if (is.null(selected) || length(selected) != 1 || selected == "") next
+    if (selected != var && selected %in% names(df)) {
+      names(df)[names(df) == selected] <- var
+    }
+  }
+  df
+}
+
+pc_data <- rename_cols(pc_data, sdtm_mapping)
+ex_data <- rename_cols(ex_data, sdtm_mapping)
+dm_data <- rename_cols(dm_data, sdtm_mapping)
+
 ## Create PKNCA object from SDTM domains ######################
 metabolites <- settings_list$sdtm_metabolites
 
