@@ -650,6 +650,10 @@ data_upload_server <- function(id) {
       filenames <- c(filenames, subj_upload$name)
     }
     session$userData$dataset_filename <- paste(filenames, collapse = ", ")
+    log_success(
+      "SDTM data loaded: PC (", nrow(pc), " rows), EX (", nrow(ex), " rows)",
+      if (!is.null(dm)) paste0(", DM (", nrow(dm), " rows)") else ""
+    )
   } else if (!is.null(pc) || !is.null(ex)) {
     # One domain uploaded but not the other
     missing <- if (is.null(pc)) "PC" else "EX"

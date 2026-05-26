@@ -361,8 +361,8 @@ ADNCA,264,PKSUM1F,PK Summary Exclusion Flag 1,text,Record Qualifier,Perm,FALSE,F
 ADNCA,265,PKSUM1FN,PK Summary Exclusion Flag 1 (N),integer,Record Qualifier,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,193,PPSUMFL,PP Summary Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,194,PPSUMRSN,PP Summary Exclusion Reason,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
-PC,1,STUDYID,Study Identifier,text,Identifier,Req,FALSE,TRUE,8,,TRUE,,FALSE,,,,NA,FALSE
-PC,2,USUBJID,Unique Subject Identifier,text,Identifier,Req,FALSE,TRUE,50,,TRUE,,FALSE,,,,NA,FALSE
+SDTM,1,STUDYID,Study Identifier,text,Identifier,Req,FALSE,TRUE,8,,TRUE,,TRUE,Character column to identify the study. Must be present in all uploaded domains,SDTM General,,0,FALSE
+SDTM,2,USUBJID,Unique Subject Identifier,text,Identifier,Req,FALSE,TRUE,50,,TRUE,,TRUE,Character column to identify a subject. Must be present in all uploaded domains,SDTM General,,0,FALSE
 PC,3,PCTEST,Name of Measurement or Test,text,Topic,Req,FALSE,FALSE,40,,TRUE,,TRUE,Character column for the name of the measured analyte (maps to PARAM),PC Concentrations,,1,FALSE
 PC,4,PCSPEC,Specimen Material Type,text,Record Qualifier,Perm,FALSE,FALSE,40,C78734,TRUE,"PLASMA, SERUM, URINE, BLOOD",TRUE,"Character column for sample specimen or matrix type. Instead of a column name, a unique value can be mapped (e.g. ""PLASMA"")",PC Concentrations,PCNAM,2,FALSE
 PC,5,PCSTRESN,Numeric Result in Standard Units,float,Result Qualifier,Req,FALSE,FALSE,12,,TRUE,,TRUE,Numeric column for analyte concentration in standard units (maps to AVAL). BLQ values are assumed to be 0 if not imputed.,PC Concentrations,PCORRESN,3,FALSE
@@ -373,8 +373,6 @@ PC,9,PCELTM,Planned Elapsed Time from Reference,text,Timing,Perm,FALSE,FALSE,40,
 PC,10,VOLUME,Volume Value,float,Record Qualifier,Perm,FALSE,FALSE,12,,TRUE,,TRUE,Numeric column for collected sample volume. Only required for excretion studies,Supplemental Variables,,17,FALSE
 PC,11,VOLUMEU,Volume Value Unit,text,Variable Qualifier,Perm,FALSE,FALSE,40,,TRUE,,TRUE,"Character column for volume unit. Instead of a column name, a unique value can be mapped (e.g. ""mL"")",Supplemental Variables,,18,FALSE
 PC,12,DOMAIN,Domain Abbreviation,text,Identifier,Req,FALSE,TRUE,2,,TRUE,,FALSE,,,,NA,FALSE
-EX,1,STUDYID,Study Identifier,text,Identifier,Req,FALSE,TRUE,8,,TRUE,,FALSE,,,,NA,FALSE
-EX,2,USUBJID,Unique Subject Identifier,text,Identifier,Req,FALSE,TRUE,50,,TRUE,,FALSE,,,,NA,FALSE
 EX,3,EXTRT,Name of Treatment,text,Topic,Req,FALSE,FALSE,40,,TRUE,,TRUE,Character column for the protocol-specified treatment name (maps to DOSETRT),EX Dosing,"EXDECOD, EXCAT",8,FALSE
 EX,4,EXDOSE,Dose per Administration,float,Record Qualifier,Req,FALSE,FALSE,12,,TRUE,,TRUE,Numeric column for the actual dose amount administered (maps to DOSEA),EX Dosing,,9,FALSE
 EX,5,EXDOSU,Dose Units,text,Variable Qualifier,Req,FALSE,FALSE,40,C71620,TRUE,,TRUE,"Character column for dose unit. Instead of a column name, a unique value can be mapped (e.g. ""mg"")",EX Dosing,,10,FALSE
@@ -384,8 +382,6 @@ EX,8,EXENDTC,End Date/Time of Treatment,dateTime,Timing,Perm,FALSE,FALSE,40,,TRU
 EX,9,EXDUR,Duration of Treatment,text,Timing,Perm,FALSE,FALSE,40,,TRUE,,TRUE,"ISO 8601 duration of dose administration (e.g. PT1H). Used to derive ADOSEDUR. If absent, computed from EXENDTC - EXSTDTC",EX Dosing,,14,FALSE
 EX,10,EXELTM,Planned Elapsed Time from First Dose,text,Timing,Perm,FALSE,FALSE,40,,TRUE,,TRUE,"ISO 8601 duration from first dose to this dose (e.g. PT24H). Used to derive nominal dose timing (NFRLT). If absent, actual times are used as nominal",EX Dosing,,15,FALSE
 EX,11,DOMAIN,Domain Abbreviation,text,Identifier,Req,FALSE,TRUE,2,,TRUE,,FALSE,,,,NA,FALSE
-DM,1,STUDYID,Study Identifier,text,Identifier,Req,FALSE,TRUE,8,,TRUE,,FALSE,,,,NA,FALSE
-DM,2,USUBJID,Unique Subject Identifier,text,Identifier,Req,FALSE,TRUE,50,,TRUE,,FALSE,,,,NA,FALSE
 DM,3,RFXSTDTC,Date/Time of First Study Treatment,dateTime,Timing,Perm,FALSE,FALSE,40,,TRUE,,TRUE,ISO 8601 datetime of first study treatment. Can be used as time origin when EX data is unavailable,Supplemental Variables,,16,FALSE
 DM,4,AGE,Age,float,Record Qualifier,Perm,FALSE,FALSE,12,,TRUE,,FALSE,,,,NA,FALSE
 DM,5,AGEU,Age Units,text,Variable Qualifier,Perm,FALSE,FALSE,10,,TRUE,,FALSE,,,,NA,FALSE

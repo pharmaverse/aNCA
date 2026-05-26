@@ -426,9 +426,14 @@ tab_data_server <- function(id) {
         if (mode == "sdtm") {
           # SDTM: PKNCAdata was already created in the mapping step;
           # update concentration data with filtered rows
+          log_trace("SDTM mode: retrieving PKNCAdata from mapping step...")
           pknca_object <- column_mapping$sdtm_pknca_data()
           req(pknca_object)
-          pknca_object$data.conc$data <- processed_data()
+          pknca_object$conc$data <- processed_data()
+          log_trace(
+            "SDTM: PKNCAdata updated with filtered data (",
+            nrow(processed_data()), " rows)."
+          )
         } else {
           # ADNCA: create PKNCAdata from mapped data
           pknca_object <- PKNCA_create_data_object(
