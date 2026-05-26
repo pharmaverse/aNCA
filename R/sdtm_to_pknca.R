@@ -301,6 +301,7 @@ pc_to_PKNCAconc <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: o
 
   # --- ADNCA-compatible aliases ------------------------------------------------
   # Downstream modules (TLG, exploration plots) reference TRT01A.
+  # TODO (Gerardo): Reconsider if this is what you actually want to do
   if (!"TRT01A" %in% names(conc_data) && "DOSETRT" %in% names(conc_data)) {
     conc_data$TRT01A <- conc_data$DOSETRT
   }
