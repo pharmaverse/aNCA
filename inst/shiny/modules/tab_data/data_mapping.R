@@ -75,7 +75,7 @@ SDTM_NON_STD_MAPPING_INFO <- data.frame(
 )
 
 SDTM_MAPPING_INFO <- metadata_nca_variables %>%
-  filter(.data$is.mapped, .data$Dataset %in% c("PC", "EX", "DM")) %>%
+  filter(.data$is.mapped, .data$Dataset %in% c("SDTM", "PC", "EX", "DM")) %>%
   select(
     Variable, Label, Values, mapping_tooltip,
     mapping_section, mapping_alternatives, mapping_order,
@@ -85,7 +85,7 @@ SDTM_MAPPING_INFO <- metadata_nca_variables %>%
     is_multiple_choice = FALSE,
     sdtm_domain = metadata_nca_variables$Dataset[
       metadata_nca_variables$is.mapped &
-        metadata_nca_variables$Dataset %in% c("PC", "EX", "DM")
+        metadata_nca_variables$Dataset %in% c("SDTM", "PC", "EX", "DM")
     ]
   ) %>%
   bind_rows(SDTM_NON_STD_MAPPING_INFO) %>%
@@ -95,7 +95,7 @@ SDTM_MAPPING_BY_SECTION <- split(
   SDTM_MAPPING_INFO, SDTM_MAPPING_INFO$mapping_section
 )
 SDTM_MAPPING_BY_SECTION <- SDTM_MAPPING_BY_SECTION[c(
-  "PC Concentrations", "EX Dosing", "Supplemental Variables"
+  "SDTM General", "PC Concentrations", "EX Dosing", "Supplemental Variables"
 )]
 
 # Column order is the default in apply_mapping()
@@ -603,21 +603,37 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
         withCallingHandlers(
           {
             # Rename columns per user mapping
+            log_trace("SDTM: renaming PC columns...")
             pc <- .apply_sdtm_column_rename(sdtm$pc, mapping_, "PC")
+            log_trace("SDTM: renaming EX columns...")
             ex <- .apply_sdtm_column_rename(sdtm$ex, mapping_, "EX")
             dm <- if (!is.null(sdtm$dm)) {
+              log_trace("SDTM: renaming DM columns...")
               .apply_sdtm_column_rename(sdtm$dm, mapping_, "DM")
             }
 
             metabolites <- input$select_sdtm_Metabolites
+            log_info(
+              "SDTM: calling sdtm_to_PKNCAdata ",
+              "(PC: ", nrow(pc), " rows, EX: ", nrow(ex), " rows",
+              if (!is.null(dm)) paste0(", DM: ", nrow(dm), " rows") else "",
+              if (length(metabolites) > 0)
+                paste0(", metabolites: ", paste(metabolites, collapse = ", "))
+              else "",
+              ")"
+            )
             pknca_obj <- sdtm_to_PKNCAdata(
               pc = pc, ex = ex, dm = dm, metabolites = metabolites
+            )
+            log_success(
+              "SDTM: PKNCAdata created. ",
+              "Conc: ", nrow(pknca_obj$conc$data), " rows, ",
+              "Dose: ", nrow(pknca_obj$dose$data), " rows."
             )
             sdtm_pknca_data(pknca_obj)
 
             # Return the concentration data for filtering/preview
-            conc_data <- pknca_obj$data.conc$data
-            conc_data
+            pknca_obj$conc$data
           },
           warning = function(w) {
             log_warn(conditionMessage(w))
@@ -626,8 +642,11 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
           }
         ),
         error = function(e) {
-          log_error(conditionMessage(e))
-          showNotification(conditionMessage(e), type = "error", duration = NULL)
+          log_error("SDTM mapping failed: ", conditionMessage(e))
+          showNotification(
+            paste("SDTM conversion error:", conditionMessage(e)),
+            type = "error", duration = NULL
+          )
           NULL
         }
       )
@@ -850,8 +869,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
 #' @returns The data.frame with renamed columns.
 #' @noRd
 .apply_sdtm_column_rename <- function(df, mapping, domain) {
+  # Include domain-specific vars and SDTM General vars (shared across domains)
   domain_vars <- SDTM_MAPPING_INFO$Variable[
-    SDTM_MAPPING_INFO$sdtm_domain == domain
+    SDTM_MAPPING_INFO$sdtm_domain %in% c(domain, "SDTM", "ALL")
   ]
 
   for (var in domain_vars) {
