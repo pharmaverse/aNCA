@@ -51,7 +51,12 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
     save_plotly_format(x, file_name, "html")
   } else if (is.character(x) && length(x) == 1) {
     # R code strings (e.g., plot code) — save as .R file
-    writeLines(x, paste0(file_name, ".R"))
+    out_path <- paste0(file_name, ".R")
+    message("[DEBUG save_dispatch] writing .R file: ", out_path)
+    message("[DEBUG save_dispatch] nchar=", nchar(x))
+    writeLines(x, out_path)
+    message("[DEBUG save_dispatch] file.exists=", file.exists(out_path),
+            " size=", file.info(out_path)$size)
   } else {
     stop("Unsupported output type object in the list: ", paste0(class(x), collapse = ", "))
   }
