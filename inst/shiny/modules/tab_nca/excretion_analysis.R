@@ -273,7 +273,7 @@ excretion_help_ui <- function() {
       )
     ),
     style = "unite",
-    icon = icon("question"), `aria-label` = "Help",
+    icon = icon("question"), label = "Help",
     status = "primary"
   )
 }

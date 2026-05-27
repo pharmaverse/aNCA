@@ -53,7 +53,7 @@ data_imputation_ui <- function(id) {
           ),
           style = "unite",
           right = TRUE,
-          icon = icon("question"), `aria-label` = "Help",
+          icon = icon("question"), label = "Help",
           status = "primary",
           width = "500px"
         )
@@ -123,7 +123,7 @@ data_imputation_ui <- function(id) {
           ),
           style = "unite",
           right = TRUE,
-          icon = icon("question"), `aria-label` = "Help",
+          icon = icon("question"), label = "Help",
           status = "primary",
           width = "500px"
         )

@@ -90,7 +90,7 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
         pageSizeOptions = c(10, 25, 50, 100, nrow(edits_table())),
         defaultPageSize = 10,
         theme = reactableTheme(
-          rowSelectedStyle = list(backgroundColor = BG_GREY_LIGHT, boxShadow = paste0("inset 2px 0 0 0 ", ACCENT_ORANGE))
+          rowSelectedStyle = list(backgroundColor = BG_GREY_LIGHT, boxShadow = glue::glue("inset 2px 0 0 0 {ACCENT_ORANGE}"))
         )
       )
     }) %>%

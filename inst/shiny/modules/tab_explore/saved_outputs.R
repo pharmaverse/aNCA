@@ -168,7 +168,7 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
           "No plots saved yet. Use ",
           tags$strong("Add to Exports"),
           " to save plots.",
-          style = paste0("color: ", TEXT_DIM, "; font-style: italic; margin: 16px 0;")
+          style = glue::glue("color: {TEXT_DIM}; font-style: italic; margin: 16px 0;")
         ))
       }
 
@@ -186,9 +186,9 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
         )
 
         tags$div(
-          style = paste0(
-            "border: 1px solid ", BORDER_PANEL, "; border-radius: 6px; ",
-            "padding: 12px; margin-bottom: 16px; background: ", ANCA_WHITE, ";"
+          style = glue::glue(
+            "border: 1px solid {BORDER_PANEL}; border-radius: 6px; ",
+            "padding: 12px; margin-bottom: 16px; background: {ANCA_WHITE};"
           ),
           tags$div(
             style = paste0(
@@ -199,14 +199,14 @@ saved_outputs_server <- function(id, saved_plots_metadata, get_plot_obj,
               tags$strong(plot_name, style = "font-size: 1.1em;"),
               tags$span(
                 paste0(" \u2014 ", plot_type, " \u00b7 ", plot_ts),
-                style = paste0("color: ", TEXT_SECONDARY, "; font-size: 0.9em;")
+                style = glue::glue("color: {TEXT_SECONDARY}; font-size: 0.9em;")
               )
             ),
             tags$a(
               href = "#",
               onclick = paste0(remove_js, "return false;"),
-              style = paste0(
-                "color: ", ACCENT_DANGER, "; font-size: 1.2em; ",
+              style = glue::glue(
+                "color: {ACCENT_DANGER}; font-size: 1.2em; ",
                 "text-decoration: none;"
               ),
               `aria-label` = "Remove from exports",

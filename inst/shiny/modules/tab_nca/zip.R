@@ -149,7 +149,7 @@ zip_ui <- function(id) {
         width = 6,
         div(
           h4("PK Parameters", style = "margin-bottom: 0.25em;"),
-          p(style = paste0("color: ", TEXT_SUBTLE, "; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;"),
+          p(style = glue::glue("color: {TEXT_SUBTLE}; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;"),
             "Parameters included in the slide tables")
         ),
         div(
@@ -308,14 +308,14 @@ zip_ui <- function(id) {
       "padding: 6px 0 2px;"
     ),
     span(
-      style = paste(
-        "display: inline-block;",
-        paste0("background-color: ", ACCENT_DANGER, ";"),
-        paste0("color: ", ANCA_WHITE, ";"),
-        "border-radius: 20px;",
-        "padding: 5px 14px;",
-        "font-size: 0.85rem;",
-        "font-weight: 500;",
+      style = glue::glue(
+        "display: inline-block; ",
+        "background-color: {ACCENT_DANGER}; ",
+        "color: {ANCA_WHITE}; ",
+        "border-radius: 20px; ",
+        "padding: 5px 14px; ",
+        "font-size: 0.85rem; ",
+        "font-weight: 500; ",
         "line-height: 1.4;"
       ),
       icon("triangle-exclamation"),

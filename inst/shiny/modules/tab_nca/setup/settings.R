@@ -81,7 +81,7 @@ partial_intervals_ui <- function(id) {
           ),
           style = "unite",
           right = TRUE,
-          icon = icon("question"), `aria-label` = "Help",
+          icon = icon("question"), label = "Help",
           status = "primary",
           width = "600px"
         )
@@ -186,7 +186,7 @@ settings_ui <- function(id) {
               ),
               style = "unite",
               right = TRUE,
-              icon = icon("question"), `aria-label` = "Help",
+              icon = icon("question"), label = "Help",
               status = "primary",
               width = "400px"
             )
@@ -404,7 +404,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         theme = reactableTheme(
           rowSelectedStyle = list(
             backgroundColor = BG_GREY_LIGHT,
-            boxShadow = paste0("inset 2px 0 0 0 ", ACCENT_ORANGE)
+            boxShadow = glue::glue("inset 2px 0 0 0 {ACCENT_ORANGE}")
           )
         )
       )

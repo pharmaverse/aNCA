@@ -79,7 +79,7 @@ slope_selector_ui <- function(id) {
           ),
           style = "unite",
           right = TRUE,
-          icon = icon("question"), `aria-label` = "Help",
+          icon = icon("question"), label = "Help",
           status = "primary",
           width = "600px"
         ),

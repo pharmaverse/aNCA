@@ -243,7 +243,7 @@ non_nca_ratio_help_ui <- function(title) {
     ),
     style = "unite",
     placement = "left",
-    icon = icon("question"), `aria-label` = "Help",
+    icon = icon("question"), label = "Help",
     status = "primary"
   )
 }

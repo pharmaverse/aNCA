@@ -45,7 +45,7 @@ parameter_exclusions_ui <- function(id) {
         ),
         style = "unite",
         right = TRUE,
-        icon = icon("question"), `aria-label` = "Help",
+        icon = icon("question"), label = "Help",
         status = "primary"
       )
     ),

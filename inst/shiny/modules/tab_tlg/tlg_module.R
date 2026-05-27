@@ -56,7 +56,7 @@ tlg_module_ui <- function(id, type, options) {
           ),
           style = "unite",
           right = TRUE,
-          icon = icon("question"), `aria-label` = "Help",
+          icon = icon("question"), label = "Help",
           status = "primary"
         ),
         actionButton(
