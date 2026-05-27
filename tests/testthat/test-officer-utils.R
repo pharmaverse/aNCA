@@ -265,3 +265,155 @@ describe(".add_pptx_dose_norm_slide", {
     expect_equal(result$n_slides, 0L)
   })
 })
+
+describe(".collect_pptestcds", {
+  it("extracts PPTESTCDs from statistics column names", {
+    slides <- list(list(
+      statistics = data.frame(
+        Statistic = "Mean",
+        `AUCIFO[ng*hr/mL]` = 1, `CMAX[ng/mL]` = 2, check.names = FALSE
+      ),
+      ind_params = list(),
+      boxplot = list()
+    ))
+    codes <- .collect_pptestcds(slides)
+    expect_true("AUCIFO" %in% codes)
+    expect_true("CMAX" %in% codes)
+    expect_true("Statistic" %in% codes)
+  })
+
+  it("extracts PPTESTCDs from ind_params column names", {
+    slides <- list(list(
+      statistics = data.frame(),
+      ind_params = list(
+        SUBJ01 = data.frame(
+          USUBJID = "01", `LAMZHL[hr]` = 5, check.names = FALSE
+        )
+      ),
+      boxplot = list()
+    ))
+    codes <- .collect_pptestcds(slides)
+    expect_true("LAMZHL" %in% codes)
+  })
+
+  it("extracts PPTESTCDs from boxplot names", {
+    slides <- list(list(
+      statistics = data.frame(),
+      ind_params = list(),
+      boxplot = list(AUCIFO = ggplot2::ggplot(), CMAX = NULL)
+    ))
+    codes <- .collect_pptestcds(slides)
+    expect_true("AUCIFO" %in% codes)
+    expect_true("CMAX" %in% codes)
+  })
+
+  it("deduplicates across groups", {
+    slides <- list(
+      list(
+        statistics = data.frame(`CMAX[ng/mL]` = 1, check.names = FALSE),
+        ind_params = list(),
+        boxplot = list(CMAX = ggplot2::ggplot())
+      ),
+      list(
+        statistics = data.frame(`CMAX[ng/mL]` = 2, check.names = FALSE),
+        ind_params = list(),
+        boxplot = list()
+      )
+    )
+    codes <- .collect_pptestcds(slides)
+    expect_equal(sum(codes == "CMAX"), 1)
+  })
+
+  it("returns empty character for empty input", {
+    expect_equal(.collect_pptestcds(list()), character(0))
+  })
+})
+
+describe(".build_glossary", {
+  it("returns matching PPTESTCD/PPTEST pairs from metadata", {
+    glossary <- .build_glossary(c("CMAX", "AUCIFO"))
+    expect_equal(ncol(glossary), 2)
+    expect_equal(names(glossary), c("PPTESTCD", "PPTEST"))
+    expect_true("CMAX" %in% glossary$PPTESTCD)
+    expect_true("AUCIFO" %in% glossary$PPTESTCD)
+  })
+
+  it("excludes codes not in metadata", {
+    glossary <- .build_glossary(c("CMAX", "NOT_A_REAL_CODE"))
+    expect_false("NOT_A_REAL_CODE" %in% glossary$PPTESTCD)
+  })
+
+  it("returns sorted, deduplicated rows", {
+    glossary <- .build_glossary(c("LAMZHL", "AUCIFO", "CMAX", "AUCIFO"))
+    expect_equal(glossary$PPTESTCD, sort(glossary$PPTESTCD))
+    expect_equal(nrow(glossary), length(unique(glossary$PPTESTCD)))
+  })
+
+  it("returns empty data frame for no matches", {
+    glossary <- .build_glossary(c("ZZZZZ_FAKE"))
+    expect_equal(nrow(glossary), 0)
+  })
+})
+
+describe(".add_pptx_glossary_slides", {
+  template <- system.file("www/templates/template.pptx", package = "aNCA")
+
+  it("adds one slide for a small glossary", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    glossary <- data.frame(
+      PPTESTCD = c("CMAX", "AUCIFO"),
+      PPTEST = c("Max Concentration", "AUC Infinity Obs"),
+      stringsAsFactors = FALSE
+    )
+    result <- .add_pptx_glossary_slides(pptx, glossary)
+    expect_equal(length(result), initial_count + 1)
+  })
+
+  it("adds multiple slides when glossary exceeds max_rows", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    glossary <- data.frame(
+      PPTESTCD = paste0("CODE", seq_len(25)),
+      PPTEST = paste0("Description ", seq_len(25)),
+      stringsAsFactors = FALSE
+    )
+    result <- .add_pptx_glossary_slides(pptx, glossary, max_rows = 10)
+    expect_equal(length(result), initial_count + 3)
+  })
+
+  it("does not add slides for empty glossary", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    glossary <- data.frame(
+      PPTESTCD = character(0), PPTEST = character(0),
+      stringsAsFactors = FALSE
+    )
+    result <- .add_pptx_glossary_slides(pptx, glossary)
+    expect_equal(length(result), initial_count)
+  })
+})
+
+describe("create_pptx_dose_slides glossary integration", {
+  template <- system.file("www/templates/template.pptx", package = "aNCA")
+
+  it("includes glossary slide in the output", {
+    slides <- list(list(
+      info = data.frame(group = "A"),
+      group = "A",
+      statistics = data.frame(
+        Statistic = "Mean", `CMAX[ng/mL]` = 1, check.names = FALSE
+      ),
+      meanplot = ggplot2::ggplot(),
+      linplot = ggplot2::ggplot(),
+      boxplot = list(CMAX = ggplot2::ggplot()),
+      ind_params = list(SUBJ01 = data.frame(param = "CMAX", value = 1)),
+      ind_plots = list(SUBJ01 = ggplot2::ggplot())
+    ))
+    out <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(slides, out, "NCA", template)
+    pptx <- officer::read_pptx(out)
+    slide_summaries <- officer::slide_summary(pptx, 2)
+    expect_true(any(grepl("Glossary", slide_summaries$text)))
+  })
+})

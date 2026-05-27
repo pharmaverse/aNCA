@@ -310,6 +310,99 @@ add_pptx_sl_plot <- function(pptx, plot) {
   list(pptx = pptx, lst_group_slide = lst_group_slide, group_slides = group_slides)
 }
 
+#' Collect all unique PPTESTCDs used across dose group slide data
+#'
+#' Extracts PPTESTCDs from statistics tables (column names), individual
+#' parameter tables (column names), and boxplot names.
+#'
+#' @param res_dose_slides List of dose group results as produced by
+#'   `get_dose_esc_results()`.
+#' @returns Character vector of unique PPTESTCDs.
+#' @keywords internal
+#' @noRd
+.collect_pptestcds <- function(res_dose_slides) {
+  codes <- unlist(lapply(res_dose_slides, .extract_group_codes), use.names = FALSE)
+  unique(codes)
+}
+
+#' Extract PPTESTCDs from a single dose group's slide data
+#' @param group A single element of res_dose_slides.
+#' @returns Character vector of PPTESTCDs (may contain duplicates).
+#' @keywords internal
+#' @noRd
+.extract_group_codes <- function(group) {
+  codes <- character(0)
+  # Statistics table columns: "PPTESTCD[unit]" or plain "PPTESTCD"
+  for (tbl_name in c("statistics", "dose_norm_statistics")) {
+    codes <- c(codes, .codes_from_df(group[[tbl_name]]))
+  }
+  # Individual parameter tables: same column format
+  if (is.list(group$ind_params)) {
+    codes <- c(codes, unlist(lapply(group$ind_params, .codes_from_df), use.names = FALSE))
+  }
+  # Boxplot names are PPTESTCDs directly
+  if (is.list(group$boxplot)) {
+    codes <- c(codes, names(group$boxplot))
+  }
+  codes
+}
+
+#' Extract PPTESTCDs from data frame column names by stripping unit suffixes
+#' @param tbl A data frame or NULL.
+#' @returns Character vector of codes, or empty character.
+#' @keywords internal
+#' @noRd
+.codes_from_df <- function(tbl) {
+  if (!is.data.frame(tbl) || ncol(tbl) == 0) return(character(0))
+  gsub("\\[.*\\]$", "", names(tbl))
+}
+
+#' Build a glossary data frame of PPTESTCD to PPTEST mappings
+#'
+#' Filters `metadata_nca_parameters` to only the PPTESTCDs present in the
+#' slide data and returns a two-column data frame.
+#'
+#' @param pptestcds Character vector of PPTESTCDs to include.
+#' @returns A data frame with columns `PPTESTCD` and `PPTEST`, sorted by
+#'   PPTESTCD.
+#' @keywords internal
+#' @noRd
+.build_glossary <- function(pptestcds) {
+  meta <- metadata_nca_parameters[, c("PPTESTCD", "PPTEST")]
+  glossary <- meta[meta$PPTESTCD %in% pptestcds, ]
+  glossary <- glossary[!duplicated(glossary$PPTESTCD), ]
+  glossary <- glossary[order(glossary$PPTESTCD), ]
+  rownames(glossary) <- NULL
+  glossary
+}
+
+#' Add glossary slides to a PowerPoint presentation
+#'
+#' Inserts one or more slides with a two-column table (PPTESTCD, PPTEST)
+#' listing all PK parameters used in the presentation. Splits across
+#' multiple slides when the table exceeds `max_rows` per slide.
+#'
+#' @param pptx An officer rpptx object.
+#' @param glossary A data frame with columns `PPTESTCD` and `PPTEST`.
+#' @param max_rows Maximum rows per glossary slide. Default 20.
+#' @returns Updated rpptx object.
+#' @keywords internal
+#' @noRd
+.add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 20L) {
+  if (nrow(glossary) == 0) return(pptx)
+
+  chunks <- split(glossary, ceiling(seq_len(nrow(glossary)) / max_rows))
+  for (i in seq_along(chunks)) {
+    page_label <- if (length(chunks) > 1) {
+      paste0("Glossary (", i, "/", length(chunks), ")")
+    } else {
+      "Glossary"
+    }
+    pptx <- add_pptx_sl_table(pptx, chunks[[i]], title = page_label, footer = "")
+  }
+  pptx
+}
+
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
 #' Adds slides for summary tables, mean plots, line plots, and individual subject results
 #' @param res_dose_slides List of results for each dose group
@@ -334,7 +427,13 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
 
   pptx <- create_pptx_doc(path, title, template)
 
-  lst_group_slide <- 1
+  # Insert glossary slide(s) after the title slide
+  all_codes <- .collect_pptestcds(res_dose_slides)
+  glossary <- .build_glossary(all_codes)
+  pptx <- .add_pptx_glossary_slides(pptx, glossary)
+  n_glossary_slides <- if (nrow(glossary) == 0) 0L else ceiling(nrow(glossary) / 20L)
+
+  lst_group_slide <- 1 + n_glossary_slides
   group_slides <- numeric()
   for (i in seq_along(res_dose_slides)) {
     result <- .process_pptx_group_slides(pptx, res_dose_slides[[i]], i, in_sections,
@@ -344,16 +443,23 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     group_slides    <- result$group_slides
   }
 
+  # Move summary slides to just after title + glossary
+  first_content_pos <- 2L + n_glossary_slides
   if (length(group_slides) > 0) {
     group_slides_rev <- rev(group_slides) + (seq_along(group_slides) - 1)
     pptx <- purrr::reduce(
       group_slides_rev,
-      function(pptx, slide_index) officer::move_slide(pptx, index = slide_index, to = 2),
+      function(pptx, slide_index) {
+        officer::move_slide(pptx, index = slide_index, to = first_content_pos)
+      },
       .init = pptx
     )
   }
   pptx <- add_pptx_sl_title(pptx, "Extra Figures")
-  pptx <- officer::move_slide(x = pptx, index = length(pptx), to = (length(group_slides) + 2))
+  pptx <- officer::move_slide(
+    x = pptx, index = length(pptx),
+    to = (length(group_slides) + first_content_pos)
+  )
 
   # Add additional analysis slides generically
   non_empty <- .filter_additional_analysis(additional_analysis, slide_sections)
