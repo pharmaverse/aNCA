@@ -776,6 +776,15 @@ pkcg03 <- function(
   interval_value <- summary_settings$interval_value
   whiskers_value <- summary_settings$whiskers_value
 
+  # For one-sided whiskers, use mid_value as the other bound
+  if (length(whiskers_value) == 1) {
+    if (grepl("lwr$", whiskers_value)) {
+      whiskers_value <- c(whiskers_value, mid_value)
+    } else {
+      whiskers_value <- c(mid_value, whiskers_value)
+    }
+  }
+
   adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
     dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
