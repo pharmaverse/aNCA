@@ -96,7 +96,10 @@ tlg_module_ui <- function(id, type, options) {
           uiOutput(ns("page_number"), inline = TRUE),
         )
       ),
-      div(style = "text-align: right;", actionButton(ns("next_page"), "Next Page", class = "btn-page"))
+      div(
+        style = "text-align: right;",
+        actionButton(ns("next_page"), "Next Page", class = "btn-page")
+      )
     ),
     shinycssloaders::withSpinner(
       switch(

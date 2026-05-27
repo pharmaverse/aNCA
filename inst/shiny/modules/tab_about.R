@@ -154,7 +154,9 @@ tab_about_server <- function(id) {
         }
       )
       tags$blockquote(
-        style = glue::glue("border-left: 3px solid {BORDER_MUTED}; padding-left: 1em; color: {TEXT_HEADING};"),
+        style = glue::glue(
+          "border-left: 3px solid {BORDER_MUTED}; padding-left: 1em; color: {TEXT_HEADING};"
+        ),
         tags$p(cit_text)
       )
     })
@@ -163,7 +165,9 @@ tab_about_server <- function(id) {
       cit <- utils::citation("PKNCA")
       cit_text <- paste(format(cit, style = "text"), collapse = "\n\n")
       tags$blockquote(
-        style = glue::glue("border-left: 3px solid {BORDER_MUTED}; padding-left: 1em; color: {TEXT_HEADING};"),
+        style = glue::glue(
+          "border-left: 3px solid {BORDER_MUTED}; padding-left: 1em; color: {TEXT_HEADING};"
+        ),
         tags$p(cit_text)
       )
     })

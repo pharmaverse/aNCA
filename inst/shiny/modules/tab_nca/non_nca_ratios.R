@@ -127,7 +127,10 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
         ),
         div(
           class = "ratio-remove-btn-wrapper",
-          actionButton(ns(paste0("remove_", count)), "", `aria-label` = "Remove ratio pair", icon = icon("trash-alt"))
+          actionButton(
+            ns(paste0("remove_", count)), "",
+            `aria-label` = "Remove ratio pair", icon = icon("trash-alt")
+          )
         )
       )
 

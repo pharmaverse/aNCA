@@ -149,8 +149,12 @@ zip_ui <- function(id) {
         width = 6,
         div(
           h4("PK Parameters", style = "margin-bottom: 0.25em;"),
-          p(style = glue::glue("color: {TEXT_SUBTLE}; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;"),
-            "Parameters included in the slide tables")
+          p(
+            style = glue::glue(
+              "color: {TEXT_SUBTLE}; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;"
+            ),
+            "Parameters included in the slide tables"
+          )
         ),
         div(
           id = ns("ind_params_container"),
