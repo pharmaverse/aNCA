@@ -180,19 +180,26 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # --- Copy Plot Code handlers ---
 
-    .show_code_modal <- function(code_text) {
+    # Track which plot type opened the code modal
+    pending_code_type <- reactiveVal(NULL)
+
+    .show_code_modal <- function(code_text, default_save_name) {
       showModal(modalDialog(
         title = "Plot Code",
         tags$pre(
           id = ns("code_block"),
           style = paste(
             "white-space: pre-wrap; word-wrap: break-word;",
-            "max-height: 60vh; overflow-y: auto; text-align: left;"
+            "max-height: 50vh; overflow-y: auto; text-align: left;"
           ),
           code_text
         ),
+        textInput(ns("save_code_name"), "Save as:", value = default_save_name),
         footer = tagList(
           modalButton("Close"),
+          actionButton(ns("save_code"), "Save Code",
+                       icon = icon("file-code"),
+                       class = "btn btn-primary"),
           actionButton(ns("clipboard_copy"), "Copy to Clipboard",
                        icon = icon("clipboard"),
                        class = "btn btn-primary")
@@ -204,14 +211,22 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     observeEvent(individual_sidebar$copy_plot_code(), {
       req(pknca_data(), individual_inputs())
+      pending_code_type("individual")
       code <- build_plot_code("individual", individual_inputs(), session)
-      .show_code_modal(code)
+      .show_code_modal(
+        code,
+        paste0("individual_plot_code", indiv_code_counter() + 1L)
+      )
     })
 
     observeEvent(mean_sidebar$copy_plot_code(), {
       req(pknca_data(), mean_inputs())
+      pending_code_type("mean")
       code <- build_plot_code("mean", mean_inputs(), session)
-      .show_code_modal(code)
+      .show_code_modal(
+        code,
+        paste0("mean_plot_code", mean_code_counter() + 1L)
+      )
     })
 
     observeEvent(input$clipboard_copy, {
@@ -230,42 +245,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       showNotification("Code copied to clipboard", type = "message", duration = 3)
     })
 
-    # --- Save Plot Code handlers ---
-
-    # Track which code type triggered the save modal
-    pending_code_type <- reactiveVal(NULL)
-
-    .show_save_code_modal <- function(default_name) {
-      showModal(modalDialog(
-        title = "Save Plot Code",
-        textInput(ns("save_code_name"), "File name:", value = default_name),
-        footer = tagList(
-          modalButton("Cancel"),
-          actionButton(ns("confirm_save_code"), "Save",
-                       class = "btn btn-primary")
-        ),
-        size = "s",
-        easyClose = TRUE
-      ))
-    }
-
-    observeEvent(individual_sidebar$save_plot_code(), {
-      req(pknca_data(), individual_inputs())
-      pending_code_type("individual")
-      .show_save_code_modal(
-        paste0("individual_plot_code", indiv_code_counter() + 1L)
-      )
-    })
-
-    observeEvent(mean_sidebar$save_plot_code(), {
-      req(pknca_data(), mean_inputs())
-      pending_code_type("mean")
-      .show_save_code_modal(
-        paste0("mean_plot_code", mean_code_counter() + 1L)
-      )
-    })
-
-    observeEvent(input$confirm_save_code, {
+    observeEvent(input$save_code, {
       raw_name <- input$save_code_name
       code_name <- gsub("[^A-Za-z0-9_-]", "_", raw_name)
       req(nzchar(code_name))
