@@ -138,7 +138,7 @@ describe("SDTM example datasets", {
           adnca_subj$ATPTREF,
           min
         )
-        dose_times <- sort(unname(dose_times))
+        dose_times <- sort(as.numeric(dose_times))
         if (length(dose_times) < 2) next
         adnca_diffs <- diff(dose_times)
 
