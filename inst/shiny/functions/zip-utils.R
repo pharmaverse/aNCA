@@ -77,8 +77,7 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
       allowed <- c(allowed, default_name)
     }
   }
-  # Also include associated _code entries for each allowed plot
-  c(allowed, paste0(allowed, "_code"))
+  allowed
 }
 
 # Check if an object is a saveable leaf (ggplot, data.frame, plotly, or code string)
@@ -97,7 +96,7 @@ save_output <- function(
   for (name in names(output)) {
     x <- output[[name]]
 
-    if (!.is_leaf(x) && inherits(x, "list")) {
+    if (!.is_leaf(x) && is.list(x)) {
       save_output(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats, obj_names
@@ -107,6 +106,12 @@ save_output <- function(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats
       )
+      # Also save associated _code entry if it exists in the parent list
+      code_name <- paste0(name, "_code")
+      code_entry <- output[[code_name]]
+      if (!is.null(code_entry) && is.character(code_entry) && length(code_entry) == 1) {
+        writeLines(code_entry, paste0(output_path, "/", code_name, ".R"))
+      }
     }
   }
 }
@@ -398,10 +403,7 @@ prepare_export_files <- function(target_dir,
   # Keep custom names whose type maps to a selected tree item
   selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
   custom_names <- all_custom[all_custom %in% selected_types]
-  custom_plot_names <- names(custom_names)
-  obj_names <- unique(c(
-    input$res_tree, custom_plot_names, paste0(custom_plot_names, "_code")
-  ))
+  obj_names <- unique(c(input$res_tree, names(custom_names)))
 
   # Filter exploration list to only include allowed plots
   results <- session$userData$results
