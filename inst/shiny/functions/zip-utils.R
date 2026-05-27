@@ -77,6 +77,7 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
     }
   }
   # Include associated _code entries for each allowed plot
+  if (length(allowed) == 0) return(character(0))
   c(allowed, paste0(allowed, "_code"))
 }
 
