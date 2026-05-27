@@ -71,7 +71,7 @@ reactable_server <- function(
 
     labeled_data <- reactive({
       req(data())
-      apply_labels(data())
+      resolve_param_labels(apply_labels(data()))
     })
 
     output$table <- renderReactable({
@@ -196,7 +196,7 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
       reactable::colDef(
         html = TRUE,
         header = htmltools::tags$span(
-          col_name,
+          label,
           `data-toggle` = "tooltip",
           `data-placement` = "top",
           title = label
