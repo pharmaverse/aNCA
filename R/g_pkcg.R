@@ -1092,18 +1092,14 @@ compute_summary_stats <- function(plot_data, xvar, yvar, mean_group_var,
       n = dplyr::n(),
       mean = mean(.data[[yvar]], na.rm = TRUE),
       sd = sd(.data[[yvar]], na.rm = TRUE),
-      se = sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+      se = sd / sqrt(n),
       median = median(.data[[yvar]], na.rm = TRUE),
-      mean_ci_lwr = mean(.data[[yvar]], na.rm = TRUE) -
-        qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-      mean_ci_upr = mean(.data[[yvar]], na.rm = TRUE) +
-        qt(0.975, dplyr::n() - 1) * sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-      mean_sdi_lwr = mean(.data[[yvar]], na.rm = TRUE) - sd(.data[[yvar]], na.rm = TRUE),
-      mean_sdi_upr = mean(.data[[yvar]], na.rm = TRUE) + sd(.data[[yvar]], na.rm = TRUE),
-      mean_sei_lwr = mean(.data[[yvar]], na.rm = TRUE) -
-        sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
-      mean_sei_upr = mean(.data[[yvar]], na.rm = TRUE) +
-        sd(.data[[yvar]], na.rm = TRUE) / sqrt(dplyr::n()),
+      mean_ci_lwr = mean - qt(0.975, n - 1) * se,
+      mean_ci_upr = mean + qt(0.975, n - 1) * se,
+      mean_sdi_lwr = mean - sd,
+      mean_sdi_upr = mean + sd,
+      mean_sei_lwr = mean - se,
+      mean_sei_upr = mean + se,
       .groups = "drop"
     )
 
