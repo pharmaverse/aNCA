@@ -441,7 +441,7 @@ data_mapping_ui <- function(id) {
 
 #' Determine the default metabolite selection for ADNCA mode.
 #' @noRd
-.get_adnca_metabolite_selection <- function(imported_mapping, adnca_data,
+.get_adnca_metabolite <- function(imported_mapping, adnca_data,
                                             param_col) {
   if (!is.null(imported_mapping$mapping$Metabolites)) {
     imported_mapping$mapping$Metabolites
@@ -508,7 +508,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
       req(input$select_PARAM != "")
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
-      selected_metab <- .get_adnca_metabolite_selection(
+      selected_metab <- .get_adnca_metabolite(
         imported_mapping(), adnca_data(), param_col
       )
       updateSelectizeInput(
