@@ -110,6 +110,7 @@ build_plot_code <- function(plot_type, inputs, session) {
       '  x_limits = ', fmt_num(inputs$x_limits), ',\n',
       '  y_limits = ', fmt_num(inputs$y_limits), ',\n',
       '  filtering_list = filtering_list,\n',
+      '  labels_df = aNCA::metadata_nca_variables,\n',
       '  use_time_since_last_dose = ',
       fmt_lgl(inputs$use_time_since_last_dose), ',\n',
       '  palette = ', fmt_chr(inputs$palette), ',\n',
@@ -133,6 +134,7 @@ build_plot_code <- function(plot_type, inputs, session) {
       '  sd_max = ', fmt_lgl(inputs$sd_max), ',\n',
       '  ci = ', fmt_lgl(inputs$ci), ',\n',
       '  filtering_list = filtering_list,\n',
+      '  labels_df = aNCA::metadata_nca_variables,\n',
       '  use_time_since_last_dose = ',
       fmt_lgl(inputs$use_time_since_last_dose), ',\n',
       '  palette = ', fmt_chr(inputs$palette), ',\n',
@@ -170,7 +172,7 @@ build_plot_code <- function(plot_type, inputs, session) {
     'ggplot2::ggsave("plot.png", plot = p, width = 10, height = 6, dpi = 300)\n',
     '\n',
     '# Export as interactive HTML\n',
-    'p_interactive <- plotly::ggplotly(p)\n',
+    'p_interactive <- plotly::ggplotly(p, tooltip = "tooltip_text")\n',
     'htmlwidgets::saveWidget(p_interactive, "plot.html", selfcontained = TRUE)\n'
   )
 }
