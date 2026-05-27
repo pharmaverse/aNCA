@@ -130,6 +130,16 @@ calculate_ratios.data.frame <- function(
   )
   group_cols <- setdiff(colnames(data), extra_res_cols)
 
+  # Parse group column values to match the types in the data.
+  # YAML-sourced settings store all values as character, but the
+  # corresponding columns in PKNCA results may be numeric (e.g. AGE).
+  # Without type coercion, merge() and anti_join() fail with
+  # "Can't join due to incompatible types".
+  ref_groups <- .coerce_group_types(ref_groups, data)
+  if (!is.null(test_groups)) {
+    test_groups <- .coerce_group_types(test_groups, data)
+  }
+
   # Define the reference and test data based on the parameters and groups
   df_ref <- as.data.frame(data)[data$PPTESTCD == ref_parameter, , drop = FALSE]
   df_ref <- merge(df_ref, ref_groups)
@@ -466,6 +476,34 @@ calculate_ratio_app <- function(
   }
 
   list(test_groups = test_groups, ref_groups = ref_groups)
+}
+
+#' Coerce group column types to match the corresponding columns in data.
+#'
+#' When group specifications are sourced from YAML settings, all values
+#' are character strings. If the PKNCA result data has those columns as
+#' numeric (e.g. AGE), joins will fail with incompatible type errors.
+#' This helper converts group columns to match the data column types.
+#'
+#' @param groups A data.frame of group values (from `.parse_ratio_groups`).
+#' @param data A data.frame with the PKNCA result data.
+#' @returns A data.frame with column types coerced to match `data`.
+#' @noRd
+.coerce_group_types <- function(groups, data) {
+  for (col in intersect(names(groups), names(data))) {
+    groups[[col]] <- utils::type.convert(groups[[col]], as.is = TRUE)
+    data_type <- class(data[[col]])[1]
+    group_type <- class(groups[[col]])[1]
+    if (data_type == group_type) next
+    if (data_type == "factor") {
+      groups[[col]] <- factor(groups[[col]], levels = levels(data[[col]]))
+    } else if (data_type %in% c("numeric", "integer")) {
+      groups[[col]] <- as.numeric(groups[[col]])
+    } else if (data_type == "character") {
+      groups[[col]] <- as.character(groups[[col]])
+    }
+  }
+  groups
 }
 
 #' Filter result data to keep only the specific interval rows for interval parameters.
