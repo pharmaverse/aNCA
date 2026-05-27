@@ -383,11 +383,12 @@ find_common_prefix <- function(strings) {
 #'
 #' @noRd
 #' @keywords internal
+
 #' Derive PKSUM1RS (exclusion reason) for ADNCA rows
 #'
-#' Combines general exclusion reasons (stored in PKSUM1RS by
-#' `add_exclusion_reasons()`) with half-life point exclusion reasons.
-#' Returns empty string for rows where PKSUM1F is not "Y".
+#' Returns the general exclusion reason (stored in PKSUM1RS by
+#' `add_exclusion_reasons()`) for rows where PKSUM1F is "Y".
+#' Returns empty string for non-excluded rows.
 #'
 #' @param data The ADNCA data frame being built.
 #' @param pksum1f Character vector of PKSUM1F values.

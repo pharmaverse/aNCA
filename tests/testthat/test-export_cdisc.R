@@ -988,13 +988,11 @@ describe("export_cdisc: PKSUM1RS column", {
 
   it("populates PKSUM1RS from general exclusion reasons", {
     modified <- test_pknca_res
-    excl_list <- list(
-      list(
-        reason = "Protocol deviation", rows = c(1, 2),
-        exclude_nca = FALSE, exclude_tlg = TRUE
-      )
-    )
-    modified <- add_exclusion_reasons(modified, excl_list)
+    n <- nrow(modified$data$conc$data)
+    modified$data$conc$data$PKSUM1F <- rep("", n)
+    modified$data$conc$data$PKSUM1RS <- rep("", n)
+    modified$data$conc$data$PKSUM1F[c(1, 2)] <- "Y"
+    modified$data$conc$data$PKSUM1RS[c(1, 2)] <- "Protocol deviation"
     result <- export_cdisc(modified)
     adnca <- result$adnca
     expect_equal(adnca$PKSUM1F[c(1, 2)], c("Y", "Y"))
@@ -1013,13 +1011,12 @@ describe("export_cdisc: PKSUM1RS column", {
 
   it("preserves general exclusion reason when half-life exclusion also applies", {
     modified <- test_pknca_res
-    excl_list <- list(
-      list(
-        reason = "Protocol deviation", rows = 3,
-        exclude_nca = FALSE, exclude_tlg = TRUE
-      )
-    )
-    modified <- add_exclusion_reasons(modified, excl_list)
+    n <- nrow(modified$data$conc$data)
+    modified$data$conc$data$PKSUM1F <- rep("", n)
+    modified$data$conc$data$PKSUM1RS <- rep("", n)
+    modified$data$conc$data$PKSUM1F[3] <- "Y"
+    modified$data$conc$data$PKSUM1RS[3] <- "Protocol deviation"
+    modified$data$conc$data$is.excluded.hl <- FALSE
     modified$data$conc$data$is.excluded.hl[3] <- TRUE
     result <- export_cdisc(modified)
     adnca <- result$adnca
