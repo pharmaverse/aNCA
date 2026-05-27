@@ -766,24 +766,10 @@ pkcg03 <- function(
   # Define summary settings
   summary_settings <- SUMMARY_SETTINGS[[summary_method]]
 
-  if (whiskers_lwr_upr == "Upper") {
-    summary_settings$whiskers_value <- summary_settings$whiskers_value[2]
-  } else if (whiskers_lwr_upr == "Lower") {
-    summary_settings$whiskers_value <- summary_settings$whiskers_value[1]
-  }
-
   mid_value <- summary_settings$mid_value
   interval_value <- summary_settings$interval_value
-  whiskers_value <- summary_settings$whiskers_value
-
-  # For one-sided whiskers, use mid_value as the other bound
-  if (length(whiskers_value) == 1) {
-    if (grepl("lwr$", whiskers_value)) {
-      whiskers_value <- c(whiskers_value, mid_value)
-    } else {
-      whiskers_value <- c(mid_value, whiskers_value)
-    }
-  }
+  whiskers_value <- resolve_whiskers(summary_settings$whiskers_value,
+                                     whiskers_lwr_upr, mid_value)
 
   adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
@@ -1081,6 +1067,25 @@ generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgrou
   } else {
     parse_annotation(plot_data, subtitle)
   }
+}
+
+# Resolve whiskers_value to a length-2 vector of c(lower, upper) column names.
+# For one-sided whiskers, the missing bound is replaced with mid_value.
+resolve_whiskers <- function(whiskers_value, whiskers_lwr_upr, mid_value) {
+  if (whiskers_lwr_upr == "Upper") {
+    whiskers_value <- whiskers_value[2]
+  } else if (whiskers_lwr_upr == "Lower") {
+    whiskers_value <- whiskers_value[1]
+  }
+
+  if (length(whiskers_value) == 1) {
+    if (grepl("lwr$", whiskers_value)) {
+      whiskers_value <- c(whiskers_value, mid_value)
+    } else {
+      whiskers_value <- c(mid_value, whiskers_value)
+    }
+  }
+  whiskers_value
 }
 
 # Compute summary statistics per group and timepoint for pkcg03
