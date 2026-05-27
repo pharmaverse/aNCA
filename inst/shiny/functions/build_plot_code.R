@@ -151,9 +151,10 @@ build_plot_code <- function(plot_type, inputs, session) {
       'dose_data <- pknca_data$dose$data\n',
       if (!is.null(inputs$usubjid) && length(inputs$usubjid) > 0) {
         paste0(
-          'conc_data <- conc_data[conc_data[[pknca_data$conc$columns$subject]] %in% ',
+          'subj_col <- pknca_data$conc$columns$subject\n',
+          'conc_data <- conc_data[conc_data[[subj_col]] %in% ',
           fmt_chr(inputs$usubjid), ', ]\n',
-          'dose_data <- dose_data[dose_data[[pknca_data$dose$columns$subject]] %in% ',
+          'dose_data <- dose_data[dose_data[[subj_col]] %in% ',
           fmt_chr(inputs$usubjid), ', ]\n'
         )
       } else "",
