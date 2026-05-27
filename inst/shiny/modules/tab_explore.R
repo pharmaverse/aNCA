@@ -176,11 +176,14 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # --- Copy Plot Code handlers ---
 
+    # Store the current code text so clipboard copy can access it
+    current_code_text <- reactiveVal(NULL)
+
     .show_code_modal <- function(code_text) {
+      current_code_text(code_text)
       showModal(modalDialog(
         title = "Plot Code",
         tags$pre(
-          id = ns("code_block"),
           style = paste(
             "white-space: pre-wrap; word-wrap: break-word;",
             "max-height: 60vh; overflow-y: auto; text-align: left;"
@@ -211,14 +214,15 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     })
 
     observeEvent(input$clipboard_copy, {
-      code_id <- ns("code_block")
+      req(current_code_text())
+      # Escape backticks and backslashes for JS string literal
+      escaped <- gsub("\\\\", "\\\\\\\\", current_code_text())
+      escaped <- gsub("`", "\\\\`", escaped)
+      escaped <- gsub("\\$", "\\\\$", escaped)
       shinyjs::runjs(paste0(
-        "var codeEl = document.getElementById('", code_id, "');",
-        "if (codeEl) {",
-        "  navigator.clipboard.writeText(codeEl.textContent).then(function() {",
-        "    Shiny.setInputValue('", ns("clipboard_done"), "', Math.random());",
-        "  });",
-        "}"
+        "navigator.clipboard.writeText(`", escaped, "`).then(function() {",
+        "  Shiny.setInputValue('", ns("clipboard_done"), "', Math.random());",
+        "});"
       ))
     })
 
