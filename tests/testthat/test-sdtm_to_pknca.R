@@ -349,7 +349,7 @@ describe("pc_to_PKNCAconc", {
     expect_true(all(d$exclude_half.life == FALSE))
     expect_true(all(d$REASON == ""))
     expect_true(all(d$METABFL == ""))
-    expect_equal(unique(d$RRLTU), "hour")
+    expect_equal(unique(d$RRLTU), "Hours")
     expect_true(all(d$CONCDUR == 0))
   })
 
