@@ -176,11 +176,9 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     # --- Copy Plot Code handlers ---
 
-    # Store the current code text so clipboard copy can access it
-    current_code_text <- reactiveVal(NULL)
-
     .show_code_modal <- function(code_text) {
-      current_code_text(code_text)
+      # Hidden textarea holds the code for reliable clipboard copy
+      textarea_id <- ns("code_textarea")
       showModal(modalDialog(
         title = "Plot Code",
         tags$pre(
@@ -188,6 +186,11 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
             "white-space: pre-wrap; word-wrap: break-word;",
             "max-height: 60vh; overflow-y: auto; text-align: left;"
           ),
+          code_text
+        ),
+        tags$textarea(
+          id = textarea_id,
+          style = "position:absolute;left:-9999px;",
           code_text
         ),
         footer = tagList(
@@ -214,15 +217,20 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     })
 
     observeEvent(input$clipboard_copy, {
-      req(current_code_text())
-      # Escape backticks and backslashes for JS string literal
-      escaped <- gsub("\\\\", "\\\\\\\\", current_code_text())
-      escaped <- gsub("`", "\\\\`", escaped)
-      escaped <- gsub("\\$", "\\\\$", escaped)
+      textarea_id <- ns("code_textarea")
       shinyjs::runjs(paste0(
-        "navigator.clipboard.writeText(`", escaped, "`).then(function() {",
+        "var ta = document.getElementById('", textarea_id, "');",
+        "if (ta) {",
+        "  ta.style.position = 'fixed';",
+        "  ta.style.left = '0';",
+        "  ta.style.top = '0';",
+        "  ta.style.opacity = '0';",
+        "  ta.select();",
+        "  document.execCommand('copy');",
+        "  ta.style.position = 'absolute';",
+        "  ta.style.left = '-9999px';",
         "  Shiny.setInputValue('", ns("clipboard_done"), "', Math.random());",
-        "});"
+        "}"
       ))
     })
 
