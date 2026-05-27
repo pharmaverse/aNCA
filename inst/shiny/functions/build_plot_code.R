@@ -5,7 +5,7 @@
 #' generates the exploration plot and exports it as PNG and interactive HTML.
 #' Follows the same pattern as script_template.R.
 #'
-#' @param plot_type Character; either "individual" or "mean".
+#' @param plot_type Character; one of "individual", "mean", or "qc".
 #' @param inputs List of current sidebar input values.
 #' @param session Shiny session object (provides mapping, filters, etc.).
 #'
@@ -117,7 +117,7 @@ build_plot_code <- function(plot_type, inputs, session) {
       '  line_type = ', fmt_chr(inputs$y_axis_values), '\n',
       ')'
     )
-  } else {
+  } else if (plot_type == "mean") {
     plot_call <- paste0(
       'p <- aNCA::exploration_meanplot(\n',
       '  pknca_data = pknca_data,\n',
@@ -139,6 +139,52 @@ build_plot_code <- function(plot_type, inputs, session) {
       fmt_lgl(inputs$use_time_since_last_dose), ',\n',
       '  palette = ', fmt_chr(inputs$palette), ',\n',
       '  line_type = ', fmt_chr(inputs$y_axis_values), '\n',
+      ')'
+    )
+  } else if (plot_type == "qc") {
+    # QC plot doesn't use filtering_list — override to empty
+    plot_filter_code <- ""
+
+    plot_call <- paste0(
+      '# Filter subjects and specimens\n',
+      'conc_data <- pknca_data$conc$data\n',
+      'dose_data <- pknca_data$dose$data\n',
+      if (!is.null(inputs$usubjid) && length(inputs$usubjid) > 0) {
+        paste0(
+          'conc_data <- conc_data[conc_data[[pknca_data$conc$columns$subject]] %in% ',
+          fmt_chr(inputs$usubjid), ', ]\n',
+          'dose_data <- dose_data[dose_data[[pknca_data$dose$columns$subject]] %in% ',
+          fmt_chr(inputs$usubjid), ', ]\n'
+        )
+      } else "",
+      if (!is.null(inputs$pcspec) && length(inputs$pcspec) > 0) {
+        paste0(
+          'conc_data <- conc_data[conc_data$PCSPEC %in% ',
+          fmt_chr(inputs$pcspec), ', ]\n'
+        )
+      } else "",
+      '\nshow_pk_samples <- "PK Samples" %in% ', fmt_chr(inputs$show_samples_doses), '\n',
+      'show_doses <- "Doses" %in% ', fmt_chr(inputs$show_samples_doses), '\n',
+      '\n',
+      'dose_col <- pknca_data$dose$columns$dose\n',
+      'doseu_col <- pknca_data$dose$columns$doseu\n',
+      'colour_var_units <- if (', fmt_chr(inputs$colour_var), ' == dose_col) doseu_col else NULL\n',
+      '\np <- aNCA::pk_dose_qc_plot(\n',
+      '  data_conc = conc_data,\n',
+      '  data_dose = dose_data,\n',
+      '  x_var = pknca_data$conc$columns$time,\n',
+      '  y_var = pknca_data$conc$columns$subject,\n',
+      '  colour_var = ', fmt_chr(inputs$colour_var), ',\n',
+      '  shape_var = "PCSPEC",\n',
+      '  grouping_vars = ', fmt_chr(inputs$group_var), ',\n',
+      '  other_tooltip_vars = c("NFRLT", "DOSETRT"),\n',
+      '  x_var_units = pknca_data$conc$columns$timeu,\n',
+      '  colour_var_units = colour_var_units,\n',
+      '  labels_df = aNCA::metadata_nca_variables,\n',
+      '  title = "Dose and Sample Events",\n',
+      '  show_pk_samples = show_pk_samples,\n',
+      '  show_doses = show_doses,\n',
+      '  as_plotly = FALSE\n',
       ')'
     )
   }
@@ -172,7 +218,11 @@ build_plot_code <- function(plot_type, inputs, session) {
     'ggplot2::ggsave("plot.png", plot = p, width = 10, height = 6, dpi = 300)\n',
     '\n',
     '# Export as interactive HTML\n',
-    'p_interactive <- plotly::ggplotly(p, tooltip = "tooltip_text")\n',
+    if (plot_type == "qc") {
+      'p_interactive <- plotly::ggplotly(p, tooltip = "text")\n'
+    } else {
+      'p_interactive <- plotly::ggplotly(p, tooltip = "tooltip_text")\n'
+    },
     'htmlwidgets::saveWidget(p_interactive, "plot.html", selfcontained = TRUE)\n'
   )
 }

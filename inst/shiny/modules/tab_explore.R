@@ -178,6 +178,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
     })
 
+    # Save the default QC plot code for the ZIP folder
+    observe({
+      req(qc_plot_outputs$current_plot(), qc_plot_outputs$qc_inputs())
+      session$userData$results$exploration$qcplot_code <-
+        build_plot_code("qc", qc_plot_outputs$qc_inputs(), session)
+    })
+
     # --- Copy Plot Code handlers ---
 
     .show_code_modal <- function(code_text) {
@@ -217,6 +224,12 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     observeEvent(mean_sidebar$copy_plot_code(), {
       req(pknca_data(), mean_inputs())
       code <- build_plot_code("mean", mean_inputs(), session)
+      .show_code_modal(code)
+    })
+
+    observeEvent(qc_plot_outputs$copy_plot_code(), {
+      req(pknca_data(), qc_plot_outputs$qc_inputs())
+      code <- build_plot_code("qc", qc_plot_outputs$qc_inputs(), session)
       .show_code_modal(code)
     })
 
@@ -364,12 +377,13 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
 
-      # Auto-save plot code alongside the plot (individual/mean only)
-      if (type %in% c("individual", "mean")) {
-        inputs_list <- switch(type,
-          individual = individual_inputs(),
-          mean = mean_inputs()
-        )
+      # Auto-save plot code alongside the plot
+      inputs_list <- switch(type,
+        individual = individual_inputs(),
+        mean = mean_inputs(),
+        qc = qc_plot_outputs$qc_inputs()
+      )
+      if (!is.null(inputs_list)) {
         code_name <- paste0(plot_name, "_code")
         code <- build_plot_code(type, inputs_list, session)
         session$userData$results$exploration[[code_name]] <- code
