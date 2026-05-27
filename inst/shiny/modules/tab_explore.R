@@ -147,15 +147,19 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       qc_counter(0L)
     })
 
-    # Save each plot independently for the ZIP folder
+    # Save each plot independently for the ZIP folder, with code
     observe({
-      req(individualplot())
+      req(individualplot(), individual_inputs())
       session$userData$results$exploration$individualplot <- individualplot()
+      session$userData$results$exploration$individualplot_code <-
+        build_plot_code("individual", individual_inputs(), session)
     })
 
     observe({
-      req(meanplot())
+      req(meanplot(), mean_inputs())
       session$userData$results$exploration$meanplot <- meanplot()
+      session$userData$results$exploration$meanplot_code <-
+        build_plot_code("mean", mean_inputs(), session)
     })
 
     # Render the mean plot output in plotly
