@@ -369,7 +369,8 @@ describe(".add_pptx_glossary_slides", {
       stringsAsFactors = FALSE
     )
     result <- .add_pptx_glossary_slides(pptx, glossary)
-    expect_equal(length(result), initial_count + 1)
+    expect_equal(length(result$pptx), initial_count + 1)
+    expect_equal(result$n_slides, 1L)
   })
 
   it("adds multiple slides when glossary exceeds max_rows", {
@@ -381,7 +382,8 @@ describe(".add_pptx_glossary_slides", {
       stringsAsFactors = FALSE
     )
     result <- .add_pptx_glossary_slides(pptx, glossary, max_rows = 10)
-    expect_equal(length(result), initial_count + 3)
+    expect_equal(length(result$pptx), initial_count + 3)
+    expect_equal(result$n_slides, 3L)
   })
 
   it("does not add slides for empty glossary", {
@@ -392,7 +394,8 @@ describe(".add_pptx_glossary_slides", {
       stringsAsFactors = FALSE
     )
     result <- .add_pptx_glossary_slides(pptx, glossary)
-    expect_equal(length(result), initial_count)
+    expect_equal(length(result$pptx), initial_count)
+    expect_equal(result$n_slides, 0L)
   })
 })
 

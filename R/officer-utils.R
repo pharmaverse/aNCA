@@ -322,7 +322,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @noRd
 .collect_pptestcds <- function(res_dose_slides) {
   codes <- unlist(lapply(res_dose_slides, .extract_group_codes), use.names = FALSE)
-  unique(codes)
+  unique(as.character(codes))
 }
 
 #' Extract PPTESTCDs from a single dose group's slide data
@@ -398,11 +398,12 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @param pptx An officer rpptx object.
 #' @param glossary A data frame with columns `PPTESTCD` and `PPTEST`.
 #' @param max_rows Maximum rows per glossary slide. Default 20.
-#' @returns Updated rpptx object.
+#' @returns A list with `pptx` (updated rpptx object) and `n_slides`
+#'   (number of glossary slides added).
 #' @keywords internal
 #' @noRd
 .add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 20L) {
-  if (nrow(glossary) == 0) return(pptx)
+  if (nrow(glossary) == 0) return(list(pptx = pptx, n_slides = 0L))
 
   chunks <- split(glossary, ceiling(seq_len(nrow(glossary)) / max_rows))
   for (i in seq_along(chunks)) {
@@ -413,7 +414,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
     }
     pptx <- add_pptx_sl_table(pptx, chunks[[i]], title = page_label, footer = "")
   }
-  pptx
+  list(pptx = pptx, n_slides = length(chunks))
 }
 
 #' Create a PowerPoint presentation with dose escalation results, including main and extra figures
@@ -443,8 +444,9 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
   # Insert glossary slide(s) after the title slide
   all_codes <- .collect_pptestcds(res_dose_slides)
   glossary <- .build_glossary(all_codes)
-  pptx <- .add_pptx_glossary_slides(pptx, glossary)
-  n_glossary_slides <- if (nrow(glossary) == 0) 0L else ceiling(nrow(glossary) / 20L)
+  glossary_result <- .add_pptx_glossary_slides(pptx, glossary)
+  pptx <- glossary_result$pptx
+  n_glossary_slides <- glossary_result$n_slides
 
   lst_group_slide <- 1 + n_glossary_slides
   group_slides <- numeric()
