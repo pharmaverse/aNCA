@@ -123,7 +123,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
     },
     actionButton(
       ns("copy_plot_code"),
-      label = "Code",
+      label = "Show Code",
       icon = icon("code"),
       class = "btn btn-primary btn-sm",
       width = "100%"
