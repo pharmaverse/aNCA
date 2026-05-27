@@ -24,11 +24,11 @@ set.seed(1)
 
 # --- PK model ----------------------------------------------------------------
 
-pk_aval <- function(time, Tmax, Cmax, lambda_z) {
+pk_aval <- function(time, t_max, c_max, lambda_z) {
   concentration <- ifelse(
-    time <= Tmax,
-    Cmax * (time / Tmax),
-    Cmax * exp(-lambda_z * (time - Tmax))
+    time <= t_max,
+    c_max * (time / t_max),
+    c_max * exp(-lambda_z * (time - t_max))
   )
   ifelse(time < 0, 0, concentration)
 }
@@ -130,7 +130,7 @@ adnca <- crossing(
   ) %>%
   # Concentration based on dose and time
   mutate(
-    AVAL = pk_aval(ARRLT, Tmax = ADOSEDUR, Cmax = 8 * (DOSEA / 10),
+    AVAL = pk_aval(ARRLT, t_max = ADOSEDUR, c_max = 8 * (DOSEA / 10),
                    lambda_z = 0.5),
     AVALU = "ug/mL"
   ) %>%

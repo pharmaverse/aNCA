@@ -275,7 +275,7 @@ SDTM_MAPPING_BY_SECTION <- SDTM_MAPPING_BY_SECTION[c(
 }
 
 .process_imported_mapping <- function(mapping, adnca_data, session,
-                                     mapping_info = MAPPING_INFO) {
+                                      mapping_info = MAPPING_INFO) {
   if (is.null(mapping)) return(character(0))
 
   column_names <- names(adnca_data)
@@ -383,9 +383,78 @@ data_mapping_ui <- function(id) {
   )
 }
 
+#' Populate ADNCA mapping inputs from uploaded data and imported settings.
+#' @noRd
+.populate_adnca_inputs <- function(session, input_ids, adnca_data,
+                                   imported_mapping) {
+  column_names <- names(adnca_data)
+  update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
+
+  if (!"VOLUME" %in% column_names) {
+    updateSelectizeInput(session, "select_VOLUMEU", selected = "")
+  }
+  if (!"WTBL" %in% column_names) {
+    updateSelectizeInput(session, "select_WTBLU", selected = "")
+  }
+
+  mapping <- imported_mapping$mapping
+  if (!is.null(mapping)) {
+    skipped <- .process_imported_mapping(mapping, adnca_data, session)
+    session$userData$mapping_skipped <- skipped
+  }
+}
+
+#' Populate SDTM mapping inputs from uploaded domain data.
+#' @noRd
+.populate_sdtm_inputs <- function(session, sdtm_input_ids, sdtm,
+                                  imported_mapping) {
+  all_cols <- unique(c(
+    names(sdtm$pc), names(sdtm$ex),
+    if (!is.null(sdtm$dm)) names(sdtm$dm) else character(0)
+  ))
+
+  .update_sdtm_selectize_inputs(
+    session, sdtm_input_ids, all_cols, SDTM_MAPPING_INFO
+  )
+
+  if (!"VOLUME" %in% names(sdtm$pc)) {
+    updateSelectizeInput(session, "select_sdtm_VOLUME", selected = "")
+    updateSelectizeInput(session, "select_sdtm_VOLUMEU", selected = "")
+  }
+  if (is.null(sdtm$dm) || !"WTBL" %in% names(sdtm$dm)) {
+    updateSelectizeInput(session, "select_sdtm_WTBL", selected = "")
+    updateSelectizeInput(session, "select_sdtm_WTBLU", selected = "")
+  }
+
+  mapping <- imported_mapping$mapping
+  if (!is.null(mapping)) {
+    sdtm_info_for_import <- SDTM_MAPPING_INFO
+    sdtm_info_for_import$Variable <- paste0(
+      "sdtm_", sdtm_info_for_import$Variable
+    )
+    skipped <- .process_imported_mapping(
+      mapping, sdtm$pc, session, sdtm_info_for_import
+    )
+    session$userData$mapping_skipped <- skipped
+  }
+}
+
+#' Determine the default metabolite selection for ADNCA mode.
+#' @noRd
+.get_adnca_metabolite_selection <- function(imported_mapping, adnca_data,
+                                            param_col) {
+  if (!is.null(imported_mapping$mapping$Metabolites)) {
+    imported_mapping$mapping$Metabolites
+  } else if ("METABFL" %in% names(adnca_data)) {
+    unique(adnca_data[adnca_data$METABFL == "Y", ][[param_col]])
+  } else {
+    NULL
+  }
+}
+
 data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
-                               input_mode = reactive("adnca"),
-                               sdtm_raw = reactive(NULL)) {
+                                input_mode = reactive("adnca"),
+                                sdtm_raw = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -418,25 +487,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     # --- ADNCA: Populate the static inputs with column names ------------------
     observeEvent(c(adnca_data(), imported_mapping()), {
       req(input_mode() == "adnca")
-      column_names <- names(adnca_data())
-      update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
-
-      # Exceptions:
-      # If by default VOLUME is not mapped, then neither is VOLUMEU
-      if (!"VOLUME" %in% column_names) {
-        updateSelectizeInput(session, "select_VOLUMEU", selected = "")
-      }
-      # If by default WTBL is not mapped, then neither is WTBLU
-      if (!"WTBL" %in% column_names) {
-        updateSelectizeInput(session, "select_WTBLU", selected = "")
-      }
-
-      mapping <- imported_mapping()$mapping
-      if (!is.null(mapping)) {
-        # process mapping using settings to override default selections
-        skipped <- .process_imported_mapping(mapping, adnca_data(), session)
-        session$userData$mapping_skipped <- skipped
-      }
+      .populate_adnca_inputs(
+        session, input_ids, adnca_data(), imported_mapping()
+      )
     })
 
     # --- SDTM: Populate inputs from domain data -------------------------------
@@ -444,40 +497,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
       req(input_mode() == "sdtm")
       sdtm <- sdtm_raw()
       req(sdtm)
-
-      # Collect all available columns across domains
-      all_cols <- unique(c(
-        names(sdtm$pc), names(sdtm$ex),
-        if (!is.null(sdtm$dm)) names(sdtm$dm) else character(0)
-      ))
-
-      # Use the SDTM-aware update function that handles the sdtm_ prefix
-      .update_sdtm_selectize_inputs(
-        session, sdtm_input_ids, all_cols, SDTM_MAPPING_INFO
+      .populate_sdtm_inputs(
+        session, sdtm_input_ids, sdtm, imported_mapping()
       )
-
-      # Clear optional fields if not present
-      if (!"VOLUME" %in% names(sdtm$pc)) {
-        updateSelectizeInput(session, "select_sdtm_VOLUME", selected = "")
-        updateSelectizeInput(session, "select_sdtm_VOLUMEU", selected = "")
-      }
-      if (is.null(sdtm$dm) || !"WTBL" %in% names(sdtm$dm)) {
-        updateSelectizeInput(session, "select_sdtm_WTBL", selected = "")
-        updateSelectizeInput(session, "select_sdtm_WTBLU", selected = "")
-      }
-
-      mapping <- imported_mapping()$mapping
-      if (!is.null(mapping)) {
-        # Prefix the mapping info variables to match the sdtm_ input IDs
-        sdtm_info_for_import <- SDTM_MAPPING_INFO
-        sdtm_info_for_import$Variable <- paste0(
-          "sdtm_", sdtm_info_for_import$Variable
-        )
-        skipped <- .process_imported_mapping(
-          mapping, sdtm$pc, session, sdtm_info_for_import
-        )
-        session$userData$mapping_skipped <- skipped
-      }
     })
 
     # Populate the dynamic input Metabolites for ADNCA
@@ -486,13 +508,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
       req(input$select_PARAM != "")
       param_col <- input$select_PARAM
       choices_metab <- unique(adnca_data()[[param_col]])
-      selected_metab <- if (!is.null(imported_mapping()$mapping$Metabolites)) {
-        imported_mapping()$mapping$Metabolites
-      } else if ("METABFL" %in% names(adnca_data())) {
-        unique(adnca_data()[adnca_data()$METABFL == "Y", ][[param_col]])
-      } else {
-        NULL
-      }
+      selected_metab <- .get_adnca_metabolite_selection(
+        imported_mapping(), adnca_data(), param_col
+      )
       updateSelectizeInput(
         session, "select_Metabolites",
         choices = choices_metab, selected = selected_metab
@@ -885,4 +903,3 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
 
   df
 }
-

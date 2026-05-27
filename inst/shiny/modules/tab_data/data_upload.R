@@ -572,6 +572,78 @@ data_upload_server <- function(id) {
 #' @param file_loading_error reactiveVal for error display.
 #' @param session Shiny session.
 #' @param ns Namespace function.
+#' Read a single SDTM domain file, appending errors on failure.
+#' @returns A list with `data` (data.frame or NULL) and `errors`.
+#' @noRd
+.read_sdtm_domain <- function(upload, domain_label, errors) {
+  if (is.null(upload$datapath)) {
+    return(list(data = NULL, errors = errors))
+  }
+  tryCatch({
+    df <- read_pk(upload$datapath)
+    log_success(domain_label, " domain loaded: ", upload$name)
+    list(data = df, errors = errors)
+  }, error = function(e) {
+    errors[[length(errors) + 1]] <- paste0(domain_label, ": ", e$message)
+    list(data = NULL, errors = errors)
+  })
+}
+
+#' Read and merge multiple subject-level upload files.
+#' @returns A list with `data` (merged data.frame or NULL) and `errors`.
+#' @noRd
+.read_subject_level_files <- function(subj_upload, errors) {
+  if (is.null(subj_upload$datapath)) {
+    return(list(data = NULL, errors = errors))
+  }
+  subj_dfs <- list()
+  for (i in seq_along(subj_upload$datapath)) {
+    tryCatch({
+      df <- read_pk(subj_upload$datapath[i])
+      subj_dfs[[length(subj_dfs) + 1]] <- df
+      log_success("Subject-level file loaded: ", subj_upload$name[i])
+    }, error = function(e) {
+      errors[[length(errors) + 1]] <<- paste0(
+        subj_upload$name[i], ": ", e$message
+      )
+    })
+  }
+  dm <- if (length(subj_dfs) > 0) .merge_subject_level_data(subj_dfs)
+  list(data = dm, errors = errors)
+}
+
+#' Build the SDTM result list from parsed domain data.
+#' @returns A list with `sdtm`, `preview`, and `errors`.
+#' @noRd
+.build_sdtm_result <- function(pc, ex, dm, pc_upload, ex_upload,
+                                subj_upload, errors, session) {
+  sdtm <- NULL
+  preview <- adnca_example
+
+  if (!is.null(pc) && !is.null(ex)) {
+    sdtm <- list(pc = pc, ex = ex, dm = dm)
+    preview <- pc
+    filenames <- c(pc_upload$name, ex_upload$name)
+    if (!is.null(subj_upload$name)) {
+      filenames <- c(filenames, subj_upload$name)
+    }
+    session$userData$dataset_filename <- paste(filenames, collapse = ", ")
+    log_success(
+      "SDTM data loaded: PC (", nrow(pc), " rows), EX (", nrow(ex), " rows)",
+      if (!is.null(dm)) paste0(", DM (", nrow(dm), " rows)") else ""
+    )
+  } else if (!is.null(pc) || !is.null(ex)) {
+    missing <- if (is.null(pc)) "PC" else "EX"
+    errors[[length(errors) + 1]] <- paste0(
+      "Both PC and EX domains are required. Missing: ", missing
+    )
+    if (!is.null(pc)) preview <- pc
+    if (!is.null(ex)) preview <- ex
+  }
+
+  list(sdtm = sdtm, preview = preview, errors = errors)
+}
+
 #' @returns A list with `sdtm` (list of pc/ex/dm data.frames or NULL)
 #'   and `preview` (data.frame for the reactable display).
 #' @noRd
@@ -581,47 +653,14 @@ data_upload_server <- function(id) {
                                   session, ns) {
   errors <- list()
 
-  # --- Read PC domain ---------------------------------------------------------
-  pc <- NULL
-  if (!is.null(pc_upload$datapath)) {
-    tryCatch({
-      pc <- read_pk(pc_upload$datapath)
-      log_success("PC domain loaded: ", pc_upload$name)
-    }, error = function(e) {
-      errors[[length(errors) + 1]] <<- paste0("PC: ", e$message)
-    })
-  }
+  pc_result <- .read_sdtm_domain(pc_upload, "PC", errors)
+  errors <- pc_result$errors
 
-  # --- Read EX domain ---------------------------------------------------------
-  ex <- NULL
-  if (!is.null(ex_upload$datapath)) {
-    tryCatch({
-      ex <- read_pk(ex_upload$datapath)
-      log_success("EX domain loaded: ", ex_upload$name)
-    }, error = function(e) {
-      errors[[length(errors) + 1]] <<- paste0("EX: ", e$message)
-    })
-  }
+  ex_result <- .read_sdtm_domain(ex_upload, "EX", errors)
+  errors <- ex_result$errors
 
-  # --- Read and merge subject-level files -------------------------------------
-  dm <- NULL
-  if (!is.null(subj_upload$datapath)) {
-    subj_dfs <- list()
-    for (i in seq_along(subj_upload$datapath)) {
-      tryCatch({
-        df <- read_pk(subj_upload$datapath[i])
-        subj_dfs[[length(subj_dfs) + 1]] <- df
-        log_success("Subject-level file loaded: ", subj_upload$name[i])
-      }, error = function(e) {
-        errors[[length(errors) + 1]] <<- paste0(
-          subj_upload$name[i], ": ", e$message
-        )
-      })
-    }
-    if (length(subj_dfs) > 0) {
-      dm <- .merge_subject_level_data(subj_dfs)
-    }
-  }
+  subj_result <- .read_subject_level_files(subj_upload, errors)
+  errors <- subj_result$errors
 
   # --- Handle settings YAML ---------------------------------------------------
   if (!is.null(settings_upload$datapath)) {
@@ -646,38 +685,18 @@ data_upload_server <- function(id) {
     }
   }
 
-  # --- Build result -----------------------------------------------------------
-  sdtm <- NULL
-  preview <- adnca_example # fallback
-
-  if (!is.null(pc) && !is.null(ex)) {
-    sdtm <- list(pc = pc, ex = ex, dm = dm)
-    preview <- pc # show PC data in the preview table
-    filenames <- c(pc_upload$name, ex_upload$name)
-    if (!is.null(subj_upload$name)) {
-      filenames <- c(filenames, subj_upload$name)
-    }
-    session$userData$dataset_filename <- paste(filenames, collapse = ", ")
-    log_success(
-      "SDTM data loaded: PC (", nrow(pc), " rows), EX (", nrow(ex), " rows)",
-      if (!is.null(dm)) paste0(", DM (", nrow(dm), " rows)") else ""
-    )
-  } else if (!is.null(pc) || !is.null(ex)) {
-    # One domain uploaded but not the other
-    missing <- if (is.null(pc)) "PC" else "EX"
-    errors[[length(errors) + 1]] <- paste0(
-      "Both PC and EX domains are required. Missing: ", missing
-    )
-    if (!is.null(pc)) preview <- pc
-    if (!is.null(ex)) preview <- ex
-  }
+  result <- .build_sdtm_result(
+    pc_result$data, ex_result$data, subj_result$data,
+    pc_upload, ex_upload, subj_upload, errors, session
+  )
+  errors <- result$errors
 
   if (length(errors) > 0) {
     file_loading_error(paste(errors, collapse = "<br>"))
     log_error("SDTM upload errors: ", paste(errors, collapse = "; "))
   }
 
-  list(sdtm = sdtm, preview = preview)
+  list(sdtm = result$sdtm, preview = result$preview)
 }
 
 #' Merge multiple subject-level data.frames by STUDYID + USUBJID.

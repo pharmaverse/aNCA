@@ -315,7 +315,7 @@ describe("pc_to_PKNCAconc", {
   it("derives ATPTREF from DOSNOA", {
     result <- pc_to_PKNCAconc(pc_mini, ex_mini)
     expect_equal(result$data$ATPTREF, c("DOSE 1", "DOSE 1", "DOSE 1",
-                                         "DOSE 1", "DOSE 2"))
+                                        "DOSE 1", "DOSE 2"))
   })
 
   it("parses NRRLT from PCELTM", {
