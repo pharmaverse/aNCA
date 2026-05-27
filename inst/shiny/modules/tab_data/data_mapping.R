@@ -442,7 +442,7 @@ data_mapping_ui <- function(id) {
 #' Determine the default metabolite selection for ADNCA mode.
 #' @noRd
 .get_adnca_metabolite <- function(imported_mapping, adnca_data,
-                                            param_col) {
+                                  param_col) {
   if (!is.null(imported_mapping$mapping$Metabolites)) {
     imported_mapping$mapping$Metabolites
   } else if ("METABFL" %in% names(adnca_data)) {
