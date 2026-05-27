@@ -77,7 +77,8 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
       allowed <- c(allowed, default_name)
     }
   }
-  allowed
+  # Also include associated _code entries for each allowed plot
+  c(allowed, paste0(allowed, "_code"))
 }
 
 # Check if an object is a saveable leaf (ggplot, data.frame, plotly, or code string)
