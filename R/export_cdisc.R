@@ -567,22 +567,21 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   exclude_vals[is.na(exclude_vals)] <- ""
 
   # Add CRITy/CRITyFL columns for each flag rule
+  # CRITyFL = "Y" when the criterion is violated (parameter excluded)
+  # CRITy = rule description only for violated rows, empty otherwise
   if (!is.null(flag_rules) && length(flag_rules) > 0) {
     for (i in seq_along(flag_rules)) {
       rule_msg <- flag_rules[i]
       crit_col <- paste0("CRIT", i)
       critfl_col <- paste0("CRIT", i, "FL")
 
-      # CRITy: the criterion description (constant for all rows)
-      data[[crit_col]] <- rule_msg
-
-      # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
       # Split on "; " (PKNCA separator) and do exact element matching to avoid
       # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
       is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
         rule_msg %in% parts
       }, logical(1))
-      data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
+      data[[critfl_col]] <- ifelse(is_violated, "Y", "")
+      data[[crit_col]] <- ifelse(is_violated, rule_msg, "")
     }
   }
 

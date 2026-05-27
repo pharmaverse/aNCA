@@ -71,6 +71,9 @@
 
 ## Bug fixes
 
+### CDISC Export
+* `CRITxFL` semantics inverted to match CDISC conventions — `"Y"` now means criterion violated (parameter excluded), empty means satisfied. `CRITx` only populated for violated rows (#1278)
+
 ### NCA Calculations
 * Renal clearance (RENALCL) removed from direct PK calculations (inaccurate in PKNCA) — use ratio table instead (#781)
 * Multidose parameters (MRTMDO, MRTMDP, VSSMDO, VSSMDP, TAT) removed from direct calculations (#869)
