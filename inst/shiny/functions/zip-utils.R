@@ -93,8 +93,15 @@ save_output <- function(
   obj_names = NULL
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
+  message("[DEBUG save_output] path=", output_path,
+          " names=", paste(names(output), collapse = ", "),
+          " obj_names=", paste(obj_names, collapse = ", "))
   for (name in names(output)) {
     x <- output[[name]]
+    message("[DEBUG save_output] processing '", name,
+            "' class=", paste(class(x), collapse = ","),
+            " is.leaf=", .is_leaf(x),
+            " is.list=", is.list(x))
 
     if (!.is_leaf(x) && is.list(x)) {
       save_output(
@@ -102,6 +109,7 @@ save_output <- function(
         ggplot_formats, table_formats, obj_names
       )
     } else if (is.null(obj_names) || name %in% obj_names) {
+      message("[DEBUG save_output] dispatching '", name, "'")
       save_dispatch(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats
@@ -109,9 +117,15 @@ save_output <- function(
       # Also save associated _code entry if it exists in the parent list
       code_name <- paste0(name, "_code")
       code_entry <- output[[code_name]]
+      message("[DEBUG save_output] checking code companion '", code_name,
+              "' exists=", !is.null(code_entry))
       if (!is.null(code_entry) && is.character(code_entry) && length(code_entry) == 1) {
+        message("[DEBUG save_output] writing code file: ",
+                paste0(output_path, "/", code_name, ".R"))
         writeLines(code_entry, paste0(output_path, "/", code_name, ".R"))
       }
+    } else {
+      message("[DEBUG save_output] SKIPPED '", name, "' (not in obj_names)")
     }
   }
 }
@@ -407,11 +421,19 @@ prepare_export_files <- function(target_dir,
 
   # Filter exploration list to only include allowed plots
   results <- session$userData$results
+  message("[DEBUG export] selected_types=", paste(selected_types, collapse = ", "))
+  message("[DEBUG export] custom_names=", paste(names(custom_names), "=", custom_names, collapse = ", "))
+  message("[DEBUG export] obj_names=", paste(obj_names, collapse = ", "))
   if (!is.null(results$exploration)) {
+    message("[DEBUG export] exploration names BEFORE filter: ",
+            paste(names(results$exploration), collapse = ", "))
     allowed <- .build_exploration_allowlist(selected_types, custom_names)
+    message("[DEBUG export] allowed=", paste(allowed, collapse = ", "))
     results$exploration <- results$exploration[
       intersect(names(results$exploration), allowed)
     ]
+    message("[DEBUG export] exploration names AFTER filter: ",
+            paste(names(results$exploration), collapse = ", "))
   }
 
   save_output(
