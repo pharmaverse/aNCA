@@ -49,6 +49,9 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
     save_table_format(x, file_name, table_formats)
   } else if (inherits(x, "plotly")) {
     save_plotly_format(x, file_name, "html")
+  } else if (is.character(x) && length(x) == 1) {
+    # R code strings (e.g., plot code) — save as .R file
+    writeLines(x, paste0(file_name, ".R"))
   } else {
     stop("Unsupported output type object in the list: ", paste0(class(x), collapse = ", "))
   }
@@ -77,9 +80,10 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   allowed
 }
 
-# Check if an object is a saveable leaf (ggplot, data.frame, or plotly)
+# Check if an object is a saveable leaf (ggplot, data.frame, plotly, or code string)
 .is_leaf <- function(x) {
-  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly")
+  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly") ||
+    (is.character(x) && length(x) == 1)
 }
 
 save_output <- function(

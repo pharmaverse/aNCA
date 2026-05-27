@@ -59,6 +59,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
     mean_counter <- reactiveVal(0L)
     qc_counter <- reactiveVal(0L)
 
+    # Counters for saved plot code files
+    indiv_code_counter <- reactiveVal(0L)
+    mean_code_counter <- reactiveVal(0L)
+
     # Track custom plot names mapped to their base type for export filtering
     # Named character vector: name = base_type (e.g., c(my_plot = "individual"))
     session$userData$exploration_custom_names <- reactiveVal(character(0))
@@ -226,6 +230,91 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       showNotification("Code copied to clipboard", type = "message", duration = 3)
     })
 
+    # --- Save Plot Code handlers ---
+
+    # Track which code type triggered the save modal
+    pending_code_type <- reactiveVal(NULL)
+
+    .show_save_code_modal <- function(default_name) {
+      showModal(modalDialog(
+        title = "Save Plot Code",
+        textInput(ns("save_code_name"), "File name:", value = default_name),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton(ns("confirm_save_code"), "Save",
+                       class = "btn btn-primary")
+        ),
+        size = "s",
+        easyClose = TRUE
+      ))
+    }
+
+    observeEvent(individual_sidebar$save_plot_code(), {
+      req(pknca_data(), individual_inputs())
+      pending_code_type("individual")
+      .show_save_code_modal(
+        paste0("individual_plot_code", indiv_code_counter() + 1L)
+      )
+    })
+
+    observeEvent(mean_sidebar$save_plot_code(), {
+      req(pknca_data(), mean_inputs())
+      pending_code_type("mean")
+      .show_save_code_modal(
+        paste0("mean_plot_code", mean_code_counter() + 1L)
+      )
+    })
+
+    observeEvent(input$confirm_save_code, {
+      raw_name <- input$save_code_name
+      code_name <- gsub("[^A-Za-z0-9_-]", "_", raw_name)
+      req(nzchar(code_name))
+
+      if (code_name != raw_name) {
+        showNotification(
+          paste0("Name sanitized to '", code_name, "'"),
+          type = "warning", duration = 4
+        )
+      }
+
+      type <- pending_code_type()
+      inputs_list <- switch(type,
+        individual = individual_inputs(),
+        mean = mean_inputs()
+      )
+      req(inputs_list)
+
+      code <- build_plot_code(type, inputs_list, session)
+
+      is_overwrite <- !is.null(
+        session$userData$results$exploration[[code_name]]
+      )
+
+      if (!is_overwrite) {
+        if (type == "individual") {
+          indiv_code_counter(indiv_code_counter() + 1L)
+        } else {
+          mean_code_counter(mean_code_counter() + 1L)
+        }
+      }
+
+      session$userData$results$exploration[[code_name]] <- code
+
+      existing <- session$userData$exploration_custom_names()
+      existing[code_name] <- type
+      session$userData$exploration_custom_names(existing)
+
+      removeModal()
+
+      msg <- if (is_overwrite) {
+        paste0("Plot code '", code_name, "' updated")
+      } else {
+        paste0("Plot code saved as '", code_name, "'")
+      }
+      showNotification(msg, type = "message", duration = 3)
+      log_info("Saved plot code: {code_name}")
+    }, ignoreInit = TRUE)
+
     # --- Saved Outputs gallery ---
 
     .get_plot_obj <- function(plot_name) {
@@ -234,6 +323,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     .on_remove <- function(plot_name) {
       session$userData$results$exploration[[plot_name]] <- NULL
+      # Also remove auto-saved code file if it exists
+      code_name <- paste0(plot_name, "_code")
+      session$userData$results$exploration[[code_name]] <- NULL
+
       existing <- session$userData$exploration_custom_names()
       existing <- existing[names(existing) != plot_name]
       session$userData$exploration_custom_names(existing)
@@ -343,6 +436,18 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       }
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
+
+      # Auto-save plot code alongside the plot (individual/mean only)
+      if (type %in% c("individual", "mean")) {
+        inputs_list <- switch(type,
+          individual = individual_inputs(),
+          mean = mean_inputs()
+        )
+        code_name <- paste0(plot_name, "_code")
+        code <- build_plot_code(type, inputs_list, session)
+        session$userData$results$exploration[[code_name]] <- code
+      }
+
       existing <- session$userData$exploration_custom_names()
       existing[plot_name] <- type
       session$userData$exploration_custom_names(existing)

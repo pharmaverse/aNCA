@@ -24,7 +24,14 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
       ns("copy_plot_code"),
       label = "Copy Plot Code",
       icon = icon("code"),
-      class = "btn btn-primary btn-sm",
+      class = "btn btn-outline-secondary btn-sm",
+      width = "100%"
+    ),
+    actionButton(
+      ns("save_plot_code"),
+      label = "Save Plot Code",
+      icon = icon("file-code"),
+      class = "btn btn-outline-secondary btn-sm",
       width = "100%"
     ),
     extra_ui,
@@ -294,7 +301,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
         )
       }),
       add_to_exports = reactive(input$add_to_exports),
-      copy_plot_code = reactive(input$copy_plot_code)
+      copy_plot_code = reactive(input$copy_plot_code),
+      save_plot_code = reactive(input$save_plot_code)
     )
   })
 }

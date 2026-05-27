@@ -41,10 +41,10 @@ build_plot_code <- function(plot_type, inputs, session) {
   time_duplicate_rows <- session$userData$time_duplicate_rows
 
   # --- Data loading ---
+  dataset_filename <- session$userData$dataset_filename %||% "input_data.csv"
   data_section <- paste0(
     '# Load raw data\n',
-    '# NOTE: Update this path to point to your input dataset\n',
-    'data_path <- "input_data.csv"\n',
+    'data_path <- "', dataset_filename, '"\n',
     'adnca_data <- aNCA::read_pk(data_path)\n'
   )
 
