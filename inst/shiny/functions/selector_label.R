@@ -58,6 +58,12 @@ selector_label <- function(input, output, session,
       parsed_info <- lapply(choices_df$PPTESTCD, parse_interval_parameter)
       choices_df$base_pptestcd <- vapply(parsed_info, `[[`, "base", FUN.VALUE = "")
       choices_df$is_interval <- vapply(parsed_info, `[[`, "is_interval", FUN.VALUE = TRUE)
+      choices_df$start_dose <- vapply(parsed_info, function(x) {
+        if (is.null(x$start)) NA_real_ else x$start
+      }, FUN.VALUE = 0)
+      choices_df$end_dose <- vapply(parsed_info, function(x) {
+        if (is.null(x$end)) NA_real_ else x$end
+      }, FUN.VALUE = 0)
 
       choices_df <- choices_df %>%
         left_join(
@@ -65,10 +71,11 @@ selector_label <- function(input, output, session,
           by = c("base_pptestcd" = "PPTESTCD")
         ) %>%
         mutate(
-          desc = ifelse(
-            is_interval & !is.na(PPTEST),
-            paste0(PPTEST, " (", sub(paste0("^", base_pptestcd, "_"), "", PPTESTCD), ")"),
-            ifelse(!is.na(PPTEST), PPTEST, PPTESTCD)
+          desc = case_when(
+            is_interval & !is.na(PPTEST) ~ gsub("T1", as.character(start_dose),
+                                                 gsub("T2", as.character(end_dose), PPTEST)),
+            !is.na(PPTEST) ~ PPTEST,
+            TRUE ~ PPTESTCD
           )
         ) %>%
         rename(val = PPTESTCD)

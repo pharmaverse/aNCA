@@ -169,8 +169,21 @@ add_label_attribute <- function(df, myres) {
         !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
         TRUE ~ PPTESTCD
       ),
-      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
+      PPTESTCD_cdisc_raw = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
+      PPTESTCD_cdisc = PPTESTCD_cdisc_raw
     ) %>%
+    rowwise() %>%
+    mutate(
+      PPTESTCD_cdisc = if (type_interval == "manual") {
+        label <- PPTESTCD_cdisc_raw
+        label <- gsub("T1", as.character(start), label)
+        label <- gsub("T2", as.character(end), label)
+        label
+      } else {
+        PPTESTCD_cdisc
+      }
+    ) %>%
+    ungroup() %>%
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)

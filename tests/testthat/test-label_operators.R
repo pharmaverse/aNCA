@@ -119,7 +119,7 @@ describe("add_label_attribute", {
 
     expect_equal(attr(df_result[["CMAX[ng/mL]"]], "label"), "Max Conc")
     expect_equal(attr(df_result[["TMAX[hr]"]], "label"), "Time of CMAX Observation")
-    expect_equal(attr(df_result[["AUCINT_0-2[hr*ng/mL]"]], "label"), "AUC from T1 to T2")
+    expect_equal(attr(df_result[["AUCINT_0-2[hr*ng/mL]"]], "label"), "AUC from 0 to 2")
     expect_null(attr(df_result[["RandomCol"]], "label"))
   })
 
@@ -143,7 +143,7 @@ describe("add_label_attribute", {
     df_result_mod <- add_label_attribute(df_input_mod, myres_mod)
 
     expect_equal(attr(df_result_mod[["CMAX"]], "label"), "Max Conc")
-    expect_equal(attr(df_result_mod[["AUCINT_0-2"]], "label"), "AUC from T1 to T2")
+    expect_equal(attr(df_result_mod[["AUCINT_0-2"]], "label"), "AUC from 0 to 2")
   })
 
   it("handles manual intervals with NA PPSTRESU without appending NA to names", {
@@ -175,7 +175,7 @@ describe("add_label_attribute", {
       `TLST[hr]` = "Time of Last Nonzero Conc",
       `CLST[ng/mL]` = "Last Nonzero Conc",
       `LAMZ[1/hr]` = "Lambda z",
-      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2"
+      `AUCINT_0-2[hr*ng/mL]` = "AUC from 0 to 2"
     )
 
     df_input <- as.data.frame(matrix(NA, ncol = length(expected_labels_map), nrow = 1))

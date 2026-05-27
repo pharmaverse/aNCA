@@ -169,14 +169,16 @@ flexible_violinboxplot <- function(res_nca,
 #' @returns Formatted y-axis label.
 #' @noRd
 .build_ylabel <- function(parameter, unit) {
-  # Resolve interval parameter label (e.g. AUCINT_0-24 -> "AUC from T1 to T2 (0-24)")
+  # Resolve interval parameter label (e.g. AUCINT_0-24 -> "AUC from 0 to 24")
   parsed <- parse_interval_parameter(parameter)
   if (parsed$is_interval) {
     label <- metadata_nca_parameters$PPTEST[
       match(parsed$base, metadata_nca_parameters$PPTESTCD)
     ]
     if (!is.na(label)) {
-      parameter <- paste0(label, " (", parsed$start, "–", parsed$end, ")")
+      label <- gsub("T1", as.character(parsed$start), label)
+      label <- gsub("T2", as.character(parsed$end), label)
+      parameter <- label
     }
   }
 
