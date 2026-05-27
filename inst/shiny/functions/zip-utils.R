@@ -103,10 +103,14 @@ save_output <- function(
         ggplot_formats, table_formats, obj_names
       )
     } else if (is.null(obj_names) || name %in% obj_names) {
+      message("[DEBUG save_output] SAVING '", name, "' class=",
+              paste(class(x), collapse = ","))
       save_dispatch(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats
       )
+    } else {
+      message("[DEBUG save_output] SKIPPED '", name, "' not in obj_names")
     }
   }
 }
@@ -404,25 +408,42 @@ prepare_export_files <- function(target_dir,
   ))
 
   # Filter exploration list to only include allowed plots.
-  # Work on a snapshot so we don't mutate session data.
   results <- session$userData$results
-  exploration_copy <- results$exploration
-  if (!is.null(exploration_copy)) {
+  exploration <- results$exploration
+  message("[DEBUG] class(results)=", paste(class(results), collapse = ","))
+  message("[DEBUG] class(exploration)=", paste(class(exploration), collapse = ","))
+  message("[DEBUG] names(exploration)=", paste(names(exploration), collapse = ", "))
+
+  if (!is.null(exploration)) {
     allowed <- .build_exploration_allowlist(selected_types, custom_names)
-    exploration_copy <- exploration_copy[
-      intersect(names(exploration_copy), allowed)
-    ]
+    message("[DEBUG] allowed=", paste(allowed, collapse = ", "))
+    keep <- intersect(names(exploration), allowed)
+    message("[DEBUG] keep=", paste(keep, collapse = ", "))
+    exploration <- exploration[keep]
+    message("[DEBUG] after filter names=", paste(names(exploration), collapse = ", "))
+
+    # Check each entry
+    for (n in names(exploration)) {
+      message("[DEBUG] entry '", n, "' class=", paste(class(exploration[[n]]), collapse = ","),
+              " is.character=", is.character(exploration[[n]]),
+              " is.leaf=", .is_leaf(exploration[[n]]))
+    }
   }
 
-  # Build a plain list for save_output with the filtered exploration
+  # Build a plain list for save_output
   export_list <- list()
   for (key in names(results)) {
     if (key == "exploration") {
-      export_list[[key]] <- exploration_copy
+      export_list[[key]] <- exploration
     } else {
       export_list[[key]] <- results[[key]]
     }
   }
+
+  message("[DEBUG] obj_names=", paste(obj_names, collapse = ", "))
+  message("[DEBUG] export_list names=", paste(names(export_list), collapse = ", "))
+  message("[DEBUG] export_list$exploration names=",
+          paste(names(export_list$exploration), collapse = ", "))
 
   save_output(
     output = export_list,
