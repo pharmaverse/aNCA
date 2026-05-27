@@ -398,7 +398,10 @@ prepare_export_files <- function(target_dir,
   # Keep custom names whose type maps to a selected tree item
   selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
   custom_names <- all_custom[all_custom %in% selected_types]
-  obj_names <- unique(c(input$res_tree, names(custom_names)))
+  custom_plot_names <- names(custom_names)
+  obj_names <- unique(c(
+    input$res_tree, custom_plot_names, paste0(custom_plot_names, "_code")
+  ))
 
   # Filter exploration list to only include allowed plots
   results <- session$userData$results

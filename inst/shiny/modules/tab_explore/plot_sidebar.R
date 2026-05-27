@@ -20,13 +20,6 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
       class = "btn btn-primary btn-sm",
       width = "100%"
     ),
-    actionButton(
-      ns("copy_plot_code"),
-      label = "Code",
-      icon = icon("code"),
-      class = "btn btn-primary btn-sm",
-      width = "100%"
-    ),
     extra_ui,
     selectInput(
       ns("palette"),
@@ -127,7 +120,14 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
         checkboxInput(ns("ci"), label = "Show 95% CI", value = FALSE),
         helpText("Mean values are not displayed if n < 3 for a time point.")
       )
-    }
+    },
+    actionButton(
+      ns("copy_plot_code"),
+      label = "Code",
+      icon = icon("code"),
+      class = "btn btn-primary btn-sm",
+      width = "100%"
+    )
   )
 }
 
