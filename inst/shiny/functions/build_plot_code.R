@@ -29,10 +29,10 @@ build_plot_code <- function(plot_type, inputs, session) {
     paste0("c(", paste(x, collapse = ", "), ")")
   }
 
-  # Serialize an R object to code using the package's clean_deparse
+  # Serialize an R object to reproducible R code
   fmt_obj <- function(x) {
     if (is.null(x)) return("NULL")
-    aNCA:::clean_deparse(x, max_per_line = 15)
+    paste(deparse(x, width.cutoff = 500), collapse = "\n")
   }
 
   # --- Extract session data ---
