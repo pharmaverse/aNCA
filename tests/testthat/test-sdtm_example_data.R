@@ -79,7 +79,7 @@ describe("SDTM example: pc_example", {
   })
 })
 
-describe("SDTM example: timing consistency", {
+describe("SDTM example: timing consistency", { #nolint
   .load_sdtm_test_data()
 
   it("preserves inter-sample time intervals per subject", {
