@@ -77,7 +77,8 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
       allowed <- c(allowed, default_name)
     }
   }
-  allowed
+  # Include associated _code entries for each allowed plot
+  c(allowed, paste0(allowed, "_code"))
 }
 
 # Check if an object is a saveable leaf (ggplot, data.frame, plotly, or code string)
@@ -93,15 +94,8 @@ save_output <- function(
   obj_names = NULL
 ) {
   dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
-  message("[DEBUG save_output] path=", output_path,
-          " names=", paste(names(output), collapse = ", "),
-          " obj_names=", paste(obj_names, collapse = ", "))
   for (name in names(output)) {
     x <- output[[name]]
-    message("[DEBUG save_output] processing '", name,
-            "' class=", paste(class(x), collapse = ","),
-            " is.leaf=", .is_leaf(x),
-            " is.list=", is.list(x))
 
     if (!.is_leaf(x) && is.list(x)) {
       save_output(
@@ -109,23 +103,10 @@ save_output <- function(
         ggplot_formats, table_formats, obj_names
       )
     } else if (is.null(obj_names) || name %in% obj_names) {
-      message("[DEBUG save_output] dispatching '", name, "'")
       save_dispatch(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats
       )
-      # Also save associated _code entry if it exists in the parent list
-      code_name <- paste0(name, "_code")
-      code_entry <- output[[code_name]]
-      message("[DEBUG save_output] checking code companion '", code_name,
-              "' exists=", !is.null(code_entry))
-      if (!is.null(code_entry) && is.character(code_entry) && length(code_entry) == 1) {
-        message("[DEBUG save_output] writing code file: ",
-                paste0(output_path, "/", code_name, ".R"))
-        writeLines(code_entry, paste0(output_path, "/", code_name, ".R"))
-      }
-    } else {
-      message("[DEBUG save_output] SKIPPED '", name, "' (not in obj_names)")
     }
   }
 }
@@ -417,27 +398,34 @@ prepare_export_files <- function(target_dir,
   # Keep custom names whose type maps to a selected tree item
   selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
   custom_names <- all_custom[all_custom %in% selected_types]
-  obj_names <- unique(c(input$res_tree, names(custom_names)))
+  custom_plot_names <- names(custom_names)
+  obj_names <- unique(c(
+    input$res_tree, custom_plot_names, paste0(custom_plot_names, "_code")
+  ))
 
-  # Filter exploration list to only include allowed plots
+  # Filter exploration list to only include allowed plots.
+  # Work on a snapshot so we don't mutate session data.
   results <- session$userData$results
-  message("[DEBUG export] selected_types=", paste(selected_types, collapse = ", "))
-  message("[DEBUG export] custom_names=", paste(names(custom_names), "=", custom_names, collapse = ", "))
-  message("[DEBUG export] obj_names=", paste(obj_names, collapse = ", "))
-  if (!is.null(results$exploration)) {
-    message("[DEBUG export] exploration names BEFORE filter: ",
-            paste(names(results$exploration), collapse = ", "))
+  exploration_copy <- results$exploration
+  if (!is.null(exploration_copy)) {
     allowed <- .build_exploration_allowlist(selected_types, custom_names)
-    message("[DEBUG export] allowed=", paste(allowed, collapse = ", "))
-    results$exploration <- results$exploration[
-      intersect(names(results$exploration), allowed)
+    exploration_copy <- exploration_copy[
+      intersect(names(exploration_copy), allowed)
     ]
-    message("[DEBUG export] exploration names AFTER filter: ",
-            paste(names(results$exploration), collapse = ", "))
+  }
+
+  # Build a plain list for save_output with the filtered exploration
+  export_list <- list()
+  for (key in names(results)) {
+    if (key == "exploration") {
+      export_list[[key]] <- exploration_copy
+    } else {
+      export_list[[key]] <- results[[key]]
+    }
   }
 
   save_output(
-    output = results,
+    output = export_list,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,

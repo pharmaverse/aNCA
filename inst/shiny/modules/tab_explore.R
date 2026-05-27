@@ -359,8 +359,6 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       }
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
-      message("[DEBUG] Saved plot: ", plot_name,
-              " class=", paste(class(plot_obj), collapse = ","))
 
       # Auto-save plot code alongside the plot (individual/mean only)
       if (type %in% c("individual", "mean")) {
@@ -371,14 +369,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         code_name <- paste0(plot_name, "_code")
         code <- build_plot_code(type, inputs_list, session)
         session$userData$results$exploration[[code_name]] <- code
-        message("[DEBUG] Saved code: ", code_name,
-                " length=", nchar(code),
-                " is.character=", is.character(code),
-                " len=", length(code))
       }
-
-      message("[DEBUG] exploration names after save: ",
-              paste(names(session$userData$results$exploration), collapse = ", "))
 
       existing <- session$userData$exploration_custom_names()
       existing[plot_name] <- type
