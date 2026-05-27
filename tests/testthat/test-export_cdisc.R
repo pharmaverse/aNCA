@@ -1001,17 +1001,17 @@ describe("export_cdisc: PKSUM1RS column", {
     expect_equal(adnca$PKSUM1RS[c(1, 2)], c("Protocol deviation", "Protocol deviation"))
   })
 
-  it("populates PKSUM1RS for half-life exclusions", {
+  it("PKSUM1RS is empty for half-life-only exclusions without a general reason", {
     modified <- test_pknca_res
     modified$data$conc$data$is.excluded.hl <- FALSE
     modified$data$conc$data$is.excluded.hl[3] <- TRUE
     result <- export_cdisc(modified)
     adnca <- result$adnca
     expect_equal(adnca$PKSUM1F[3], "Y")
-    expect_equal(adnca$PKSUM1RS[3], "Half-life point exclusion")
+    expect_equal(adnca$PKSUM1RS[3], "")
   })
 
-  it("concatenates general and half-life exclusion reasons", {
+  it("preserves general exclusion reason when half-life exclusion also applies", {
     modified <- test_pknca_res
     excl_list <- list(
       list(
@@ -1024,9 +1024,6 @@ describe("export_cdisc: PKSUM1RS column", {
     result <- export_cdisc(modified)
     adnca <- result$adnca
     expect_equal(adnca$PKSUM1F[3], "Y")
-    expect_equal(
-      adnca$PKSUM1RS[3],
-      "Protocol deviation; Half-life point exclusion"
-    )
+    expect_equal(adnca$PKSUM1RS[3], "Protocol deviation")
   })
 })

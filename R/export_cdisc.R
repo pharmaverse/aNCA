@@ -400,17 +400,6 @@ find_common_prefix <- function(strings) {
   } else {
     rep("", nrow(data))
   }
-  if ("is.excluded.hl" %in% names(data)) {
-    hl_reason <- "Half-life point exclusion"
-    reason <- ifelse(
-      data$is.excluded.hl & reason == "", hl_reason,
-      ifelse(
-        data$is.excluded.hl & reason != "",
-        paste0(reason, "; ", hl_reason),
-        reason
-      )
-    )
-  }
   ifelse(pksum1f == "Y", reason, "")
 }
 
