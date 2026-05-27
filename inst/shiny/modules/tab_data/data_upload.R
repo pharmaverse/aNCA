@@ -616,7 +616,7 @@ data_upload_server <- function(id) {
 #' @returns A list with `sdtm`, `preview`, and `errors`.
 #' @noRd
 .build_sdtm_result <- function(pc, ex, dm, pc_upload, ex_upload,
-                                subj_upload, errors, session) {
+                               subj_upload, errors, session) {
   sdtm <- NULL
   preview <- adnca_example
 
