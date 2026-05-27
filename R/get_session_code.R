@@ -213,9 +213,20 @@ get_settings_code <- function(
   settings_file_path,
   data_path,
   output_path = "settings_code.R",
-  template_path = system.file("www/templates/script_template.R", package = "aNCA")
+  template_path = NULL
 ) {
   settings <- read_settings(settings_file_path)
+
+  # Auto-select template based on input_mode if not explicitly provided
+  if (is.null(template_path)) {
+    mode <- settings[["input_mode"]] %||% "adnca"
+    template_file <- if (identical(mode, "sdtm")) {
+      "www/templates/script_template_sdtm.R"
+    } else {
+      "www/templates/script_template.R"
+    }
+    template_path <- system.file(template_file, package = "aNCA")
+  }
 
   session <- list(
     settings = settings[["settings"]],
@@ -228,7 +239,8 @@ get_settings_code <- function(
     extra_vars_to_keep = c(
       settings[["mapping"]][["Grouping_Variables"]], "DOSEA", "ATPTREF", "ROUTE"
     ),
-    time_duplicate_rows = settings[["time_duplicate_keys"]]
+    time_duplicate_rows = settings[["time_duplicate_keys"]],
+    sdtm_metabolites = settings[["sdtm_metabolites"]]
   )
 
   get_code(
