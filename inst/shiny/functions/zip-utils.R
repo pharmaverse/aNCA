@@ -49,7 +49,7 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
     save_table_format(x, file_name, table_formats)
   } else if (inherits(x, "plotly")) {
     save_plotly_format(x, file_name, "html")
-  } else if (is.character(x) && length(x) == 1) {
+  } else if (is.character(x) && length(x) == 1 && grepl("_code$", file_name)) {
     writeLines(x, paste0(file_name, ".R"))
   } else {
     stop("Unsupported output type object in the list: ", paste0(class(x), collapse = ", "))

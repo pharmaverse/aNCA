@@ -233,6 +233,8 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       .show_code_modal(code)
     })
 
+    # Uses deprecated execCommand('copy') via a hidden textarea because
+    # navigator.clipboard.writeText() fails with R code containing $ and backticks.
     observeEvent(input$clipboard_copy, {
       textarea_id <- ns("code_textarea")
       shinyjs::runjs(paste0(

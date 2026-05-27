@@ -9,7 +9,7 @@
 #' @param inputs List of current sidebar input values.
 #' @param session Shiny session object (provides mapping, filters, etc.).
 #'
-#' @return A single character string of R code.
+#' @returns A single character string of R code.
 build_plot_code <- function(plot_type, inputs, session) {
   # Format helpers: quote R objects for code output
   fmt_chr <- function(x) {
@@ -19,7 +19,8 @@ build_plot_code <- function(plot_type, inputs, session) {
   }
 
   fmt_lgl <- function(x) {
-    if (is.null(x) || !is.logical(x)) return("FALSE")
+    if (is.null(x)) return("NULL")
+    if (!is.logical(x)) return("FALSE")
     if (x) "TRUE" else "FALSE"
   }
 
@@ -94,9 +95,8 @@ build_plot_code <- function(plot_type, inputs, session) {
   }
 
   # --- Plot function call ---
-  threshold_code <- fmt_num(inputs$threshold_value)
-
   if (plot_type == "individual") {
+    threshold_code <- fmt_num(inputs$threshold_value)
     plot_call <- paste0(
       'p <- aNCA::exploration_individualplot(\n',
       '  pknca_data = pknca_data,\n',
@@ -118,6 +118,7 @@ build_plot_code <- function(plot_type, inputs, session) {
       ')'
     )
   } else if (plot_type == "mean") {
+    threshold_code <- fmt_num(inputs$threshold_value)
     plot_call <- paste0(
       'p <- aNCA::exploration_meanplot(\n',
       '  pknca_data = pknca_data,\n',
@@ -164,8 +165,8 @@ build_plot_code <- function(plot_type, inputs, session) {
           fmt_chr(inputs$pcspec), ', ]\n'
         )
       } else "",
-      '\nshow_pk_samples <- "PK Samples" %in% ', fmt_chr(inputs$show_samples_doses), '\n',
-      'show_doses <- "Doses" %in% ', fmt_chr(inputs$show_samples_doses), '\n',
+      '\nshow_pk_samples <- ', fmt_lgl("PK Samples" %in% inputs$show_samples_doses), '\n',
+      'show_doses <- ', fmt_lgl("Doses" %in% inputs$show_samples_doses), '\n',
       '\n',
       'dose_col <- pknca_data$dose$columns$dose\n',
       'doseu_col <- pknca_data$dose$columns$doseu\n',
@@ -188,6 +189,8 @@ build_plot_code <- function(plot_type, inputs, session) {
       '  as_plotly = FALSE\n',
       ')'
     )
+  } else {
+    stop("Unknown plot_type: ", plot_type)
   }
 
   # --- Assemble full script ---
@@ -209,9 +212,11 @@ build_plot_code <- function(plot_type, inputs, session) {
     '\n',
     pknca_section,
     '\n',
-    '## Plot filtering\n',
-    plot_filter_code, '\n',
-    '\n',
+    if (nzchar(plot_filter_code)) {
+      paste0('## Plot filtering\n', plot_filter_code, '\n\n')
+    } else {
+      ""
+    },
     '## Generate plot\n',
     plot_call, '\n',
     '\n',
