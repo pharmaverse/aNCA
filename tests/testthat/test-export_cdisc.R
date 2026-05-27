@@ -970,3 +970,63 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
     expect_length(crit_cols, 0)
   })
 })
+
+describe("export_cdisc: PKSUM1RS column", {
+  it("includes PKSUM1RS in ADNCA output", {
+    result <- export_cdisc(test_pknca_res)
+    expect_true("PKSUM1RS" %in% names(result$adnca))
+  })
+
+  it("PKSUM1RS is empty when PKSUM1F is not Y", {
+    result <- export_cdisc(test_pknca_res)
+    adnca <- result$adnca
+    non_excluded <- adnca$PKSUM1F != "Y"
+    if (any(non_excluded)) {
+      expect_true(all(adnca$PKSUM1RS[non_excluded] == ""))
+    }
+  })
+
+  it("populates PKSUM1RS from general exclusion reasons", {
+    modified <- test_pknca_res
+    excl_list <- list(
+      list(
+        reason = "Protocol deviation", rows = c(1, 2),
+        exclude_nca = FALSE, exclude_tlg = TRUE
+      )
+    )
+    modified <- add_exclusion_reasons(modified, excl_list)
+    result <- export_cdisc(modified)
+    adnca <- result$adnca
+    expect_equal(adnca$PKSUM1F[c(1, 2)], c("Y", "Y"))
+    expect_equal(adnca$PKSUM1RS[c(1, 2)], c("Protocol deviation", "Protocol deviation"))
+  })
+
+  it("populates PKSUM1RS for half-life exclusions", {
+    modified <- test_pknca_res
+    modified$data$conc$data$is.excluded.hl <- FALSE
+    modified$data$conc$data$is.excluded.hl[3] <- TRUE
+    result <- export_cdisc(modified)
+    adnca <- result$adnca
+    expect_equal(adnca$PKSUM1F[3], "Y")
+    expect_equal(adnca$PKSUM1RS[3], "Half-life point exclusion")
+  })
+
+  it("concatenates general and half-life exclusion reasons", {
+    modified <- test_pknca_res
+    excl_list <- list(
+      list(
+        reason = "Protocol deviation", rows = 3,
+        exclude_nca = FALSE, exclude_tlg = TRUE
+      )
+    )
+    modified <- add_exclusion_reasons(modified, excl_list)
+    modified$data$conc$data$is.excluded.hl[3] <- TRUE
+    result <- export_cdisc(modified)
+    adnca <- result$adnca
+    expect_equal(adnca$PKSUM1F[3], "Y")
+    expect_equal(
+      adnca$PKSUM1RS[3],
+      "Protocol deviation; Half-life point exclusion"
+    )
+  })
+})

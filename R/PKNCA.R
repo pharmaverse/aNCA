@@ -948,9 +948,12 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     exclude_col <- "exclude"
   }
 
-  # Initialise PKSUM1F if not present
+  # Initialise PKSUM1F and PKSUM1RS if not present
   if (!"PKSUM1F" %in% names(pknca_data$conc$data)) {
     pknca_data$conc$data$PKSUM1F <- ""
+  }
+  if (!"PKSUM1RS" %in% names(pknca_data$conc$data)) {
+    pknca_data$conc$data$PKSUM1RS <- ""
   }
 
   for (excl in exclusion_list) {
@@ -974,9 +977,17 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
         )
       )
     }
-    # TLG exclusion: flag rows for PK summary exclusion
+    # TLG exclusion: flag rows and store reason
     if (isTRUE(excl$exclude_tlg)) {
       pknca_data$conc$data$PKSUM1F[rows] <- "Y"
+      pknca_data$conc$data$PKSUM1RS[rows] <- ifelse(
+        pknca_data$conc$data$PKSUM1RS[rows] == "",
+        reason,
+        paste0(
+          pknca_data$conc$data$PKSUM1RS[rows],
+          "; ", reason
+        )
+      )
     }
   }
   pknca_data
