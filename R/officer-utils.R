@@ -359,8 +359,11 @@ add_pptx_sl_plot <- function(pptx, plot) {
 
 #' Build a glossary data frame of PPTESTCD to PPTEST mappings
 #'
-#' Filters `metadata_nca_parameters` to only the PPTESTCDs present in the
-#' slide data and returns a two-column data frame.
+#' Uses `translate_terms()` to look up PPTEST for each PPTESTCD. Codes in
+#' `metadata_nca_parameters` get their proper label; codes not in metadata
+#' (e.g. custom ratio PPTESTCDs) are kept with the code itself as the label.
+#' Non-parameter column names (where PPTESTCD == PPTEST and not in metadata)
+#' are excluded.
 #'
 #' @param pptestcds Character vector of PPTESTCDs to include.
 #' @returns A data frame with columns `PPTESTCD` and `PPTEST`, sorted by
@@ -368,9 +371,19 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @keywords internal
 #' @noRd
 .build_glossary <- function(pptestcds) {
-  meta <- metadata_nca_parameters[, c("PPTESTCD", "PPTEST")]
-  glossary <- meta[meta$PPTESTCD %in% pptestcds, ]
-  glossary <- glossary[!duplicated(glossary$PPTESTCD), ]
+  pptestcds <- unique(pptestcds)
+  pptest <- translate_terms(pptestcds, mapping_col = "PPTESTCD", target_col = "PPTEST")
+  known_codes <- metadata_nca_parameters$PPTESTCD
+  # Keep codes that are in metadata OR where translate_terms changed the value
+  # (custom codes not in metadata get themselves back — keep them too)
+  is_known <- pptestcds %in% known_codes
+  is_translated <- pptestcds != pptest
+  keep <- is_known | is_translated
+  glossary <- data.frame(
+    PPTESTCD = pptestcds[keep],
+    PPTEST = pptest[keep],
+    stringsAsFactors = FALSE
+  )
   glossary <- glossary[order(glossary$PPTESTCD), ]
   rownames(glossary) <- NULL
   glossary

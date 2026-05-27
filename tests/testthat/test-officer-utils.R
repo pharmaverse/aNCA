@@ -338,9 +338,11 @@ describe(".build_glossary", {
     expect_true("AUCIFO" %in% glossary$PPTESTCD)
   })
 
-  it("excludes codes not in metadata", {
-    glossary <- .build_glossary(c("CMAX", "NOT_A_REAL_CODE"))
-    expect_false("NOT_A_REAL_CODE" %in% glossary$PPTESTCD)
+  it("excludes non-parameter column names not in metadata", {
+    glossary <- .build_glossary(c("CMAX", "Statistic", "USUBJID"))
+    expect_true("CMAX" %in% glossary$PPTESTCD)
+    expect_false("Statistic" %in% glossary$PPTESTCD)
+    expect_false("USUBJID" %in% glossary$PPTESTCD)
   })
 
   it("returns sorted, deduplicated rows", {
@@ -349,8 +351,8 @@ describe(".build_glossary", {
     expect_equal(nrow(glossary), length(unique(glossary$PPTESTCD)))
   })
 
-  it("returns empty data frame for no matches", {
-    glossary <- .build_glossary(c("ZZZZZ_FAKE"))
+  it("returns empty data frame when no codes match metadata", {
+    glossary <- .build_glossary(c("Statistic", "USUBJID"))
     expect_equal(nrow(glossary), 0)
   })
 })
