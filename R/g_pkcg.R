@@ -47,7 +47,6 @@ g_pkcg01_log <- function(data, ...) {
 #' @returns A list of ggplot or plotly objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
-#' @importFrom tern g_ipp
 #' @importFrom stats setNames
 #' @importFrom plotly ggplotly layout
 #'
@@ -121,38 +120,42 @@ pkcg01 <- function(
   # Construct the reference ggplot object
   plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
 
-  plot <- tern::g_ipp(
-    df = plot_data,
-    xvar = xvar,
-    yvar = yvar,
-    xlab = paste0(parse_annotation(plot_data, xlab), collapse = ","),
-    ylab = paste0(parse_annotation(plot_data, ylab), collapse = ","),
-    id_var = "USUBJID",
-    add_baseline_hline = FALSE,
-    yvar_baseline = yvar,
-    plotting_choices = "separate_by_obs"
-  )[[1]]
+  plot <- ggplot2::ggplot(
+    data = plot_data,
+    mapping = aes(
+      x = .data[[xvar]],
+      y = .data[[yvar]]
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 0.4) +
+    ggplot2::geom_point(size = 2) +
+    labs(
+      x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
+      y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
+    ) +
+    ggplot2::theme_bw()
 
   # Provide limits and additional potential future aesthetic customizations
   plot <- plot +
-    aes(color = NULL) +
     theme(
       plot.title = element_text(family = "sans", size = 14, color = "black"),
       plot.subtitle = element_text(family = "sans", size = 11, color = "black")
     ) +
     coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
-  # Ensure x breaks labels do not overlap graphically
-  plot <- plot +
-    scale_x_continuous(
-      guide = guide_axis(n.dodge = 1),
-      breaks = filter_breaks(
-        plot_data[[xbreaks_var]],
-        min_cm_distance = xbreaks_mindist,
-        plot = plot
-      ),
-      labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
-    )
+  # Replace default x scale from tern::g_ipp with custom breaks
+  suppressMessages(
+    plot <- plot +
+      scale_x_continuous(
+        guide = guide_axis(n.dodge = 1),
+        breaks = filter_breaks(
+          plot_data[[xbreaks_var]],
+          min_cm_distance = xbreaks_mindist,
+          plot = plot
+        ),
+        labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+      )
+  )
 
   # Add color when specified
   if (!is.null(color_var)) {
@@ -180,11 +183,13 @@ pkcg01 <- function(
     )
 
     if (!plotly) {
-      plot <- plot +
-        scale_y_continuous(
-          transform = "log10",
-          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
-        )
+      suppressMessages(
+        plot <- plot +
+          scale_y_continuous(
+            transform = "log10",
+            labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+          )
+      )
     }
   }
 
@@ -385,7 +390,6 @@ g_pkcg02_log <- function(data, ...) {
 #' @returns A list of ggplot or plotly objects for each unique group.
 #' @importFrom dplyr mutate across rowwise ungroup group_by n
 #' @importFrom ggplot2 aes scale_x_continuous labs
-#' @importFrom tern g_ipp
 #' @importFrom stats setNames
 
 #' @examples
@@ -458,17 +462,22 @@ pkcg02 <- function(
   # Construct the reference ggplot object
   plot_data <- adnca_grouped %>% filter(id_plot == id_plot[1])
 
-  plot <- tern::g_ipp(
-    df = plot_data,
-    xvar = xvar,
-    yvar = yvar,
-    xlab = paste0(parse_annotation(plot_data, xlab), collapse = ","),
-    ylab = paste0(parse_annotation(plot_data, ylab), collapse = ","),
-    id_var = "USUBJID",
-    add_baseline_hline = FALSE,
-    yvar_baseline = yvar,
-    plotting_choices = "all_in_one"
-  )
+  plot <- ggplot2::ggplot(
+    data = plot_data,
+    mapping = ggplot2::aes(
+      x = .data[[xvar]],
+      y = .data[[yvar]],
+      group = .data[["USUBJID"]],
+      colour = .data[["USUBJID"]]
+    )
+  ) +
+    ggplot2::geom_line(linewidth = 0.4) +
+    ggplot2::geom_point(size = 2) +
+    ggplot2::labs(
+      x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
+      y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
+    ) +
+    ggplot2::theme_bw()
 
   # Provide limits and additional potential future aesthetic customizations
   plot <- plot +
@@ -479,15 +488,17 @@ pkcg02 <- function(
     ggplot2::coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
 
-  # Ensure x breaks labels do not overlap graphically
-  plot <- plot + ggplot2::scale_x_continuous(
-    guide = ggplot2::guide_axis(n.dodge = 1),
-    breaks = filter_breaks(
-      plot_data[[xbreaks_var]],
-      min_cm_distance = xbreaks_mindist,
-      plot = plot
-    ),
-    labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+  # Replace default x scale from tern::g_ipp with custom breaks
+  suppressMessages(
+    plot <- plot + ggplot2::scale_x_continuous(
+      guide = ggplot2::guide_axis(n.dodge = 1),
+      breaks = filter_breaks(
+        plot_data[[xbreaks_var]],
+        min_cm_distance = xbreaks_mindist,
+        plot = plot
+      ),
+      labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+    )
   )
 
   # Add color when specified
@@ -512,11 +523,13 @@ pkcg02 <- function(
     )
 
     if (!plotly) {
-      plot <- plot +
-        scale_y_continuous(
-          transform = "log10",
-          labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
-        )
+      suppressMessages(
+        plot <- plot +
+          scale_y_continuous(
+            transform = "log10",
+            labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+          )
+      )
     }
   }
 
@@ -685,10 +698,9 @@ g_pkcg03_log <- function(data, ...) {
 #' @param summary_method  A character string specifying the stat method to summarize observations.
 #' @param whiskers_lwr_upr A character string specifying the whisker type (upper, lower or both)
 #' @returns A list of ggplot objects for each unique group.
-#' @importFrom dplyr mutate across rowwise ungroup group_by n
-#' @importFrom ggplot2 aes scale_x_continuous labs
-#' @importFrom tern g_ipp
-#' @importFrom stats setNames
+#' @importFrom dplyr mutate across rowwise ungroup group_by n summarise n_distinct
+#' @importFrom ggplot2 aes scale_x_continuous labs geom_line geom_point geom_errorbar
+#' @importFrom stats setNames median sd qt
 
 #' @examples
 #' \dontrun{
@@ -762,15 +774,10 @@ pkcg03 <- function(
   # Define summary settings
   summary_settings <- SUMMARY_SETTINGS[[summary_method]]
 
-  if (whiskers_lwr_upr == "Upper") {
-    summary_settings$whiskers_value <- summary_settings$whiskers_value[2]
-  } else if (whiskers_lwr_upr == "Lower") {
-    summary_settings$whiskers_value <- summary_settings$whiskers_value[1]
-  }
-
   mid_value <- summary_settings$mid_value
   interval_value <- summary_settings$interval_value
-  whiskers_value <- summary_settings$whiskers_value
+  whiskers_value <- resolve_whiskers(summary_settings$whiskers_value,
+                                     whiskers_lwr_upr, mid_value)
 
   adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
@@ -849,28 +856,43 @@ pkcg03 <- function(
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
 
 
-    plot <- tern::g_lineplot(
-      df = plot_data,
-      variables =  tern::control_lineplot_vars(
-        x = xvar,
-        y = yvar,
-        group_var = mean_group_var,
-        paramcd = "PARAM",
-        y_unit = yvar_unit,
-        subject_var = "USUBJID",
-      ),
-      alt_counts_df = plot_data,
-      mid = mid_value,
-      interval = interval_value,
-      whiskers = whiskers_value,
-      x_lab = parse_annotation(plot_data, xlab),
-      y_lab = parse_annotation(plot_data, ylab),
-      y_lab_add_paramcd = FALSE,
-      y_lab_add_unit = FALSE,
-      title = "Plot of Mean and 95% Confidence Limits by Visit",
-      subtitle = "xxx",
-      caption = NULL
+    df_stats <- compute_summary_stats(
+      plot_data, xvar, yvar, mean_group_var, interval_value, mid_value
     )
+    strata_n <- paste0(mean_group_var, "_N")
+
+    plot <- ggplot2::ggplot(
+      data = df_stats,
+      mapping = aes(
+        x = .data[[xvar]],
+        y = .data[[mid_value]],
+        color = .data[[strata_n]],
+        shape = .data[[strata_n]],
+        group = .data[[strata_n]]
+      )
+    ) +
+      geom_point(size = 2, na.rm = TRUE) +
+      geom_line(na.rm = TRUE) +
+      geom_errorbar(
+        aes(
+          ymin = .data[[whiskers_value[1]]],
+          ymax = .data[[whiskers_value[max(1, length(whiskers_value))]]]
+        ),
+        width = 0.45,
+        na.rm = TRUE
+      ) +
+      labs(
+        x = parse_annotation(plot_data, xlab),
+        y = parse_annotation(plot_data, ylab),
+        color = NULL,
+        shape = NULL
+      ) +
+      ggplot2::theme_bw() +
+      ggplot2::theme(
+        legend.key.width = grid::unit(1, "cm"),
+        legend.position = "bottom",
+        legend.direction = "horizontal"
+      )
 
 
 
@@ -882,17 +904,19 @@ pkcg03 <- function(
       ) +
       coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
-    # Ensure x breaks labels do not overlap graphically
-    plot <- plot +
-      scale_x_continuous(
-        guide = guide_axis(n.dodge = 1),
-        breaks = filter_breaks(
-          plot_data[[xbreaks_var]],
-          min_cm_distance = xbreaks_mindist,
-          plot = plot
-        ),
-        labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
-      )
+    # Replace default x scale from tern::g_lineplot with custom breaks
+    suppressMessages(
+      plot <- plot +
+        scale_x_continuous(
+          guide = guide_axis(n.dodge = 1),
+          breaks = filter_breaks(
+            plot_data[[xbreaks_var]],
+            min_cm_distance = xbreaks_mindist,
+            plot = plot
+          ),
+          labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+        )
+    )
 
 
     aval_stat <- mid_value
@@ -904,11 +928,13 @@ pkcg03 <- function(
       )
 
       if (!plotly) {
-        plot <- plot +
-          scale_y_continuous(
-            transform = "log10",
-            labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
-          )
+        suppressMessages(
+          plot <- plot +
+            scale_y_continuous(
+              transform = "log10",
+              labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+            )
+        )
       }
     }
 
@@ -1054,6 +1080,75 @@ generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgrou
   } else {
     parse_annotation(plot_data, subtitle)
   }
+}
+
+# Resolve whiskers_value to a length-2 vector of c(lower, upper) column names.
+# For one-sided whiskers, the missing bound is replaced with mid_value.
+resolve_whiskers <- function(whiskers_value, whiskers_lwr_upr, mid_value) {
+  if (whiskers_lwr_upr == "Upper") {
+    whiskers_value <- whiskers_value[2]
+  } else if (whiskers_lwr_upr == "Lower") {
+    whiskers_value <- whiskers_value[1]
+  }
+
+  if (length(whiskers_value) == 1) {
+    if (grepl("lwr$", whiskers_value)) {
+      whiskers_value <- c(whiskers_value, mid_value)
+    } else {
+      whiskers_value <- c(mid_value, whiskers_value)
+    }
+  }
+  whiskers_value
+}
+
+# Compute summary statistics per group and timepoint for pkcg03
+compute_summary_stats <- function(plot_data, xvar, yvar, mean_group_var,
+                                  interval_value, mid_value) {
+  df_stats <- plot_data %>%
+    group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+    summarise(
+      n = dplyr::n(),
+      mean = mean(.data[[yvar]], na.rm = TRUE),
+      sd = sd(.data[[yvar]], na.rm = TRUE),
+      se = sd / sqrt(n),
+      median = median(.data[[yvar]], na.rm = TRUE),
+      mean_ci_lwr = mean - qt(0.975, n - 1) * se,
+      mean_ci_upr = mean + qt(0.975, n - 1) * se,
+      mean_sdi_lwr = mean - sd,
+      mean_sdi_upr = mean + sd,
+      mean_sei_lwr = mean - se,
+      mean_sei_upr = mean + se,
+      .groups = "drop"
+    )
+
+  if (interval_value == "median_ci") {
+    median_ci <- plot_data %>%
+      group_by(.data[[mean_group_var]], .data[[xvar]]) %>%
+      summarise(
+        median_ci_lwr = tryCatch(
+          stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[1],
+          error = function(e) NA_real_
+        ),
+        median_ci_upr = tryCatch(
+          stats::wilcox.test(.data[[yvar]], conf.int = TRUE)$conf.int[2],
+          error = function(e) NA_real_
+        ),
+        .groups = "drop"
+      )
+    df_stats <- dplyr::left_join(df_stats, median_ci, by = c(mean_group_var, xvar))
+  }
+
+  # Add N-count labels to group variable
+  strata_n <- paste0(mean_group_var, "_N")
+  df_n <- plot_data %>%
+    group_by(.data[[mean_group_var]]) %>%
+    summarise(N = n_distinct(USUBJID), .groups = "drop") %>%
+    mutate(!!strata_n := paste0(.data[[mean_group_var]], " (N = ", N, ")"))
+  df_stats <- dplyr::left_join(df_stats, df_n[, c(mean_group_var, strata_n)],
+                               by = mean_group_var)
+
+  # Remove rows where mid value is NA
+  df_stats[!is.na(df_stats[[mid_value]]), ]
 }
 
 # Helper function to assert package availability
