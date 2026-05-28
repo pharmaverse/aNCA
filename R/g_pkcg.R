@@ -143,7 +143,7 @@ pkcg01 <- function(
     coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
   # Replace default x scale from tern::g_ipp with custom breaks
-  suppressWarnings(
+  suppressMessages(
     plot <- plot +
       scale_x_continuous(
         guide = guide_axis(n.dodge = 1),
@@ -182,7 +182,7 @@ pkcg01 <- function(
     )
 
     if (!plotly) {
-      suppressWarnings(
+      suppressMessages(
         plot <- plot +
           scale_y_continuous(
             transform = "log10",
@@ -484,7 +484,7 @@ pkcg02 <- function(
 
 
   # Replace default x scale from tern::g_ipp with custom breaks
-  suppressWarnings(
+  suppressMessages(
     plot <- plot + ggplot2::scale_x_continuous(
       guide = ggplot2::guide_axis(n.dodge = 1),
       breaks = filter_breaks(
@@ -518,7 +518,7 @@ pkcg02 <- function(
     )
 
     if (!plotly) {
-      suppressWarnings(
+      suppressMessages(
         plot <- plot +
           scale_y_continuous(
             transform = "log10",
@@ -891,7 +891,7 @@ pkcg03 <- function(
       coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
     # Replace default x scale from tern::g_lineplot with custom breaks
-    suppressWarnings(
+    suppressMessages(
       plot <- plot +
         scale_x_continuous(
           guide = guide_axis(n.dodge = 1),
@@ -914,7 +914,7 @@ pkcg03 <- function(
       )
 
       if (!plotly) {
-        suppressWarnings(
+        suppressMessages(
           plot <- plot +
             scale_y_continuous(
               transform = "log10",
