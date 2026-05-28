@@ -72,7 +72,7 @@
 ## Bug fixes
 
 ### CDISC Export
-* `CRITxFL` semantics inverted to match CDISC conventions — `"Y"` now means criterion violated (parameter excluded), empty means satisfied. `CRITx` only populated for violated rows (#1278)
+* `CRITxFL` now uses `""` instead of `"N"` when criterion is violated. `CRITx` is always populated with the rule description. `CRITxFL = "Y"` means criterion satisfied (#1278)
 
 ### NCA Calculations
 * Renal clearance (RENALCL) removed from direct PK calculations (inaccurate in PKNCA) — use ratio table instead (#781)

@@ -549,10 +549,10 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 
 #' Add CRITy/CRITyFL and PPSUMFL/PPSUMRSN columns to ADPP
 #'
-#' For each flag rule message, creates a CRITy column (criterion description)
-#' and CRITyFL column ("Y" if satisfied, "N" if violated) by grepping the
-#' `exclude` column. PPSUMFL is "Y" when the record is excluded from summaries,
-#' empty when included.
+#' For each flag rule message, creates a CRITy column (criterion description,
+#' always populated) and CRITyFL column ("Y" if criterion satisfied, "" if
+#' violated) by grepping the `exclude` column. PPSUMFL is "Y" when the record
+#' is excluded from summaries, empty when included.
 #'
 #' @param data A data.frame with an `exclude` column from PKNCA results.
 #' @param flag_rules Character vector of exclusion messages applied during NCA
@@ -567,21 +567,23 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   exclude_vals[is.na(exclude_vals)] <- ""
 
   # Add CRITy/CRITyFL columns for each flag rule
-  # CRITyFL = "Y" when the criterion is violated (parameter excluded)
-  # CRITy = rule description only for violated rows, empty otherwise
+  # CRITy = rule description for all rows (constant)
+  # CRITyFL = "Y" when criterion is satisfied, "" when violated
   if (!is.null(flag_rules) && length(flag_rules) > 0) {
     for (i in seq_along(flag_rules)) {
       rule_msg <- flag_rules[i]
       crit_col <- paste0("CRIT", i)
       critfl_col <- paste0("CRIT", i, "FL")
 
+      # CRITy: always the criterion description
+      data[[crit_col]] <- rule_msg
+
       # Split on "; " (PKNCA separator) and do exact element matching to avoid
       # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
       is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
         rule_msg %in% parts
       }, logical(1))
-      data[[critfl_col]] <- ifelse(is_violated, "Y", "")
-      data[[crit_col]] <- ifelse(is_violated, rule_msg, "")
+      data[[critfl_col]] <- ifelse(is_violated, "", "Y")
     }
   }
 
