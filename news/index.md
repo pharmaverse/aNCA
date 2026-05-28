@@ -288,8 +288,17 @@
 - Pagination controls in the slope selector are less buggy
   ([\#956](https://github.com/pharmaverse/aNCA/issues/956))
 
+#### TLG
+
+- Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in
+  mean plots (`pkcg03`)
+  ([\#1316](https://github.com/pharmaverse/aNCA/issues/1316))
+
 ### Dependency changes
 
+- Removed `tern` and `nestcolor` — TLG plots (`pkcg01`, `pkcg02`,
+  `pkcg03`) now use inline ggplot2 code
+  ([\#1316](https://github.com/pharmaverse/aNCA/issues/1316))
 - `rlistings`, `officer`, and `flextable` moved from Imports to Suggests
   — the app notifies users when these are missing
   ([\#1106](https://github.com/pharmaverse/aNCA/issues/1106))

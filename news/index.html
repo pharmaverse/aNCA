@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9174</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9175</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -194,10 +194,15 @@
 <li>TMAX label corrected from “Time of CMAX” to “Time of CMAX Observation” (<a href="https://github.com/pharmaverse/aNCA/issues/787" class="external-link">#787</a>)</li>
 <li>Pagination controls in the slope selector are less buggy (<a href="https://github.com/pharmaverse/aNCA/issues/956" class="external-link">#956</a>)</li>
 </ul></div>
+<div class="section level4">
+<h4 id="tlg-development-version">TLG<a class="anchor" aria-label="anchor" href="#tlg-development-version"></a></h4>
+<ul><li>Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in mean plots (<code>pkcg03</code>) (<a href="https://github.com/pharmaverse/aNCA/issues/1316" class="external-link">#1316</a>)</li>
+</ul></div>
 </div>
 <div class="section level3">
 <h3 id="dependency-changes-development-version">Dependency changes<a class="anchor" aria-label="anchor" href="#dependency-changes-development-version"></a></h3>
-<ul><li>
+<ul><li>Removed <code>tern</code> and <code>nestcolor</code> — TLG plots (<code>pkcg01</code>, <code>pkcg02</code>, <code>pkcg03</code>) now use inline ggplot2 code (<a href="https://github.com/pharmaverse/aNCA/issues/1316" class="external-link">#1316</a>)</li>
+<li>
 <code>rlistings</code>, <code>officer</code>, and <code>flextable</code> moved from Imports to Suggests — the app notifies users when these are missing (<a href="https://github.com/pharmaverse/aNCA/issues/1106" class="external-link">#1106</a>)</li>
 <li>Removed <code>methods</code>, <code>scales</code>, and <code>stringr</code> from package dependencies, replaced with base R equivalents (<a href="https://github.com/pharmaverse/aNCA/issues/1108" class="external-link">#1108</a>)</li>
 <li>Settings YAML units accept minimal format: just <code>PPTESTCD</code> and <code>PPSTRESU</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1027" class="external-link">#1027</a>)</li>
