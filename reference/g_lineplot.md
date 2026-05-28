@@ -163,6 +163,4 @@ p <- g_lineplot(
   color_by = "USUBJID"
 )
 print(p)
-#> Ignoring unknown labels:
-#> • linetype : ""
 ```
