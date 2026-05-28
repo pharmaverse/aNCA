@@ -27,7 +27,7 @@ zip_ui <- function(id) {
         "font-weight: 500;",
         "font-size: 1rem;"
       ),
-      title = "Choose items to include in the export",
+      title = "Press to select the items to include in the export",
       disabled = TRUE
     )
   )
