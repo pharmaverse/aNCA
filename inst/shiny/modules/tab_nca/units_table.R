@@ -107,12 +107,14 @@ units_table_server <- function(id, mydata) {
       columns = list(
         PPTESTCD = colDef(name = "Parameter"),
         PPTESTCD_short = colDef(name = "Short Parameter"),
-        PCSPEC = colDef(name = "Specimen"),
         PPORRESU = colDef(name = "Default Unit"),
         PPSTRESU = colDef(name = "Custom Unit"),
         conversion_factor = colDef(name = "Conversion Factor"),
         is_hidden = colDef(show = FALSE),
         default = colDef(show = FALSE)
+      ),
+      defaultColDef = colDef(
+        header = function(value) get_label(value)
       ),
       pagination = FALSE,
       filterable = TRUE,
