@@ -870,7 +870,8 @@ pkcg03 <- function(
           ymin = .data[[whiskers_value[1]]],
           ymax = .data[[whiskers_value[max(1, length(whiskers_value))]]]
         ),
-        width = 0.45
+        width = 0.45,
+        na.rm = TRUE
       ) +
       labs(
         x = parse_annotation(plot_data, xlab),
