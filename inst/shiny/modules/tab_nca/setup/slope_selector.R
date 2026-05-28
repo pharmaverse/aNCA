@@ -29,12 +29,10 @@ slope_selector_ui <- function(id) {
   ns <- NS(id)
   assets <- system.file("shiny/www", package = "aNCA")
 
-  div(
-    class = "slope-selector-module",
+  tagList(
     fluidRow(
       column(
-        width = 10,
-        manual_slopes_table_ui(ns("manual_slopes"))
+        width = 10
       ),
       column(
         width = 2,
@@ -87,6 +85,9 @@ slope_selector_ui <- function(id) {
         )
       )
     ),
+    div(
+      class = "slope-selector-module",
+      manual_slopes_table_ui(ns("manual_slopes")),
     # Widgets for manipulating plots display #
     fluidRow(
       class = "plot-widgets-container",
@@ -124,6 +125,7 @@ slope_selector_ui <- function(id) {
     # Use the new pagination UI module
     page_and_searcher_ui(ns("page_and_searcher")),
     br()
+    )
   )
 }
 

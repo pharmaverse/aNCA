@@ -8,17 +8,12 @@
 manual_slopes_table_ui <- function(id) {
   ns <- NS(id)
 
-  fluidRow(
-    # Selection and exclusion controls #
+  tagList(
     div(
-      class = "plot-widget-group",
-      actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
-    ),
-    div(
-      class = "plot-widget-group",
+      style = "display: flex; gap: 8px; align-items: center;",
+      actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success"),
       actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
     ),
-    # Table with selections and exclusions #
     fluidRow(
       reactableOutput(ns("manual_slopes"))
     )
