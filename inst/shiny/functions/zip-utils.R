@@ -266,7 +266,9 @@ get_dose_esc_results <- function(
           "start", "end", "parameter_unit", "PPSTRES"
         )
       )) %>%
-      pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
+      pivot_wider(names_from = parameter_unit, values_from = PPSTRES,
+                  values_fn = list) %>%
+      mutate(across(where(is.list), ~ sapply(., `[`, 1))) %>%
       split(.[[o_nca$data$conc$columns$subject]])
 
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
