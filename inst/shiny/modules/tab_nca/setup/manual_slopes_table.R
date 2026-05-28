@@ -5,14 +5,20 @@
 #'
 #' @param id Shiny module id
 #' @return Shiny UI element (fluidRow)
-manual_slopes_table_ui <- function(id) {
+manual_slopes_table_ui <- function(id, help_widget = NULL) {
   ns <- NS(id)
 
   tagList(
-    div(
-      style = "display: flex; gap: 8px; align-items: center;",
-      actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success"),
-      actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
+    fluidRow(
+      column(
+        width = 10,
+        div(
+          style = "display: flex; gap: 8px; align-items: center;",
+          actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success"),
+          actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
+        )
+      ),
+      if (!is.null(help_widget)) column(width = 2, help_widget)
     ),
     fluidRow(
       reactableOutput(ns("manual_slopes"))
