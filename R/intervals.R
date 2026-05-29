@@ -331,26 +331,16 @@ update_main_intervals <- function(
 #'
 rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_parameters) {
   # Don't impute parameters that are not AUC dependent.
-  # Start with directly AUC-related params, then resolve transitive
-  # dependencies (e.g. aucinf.obs -> lambda.z -> half.life) so that
-  # the half.life used within AUCINF reflects the same BLQ-imputed data
-  # as the AUC calculation itself (#1057).
+  # Parameters in the AUC calculation chain (half.life feeds lambda.z,
+  # which feeds aucinf.obs) must all use the same BLQ-imputed data (#1057).
   params_auc_dep <- metadata_nca_parameters %>%
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
-  # Resolve transitive dependencies from AUC parameters.
-  # Two levels cover the full chain without reaching purely
-  # observational leaf parameters (cmax, tmax, tlast):
-  #   Level 1: lambda.z, clast.obs (direct deps of aucinf.obs/pred)
-  #   Level 2: half.life (dep of lambda.z, clast.pred)
-  needs_impute <- params_auc_dep
-  for (depth in 1:2) {
-    upstream <- .resolve_upstream_deps(metadata_nca_parameters, needs_impute)
-    upstream <- setdiff(upstream, needs_impute)
-    if (length(upstream) == 0) break
-    needs_impute <- c(needs_impute, upstream)
-  }
+  # Build reverse dependency table and walk forward along the data-flow
+  # direction to find all params whose consumers eventually reach an AUC param.
+  rev_deps <- .build_rev_deps(metadata_nca_parameters)
+  needs_impute <- .walk_forward_deps(params_auc_dep, rev_deps)
 
   params_not_to_impute <- metadata_nca_parameters %>%
     filter(!PKNCA %in% needs_impute) %>%
@@ -388,14 +378,40 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   data
 }
 
-#' Resolve the direct upstream dependencies of a set of PKNCA parameters.
-#' Returns all parameter names listed in the Depends column for the given params.
+#' Build a reverse dependency table from the Depends column.
+#' For each parameter A, returns which parameters list A as a dependency.
+#' e.g., lambda.z lists half.life in Depends, so rev_deps$half.life includes lambda.z.
 #' @noRd
-.resolve_upstream_deps <- function(metadata, params) {
-  dep_str <- metadata %>%
-    filter(PKNCA %in% params) %>%
-    pull(Depends)
-  dep_str <- dep_str[!is.na(dep_str) & dep_str != ""]
-  if (length(dep_str) == 0) return(character())
-  unique(trimws(unlist(strsplit(dep_str, ","))))
+.build_rev_deps <- function(metadata) {
+  rev <- list()
+  for (i in seq_len(nrow(metadata))) {
+    pkg_name <- metadata$PKNCA[i]
+    dep_str <- metadata$Depends[i]
+    if (is.na(dep_str) || dep_str == "") next
+    dep_list <- trimws(strsplit(dep_str, ",")[[1]])
+    for (d in dep_list) {
+      rev[[d]] <- unique(c(rev[[d]], pkg_name))
+    }
+  }
+  rev
+}
+
+#' Walk forward through the reverse dependency table from `start_set`.
+#' At each iteration, finds params whose consumers include any param
+#' already in the set — i.e., params that feed into the current chain.
+#' Limited to 2 steps to avoid reaching purely observational leaf params.
+#' @noRd
+.walk_forward_deps <- function(start_set, rev_deps, max_depth = 2) {
+  needs <- start_set
+  for (depth in seq_len(max_depth)) {
+    newly_found <- character()
+    for (pkg in names(rev_deps)) {
+      if (!pkg %in% needs && any(rev_deps[[pkg]] %in% needs)) {
+        newly_found <- c(newly_found, pkg)
+      }
+    }
+    if (length(newly_found) == 0) break
+    needs <- c(needs, newly_found)
+  }
+  needs
 }
