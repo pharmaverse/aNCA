@@ -295,6 +295,12 @@ update_main_intervals <- function(
   # and apply it only for non-observational parameters
 
   if (!is.null(blq_imputation_rule)) {
+    # Ensure impute column exists so dplyr mutate below references the
+    # column rather than the function parameter (which could be FALSE
+    # from YAML settings, causing "PKNCA_impute_method_FALSE" error).
+    if (!"impute" %in% names(data$intervals)) {
+      data$intervals$impute <- NA_character_
+    }
     data$intervals <- data$intervals %>%
       mutate(
         impute = ifelse(
@@ -324,16 +330,30 @@ update_main_intervals <- function(
 #' @import dplyr
 #'
 rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_parameters) {
-  # Don't impute parameters that are not AUC dependent
+  # Don't impute parameters that are not AUC dependent.
+  # Start with directly AUC-related params, then resolve transitive
+  # dependencies (e.g. aucinf.obs -> lambda.z -> half.life) so that
+  # the half.life used within AUCINF reflects the same BLQ-imputed data
+  # as the AUC calculation itself (#1057).
   params_auc_dep <- metadata_nca_parameters %>%
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
+  # Resolve transitive dependencies from AUC parameters.
+  # Two levels cover the full chain without reaching purely
+  # observational leaf parameters (cmax, tmax, tlast):
+  #   Level 1: lambda.z, clast.obs (direct deps of aucinf.obs/pred)
+  #   Level 2: half.life (dep of lambda.z, clast.pred)
+  needs_impute <- params_auc_dep
+  for (depth in 1:2) {
+    upstream <- .resolve_upstream_deps(metadata_nca_parameters, needs_impute)
+    upstream <- setdiff(upstream, needs_impute)
+    if (length(upstream) == 0) break
+    needs_impute <- c(needs_impute, upstream)
+  }
+
   params_not_to_impute <- metadata_nca_parameters %>%
-    filter(
-      !grepl("auc|aumc", PKNCA),
-      !grepl(paste0(params_auc_dep, collapse = "|"), Depends)
-    ) %>%
+    filter(!PKNCA %in% needs_impute) %>%
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
@@ -366,4 +386,16 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   }, all_impute_methods, init = data$intervals)
 
   data
+}
+
+#' Resolve the direct upstream dependencies of a set of PKNCA parameters.
+#' Returns all parameter names listed in the Depends column for the given params.
+#' @noRd
+.resolve_upstream_deps <- function(metadata, params) {
+  dep_str <- metadata %>%
+    filter(PKNCA %in% params) %>%
+    pull(Depends)
+  dep_str <- dep_str[!is.na(dep_str) & dep_str != ""]
+  if (length(dep_str) == 0) return(character())
+  unique(trimws(unlist(strsplit(dep_str, ","))))
 }
