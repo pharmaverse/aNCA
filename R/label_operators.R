@@ -210,7 +210,9 @@ add_label_attribute <- function(df, myres) {
         !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
         TRUE ~ PPTESTCD
       ),
-      PPTESTCD_cdisc_raw = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"),
+      PPTESTCD_cdisc_raw = translate_terms(
+        PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"
+      ),
       PPTESTCD_cdisc = PPTESTCD_cdisc_raw
     ) %>%
     rowwise() %>%
