@@ -26,13 +26,6 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         class = "btn btn-primary btn-sm",
         width = "100%"
       ),
-      actionButton(
-        ns("copy_plot_code"),
-        label = "Show Code",
-        icon = icon("code"),
-        class = "btn btn-primary btn-sm",
-        width = "100%"
-      ),
       extra_ui,
       uiOutput(ns("groupvar_ui_wrapper")
       ),
@@ -61,6 +54,13 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         selected = NULL,
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
+      ),
+      actionButton(
+        ns("copy_plot_code"),
+        label = "Show Code",
+        icon = icon("code"),
+        class = "btn btn-primary btn-sm",
+        width = "100%"
       )
     ),
     plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
