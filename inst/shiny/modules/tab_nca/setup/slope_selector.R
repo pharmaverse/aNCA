@@ -29,7 +29,8 @@ slope_selector_ui <- function(id) {
   ns <- NS(id)
   assets <- system.file("shiny/www", package = "aNCA")
 
-  tagList(
+  div(
+    class = "slope-selector-module",
     manual_slopes_table_ui(
       ns("manual_slopes"),
       help_widget = dropdown(
@@ -80,46 +81,43 @@ slope_selector_ui <- function(id) {
         width = "600px"
       )
     ),
-    div(
-      class = "slope-selector-module",
-      # Widgets for manipulating plots display #
-      fluidRow(
-        class = "plot-widgets-container",
-        div(
-          class = "plot-widget-group",
-          selectInput(
-            ns("plots_per_page"),
-            "Plots per page:",
-            choices = c(1, 3, 6, 9, 18, 100),
-            selected = 9
-          )
+    # Widgets for manipulating plots display #
+    fluidRow(
+      class = "plot-widgets-container",
+      div(
+        class = "plot-widget-group",
+        selectInput(
+          ns("plots_per_page"),
+          "Plots per page:",
+          choices = c(1, 3, 6, 9, 18, 100),
+          selected = 9
+        )
+      ),
+      div(
+        class = "plot-widget-group",
+        selectInput(
+          ns("search_subject"),
+          label = "Search Subject",
+          choices = NULL,
+          multiple = TRUE
         ),
-        div(
-          class = "plot-widget-group",
-          selectInput(
-            ns("search_subject"),
-            label = "Search Subject",
-            choices = NULL,
-            multiple = TRUE
-          ),
-        )
-      ),
-      fluidRow(
-        orderInput(
-          ns("order_groups"),
-          label = "Order plots by:",
-          items = NULL,
-          width = "100%"
-        )
-      ),
-      br(),
-      # Plots display #
-      uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
-      br(),
-      # Use the new pagination UI module
-      page_and_searcher_ui(ns("page_and_searcher")),
-      br()
-    )
+      )
+    ),
+    fluidRow(
+      orderInput(
+        ns("order_groups"),
+        label = "Order plots by:",
+        items = NULL,
+        width = "100%"
+      )
+    ),
+    br(),
+    # Plots display #
+    uiOutput(ns("slope_plots_ui"), class = "slope-plots-container"),
+    br(),
+    # Use the new pagination UI module
+    page_and_searcher_ui(ns("page_and_searcher")),
+    br()
   )
 }
 
