@@ -179,7 +179,7 @@
     "ppanmeth_test_groups",
     "predict",
     "prev_dosno",
-
+    "se",
     "single_dose_present",
     "span.ratio",
     "start",
