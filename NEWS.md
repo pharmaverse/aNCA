@@ -127,8 +127,12 @@
 * TMAX label corrected from "Time of CMAX" to "Time of CMAX Observation" (#787)
 * Pagination controls in the slope selector are less buggy (#956)
 
+### TLG
+* Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in mean plots (`pkcg03`) (#1316)
+
 ## Dependency changes
 
+* Removed `tern` and `nestcolor` — TLG plots (`pkcg01`, `pkcg02`, `pkcg03`) now use inline ggplot2 code (#1316)
 * `rlistings`, `officer`, and `flextable` moved from Imports to Suggests — the app notifies users when these are missing (#1106)
 * Removed `methods`, `scales`, and `stringr` from package dependencies, replaced with base R equivalents (#1108)
 * Settings YAML units accept minimal format: just `PPTESTCD` and `PPSTRESU` (#1027)
