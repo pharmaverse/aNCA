@@ -4,7 +4,8 @@
 #' Provides buttons to add/remove rules and a reactable table for editing.
 #'
 #' @param id Shiny module id
-#' @return Shiny UI element (fluidRow)
+#' @param help_widget Optional Shiny UI element to display in the header row (e.g., help dropdown)
+#' @return Shiny UI element (tagList of fluidRows)
 manual_slopes_table_ui <- function(id, help_widget = NULL) {
   ns <- NS(id)
 
