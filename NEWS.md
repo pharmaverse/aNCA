@@ -94,6 +94,7 @@
 * NCA results flagging correctly distinguishes missing vs not-requested parameters (#934)
 * Custom units table join uses correct keys instead of hardcoded columns (#1159)
 * "Summarise by" selector in Matrix Ratios fixed (input ID mismatch) (#1198)
+* `export_cdisc()` now includes `ATPTREF` and `ROUTE` columns in ADPP output (#1276)
 
 ### Settings & Upload
 * SASS compilation moved from runtime to build-time script, fixing startup crashes on read-only deployments (#1107)

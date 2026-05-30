@@ -361,3 +361,5 @@ ADNCA,264,PKSUM1F,PK Summary Exclusion Flag 1,text,Record Qualifier,Perm,FALSE,F
 ADNCA,265,PKSUM1FN,PK Summary Exclusion Flag 1 (N),integer,Record Qualifier,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,193,PPSUMFL,PP Summary Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,194,PPSUMRSN,PP Summary Exclusion Reason,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,229,ATPTREF,Analysis Timepoint Reference,text,Timing,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,88,ROUTE,Route of Administration,text,Topic,Perm,FALSE,FALSE,40,C66729,FALSE,,FALSE,,,,NA,FALSE
