@@ -376,6 +376,24 @@ pc_to_PKNCAconc <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: o
   conc_data$exclude_half.life <- FALSE
   conc_data$REASON            <- ""
 
+  # --- Drop excluded rows with missing time ------------------------------------
+  # TODO: Remove this filter once PKNCA validates `exclude` before `time`.
+  # Currently PKNCA (CRAN) checks for NA in the time column before honouring
+  # the exclude flag, so excluded rows with NA AFRLT cause an error.
+  # Workaround: remove those rows entirely and warn the user.
+  excluded_na_time <- nchar(conc_data$nca_exclude) > 0 & is.na(conc_data$AFRLT)
+  n_dropped <- sum(excluded_na_time)
+  if (n_dropped > 0) {
+    warning(
+      n_dropped, " excluded sample(s) with missing time were removed. ",
+      "These are records marked for exclusion (e.g. via PCREASND) that also ",
+      "lack a valid collection datetime. In a future PKNCA version, excluded ",
+      "records will be kept and skipped automatically.",
+      call. = FALSE
+    )
+    conc_data <- conc_data[!excluded_na_time, ]
+  }
+
   # --- Volume unit conversion (for excretion analysis) -------------------------
   conc_data <- convert_volume_units(conc_data)
 
