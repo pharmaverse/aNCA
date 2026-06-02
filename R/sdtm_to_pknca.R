@@ -147,7 +147,7 @@ route_cdisc_to_pknca <- function(route) {
     warning(
       "Dose duration defaulted to 0 hours for ", n_defaulted,
       " of ", nrow(ex), " dose records (no EXDUR or EXENDTC available). ",
-      "This assumes instantaneous dosing (e.g. extravascular).",
+      "This assumes instantaneous dosing (e.g. extravascular or bolus).",
       call. = FALSE
     )
     adosedur[is.na(adosedur)] <- 0
