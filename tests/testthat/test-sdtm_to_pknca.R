@@ -451,6 +451,27 @@ describe("pc_to_PKNCAconc", {
     expect_equal(excl[5], "")
   })
 
+  it("drops excluded rows with NA time and warns", {
+    pc_excluded <- pc_mini
+    pc_excluded$PCREASND <- c("", "", "NOT DONE", "", "")
+    pc_excluded$PCDTC[3] <- NA
+    expect_warning(
+      result <- pc_to_PKNCAconc(pc_excluded, ex_mini),
+      "1 excluded sample.*missing time.*removed"
+    )
+    expect_equal(nrow(result$data), 4)
+    expect_false("NOT DONE" %in% result$data$nca_exclude)
+  })
+
+  it("keeps excluded rows that have valid time", {
+    pc_with_reason <- pc_mini
+    pc_with_reason$PCREASND <- c("", "", "Hemolyzed", "", "")
+    result <- pc_to_PKNCAconc(pc_with_reason, ex_mini)
+    # Row 3 is excluded but has valid time — kept in data
+    expect_equal(nrow(result$data), 5)
+    expect_equal(result$data$nca_exclude[3], "Hemolyzed")
+  })
+
   it("defaults nca_exclude to empty when PCREASND is absent", {
     result <- pc_to_PKNCAconc(pc_mini, ex_mini)
     expect_true(all(result$data$nca_exclude == ""))
