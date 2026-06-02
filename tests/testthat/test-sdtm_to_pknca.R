@@ -61,6 +61,32 @@ describe("parse_iso8601_duration", {
   it("handles decimal hours", {
     expect_equal(parse_iso8601_duration("PT2.889H"), 2.889)
   })
+
+  it("returns NA for empty strings", {
+    expect_true(is.na(parse_iso8601_duration("")))
+    expect_true(is.na(parse_iso8601_duration("  ")))
+  })
+
+  it("parses days", {
+    expect_equal(parse_iso8601_duration("P3D"), 72)
+  })
+
+  it("parses weeks", {
+    expect_equal(parse_iso8601_duration("P2W"), 336)
+  })
+
+  it("parses days and time combined", {
+    expect_equal(parse_iso8601_duration("P1DT12H"), 36)
+  })
+
+  it("parses days with decimal hours", {
+    expect_equal(parse_iso8601_duration("P5DT12.25H"), 132.25)
+  })
+
+  it("handles vector with mixed empty and valid values", {
+    result <- parse_iso8601_duration(c("PT2H", "", NA, "P1D"))
+    expect_equal(result, c(2, NA, NA, 24))
+  })
 })
 
 
@@ -143,6 +169,20 @@ describe(".prepare_dose_table", {
   it("defaults ADOSEDUR to 0 when both EXDUR and EXENDTC are absent", {
     ex_no_dur <- ex_mini[, setdiff(names(ex_mini), c("EXDUR", "EXENDTC"))]
     result <- .prepare_dose_table(ex_no_dur)
+    expect_equal(result$ADOSEDUR, c(0, 0, 0))
+  })
+
+  it("falls back to EXENDTC when EXDUR is all empty strings", {
+    ex_empty_dur <- ex_mini
+    ex_empty_dur$EXDUR <- ""
+    result <- .prepare_dose_table(ex_empty_dur)
+    expect_equal(result$ADOSEDUR, c(2, 2, 2))
+  })
+
+  it("falls back to 0 when EXDUR is empty and EXENDTC is absent", {
+    ex_empty_dur <- ex_mini[, setdiff(names(ex_mini), "EXENDTC")]
+    ex_empty_dur$EXDUR <- ""
+    result <- .prepare_dose_table(ex_empty_dur)
     expect_equal(result$ADOSEDUR, c(0, 0, 0))
   })
 
