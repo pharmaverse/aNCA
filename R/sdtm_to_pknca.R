@@ -361,8 +361,23 @@ pc_to_PKNCAconc <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: o
     conc_data$TRT01A <- conc_data$DOSETRT
   }
 
-  # --- Initialise aNCA-specific columns ---------------------------------------
-  conc_data$nca_exclude       <- ""
+  # --- NCA exclusions from PCSTAT / PCREASND ----------------------------------
+  # SDTM uses PCSTAT = "NOT DONE" to flag samples that were not collected or
+  # not analysed. PCREASND gives the reason. Map these to nca_exclude so
+  # PKNCA skips them (same role as DTYPE / NCAwXRS in the ADNCA path).
+  nca_exclude <- rep("", nrow(conc_data))
+  if ("PCREASND" %in% names(pc)) {
+    reason <- trimws(pc$PCREASND)
+    reason[is.na(reason)] <- ""
+    has_reason <- nchar(reason) > 0
+    nca_exclude[has_reason] <- reason[has_reason]
+  } else if ("PCSTAT" %in% names(pc)) {
+    stat <- trimws(pc$PCSTAT)
+    stat[is.na(stat)] <- ""
+    not_done <- stat != ""
+    nca_exclude[not_done] <- stat[not_done]
+  }
+  conc_data$nca_exclude       <- nca_exclude
   conc_data$is.excluded.hl    <- FALSE
   conc_data$is.included.hl    <- FALSE
   conc_data$exclude_half.life <- FALSE
