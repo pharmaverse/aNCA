@@ -141,8 +141,17 @@ route_cdisc_to_pknca <- function(route) {
     adosedur[na_dur] <- dur_from_dates[na_dur]
   }
 
-  # Default: 0 for extravascular, NA stays for IV (will need review)
-  adosedur[is.na(adosedur)] <- 0
+  # Default remaining NAs to 0 with a warning
+  n_defaulted <- sum(is.na(adosedur))
+  if (n_defaulted > 0) {
+    warning(
+      "Dose duration defaulted to 0 hours for ", n_defaulted,
+      " of ", nrow(ex), " dose records (no EXDUR or EXENDTC available). ",
+      "This assumes instantaneous dosing (e.g. extravascular).",
+      call. = FALSE
+    )
+    adosedur[is.na(adosedur)] <- 0
+  }
 
   # Parse nominal elapsed time (EXELTM) if available and non-empty
   exeltm_hours <- NULL
