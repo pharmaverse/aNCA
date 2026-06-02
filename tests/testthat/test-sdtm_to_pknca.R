@@ -166,9 +166,12 @@ describe(".prepare_dose_table", {
     expect_equal(result$ADOSEDUR, c(2, 2, 2))
   })
 
-  it("defaults ADOSEDUR to 0 when both EXDUR and EXENDTC are absent", {
+  it("defaults ADOSEDUR to 0 with warning when no duration source", {
     ex_no_dur <- ex_mini[, setdiff(names(ex_mini), c("EXDUR", "EXENDTC"))]
-    result <- .prepare_dose_table(ex_no_dur)
+    expect_warning(
+      result <- .prepare_dose_table(ex_no_dur),
+      "Dose duration defaulted to 0"
+    )
     expect_equal(result$ADOSEDUR, c(0, 0, 0))
   })
 
@@ -179,10 +182,13 @@ describe(".prepare_dose_table", {
     expect_equal(result$ADOSEDUR, c(2, 2, 2))
   })
 
-  it("falls back to 0 when EXDUR is empty and EXENDTC is absent", {
+  it("warns when EXDUR is empty and EXENDTC is absent", {
     ex_empty_dur <- ex_mini[, setdiff(names(ex_mini), "EXENDTC")]
     ex_empty_dur$EXDUR <- ""
-    result <- .prepare_dose_table(ex_empty_dur)
+    expect_warning(
+      result <- .prepare_dose_table(ex_empty_dur),
+      "Dose duration defaulted to 0"
+    )
     expect_equal(result$ADOSEDUR, c(0, 0, 0))
   })
 
