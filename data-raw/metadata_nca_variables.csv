@@ -372,7 +372,8 @@ PC,8,PCRFTDTC,Date/Time of Reference Point,dateTime,Timing,Perm,FALSE,FALSE,40,,
 PC,9,PCELTM,Planned Elapsed Time from Reference,text,Timing,Perm,FALSE,FALSE,40,,TRUE,,TRUE,"ISO 8601 duration from reference dose to planned sample time (e.g. PT2H, PT-0.5H). Used to derive NRRLT",PC Concentrations,PCTPTNUM,7,FALSE
 PC,10,VOLUME,Volume Value,float,Record Qualifier,Perm,FALSE,FALSE,12,,TRUE,,TRUE,Numeric column for collected sample volume. Only required for excretion studies,Supplemental Variables,,17,FALSE
 PC,11,VOLUMEU,Volume Value Unit,text,Variable Qualifier,Perm,FALSE,FALSE,40,,TRUE,,TRUE,"Character column for volume unit. Instead of a column name, a unique value can be mapped (e.g. ""mL"")",Supplemental Variables,,18,FALSE
-PC,12,DOMAIN,Domain Abbreviation,text,Identifier,Req,FALSE,TRUE,2,,TRUE,,FALSE,,,,NA,FALSE
+PC,12,PCREASND,Reason Test Not Done,text,Record Qualifier,Perm,FALSE,FALSE,200,,TRUE,,TRUE,"Character column with the reason a sample was not done (e.g. ""Sample hemolyzed""). Non-empty values exclude the record from NCA (same role as NCAwXRS in ADNCA)",Supplemental Variables,,19,FALSE
+PC,13,DOMAIN,Domain Abbreviation,text,Identifier,Req,FALSE,TRUE,2,,TRUE,,FALSE,,,,NA,FALSE
 EX,3,EXTRT,Name of Treatment,text,Topic,Req,FALSE,FALSE,40,,TRUE,,TRUE,Character column for the protocol-specified treatment name (maps to DOSETRT),EX Dosing,"EXDECOD, EXCAT",8,FALSE
 EX,4,EXDOSE,Dose per Administration,float,Record Qualifier,Req,FALSE,FALSE,12,,TRUE,,TRUE,Numeric column for the actual dose amount administered (maps to DOSEA),EX Dosing,,9,FALSE
 EX,5,EXDOSU,Dose Units,text,Variable Qualifier,Req,FALSE,FALSE,40,C71620,TRUE,,TRUE,"Character column for dose unit. Instead of a column name, a unique value can be mapped (e.g. ""mg"")",EX Dosing,,10,FALSE

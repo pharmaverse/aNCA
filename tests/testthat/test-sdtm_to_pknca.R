@@ -441,9 +441,8 @@ describe("pc_to_PKNCAconc", {
     expect_equal(unique(result$data$PCSPEC), "UNKNOWN")
   })
 
-  it("populates nca_exclude from PCREASND", {
+  it("uses PCREASND as nca_exclude when mapped", {
     pc_with_reason <- pc_mini
-    pc_with_reason$PCSTAT <- c("", "", "NOT DONE", "", "")
     pc_with_reason$PCREASND <- c("", "", "Sample hemolyzed", "", "")
     result <- pc_to_PKNCAconc(pc_with_reason, ex_mini)
     excl <- result$data$nca_exclude
@@ -452,17 +451,7 @@ describe("pc_to_PKNCAconc", {
     expect_equal(excl[5], "")
   })
 
-  it("falls back to PCSTAT when PCREASND is absent", {
-    pc_with_stat <- pc_mini
-    pc_with_stat$PCSTAT <- c("", "", "NOT DONE", "", "NOT DONE")
-    result <- pc_to_PKNCAconc(pc_with_stat, ex_mini)
-    excl <- result$data$nca_exclude
-    expect_equal(excl[3], "NOT DONE")
-    expect_equal(excl[5], "NOT DONE")
-    expect_equal(excl[1], "")
-  })
-
-  it("leaves nca_exclude empty when PCSTAT/PCREASND are absent", {
+  it("defaults nca_exclude to empty when PCREASND is absent", {
     result <- pc_to_PKNCAconc(pc_mini, ex_mini)
     expect_true(all(result$data$nca_exclude == ""))
   })
