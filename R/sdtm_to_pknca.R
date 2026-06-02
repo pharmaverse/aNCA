@@ -25,25 +25,50 @@ std_dtc_to_rdate <- function(dtc) {
 
 #' Parse an ISO 8601 duration string to numeric hours
 #'
-#' Supports durations in the form \code{PT<number>H}, \code{PT<number>M},
-#' \code{PT<number>S}, or combinations like \code{PT1H30M}. Also handles
-#' negative durations (e.g. \code{PT-0.5H}). Returns the total duration in
-#' hours as a numeric value.
+#' Supports the full CDISC-compliant ISO 8601 duration format:
+#' \code{PnYnMnDTnHnMnS} and \code{PnW}. Empty strings and \code{NA}
+#' values return \code{NA_real_}. Month and year conversions use
+#' average lengths (30.4375 days/month, 365.25 days/year).
 #'
 #' @param x Character vector of ISO 8601 duration strings (e.g. \code{"PT2H"},
-#'   \code{"PT1H30M"}, \code{"PT90M"})
+#'   \code{"P3D"}, \code{"P1DT12H"}, \code{"P2W"}, \code{"PT0.5H"})
 #' @returns Numeric vector of durations in hours
 #' @keywords internal
 parse_iso8601_duration <- function(x) {
   vapply(x, function(val) {
-    if (is.na(val) || !grepl("^PT", val)) return(NA_real_)
+    if (is.na(val) || !nzchar(trimws(val)) || !grepl("^P", val)) {
+      return(NA_real_)
+    }
     hours <- 0
-    h_match <- regmatches(val, regexpr("-?[0-9.]+(?=H)", val, perl = TRUE))
+
+    # Week format: PnW (cannot be mixed with other components per ISO 8601)
+    w_match <- regmatches(val, regexpr("[0-9.]+(?=W)", val, perl = TRUE))
+    if (length(w_match) == 1) return(as.numeric(w_match) * 7 * 24)
+
+    # Date components (before T): years, months, days
+    date_part <- sub("T.*", "", sub("^P", "", val))
+    y_match <- regmatches(date_part, regexpr("[0-9.]+(?=Y)", date_part,
+                                             perl = TRUE))
+    if (length(y_match) == 1) hours <- hours + as.numeric(y_match) * 365.25 * 24
+    mo_match <- regmatches(date_part, regexpr("[0-9.]+(?=M)", date_part,
+                                              perl = TRUE))
+    if (length(mo_match) == 1) hours <- hours + as.numeric(mo_match) * 30.4375 * 24
+    d_match <- regmatches(date_part, regexpr("[0-9.]+(?=D)", date_part,
+                                             perl = TRUE))
+    if (length(d_match) == 1) hours <- hours + as.numeric(d_match) * 24
+
+    # Time components (after T): hours, minutes, seconds
+    time_part <- if (grepl("T", val)) sub(".*T", "", val) else ""
+    h_match <- regmatches(time_part, regexpr("-?[0-9.]+(?=H)", time_part,
+                                             perl = TRUE))
     if (length(h_match) == 1) hours <- hours + as.numeric(h_match)
-    m_match <- regmatches(val, regexpr("-?[0-9.]+(?=M)", val, perl = TRUE))
+    m_match <- regmatches(time_part, regexpr("-?[0-9.]+(?=M)", time_part,
+                                             perl = TRUE))
     if (length(m_match) == 1) hours <- hours + as.numeric(m_match) / 60
-    s_match <- regmatches(val, regexpr("-?[0-9.]+(?=S)", val, perl = TRUE))
+    s_match <- regmatches(time_part, regexpr("-?[0-9.]+(?=S)", time_part,
+                                             perl = TRUE))
     if (length(s_match) == 1) hours <- hours + as.numeric(s_match) / 3600
+
     hours
   }, numeric(1), USE.NAMES = FALSE)
 }
@@ -92,23 +117,38 @@ route_cdisc_to_pknca <- function(route) {
   exstdtc_posix <- std_dtc_to_rdate(ex$EXSTDTC)
 
   # Parse duration: from EXDUR (ISO 8601) or EXENDTC - EXSTDTC
-  if ("EXDUR" %in% names(ex)) {
+  # EXDUR may be present but empty/NA — only use it when it has real values
+  has_exdur <- "EXDUR" %in% names(ex) &&
+    any(!is.na(ex$EXDUR) & nchar(trimws(ex$EXDUR)) > 0)
+
+  if (has_exdur) {
     adosedur <- if (is.character(ex$EXDUR)) {
       parse_iso8601_duration(ex$EXDUR)
     } else {
       as.numeric(ex$EXDUR)
     }
-  } else if ("EXENDTC" %in% names(ex)) {
-    end_posix <- std_dtc_to_rdate(ex$EXENDTC)
-    dur <- as.numeric(difftime(end_posix, exstdtc_posix, units = "hours"))
-    adosedur <- ifelse(is.na(dur), 0, dur)
   } else {
-    adosedur <- rep(0, nrow(ex))
+    adosedur <- rep(NA_real_, nrow(ex))
   }
 
-  # Parse nominal elapsed time (EXELTM) if available
+  # Fill remaining NAs from EXENDTC - EXSTDTC
+  na_dur <- is.na(adosedur)
+  if (any(na_dur) && "EXENDTC" %in% names(ex)) {
+    end_posix <- std_dtc_to_rdate(ex$EXENDTC)
+    dur_from_dates <- as.numeric(
+      difftime(end_posix, exstdtc_posix, units = "hours")
+    )
+    adosedur[na_dur] <- dur_from_dates[na_dur]
+  }
+
+  # Default: 0 for extravascular, NA stays for IV (will need review)
+  adosedur[is.na(adosedur)] <- 0
+
+  # Parse nominal elapsed time (EXELTM) if available and non-empty
   exeltm_hours <- NULL
-  if ("EXELTM" %in% names(ex)) {
+  has_exeltm <- "EXELTM" %in% names(ex) &&
+    any(!is.na(ex$EXELTM) & nchar(trimws(ex$EXELTM)) > 0)
+  if (has_exeltm) {
     exeltm_hours <- if (is.character(ex$EXELTM)) {
       parse_iso8601_duration(ex$EXELTM)
     } else {
@@ -256,8 +296,14 @@ pc_to_PKNCAconc <- function(pc, ex, dm = NULL, metabolites = NULL) { # nolint: o
 
   # --- Nominal times ----------------------------------------------------------
   # NRRLT: from PCELTM (nominal time from reference / most recent dose)
-  if ("PCELTM" %in% names(pc)) {
-    conc_data$NRRLT <- parse_iso8601_duration(pc$PCELTM)
+  has_pceltm <- "PCELTM" %in% names(pc) &&
+    any(!is.na(pc$PCELTM) & nchar(trimws(pc$PCELTM)) > 0)
+  if (has_pceltm) {
+    nrrlt_parsed <- parse_iso8601_duration(pc$PCELTM)
+    # Fill rows where PCELTM was empty/unparseable with ARRLT
+    na_nrrlt <- is.na(nrrlt_parsed)
+    nrrlt_parsed[na_nrrlt] <- conc_data$ARRLT[na_nrrlt]
+    conc_data$NRRLT <- nrrlt_parsed
   } else {
     # Fallback: use ARRLT as nominal
     conc_data$NRRLT <- conc_data$ARRLT
