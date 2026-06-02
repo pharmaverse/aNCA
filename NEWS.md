@@ -80,6 +80,7 @@
 * Dose-aware AUCint parameters now share the same PPTESTCD as their non-dose-aware counterparts in CDISC exports, with `PPANMETH` indicating the analytical method. Internal PPTESTCDs renamed from misleading `D` suffix (e.g. `AUCINTD`) to lowercase `da` suffix (e.g. `AUCINTda`). Fixed wrong PPTEST label for `AUCINTD` which said "Normalized by Dose" (#1242)
 * Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are now normalized to `NULL` when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (#1262)
 * Interval-specific parameters (`aucint.*`, `cav.int.*`) excluded from the Parameter Selection matrix — they require finite sub-intervals and must be configured via Partial Interval Calculations (#1309)
+* Slope rules table (Slope Selector) now properly clears when all rules are removed, and row removal no longer corrupts data or leaks extraneous columns (#1302). The root cause was multi-layered: (1) `validate(need(FALSE))` retained previous output instead of clearing the reactable, (2) `reactable.extras` widgets sent Shiny input events during initialization after every re-render, overwriting valid data with widget defaults, (3) `rbind`/`bind_rows` column mismatches introduced stray columns from plot-click rules, and (4) a namespaced `updateReactable` had been a silent no-op since #1262 due to a missing module namespace suffix.
 
 ### Ratio Calculations
 * Fixed `Aggregate Subject = yes/if-needed` not aggregating reference values, and ratio columns not appearing in results (#1273)

@@ -39,7 +39,7 @@ describe("check_slope_rule_overlap", {
       PARAM = "A", PCSPEC = 1, RANGE = "3:6", REASON = "outlier"
     )
     result <- check_slope_rule_overlap(existing, new_rule)
-    expect_null(result)
+    expect_equal(nrow(result), 0)
   })
 
   it("returns remaining rows when cancelling one of multiple exclusions", {

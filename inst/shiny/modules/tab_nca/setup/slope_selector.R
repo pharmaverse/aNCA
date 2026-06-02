@@ -266,18 +266,14 @@ slope_selector_server <- function( # nolint
       refresh_reactable(refresh_reactable() + 1)
     })
 
-    #' Separate event handling updating displayed reactable upon every change (adding and removing
-    #' rows, plots selection, edits). This needs to be separate call, since simply re-rendering
-    #' the table would mean losing focus on text inputs when entering values.
+    #' Observe manual_slopes changes for inline edits.
+    #' NOTE: We intentionally do NOT call updateReactable here because:
+    #' 1. renderReactable + bindEvent(refresh_reactable()) handles all full re-renders
+    #' 2. reactable.extras widgets (dropdown_extra, text_extra) handle inline edits directly
+    #' 3. updateReactable from the parent module cannot reference the inner module's
+    #'    outputId without hardcoding internal namespace structure (#1302).
     observeEvent(manual_slopes(), {
-      req(manual_slopes())
-
-      # Update reactable with rules
-      reactable::updateReactable(
-        outputId = "manual_slopes",
-        data = manual_slopes()
-      )
-
+      # manual_slopes changes are handled by refresh_reactable-triggered re-renders
     })
     #' returns half life adjustments rules to update processed_pknca_data in nca_setup.R
     manual_slopes

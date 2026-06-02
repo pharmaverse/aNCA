@@ -93,7 +93,7 @@ describe("check_slope_rule_overlap", {
       RANGE = "3:6"
     )
 
-    expect_null(check_slope_rule_overlap(EXISTING_FIXTURE, NEW))
+    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 0)
   })
 
   it("should warn if more than one range for single subject, profile and rule type is detected", {
