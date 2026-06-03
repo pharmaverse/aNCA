@@ -290,9 +290,8 @@ update_main_intervals <- function(
     data <- create_start_impute(data)
   }
 
-  # Ensure impute column exists so dplyr mutate below references the column
-  # rather than the function parameter (which could be FALSE from YAML settings,
-  # causing "PKNCA_impute_method_FALSE" not found error).
+  # Prevent mutate() from resolving `impute` to the function parameter instead
+  # of the column (causes PKNCA_impute_method_FALSE error when impute=FALSE).
   if (!"impute" %in% names(data$intervals)) {
     data$intervals$impute <- NA_character_
   }

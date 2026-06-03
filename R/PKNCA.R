@@ -898,10 +898,8 @@ remove_pp_not_requested <- function(pknca_res) {
     pknca_res$data$intervals$impute <- NA_character_
   }
 
-  # Build explicit match columns: PKNCA groups + interval identifiers only.
-  # Exclude user-specified keep_interval_cols (e.g. AGE, SEX) which are
-  # not needed for parameter-request matching and may cause type-mismatch
-  # errors when dplyr strict-join sees incompatible types across data frames.
+  # Match on PKNCA groups + interval IDs only; exclude keep_interval_cols
+  # to avoid type-mismatch errors on joins.
   pknca_groups <- unique(c(
     group_vars(pknca_res$data$conc),
     group_vars(pknca_res$data$dose)

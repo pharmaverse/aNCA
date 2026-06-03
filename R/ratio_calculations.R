@@ -130,11 +130,7 @@ calculate_ratios.data.frame <- function(
   )
   group_cols <- setdiff(colnames(data), extra_res_cols)
 
-  # Parse group column values to match the types in the data.
-  # YAML-sourced settings store all values as character, but the
-  # corresponding columns in PKNCA results may be numeric (e.g. AGE).
-  # Without type coercion, merge() and anti_join() fail with
-  # "Can't join due to incompatible types".
+  # Coerce YAML-sourced character values to match data column types for joins.
   ref_groups <- .coerce_group_types(ref_groups, data)
   if (!is.null(test_groups)) {
     test_groups <- .coerce_group_types(test_groups, data)
