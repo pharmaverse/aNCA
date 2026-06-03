@@ -400,12 +400,12 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #'
 #' @param pptx An officer rpptx object.
 #' @param glossary A data frame with columns `PPTESTCD` and `PPTEST`.
-#' @param max_rows Maximum rows per glossary slide. Default 10.
+#' @param max_rows Maximum rows per glossary slide. Default 8.
 #' @returns A list with `pptx` (updated rpptx object) and `n_slides`
 #'   (number of glossary slides added).
 #' @keywords internal
 #' @noRd
-.add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 10L) {
+.add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 8L) {
   if (nrow(glossary) == 0) return(list(pptx = pptx, n_slides = 0L))
 
   # Position table closer to the title than the default template placeholder,
