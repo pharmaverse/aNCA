@@ -233,22 +233,28 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       .show_code_modal(code)
     })
 
-    # Uses deprecated execCommand('copy') via a hidden textarea because
-    # navigator.clipboard.writeText() fails with R code containing $ and backticks.
+    # Copy code to clipboard using the modern Clipboard API with
+    # execCommand fallback for older browsers.
     observeEvent(input$clipboard_copy, {
       textarea_id <- ns("code_textarea")
+      done_id <- ns("clipboard_done")
       shinyjs::runjs(paste0(
         "var ta = document.getElementById('", textarea_id, "');",
         "if (ta) {",
-        "  ta.style.position = 'fixed';",
-        "  ta.style.left = '0';",
-        "  ta.style.top = '0';",
-        "  ta.style.opacity = '0';",
-        "  ta.select();",
-        "  document.execCommand('copy');",
-        "  ta.style.position = 'absolute';",
-        "  ta.style.left = '-9999px';",
-        "  Shiny.setInputValue('", ns("clipboard_done"), "', Math.random());",
+        "  var text = ta.value;",
+        "  if (navigator.clipboard && navigator.clipboard.writeText) {",
+        "    navigator.clipboard.writeText(text).then(function() {",
+        "      Shiny.setInputValue('", done_id, "', Math.random());",
+        "    }).catch(function() {",
+        "      ta.select();",
+        "      document.execCommand('copy');",
+        "      Shiny.setInputValue('", done_id, "', Math.random());",
+        "    });",
+        "  } else {",
+        "    ta.select();",
+        "    document.execCommand('copy');",
+        "    Shiny.setInputValue('", done_id, "', Math.random());",
+        "  }",
         "}"
       ))
     })

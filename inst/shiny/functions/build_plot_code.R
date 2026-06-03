@@ -84,7 +84,8 @@ build_plot_code <- function(plot_type, inputs, session) {
 
 .fmt_chr <- function(x) {
   if (is.null(x) || length(x) == 0) return("NULL")
-  quoted <- vapply(x, function(v) encodeString(v, quote = "\""), character(1))
+  quoted <- vapply(x, function(v) encodeString(v, quote = "\""), character(1),
+    USE.NAMES = FALSE)
   if (length(quoted) == 1) return(quoted)
   paste0("c(", paste(quoted, collapse = ", "), ")")
 }
