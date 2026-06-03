@@ -931,10 +931,11 @@ remove_pp_not_requested <- function(pknca_res) {
 #'   - exclude_nca: logical, if TRUE the rows are excluded from NCA
 #'     calculations (added to the exclude column)
 #'   - exclude_tlg: logical, if TRUE the rows are flagged with
-#'     PKSUM1F = "Y" so TLGs can filter them out
+#'     PKSUM1F = "Y" and the reason is stored in PKSUM1RS so
+#'     TLGs can filter them out
 #'
 #' @return The modified PKNCAdata object with updated exclusion
-#'   reasons and PKSUM1F in the concentration object.
+#'   reasons, PKSUM1F, and PKSUM1RS in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   if (is.null(exclusion_list) || length(exclusion_list) == 0) {
