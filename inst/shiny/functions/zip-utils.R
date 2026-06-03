@@ -82,9 +82,9 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
 }
 
 # Check if an object is a saveable leaf (ggplot, data.frame, plotly, or code string)
-.is_leaf <- function(x) {
+.is_leaf <- function(x, name = "") {
   inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly") ||
-    (is.character(x) && length(x) == 1)
+    (is.character(x) && length(x) == 1 && grepl("_code$", name))
 }
 
 save_output <- function(
@@ -97,7 +97,7 @@ save_output <- function(
   for (name in names(output)) {
     x <- output[[name]]
 
-    if (!.is_leaf(x) && is.list(x)) {
+    if (!.is_leaf(x, name) && is.list(x)) {
       save_output(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats, obj_names

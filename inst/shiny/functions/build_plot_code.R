@@ -17,7 +17,11 @@ build_plot_code <- function(plot_type, inputs, session) {
   time_duplicate_rows <- session$userData$time_duplicate_rows
 
   # --- Data loading ---
-  dataset_filename <- session$userData$dataset_filename %||% "input_data.csv"
+  dataset_filename <- if (!is.null(session$userData$dataset_filename)) {
+    session$userData$dataset_filename
+  } else {
+    "input_data.csv"
+  }
   data_section <- paste0(
     "# Load raw data\n",
     "data_path <- \"", dataset_filename, "\"\n",
@@ -80,8 +84,9 @@ build_plot_code <- function(plot_type, inputs, session) {
 
 .fmt_chr <- function(x) {
   if (is.null(x) || length(x) == 0) return("NULL")
-  if (length(x) == 1) return(paste0("\"", x, "\""))
-  paste0("c(", paste0("\"", x, "\"", collapse = ", "), ")")
+  quoted <- vapply(x, function(v) encodeString(v, quote = "\""), character(1))
+  if (length(quoted) == 1) return(quoted)
+  paste0("c(", paste(quoted, collapse = ", "), ")")
 }
 
 .fmt_lgl <- function(x) {
@@ -182,10 +187,18 @@ build_plot_code <- function(plot_type, inputs, session) {
     )
   }
 
+  pcspec_col <- if (!is.null(inputs$pcspec_col)) inputs$pcspec_col else "PCSPEC"
+  shape_var <- if (!is.null(inputs$shape_var)) inputs$shape_var else "PCSPEC"
+  tooltip_vars <- if (!is.null(inputs$other_tooltip_vars)) {
+    inputs$other_tooltip_vars
+  } else {
+    c("NFRLT", "DOSETRT")
+  }
+
   pcspec_filter <- ""
   if (!is.null(inputs$pcspec) && length(inputs$pcspec) > 0) {
     pcspec_filter <- paste0(
-      "conc_data <- conc_data[conc_data$PCSPEC %in% ",
+      "conc_data <- conc_data[conc_data$", pcspec_col, " %in% ",
       .fmt_chr(inputs$pcspec), ", ]\n"
     )
   }
@@ -212,9 +225,9 @@ build_plot_code <- function(plot_type, inputs, session) {
     "  x_var = pknca_data$conc$columns$time,\n",
     "  y_var = pknca_data$conc$columns$subject,\n",
     "  colour_var = ", .fmt_chr(inputs$colour_var), ",\n",
-    "  shape_var = \"PCSPEC\",\n",
+    "  shape_var = ", .fmt_chr(shape_var), ",\n",
     "  grouping_vars = ", .fmt_chr(inputs$group_var), ",\n",
-    "  other_tooltip_vars = c(\"NFRLT\", \"DOSETRT\"),\n",
+    "  other_tooltip_vars = ", .fmt_chr(tooltip_vars), ",\n",
     "  x_var_units = pknca_data$conc$columns$timeu,\n",
     "  colour_var_units = colour_var_units,\n",
     "  labels_df = aNCA::metadata_nca_variables,\n",

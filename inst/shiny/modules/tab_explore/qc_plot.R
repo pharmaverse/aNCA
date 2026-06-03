@@ -218,7 +218,10 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         group_var = input$group_var,
         usubjid = input$usubjid,
         pcspec = input$pcspec,
-        show_samples_doses = input$show_samples_doses
+        show_samples_doses = input$show_samples_doses,
+        pcspec_col = "PCSPEC",
+        shape_var = "PCSPEC",
+        other_tooltip_vars = c("NFRLT", "DOSETRT")
       ))
     )
   })
