@@ -386,8 +386,8 @@ find_common_prefix <- function(strings) {
 
 #' Derive PKSUM1RS (exclusion reason) for ADNCA rows
 #'
-#' Returns the general exclusion reason (stored in PKSUM1RS by
-#' `add_exclusion_reasons()`) for rows where PKSUM1F is "Y".
+#' Combines general exclusion reasons (stored in PKSUM1RS by
+#' `add_exclusion_reasons()`) with half-life point exclusion reasons.
 #' Returns empty string for non-excluded rows.
 #'
 #' @param data The ADNCA data frame being built.
@@ -400,6 +400,15 @@ find_common_prefix <- function(strings) {
     data$PKSUM1RS
   } else {
     rep("", nrow(data))
+  }
+  # Append half-life exclusion reason when applicable
+  if ("is.excluded.hl" %in% names(data)) {
+    hl_rows <- !is.na(data$is.excluded.hl) & data$is.excluded.hl
+    reason[hl_rows] <- ifelse(
+      reason[hl_rows] == "",
+      "Half-life point exclusion",
+      paste0(reason[hl_rows], "; Half-life point exclusion")
+    )
   }
   ifelse(pksum1f == "Y", reason, "")
 }
