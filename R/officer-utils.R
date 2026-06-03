@@ -32,7 +32,7 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @returns rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
   ft <- flextable::flextable(df, cwidth = 1) %>%
-    flextable::fontsize(size = 8, part = "all")
+    flextable::fontsize(size = 9, part = "all")
   officer::add_slide(pptx, layout = "Content with Caption") %>%
     officer::ph_with(value = plot, location = "Content Placeholder 1") %>%
     officer::ph_with(value = ft, location = "Table Placeholder 1")
@@ -58,7 +58,7 @@ add_pptx_sl_table <- function(pptx, df, title = "",
 
   # Set flextable to autofit and center for better appearance
   ft <- flextable::flextable(df) %>%
-    flextable::fontsize(size = 8, part = "all") %>%
+    flextable::fontsize(size = 9, part = "all") %>%
     flextable::autofit()
 
   officer::add_slide(pptx, layout = "Title Only") %>%
@@ -427,7 +427,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
       fp_p = officer::fp_par(text.align = "center", line_spacing = 1)
     )
     ft <- flextable::flextable(chunks[[i]]) %>%
-      flextable::fontsize(size = 8, part = "all") %>%
+      flextable::fontsize(size = 9, part = "all") %>%
       flextable::autofit()
 
     pptx <- officer::add_slide(pptx, layout = "Title Only") %>%
