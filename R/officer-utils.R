@@ -58,9 +58,17 @@ add_pptx_sl_table <- function(pptx, df, title = "",
   ft <- flextable::flextable(df) %>%
     flextable::autofit()
 
+  # Use explicit positions: compact title at top, table fills remaining space
+  title_loc <- officer::ph_location(
+    left = 0.5, top = 0.15, width = 9, height = 0.6
+  )
+  table_loc <- officer::ph_location(
+    left = 0.5, top = 0.85, width = 9, height = 4.1
+  )
+
   officer::add_slide(pptx, layout = "Title Only") %>%
-    officer::ph_with(value = ft, location = "Table Placeholder 1") %>%
-    officer::ph_with(value = title_formatted, location = "Title 1") %>%
+    officer::ph_with(value = ft, location = table_loc) %>%
+    officer::ph_with(value = title_formatted, location = title_loc) %>%
     officer::ph_with(value = footer, location = "Footer Placeholder 3")
 }
 
@@ -397,12 +405,12 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #'
 #' @param pptx An officer rpptx object.
 #' @param glossary A data frame with columns `PPTESTCD` and `PPTEST`.
-#' @param max_rows Maximum rows per glossary slide. Default 20.
+#' @param max_rows Maximum rows per glossary slide. Default 15.
 #' @returns A list with `pptx` (updated rpptx object) and `n_slides`
 #'   (number of glossary slides added).
 #' @keywords internal
 #' @noRd
-.add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 20L) {
+.add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 15L) {
   if (nrow(glossary) == 0) return(list(pptx = pptx, n_slides = 0L))
 
   chunks <- split(glossary, ceiling(seq_len(nrow(glossary)) / max_rows))
