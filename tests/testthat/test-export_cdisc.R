@@ -838,7 +838,7 @@ describe("export_cdisc: CRITy column creation", {
     adpp <- result$adpp
     expect_true("CRIT1" %in% names(adpp))
     expect_true("CRIT1FL" %in% names(adpp))
-    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
+    expect_equal(unique(adpp$CRIT1), "R2ADJ >= 0.7")
   })
 
   it("creates CRITy columns for each flag rule", {
@@ -849,21 +849,21 @@ describe("export_cdisc: CRITy column creation", {
     expect_true("CRIT1FL" %in% names(adpp))
     expect_true("CRIT2" %in% names(adpp))
     expect_true("CRIT2FL" %in% names(adpp))
-    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
-    expect_equal(unique(adpp$CRIT2), "AUCPEO > 20")
+    expect_equal(unique(adpp$CRIT1), "R2ADJ >= 0.7")
+    expect_equal(unique(adpp$CRIT2), "AUCPEO <= 20")
   })
 })
 
 describe("export_cdisc: CRITyFL values", {
 
-  it("CRITyFL is Y and CRITy contains rule when criterion is satisfied", {
+  it("CRITyFL is Y and CRITy contains inverted criterion when satisfied", {
     result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
     adpp <- result$adpp
     expect_true(all(adpp$CRIT1FL == "Y"))
-    expect_true(all(adpp$CRIT1 == "R2ADJ < 0.7"))
+    expect_true(all(adpp$CRIT1 == "R2ADJ >= 0.7"))
   })
 
-  it("CRITyFL is empty and CRITy contains rule for violated records", {
+  it("CRITyFL is empty and CRITy contains inverted criterion for violated records", {
     modified <- test_pknca_res
     modified$result <- modified$result %>%
       mutate(
@@ -880,9 +880,9 @@ describe("export_cdisc: CRITyFL values", {
     unflagged <- adpp %>%
       filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
     expect_true(all(flagged$CRIT1FL == ""))
-    expect_true(all(flagged$CRIT1 == "R2ADJ < 0.7"))
+    expect_true(all(flagged$CRIT1 == "R2ADJ >= 0.7"))
     expect_true(all(unflagged$CRIT1FL == "Y"))
-    expect_true(all(unflagged$CRIT1 == "R2ADJ < 0.7"))
+    expect_true(all(unflagged$CRIT1 == "R2ADJ >= 0.7"))
   })
 
   it("handles multiple rules where only one is violated", {
@@ -900,9 +900,27 @@ describe("export_cdisc: CRITyFL values", {
     flagged <- adpp %>%
       filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
     expect_true(all(flagged$CRIT1FL == ""))
-    expect_true(all(flagged$CRIT1 == "R2ADJ < 0.7"))
+    expect_true(all(flagged$CRIT1 == "R2ADJ >= 0.7"))
     expect_true(all(flagged$CRIT2FL == "Y"))
-    expect_true(all(flagged$CRIT2 == "AUCPEO > 20"))
+    expect_true(all(flagged$CRIT2 == "AUCPEO <= 20"))
+  })
+})
+
+describe(".invert_criterion_operator", {
+  it("inverts < to >=", {
+    expect_equal(aNCA:::.invert_criterion_operator("R2ADJ < 0.7"), "R2ADJ >= 0.7")
+  })
+  it("inverts > to <=", {
+    expect_equal(aNCA:::.invert_criterion_operator("AUCPEO > 20"), "AUCPEO <= 20")
+  })
+  it("inverts <= to >", {
+    expect_equal(aNCA:::.invert_criterion_operator("X <= 5"), "X > 5")
+  })
+  it("inverts >= to <", {
+    expect_equal(aNCA:::.invert_criterion_operator("Y >= 10"), "Y < 10")
+  })
+  it("returns unchanged string when no operator found", {
+    expect_equal(aNCA:::.invert_criterion_operator("no operator"), "no operator")
   })
 })
 
