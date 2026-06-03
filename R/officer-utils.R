@@ -31,9 +31,11 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @param plot ggplot object to show as plot
 #' @returns rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
+  ft <- flextable::flextable(df, cwidth = 1) %>%
+    flextable::fontsize(size = 9, part = "all")
   officer::add_slide(pptx, layout = "Content with Caption") %>%
     officer::ph_with(value = plot, location = "Content Placeholder 1") %>%
-    officer::ph_with(value = flextable::flextable(df, cwidth = 1), location = "Table Placeholder 1")
+    officer::ph_with(value = ft, location = "Table Placeholder 1")
 }
 
 #' Add a slide with a table only
@@ -56,6 +58,7 @@ add_pptx_sl_table <- function(pptx, df, title = "",
 
   # Set flextable to autofit and center for better appearance
   ft <- flextable::flextable(df) %>%
+    flextable::fontsize(size = 9, part = "all") %>%
     flextable::autofit()
 
   officer::add_slide(pptx, layout = "Title Only") %>%
@@ -397,13 +400,18 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #'
 #' @param pptx An officer rpptx object.
 #' @param glossary A data frame with columns `PPTESTCD` and `PPTEST`.
-#' @param max_rows Maximum rows per glossary slide. Default 20.
+#' @param max_rows Maximum rows per glossary slide. Default 15.
 #' @returns A list with `pptx` (updated rpptx object) and `n_slides`
 #'   (number of glossary slides added).
 #' @keywords internal
 #' @noRd
-.add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 20L) {
+.add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 15L) {
   if (nrow(glossary) == 0) return(list(pptx = pptx, n_slides = 0L))
+
+  # Position table closer to the title than the default template placeholder
+  table_loc <- officer::ph_location(
+    left = 0.5, top = 1.2, width = 9, height = 3.8
+  )
 
   chunks <- split(glossary, ceiling(seq_len(nrow(glossary)) / max_rows))
   for (i in seq_along(chunks)) {
@@ -412,7 +420,19 @@ add_pptx_sl_plot <- function(pptx, plot) {
     } else {
       "Glossary"
     }
-    pptx <- add_pptx_sl_table(pptx, chunks[[i]], title = page_label, footer = "")
+
+    title_formatted <- officer::fpar(
+      officer::ftext(page_label),
+      fp_p = officer::fp_par(text.align = "center", line_spacing = 1)
+    )
+    ft <- flextable::flextable(chunks[[i]]) %>%
+      flextable::fontsize(size = 9, part = "all") %>%
+      flextable::autofit()
+
+    pptx <- officer::add_slide(pptx, layout = "Title Only") %>%
+      officer::ph_with(value = ft, location = table_loc) %>%
+      officer::ph_with(value = title_formatted, location = "Title 1") %>%
+      officer::ph_with(value = "", location = "Footer Placeholder 3")
   }
   list(pptx = pptx, n_slides = length(chunks))
 }
