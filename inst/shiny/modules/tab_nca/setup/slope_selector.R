@@ -262,7 +262,7 @@ slope_selector_server <- function( # nolint
       manual_slopes(click_result$manual_slopes)
 
       # render rectable anew #
-      shinyjs::runjs("memory = {};") # needed to properly reset reactable.extras widgets
+      reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
     })
 
