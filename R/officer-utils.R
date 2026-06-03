@@ -32,7 +32,7 @@ add_pptx_sl_title <- function(pptx, title) {
 #' @returns rpptx object with slide added
 add_pptx_sl_plottable <- function(pptx, df, plot) {
   ft <- flextable::flextable(df, cwidth = 1) %>%
-    flextable::fontsize(size = 9, part = "all")
+    flextable::fontsize(size = 8, part = "all")
   officer::add_slide(pptx, layout = "Content with Caption") %>%
     officer::ph_with(value = plot, location = "Content Placeholder 1") %>%
     officer::ph_with(value = ft, location = "Table Placeholder 1")
@@ -58,7 +58,7 @@ add_pptx_sl_table <- function(pptx, df, title = "",
 
   # Set flextable to autofit and center for better appearance
   ft <- flextable::flextable(df) %>%
-    flextable::fontsize(size = 9, part = "all") %>%
+    flextable::fontsize(size = 8, part = "all") %>%
     flextable::autofit()
 
   officer::add_slide(pptx, layout = "Title Only") %>%
@@ -408,9 +408,10 @@ add_pptx_sl_plot <- function(pptx, plot) {
 .add_pptx_glossary_slides <- function(pptx, glossary, max_rows = 15L) {
   if (nrow(glossary) == 0) return(list(pptx = pptx, n_slides = 0L))
 
-  # Position table closer to the title than the default template placeholder
+  # Position table closer to the title than the default template placeholder,
+  # horizontally centered on the 10" slide
   table_loc <- officer::ph_location(
-    left = 0.5, top = 1.2, width = 9, height = 3.8
+    left = 1.85, top = 1.2, width = 6.3, height = 3.8
   )
 
   chunks <- split(glossary, ceiling(seq_len(nrow(glossary)) / max_rows))
@@ -426,7 +427,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
       fp_p = officer::fp_par(text.align = "center", line_spacing = 1)
     )
     ft <- flextable::flextable(chunks[[i]]) %>%
-      flextable::fontsize(size = 9, part = "all") %>%
+      flextable::fontsize(size = 8, part = "all") %>%
       flextable::autofit()
 
     pptx <- officer::add_slide(pptx, layout = "Title Only") %>%
