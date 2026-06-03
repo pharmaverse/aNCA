@@ -740,6 +740,15 @@ describe(".get_subjid", {
     expect_equal(result, c("1", "2"))
   })
 
+  it("derives SUBJID correctly with multiple STUDYIDs", {
+    data <- data.frame(
+      USUBJID = c("STUDY1-001", "STUDY2-002", "STUDY1-003"),
+      STUDYID = c("STUDY1", "STUDY2", "STUDY1")
+    )
+    result <- get_subjid(data)
+    expect_equal(result, c("001", "002", "003"))
+  })
+
   it("returns NA when neither USUBJID nor SUBJID are present", {
     data <- data.frame()
     result <- get_subjid(data)
