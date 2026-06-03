@@ -266,6 +266,39 @@ describe(".add_pptx_dose_norm_slide", {
   })
 })
 
+describe("add_pptx_sl_plottable", {
+  template <- system.file("www/templates/template.pptx", package = "aNCA")
+
+  it("adds a slide with plot and table", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    df <- data.frame(A = 1, B = 2)
+    p <- ggplot2::ggplot()
+    pptx <- add_pptx_sl_plottable(pptx, df, p)
+    expect_equal(length(pptx), initial_count + 1)
+  })
+})
+
+describe("add_pptx_sl_table", {
+  template <- system.file("www/templates/template.pptx", package = "aNCA")
+
+  it("adds a slide with a table and title", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    initial_count <- length(pptx)
+    df <- data.frame(Param = "CMAX", Value = 42)
+    pptx <- add_pptx_sl_table(pptx, df, title = "Summary")
+    expect_equal(length(pptx), initial_count + 1)
+  })
+
+  it("uses default footer when none specified", {
+    pptx <- create_pptx_doc(tempfile(fileext = ".pptx"), "Test", template)
+    df <- data.frame(X = 1)
+    pptx <- add_pptx_sl_table(pptx, df)
+    summary <- officer::slide_summary(pptx, 2)
+    expect_true(any(grepl("individual results", summary$text)))
+  })
+})
+
 describe(".collect_pptestcds", {
   it("extracts PPTESTCDs from statistics column names", {
     slides <- list(list(
