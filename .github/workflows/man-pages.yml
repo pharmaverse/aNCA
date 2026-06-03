@@ -47,7 +47,6 @@ jobs:
       - name: Install R Dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          install-sysreqs: false
           # roxygen2 pinned to match the version used locally by developers.
           # Update this when the team upgrades to a newer roxygen2 version.
           extra-packages: |
