@@ -9,7 +9,7 @@ apply_parameter_exclusions(res, excl_info)
 \arguments{
 \item{res}{A PKNCA result object (list with \verb{$result} data frame).}
 
-\item{excl_info}{A list with \code{indices} (integer vector of zero-based row
+\item{excl_info}{A list with \code{indices} (integer vector of 1-based row
 indices) and \code{reasons} (character vector of exclusion reasons).
 If \code{NULL} or empty, the result is returned unchanged.}
 }

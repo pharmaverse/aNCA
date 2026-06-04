@@ -4,7 +4,7 @@
 #' which are consumed by [export_cdisc()] to populate `PPSUMFL`/`PPSUMRSN` in ADPP.
 #'
 #' @param res A PKNCA result object (list with `$result` data frame).
-#' @param excl_info A list with `indices` (integer vector of zero-based row
+#' @param excl_info A list with `indices` (integer vector of 1-based row
 #'   indices) and `reasons` (character vector of exclusion reasons).
 #'   If `NULL` or empty, the result is returned unchanged.
 #'
