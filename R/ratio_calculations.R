@@ -440,7 +440,12 @@ calculate_ratio_app <- function(
   switch(aggregate_subject,
     "yes" = list(setdiff(match_cols, "USUBJID")),
     "no" = {
-      if (!"USUBJID" %in% match_cols) {
+      # For between-subject variables (SEX, RACE, COHORT, etc.), each subject
+      # belongs to only one group, so per-subject USUBJID matching is impossible.
+      # Drop USUBJID to allow group-level comparison (#1286).
+      if (!reference_colname %in% c("ATPTREF", "DOSNOA", "type_interval", "USUBJID")) {
+        match_cols <- setdiff(match_cols, "USUBJID")
+      } else if (!"USUBJID" %in% match_cols) {
         stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
       }
       list(match_cols)
