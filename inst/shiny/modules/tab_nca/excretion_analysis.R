@@ -273,7 +273,7 @@ excretion_help_ui <- function() {
       )
     ),
     style = "unite",
-    icon = icon("question"), label = "Help",
+    icon = icon("question"), tooltip = tooltipOptions(title = "Help"),
     status = "primary"
   )
 }

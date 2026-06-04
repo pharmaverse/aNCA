@@ -77,7 +77,7 @@ ratios_table_ui <- function(id) {
     ),
     style = "unite",
     right = TRUE,
-    icon = icon("question"), label = "Help",
+    icon = icon("question"), tooltip = tooltipOptions(title = "Help"),
     status = "primary",
     width = "500px"
   )
