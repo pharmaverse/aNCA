@@ -37,7 +37,7 @@ general_exclusions_ui <- function(id) {
       actionButton(
         ns("add_exclusion_reason"),
         label = "Add",
-        class = "btn btn-primary btn-sm"
+        class = "btn-primary btn-sm"
       ),
       # Help button (dropdown)
       dropdown(
@@ -78,7 +78,7 @@ general_exclusions_ui <- function(id) {
         ),
         style = "unite",
         right = TRUE,
-        icon = icon("question"),
+        icon = icon("question"), tooltip = tooltipOptions(title = "Help"),
         status = "primary"
       )
     ),

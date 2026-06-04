@@ -9,9 +9,9 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
 .legend_swatch <- function(color, label) {
   div(
     style = "display:flex; align-items:center; gap:6px;",
-    div(style = paste0(
-      "width:14px; height:14px; background:", color,
-      "; border:1px solid #ddd;"
+    div(style = glue::glue(
+      "width:14px; height:14px; background:{color}",
+      "; border:1px solid {BORDER_LIGHT};"
     )),
     span(label, style = "font-size:0.9em;")
   )
@@ -167,7 +167,8 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
             ns(value),
             label = NULL,
             icon = shiny::icon("times"),
-            class = "btn btn-link btn-sm",
+            `aria-label` = "Remove exclusion",
+            class = "btn-link btn-sm",
             style = "padding:2px 6px;"
           )
         )
@@ -196,7 +197,7 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
     pagination = FALSE,
     defaultPageSize = nrow(df),
     theme = reactable::reactableTheme(
-      headerStyle = list(background = "#e9e9e9")
+      headerStyle = list(background = BG_GREY_HEADER)
     ),
     columns = cols
   )

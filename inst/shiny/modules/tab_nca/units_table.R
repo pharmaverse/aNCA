@@ -18,8 +18,7 @@ units_table_ui <- function(id) {
     actionButton(
       ns("open_units_table"),
       icon = icon("scale-balanced"),
-      label = "Parameter Units",
-      disabled = FALSE
+      label = "Parameter Units"
     )
   )
 }

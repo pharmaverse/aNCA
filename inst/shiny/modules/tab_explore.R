@@ -219,7 +219,7 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
         footer = tagList(
           modalButton("Cancel"),
           actionButton(ns("confirm_add_to_exports"), "Save",
-                       class = "btn btn-primary")
+                       class = "btn-primary")
         ),
         size = "s",
         easyClose = TRUE

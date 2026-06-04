@@ -182,8 +182,8 @@ manual_slopes_table_server <- function(
         borderless = TRUE,
         theme = reactableTheme(
           rowSelectedStyle = list(
-            backgroundColor = "#eee",
-            boxShadow = "inset 2px 0 0 0 #ffa62d"
+            backgroundColor = BG_GREY_LIGHT,
+            boxShadow = glue::glue("inset 2px 0 0 0 {ACCENT_ORANGE}")
           )
         )
       )

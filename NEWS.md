@@ -1,5 +1,15 @@
 # aNCA (development version)
 
+## Code Quality
+
+* Removed debug `print()` statements from TLG module and replaced with proper logging (#1298)
+* Removed unused `require(magrittr)` and `require(stats)` calls from `app.R` (#1298)
+* Replaced deprecated HTML `align` attributes with inline CSS in TLG module (#1298)
+* Standardized button CSS classes: removed redundant `btn` prefix where duplicate with `btn-*` (#1298)
+* Added `aria-label` attributes to 15 icon-only buttons for accessibility (#1298)
+* Removed redundant `disabled = FALSE` default from units table actionButton (#1298)
+* Extracted inline hex colors to shared `colors.R` constants and SCSS variables (#1298)
+
 ## Features
 
 ### Settings & Configuration

@@ -535,7 +535,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
           if (dup_data[index, ".dup_group"] %% 2 == 0) {
             list(background = "white")
           } else {
-            list(background = "#e6f2ff")
+            list(background = BG_BLUE_LIGHT)
           }
         },
         selection = "multiple",

@@ -18,7 +18,7 @@ zip_ui <- function(id) {
       inputId = ns("open_zip_modal"),
       label = "Save",
       icon = icon("download"),
-      class = "btn btn-primary",
+      class = "btn-primary",
       style = paste(
         "margin-left: 10px;",
         "padding: 8px 18px;",
@@ -149,8 +149,12 @@ zip_ui <- function(id) {
         width = 6,
         div(
           h4("PK Parameters", style = "margin-bottom: 0.25em;"),
-          p(style = "color: #777; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;",
-            "Parameters included in the slide tables")
+          p(
+            style = glue::glue(
+              "color: {TEXT_SUBTLE}; font-size: 0.85em; margin-top: 0; margin-bottom: 0.75em;"
+            ),
+            "Parameters included in the slide tables"
+          )
         ),
         div(
           id = ns("ind_params_container"),
@@ -228,7 +232,7 @@ zip_ui <- function(id) {
         actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
         div(
           modalButton("Cancel"),
-          downloadButton(ns("download_zip_configured"), "Export", class = "btn btn-primary")
+          downloadButton(ns("download_zip_configured"), "Export", class = "btn-primary")
         )
       )
     ),
@@ -308,14 +312,14 @@ zip_ui <- function(id) {
       "padding: 6px 0 2px;"
     ),
     span(
-      style = paste(
-        "display: inline-block;",
-        "background-color: #dc3545;",
-        "color: #fff;",
-        "border-radius: 20px;",
-        "padding: 5px 14px;",
-        "font-size: 0.85rem;",
-        "font-weight: 500;",
+      style = glue::glue(
+        "display: inline-block; ",
+        "background-color: {ACCENT_DANGER}; ",
+        "color: {ANCA_WHITE}; ",
+        "border-radius: 20px; ",
+        "padding: 5px 14px; ",
+        "font-size: 0.85rem; ",
+        "font-weight: 500; ",
         "line-height: 1.4;"
       ),
       icon("triangle-exclamation"),
@@ -450,7 +454,7 @@ zip_ui <- function(id) {
           ns("confirm_export"),
           label = "Export ZIP with Results",
           icon  = icon("download"),
-          class = "btn btn-primary"
+          class = "btn-primary"
         )
       ),
       easyClose = FALSE,
@@ -598,7 +602,7 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
               actionButton(ns("back_to_export"), "Back", icon = icon("arrow-left")),
               div(
                 modalButton("Cancel"),
-                downloadButton(ns("download_zip"), "Export", class = "btn btn-primary")
+                downloadButton(ns("download_zip"), "Export", class = "btn-primary")
               )
             )
           ),

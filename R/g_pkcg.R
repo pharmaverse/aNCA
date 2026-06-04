@@ -393,6 +393,7 @@ g_pkcg02_log <- function(data, ...) {
 #' @importFrom stats setNames
 
 #' @examples
+#' \donttest{
 #' # Make an example small dataset
 #' adnca <- adnca_example
 #' adnca <- adnca[adnca$USUBJID %in% unique(adnca$USUBJID)[c(1, 2)],]
@@ -403,7 +404,7 @@ g_pkcg02_log <- function(data, ...) {
 #' plots <- pkcg02(adnca)
 #' plots_log <- pkcg02(adnca, scale = "LOG")
 #' plotly::plotly_build(plots[[1]]) # View the first plot
-#'
+#' }
 #' @export
 #' @author Kezia Kobana
 pkcg02 <- function(
