@@ -399,14 +399,17 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
 #' Walk forward through the reverse dependency table from `start_set`.
 #' At each iteration, finds params whose consumers include any param
 #' already in the set — i.e., params that feed into the current chain.
-#' Limited to 2 steps to avoid reaching purely observational leaf params.
+#' Stops when reaching purely observational leaf params (cmax, tmax, tlast)
+#' to avoid including them in the imputation set.
 #' @noRd
-.walk_forward_deps <- function(start_set, rev_deps, max_depth = 2) {
+.walk_forward_deps <- function(start_set, rev_deps,
+                                obs_params = c("cmax", "tmax", "tlast")) {
   needs <- start_set
-  for (depth in seq_len(max_depth)) {
+  repeat {
     newly_found <- character()
     for (pkg in names(rev_deps)) {
-      if (!pkg %in% needs && any(rev_deps[[pkg]] %in% needs)) {
+      if (!pkg %in% needs && !pkg %in% obs_params &&
+          any(rev_deps[[pkg]] %in% needs)) {
         newly_found <- c(newly_found, pkg)
       }
     }

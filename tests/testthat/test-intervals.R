@@ -492,7 +492,7 @@ describe(".walk_forward_deps", {
     expect_false("tmax" %in% result)
   })
 
-  it("stops at max_depth=2 and does not reach leaf params at depth 3", {
+  it("excludes observational leaf params (cmax, tmax, tlast) regardless of depth", {
     metadata <- data.frame(
       PKNCA = c("half.life", "lambda.z", "aucinf.obs"),
       Depends = c("tmax", "half.life", "lambda.z"),
@@ -502,6 +502,29 @@ describe(".walk_forward_deps", {
     result <- .walk_forward_deps(c("aucinf.obs"), rev_deps)
     expect_true("lambda.z" %in% result)
     expect_true("half.life" %in% result)
+    # tmax is in default obs_params → excluded regardless of depth
     expect_false("tmax" %in% result)
+  })
+})
+
+describe("rm_impute_obs_params integration", {
+  it("retains imputation for half.life when aucinf.obs is requested (#1057)", {
+    data <- FIXTURE_PKNCA_DATA
+    # Mark all intervals as having imputation
+    if (!"impute" %in% names(data$intervals)) {
+      data$intervals$impute <- "blq"
+    } else {
+      data$intervals$impute[is.na(data$intervals$impute)] <- "blq"
+    }
+    # Request only aucinf.obs and half.life
+    for (col in names(data$intervals)) {
+      if (col %in% c("start", "end", "impute", "type_interval")) next
+      data$intervals[[col]] <- col %in% c("aucinf.obs", "half.life")
+    }
+    result <- rm_impute_obs_params(data, metadata_nca_parameters)
+    # half.life should NOT have imputation removed (it feeds aucinf.obs)
+    expect_false(
+      any(grepl("half.life", result$intervals$impute_not_for_params %||% character()))
+    )
   })
 })
