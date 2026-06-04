@@ -83,6 +83,8 @@
 
 ### Ratio Calculations
 * Fixed `Aggregate Subject = yes/if-needed` not aggregating reference values, and ratio columns not appearing in results (#1273)
+* Fixed ratio calculation failures for non-ATPTREF contrast variables (e.g. SEX, AGE, COHORT) when `aggregate_subject = "no"` and profiles have different absolute dosing times. `start`/`end` are now dropped from match columns for non-core keep_interval_cols (#1286)
+* Fixed garbled Unicode symbols in AggregateSubject dropdown UI on some browser/OS configurations (#1334)
 
 ### NCA Results & Export
 * Descriptive statistics were silently ungrouped when exported before visiting the tab — now falls back to default grouping columns (#1264)
