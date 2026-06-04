@@ -190,3 +190,53 @@ describe("add_label_attribute", {
     ))
   })
 })
+
+describe("resolve_param_labels", {
+  it("resolves interval column with unit suffix to human-readable label", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "AUCINT_0-12[hr*ng/mL]"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["AUCINT_0-12[hr*ng/mL]"]], "label"),
+      "AUC from 0 to 12"
+    )
+  })
+
+  it("resolves interval column without unit suffix", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "AUCINT_0-24"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["AUCINT_0-24"]], "label"),
+      "AUC from 0 to 24"
+    )
+  })
+
+  it("resolves non-interval column to standard PPTEST label", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "CMAX"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["CMAX"]], "label"),
+      "Max Conc"
+    )
+  })
+
+  it("preserves existing label on column", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "AUCINT_0-12"
+    attr(df[["AUCINT_0-12"]], "label") <- "Custom Label"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["AUCINT_0-12"]], "label"),
+      "Custom Label"
+    )
+  })
+
+  it("does not set label for unrecognized column", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "UNKNOWN_PARAM"
+    result <- resolve_param_labels(df)
+    expect_null(attr(result[["UNKNOWN_PARAM"]], "label"))
+  })
+})
