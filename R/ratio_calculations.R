@@ -440,11 +440,15 @@ calculate_ratio_app <- function(
   switch(aggregate_subject,
     "yes" = list(setdiff(match_cols, "USUBJID")),
     "no" = {
-      # For between-subject variables (SEX, RACE, COHORT, etc.), each subject
-      # belongs to only one group, so per-subject USUBJID matching is impossible.
-      # Drop USUBJID to allow group-level comparison (#1286).
+      # For between-subject variables (SEX, RACE, COHORT, etc.), all
+      # subject-level columns differ between groups and block the merge.
+      # Keep only essential PK formula columns for matching (#1286).
       if (!reference_colname %in% c("ATPTREF", "DOSNOA", "type_interval", "USUBJID")) {
-        match_cols <- setdiff(match_cols, "USUBJID")
+        essential_keys <- intersect(
+          c("STUDYID", "PCSPEC", "DOSETRT", "PARAM", "ATPTREF", "DOSNOA", "type_interval"),
+          match_cols
+        )
+        match_cols <- essential_keys
       } else if (!"USUBJID" %in% match_cols) {
         stop("USUBJID must be included in match_cols when aggregate_subject is 'never'.")
       }
