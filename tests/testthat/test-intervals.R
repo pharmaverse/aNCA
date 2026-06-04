@@ -449,3 +449,59 @@ describe("rm_impute_obs_params", {
     expect_equal(result$intervals, intervals_before)
   })
 })
+
+describe(".build_rev_deps", {
+  it("builds reverse dependency map from Depends column", {
+    metadata <- data.frame(
+      PKNCA = c("half.life", "lambda.z", "aucinf.obs", "cmax"),
+      Depends = c("tmax, tlast", "half.life", "lambda.z", NA),
+      stringsAsFactors = FALSE
+    )
+    result <- .build_rev_deps(metadata)
+    expect_type(result, "list")
+    expect_true("lambda.z" %in% result[["half.life"]])
+    expect_true("aucinf.obs" %in% result[["lambda.z"]])
+    expect_null(result[["cmax"]])
+  })
+
+  it("handles empty Depends strings", {
+    metadata <- data.frame(
+      PKNCA = c("param1", "param2"),
+      Depends = c("", NA),
+      stringsAsFactors = FALSE
+    )
+    result <- .build_rev_deps(metadata)
+    expect_type(result, "list")
+  })
+})
+
+describe(".walk_forward_deps", {
+  it("finds half.life via transitive chain: half.life -> lambda.z -> aucinf.obs", {
+    metadata <- data.frame(
+      PKNCA = c("half.life", "lambda.z", "aucinf.obs", "cmax", "tmax"),
+      Depends = c("tmax, tlast", "half.life", "lambda.z", NA, NA),
+      stringsAsFactors = FALSE
+    )
+    rev_deps <- .build_rev_deps(metadata)
+    start_set <- c("aucinf.obs")
+    result <- .walk_forward_deps(start_set, rev_deps)
+    expect_true("aucinf.obs" %in% result)
+    expect_true("lambda.z" %in% result)
+    expect_true("half.life" %in% result)
+    expect_false("cmax" %in% result)
+    expect_false("tmax" %in% result)
+  })
+
+  it("stops at max_depth=2 and does not reach leaf params at depth 3", {
+    metadata <- data.frame(
+      PKNCA = c("half.life", "lambda.z", "aucinf.obs"),
+      Depends = c("tmax", "half.life", "lambda.z"),
+      stringsAsFactors = FALSE
+    )
+    rev_deps <- .build_rev_deps(metadata)
+    result <- .walk_forward_deps(c("aucinf.obs"), rev_deps)
+    expect_true("lambda.z" %in% result)
+    expect_true("half.life" %in% result)
+    expect_false("tmax" %in% result)
+  })
+})
