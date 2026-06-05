@@ -253,7 +253,6 @@ describe("resolve_whiskers (via pkcg03)", {
       plotly           = FALSE
     )[[1]]
     layer_eb <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    # resolve_whiskers("Upper") -> c("mean", "mean_sdi_upr")
     expect_equal(rlang::as_label(layer_eb$mapping$ymin), "mean")
     expect_equal(rlang::as_label(layer_eb$mapping$ymax), "mean_sdi_upr")
   })
@@ -266,7 +265,6 @@ describe("resolve_whiskers (via pkcg03)", {
       plotly           = FALSE
     )[[1]]
     layer_eb <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    # resolve_whiskers("Lower") -> c("mean_sdi_lwr", "mean")
     expect_equal(rlang::as_label(layer_eb$mapping$ymin), "mean_sdi_lwr")
     expect_equal(rlang::as_label(layer_eb$mapping$ymax), "mean")
   })
