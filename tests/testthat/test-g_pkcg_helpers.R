@@ -308,7 +308,7 @@ describe("compute_summary_stats (via pkcg03)", {
     adpc_allblq        <- adpc_pkcg03
     adpc_allblq$AVALC[adpc_allblq$DOSEA == 50] <- "BLQ"
     plots <- pkcg03(adpc_allblq, summary_method = "Mean_ci", plotly = FALSE)
-    expect_true(length(plots) < 2)   # fewer plots than without BLQ data
+    expect_equal(length(plots), 0)
   })
 })
 
