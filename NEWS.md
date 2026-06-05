@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Testing
+
+* Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
+
 ## Features
 
 ### Settings & Configuration
