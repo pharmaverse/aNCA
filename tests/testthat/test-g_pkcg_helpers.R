@@ -300,10 +300,13 @@ describe("compute_summary_stats (via pkcg03)", {
 
   it("pkcg03 silently drops a group when all timepoints are BLQ-filtered", {
     # Make all samples at every timepoint BLQ for DOSEA==50 group so that
-    # keep_blq_timepoints removes all rows → nrow(plot_data)==0 → return(NULL)
+    # keep_blq_timepoints removes all rows → nrow(plot_data)==0 → return(NULL).
+    # In this fixture DOSEA==50 has 5 subjects and DOSEA==100 has only 3, so
+    # keep_blq_timepoints also filters DOSEA==100 (n_samples <= 1 guard).
+    # Both groups are dropped → 0 plots, which is fewer than the 1 produced by
+    # the unmodified adpc_pkcg03 fixture.
     adpc_allblq        <- adpc_pkcg03
     adpc_allblq$AVALC[adpc_allblq$DOSEA == 50] <- "BLQ"
-    # Only the DOSEA==100 group should produce a plot; the 50 group is dropped
     plots <- pkcg03(adpc_allblq, summary_method = "Mean_ci", plotly = FALSE)
     expect_true(length(plots) < 2)   # fewer plots than without BLQ data
   })
