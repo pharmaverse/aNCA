@@ -18,9 +18,8 @@ helper_data <- data.frame(
 )
 attr(helper_data$TRT01A, "label") <- "Treatment"
 
-# Fixture for pkcg03-based tests (mirrors the adpc1 fixture in test-g_pkcg.R)
+# Fixture for pkcg03-based tests (all subjects retained to exercise both DOSEA groups)
 adpc_pkcg03 <- FIXTURE_CONC_DATA %>%
-  filter(USUBJID %in% unique(USUBJID)) %>%
   mutate(
     USUBJID = as.character(USUBJID),
     TRT01A  = "Dummy Treatment",
