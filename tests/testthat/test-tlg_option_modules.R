@@ -65,19 +65,20 @@ describe("tlg_option_numeric_server", {
     trigger_count <- shiny::reactiveVal(0)
     reset_trigger <- shiny::reactive(trigger_count())
 
-    shiny::testServer(
-      tlg_option_numeric_server,
-      args = list(
-        opt_def       = opt_def,
-        data          = shiny::reactive(NULL),
-        reset_trigger = reset_trigger
-      ),
-      {
-        session$setInputs(numeric = 99)
-        trigger_count(1)
-        session$flushReact()
-        # shinyjs::reset is a JS side-effect; verify no error is thrown
-      }
+    expect_no_error(
+      shiny::testServer(
+        tlg_option_numeric_server,
+        args = list(
+          opt_def       = opt_def,
+          data          = shiny::reactive(NULL),
+          reset_trigger = reset_trigger
+        ),
+        {
+          session$setInputs(numeric = 99)
+          trigger_count(1)
+          session$flushReact()
+        }
+      )
     )
   })
 })
@@ -127,19 +128,20 @@ describe("tlg_option_text_server", {
     trigger_count <- shiny::reactiveVal(0)
     reset_trigger <- shiny::reactive(trigger_count())
 
-    shiny::testServer(
-      tlg_option_text_server,
-      args = list(
-        opt_def       = opt_def,
-        data          = shiny::reactive(NULL),
-        reset_trigger = reset_trigger
-      ),
-      {
-        session$setInputs(text = "changed")
-        trigger_count(1)
-        session$flushReact()
-        # shinyjs::reset is a JS side-effect; verify no error is thrown
-      }
+    expect_no_error(
+      shiny::testServer(
+        tlg_option_text_server,
+        args = list(
+          opt_def       = opt_def,
+          data          = shiny::reactive(NULL),
+          reset_trigger = reset_trigger
+        ),
+        {
+          session$setInputs(text = "changed")
+          trigger_count(1)
+          session$flushReact()
+        }
+      )
     )
   })
 })
@@ -291,19 +293,20 @@ describe("tlg_option_select_server", {
     trigger_count <- shiny::reactiveVal(0)
     reset_trigger <- shiny::reactive(trigger_count())
 
-    shiny::testServer(
-      tlg_option_select_server,
-      args = list(
-        opt_def       = opt_def,
-        data          = shiny::reactive(NULL),
-        reset_trigger = reset_trigger
-      ),
-      {
-        session$setInputs(select = "B")
-        trigger_count(1)
-        session$flushReact()
-        # shinyjs::reset is a JS side-effect; verify no error is thrown
-      }
+    expect_no_error(
+      shiny::testServer(
+        tlg_option_select_server,
+        args = list(
+          opt_def       = opt_def,
+          data          = shiny::reactive(NULL),
+          reset_trigger = reset_trigger
+        ),
+        {
+          session$setInputs(select = "B")
+          trigger_count(1)
+          session$flushReact()
+        }
+      )
     )
   })
 })
