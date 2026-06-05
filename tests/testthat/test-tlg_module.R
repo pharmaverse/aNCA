@@ -110,19 +110,21 @@ describe("tlg_module_server", {
 
   it("skips character-valued options (group label markers)", {
     # options[[opt]] is a plain string → is.character() branch returns NULL,
-    # so it is excluded from options_values (line 206 in tlg_module.R)
-    shiny::testServer(
-      tlg_module_server,
-      args = list(
-        data        = test_data,
-        type        = "graph",
-        render_list = render_list_ok,
-        options     = list(section_title = "My Section")
-      ),
-      {
-        # If the character guard works, no error and no option widget created
-        expect_true(TRUE)
-      }
+    # so it is excluded from options_values (line 206 in tlg_module.R).
+    # The resulting reactiveValues object should have no entries.
+    expect_no_error(
+      shiny::testServer(
+        tlg_module_server,
+        args = list(
+          data        = test_data,
+          type        = "graph",
+          render_list = render_list_ok,
+          options     = list(section_title = "My Section")
+        ),
+        {
+          expect_equal(length(reactiveValuesToList(options_values)), 0)
+        }
+      )
     )
   })
 
