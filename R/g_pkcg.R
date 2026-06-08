@@ -16,6 +16,15 @@ g_pkcg01_log <- function(data, ...) {
   pkcg01(adnca = data, scale = "LOG", ...)
 }
 
+#' Wrapper around aNCA::pkcg01() function. Calls the function with `SBS` scale argument.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg01.
+#' @export
+g_pkcg01_sbs <- function(data, ...) {
+  pkcg01(adnca = data, scale = "SBS", ...)
+}
+
 #' Generate PK Concentration-Time Profile Plots
 #'
 #' This function generates a list of ggplots for PK concentration-time profiles.
@@ -359,6 +368,15 @@ g_pkcg02_log <- function(data, ...) {
   pkcg02(adnca = data, scale = "LOG", ...)
 }
 
+#' Wrapper around aNCA::pkcg02() function. Calls the function with `SBS` scale argument.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg02.
+#' @export
+g_pkcg02_sbs <- function(data, ...) {
+  pkcg02(adnca = data, scale = "SBS", ...)
+}
+
 #' Generate Combined PK Concentration-Time Profile Plot by Cohort
 #'
 #' This function generates a list of plotly objects PK concentration-time profiles by group
@@ -667,6 +685,15 @@ g_pkcg03_lin <- function(data, ...) {
 #' @export
 g_pkcg03_log <- function(data, ...) {
   pkcg03(adnca = data, scale = "LOG", ...)
+}
+
+#' Wrapper around aNCA::pkcg03() function. Calls the function with `SBS` scale argument.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg03.
+#' @export
+g_pkcg03_sbs <- function(data, ...) {
+  pkcg03(adnca = data, scale = "SBS", ...)
 }
 
 #' Generate PK Concentration-Time Profile Plots
