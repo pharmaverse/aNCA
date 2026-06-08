@@ -239,3 +239,12 @@ l_pkcl01 <- function(
 
     setNames(unique(data_grouped[["id_list"]]))
 }
+
+#' Wrapper around aNCA::l_pkcl01() for TAD-based concentration listings.
+#' @param data Data to be passed into the listing function.
+#' @param ...  Any other parameters to be passed into the listing function.
+#' @returns A named list of listing_df objects.
+#' @export
+l_pkcl01_tad <- function(data, ...) {
+  l_pkcl01(data, displaying_vars = c("NRRLT", "ARRLT", "AVAL"), ...)
+}
