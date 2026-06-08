@@ -106,7 +106,6 @@ describe("tlg_module_server", {
     )))
   )
   render_list_ok  <- function(data, ...) list("plot_a", "plot_b", "plot_c")
-  render_list_err <- function(data, ...) stop("render failed")
 
   it("skips character-valued options (group label markers)", {
     # options[[opt]] is a plain string → is.character() branch returns NULL,

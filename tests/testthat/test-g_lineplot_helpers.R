@@ -200,19 +200,21 @@ describe(".build_plot_data", {
     lt_data <- line_data
     # Rows with non-empty linetype_by get a "(DN)" suffix on color_var;
     # rows with empty string stay as-is.
-    lt_data$lt_var <- c("DN", "", "DN", "")
+    dn_marker      <- "DN"
+    lt_data$lt_var <- c(dn_marker, "", dn_marker, "")
     result <- aNCA:::.build_plot_data(
       lt_data, "NFRLT", "USUBJID", "USUBJID", "lt_var", NULL, NULL
     )
     dn_rows    <- lt_data$lt_var != ""
     plain_rows <- lt_data$lt_var == ""
     expect_true(all(grepl(" \\(DN\\)$", as.character(result$color_var[dn_rows]))))
-    expect_false(any(grepl("DN", as.character(result$color_var[plain_rows]))))
+    expect_false(any(grepl(dn_marker, as.character(result$color_var[plain_rows]))))
   })
 
   it("color_var is a factor with default levels first when linetype_by set", {
+    dn_marker      <- "DN"
     lt_data        <- line_data
-    lt_data$lt_var <- c("DN", "DN", "", "")
+    lt_data$lt_var <- c(dn_marker, dn_marker, "", "")
     result <- aNCA:::.build_plot_data(
       lt_data, "NFRLT", "USUBJID", "USUBJID", "lt_var", NULL, NULL
     )
