@@ -127,6 +127,8 @@ l_pkcl01 <- function(
           "AVALU" %in% names(data) & var_name == "AVAL" ~ paste0(Label, " ($AVALU)"),
           "RRLTU" %in% names(data) & var_name == "AFRLT" ~ paste0(Label, " ($RRLTU)"),
           "RRLTU" %in% names(data) & var_name == "NFRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(data) & var_name == "ARRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(data) & var_name == "NRRLT" ~ paste0(Label, " ($RRLTU)"),
           .default = Label
         )
       ) %>%
@@ -246,5 +248,6 @@ l_pkcl01 <- function(
 #' @returns A named list of listing_df objects.
 #' @export
 l_pkcl01_tad <- function(data, ...) {
+  data <- apply_labels(data)
   l_pkcl01(data, displaying_vars = c("NRRLT", "ARRLT", "AVAL"), ...)
 }
