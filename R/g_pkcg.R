@@ -696,6 +696,33 @@ g_pkcg03_sbs <- function(data, ...) {
   pkcg03(adnca = data, scale = "SBS", ...)
 }
 
+#' Wrapper around aNCA::pkcg03() function. Mean linear plot grouped by dose.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg03.
+#' @export
+p_pkcg03_lin_dose <- function(data, ...) {
+  pkcg03(adnca = data, scale = "LIN", mean_group_var = "DOSEA", ...)
+}
+
+#' Wrapper around aNCA::pkcg03() function. Mean log plot grouped by dose.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg03.
+#' @export
+p_pkcg03_log_dose <- function(data, ...) {
+  pkcg03(adnca = data, scale = "LOG", mean_group_var = "DOSEA", ...)
+}
+
+#' Wrapper around aNCA::pkcg03() function. Mean side-by-side plot grouped by dose.
+#' @param data Data to be passed into the plotting function.
+#' @param ...  Any other parameters to be passed into the plotting function.
+#' @returns ggplot2 object for pkcg03.
+#' @export
+p_pkcg03_sbs_dose <- function(data, ...) {
+  pkcg03(adnca = data, scale = "SBS", mean_group_var = "DOSEA", ...)
+}
+
 #' Generate PK Concentration-Time Profile Plots
 #'
 #' This function generates a list of ggplots for Mean PK concentration-time profiles.
