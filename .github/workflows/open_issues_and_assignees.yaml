@@ -1,0 +1,48 @@
+name: List Open Issues and Assignees
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  # Optional: Runs automatically every day at midnight UTC
+#  schedule:
+#    - cron: '0 0 * * *'
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to push the updated markdown file back to the repo
+      issues: read     # Required to read issue data
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Fetch Open Issues and Format to Markdown
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## Open Issues Report" > open_issues.md
+          echo "Generated on: $(date -u)" >> open_issues.md
+          echo "" >> open_issues.md
+          echo "| Issue Number | Title | Body  | Assignees | URL |" >> open_issues.md
+          echo "| ------------ | ----- | ----- | --------- | --- |" >> open_issues.md
+          
+          # Use GitHub CLI to fetch JSON, then jq to parse it into Markdown table rows
+          gh issue list --state open --limit 1000 --json number,title,assignees,url \
+            --jq '.[] | "| #\(.number) | \(.title) | \(.body) | \([.assignees[].login] | join(", ") | if . == "" then "_None_" else . end) | [Link](\(.url)) |"' >> open_issues.md
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add open_issues.md
+          
+          # Only commit and push if the file actually changed
+          if git diff --staged --quiet; then
+            echo "No changes to open issues."
+          else
+            git commit -m "chore: update open issues list [skip ci]"
+            git push
+          fi
