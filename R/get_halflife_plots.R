@@ -43,7 +43,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
-    pknca_data$conc$data[["exclude_half.life"]] <- FALSE
+    pknca_data$conc$data[["exclude_half.life"]] <- NA
     exclude_hl_col <- "exclude_half.life"
   }
 
@@ -114,7 +114,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
       tlast = tlast + start,
       is_halflife_used = .[[time_col]] >= lambda.z.time.first &
         .[[time_col]] <= lambda.z.time.last &
-        !.[[exclude_hl_col]]
+        !(.[[exclude_hl_col]] %in% TRUE)
     ) %>%
     group_by(!!!syms(c(group_vars(pknca_data), "start", "end"))) %>%
     mutate(
@@ -133,9 +133,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   info_per_plot_list <- info_per_plot_list %>%
     mutate(
       color = "black",
-      color = ifelse(.[[exclude_hl_col]], "red", color),
+      color = ifelse(.[[exclude_hl_col]] %in% TRUE, "red", color),
       color = ifelse(is_halflife_used & !is.na(is_halflife_used), "green", color),
-      symbol = ifelse(.[[exclude_hl_col]], "x", "circle")
+      symbol = ifelse(.[[exclude_hl_col]] %in% TRUE, "x", "circle")
     ) %>%
     group_by(!!!syms(c(group_vars(pknca_data), "start", "end"))) %>%
     group_split()

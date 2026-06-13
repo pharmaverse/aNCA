@@ -169,7 +169,11 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- ""
-  df_conc$exclude_half.life <- FALSE
+  # NA (not FALSE) marks "no half-life exclusion yet". This mirrors how
+  # include_half.life is left NA until a point is selected and prevents PKNCA's
+  # "cannot both include and exclude half-life points" check from firing when
+  # only inclusions are set (an all-FALSE column counts as "in use").
+  df_conc$exclude_half.life <- NA
 
   # Create PKNCA conc object
 
@@ -869,7 +873,7 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
       time_col <- processed_pknca_data$conc$columns$time
 
       has_no_reason <- (nchar(data_conc[["REASON"]]) == 0) | is.na(data_conc[["REASON"]])
-      has_hl_excl <- data_conc[[excl_hl_col]]
+      has_hl_excl <- data_conc[[excl_hl_col]] %in% TRUE
       missing_reasons <- has_hl_excl & has_no_reason
 
       if (any(missing_reasons)) {
