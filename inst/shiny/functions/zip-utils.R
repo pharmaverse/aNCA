@@ -571,7 +571,8 @@ prepare_export_files <- function(target_dir,
     slope_rules = session$userData$slope_rules(),
     filters = session$userData$applied_filters,
     time_duplicate_keys = session$userData$time_duplicate_keys,
-    nca_ran = isTRUE(session$userData$nca_ran)
+    nca_ran = isTRUE(session$userData$nca_ran),
+    parameter_exclusions = session$userData$parameter_exclusions
   )
 
   dataset_name <- session$userData$dataset_filename %||% ""

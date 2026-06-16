@@ -95,6 +95,7 @@
 * NCA results flagging correctly distinguishes missing vs not-requested parameters (#934)
 * Custom units table join uses correct keys instead of hardcoded columns (#1159)
 * "Summarise by" selector in Matrix Ratios fixed (input ID mismatch) (#1198)
+* `script_template.R` now applies parameter exclusions before `export_cdisc()`, so PPSUMFL/PPSUMRSN appear in ADPP when running the R script (#1274)
 
 ### Settings & Upload
 * SASS compilation moved from runtime to build-time script, fixing startup crashes on read-only deployments (#1107)
