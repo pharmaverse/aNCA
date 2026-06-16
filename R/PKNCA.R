@@ -481,6 +481,22 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     add = TRUE
   )
 
+  # Resolve per-interval conflicts: PKNCA errors when both include_half.life
+  # and exclude_half.life columns have non-NA values in the same interval.
+  # Convert mixed intent to include-only: excluded points lose their inclusion,
+  # then the exclude column is cleared entirely.
+  excl_col <- pknca_data$conc$columns$exclude_half.life
+  incl_col <- pknca_data$conc$columns$include_half.life
+  if (!is.null(excl_col) && !is.null(incl_col)) {
+    has_any_excl <- any(pknca_data$conc$data[[excl_col]] %in% TRUE)
+    has_any_incl <- any(pknca_data$conc$data[[incl_col]] %in% TRUE)
+    if (has_any_excl && has_any_incl) {
+      excl_rows <- which(pknca_data$conc$data[[excl_col]] %in% TRUE)
+      pknca_data$conc$data[[incl_col]][excl_rows] <- NA
+      pknca_data$conc$data[[excl_col]] <- NA
+    }
+  }
+
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
