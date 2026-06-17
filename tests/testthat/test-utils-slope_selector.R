@@ -39,7 +39,7 @@ describe("check_slope_rule_overlap", {
       PARAM = "A", PCSPEC = 1, RANGE = "3:6", REASON = "outlier"
     )
     result <- check_slope_rule_overlap(existing, new_rule)
-    expect_null(result)
+    expect_equal(nrow(result), 0)
   })
 
   it("returns remaining rows when cancelling one of multiple exclusions", {
@@ -53,6 +53,38 @@ describe("check_slope_rule_overlap", {
     expect_s3_class(result, "data.frame")
     expect_equal(nrow(result), 1)
     expect_equal(result$RANGE, "7:9")
+  })
+
+  it("drops extra columns from existing that are not in new (column normalization)", {
+    existing <- data.frame(
+      TYPE = "Exclusion", USUBJID = 1, ATPTREF = 1,
+      PARAM = "A", PCSPEC = 1, RANGE = "3:6",
+      EXTRA_COL = "should_be_dropped", stringsAsFactors = FALSE
+    )
+    new_rule_no_reason <- data.frame(
+      TYPE = "Selection", USUBJID = 1, ATPTREF = 1,
+      PARAM = "A", PCSPEC = 1, RANGE = "1:3",
+      stringsAsFactors = FALSE
+    )
+    result <- check_slope_rule_overlap(existing, new_rule_no_reason)
+    expect_false("EXTRA_COL" %in% names(result))
+    expect_equal(nrow(result), 2)
+  })
+
+  it("keeps only common columns when new has missing columns (e.g. no REASON)", {
+    existing <- data.frame(
+      TYPE = "Exclusion", USUBJID = 1, ATPTREF = 1,
+      PARAM = "A", PCSPEC = 1, RANGE = "3:6",
+      REASON = "outlier", stringsAsFactors = FALSE
+    )
+    new_no_reason <- data.frame(
+      TYPE = "Selection", USUBJID = 1, ATPTREF = 1,
+      PARAM = "B", PCSPEC = 1, RANGE = "1:3",
+      stringsAsFactors = FALSE
+    )
+    result <- check_slope_rule_overlap(existing, new_no_reason)
+    expect_false("REASON" %in% names(result))
+    expect_equal(nrow(result), 2)
   })
 })
 

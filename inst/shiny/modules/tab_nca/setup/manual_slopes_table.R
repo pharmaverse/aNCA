@@ -84,6 +84,23 @@ manual_slopes_table_server <- function(
     # create a reactive to update the reactable UI when the table changes
     refresh_reactable <- reactiveVal(0)
 
+    # Flag to suppress edit events during widget (re-)initialization after table re-render.
+    # When TRUE, edit observer ignores incoming events to prevent reactable.extras widgets
+    # from writing default values (e.g. first dropdown choice, empty text) into the data.
+    # Uses a generation counter so rapid successive operations don't prematurely unblock.
+    suppress_edit_events <- reactiveVal(0)  # 0 = not suppressing, >0 = suppressing
+
+    # Set suppression on each re-render; clear after delay only if no newer re-render occurred.
+    observeEvent(refresh_reactable(), {
+      gen <- suppress_edit_events(0) + 1  # increment generation (0→1, 1→2, etc.)
+      suppress_edit_events(gen)
+      shinyjs::delay(500, {
+        if (identical(suppress_edit_events(), gen)) {
+          suppress_edit_events(0)
+        }
+      })
+    }, ignoreInit = TRUE)
+
     # Add a new row to the table when the user clicks the add button
     observeEvent(input$add_rule, {
       log_trace("{id}: adding manual slopes row")
@@ -112,6 +129,11 @@ manual_slopes_table_server <- function(
       } else {
         new_row[0, ] # empty DF with matching columns
       }
+      # Keep only columns present in new_row to prevent rbind column mismatch
+      # when old rules (e.g. from plot clicks) have extra columns like ATPTREF (#1302)
+      common_cols <- intersect(names(old_rows), names(new_row))
+      old_rows <- old_rows[, common_cols, drop = FALSE]
+      new_row <- new_row[, common_cols, drop = FALSE]
       updated_data <- as.data.frame(
         rbind(old_rows, new_row),
         stringsAsFactors = FALSE
@@ -126,9 +148,11 @@ manual_slopes_table_server <- function(
       log_trace("{id}: removing manual slopes row")
       req(manual_slopes())
       selected <- getReactableState("manual_slopes", "selected")
-      req(selected)
-      edited_slopes <- manual_slopes()[-selected, ]
-      if (nrow(edited_slopes) == 0) edited_slopes <- NULL
+      if (is.null(selected) || length(selected) == 0) {
+        return()
+      }
+      edited_slopes <- manual_slopes()[-selected, , drop = FALSE]
+      if (nrow(edited_slopes) == 0) edited_slopes <- edited_slopes[0, ]
       manual_slopes(edited_slopes)
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)
@@ -136,11 +160,14 @@ manual_slopes_table_server <- function(
 
     # Render the manual slopes table (reactable)
     output$manual_slopes <- renderReactable({
-      req(manual_slopes())
+      data <- manual_slopes()
+      if (is.null(data) || nrow(data) == 0) {
+        return(NULL)
+      }
       log_trace("{id}: rendering slope edit data table")
-      isolate({
-        data <- manual_slopes()
-      })
+      # Drop stray columns (e.g. ATPTREF from plot clicks) not in canonical column set (#1302)
+      canonical_cols <- c(colnames(slopes_pknca_groups()), "TYPE", "RANGE", "REASON")
+      data <- data[, intersect(names(data), canonical_cols), drop = FALSE]
       # Define columns: group columns (dynamic), then TYPE/RANGE/REASON (fixed)
       fixed_columns <- list(
         TYPE = colDef(
@@ -197,6 +224,7 @@ manual_slopes_table_server <- function(
       req(manual_slopes())
       purrr::walk(colnames(manual_slopes()), function(colname) {
         observeEvent(input[[paste0("edit_", colname)]], {
+          req(suppress_edit_events() == 0)
           edit <- input[[paste0("edit_", colname)]]
           edited_slopes <- manual_slopes()
           edited_slopes[edit$row, edit$column] <- edit$value
