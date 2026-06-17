@@ -39,7 +39,7 @@
 #'
 #' A dataset containing pharmacokinetic variable specifications.
 #'
-#' @format A data frame with 359 rows and 19 variables:
+#' @format A data frame with 363 rows and 19 variables:
 #' \describe{
 #'   \item{Dataset}{Character. Indicates the dataset the variable belongs to (PP, ADNCA, ADPP).}
 #'   \item{Order}{Numeric. Variable order within its domain, based on Role, Core and Variable}

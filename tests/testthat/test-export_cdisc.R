@@ -969,4 +969,10 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
     crit_cols <- grep("^CRIT|PPSUMFL|PPSUMRSN", names(pp), value = TRUE)
     expect_length(crit_cols, 0)
   })
+
+  it("includes ATPTREF and ROUTE in ADPP when present in source data (#1276)", {
+    result <- export_cdisc(test_pknca_res)
+    expect_true("ATPTREF" %in% names(result$adpp))
+    expect_true("ROUTE" %in% names(result$adpp))
+  })
 })
