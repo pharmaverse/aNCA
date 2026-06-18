@@ -253,3 +253,63 @@ describe("l_pkcl01", {
 
   })
 })
+
+# --- l_pkcl02_uri -----------------------------------------------------------
+
+uri_data <- data.frame(
+  PARAM   = rep("DrugA", 4),
+  PCSPEC  = rep(c("URINE", "SERUM"), each = 2),
+  TRT01A  = rep(c("10mg", "50mg"), 2),
+  USUBJID = c("S1", "S2", "S3", "S4"),
+  ATPTREF = "DOSE 1",
+  NFRLT   = c(0, 2, 0, 2),
+  AFRLT   = c(0.1, 2.1, 0.1, 2.1),
+  AVAL    = c(1.2, 3.4, 5.6, 7.8),
+  AVALU   = "mg/mL",
+  VOLUME  = c(100, 120, 110, 130),
+  VOLUMEU = "mL",
+  stringsAsFactors = FALSE
+)
+
+describe("l_pkcl02_uri", {
+  skip_if_not_installed("rlistings")
+
+  it("returns a named list of listing_df objects", {
+    result <- l_pkcl02_uri(uri_data)
+    expect_type(result, "list")
+    purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  })
+
+  it("filters to URINE rows only", {
+    result <- l_pkcl02_uri(uri_data)
+    listing_df <- result[[1]]
+    expect_equal(nrow(listing_df), 2)
+  })
+
+  it("includes VOLUME and VOLUMEU in displaying_vars by default", {
+    result <- l_pkcl02_uri(uri_data)[[1]]
+    expect_true("VOLUME" %in% names(result))
+  })
+
+  it("does not include VOLUME when column is absent from data", {
+    data_no_vol <- uri_data[, setdiff(names(uri_data), c("VOLUME", "VOLUMEU"))]
+    result <- l_pkcl02_uri(data_no_vol)[[1]]
+    expect_false("VOLUME" %in% names(result))
+  })
+
+  it("stops with informative error when no urine rows found", {
+    data_serum <- uri_data[uri_data$PCSPEC == "SERUM", , drop = FALSE]
+    expect_error(l_pkcl02_uri(data_serum), "no urine concentration data found")
+  })
+
+  it("accepts custom displaying_vars", {
+    result <- l_pkcl02_uri(uri_data, displaying_vars = c("NFRLT", "AVAL"))
+    expect_type(result, "list")
+    purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  })
+
+  it("passes through ... to l_pkcl01 (e.g. custom footnote)", {
+    result <- l_pkcl02_uri(uri_data, footnote = "test footnote")
+    expect_type(result, "list")
+  })
+})

@@ -1,0 +1,181 @@
+# Shared fixture: minimal ADPP-like data frame
+pkpt_data <- data.frame(
+  USUBJID = rep(paste0("S", 1:6), each = 3),
+  TRT01A  = rep(c("10mg", "10mg", "10mg", "50mg", "50mg", "50mg"), each = 3),
+  DOSEA   = rep(c(10, 10, 10, 50, 50, 50), each = 3),
+  AVISIT  = "Day 1",
+  PARAM   = rep(c("Cmax", "AUClast", "Tmax"), 6),
+  PARAMCD = rep(c("CMAX", "AUCLST", "TMAX"), 6),
+  AVAL    = c(5, 20, 1,   6, 22, 1.2,  7, 21, 0.9,
+              10, 40, 1.5, 11, 38, 1.3, 9, 42, 1.4),
+  AVALU   = rep(c("ng/mL", "ng/mL*h", "h"), 6),
+  PPCAT   = "Drug A Plasma",
+  PPSPEC  = "Plasma",
+  METABFL = NA_character_,
+  stringsAsFactors = FALSE
+)
+
+# Metabolite variant: mark some rows as metabolite
+pkpt_metab_data <- pkpt_data
+pkpt_metab_data$METABFL[pkpt_metab_data$TRT01A == "50mg"] <- "Y"
+
+describe("t_pkpt03_col", {
+  it("returns a named list of data frames", {
+    result <- t_pkpt03_col(pkpt_data)
+    expect_type(result, "list")
+    purrr::walk(result, ~ expect_s3_class(.x, "data.frame"))
+  })
+
+  it("contains expected statistic columns", {
+    result <- t_pkpt03_col(pkpt_data)[[1]]
+    expected <- c("TRT01A", "PARAM", "n", "Mean", "SD", "CV_pct",
+                  "GeoMean", "GeoCV_pct", "Median", "Min", "Max")
+    expect_true(all(expected %in% names(result)))
+  })
+
+  it("computes correct n per treatment and parameter", {
+    result <- t_pkpt03_col(pkpt_data)[[1]]
+    row_cmax_10 <- result[result$TRT01A == "10mg" & result$PARAM == "Cmax", ]
+    expect_equal(row_cmax_10$n, 3)
+  })
+
+  it("computes Mean correctly", {
+    result <- t_pkpt03_col(pkpt_data)[[1]]
+    row <- result[result$TRT01A == "10mg" & result$PARAM == "Cmax", ]
+    expect_equal(row$Mean, round(mean(c(5, 6, 7)), 3))
+  })
+
+  it("returns NA for SD when only one observation", {
+    one_obs <- pkpt_data[pkpt_data$USUBJID == "S1", ]
+    result <- t_pkpt03_col(one_obs)[[1]]
+    row <- result[result$PARAM == "Cmax", ]
+    expect_true(is.na(row$SD))
+  })
+
+  it("stops with informative error when required columns are missing", {
+    bad <- pkpt_data[, setdiff(names(pkpt_data), "AVAL")]
+    expect_error(t_pkpt03_col(bad), "missing required columns")
+  })
+
+  it("produces one table per AVISIT/PPCAT combination", {
+    two_visits <- rbind(
+      pkpt_data,
+      transform(pkpt_data, AVISIT = "Day 7")
+    )
+    result <- t_pkpt03_col(two_visits)
+    expect_equal(length(result), 2)
+  })
+})
+
+describe("t_pkpt03_MP_col", {
+  it("filters to metabolite rows before summarizing (METABFL path)", {
+    result <- t_pkpt03_MP_col(pkpt_metab_data)[[1]]
+    # Only 50mg arm has METABFL set — only that arm should appear
+    expect_true(all(result$TRT01A == "50mg"))
+  })
+
+  it("falls back to PPCAT when METABFL absent and PPCAT contains 'metab'", {
+    # Simulate ADPP without METABFL: PPCAT identifies metabolite rows
+    data_ppcat <- pkpt_data
+    data_ppcat$PPCAT <- ifelse(data_ppcat$TRT01A == "50mg", "Metab-DrugA Plasma", "DrugA Plasma")
+    data_ppcat <- data_ppcat[, setdiff(names(data_ppcat), "METABFL")]
+    result <- t_pkpt03_MP_col(data_ppcat)[[1]]
+    expect_true(all(result$TRT01A == "50mg"))
+  })
+
+  it("falls back to PARAM when METABFL and PPCAT both absent but PARAM contains 'metab'", {
+    data_param <- pkpt_data
+    data_param$PARAM <- ifelse(data_param$TRT01A == "50mg",
+                               paste0("Metab-", data_param$PARAM),
+                               data_param$PARAM)
+    data_param <- data_param[, setdiff(names(data_param), c("METABFL", "PPCAT"))]
+    result <- t_pkpt03_MP_col(data_param)[[1]]
+    expect_true(all(result$TRT01A == "50mg"))
+  })
+
+  it("stops when METABFL absent and no 'metab' in PPCAT or PARAM", {
+    data_no_metabfl <- pkpt_data[, setdiff(names(pkpt_data), "METABFL")]
+    expect_error(t_pkpt03_MP_col(data_no_metabfl), "No metabolite data found")
+  })
+
+  it("stops with informative error when METABFL is all missing", {
+    expect_error(t_pkpt03_MP_col(pkpt_data), "No metabolite data found")
+  })
+})
+
+describe("t_pkpt07_norm", {
+  it("filters to dose-normalized parameters (PARAMCD ending in D)", {
+    data_with_dn <- pkpt_data
+    data_with_dn$PARAMCD <- rep(c("CMAXD", "AUCTLSTD", "TMAX"), 6)
+    data_with_dn$PARAM   <- rep(c("Cmax/D", "AUClast/D", "Tmax"), 6)
+    result <- t_pkpt07_norm(data_with_dn)[[1]]
+    expect_true(all(grepl("D$", result$PARAM) | result$PARAM == "Tmax"))
+    expect_false("Tmax" %in% result$PARAM)  # TMAX doesn't end in D
+  })
+
+  it("stops with informative error when no dose-normalized params found", {
+    expect_error(t_pkpt07_norm(pkpt_data), "no dose-normalized parameters")
+  })
+})
+
+describe("t_pkpt08_uri", {
+  it("filters to urine records before summarizing", {
+    data_mixed <- pkpt_data
+    data_mixed$PPSPEC[data_mixed$TRT01A == "10mg"] <- "URINE"
+    result <- t_pkpt08_uri(data_mixed)[[1]]
+    # Only urine rows (10mg arm) survive the filter
+    expect_true(all(result$TRT01A == "10mg"))
+  })
+
+  it("stops with informative error when no urine records present", {
+    expect_error(
+      t_pkpt08_uri(pkpt_data),  # all Plasma
+      "no urine PK parameter data found"
+    )
+  })
+})
+
+describe("t_pkpt11_gmr", {
+  it("returns a named list of data frames", {
+    result <- t_pkpt11_gmr(pkpt_data, ref_arm = "10mg")
+    expect_type(result, "list")
+    purrr::walk(result, ~ expect_s3_class(.x, "data.frame"))
+  })
+
+  it("contains GMR, CI_lower, CI_upper columns", {
+    result <- t_pkpt11_gmr(pkpt_data, ref_arm = "10mg")[[1]]
+    expect_true(all(c("GMR", "CI_lower", "CI_upper") %in% names(result)))
+  })
+
+  it("GMR is ratio of geometric means (50mg / 10mg)", {
+    result <- t_pkpt11_gmr(pkpt_data, ref_arm = "10mg")[[1]]
+    row <- result[result$PARAM == "Cmax", ]
+    gm_10 <- exp(mean(log(c(5, 6, 7))))
+    gm_50 <- exp(mean(log(c(10, 11, 9))))
+    expect_equal(row$GMR, round(gm_50 / gm_10, 3))
+  })
+
+  it("CI_lower < GMR < CI_upper", {
+    result <- t_pkpt11_gmr(pkpt_data, ref_arm = "10mg")[[1]]
+    expect_true(all(result$CI_lower < result$GMR, na.rm = TRUE))
+    expect_true(all(result$GMR < result$CI_upper, na.rm = TRUE))
+  })
+
+  it("uses first sorted arm as reference when ref_arm is NULL", {
+    result <- t_pkpt11_gmr(pkpt_data)[[1]]
+    # "10mg" sorts before "50mg", so 10mg is ref → only 50mg rows appear
+    expect_true(all(result$TRT01A == "50mg"))
+  })
+
+  it("stops with informative error when ref_arm not found", {
+    expect_error(
+      t_pkpt11_gmr(pkpt_data, ref_arm = "100mg"),
+      "not found"
+    )
+  })
+
+  it("stops when required columns are missing", {
+    bad <- pkpt_data[, setdiff(names(pkpt_data), "AVAL")]
+    expect_error(t_pkpt11_gmr(bad), "missing required columns")
+  })
+})
