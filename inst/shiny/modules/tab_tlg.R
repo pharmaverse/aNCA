@@ -246,6 +246,12 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NUL
       filter_tlg_excluded(data()$conc$data)
     })
 
+    # ADPP with PPSUMFL-excluded rows removed (mirrors conc_data for ADNCA)
+    adpp_data <- reactive({
+      req(adpp())
+      filter_tlg_excluded(adpp())
+    })
+
     # Create and render Table interface and modules
     output$tables <- renderUI({
       req(tlg_order_filtered())
@@ -264,7 +270,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NUL
 
           table_data <- switch(
             g_def$dataset,
-            "ADPP"  = adpp,
+            "ADPP"  = adpp_data,
             "ADNCA" = adnca,
             reactive(filter_tlg_excluded(data()$conc$data))
           )
@@ -300,7 +306,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NUL
             paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
           )
 
-          graph_data <- if (g_def$dataset == "ADPP") adpp else conc_data
+          graph_data <- if (g_def$dataset == "ADPP") adpp_data else conc_data
 
           if (exists(g_def$fun)) {
             tlg_module_server(module_id, graph_data, "graph", get(g_def$fun), g_def$options)
@@ -343,7 +349,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NUL
               paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
             )
 
-            list_data <- if (g_def$dataset == "ADPP") adpp else conc_data
+            list_data <- if (g_def$dataset == "ADPP") adpp_data else conc_data
 
             if (exists(g_def$fun)) {
               tlg_module_server(module_id, list_data, "listing", get(g_def$fun), g_def$options)

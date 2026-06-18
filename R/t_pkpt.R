@@ -1,12 +1,15 @@
 #' Summary PK Parameters Table — statistics in columns (pkpt03)
 #'
 #' Summarizes pharmacokinetic parameters from ADPP data. Returns one data frame
-#' per visit/analyte combination with PK parameters as rows and descriptive
+#' per analyte (PPCAT) combination with PK parameters as rows and descriptive
 #' statistics as columns.
 #'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param list_vars Character vector of columns used to split output into
-#'   separate tables. Default: `c("AVISIT", "PPCAT")`.
+#'   separate tables. Default: `c("PPCAT")`.  `AVISIT` is a conditional ADPP
+#'   column that is typically absent from `export_cdisc()$adpp`; it is silently
+#'   skipped when not present so there is no need to remove it manually, but
+#'   adding it only helps when your ADPP actually contains visit information.
 #' @param strat_var Column for treatment/dose stratification. Default: `"TRT01A"`.
 #' @param param_var Column containing parameter names shown as rows.
 #'   Default: `"PARAM"`.
@@ -27,7 +30,7 @@
 #' @export
 t_pkpt03_col <- function(
   data,
-  list_vars  = c("AVISIT", "PPCAT"),
+  list_vars  = c("PPCAT"),
   strat_var  = "TRT01A",
   param_var  = "PARAM",
   value_var  = "AVAL"
@@ -85,20 +88,7 @@ t_pkpt03_col <- function(
     apply_labels(result)
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = make_table(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  tables <- lapply(levels(split_keys), function(key) {
-    make_table(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(tables, levels(split_keys))
+  split_and_apply(data, present_list_vars, make_table)
 }
 
 #' @describeIn t_pkpt03_col Summary of metabolite-to-parent ratios (stats in columns).
@@ -108,30 +98,7 @@ t_pkpt03_col <- function(
 #'   the NCA run.
 #' @export
 t_pkpt03_MP_col <- function(data, ...) {
-  # Preferred: METABFL flag
-  if ("METABFL" %in% names(data) &&
-      any(!is.na(data$METABFL) & data$METABFL != "")) {
-    data <- data[!is.na(data$METABFL) & data$METABFL != "", , drop = FALSE]
-    return(t_pkpt03_col(data, ...))
-  }
-
-  # Fallback: PPCAT (= PARAM in ADPP) containing "metab"
-  for (col in c("PPCAT", "PARAM")) {
-    if (col %in% names(data)) {
-      metab_vals <- unique(data[[col]][grepl("metab", data[[col]], ignore.case = TRUE)])
-      if (length(metab_vals) > 0) {
-        data <- data[grepl("metab", data[[col]], ignore.case = TRUE), , drop = FALSE]
-        return(t_pkpt03_col(data, ...))
-      }
-    }
-  }
-
-  stop(
-    "No metabolite data found. ",
-    "METABFL is absent or all missing, and no PPCAT/PARAM values contain 'metab'. ",
-    "To use this table, include METABFL as a grouping variable in your NCA run, ",
-    "or ensure metabolite rows are labelled with 'metab' in PPCAT or PARAM."
-  )
+  t_pkpt03_col(filter_metabolite_rows(data, "t_pkpt03_MP_col"), ...)
 }
 
 #' Mean Dose-Normalized PK Parameters Table (pkpt07)
@@ -158,7 +125,7 @@ t_pkpt03_MP_col <- function(data, ...) {
 t_pkpt07_norm <- function(
   data,
   paramcd_var = "PARAMCD",
-  list_vars   = c("AVISIT", "PPCAT"),
+  list_vars   = c("PPCAT"),
   strat_var   = "TRT01A",
   param_var   = "PARAM",
   value_var   = "AVAL"
@@ -184,7 +151,12 @@ t_pkpt07_norm <- function(
 
 #' Mean Urine Amount and Percent Recovered Table (pkpt08)
 #'
-#' Filters ADPP to urine specimen records and delegates to [t_pkpt03_col()].
+#' Filters ADPP to urine specimen records and summarizes cumulative amount
+#' excreted (Ae) and percentage of dose recovered (Fe%) with descriptive
+#' statistics in columns.  Per the TLG catalog specification for pkpt08,
+#' the summary includes n, Mean, SD, CV%, Median, Min, Max — without
+#' geometric mean or geometric CV% (those are omitted because urine recovery
+#' parameters are not log-normally distributed by convention).
 #'
 #' @param data A CDISC ADPP data frame. Urine records are identified by
 #'   `PPSPEC %in% urine_specs`.
@@ -192,7 +164,9 @@ t_pkpt07_norm <- function(
 #'   Default: `c("URINE", "Urine")`.
 #' @inheritParams t_pkpt03_col
 #'
-#' @return Named list of data frames (same format as [t_pkpt03_col()]).
+#' @return Named list of data frames with columns: `strat_var`, `param_var`,
+#'   `n`, `Mean`, `SD`, `CV_pct`, `Median`, `Min`, `Max`.
+#'   Use [t_pkpt03_col()] instead if geometric mean statistics are needed.
 #'
 #' @examples
 #' \dontrun{
@@ -204,7 +178,7 @@ t_pkpt07_norm <- function(
 t_pkpt08_uri <- function(
   data,
   urine_specs = c("URINE", "Urine"),
-  list_vars   = c("AVISIT", "PPCAT"),
+  list_vars   = c("PPCAT"),
   strat_var   = "TRT01A",
   param_var   = "PARAM",
   value_var   = "AVAL"
@@ -266,20 +240,7 @@ t_pkpt08_uri <- function(
     apply_labels(result)
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = make_table(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  tables <- lapply(levels(split_keys), function(key) {
-    make_table(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(tables, levels(split_keys))
+  split_and_apply(data, present_list_vars, make_table)
 }
 
 #' GMR Table with Confidence Intervals (pkpt11)
@@ -315,7 +276,7 @@ t_pkpt11_gmr <- function(
   data,
   ref_arm   = NULL,
   ci_level  = 0.90,
-  list_vars = c("AVISIT", "PPCAT"),
+  list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
   value_var = "AVAL"
@@ -366,10 +327,29 @@ t_pkpt11_gmr <- function(
   }
 
   make_table <- function(df) {
+    arms_in_split <- unique(df[[strat_var]])
+
+    if (!ref_arm %in% arms_in_split) {
+      warning(
+        "t_pkpt11_gmr: reference arm '", ref_arm, "' is absent from this ",
+        "data split. Returning an empty table for this page."
+      )
+      return(data.frame())
+    }
+
+    trt_in_split <- intersect(trt_arms, arms_in_split)
+    if (length(trt_in_split) == 0) {
+      warning(
+        "t_pkpt11_gmr: no treatment arms other than '", ref_arm,
+        "' found in this data split. Returning an empty table."
+      )
+      return(data.frame())
+    }
+
     params   <- unique(df[[param_var]])
     ref_data <- df[df[[strat_var]] == ref_arm, , drop = FALSE]
 
-    rows <- unlist(lapply(trt_arms, function(s) {
+    rows <- unlist(lapply(trt_in_split, function(s) {
       trt_data <- df[df[[strat_var]] == s, , drop = FALSE]
       lapply(params, function(p) {
         ref_v <- ref_data[[value_var]][ref_data[[param_var]] == p]
@@ -385,18 +365,5 @@ t_pkpt11_gmr <- function(
     apply_labels(result)
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = make_table(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  tables <- lapply(levels(split_keys), function(key) {
-    make_table(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(tables, levels(split_keys))
+  split_and_apply(data, present_list_vars, make_table)
 }

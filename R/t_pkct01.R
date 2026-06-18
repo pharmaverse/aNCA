@@ -55,9 +55,6 @@ t_pkct01 <- function(
   }
 
   present_list_vars <- intersect(list_vars, names(data))
-  if (length(present_list_vars) == 0) {
-    present_list_vars <- character(0)
-  }
 
   present_visit_var <- if (visit_var %in% names(data)) visit_var else NULL
   has_blq_col <- blq_var %in% names(data)
@@ -115,20 +112,7 @@ t_pkct01 <- function(
     apply_labels(result)
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = make_table(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  tables <- lapply(levels(split_keys), function(key) {
-    make_table(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(tables, levels(split_keys))
+  split_and_apply(data, present_list_vars, make_table)
 }
 
 #' @describeIn t_pkct01 Stratify by dose instead of treatment arm (first dose).

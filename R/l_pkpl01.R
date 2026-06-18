@@ -93,19 +93,23 @@ l_pkpl01 <- function(
       ))) %>%
       tidyr::pivot_wider(
         names_from  = dplyr::all_of(param_var),
-        values_from = ".val_fmt"
+        values_from = ".val_fmt",
+        # When a subject has multiple rows for the same PARAM (e.g. multi-
+        # interval ADPP), take the first value rather than creating list-columns.
+        values_fn   = dplyr::first,
+        values_fill = NA_real_
       )
 
     param_cols <- sort(unique(df[[param_var]]))
     param_cols <- param_cols[param_cols %in% names(wide)]
 
-    formatters::var_labels(wide)[param_cols] <- col_labels[
+    var_labels(wide)[param_cols] <- col_labels[
       match(param_cols, sort(unique(df[[param_var]])))
     ]
     for (v in grouping_vars) {
       if (v %in% names(wide)) {
         lbl <- attr(df[[v]], "label")
-        if (!is.null(lbl)) formatters::var_labels(wide)[v] <- lbl
+        if (!is.null(lbl)) var_labels(wide)[v] <- lbl
       }
     }
 
@@ -120,67 +124,36 @@ l_pkpl01 <- function(
     )
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = .make_wide_listing(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  listings <- lapply(levels(split_keys), function(key) {
-    .make_wide_listing(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(listings, levels(split_keys))
+  split_and_apply(data, present_list_vars, .make_wide_listing)
 }
 
 #' @describeIn l_pkpl01 Listing filtered to metabolite rows (pkpl01 M/P).
 #'   Uses the same METABFL → PPCAT → PARAM fallback as [t_pkpt03_MP_col()].
 #' @export
 l_pkpl01_mp <- function(data, ...) {
-  if ("METABFL" %in% names(data) &&
-      any(!is.na(data$METABFL) & data$METABFL != "")) {
-    data <- data[!is.na(data$METABFL) & data$METABFL != "", , drop = FALSE]
-    return(l_pkpl01(data, ...))
-  }
-
-  for (col in c("PPCAT", "PARAM")) {
-    if (col %in% names(data)) {
-      if (any(grepl("metab", data[[col]], ignore.case = TRUE))) {
-        data <- data[grepl("metab", data[[col]], ignore.case = TRUE), ,
-                     drop = FALSE]
-        return(l_pkpl01(data, ...))
-      }
-    }
-  }
-
-  stop(
-    "l_pkpl01_mp: no metabolite data found. ",
-    "METABFL is absent or all missing, and no PPCAT/PARAM values contain ",
-    "'metab'. Include METABFL as a grouping variable in your NCA run, or ",
-    "ensure metabolite rows are labelled with 'metab' in PPCAT or PARAM."
-  )
+  l_pkpl01(filter_metabolite_rows(data, "l_pkpl01_mp"), ...)
 }
 
-#' Individual Treatment Ratio Listing (pkpl04)
+#' Individual Treatment Comparison Listing (pkpl04)
 #'
-#' Produces a per-subject listing of PK parameter values organised for
-#' treatment comparison.  Each listing page covers one PPCAT/PPSPEC
-#' combination; within each page the data is keyed by PARAM and USUBJID so
-#' readers can compare values across treatment arms side-by-side in the
-#' key-column header rows.
+#' Produces a per-subject listing of individual PK parameter values organised
+#' for treatment comparison. Each listing page covers one PPCAT/PPSPEC
+#' combination; within each page data is keyed by PARAM, TRT01A, and USUBJID
+#' so that a reader can visually compare each subject's values across treatment
+#' arms (pkpl04 style).
 #'
 #' @details
-#' This listing shows raw individual AVAL values (not pre-computed ratios).
-#' It is designed for crossover studies where the same subject appears in
-#' multiple treatment arms, but it also renders for parallel designs.
+#' This listing shows the raw individual `AVAL` values from ADPP, not
+#' pre-computed ratios. If your ADPP contains NCA ratio parameters (e.g.
+#' metabolite-to-parent AUC ratios added via the aNCA ratio-calculation
+#' module), those parameters are displayed here just like any other PARAM row.
+#' The `_mp` suffix in the function name reflects its typical use with
+#' metabolite/parent ratio parameters, but no metabolite filtering is applied —
+#' all PARAM values in the data are included.
 #'
 #' @inheritParams l_pkpl01
 #' @param grouping_vars Key/header columns. Default: `c("PARAM", "TRT01A",
 #'   "USUBJID")`.
-#' @param displaying_vars Data columns. Default: `c("AVAL", "AVALU")`.
 #'
 #' @return A named list of `listing_df` objects.
 #'

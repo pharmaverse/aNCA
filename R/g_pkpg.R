@@ -28,9 +28,9 @@
 #' plots[[1]]
 #' }
 #'
-#' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter labs theme_bw theme
-#'   element_text element_blank facet_wrap
-#' @importFrom rlang .data sym
+#' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter geom_text stat_summary
+#'   labs theme_bw theme element_text element_blank facet_wrap
+#' @importFrom rlang .data
 #' @export
 p_pkpg03_boxp <- function(
   data,
@@ -129,20 +129,7 @@ p_pkpg03_boxp <- function(
     p
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = .make_plot(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  plots <- lapply(levels(split_keys), function(key) {
-    .make_plot(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(plots, levels(split_keys))
+  split_and_apply(data, present_list_vars, .make_plot)
 }
 
 #' @describeIn p_pkpg03_boxp Boxplot with all individual data points overlaid (pkpg04).
@@ -170,27 +157,7 @@ p_pkpg04_boxp <- function(data, ...) {
 #'
 #' @export
 p_pkpg06_mp <- function(data, ...) {
-  if ("METABFL" %in% names(data) &&
-      any(!is.na(data$METABFL) & data$METABFL != "")) {
-    data <- data[!is.na(data$METABFL) & data$METABFL != "", , drop = FALSE]
-    return(p_pkpg03_boxp(data, ...))
-  }
-
-  for (col in c("PPCAT", "PARAM")) {
-    if (col %in% names(data)) {
-      if (any(grepl("metab", data[[col]], ignore.case = TRUE))) {
-        data <- data[grepl("metab", data[[col]], ignore.case = TRUE), , drop = FALSE]
-        return(p_pkpg03_boxp(data, ...))
-      }
-    }
-  }
-
-  stop(
-    "p_pkpg06_mp: no metabolite data found. ",
-    "METABFL is absent or all missing, and no PPCAT/PARAM values contain 'metab'. ",
-    "To use this plot, include METABFL as a grouping variable in your NCA run, ",
-    "or ensure metabolite rows are labelled with 'metab' in PPCAT or PARAM."
-  )
+  p_pkpg03_boxp(filter_metabolite_rows(data, "p_pkpg06_mp"), ...)
 }
 
 #' Mean Urine PK Parameter Profile Plot (pkpg01)
@@ -351,20 +318,7 @@ p_pkpg01_cum <- function(
     p
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = .make_urine_plot(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  plots <- lapply(levels(split_keys), function(key) {
-    .make_urine_plot(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(plots, levels(split_keys))
+  split_and_apply(data, present_list_vars, .make_urine_plot)
 }
 
 #' @describeIn p_pkpg01_cum Mean percentage of dose recovered in urine (pkpg01 %).
@@ -413,8 +367,8 @@ p_pkpg01_per <- function(
 #' plots[[1]]
 #' }
 #'
-#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_text facet_wrap
-#'   labs scale_x_log10 scale_y_log10 theme_bw theme element_text
+#' @importFrom ggplot2 ggplot aes geom_point geom_line geom_text geom_errorbar
+#'   facet_wrap labs scale_x_log10 scale_y_log10 theme_bw theme element_text
 #' @importFrom rlang .data
 #' @importFrom stats lm coef confint predict sd
 #' @export
@@ -562,6 +516,14 @@ p_pkpg02_doseprop <- function(
         mean_val = mean(.data[[value_var]], na.rm = TRUE),
         sd_val   = stats::sd(.data[[value_var]], na.rm = TRUE),
         .groups  = "drop"
+      ) %>%
+      dplyr::mutate(
+        # Per TLG catalog pkpg02: omit error bars when SD >= mean to avoid
+        # non-positive lower bounds on the log scale (log(<=0) is undefined).
+        ymin = ifelse(is.na(.data[["sd_val"]]) | .data[["sd_val"]] >= .data[["mean_val"]],
+                      NA_real_, .data[["mean_val"]] - .data[["sd_val"]]),
+        ymax = ifelse(is.na(.data[["sd_val"]]) | .data[["sd_val"]] >= .data[["mean_val"]],
+                      NA_real_, .data[["mean_val"]] + .data[["sd_val"]])
       )
 
     p <- p +
@@ -569,12 +531,13 @@ p_pkpg02_doseprop <- function(
         data        = dose_summary,
         ggplot2::aes(
           x    = .data[[dose_var]],
-          ymin = .data[["mean_val"]] - .data[["sd_val"]],
-          ymax = .data[["mean_val"]] + .data[["sd_val"]]
+          ymin = .data[["ymin"]],
+          ymax = .data[["ymax"]]
         ),
         width       = 0.05,
         color       = "black",
-        inherit.aes = FALSE
+        inherit.aes = FALSE,
+        na.rm       = TRUE
       ) +
       ggplot2::geom_point(
         data        = dose_summary,
@@ -591,18 +554,5 @@ p_pkpg02_doseprop <- function(
     p
   }
 
-  if (length(present_list_vars) == 0) {
-    return(list(all = .make_dp_plot(data)))
-  }
-
-  split_keys <- do.call(
-    interaction,
-    c(lapply(present_list_vars, function(v) as.character(data[[v]])),
-      list(sep = " / ", drop = TRUE))
-  )
-
-  plots <- lapply(levels(split_keys), function(key) {
-    .make_dp_plot(data[split_keys == key, , drop = FALSE])
-  })
-  setNames(plots, levels(split_keys))
+  split_and_apply(data, present_list_vars, .make_dp_plot)
 }

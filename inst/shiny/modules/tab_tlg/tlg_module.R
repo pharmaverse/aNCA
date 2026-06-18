@@ -8,17 +8,24 @@
 #' To read more check out documentation for each function of the module and the contributing
 #' guidelines.
 
-#' Filter out rows excluded from TLGs via PKSUM1F.
-#' Rows with PKSUM1F == "Y" are removed.
-#' @param data A data frame (typically conc$data).
+#' Filter out rows excluded from TLGs.
+#'
+#' Removes rows flagged for exclusion from summary tables.
+#' - ADNCA data: removes rows where `PKSUM1F == "Y"`.
+#' - ADPP data: removes rows where `PPSUMFL == "Y"`.
+#' Both flags are checked so the function works on either dataset.
+#'
+#' @param data A data frame (ADNCA or ADPP).
 #' @return The filtered data frame.
 #' @noRd
 filter_tlg_excluded <- function(data) {
   if ("PKSUM1F" %in% names(data)) {
-    data[data$PKSUM1F != "Y", , drop = FALSE]
-  } else {
-    data
+    data <- data[data$PKSUM1F != "Y", , drop = FALSE]
   }
+  if ("PPSUMFL" %in% names(data)) {
+    data <- data[data$PPSUMFL != "Y", , drop = FALSE]
+  }
+  data
 }
 
 #' Function generating UI for a TLG module.
