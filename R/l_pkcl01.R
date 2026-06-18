@@ -251,3 +251,62 @@ l_pkcl01_tad <- function(data, ...) {
   data <- apply_labels(data)
   l_pkcl01(data, displaying_vars = c("NRRLT", "ARRLT", "AVAL"), ...)
 }
+
+#' Urine Concentration and Volume Listing (pkcl02)
+#'
+#' Filters ADNCA to urine specimen rows (where `PCSPEC %in% urine_specs`) then
+#' delegates to [l_pkcl01()] with VOLUME and VOLUMEU added to the displayed
+#' columns when those columns are present in the data.
+#'
+#' @param data A CDISC ADNCA data frame (from `export_cdisc()$adnca`).
+#' @param urine_specs Character vector of specimen type values to keep.
+#'   Default: `c("URINE", "Urine")`.
+#' @param displaying_vars Character vector of columns to display. When `NULL`
+#'   (default), uses `c("NFRLT", "AFRLT", "AVAL")` plus `VOLUME`/`VOLUMEU`
+#'   if those columns exist in the data.
+#' @param ... Additional arguments forwarded to [l_pkcl01()].
+#'
+#' @return A named list of `listing_df` objects.
+#'
+#' @examples
+#' \dontrun{
+#' adnca <- export_cdisc(res_nca)$adnca
+#' listings <- l_pkcl02_uri(adnca)
+#' print(listings[[1]])
+#' }
+#'
+#' @export
+l_pkcl02_uri <- function(
+  data,
+  urine_specs     = c("URINE", "Urine"),
+  listgroup_vars  = c("PARAM", "PCSPEC"),
+  displaying_vars = NULL,
+  ...
+) {
+  if ("PCSPEC" %in% names(data)) {
+    data <- data[data$PCSPEC %in% urine_specs, , drop = FALSE]
+  }
+  if (nrow(data) == 0) {
+    stop(
+      "l_pkcl02_uri: no urine concentration data found. ",
+      "Ensure PCSPEC contains one of: ",
+      paste(urine_specs, collapse = ", ")
+    )
+  }
+
+  if (is.null(displaying_vars)) {
+    vol_vars        <- intersect(c("VOLUME", "VOLUMEU"), names(data))
+    displaying_vars <- c("NFRLT", "AFRLT", "AVAL", vol_vars)
+  }
+
+  l_pkcl01(
+    data,
+    listgroup_vars  = listgroup_vars,
+    displaying_vars = displaying_vars,
+    title = paste0(
+      "Listing of Urine PK Concentration and Volume ",
+      "by Treatment Group, Subject and Nominal Time, PK Population"
+    ),
+    ...
+  )
+}
