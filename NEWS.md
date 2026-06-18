@@ -6,6 +6,22 @@
 
 ## Features
 
+### TLG Catalog
+* Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
+  - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
+  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent filtered)
+  - `t_pkpt07_norm` — dose-normalized PK parameter summary table
+  - `t_pkpt08_uri` — urine cumulative amount and % dose recovered summary table (n, Mean, SD, CV%, Median, Min, Max)
+  - `t_pkpt11_gmr` — geometric mean ratio table with 90% CIs
+  - `p_pkpg03_boxp` / `p_pkpg04_boxp` — boxplots of primary PK parameters (with and without individual data points)
+  - `p_pkpg06_mp` — boxplot of metabolite/parent PK parameter ratios
+  - `p_pkpg01_cum` / `p_pkpg01_per` — mean cumulative urine amount and % dose recovered line plots
+  - `p_pkpg02_doseprop` — dose-proportionality scatter plot with power-model regression on log-log scale
+  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite-filtered)
+  - `l_pkpl04_mp` — individual PK parameter listing organised for treatment comparison
+  - `l_pkcl02_uri` — urine concentration and volume listing
+* ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMFL = "Y"`, consistent with ADNCA exclusion via `PKSUM1F` (#1343)
+
 ### Settings & Configuration
 * Settings upload auto-restores the full session: mapping, filters, data processing, tab navigation, and auto-runs NCA if previously run. Incompatible settings degrade gracefully with notifications (#1225)
 * Settings version control: YAML file stores multiple versions with metadata. Save button in header, version selection on upload, version delete support (#1103)

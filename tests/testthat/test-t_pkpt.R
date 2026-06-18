@@ -57,12 +57,21 @@ describe("t_pkpt03_col", {
     expect_error(t_pkpt03_col(bad), "missing required columns")
   })
 
-  it("produces one table per AVISIT/PPCAT combination", {
+  it("produces one table per PPCAT when split by PPCAT (default)", {
+    two_cats <- rbind(
+      pkpt_data,
+      transform(pkpt_data, PPCAT = "DrugB Plasma")
+    )
+    result <- t_pkpt03_col(two_cats)
+    expect_equal(length(result), 2)
+  })
+
+  it("splits by AVISIT when explicitly passed in list_vars", {
     two_visits <- rbind(
       pkpt_data,
       transform(pkpt_data, AVISIT = "Day 7")
     )
-    result <- t_pkpt03_col(two_visits)
+    result <- t_pkpt03_col(two_visits, list_vars = c("AVISIT", "PPCAT"))
     expect_equal(length(result), 2)
   })
 })
@@ -95,11 +104,11 @@ describe("t_pkpt03_MP_col", {
 
   it("stops when METABFL absent and no 'metab' in PPCAT or PARAM", {
     data_no_metabfl <- pkpt_data[, setdiff(names(pkpt_data), "METABFL")]
-    expect_error(t_pkpt03_MP_col(data_no_metabfl), "No metabolite data found")
+    expect_error(t_pkpt03_MP_col(data_no_metabfl), "no metabolite data found")
   })
 
   it("stops with informative error when METABFL is all missing", {
-    expect_error(t_pkpt03_MP_col(pkpt_data), "No metabolite data found")
+    expect_error(t_pkpt03_MP_col(pkpt_data), "no metabolite data found")
   })
 })
 
@@ -177,5 +186,22 @@ describe("t_pkpt11_gmr", {
   it("stops when required columns are missing", {
     bad <- pkpt_data[, setdiff(names(pkpt_data), "AVAL")]
     expect_error(t_pkpt11_gmr(bad), "missing required columns")
+  })
+
+  it("returns empty data frame and warns when ref_arm absent from a sub-split", {
+    # Create two-split data where ref_arm "10mg" only exists in one PPCAT
+    split_data <- rbind(
+      pkpt_data,
+      transform(pkpt_data[pkpt_data$TRT01A == "50mg", ],
+                PPCAT = "DrugB Plasma")
+    )
+    # "DrugB Plasma" split has only 50mg rows — ref_arm "10mg" is absent
+    expect_warning(
+      result <- t_pkpt11_gmr(split_data, ref_arm = "10mg"),
+      "reference arm"
+    )
+    # The DrugA split returns a normal table; the DrugB split is empty
+    drug_b_key <- grep("DrugB", names(result), value = TRUE)
+    expect_equal(nrow(result[[drug_b_key]]), 0)
   })
 })

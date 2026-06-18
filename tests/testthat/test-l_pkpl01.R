@@ -71,6 +71,17 @@ describe("l_pkpl01", {
     expect_type(result, "list")
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
+
+  it("handles multi-interval ADPP (duplicate PARAM rows per subject) without error", {
+    # Simulate ADPP with two dose intervals: same USUBJID+PARAM appears twice
+    dup_data <- rbind(pkpl_data, pkpl_data)
+    dup_data$AVAL <- dup_data$AVAL + runif(nrow(dup_data), 0, 1)
+    # pivot_wider must not produce list-columns; values_fn = first deduplicates
+    expect_no_error({
+      result <- l_pkpl01(dup_data)
+    })
+    purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  })
 })
 
 describe("l_pkpl01_mp", {

@@ -55,6 +55,35 @@ describe("filter_tlg_excluded", {
     result <- filter_tlg_excluded(df)
     expect_equal(nrow(result), 0)
   })
+
+  it("removes rows where PPSUMFL is 'Y' (ADPP exclusion flag)", {
+    df <- data.frame(
+      x       = 1:4,
+      PPSUMFL = c("", "Y", "", "Y"),
+      stringsAsFactors = FALSE
+    )
+    result <- filter_tlg_excluded(df)
+    expect_equal(nrow(result), 2)
+    expect_equal(result$x, c(1L, 3L))
+  })
+
+  it("filters both PKSUM1F and PPSUMFL when both are present", {
+    df <- data.frame(
+      x       = 1:4,
+      PKSUM1F = c("Y", "",  "",  ""),
+      PPSUMFL = c("",  "Y", "",  ""),
+      stringsAsFactors = FALSE
+    )
+    result <- filter_tlg_excluded(df)
+    # rows 1 and 2 removed; rows 3 and 4 kept
+    expect_equal(nrow(result), 2)
+    expect_equal(result$x, c(3L, 4L))
+  })
+
+  it("returns all rows when PPSUMFL is absent", {
+    df <- data.frame(x = 1:3, stringsAsFactors = FALSE)
+    expect_equal(nrow(filter_tlg_excluded(df)), 3)
+  })
 })
 
 # ---------------------------------------------------------------------------
