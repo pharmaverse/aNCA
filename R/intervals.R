@@ -295,6 +295,12 @@ update_main_intervals <- function(
   # and apply it only for non-observational parameters
 
   if (!is.null(blq_imputation_rule)) {
+    # Ensure impute column exists so dplyr mutate below references the
+    # column rather than the function parameter (which could be FALSE
+    # from YAML settings, causing "PKNCA_impute_method_FALSE" error).
+    if (!"impute" %in% names(data$intervals)) {
+      data$intervals$impute <- NA_character_
+    }
     data$intervals <- data$intervals %>%
       mutate(
         impute = ifelse(
@@ -324,16 +330,20 @@ update_main_intervals <- function(
 #' @import dplyr
 #'
 rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_parameters) {
-  # Don't impute parameters that are not AUC dependent
+  # Don't impute parameters that are not AUC dependent.
+  # Parameters in the AUC calculation chain (half.life feeds lambda.z,
+  # which feeds aucinf.obs) must all use the same BLQ-imputed data (#1057).
   params_auc_dep <- metadata_nca_parameters %>%
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
+  # Build reverse dependency table and walk forward along the data-flow
+  # direction to find all params whose consumers eventually reach an AUC param.
+  rev_deps <- .build_rev_deps(metadata_nca_parameters)
+  needs_impute <- .walk_forward_deps(params_auc_dep, rev_deps)
+
   params_not_to_impute <- metadata_nca_parameters %>%
-    filter(
-      !grepl("auc|aumc", PKNCA),
-      !grepl(paste0(params_auc_dep, collapse = "|"), Depends)
-    ) %>%
+    filter(!PKNCA %in% needs_impute) %>%
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
@@ -366,4 +376,45 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   }, all_impute_methods, init = data$intervals)
 
   data
+}
+
+#' Build a reverse dependency table from the Depends column.
+#' For each parameter A, returns which parameters list A as a dependency.
+#' e.g., lambda.z lists half.life in Depends, so rev_deps$half.life includes lambda.z.
+#' @noRd
+.build_rev_deps <- function(metadata) {
+  rev <- list()
+  for (i in seq_len(nrow(metadata))) {
+    pkg_name <- metadata$PKNCA[i]
+    dep_str <- metadata$Depends[i]
+    if (is.na(dep_str) || dep_str == "") next
+    dep_list <- trimws(strsplit(dep_str, ",")[[1]])
+    for (d in dep_list) {
+      rev[[d]] <- unique(c(rev[[d]], pkg_name))
+    }
+  }
+  rev
+}
+
+#' Walk forward through the reverse dependency table from `start_set`.
+#' At each iteration, finds params whose consumers include any param
+#' already in the set — i.e., params that feed into the current chain.
+#' Stops when reaching purely observational leaf params (cmax, tmax, tlast)
+#' to avoid including them in the imputation set.
+#' @noRd
+.walk_forward_deps <- function(start_set, rev_deps,
+                                obs_params = c("cmax", "tmax", "tlast")) {
+  needs <- start_set
+  repeat {
+    newly_found <- character()
+    for (pkg in names(rev_deps)) {
+      if (!pkg %in% needs && !pkg %in% obs_params &&
+          any(rev_deps[[pkg]] %in% needs)) {
+        newly_found <- c(newly_found, pkg)
+      }
+    }
+    if (length(newly_found) == 0) break
+    needs <- c(needs, newly_found)
+  }
+  needs
 }

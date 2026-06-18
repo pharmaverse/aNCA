@@ -18,6 +18,9 @@
 * Partial interval parameters section supports calculations beyond `AUCINT`: `RCAMINT`, `AUCINTD`, `CAVGINT`, and others. Table starts empty by default with a Remove Row button (#524, #1249)
 * "Min. Points for Half-life" setting added (range 2–10, default 3) (#1155)
 * BLQ imputation rules via `NCA Setup > Data Imputation` (#139)
+
+### Bug Fixes
+* Half-life (LAMZHL) and lambda.z (LAMZ) now correctly retain BLQ imputation when half-life-dependent parameters (AUCIFO, AUCIFP) are requested. Previously `rm_impute_obs_params()` removed imputation from `half.life` because its dependency check was limited to one level — missing the transitive chain `half.life -> lambda.z -> aucinf.obs`. The dependency resolution now recursively traverses upstream dependencies to include all parameters in the AUC calculation chain (#1057).
 * General Exclusions section for in-app NCA exclusions, with "Excl. TLG" checkbox per entry (#851, #1018)
 * Parameter Exclusions tab: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
 * NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are excluded from NCA (#752)
