@@ -23,6 +23,19 @@ split_and_apply <- function(data, list_vars, fn) {
     return(list(all = fn(data)))
   }
 
+  # Rows where any split column is NA are excluded: they cannot be assigned to a
+  # meaningful group and would otherwise appear as a spurious "NA / PLASMA" page.
+  complete_rows <- rowSums(is.na(data[, present, drop = FALSE])) == 0
+  if (!all(complete_rows)) {
+    warning(
+      "split_and_apply: ", sum(!complete_rows), " row(s) with NA in split ",
+      "variable(s) [", paste(present, collapse = ", "), "] were excluded."
+    )
+    data <- data[complete_rows, , drop = FALSE]
+  }
+
+  if (nrow(data) == 0) return(list(all = fn(data)))
+
   split_keys <- do.call(
     interaction,
     c(

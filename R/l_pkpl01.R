@@ -57,7 +57,7 @@ l_pkpl01 <- function(
          paste(missing_cols, collapse = ", "))
   }
 
-  data <- apply_labels(data)
+  data <- apply_labels(data, type = "ADPP")
 
   if (is.null(subtitle)) {
     subtitle <- paste(
@@ -67,8 +67,6 @@ l_pkpl01 <- function(
       collapse = "\n"
     )
   }
-
-  present_list_vars <- intersect(listgroup_vars, names(data))
 
   .make_wide_listing <- function(df) {
     has_unit <- unit_var %in% names(df)
@@ -88,7 +86,7 @@ l_pkpl01 <- function(
         .val_fmt = round(as.numeric(.data[[value_var]]), 3)
       ) %>%
       dplyr::select(dplyr::all_of(c(
-        intersect(present_list_vars, names(df)),
+        intersect(listgroup_vars, names(df)),
         grouping_vars, param_var, ".val_fmt"
       ))) %>%
       tidyr::pivot_wider(
@@ -113,9 +111,13 @@ l_pkpl01 <- function(
       }
     }
 
+    # pivot_wider spreads param_var into column headers, so param_var is no longer
+    # a column in `wide`.  Exclude it from key_cols so it is not silently dropped
+    # by intersect() — it already appears as the display columns (param_cols).
+    key_col_candidates <- setdiff(grouping_vars, param_var)
     rlistings::as_listing(
       df          = wide,
-      key_cols    = intersect(grouping_vars, names(wide)),
+      key_cols    = intersect(key_col_candidates, names(wide)),
       disp_cols   = intersect(param_cols, names(wide)),
       main_title  = parse_annotation(data = df, text = title),
       subtitles   = gsub("<br>", "\n",
@@ -124,7 +126,7 @@ l_pkpl01 <- function(
     )
   }
 
-  split_and_apply(data, present_list_vars, .make_wide_listing)
+  split_and_apply(data, listgroup_vars, .make_wide_listing)
 }
 
 #' @describeIn l_pkpl01 Listing filtered to metabolite rows (pkpl01 M/P).
@@ -138,9 +140,8 @@ l_pkpl01_mp <- function(data, ...) {
 #'
 #' Produces a per-subject listing of individual PK parameter values organised
 #' for treatment comparison. Each listing page covers one PPCAT/PPSPEC
-#' combination; within each page data is keyed by PARAM, TRT01A, and USUBJID
-#' so that a reader can visually compare each subject's values across treatment
-#' arms (pkpl04 style).
+#' combination. PK parameters become display columns (one column per PARAM value)
+#' and the rows are keyed by `TRT01A` and `USUBJID`.
 #'
 #' @details
 #' This listing shows the raw individual `AVAL` values from ADPP, not
@@ -151,9 +152,15 @@ l_pkpl01_mp <- function(data, ...) {
 #' metabolite/parent ratio parameters, but no metabolite filtering is applied —
 #' all PARAM values in the data are included.
 #'
+#' Note: `PARAM` is listed in `grouping_vars` so that it participates in the
+#' `pivot_wider` step (each unique PARAM value becomes a column header). After
+#' pivoting, `PARAM` is no longer a row-key column; the actual listing keys
+#' are `TRT01A` and `USUBJID`.
+#'
 #' @inheritParams l_pkpl01
-#' @param grouping_vars Key/header columns. Default: `c("PARAM", "TRT01A",
-#'   "USUBJID")`.
+#' @param grouping_vars Columns used to identify row keys before pivoting.
+#'   `PARAM` must be included so it is spread into display columns.
+#'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
 #'
 #' @return A named list of `listing_df` objects.
 #'

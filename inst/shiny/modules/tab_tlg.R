@@ -271,7 +271,11 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NUL
           table_data <- switch(
             g_def$dataset,
             "ADPP"  = adpp_data,
-            "ADNCA" = adnca,
+            # Use conc_data (which applies filter_tlg_excluded) for consistency
+            # with graphs and listings.  The raw `adnca` reactive is not filtered,
+            # so using it here would include PKSUM1F=="Y" rows that are excluded
+            # from all other TLG types.
+            "ADNCA" = conc_data,
             reactive(filter_tlg_excluded(data()$conc$data))
           )
 

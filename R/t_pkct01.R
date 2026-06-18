@@ -54,8 +54,6 @@ t_pkct01 <- function(
     stop("t_pkct01: missing required columns: ", paste(missing_cols, collapse = ", "))
   }
 
-  present_list_vars <- intersect(list_vars, names(data))
-
   present_visit_var <- if (visit_var %in% names(data)) visit_var else NULL
   has_blq_col <- blq_var %in% names(data)
 
@@ -64,13 +62,18 @@ t_pkct01 <- function(
   .summarise_group <- function(df) {
     aval_num <- df$AVAL
     is_blq <- if (has_blq_col) {
-      df[[blq_var]] == "BLQ"
+      # Guard against NA in blq_var: NA != "BLQ" → NA, coerce to FALSE so those
+      # rows are neither counted as BLQ nor silently passed into numeric stats.
+      !is.na(df[[blq_var]]) & df[[blq_var]] == "BLQ"
     } else {
       !is.na(df$AVAL) & df$AVAL == 0
     }
     aval_num[is_blq] <- NA_real_
 
-    n_total  <- sum(!is.na(df$AVAL))   # all non-NA observations (BLQ + quantifiable)
+    # n = quantifiable + BLQ (regardless of whether AVAL is NA for BLQ rows).
+    # Using only !is.na(AVAL) would undercount when AVALC="BLQ" but AVAL=NA,
+    # causing n_blq > n — an impossible table entry.
+    n_total  <- sum(!is.na(df$AVAL) | is_blq)
     n_blq    <- sum(is_blq, na.rm = TRUE)
     vals     <- aval_num[!is.na(aval_num)]
     pos_vals <- vals[vals > 0]
@@ -93,9 +96,19 @@ t_pkct01 <- function(
   }
 
   make_table <- function(df) {
+    # Coerce grouping columns to character so that R's NA becomes the string "NA"
+    # before interaction().  interaction(..., drop = TRUE) never creates a factor
+    # level for R's NA, so rows with NA in strat_var or time_var would be silently
+    # dropped (e.g. unscheduled samples with NFRLT = NA).  Using the string "NA"
+    # keeps those rows visible in the table under an explicit "NA" label.
+    group_cols <- lapply(row_vars, function(v) {
+      x <- df[[v]]
+      x[is.na(x)] <- "NA"
+      as.character(x)
+    })
     groups <- do.call(
       interaction,
-      c(lapply(row_vars, function(v) df[[v]]), list(sep = " | ", drop = TRUE))
+      c(group_cols, list(sep = " | ", drop = TRUE))
     )
 
     rows <- lapply(levels(groups), function(grp) {
@@ -112,7 +125,7 @@ t_pkct01 <- function(
     apply_labels(result)
   }
 
-  split_and_apply(data, present_list_vars, make_table)
+  split_and_apply(data, list_vars, make_table)
 }
 
 #' @describeIn t_pkct01 Stratify by dose instead of treatment arm (first dose).

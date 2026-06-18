@@ -1,3 +1,38 @@
+#' Shared table builder for ADPP summary tables (pkpt03 / pkpt08 pattern).
+#'
+#' Deduplicates to one row per USUBJID × strat × param, then applies
+#' `summary_fn` to the numeric values for each stratum/parameter combination.
+#' Used internally by `t_pkpt03_col` and `t_pkpt08_uri` to avoid duplicating
+#' the identical looping/cbind/rbind boilerplate.
+#'
+#' @param df Data frame (one split from `split_and_apply`).
+#' @param strat_var,param_var,value_var Column name strings.
+#' @param summary_fn Function that takes a numeric vector and returns a
+#'   one-row `data.frame` of summary statistics.
+#' @return A labeled `data.frame`.
+#' @noRd
+.build_pkpp_table <- function(df, strat_var, param_var, value_var, summary_fn) {
+  if ("USUBJID" %in% names(df)) {
+    df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+  }
+  strats <- sort(unique(df[[strat_var]]))
+  params <- sort(unique(df[[param_var]]))
+  rows <- lapply(strats, function(s) {
+    sub_s <- df[df[[strat_var]] == s, , drop = FALSE]
+    lapply(params, function(p) {
+      vals <- sub_s[[value_var]][sub_s[[param_var]] == p]
+      key  <- data.frame(strat = s, param = p, stringsAsFactors = FALSE)
+      names(key) <- c(strat_var, param_var)
+      cbind(key, summary_fn(vals), stringsAsFactors = FALSE)
+    })
+  })
+  flat <- unlist(rows, recursive = FALSE)
+  if (length(flat) == 0) return(data.frame())
+  result <- do.call(rbind, flat)
+  rownames(result) <- NULL
+  apply_labels(result, type = "ADPP")
+}
+
 #' Summary PK Parameters Table — statistics in columns (pkpt03)
 #'
 #' Summarizes pharmacokinetic parameters from ADPP data. Returns one data frame
@@ -41,8 +76,6 @@ t_pkpt03_col <- function(
     stop("t_pkpt03_col: missing required columns: ", paste(missing_cols, collapse = ", "))
   }
 
-  present_list_vars <- intersect(list_vars, names(data))
-
   if (nrow(data) == 0) return(list(data.frame()))
 
   .summarise_pk <- function(vals) {
@@ -67,28 +100,10 @@ t_pkpt03_col <- function(
     )
   }
 
-  make_table <- function(df) {
-    strats <- unique(df[[strat_var]])
-    params <- unique(df[[param_var]])
-    rows <- lapply(strats, function(s) {
-      sub_s <- df[df[[strat_var]] == s, , drop = FALSE]
-      lapply(params, function(p) {
-        vals <- sub_s[[value_var]][sub_s[[param_var]] == p]
-        key  <- data.frame(
-          strat = s, param = p, stringsAsFactors = FALSE
-        )
-        names(key) <- c(strat_var, param_var)
-        cbind(key, .summarise_pk(vals), stringsAsFactors = FALSE)
-      })
-    })
-    flat <- unlist(rows, recursive = FALSE)
-    if (length(flat) == 0) return(data.frame())
-    result <- do.call(rbind, flat)
-    rownames(result) <- NULL
-    apply_labels(result)
-  }
-
-  split_and_apply(data, present_list_vars, make_table)
+  split_and_apply(
+    data, list_vars,
+    function(df) .build_pkpp_table(df, strat_var, param_var, value_var, .summarise_pk)
+  )
 }
 
 #' @describeIn t_pkpt03_col Summary of metabolite-to-parent ratios (stats in columns).
@@ -132,6 +147,12 @@ t_pkpt07_norm <- function(
 ) {
   if (paramcd_var %in% names(data)) {
     data <- data[grepl("D$", data[[paramcd_var]]), , drop = FALSE]
+  } else {
+    warning(
+      "t_pkpt07_norm: column '", paramcd_var, "' not found in data; ",
+      "dose-normalization filter could not be applied. All parameters are ",
+      "included. Ensure PARAMCD is exported from your NCA run to use this table."
+    )
   }
   if (nrow(data) == 0) {
     stop(
@@ -201,8 +222,6 @@ t_pkpt08_uri <- function(
          paste(missing_cols, collapse = ", "))
   }
 
-  present_list_vars <- intersect(list_vars, names(data))
-
   .summarise_uri <- function(vals) {
     vals <- vals[!is.na(vals)]
     n    <- length(vals)
@@ -221,26 +240,10 @@ t_pkpt08_uri <- function(
     )
   }
 
-  make_table <- function(df) {
-    strats <- unique(df[[strat_var]])
-    params <- unique(df[[param_var]])
-    rows <- lapply(strats, function(s) {
-      sub_s <- df[df[[strat_var]] == s, , drop = FALSE]
-      lapply(params, function(p) {
-        vals <- sub_s[[value_var]][sub_s[[param_var]] == p]
-        key  <- data.frame(strat = s, param = p, stringsAsFactors = FALSE)
-        names(key) <- c(strat_var, param_var)
-        cbind(key, .summarise_uri(vals), stringsAsFactors = FALSE)
-      })
-    })
-    flat <- unlist(rows, recursive = FALSE)
-    if (length(flat) == 0) return(data.frame())
-    result <- do.call(rbind, flat)
-    rownames(result) <- NULL
-    apply_labels(result)
-  }
-
-  split_and_apply(data, present_list_vars, make_table)
+  split_and_apply(
+    data, list_vars,
+    function(df) .build_pkpp_table(df, strat_var, param_var, value_var, .summarise_uri)
+  )
 }
 
 #' GMR Table with Confidence Intervals (pkpt11)
@@ -295,7 +298,6 @@ t_pkpt11_gmr <- function(
   trt_arms <- setdiff(arms, ref_arm)
 
   alpha   <- 1 - ci_level
-  present_list_vars <- intersect(list_vars, names(data))
 
   .gmr_row <- function(ref_vals, trt_vals, strat, param) {
     ref_log <- log(ref_vals[ref_vals > 0 & !is.na(ref_vals)])
@@ -327,6 +329,12 @@ t_pkpt11_gmr <- function(
   }
 
   make_table <- function(df) {
+    # Deduplicate to one row per subject × parameter × stratum before computing
+    # GMR.  ADPP multi-interval duplicates inflate n and produce falsely narrow CIs.
+    if ("USUBJID" %in% names(df)) {
+      df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+    }
+
     arms_in_split <- unique(df[[strat_var]])
 
     if (!ref_arm %in% arms_in_split) {
@@ -346,7 +354,7 @@ t_pkpt11_gmr <- function(
       return(data.frame())
     }
 
-    params   <- unique(df[[param_var]])
+    params   <- sort(unique(df[[param_var]]))
     ref_data <- df[df[[strat_var]] == ref_arm, , drop = FALSE]
 
     rows <- unlist(lapply(trt_in_split, function(s) {
@@ -362,8 +370,8 @@ t_pkpt11_gmr <- function(
     names(result)[names(result) == "strat"] <- strat_var
     names(result)[names(result) == "param"] <- param_var
     rownames(result) <- NULL
-    apply_labels(result)
+    apply_labels(result, type = "ADPP")
   }
 
-  split_and_apply(data, present_list_vars, make_table)
+  split_and_apply(data, list_vars, make_table)
 }

@@ -62,9 +62,14 @@ p_pkpg03_boxp <- function(
     if (!is.null(lbl)) lbl else value_var
   }
 
-  present_list_vars <- intersect(list_vars, names(data))
-
   .make_plot <- function(df) {
+    # Deduplicate to one row per subject × parameter × stratum.  ADPP multi-interval
+    # data has identical rows per dose event; duplicates inflate jitter point counts
+    # and distort summary statistics in stat_summary.  Done inside .make_plot (after
+    # split_and_apply) so that list_vars columns don't interfere with the dedup key.
+    if ("USUBJID" %in% names(df)) {
+      df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+    }
     p <- ggplot2::ggplot(
       df,
       ggplot2::aes(
@@ -129,7 +134,7 @@ p_pkpg03_boxp <- function(
     p
   }
 
-  split_and_apply(data, present_list_vars, .make_plot)
+  split_and_apply(data, list_vars, .make_plot)
 }
 
 #' @describeIn p_pkpg03_boxp Boxplot with all individual data points overlaid (pkpg04).
@@ -230,6 +235,13 @@ p_pkpg01_cum <- function(
   data <- data[!is.na(data[[value_var]]), , drop = FALSE]
   if (nrow(data) == 0) return(list())
 
+  data[[strat_var]] <- as.factor(data[[strat_var]])
+
+  y_label <- if (!is.null(ylab)) ylab else {
+    lbl <- attr(data[[value_var]], "label")
+    if (!is.null(lbl)) lbl else value_var
+  }
+
   .parse_ppenint <- function(x) {
     x <- as.character(x)
     # ISO 8601 duration: "PT12H" → 12, "PT1.5H" → 1.5, "Inf" → Inf
@@ -239,34 +251,31 @@ p_pkpg01_cum <- function(
     hrs
   }
 
-  use_numeric_x <- time_end_var %in% names(data) &&
-    !all(is.na(data[[time_end_var]])) &&
-    !all(is.infinite(.parse_ppenint(data[[time_end_var]])))
-
-  if (use_numeric_x) {
-    data[[time_end_var]] <- .parse_ppenint(data[[time_end_var]])
-    use_numeric_x <- !all(is.na(data[[time_end_var]]))
-    x_var <- time_end_var
-    x_axis_label <- if (!is.null(xlab)) xlab else "Time (hours)"
-  }
-
-  if (!use_numeric_x) {
-    param_levels      <- sort(unique(data[[param_var]]))
-    data[[param_var]] <- factor(data[[param_var]], levels = param_levels)
-    x_var             <- param_var
-    x_axis_label      <- if (!is.null(xlab)) xlab else "Collection Interval"
-  }
-
-  data[[strat_var]] <- as.factor(data[[strat_var]])
-
-  y_label <- if (!is.null(ylab)) ylab else {
-    lbl <- attr(data[[value_var]], "label")
-    if (!is.null(lbl)) lbl else value_var
-  }
-
-  present_list_vars <- intersect(list_vars, names(data))
-
+  # use_numeric_x and x_var are evaluated per split subset inside .make_urine_plot
+  # so that each PPCAT page uses the correct axis based on its own PPENINT values.
+  # Evaluating them on the full dataset before splitting causes blank pages when
+  # one PPCAT subset has all-NA PPENINT after parsing.
   .make_urine_plot <- function(df, page_title = title) {
+    # Determine x-axis type from this subset's data only
+    use_num <- time_end_var %in% names(df) &&
+      !all(is.na(df[[time_end_var]])) &&
+      !all(is.infinite(.parse_ppenint(df[[time_end_var]])))
+
+    if (use_num) {
+      df[[time_end_var]] <- .parse_ppenint(df[[time_end_var]])
+      use_num <- !all(is.na(df[[time_end_var]]))
+    }
+
+    if (use_num) {
+      x_var         <- time_end_var
+      x_axis_label  <- if (!is.null(xlab)) xlab else "Time (hours)"
+    } else {
+      param_levels      <- sort(unique(df[[param_var]]))
+      df[[param_var]]   <- factor(df[[param_var]], levels = param_levels)
+      x_var             <- param_var
+      x_axis_label      <- if (!is.null(xlab)) xlab else "Collection Interval"
+    }
+
     summary_df <- df %>%
       dplyr::group_by(.data[[strat_var]], .data[[x_var]]) %>%
       dplyr::summarise(
@@ -292,7 +301,7 @@ p_pkpg01_cum <- function(
       ggplot2::geom_point(size = 2.5) +
       ggplot2::geom_errorbar(
         ggplot2::aes(ymin = .data[["ymin"]], ymax = .data[["ymax"]]),
-        width = if (use_numeric_x) 0.5 else 0.2, alpha = 0.7
+        width = if (use_num) 0.5 else 0.2, alpha = 0.7
       ) +
       ggplot2::labs(
         title    = page_title,
@@ -310,7 +319,7 @@ p_pkpg01_cum <- function(
         legend.position = "bottom"
       )
 
-    if (use_numeric_x) {
+    if (use_num) {
       x_breaks <- sort(unique(summary_df[[x_var]]))
       p <- p + ggplot2::scale_x_continuous(breaks = x_breaks)
     }
@@ -318,7 +327,7 @@ p_pkpg01_cum <- function(
     p
   }
 
-  split_and_apply(data, present_list_vars, .make_urine_plot)
+  split_and_apply(data, list_vars, .make_urine_plot)
 }
 
 #' @describeIn p_pkpg01_cum Mean percentage of dose recovered in urine (pkpg01 %).
@@ -412,8 +421,6 @@ p_pkpg02_doseprop <- function(
     if (!is.null(lbl)) lbl else value_var
   }
 
-  present_list_vars <- intersect(list_vars, names(data))
-
   .fit_power <- function(df_param) {
     df_f <- df_param[df_param[[value_var]] > 0 & df_param[[dose_var]] > 0, , drop = FALSE]
     if (nrow(df_f) < 3) return(NULL)
@@ -502,7 +509,10 @@ p_pkpg02_doseprop <- function(
       p <- p + ggplot2::geom_text(
         data        = annot_df,
         ggplot2::aes(x = .data[[dose_var]], y = .data[[value_var]], label = .data[["label"]]),
-        hjust       = -0.05,
+        # hjust = 0.05 places text just inside the left panel edge (x = -Inf).
+        # hjust < 0 pushes text outside the left edge where it is clipped and
+        # invisible with ggplot2's default clip = "on".
+        hjust       = 0.05,
         vjust       = 1.5,
         size        = 2.8,
         color       = "black",
@@ -554,5 +564,5 @@ p_pkpg02_doseprop <- function(
     p
   }
 
-  split_and_apply(data, present_list_vars, .make_dp_plot)
+  split_and_apply(data, list_vars, .make_dp_plot)
 }
