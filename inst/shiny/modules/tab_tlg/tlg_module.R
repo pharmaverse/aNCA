@@ -101,8 +101,9 @@ tlg_module_ui <- function(id, type, options) {
     shinycssloaders::withSpinner(
       switch(
         type,
-        graph = uiOutput(ns("tlg_output")),
-        listing = verbatimTextOutput(ns("tlg_output"))
+        graph   = uiOutput(ns("tlg_output")),
+        listing = verbatimTextOutput(ns("tlg_output")),
+        table   = uiOutput(ns("tlg_output"))
       )
     )
   )
@@ -120,8 +121,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
       type,
-      "graph" = renderUI,
-      "listing" = renderPrint
+      "graph"   = renderUI,
+      "listing" = renderPrint,
+      "table"   = renderUI
     )
 
     current_page <- reactiveVal(1)
@@ -179,14 +181,12 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
-        tlg_data <- filter_tlg_excluded(data()$conc$data)
-        do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
+        do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")
         print(e)
-        "Error: list rendering failed with current options.
-        Check the R console for more information."
+        paste0("Error: ", conditionMessage(e))
       })
     }) %>%
       debounce(750)
@@ -199,7 +199,26 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      unname(tlg_list()[page_start:page_end])
+      page_items <- unname(tlg_list()[page_start:page_end])
+
+      if (type == "table") {
+        lapply(page_items, function(df) {
+          if (!is.data.frame(df)) return(tags$pre(as.character(df)))
+          if (ncol(df) == 0) return(tags$p("No data available for this table."))
+          reactable::reactable(df, columns = define_cols(df))
+        })
+      } else if (type == "listing") {
+        for (item in page_items) print(item)
+      } else {
+        lapply(page_items, function(item) {
+          if (is.character(item)) return(tags$pre(item))
+          if (inherits(item, c("gg", "ggplot"))) {
+            plotly::ggplotly(item)
+          } else {
+            item
+          }
+        })
+      }
     })
 
     options_values <- lapply(names(options), function(option) {

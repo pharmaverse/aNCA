@@ -61,10 +61,11 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
             select = dropdown_extra(
               id = session$ns(colname),
               choices = {
+                conc_df <- if (is.data.frame(data())) data() else data()$conc$data
                 if (isTRUE(def$choices == ".colnames")) {
-                  names(data()$conc$data)
+                  names(conc_df)
                 } else if (length(def$choices) == 1 && grepl("^\\$", def$choices)) {
-                  unique(data()$conc$data[, sub("^\\$", "", def$choices)])
+                  unique(conc_df[, sub("^\\$", "", def$choices)])
                 } else {
                   def$choices
                 }

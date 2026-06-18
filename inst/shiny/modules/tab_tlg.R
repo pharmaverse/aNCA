@@ -65,7 +65,7 @@ tab_tlg_ui <- function(id) {
       ),
       card(reactable_ui(ns("selected_tlg_table"))),
     ),
-    nav_panel("Tables", "To be added"),
+    nav_panel("Tables", uiOutput(ns("tables"), class = "tlg-module"), value = "Tables"),
     nav_panel("Listings", uiOutput(ns("listings"), class = "tlg-module"), value = "Listings"),
     nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-module"), value = "Graphs"),
     # disable loader for initial empty UI render #
@@ -75,7 +75,7 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data) {
+tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
@@ -240,6 +240,51 @@ tab_tlg_server <- function(id, data) {
     }) %>%
       bindEvent(c(input$submit_tlg_order))
 
+    # Normalized ADNCA concentration data for graph/listing modules
+    conc_data <- reactive({
+      req(data())
+      filter_tlg_excluded(data()$conc$data)
+    })
+
+    # Create and render Table interface and modules
+    output$tables <- renderUI({
+      req(tlg_order_filtered())
+
+      tlg_order_tables <- filter(tlg_order_filtered(), Type == "Table") %>%
+        select("id") %>%
+        pull()
+
+      panels <- lapply(tlg_order_tables, function(g_id) {
+        table_ui <- {
+          g_def <- .TLG_DEFINITIONS[[g_id]]
+          module_id <- paste0(
+            g_id,
+            paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
+          )
+
+          table_data <- switch(
+            g_def$dataset,
+            "ADPP"  = adpp,
+            "ADNCA" = adnca,
+            reactive(filter_tlg_excluded(data()$conc$data))
+          )
+
+          if (exists(g_def$fun)) {
+            tlg_module_server(module_id, table_data, "table", get(g_def$fun), g_def$options)
+            tlg_module_ui(session$ns(module_id), "table", g_def$options)
+          } else {
+            tags$div("Table not implemented yet")
+          }
+        }
+
+        nav_panel(g_def$label, table_ui)
+      })
+
+      panels$"widths" <- c(2, 10)
+
+      do.call(navset_pill_list, panels)
+    })
+
     # Create and render Graph interface and modules
     output$graphs <- renderUI({
       req(tlg_order_filtered())
@@ -255,8 +300,10 @@ tab_tlg_server <- function(id, data) {
             paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
           )
 
+          graph_data <- if (g_def$dataset == "ADPP") adpp else conc_data
+
           if (exists(g_def$fun)) {
-            tlg_module_server(module_id, data, "graph", get(g_def$fun), g_def$options)
+            tlg_module_server(module_id, graph_data, "graph", get(g_def$fun), g_def$options)
             tlg_module_ui(session$ns(module_id), "graph", g_def$options)
           } else {
             tags$div("Graph not implemented yet")
@@ -296,8 +343,10 @@ tab_tlg_server <- function(id, data) {
               paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
             )
 
+            list_data <- if (g_def$dataset == "ADPP") adpp else conc_data
+
             if (exists(g_def$fun)) {
-              tlg_module_server(module_id, data, "listing", get(g_def$fun), g_def$options)
+              tlg_module_server(module_id, list_data, "listing", get(g_def$fun), g_def$options)
               tlg_module_ui(session$ns(module_id), "listing", g_def$options)
             } else {
               tags$div("Listing not implemented yet")
