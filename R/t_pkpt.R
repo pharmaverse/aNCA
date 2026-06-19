@@ -195,6 +195,7 @@ t_pkpt07_norm <- function(
 #' tables <- t_pkpt08_uri(adpp)
 #' }
 #'
+#' @importFrom stats sd median
 #' @export
 t_pkpt08_uri <- function(
   data,
@@ -226,14 +227,14 @@ t_pkpt08_uri <- function(
     vals <- vals[!is.na(vals)]
     n    <- length(vals)
     mn   <- if (n > 0) mean(vals)   else NA_real_
-    s    <- if (n > 1) stats::sd(vals) else NA_real_
+    s    <- if (n > 1) sd(vals) else NA_real_
     data.frame(
       n      = n,
       Mean   = round(mn, 3),
       SD     = round(s,  3),
       CV_pct = if (!is.na(mn) && mn != 0 && !is.na(s))
                  round(s / mn * 100, 1) else NA_real_,
-      Median = if (n > 0) round(stats::median(vals), 3) else NA_real_,
+      Median = if (n > 0) round(median(vals), 3) else NA_real_,
       Min    = if (n > 0) round(min(vals), 3) else NA_real_,
       Max    = if (n > 0) round(max(vals), 3) else NA_real_,
       stringsAsFactors = FALSE

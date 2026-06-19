@@ -15,8 +15,6 @@
 #' @param subtitle Per-listing subtitle. Supports `$VAR` / `!VAR` annotation
 #'   syntax. Defaults to the unique values of `listgroup_vars`.
 #' @param footnote Footnote string.
-#' @param formatting_vars_table Optional data frame overriding auto-generated
-#'   column formatting (same format as in [l_pkcl01()]).
 #'
 #' @return A named list of `listing_df` objects (one per `listgroup_vars`
 #'   combination), suitable for printing in a Shiny `verbatimTextOutput`.
