@@ -20,10 +20,10 @@
 #' @noRd
 filter_tlg_excluded <- function(data) {
   if ("PKSUM1F" %in% names(data)) {
-    data <- data[data$PKSUM1F != "Y", , drop = FALSE]
+    data <- data[is.na(data$PKSUM1F) | data$PKSUM1F != "Y", , drop = FALSE]
   }
   if ("PPSUMFL" %in% names(data)) {
-    data <- data[data$PPSUMFL != "Y", , drop = FALSE]
+    data <- data[is.na(data$PPSUMFL) | data$PPSUMFL != "Y", , drop = FALSE]
   }
   data
 }
