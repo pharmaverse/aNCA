@@ -840,6 +840,17 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' @importFrom PKNCA exclude
 #' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
+  # Debug: check for duplicate PPTESTCD per group before applying rules
+  res_df <- as.data.frame(res)
+  group_cols <- setdiff(names(res_df), c("PPTESTCD", "PPORRES", "PPORRESU",
+                                          "PPSTRESU", "PPSTRES", "exclude"))
+  dupes <- res_df %>%
+    dplyr::count(dplyr::across(dplyr::all_of(c(group_cols, "PPTESTCD")))) %>%
+    dplyr::filter(n > 1)
+  if (nrow(dupes) > 0) {
+    message("DEBUG: Duplicate PPTESTCD per group found:")
+    print(dupes)
+  }
   for (param in names(rules)) {
     if (startsWith(param, "AUCPE")) {
       exc_fun <- PKNCA::exclude_nca_by_param(
