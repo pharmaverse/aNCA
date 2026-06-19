@@ -102,9 +102,9 @@ t_pkct01 <- function(
     # dropped (e.g. unscheduled samples with NFRLT = NA).  Using the string "NA"
     # keeps those rows visible in the table under an explicit "NA" label.
     group_cols <- lapply(row_vars, function(v) {
-      x <- df[[v]]
+      x <- as.character(df[[v]])
       x[is.na(x)] <- "NA"
-      as.character(x)
+      x
     })
     groups <- do.call(
       interaction,
