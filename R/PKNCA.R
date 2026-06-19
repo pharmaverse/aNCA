@@ -356,6 +356,16 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       by = group_vars(adnca_data$dose)
     )
 
+  # Debug: check for duplicate intervals after left_join
+  n_total <- nrow(data$intervals)
+  n_distinct <- nrow(dplyr::distinct(data$intervals))
+  if (n_total != n_distinct) {
+    message("WARNING: ", n_total - n_distinct, " duplicate interval rows after left_join (",
+            n_total, " total, ", n_distinct, " distinct)")
+  } else {
+    message("DEBUG: No duplicate intervals (", n_total, " rows)")
+  }
+
   # Apply filtering
   data$intervals <- data$intervals %>%
     filter(
