@@ -28,6 +28,7 @@
 #' plots[[1]]
 #' }
 #'
+#' @import dplyr
 #' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter geom_text stat_summary
 #'   labs theme_bw theme element_text element_blank facet_wrap
 #' @importFrom rlang .data
@@ -113,8 +114,12 @@ p_pkpg03_boxp <- function(
       outlier_df <- df %>%
         dplyr::group_by(.data[[param_var]], .data[[strat_var]]) %>%
         dplyr::mutate(
-          .is_out = .data[[value_var]] %in%
-            boxplot.stats(.data[[value_var]])$out
+          .q1     = quantile(.data[[value_var]], 0.25, na.rm = TRUE),
+          .q3     = quantile(.data[[value_var]], 0.75, na.rm = TRUE),
+          .iqr    = .q3 - .q1,
+          .is_out = !is.na(.data[[value_var]]) &
+            (.data[[value_var]] < .q1 - 1.5 * .iqr |
+             .data[[value_var]] > .q3 + 1.5 * .iqr)
         ) %>%
         dplyr::ungroup() %>%
         dplyr::filter(.data[[".is_out"]])
@@ -197,6 +202,7 @@ p_pkpg06_mp <- function(data, ...) {
 #' plots[[1]]
 #' }
 #'
+#' @import dplyr
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_errorbar labs
 #'   theme_bw theme element_text
 #' @importFrom rlang .data
@@ -256,6 +262,12 @@ p_pkpg01_cum <- function(
   # Evaluating them on the full dataset before splitting causes blank pages when
   # one PPCAT subset has all-NA PPENINT after parsing.
   .make_urine_plot <- function(df, page_title = title) {
+    # Deduplicate to one row per subject × stratum × x-axis variable.  ADPP
+    # multi-interval data repeats the same value per dose event; duplicates make
+    # sd_val = 0, collapsing error bars to flat lines.
+    if ("USUBJID" %in% names(df)) {
+      df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+    }
     # Determine x-axis type from this subset's data only
     use_num <- time_end_var %in% names(df) &&
       !all(is.na(df[[time_end_var]])) &&
@@ -376,6 +388,7 @@ p_pkpg01_per <- function(
 #' plots[[1]]
 #' }
 #'
+#' @import dplyr
 #' @importFrom ggplot2 ggplot aes geom_point geom_line geom_text geom_errorbar
 #'   facet_wrap labs scale_x_log10 scale_y_log10 theme_bw theme element_text
 #' @importFrom rlang .data
@@ -444,6 +457,12 @@ p_pkpg02_doseprop <- function(
   }
 
   .make_dp_plot <- function(df) {
+    # Deduplicate to one row per subject × parameter × stratum.  ADPP multi-interval
+    # data has identical rows per dose event; duplicates make sd_val = 0, collapsing
+    # error bars to flat lines while inflating the scatter point count.
+    if ("USUBJID" %in% names(df)) {
+      df <- df[!duplicated(df[c("USUBJID", param_var, strat_var)]), , drop = FALSE]
+    }
     params <- unique(df[[param_var]])
 
     fit_results <- lapply(params, function(p) {
