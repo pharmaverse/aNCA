@@ -508,7 +508,11 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
   }
 
   # Calculate results using PKNCA
+  message("DEBUG: intervals before pk.nca: ", nrow(pknca_data$intervals),
+          " | half.life TRUE: ", sum(pknca_data$intervals$half.life, na.rm = TRUE))
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
+  message("DEBUG: results after pk.nca: ", nrow(results$result),
+          " | R2ADJ rows: ", sum(results$result$PPTESTCD == "adj.r.squared", na.rm = TRUE))
 
 
   dose_data_to_join <- select(
