@@ -353,8 +353,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     list(
       res_nca = res_nca,
       processed_pknca_data = processed_pknca_data,
-      adpp = reactive(cdisc()$adpp),
-      adnca = reactive(cdisc()$adnca)
+      adpp = reactive(cdisc()$adpp)
     )
   })
 }

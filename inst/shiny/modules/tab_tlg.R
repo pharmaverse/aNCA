@@ -75,7 +75,7 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NULL)) {
+tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
@@ -263,21 +263,9 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), adnca = reactive(NUL
       panels <- lapply(tlg_order_tables, function(g_id) {
         table_ui <- {
           g_def <- .TLG_DEFINITIONS[[g_id]]
-          module_id <- paste0(
-            g_id,
-            paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
-          )
+          module_id <- paste0(g_id, "_tbl")
 
-          table_data <- switch(
-            g_def$dataset,
-            "ADPP"  = adpp_data,
-            # Use conc_data (which applies filter_tlg_excluded) for consistency
-            # with graphs and listings.  The raw `adnca` reactive is not filtered,
-            # so using it here would include PKSUM1F=="Y" rows that are excluded
-            # from all other TLG types.
-            "ADNCA" = conc_data,
-            reactive(filter_tlg_excluded(data()$conc$data))
-          )
+          table_data <- if (g_def$dataset == "ADPP") adpp_data else conc_data
 
           if (exists(g_def$fun)) {
             tlg_module_server(module_id, table_data, "table", get(g_def$fun), g_def$options)

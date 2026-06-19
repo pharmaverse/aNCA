@@ -247,8 +247,7 @@ server <- function(input, output, session) {
   tab_tlg_server(
     "tlg",
     tab_nca_outputs$processed_pknca_data,
-    adpp  = tab_nca_outputs$adpp,
-    adnca = tab_nca_outputs$adnca
+    adpp = tab_nca_outputs$adpp
   )
 
   # ABOUT ----
