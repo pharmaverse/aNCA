@@ -328,6 +328,17 @@ describe("p_pkpg02_doseprop", {
     expect_true(any(layer_classes == "GeomText"))
   })
 
+  it("annotation x-coordinate is finite when log_scale = TRUE (default)", {
+    # Regression: -Inf mapped through log10() becomes NaN/NA, causing geom_text
+    # to silently drop the annotation row.  Ensure the data passed to the
+    # GeomText layer has a finite x-coordinate so the label is always rendered.
+    result <- p_pkpg02_doseprop(pkpg02_data)[[1]]
+    text_layer <- result$layers[sapply(result$layers, function(l) inherits(l$geom, "GeomText"))][[1]]
+    annot_data <- text_layer$data
+    expect_true(all(is.finite(annot_data[["DOSEA"]])),
+                info = "annotation DOSEA (x-anchor) must be finite for log10 scale to render it")
+  })
+
   it("applies log10 scales when log_scale = TRUE (default)", {
     result <- p_pkpg02_doseprop(pkpg02_data)[[1]]
     trans_names <- sapply(result$scales$scales, function(s) s$trans$name)

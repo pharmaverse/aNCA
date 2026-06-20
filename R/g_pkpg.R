@@ -234,7 +234,7 @@ p_pkpg01_cum <- function(
       "p_pkpg01_cum: 'PPSPEC' column not found in data; the urine specimen ",
       "filter was not applied. All rows are treated as urine. If your data ",
       "contains non-urine records, the output will be incorrect. Ensure ",
-      "PCSPEC is present in the source concentration data."
+      "PPSPEC is present in the ADPP parameter data (from export_cdisc()$adpp)."
     )
   }
   if (!is.null(paramcd_filter) && "PARAMCD" %in% names(data) && nrow(data) > 0) {
@@ -530,13 +530,20 @@ p_pkpg02_doseprop <- function(
       )
 
       annot_df <- do.call(rbind, lapply(fit_results, function(fit) {
+        # On a log10 x-scale, x = -Inf is transformed to log10(-Inf) = NaN,
+        # which geom_text treats as NA and silently drops the annotation row.
+        # Instead, anchor each label at the minimum positive dose for that
+        # parameter so it always appears at the left edge of the data cloud.
+        param_doses <- df[[dose_var]][df[[param_var]] == fit$param &
+                                        df[[dose_var]] > 0 & !is.na(df[[dose_var]])]
+        x_anchor    <- if (length(param_doses) > 0) min(param_doses) else -Inf
         setNames(
           data.frame(
             fit$param,
             sprintf("β = %.3f [%.3f, %.3f]\nadj. R² = %.3f",
                     fit$slope, fit$slope_ci[1], fit$slope_ci[2],
                     fit$adj_r2),
-            -Inf, Inf,
+            x_anchor, Inf,
             stringsAsFactors = FALSE
           ),
           c(param_var, "label", dose_var, value_var)
@@ -545,10 +552,10 @@ p_pkpg02_doseprop <- function(
       p <- p + ggplot2::geom_text(
         data        = annot_df,
         ggplot2::aes(x = .data[[dose_var]], y = .data[[value_var]], label = .data[["label"]]),
-        # hjust = 0.05 places text just inside the left panel edge (x = -Inf).
-        # hjust < 0 pushes text outside the left edge where it is clipped and
-        # invisible with ggplot2's default clip = "on".
-        hjust       = 0.05,
+        # hjust = 0 left-aligns text from the anchor dose coordinate.  Using
+        # -Inf / hjust = 0.05 (panel-edge idiom) would work on linear scales
+        # but is transformed to NaN by scale_x_log10() and silently dropped.
+        hjust       = 0,
         vjust       = 1.5,
         size        = 2.8,
         color       = "black",
