@@ -254,10 +254,22 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       filter_tlg_excluded(adpp())
     })
 
+    # Track which module IDs have already been registered for this session.
+    # tlg_module_server() calls Shiny's moduleServer(), which registers reactive
+    # observers (pagination buttons, entries-per-page, etc.) every time it is
+    # called.  Because renderUI re-executes on re-submit, calling
+    # tlg_module_server() with the same ID a second time would accumulate
+    # duplicate observers that fire multiple times per user action.
+    # output$tlg_output is safely deduplicated by Shiny (second assignment
+    # destroys the first), but observers are not — only this environment prevents
+    # the duplication.  The environment lives inside moduleServer(), so it is
+    # fresh per Shiny session and does not leak across sessions.
+    .registered_modules <- new.env(parent = emptyenv())
+
     # Shared helper: build navset_pill_list panels for one TLG type.
     # Factored out to eliminate the copy-paste across table / graph / listing
     # renderUI blocks.  `id_suffix` must be unique per type to produce
-    # deterministic, stable module IDs that don't accumulate across re-submits.
+    # deterministic, stable module IDs.
     .build_tlg_panels <- function(g_ids, type, id_suffix) {
       lapply(g_ids, function(g_id) {
         g_def     <- .TLG_DEFINITIONS[[g_id]]
@@ -265,7 +277,12 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
         tlg_data  <- if (g_def$dataset == "ADPP") adpp_data else conc_data
 
         panel_ui <- if (exists(g_def$fun)) {
-          tlg_module_server(module_id, tlg_data, type, get(g_def$fun), g_def$options)
+          # Only register the Shiny module once per session to avoid accumulating
+          # duplicate pagination observers on re-submit.
+          if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
+            tlg_module_server(module_id, tlg_data, type, get(g_def$fun), g_def$options)
+            assign(module_id, TRUE, envir = .registered_modules)
+          }
           tlg_module_ui(session$ns(module_id), type, g_def$options)
         } else {
           tags$div(paste(tools::toTitleCase(type), "not implemented yet"))
