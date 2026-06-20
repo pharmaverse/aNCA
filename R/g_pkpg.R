@@ -56,20 +56,17 @@ p_pkpg03_boxp <- function(
 
   data[[strat_var]] <- as.factor(data[[strat_var]])
 
-  y_label <- if (!is.null(ylab)) {
-    ylab
-  } else {
-    lbl <- attr(data[[value_var]], "label")
-    if (!is.null(lbl)) lbl else value_var
-  }
+  y_label <- if (!is.null(ylab)) ylab else .get_var_label(data, value_var)
 
   .make_plot <- function(df) {
     # Deduplicate to one row per subject × parameter × stratum.  ADPP multi-interval
     # data has identical rows per dose event; duplicates inflate jitter point counts
     # and distort summary statistics in stat_summary.  Done inside .make_plot (after
     # split_and_apply) so that list_vars columns don't interfere with the dedup key.
+    # AVISIT is included when present so multi-visit rows are preserved.
     if ("USUBJID" %in% names(df)) {
-      df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+      dedup_cols <- intersect(c("USUBJID", strat_var, param_var, "AVISIT"), names(df))
+      df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
     }
     p <- ggplot2::ggplot(
       df,
@@ -110,7 +107,13 @@ p_pkpg03_boxp <- function(
       p <- p + ggplot2::geom_jitter(width = 0.15, size = 1.5, alpha = 0.6)
     }
 
-    if ("USUBJID" %in% names(df)) {
+    # Outlier labels: only shown when all_points = FALSE (pkpg03 style).
+    # When all_points = TRUE (pkpg04), every dot is drawn by geom_jitter with
+    # a random x-offset, so a geom_text anchored at the un-jittered factor
+    # centre would visually float away from the jitter point.  In pkpg04, all
+    # data points are already visible as individual dots, so outlier labelling
+    # is redundant and would be misleading.
+    if (!all_points && "USUBJID" %in% names(df)) {
       outlier_df <- df %>%
         dplyr::group_by(.data[[param_var]], .data[[strat_var]]) %>%
         dplyr::mutate(
@@ -130,6 +133,7 @@ p_pkpg03_boxp <- function(
           ggplot2::aes(label = .data[["USUBJID"]]),
           size        = 2.5,
           hjust       = -0.2,
+          color       = "black",
           show.legend = FALSE,
           inherit.aes = TRUE
         )
@@ -243,10 +247,7 @@ p_pkpg01_cum <- function(
 
   data[[strat_var]] <- as.factor(data[[strat_var]])
 
-  y_label <- if (!is.null(ylab)) ylab else {
-    lbl <- attr(data[[value_var]], "label")
-    if (!is.null(lbl)) lbl else value_var
-  }
+  y_label <- if (!is.null(ylab)) ylab else .get_var_label(data, value_var)
 
   .parse_ppenint <- function(x) {
     x <- as.character(x)
@@ -265,8 +266,10 @@ p_pkpg01_cum <- function(
     # Deduplicate to one row per subject × stratum × x-axis variable.  ADPP
     # multi-interval data repeats the same value per dose event; duplicates make
     # sd_val = 0, collapsing error bars to flat lines.
+    # AVISIT is included when present so multi-visit rows are preserved.
     if ("USUBJID" %in% names(df)) {
-      df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+      dedup_cols <- intersect(c("USUBJID", strat_var, param_var, "AVISIT"), names(df))
+      df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
     }
     # Determine x-axis type from this subset's data only
     use_num <- time_end_var %in% names(df) &&
@@ -425,14 +428,10 @@ p_pkpg02_doseprop <- function(
 
   x_label <- if (!is.null(xlab)) xlab else {
     dose_u <- if ("DOSEU" %in% names(data)) unique(data[["DOSEU"]])[1] else ""
-    lbl    <- attr(data[[dose_var]], "label")
-    base   <- if (!is.null(lbl)) lbl else dose_var
+    base   <- .get_var_label(data, dose_var)
     if (nchar(dose_u) > 0) paste0(base, " (", dose_u, ")") else base
   }
-  y_label <- if (!is.null(ylab)) ylab else {
-    lbl <- attr(data[[value_var]], "label")
-    if (!is.null(lbl)) lbl else value_var
-  }
+  y_label <- if (!is.null(ylab)) ylab else .get_var_label(data, value_var)
 
   .fit_power <- function(df_param) {
     df_f <- df_param[df_param[[value_var]] > 0 & df_param[[dose_var]] > 0, , drop = FALSE]
@@ -460,8 +459,10 @@ p_pkpg02_doseprop <- function(
     # Deduplicate to one row per subject × parameter × stratum.  ADPP multi-interval
     # data has identical rows per dose event; duplicates make sd_val = 0, collapsing
     # error bars to flat lines while inflating the scatter point count.
+    # AVISIT is included when present so multi-visit rows are preserved.
     if ("USUBJID" %in% names(df)) {
-      df <- df[!duplicated(df[c("USUBJID", param_var, strat_var)]), , drop = FALSE]
+      dedup_cols <- intersect(c("USUBJID", param_var, strat_var, "AVISIT"), names(df))
+      df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
     }
     params <- unique(df[[param_var]])
 
@@ -523,8 +524,6 @@ p_pkpg02_doseprop <- function(
           c(param_var, "label", dose_var, value_var)
         )
       }))
-      annot_df[[dose_var]]  <- -Inf
-      annot_df[[value_var]] <- Inf
       p <- p + ggplot2::geom_text(
         data        = annot_df,
         ggplot2::aes(x = .data[[dose_var]], y = .data[[value_var]], label = .data[["label"]]),

@@ -1,3 +1,45 @@
+#' Compute descriptive statistics for a numeric vector of PK values.
+#'
+#' Returns a one-row data frame of n, Mean, SD, CV%, GeoMean, GeoCV%, Median,
+#' Min, Max.  When `include_geo = FALSE`, the GeoMean and GeoCV_pct columns
+#' are omitted (used for urine parameters that are not log-normally distributed
+#' by convention).
+#'
+#' @param vals Numeric vector (NAs already handled by caller or this function).
+#' @param include_geo Logical. Include GeoMean and GeoCV_pct columns.
+#'   Default: `TRUE`.
+#' @noRd
+.summarise_adpp <- function(vals, include_geo = TRUE) {
+  vals <- vals[!is.na(vals)]
+  pos  <- vals[vals > 0]
+  n    <- length(vals)
+  mn   <- if (n > 0) mean(vals) else NA_real_
+  s    <- if (n > 1) sd(vals)   else NA_real_
+  out  <- data.frame(
+    n      = n,
+    Mean   = round(mn, 3),
+    SD     = round(s,  3),
+    CV_pct = if (!is.na(mn) && mn != 0 && !is.na(s))
+               round(s / mn * 100, 1) else NA_real_,
+    stringsAsFactors = FALSE
+  )
+  if (include_geo) {
+    gm  <- if (length(pos) > 0) exp(mean(log(pos))) else NA_real_
+    gs  <- if (length(pos) > 1) sd(log(pos))        else NA_real_
+    out <- cbind(out, data.frame(
+      GeoMean   = round(gm, 3),
+      GeoCV_pct = if (!is.na(gs)) round(sqrt(exp(gs^2) - 1) * 100, 1) else NA_real_,
+      stringsAsFactors = FALSE
+    ))
+  }
+  cbind(out, data.frame(
+    Median = if (n > 0) round(median(vals), 3) else NA_real_,
+    Min    = if (n > 0) round(min(vals),    3) else NA_real_,
+    Max    = if (n > 0) round(max(vals),    3) else NA_real_,
+    stringsAsFactors = FALSE
+  ))
+}
+
 #' Shared table builder for ADPP summary tables (pkpt03 / pkpt08 pattern).
 #'
 #' Deduplicates to one row per USUBJID × strat × param, then applies
@@ -13,7 +55,16 @@
 #' @noRd
 .build_pkpp_table <- function(df, strat_var, param_var, value_var, summary_fn) {
   if ("USUBJID" %in% names(df)) {
-    df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+    # Include AVISIT in the dedup key when present so that rows from different
+    # visits (genuinely different AVAL values) are kept.  AVISIT is absent from
+    # single-interval ADPP; including it only when present is safe because
+    # !duplicated() still collapses true within-visit duplicates (same
+    # USUBJID × strat × param × AVISIT repeated per dose event).
+    dedup_cols <- intersect(
+      c("USUBJID", strat_var, param_var, "AVISIT"),
+      names(df)
+    )
+    df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
   }
   strats <- sort(unique(df[[strat_var]]))
   params <- sort(unique(df[[param_var]]))
@@ -78,31 +129,9 @@ t_pkpt03_col <- function(
 
   if (nrow(data) == 0) return(list(data.frame()))
 
-  .summarise_pk <- function(vals) {
-    vals <- vals[!is.na(vals)]
-    pos  <- vals[vals > 0]
-    n    <- length(vals)
-    mn   <- if (n > 0) mean(vals) else NA_real_
-    s    <- if (n > 1) sd(vals)   else NA_real_
-    gm   <- if (length(pos) > 0) exp(mean(log(pos))) else NA_real_
-    gs   <- if (length(pos) > 1) sd(log(pos))        else NA_real_
-    data.frame(
-      n       = n,
-      Mean    = round(mn,  3),
-      SD      = round(s,   3),
-      CV_pct  = if (!is.na(mn) && mn != 0 && !is.na(s)) round(s / mn * 100, 1) else NA_real_,
-      GeoMean = round(gm,  3),
-      GeoCV_pct = if (!is.na(gs)) round(sqrt(exp(gs^2) - 1) * 100, 1) else NA_real_,
-      Median  = if (n > 0) round(median(vals), 3) else NA_real_,
-      Min     = if (n > 0) round(min(vals),    3) else NA_real_,
-      Max     = if (n > 0) round(max(vals),    3) else NA_real_,
-      stringsAsFactors = FALSE
-    )
-  }
-
   split_and_apply(
     data, list_vars,
-    function(df) .build_pkpp_table(df, strat_var, param_var, value_var, .summarise_pk)
+    function(df) .build_pkpp_table(df, strat_var, param_var, value_var, .summarise_adpp)
   )
 }
 
@@ -118,14 +147,19 @@ t_pkpt03_MP_col <- function(data, ...) {
 
 #' Mean Dose-Normalized PK Parameters Table (pkpt07)
 #'
-#' Filters ADPP to dose-normalized parameters (those whose `PARAMCD` ends in
-#' `"D"`, e.g. `CMAXD`, `AUCTLSTD`) and summarizes them with the same column
-#' layout as [t_pkpt03_col()]. These parameters must have been computed during
-#' the NCA run — they are not derived on the fly.
+#' Filters ADPP to dose-normalized parameters and summarizes them with the
+#' same column layout as [t_pkpt03_col()].  These parameters must have been
+#' computed during the NCA run — they are not derived on the fly.
 #'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param paramcd_var Column containing parameter codes used to detect
 #'   dose-normalized parameters. Default: `"PARAMCD"`.
+#' @param paramcd_filter Character vector of CDISC dose-normalized PARAMCDs to
+#'   keep.  Defaults to the standard codes used in this package:
+#'   `c("CMAXD", "AUCLSTD", "AUCIFOD", "AUCTLSTD")`.  Pass `NULL` to fall
+#'   back to the regex `grepl("[A-Z0-9]D$", PARAMCD)` pattern, which keeps
+#'   any code whose last two characters are an uppercase letter/digit followed
+#'   by `D`.
 #' @inheritParams t_pkpt03_col
 #'
 #' @return Named list of data frames (same format as [t_pkpt03_col()]).
@@ -134,19 +168,29 @@ t_pkpt03_MP_col <- function(data, ...) {
 #' \dontrun{
 #' adpp <- export_cdisc(res_nca)$adpp
 #' tables <- t_pkpt07_norm(adpp)
+#' # Include a custom dose-normalized code:
+#' tables <- t_pkpt07_norm(adpp, paramcd_filter = c("CMAXD", "AUCLSTD", "MYPARAMD"))
 #' }
 #'
 #' @export
 t_pkpt07_norm <- function(
   data,
-  paramcd_var = "PARAMCD",
-  list_vars   = c("PPCAT"),
-  strat_var   = "TRT01A",
-  param_var   = "PARAM",
-  value_var   = "AVAL"
+  paramcd_var    = "PARAMCD",
+  paramcd_filter = c("CMAXD", "AUCLSTD", "AUCIFOD", "AUCTLSTD"),
+  list_vars      = c("PPCAT"),
+  strat_var      = "TRT01A",
+  param_var      = "PARAM",
+  value_var      = "AVAL"
 ) {
   if (paramcd_var %in% names(data)) {
-    data <- data[grepl("D$", data[[paramcd_var]]), , drop = FALSE]
+    if (!is.null(paramcd_filter)) {
+      data <- data[data[[paramcd_var]] %in% paramcd_filter, , drop = FALSE]
+    } else {
+      # Fallback regex: last two chars are [A-Z0-9] then D (e.g. CMAXD, AUCLSTD).
+      # The simple "D$" pattern was too broad — it matched any code ending in D,
+      # including non-dose-normalized codes like AUCCUMD or study-specific codes.
+      data <- data[grepl("[A-Z0-9]D$", data[[paramcd_var]]), , drop = FALSE]
+    }
   } else {
     warning(
       "t_pkpt07_norm: column '", paramcd_var, "' not found in data; ",
@@ -223,27 +267,12 @@ t_pkpt08_uri <- function(
          paste(missing_cols, collapse = ", "))
   }
 
-  .summarise_uri <- function(vals) {
-    vals <- vals[!is.na(vals)]
-    n    <- length(vals)
-    mn   <- if (n > 0) mean(vals)   else NA_real_
-    s    <- if (n > 1) sd(vals) else NA_real_
-    data.frame(
-      n      = n,
-      Mean   = round(mn, 3),
-      SD     = round(s,  3),
-      CV_pct = if (!is.na(mn) && mn != 0 && !is.na(s))
-                 round(s / mn * 100, 1) else NA_real_,
-      Median = if (n > 0) round(median(vals), 3) else NA_real_,
-      Min    = if (n > 0) round(min(vals), 3) else NA_real_,
-      Max    = if (n > 0) round(max(vals), 3) else NA_real_,
-      stringsAsFactors = FALSE
-    )
-  }
-
   split_and_apply(
     data, list_vars,
-    function(df) .build_pkpp_table(df, strat_var, param_var, value_var, .summarise_uri)
+    function(df) .build_pkpp_table(
+      df, strat_var, param_var, value_var,
+      function(v) .summarise_adpp(v, include_geo = FALSE)
+    )
   )
 }
 
@@ -332,8 +361,13 @@ t_pkpt11_gmr <- function(
   make_table <- function(df) {
     # Deduplicate to one row per subject × parameter × stratum before computing
     # GMR.  ADPP multi-interval duplicates inflate n and produce falsely narrow CIs.
+    # Include AVISIT in the key when present so multi-visit rows are preserved.
     if ("USUBJID" %in% names(df)) {
-      df <- df[!duplicated(df[c("USUBJID", strat_var, param_var)]), , drop = FALSE]
+      dedup_cols <- intersect(
+        c("USUBJID", strat_var, param_var, "AVISIT"),
+        names(df)
+      )
+      df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
     }
 
     arms_in_split <- unique(df[[strat_var]])
