@@ -285,6 +285,16 @@ l_pkcl02_uri <- function(
 ) {
   if ("PCSPEC" %in% names(data)) {
     data <- data[data$PCSPEC %in% urine_specs, , drop = FALSE]
+  } else {
+    warning(
+      "l_pkcl02_uri: 'PCSPEC' column not found in data; the urine specimen ",
+      "filter was not applied. All rows are treated as urine. If your data ",
+      "contains non-urine records, the output will be incorrect. Ensure ",
+      "PCSPEC is present in the source concentration data."
+    )
+    # Drop PCSPEC from listgroup_vars so l_pkcl01's all_of() doesn't fail on an
+    # absent column — mirrors the intersect() guard used by split_and_apply().
+    listgroup_vars <- intersect(listgroup_vars, names(data))
   }
   if (nrow(data) == 0) {
     stop(

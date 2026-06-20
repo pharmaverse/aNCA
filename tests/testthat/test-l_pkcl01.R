@@ -312,4 +312,12 @@ describe("l_pkcl02_uri", {
     result <- l_pkcl02_uri(uri_data, footnote = "test footnote")
     expect_type(result, "list")
   })
+
+  it("warns when PCSPEC column is absent and skips the urine filter", {
+    data_no_pcspec <- uri_data[, setdiff(names(uri_data), "PCSPEC"), drop = FALSE]
+    expect_warning(
+      l_pkcl02_uri(data_no_pcspec),
+      "PCSPEC.*column not found"
+    )
+  })
 })
