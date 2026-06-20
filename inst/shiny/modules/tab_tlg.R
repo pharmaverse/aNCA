@@ -232,7 +232,6 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # Submit the TLG order, filter selected TLGs
     tlg_order_filtered <- reactive({
       req(data())
-      print(tlg_order())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
@@ -248,80 +247,55 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
 
     # ADPP with PPSUMFL-excluded rows removed (mirrors conc_data for ADNCA)
     adpp_data <- reactive({
-      req(adpp())
+      validate(need(
+        !is.null(adpp()),
+        "ADPP data is not available. Run NCA first to view PK parameter outputs."
+      ))
       filter_tlg_excluded(adpp())
     })
+
+    # Shared helper: build navset_pill_list panels for one TLG type.
+    # Factored out to eliminate the copy-paste across table / graph / listing
+    # renderUI blocks.  `id_suffix` must be unique per type to produce
+    # deterministic, stable module IDs that don't accumulate across re-submits.
+    .build_tlg_panels <- function(g_ids, type, id_suffix) {
+      lapply(g_ids, function(g_id) {
+        g_def     <- .TLG_DEFINITIONS[[g_id]]
+        module_id <- paste0(g_id, id_suffix)
+        tlg_data  <- if (g_def$dataset == "ADPP") adpp_data else conc_data
+
+        panel_ui <- if (exists(g_def$fun)) {
+          tlg_module_server(module_id, tlg_data, type, get(g_def$fun), g_def$options)
+          tlg_module_ui(session$ns(module_id), type, g_def$options)
+        } else {
+          tags$div(paste(tools::toTitleCase(type), "not implemented yet"))
+        }
+
+        nav_panel(g_def$label, panel_ui)
+      })
+    }
 
     # Create and render Table interface and modules
     output$tables <- renderUI({
       req(tlg_order_filtered())
-
-      tlg_order_tables <- filter(tlg_order_filtered(), Type == "Table") %>%
-        select("id") %>%
-        pull()
-
-      panels <- lapply(tlg_order_tables, function(g_id) {
-        table_ui <- {
-          g_def <- .TLG_DEFINITIONS[[g_id]]
-          module_id <- paste0(g_id, "_tbl")
-
-          table_data <- if (g_def$dataset == "ADPP") adpp_data else conc_data
-
-          if (exists(g_def$fun)) {
-            tlg_module_server(module_id, table_data, "table", get(g_def$fun), g_def$options)
-            tlg_module_ui(session$ns(module_id), "table", g_def$options)
-          } else {
-            tags$div("Table not implemented yet")
-          }
-        }
-
-        nav_panel(g_def$label, table_ui)
-      })
-
+      ids    <- filter(tlg_order_filtered(), Type == "Table") %>% pull("id")
+      panels <- .build_tlg_panels(ids, "table", "_tbl")
       panels$"widths" <- c(2, 10)
-
       do.call(navset_pill_list, panels)
     })
 
     # Create and render Graph interface and modules
     output$graphs <- renderUI({
       req(tlg_order_filtered())
-      tlg_order_graphs <- filter(tlg_order_filtered(), Type == "Graph") %>%
-        select("id") %>%
-        pull()
-
-      panels <- lapply(tlg_order_graphs, function(g_id) {
-        graph_ui <- {
-          g_def <- .TLG_DEFINITIONS[[g_id]]
-          module_id <- paste0(
-            g_id,
-            paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
-          )
-
-          graph_data <- if (g_def$dataset == "ADPP") adpp_data else conc_data
-
-          if (exists(g_def$fun)) {
-            tlg_module_server(module_id, graph_data, "graph", get(g_def$fun), g_def$options)
-            tlg_module_ui(session$ns(module_id), "graph", g_def$options)
-          } else {
-            tags$div("Graph not implemented yet")
-          }
-        }
-
-        nav_panel(g_def$label, graph_ui)
-      })
-
+      ids    <- filter(tlg_order_filtered(), Type == "Graph") %>% pull("id")
+      panels <- .build_tlg_panels(ids, "graph", "_grp")
       panels$"widths" <- c(2, 10)
-
       do.call(navset_pill_list, panels)
     })
 
     output$listings <- renderUI({
       req(tlg_order_filtered())
-
-      tlg_order_listings <- filter(tlg_order_filtered(), Type == "Listing") %>%
-        select("id") %>%
-        pull()
+      ids <- filter(tlg_order_filtered(), Type == "Listing") %>% pull("id")
 
       if (!requireNamespace("rlistings", quietly = TRUE)) {
         panels <- list(nav_panel(
@@ -333,30 +307,10 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
           )
         ))
       } else {
-        panels <- lapply(tlg_order_listings, function(g_id) {
-          list_ui <- {
-            g_def <- .TLG_DEFINITIONS[[g_id]]
-            module_id <- paste0(
-              g_id,
-              paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
-            )
-
-            list_data <- if (g_def$dataset == "ADPP") adpp_data else conc_data
-
-            if (exists(g_def$fun)) {
-              tlg_module_server(module_id, list_data, "listing", get(g_def$fun), g_def$options)
-              tlg_module_ui(session$ns(module_id), "listing", g_def$options)
-            } else {
-              tags$div("Listing not implemented yet")
-            }
-          }
-
-          nav_panel(g_def$label, list_ui)
-        })
+        panels <- .build_tlg_panels(ids, "listing", "_lst")
       }
 
       panels$"widths" <- c(2, 10)
-
       do.call(navset_pill_list, panels)
     })
   })
