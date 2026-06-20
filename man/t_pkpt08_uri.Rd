@@ -7,7 +7,7 @@
 t_pkpt08_uri(
   data,
   urine_specs = c("URINE", "Urine"),
-  list_vars = c("AVISIT", "PPCAT"),
+  list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
   value_var = "AVAL"
@@ -21,7 +21,10 @@ t_pkpt08_uri(
 Default: \code{c("URINE", "Urine")}.}
 
 \item{list_vars}{Character vector of columns used to split output into
-separate tables. Default: \code{c("AVISIT", "PPCAT")}.}
+separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
+column that is typically absent from \code{export_cdisc()$adpp}; it is silently
+skipped when not present so there is no need to remove it manually, but
+adding it only helps when your ADPP actually contains visit information.}
 
 \item{strat_var}{Column for treatment/dose stratification. Default: \code{"TRT01A"}.}
 
@@ -31,10 +34,17 @@ Default: \code{"PARAM"}.}
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 }
 \value{
-Named list of data frames (same format as \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}).
+Named list of data frames with columns: \code{strat_var}, \code{param_var},
+\code{n}, \code{Mean}, \code{SD}, \code{CV_pct}, \code{Median}, \code{Min}, \code{Max}.
+Use \code{\link[=t_pkpt03_col]{t_pkpt03_col()}} instead if geometric mean statistics are needed.
 }
 \description{
-Filters ADPP to urine specimen records and delegates to \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.
+Filters ADPP to urine specimen records and summarizes cumulative amount
+excreted (Ae) and percentage of dose recovered (Fe\%) with descriptive
+statistics in columns.  Per the TLG catalog specification for pkpt08,
+the summary includes n, Mean, SD, CV\%, Median, Min, Max — without
+geometric mean or geometric CV\% (those are omitted because urine recovery
+parameters are not log-normally distributed by convention).
 }
 \examples{
 \dontrun{

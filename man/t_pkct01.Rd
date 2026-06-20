@@ -48,7 +48,7 @@ for post-imputation BLQ encoding.}
 A named list of data frames, one per unique combination of
 \code{list_vars}.  Each data frame contains columns for \code{strat_var},
 \code{visit_var}, \code{time_var}, and the statistics:
-\code{n}, \code{n_blq}, \code{Mean}, \code{SD}, \code{CV_pct}, \code{Median}, \code{GeoMean}, \code{Min}, \code{Max}.
+\code{n}, \code{n_blq}, \code{Mean}, \code{SD}, \code{CV_pct}, \code{Median}, \code{GeoMean}, \code{GeoCV_pct}, \code{Min}, \code{Max}.
 }
 \description{
 Summarizes PK concentration data by treatment/dose group and nominal timepoint.

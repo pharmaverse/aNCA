@@ -9,11 +9,12 @@ l_pkpl01(
   data,
   listgroup_vars = c("PPCAT", "PPSPEC"),
   grouping_vars = c("TRT01A", "USUBJID"),
-  displaying_vars = c("PARAM", "AVAL", "AVALU"),
+  param_var = "PARAM",
+  value_var = "AVAL",
+  unit_var = "AVALU",
   title = "Listing of Individual PK Parameters",
   subtitle = NULL,
-  footnote = NULL,
-  formatting_vars_table = NULL
+  footnote = NULL
 )
 
 l_pkpl01_mp(data, ...)
@@ -25,10 +26,15 @@ l_pkpl01_mp(data, ...)
 into separate listings. Default: \code{c("PPCAT", "PPSPEC")}.}
 
 \item{grouping_vars}{Character vector of key/header columns within each
-listing. Default: \code{c("TRT01A", "USUBJID")}.}
+listing (shown as indented row keys). Default: \code{c("TRT01A", "USUBJID")}.}
 
-\item{displaying_vars}{Character vector of columns shown as data columns.
-Default: \code{c("PARAM", "AVAL", "AVALU")}.}
+\item{param_var}{Column whose unique values become display columns after
+pivoting wide. Default: \code{"PARAM"}.}
+
+\item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
+
+\item{unit_var}{Column containing the parameter unit used to build column
+headers (\code{"<PARAM> (<unit>)"}). Default: \code{"AVALU"}.}
 
 \item{title}{Main listing title string.}
 
@@ -36,9 +42,6 @@ Default: \code{c("PARAM", "AVAL", "AVALU")}.}
 syntax. Defaults to the unique values of \code{listgroup_vars}.}
 
 \item{footnote}{Footnote string.}
-
-\item{formatting_vars_table}{Optional data frame overriding auto-generated
-column formatting (same format as in \code{\link[=l_pkcl01]{l_pkcl01()}}).}
 }
 \value{
 A named list of \code{listing_df} objects (one per \code{listgroup_vars}

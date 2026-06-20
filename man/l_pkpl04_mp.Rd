@@ -2,53 +2,46 @@
 % Please edit documentation in R/l_pkpl01.R
 \name{l_pkpl04_mp}
 \alias{l_pkpl04_mp}
-\title{Individual Treatment Ratio Listing (pkpl04)}
+\title{Individual Treatment Comparison Listing (pkpl04)}
 \usage{
 l_pkpl04_mp(
   data,
-  listgroup_vars = c("PPCAT", "PPSPEC"),
   grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
-  displaying_vars = c("AVAL", "AVALU"),
   title = "Listing of Individual PK Parameter Values by Treatment",
-  subtitle = NULL,
-  footnote = NULL,
-  formatting_vars_table = NULL
+  ...
 )
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
 
-\item{listgroup_vars}{Character vector of columns used to split the output
-into separate listings. Default: \code{c("PPCAT", "PPSPEC")}.}
-
-\item{grouping_vars}{Key/header columns. Default: \code{c("PARAM", "TRT01A", "USUBJID")}.}
-
-\item{displaying_vars}{Data columns. Default: \code{c("AVAL", "AVALU")}.}
+\item{grouping_vars}{Columns used to identify row keys before pivoting.
+\code{PARAM} must be included so it is spread into display columns.
+Default: \code{c("PARAM", "TRT01A", "USUBJID")}.}
 
 \item{title}{Main listing title string.}
-
-\item{subtitle}{Per-listing subtitle. Supports \verb{$VAR} / \code{!VAR} annotation
-syntax. Defaults to the unique values of \code{listgroup_vars}.}
-
-\item{footnote}{Footnote string.}
-
-\item{formatting_vars_table}{Optional data frame overriding auto-generated
-column formatting (same format as in \code{\link[=l_pkcl01]{l_pkcl01()}}).}
 }
 \value{
 A named list of \code{listing_df} objects.
 }
 \description{
-Produces a per-subject listing of PK parameter values organised for
-treatment comparison.  Each listing page covers one PPCAT/PPSPEC
-combination; within each page the data is keyed by PARAM and USUBJID so
-readers can compare values across treatment arms side-by-side in the
-key-column header rows.
+Produces a per-subject listing of individual PK parameter values organised
+for treatment comparison. Each listing page covers one PPCAT/PPSPEC
+combination. PK parameters become display columns (one column per PARAM value)
+and the rows are keyed by \code{TRT01A} and \code{USUBJID}.
 }
 \details{
-This listing shows raw individual AVAL values (not pre-computed ratios).
-It is designed for crossover studies where the same subject appears in
-multiple treatment arms, but it also renders for parallel designs.
+This listing shows the raw individual \code{AVAL} values from ADPP, not
+pre-computed ratios. If your ADPP contains NCA ratio parameters (e.g.
+metabolite-to-parent AUC ratios added via the aNCA ratio-calculation
+module), those parameters are displayed here just like any other PARAM row.
+The \verb{_mp} suffix in the function name reflects its typical use with
+metabolite/parent ratio parameters, but no metabolite filtering is applied —
+all PARAM values in the data are included.
+
+Note: \code{PARAM} is listed in \code{grouping_vars} so that it participates in the
+\code{pivot_wider} step (each unique PARAM value becomes a column header). After
+pivoting, \code{PARAM} is no longer a row-key column; the actual listing keys
+are \code{TRT01A} and \code{USUBJID}.
 }
 \examples{
 \dontrun{

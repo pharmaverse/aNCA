@@ -8,7 +8,7 @@ t_pkpt11_gmr(
   data,
   ref_arm = NULL,
   ci_level = 0.9,
-  list_vars = c("AVISIT", "PPCAT"),
+  list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
   value_var = "AVAL"
@@ -24,7 +24,10 @@ t_pkpt11_gmr(
 Default: \code{0.90}.}
 
 \item{list_vars}{Character vector of columns used to split output into
-separate tables. Default: \code{c("AVISIT", "PPCAT")}.}
+separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
+column that is typically absent from \code{export_cdisc()$adpp}; it is silently
+skipped when not present so there is no need to remove it manually, but
+adding it only helps when your ADPP actually contains visit information.}
 
 \item{strat_var}{Column for treatment/dose stratification. Default: \code{"TRT01A"}.}
 

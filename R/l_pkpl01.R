@@ -8,9 +8,12 @@
 #' @param listgroup_vars Character vector of columns used to split the output
 #'   into separate listings. Default: `c("PPCAT", "PPSPEC")`.
 #' @param grouping_vars Character vector of key/header columns within each
-#'   listing. Default: `c("TRT01A", "USUBJID")`.
-#' @param displaying_vars Character vector of columns shown as data columns.
-#'   Default: `c("PARAM", "AVAL", "AVALU")`.
+#'   listing (shown as indented row keys). Default: `c("TRT01A", "USUBJID")`.
+#' @param param_var Column whose unique values become display columns after
+#'   pivoting wide. Default: `"PARAM"`.
+#' @param value_var Column containing the numeric analysis value. Default: `"AVAL"`.
+#' @param unit_var Column containing the parameter unit used to build column
+#'   headers (`"<PARAM> (<unit>)"`). Default: `"AVALU"`.
 #' @param title Main listing title string.
 #' @param subtitle Per-listing subtitle. Supports `$VAR` / `!VAR` annotation
 #'   syntax. Defaults to the unique values of `listgroup_vars`.
@@ -169,30 +172,13 @@ l_pkpl01_mp <- function(data, ...) {
 #' print(listings[[1]])
 #' }
 #'
-#' @import dplyr formatters
-#' @importFrom stats setNames
 #' @export
 l_pkpl04_mp <- function(
   data,
-  listgroup_vars = c("PPCAT", "PPSPEC"),
-  grouping_vars  = c("PARAM", "TRT01A", "USUBJID"),
-  param_var      = "PARAM",
-  value_var      = "AVAL",
-  unit_var       = "AVALU",
-  title    = "Listing of Individual PK Parameter Values by Treatment",
-  subtitle = NULL,
-  footnote = NULL
+  grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
+  title         = "Listing of Individual PK Parameter Values by Treatment",
+  ...
 ) {
-  l_pkpl01(
-    data           = data,
-    listgroup_vars = listgroup_vars,
-    grouping_vars  = grouping_vars,
-    param_var      = param_var,
-    value_var      = value_var,
-    unit_var       = unit_var,
-    title          = title,
-    subtitle       = subtitle,
-    footnote       = footnote
-  )
+  l_pkpl01(data, grouping_vars = grouping_vars, title = title, ...)
 }
 

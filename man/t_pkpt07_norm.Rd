@@ -7,7 +7,8 @@
 t_pkpt07_norm(
   data,
   paramcd_var = "PARAMCD",
-  list_vars = c("AVISIT", "PPCAT"),
+  paramcd_filter = c("CMAXD", "AUCLSTD", "AUCIFOD", "AUCTLSTD"),
+  list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
   value_var = "AVAL"
@@ -19,8 +20,18 @@ t_pkpt07_norm(
 \item{paramcd_var}{Column containing parameter codes used to detect
 dose-normalized parameters. Default: \code{"PARAMCD"}.}
 
+\item{paramcd_filter}{Character vector of CDISC dose-normalized PARAMCDs to
+keep.  Defaults to the standard codes used in this package:
+\code{c("CMAXD", "AUCLSTD", "AUCIFOD", "AUCTLSTD")}.  Pass \code{NULL} to fall
+back to the regex \code{grepl("[A-Z0-9]D$", PARAMCD)} pattern, which keeps
+any code whose last two characters are an uppercase letter/digit followed
+by \code{D}.}
+
 \item{list_vars}{Character vector of columns used to split output into
-separate tables. Default: \code{c("AVISIT", "PPCAT")}.}
+separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
+column that is typically absent from \code{export_cdisc()$adpp}; it is silently
+skipped when not present so there is no need to remove it manually, but
+adding it only helps when your ADPP actually contains visit information.}
 
 \item{strat_var}{Column for treatment/dose stratification. Default: \code{"TRT01A"}.}
 
@@ -33,15 +44,16 @@ Default: \code{"PARAM"}.}
 Named list of data frames (same format as \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}).
 }
 \description{
-Filters ADPP to dose-normalized parameters (those whose \code{PARAMCD} ends in
-\code{"D"}, e.g. \code{CMAXD}, \code{AUCTLSTD}) and summarizes them with the same column
-layout as \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}. These parameters must have been computed during
-the NCA run — they are not derived on the fly.
+Filters ADPP to dose-normalized parameters and summarizes them with the
+same column layout as \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.  These parameters must have been
+computed during the NCA run — they are not derived on the fly.
 }
 \examples{
 \dontrun{
 adpp <- export_cdisc(res_nca)$adpp
 tables <- t_pkpt07_norm(adpp)
+# Include a custom dose-normalized code:
+tables <- t_pkpt07_norm(adpp, paramcd_filter = c("CMAXD", "AUCLSTD", "MYPARAMD"))
 }
 
 }

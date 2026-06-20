@@ -7,7 +7,7 @@
 \usage{
 t_pkpt03_col(
   data,
-  list_vars = c("AVISIT", "PPCAT"),
+  list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
   value_var = "AVAL"
@@ -19,7 +19,10 @@ t_pkpt03_MP_col(data, ...)
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
 
 \item{list_vars}{Character vector of columns used to split output into
-separate tables. Default: \code{c("AVISIT", "PPCAT")}.}
+separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
+column that is typically absent from \code{export_cdisc()$adpp}; it is silently
+skipped when not present so there is no need to remove it manually, but
+adding it only helps when your ADPP actually contains visit information.}
 
 \item{strat_var}{Column for treatment/dose stratification. Default: \code{"TRT01A"}.}
 
@@ -35,7 +38,7 @@ Each data frame has columns: \code{strat_var}, \code{param_var}, \code{n}, \code
 }
 \description{
 Summarizes pharmacokinetic parameters from ADPP data. Returns one data frame
-per visit/analyte combination with PK parameters as rows and descriptive
+per analyte (PPCAT) combination with PK parameters as rows and descriptive
 statistics as columns.
 }
 \section{Functions}{
