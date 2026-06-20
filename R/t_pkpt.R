@@ -1,45 +1,3 @@
-#' Compute descriptive statistics for a numeric vector of PK values.
-#'
-#' Returns a one-row data frame of n, Mean, SD, CV%, GeoMean, GeoCV%, Median,
-#' Min, Max.  When `include_geo = FALSE`, the GeoMean and GeoCV_pct columns
-#' are omitted (used for urine parameters that are not log-normally distributed
-#' by convention).
-#'
-#' @param vals Numeric vector (NAs already handled by caller or this function).
-#' @param include_geo Logical. Include GeoMean and GeoCV_pct columns.
-#'   Default: `TRUE`.
-#' @noRd
-.summarise_adpp <- function(vals, include_geo = TRUE) {
-  vals <- vals[!is.na(vals)]
-  pos  <- vals[vals > 0]
-  n    <- length(vals)
-  mn   <- if (n > 0) mean(vals) else NA_real_
-  s    <- if (n > 1) sd(vals)   else NA_real_
-  out  <- data.frame(
-    n      = n,
-    Mean   = round(mn, 3),
-    SD     = round(s,  3),
-    CV_pct = if (!is.na(mn) && mn != 0 && !is.na(s))
-               round(s / mn * 100, 1) else NA_real_,
-    stringsAsFactors = FALSE
-  )
-  if (include_geo) {
-    gm  <- if (length(pos) > 0) exp(mean(log(pos))) else NA_real_
-    gs  <- if (length(pos) > 1) sd(log(pos))        else NA_real_
-    out <- cbind(out, data.frame(
-      GeoMean   = round(gm, 3),
-      GeoCV_pct = if (!is.na(gs)) round(sqrt(exp(gs^2) - 1) * 100, 1) else NA_real_,
-      stringsAsFactors = FALSE
-    ))
-  }
-  cbind(out, data.frame(
-    Median = if (n > 0) round(median(vals), 3) else NA_real_,
-    Min    = if (n > 0) round(min(vals),    3) else NA_real_,
-    Max    = if (n > 0) round(max(vals),    3) else NA_real_,
-    stringsAsFactors = FALSE
-  ))
-}
-
 #' Shared table builder for ADPP summary tables (pkpt03 / pkpt08 pattern).
 #'
 #' Deduplicates to one row per USUBJID × strat × param, then applies
@@ -251,6 +209,13 @@ t_pkpt08_uri <- function(
 ) {
   if ("PPSPEC" %in% names(data)) {
     data <- data[data$PPSPEC %in% urine_specs, , drop = FALSE]
+  } else {
+    warning(
+      "t_pkpt08_uri: 'PPSPEC' column not found in data; the urine specimen ",
+      "filter was not applied. All rows are treated as urine. If your data ",
+      "contains non-urine records, the output will be incorrect. Ensure ",
+      "PCSPEC is present in the source concentration data."
+    )
   }
   if (nrow(data) == 0) {
     stop(
