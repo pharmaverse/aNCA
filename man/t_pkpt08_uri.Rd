@@ -42,7 +42,7 @@ Use \code{\link[=t_pkpt03_col]{t_pkpt03_col()}} instead if geometric mean statis
 Filters ADPP to urine specimen records and summarizes cumulative amount
 excreted (Ae) and percentage of dose recovered (Fe\%) with descriptive
 statistics in columns.  Per the TLG catalog specification for pkpt08,
-the summary includes n, Mean, SD, CV\%, Median, Min, Max — without
+the summary includes n, Mean, SD, CV\%, Median, Min, Max -- without
 geometric mean or geometric CV\% (those are omitted because urine recovery
 parameters are not log-normally distributed by convention).
 }

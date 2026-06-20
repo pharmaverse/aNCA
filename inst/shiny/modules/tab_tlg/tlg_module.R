@@ -124,7 +124,7 @@ tlg_module_ui <- function(id, type, options) {
 #' @param render_list function that renders the list of entries, actual implementation of the TLG
 #' @param options     list of options to customize input parameters
 #'
-tlg_module_server <- function(id, data, type, render_list, options = NULL) {
+tlg_module_server <- function(id, data, type, render_list, options = NULL) { # nolint: cyclocomp_linter
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
       type,

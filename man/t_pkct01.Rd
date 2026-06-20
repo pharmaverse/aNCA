@@ -43,6 +43,8 @@ are counted separately and excluded from numeric summaries. When \code{blq_var}
 is absent (as in \code{export_cdisc()$adnca}, which does not include \code{AVALC}),
 BLQ is detected via \code{AVAL == 0}, consistent with the package convention
 for post-imputation BLQ encoding.}
+
+\item{...}{Additional arguments forwarded to \code{\link[=t_pkct01]{t_pkct01()}}.}
 }
 \value{
 A named list of data frames, one per unique combination of

@@ -3,7 +3,7 @@
 \name{t_pkpt03_col}
 \alias{t_pkpt03_col}
 \alias{t_pkpt03_MP_col}
-\title{Summary PK Parameters Table — statistics in columns (pkpt03)}
+\title{Summary PK Parameters Table -- statistics in columns (pkpt03)}
 \usage{
 t_pkpt03_col(
   data,
@@ -30,6 +30,8 @@ adding it only helps when your ADPP actually contains visit information.}
 Default: \code{"PARAM"}.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
+
+\item{...}{Additional arguments forwarded to \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.}
 }
 \value{
 A named list of data frames, one per combination of \code{list_vars}.

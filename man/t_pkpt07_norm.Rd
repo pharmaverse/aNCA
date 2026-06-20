@@ -46,7 +46,7 @@ Named list of data frames (same format as \code{\link[=t_pkpt03_col]{t_pkpt03_co
 \description{
 Filters ADPP to dose-normalized parameters and summarizes them with the
 same column layout as \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.  These parameters must have been
-computed during the NCA run — they are not derived on the fly.
+computed during the NCA run -- they are not derived on the fly.
 }
 \examples{
 \dontrun{

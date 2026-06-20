@@ -2,7 +2,7 @@
 #'
 #' Creates individual-level listings of PK parameters from ADPP data using the
 #' same engine as [l_pkcl01()].  Returns one listing per unique combination of
-#' `listgroup_vars` (default: `PPCAT` × `PPSPEC`).
+#' `listgroup_vars` (default: `PPCAT` x `PPSPEC`).
 #'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param listgroup_vars Character vector of columns used to split the output
@@ -131,7 +131,8 @@ l_pkpl01 <- function(
 }
 
 #' @describeIn l_pkpl01 Listing filtered to metabolite rows (pkpl01 M/P).
-#'   Uses the same METABFL → PPCAT → PARAM fallback as [t_pkpt03_MP_col()].
+#'   Uses the same METABFL -> PPCAT -> PARAM fallback as [t_pkpt03_MP_col()].
+#' @param ... Additional arguments forwarded to [l_pkpl01()].
 #' @export
 l_pkpl01_mp <- function(data, ...) {
   l_pkpl01(filter_metabolite_rows(data, "l_pkpl01_mp"), ...)
@@ -150,7 +151,7 @@ l_pkpl01_mp <- function(data, ...) {
 #' metabolite-to-parent AUC ratios added via the aNCA ratio-calculation
 #' module), those parameters are displayed here just like any other PARAM row.
 #' The `_mp` suffix in the function name reflects its typical use with
-#' metabolite/parent ratio parameters, but no metabolite filtering is applied —
+#' metabolite/parent ratio parameters, but no metabolite filtering is applied --
 #' all PARAM values in the data are included.
 #'
 #' Note: `PARAM` is listed in `grouping_vars` so that it participates in the
@@ -162,6 +163,7 @@ l_pkpl01_mp <- function(data, ...) {
 #' @param grouping_vars Columns used to identify row keys before pivoting.
 #'   `PARAM` must be included so it is spread into display columns.
 #'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
+#' @param ... Additional arguments forwarded to [l_pkpl01()].
 #'
 #' @return A named list of `listing_df` objects.
 #'
@@ -181,4 +183,3 @@ l_pkpl04_mp <- function(
 ) {
   l_pkpl01(data, grouping_vars = grouping_vars, title = title, ...)
 }
-

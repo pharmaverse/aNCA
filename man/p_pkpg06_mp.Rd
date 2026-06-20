@@ -8,6 +8,8 @@ p_pkpg06_mp(data, ...)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
+
+\item{...}{Additional arguments forwarded to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.}
 }
 \value{
 A named list of ggplot objects (same format as \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}).

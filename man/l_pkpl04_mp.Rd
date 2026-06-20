@@ -19,6 +19,8 @@ l_pkpl04_mp(
 Default: \code{c("PARAM", "TRT01A", "USUBJID")}.}
 
 \item{title}{Main listing title string.}
+
+\item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }
 \value{
 A named list of \code{listing_df} objects.
@@ -35,7 +37,7 @@ pre-computed ratios. If your ADPP contains NCA ratio parameters (e.g.
 metabolite-to-parent AUC ratios added via the aNCA ratio-calculation
 module), those parameters are displayed here just like any other PARAM row.
 The \verb{_mp} suffix in the function name reflects its typical use with
-metabolite/parent ratio parameters, but no metabolite filtering is applied —
+metabolite/parent ratio parameters, but no metabolite filtering is applied --
 all PARAM values in the data are included.
 
 Note: \code{PARAM} is listed in \code{grouping_vars} so that it participates in the

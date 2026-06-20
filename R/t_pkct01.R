@@ -40,7 +40,7 @@
 #'
 #' @importFrom stats sd median
 #' @export
-t_pkct01 <- function(
+t_pkct01 <- function( # nolint: cyclocomp_linter
   data,
   list_vars = c("PARAM", "PCSPEC"),
   strat_var = "TRT01A",
@@ -85,7 +85,7 @@ t_pkct01 <- function(
       Mean      = if (length(vals) > 0) round(mean(vals),   3) else NA_real_,
       SD        = if (length(vals) > 1) round(sd(vals),     3) else NA_real_,
       CV_pct    = if (length(vals) > 1 && mean(vals) != 0)
-                    round(sd(vals) / mean(vals) * 100, 1) else NA_real_,
+        round(sd(vals) / mean(vals) * 100, 1) else NA_real_,
       Median    = if (length(vals) > 0) round(median(vals), 3) else NA_real_,
       GeoMean   = if (length(pos_vals) > 0) round(exp(mean(log(pos_vals))), 3) else NA_real_,
       GeoCV_pct = if (!is.na(gs)) round(sqrt(exp(gs^2) - 1) * 100, 1) else NA_real_,
@@ -129,6 +129,7 @@ t_pkct01 <- function(
 }
 
 #' @describeIn t_pkct01 Stratify by dose instead of treatment arm (first dose).
+#' @param ... Additional arguments forwarded to [t_pkct01()].
 #' @export
 t_pkct01_dose <- function(data, ...) {
   t_pkct01(data, strat_var = "DOSEA", ...)

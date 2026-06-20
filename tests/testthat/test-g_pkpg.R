@@ -333,7 +333,8 @@ describe("p_pkpg02_doseprop", {
     # to silently drop the annotation row.  Ensure the data passed to the
     # GeomText layer has a finite x-coordinate so the label is always rendered.
     result <- p_pkpg02_doseprop(pkpg02_data)[[1]]
-    text_layer <- result$layers[sapply(result$layers, function(l) inherits(l$geom, "GeomText"))][[1]]
+    geom_text_idx <- sapply(result$layers, function(l) inherits(l$geom, "GeomText"))
+    text_layer <- result$layers[geom_text_idx][[1]]
     annot_data <- text_layer$data
     expect_true(all(is.finite(annot_data[["DOSEA"]])),
                 info = "annotation DOSEA (x-anchor) must be finite for log10 scale to render it")

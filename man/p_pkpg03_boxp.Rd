@@ -44,13 +44,15 @@ on the boxes (pkpg04 style). Default: \code{FALSE}.}
 \item{footnote}{Optional footnote string.}
 
 \item{ylab}{Y-axis label. Defaults to the label attribute of \code{value_var}.}
+
+\item{...}{Additional arguments forwarded to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.}
 }
 \value{
 A named list of ggplot objects.
 }
 \description{
 Produces one boxplot per PK parameter with treatment arms on the x-axis.
-Returns a named list of ggplot objects, one per \code{PPCAT} × \code{PPSPEC}
+Returns a named list of ggplot objects, one per \code{PPCAT} x \code{PPSPEC}
 combination in the ADPP data.
 }
 \section{Functions}{

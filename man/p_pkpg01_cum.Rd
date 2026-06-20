@@ -42,6 +42,15 @@ Default: \code{"PARAM"}.}
 \item{urine_specs}{Character vector of \code{PPSPEC} values treated as urine.
 Default: \code{c("URINE", "Urine")}.}
 
+\item{paramcd_filter}{Character vector of \code{PARAMCD} values to keep. Only
+rows with a matching \code{PARAMCD} are plotted. Pass \code{NULL} to skip the
+filter. Default: \code{"RCAMINT"} (cumulative amount recovered per interval).}
+
+\item{time_end_var}{Column containing the collection interval end time
+(ISO 8601 duration string or numeric hours). Used as a numeric x-axis
+when parseable; falls back to \code{param_var} labels otherwise.
+Default: \code{"PPENINT"}.}
+
 \item{list_vars}{Columns used to split output into separate plots.
 Default: \code{c("PPCAT")}.}
 
@@ -54,12 +63,14 @@ Default: \code{c("PPCAT")}.}
 \item{xlab}{X-axis label. Default: \code{"Collection Interval"}.}
 
 \item{ylab}{Y-axis label. Defaults to the label attribute of \code{value_var}.}
+
+\item{...}{Additional arguments forwarded to \code{\link[=p_pkpg01_cum]{p_pkpg01_cum()}}.}
 }
 \value{
 A named list of ggplot objects.
 }
 \description{
-Computes mean (± SD) of a urine PK parameter per treatment arm across
+Computes mean (+/- SD) of a urine PK parameter per treatment arm across
 collection intervals and draws a connected line plot.  Designed for ADPP
 data filtered to \code{PPSPEC \%in\% urine_specs} (e.g. cumulative amount excreted
 or fraction of dose recovered).  Returns one ggplot per unique combination

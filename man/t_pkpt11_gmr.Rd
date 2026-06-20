@@ -47,7 +47,7 @@ selected PK parameters, comparing each treatment arm to a reference arm.
 }
 \details{
 The confidence interval is computed on the log scale using a two-sample
-t-test approach: \verb{exp(log_ratio ± t * SE)} where SE is derived from the
+t-test approach: \verb{exp(log_ratio +/- t * SE)} where SE is derived from the
 pooled within-group standard deviations on the log scale.
 }
 \examples{

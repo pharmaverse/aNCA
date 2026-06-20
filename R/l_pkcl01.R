@@ -261,6 +261,9 @@ l_pkcl01_tad <- function(data, ...) {
 #' @param data A CDISC ADNCA data frame (from `export_cdisc()$adnca`).
 #' @param urine_specs Character vector of specimen type values to keep.
 #'   Default: `c("URINE", "Urine")`.
+#' @param listgroup_vars Character vector of columns used to split output into
+#'   separate listings. Default: `c("PARAM", "PCSPEC")`. When `PCSPEC` is
+#'   absent from `data`, it is silently removed from this vector.
 #' @param displaying_vars Character vector of columns to display. When `NULL`
 #'   (default), uses `c("NFRLT", "AFRLT", "AVAL")` plus `VOLUME`/`VOLUMEU`
 #'   if those columns exist in the data.

@@ -1,7 +1,7 @@
 #' Boxplot of Primary PK Parameters (pkpg03)
 #'
 #' Produces one boxplot per PK parameter with treatment arms on the x-axis.
-#' Returns a named list of ggplot objects, one per `PPCAT` × `PPSPEC`
+#' Returns a named list of ggplot objects, one per `PPCAT` x `PPSPEC`
 #' combination in the ADPP data.
 #'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
@@ -122,7 +122,7 @@ p_pkpg03_boxp <- function(
           .iqr    = .q3 - .q1,
           .is_out = !is.na(.data[[value_var]]) &
             (.data[[value_var]] < .q1 - 1.5 * .iqr |
-             .data[[value_var]] > .q3 + 1.5 * .iqr)
+               .data[[value_var]] > .q3 + 1.5 * .iqr)
         ) %>%
         dplyr::ungroup() %>%
         dplyr::filter(.data[[".is_out"]])
@@ -147,6 +147,7 @@ p_pkpg03_boxp <- function(
 }
 
 #' @describeIn p_pkpg03_boxp Boxplot with all individual data points overlaid (pkpg04).
+#' @param ... Additional arguments forwarded to [p_pkpg03_boxp()].
 #' @export
 p_pkpg04_boxp <- function(data, ...) {
   p_pkpg03_boxp(data, all_points = TRUE, ...)
@@ -159,6 +160,7 @@ p_pkpg04_boxp <- function(data, ...) {
 #' then delegates to [p_pkpg03_boxp()].
 #'
 #' @inheritParams p_pkpg03_boxp
+#' @param ... Additional arguments forwarded to [p_pkpg03_boxp()].
 #'
 #' @return A named list of ggplot objects (same format as [p_pkpg03_boxp()]).
 #'
@@ -176,7 +178,7 @@ p_pkpg06_mp <- function(data, ...) {
 
 #' Mean Urine PK Parameter Profile Plot (pkpg01)
 #'
-#' Computes mean (± SD) of a urine PK parameter per treatment arm across
+#' Computes mean (+/- SD) of a urine PK parameter per treatment arm across
 #' collection intervals and draws a connected line plot.  Designed for ADPP
 #' data filtered to `PPSPEC %in% urine_specs` (e.g. cumulative amount excreted
 #' or fraction of dose recovered).  Returns one ggplot per unique combination
@@ -189,6 +191,13 @@ p_pkpg06_mp <- function(data, ...) {
 #' @param value_var Column containing the numeric analysis value. Default: `"AVAL"`.
 #' @param urine_specs Character vector of `PPSPEC` values treated as urine.
 #'   Default: `c("URINE", "Urine")`.
+#' @param paramcd_filter Character vector of `PARAMCD` values to keep. Only
+#'   rows with a matching `PARAMCD` are plotted. Pass `NULL` to skip the
+#'   filter. Default: `"RCAMINT"` (cumulative amount recovered per interval).
+#' @param time_end_var Column containing the collection interval end time
+#'   (ISO 8601 duration string or numeric hours). Used as a numeric x-axis
+#'   when parseable; falls back to `param_var` labels otherwise.
+#'   Default: `"PPENINT"`.
 #' @param list_vars Columns used to split output into separate plots.
 #'   Default: `c("PPCAT")`.
 #' @param title Optional plot title.
@@ -212,7 +221,7 @@ p_pkpg06_mp <- function(data, ...) {
 #' @importFrom rlang .data
 #' @importFrom stats sd
 #' @export
-p_pkpg01_cum <- function(
+p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   data,
   strat_var      = "TRT01A",
   param_var      = "PARAM",
@@ -366,6 +375,7 @@ p_pkpg01_cum <- function(
 #' @describeIn p_pkpg01_cum Mean percentage of dose recovered in urine (pkpg01 %).
 #'   Identical to [p_pkpg01_cum()] but defaults to a % dose recovered title and
 #'   y-axis label.
+#' @param ... Additional arguments forwarded to [p_pkpg01_cum()].
 #' @export
 p_pkpg01_per <- function(
   data,
@@ -381,9 +391,9 @@ p_pkpg01_per <- function(
 #'
 #' Plots individual AVAL values against dose (DOSEA) on a log-log scale with
 #' one facet per PK parameter.  A power-model regression line
-#' (log y = α + β × log x) is overlaid on each facet together with the slope
+#' (log y = a + b * log x) is overlaid on each facet together with the slope
 #' estimate and its confidence interval, enabling visual assessment of
-#' dose-proportionality (β = 1).
+#' dose-proportionality (slope b = 1).
 #'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param dose_var  Column containing the administered dose. Default: `"DOSEA"`.
@@ -415,7 +425,7 @@ p_pkpg01_per <- function(
 #' @importFrom rlang .data
 #' @importFrom stats lm coef confint predict sd
 #' @export
-p_pkpg02_doseprop <- function(
+p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
   data,
   dose_var  = "DOSEA",
   value_var = "AVAL",
@@ -439,12 +449,14 @@ p_pkpg02_doseprop <- function(
 
   data <- data[
     !is.na(data[[value_var]]) & !is.na(data[[dose_var]]) &
-    data[[value_var]] > 0     & data[[dose_var]] > 0, ,
+      data[[value_var]] > 0     & data[[dose_var]] > 0, ,
     drop = FALSE
   ]
   if (nrow(data) == 0) return(list())
 
-  x_label <- if (!is.null(xlab)) xlab else {
+  x_label <- if (!is.null(xlab)) {
+    xlab
+  } else {
     dose_u <- if ("DOSEU" %in% names(data)) unique(data[["DOSEU"]])[1] else ""
     base   <- .get_var_label(data, dose_var)
     if (nchar(dose_u) > 0) paste0(base, " (", dose_u, ")") else base
@@ -540,7 +552,7 @@ p_pkpg02_doseprop <- function(
         setNames(
           data.frame(
             fit$param,
-            sprintf("β = %.3f [%.3f, %.3f]\nadj. R² = %.3f",
+            sprintf("\u03b2 = %.3f [%.3f, %.3f]\nadj. R\u00b2 = %.3f",
                     fit$slope, fit$slope_ci[1], fit$slope_ci[2],
                     fit$adj_r2),
             x_anchor, Inf,

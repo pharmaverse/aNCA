@@ -1,6 +1,6 @@
 #' Shared table builder for ADPP summary tables (pkpt03 / pkpt08 pattern).
 #'
-#' Deduplicates to one row per USUBJID × strat × param, then applies
+#' Deduplicates to one row per USUBJID x strat x param, then applies
 #' `summary_fn` to the numeric values for each stratum/parameter combination.
 #' Used internally by `t_pkpt03_col` and `t_pkpt08_uri` to avoid duplicating
 #' the identical looping/cbind/rbind boilerplate.
@@ -42,7 +42,7 @@
   apply_labels(result, type = "ADPP")
 }
 
-#' Summary PK Parameters Table — statistics in columns (pkpt03)
+#' Summary PK Parameters Table -- statistics in columns (pkpt03)
 #'
 #' Summarizes pharmacokinetic parameters from ADPP data. Returns one data frame
 #' per analyte (PPCAT) combination with PK parameters as rows and descriptive
@@ -98,8 +98,9 @@ t_pkpt03_col <- function(
 #'   falls back to rows where `PPCAT` or `PARAM` contains "metab" (case-insensitive).
 #'   `METABFL` is present in ADPP only when it was included as a grouping variable in
 #'   the NCA run.
+#' @param ... Additional arguments forwarded to [t_pkpt03_col()].
 #' @export
-t_pkpt03_MP_col <- function(data, ...) {
+t_pkpt03_MP_col <- function(data, ...) { # nolint: object_name_linter
   t_pkpt03_col(filter_metabolite_rows(data, "t_pkpt03_MP_col"), ...)
 }
 
@@ -107,7 +108,7 @@ t_pkpt03_MP_col <- function(data, ...) {
 #'
 #' Filters ADPP to dose-normalized parameters and summarizes them with the
 #' same column layout as [t_pkpt03_col()].  These parameters must have been
-#' computed during the NCA run — they are not derived on the fly.
+#' computed during the NCA run -- they are not derived on the fly.
 #'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param paramcd_var Column containing parameter codes used to detect
@@ -177,7 +178,7 @@ t_pkpt07_norm <- function(
 #' Filters ADPP to urine specimen records and summarizes cumulative amount
 #' excreted (Ae) and percentage of dose recovered (Fe%) with descriptive
 #' statistics in columns.  Per the TLG catalog specification for pkpt08,
-#' the summary includes n, Mean, SD, CV%, Median, Min, Max — without
+#' the summary includes n, Mean, SD, CV%, Median, Min, Max -- without
 #' geometric mean or geometric CV% (those are omitted because urine recovery
 #' parameters are not log-normally distributed by convention).
 #'
@@ -234,10 +235,12 @@ t_pkpt08_uri <- function(
 
   split_and_apply(
     data, list_vars,
-    function(df) .build_pkpp_table(
-      df, strat_var, param_var, value_var,
-      function(v) .summarise_adpp(v, include_geo = FALSE)
-    )
+    function(df) {
+      .build_pkpp_table(
+        df, strat_var, param_var, value_var,
+        function(v) .summarise_adpp(v, include_geo = FALSE)
+      )
+    }
   )
 }
 
@@ -259,7 +262,7 @@ t_pkpt08_uri <- function(
 #'
 #' @details
 #' The confidence interval is computed on the log scale using a two-sample
-#' t-test approach: `exp(log_ratio ± t * SE)` where SE is derived from the
+#' t-test approach: `exp(log_ratio +/- t * SE)` where SE is derived from the
 #' pooled within-group standard deviations on the log scale.
 #'
 #' @examples
@@ -297,7 +300,8 @@ t_pkpt11_gmr <- function(
   .gmr_row <- function(ref_vals, trt_vals, strat, param) {
     ref_log <- log(ref_vals[ref_vals > 0 & !is.na(ref_vals)])
     trt_log <- log(trt_vals[trt_vals > 0 & !is.na(trt_vals)])
-    nr <- length(ref_log); nt <- length(trt_log)
+    nr <- length(ref_log)
+    nt <- length(trt_log)
 
     if (nr < 2 || nt < 2) {
       gmr <- ci_lo <- ci_hi <- NA_real_
@@ -314,7 +318,7 @@ t_pkpt11_gmr <- function(
         ci_lo <- ci_hi <- NA_real_
       } else {
         df     <- (se^2)^2 / ((sd(ref_log)^2 / nr)^2 / (nr - 1) +
-                               (sd(trt_log)^2 / nt)^2 / (nt - 1))
+                                (sd(trt_log)^2 / nt)^2 / (nt - 1))
         t_crit <- qt(1 - alpha / 2, df = max(df, 1, na.rm = TRUE))
         gmr    <- round(exp(log_ratio), 3)
         ci_lo  <- round(exp(log_ratio - t_crit * se), 3)

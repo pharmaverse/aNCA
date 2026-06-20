@@ -42,6 +42,8 @@ headers (\code{"<PARAM> (<unit>)"}). Default: \code{"AVALU"}.}
 syntax. Defaults to the unique values of \code{listgroup_vars}.}
 
 \item{footnote}{Footnote string.}
+
+\item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }
 \value{
 A named list of \code{listing_df} objects (one per \code{listgroup_vars}
@@ -50,12 +52,12 @@ combination), suitable for printing in a Shiny \code{verbatimTextOutput}.
 \description{
 Creates individual-level listings of PK parameters from ADPP data using the
 same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per unique combination of
-\code{listgroup_vars} (default: \code{PPCAT} × \code{PPSPEC}).
+\code{listgroup_vars} (default: \code{PPCAT} x \code{PPSPEC}).
 }
 \section{Functions}{
 \itemize{
 \item \code{l_pkpl01_mp()}: Listing filtered to metabolite rows (pkpl01 M/P).
-Uses the same METABFL → PPCAT → PARAM fallback as \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
+Uses the same METABFL -> PPCAT -> PARAM fallback as \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
 
 }}
 \examples{

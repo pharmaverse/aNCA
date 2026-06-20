@@ -54,9 +54,9 @@ A named list of ggplot objects.
 \description{
 Plots individual AVAL values against dose (DOSEA) on a log-log scale with
 one facet per PK parameter.  A power-model regression line
-(log y = α + β × log x) is overlaid on each facet together with the slope
+(log y = a + b * log x) is overlaid on each facet together with the slope
 estimate and its confidence interval, enabling visual assessment of
-dose-proportionality (β = 1).
+dose-proportionality (slope b = 1).
 }
 \examples{
 \dontrun{

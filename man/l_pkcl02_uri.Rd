@@ -18,6 +18,10 @@ l_pkcl02_uri(
 \item{urine_specs}{Character vector of specimen type values to keep.
 Default: \code{c("URINE", "Urine")}.}
 
+\item{listgroup_vars}{Character vector of columns used to split output into
+separate listings. Default: \code{c("PARAM", "PCSPEC")}. When \code{PCSPEC} is
+absent from \code{data}, it is silently removed from this vector.}
+
 \item{displaying_vars}{Character vector of columns to display. When \code{NULL}
 (default), uses \code{c("NFRLT", "AFRLT", "AVAL")} plus \code{VOLUME}/\code{VOLUMEU}
 if those columns exist in the data.}

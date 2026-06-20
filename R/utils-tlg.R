@@ -53,11 +53,11 @@ split_and_apply <- function(data, list_vars, fn) {
 #' Filter ADPP rows to metabolite records
 #'
 #' Applies a three-tier fallback to identify metabolite rows in ADPP:
-#' 1. `METABFL` column — preferred when included as a grouping variable in
+#' 1. `METABFL` column -- preferred when included as a grouping variable in
 #'    the NCA run (non-missing, non-empty values are kept).
-#' 2. `PPCAT` containing "metab" (case-insensitive) — used when `METABFL`
+#' 2. `PPCAT` containing "metab" (case-insensitive) -- used when `METABFL`
 #'    is absent or all-missing.
-#' 3. `PARAM` containing "metab" (case-insensitive) — final fallback.
+#' 3. `PARAM` containing "metab" (case-insensitive) -- final fallback.
 #'
 #' Throws an informative error when no metabolite data can be found.
 #'
@@ -71,7 +71,7 @@ filter_metabolite_rows <- function(
     data, caller = "filter_metabolite_rows") {
   # Preferred: explicit METABFL flag set by the NCA grouping variable
   if ("METABFL" %in% names(data) &&
-      any(!is.na(data$METABFL) & data$METABFL != "")) {
+        any(!is.na(data$METABFL) & data$METABFL != "")) {
     return(
       data[!is.na(data$METABFL) & data$METABFL != "", , drop = FALSE]
     )
@@ -80,7 +80,7 @@ filter_metabolite_rows <- function(
   # Fallback: PPCAT or PARAM column containing "metab"
   for (col in c("PPCAT", "PARAM")) {
     if (col %in% names(data) &&
-        any(grepl("metab", data[[col]], ignore.case = TRUE))) {
+          any(grepl("metab", data[[col]], ignore.case = TRUE))) {
       return(
         data[grepl("metab", data[[col]], ignore.case = TRUE), ,
              drop = FALSE]
@@ -112,7 +112,7 @@ filter_metabolite_rows <- function(
 #' @param include_geo Logical. Include GeoMean and GeoCV_pct columns.
 #'   Default: `TRUE`.
 #' @noRd
-.summarise_adpp <- function(vals, include_geo = TRUE) {
+.summarise_adpp <- function(vals, include_geo = TRUE) { # nolint: cyclocomp_linter
   vals <- vals[!is.na(vals)]
   pos  <- vals[vals > 0]
   n    <- length(vals)
@@ -123,7 +123,7 @@ filter_metabolite_rows <- function(
     Mean   = round(mn, 3),
     SD     = round(s,  3),
     CV_pct = if (!is.na(mn) && mn != 0 && !is.na(s))
-               round(s / mn * 100, 1) else NA_real_,
+      round(s / mn * 100, 1) else NA_real_,
     stringsAsFactors = FALSE
   )
   if (include_geo) {
