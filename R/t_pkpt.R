@@ -214,7 +214,7 @@ t_pkpt08_uri <- function(
       "t_pkpt08_uri: 'PPSPEC' column not found in data; the urine specimen ",
       "filter was not applied. All rows are treated as urine. If your data ",
       "contains non-urine records, the output will be incorrect. Ensure ",
-      "PCSPEC is present in the source concentration data."
+      "PPSPEC is present in the ADPP parameter data (from export_cdisc()$adpp)."
     )
   }
   if (nrow(data) == 0) {
@@ -304,12 +304,22 @@ t_pkpt11_gmr <- function(
     } else {
       log_ratio <- mean(trt_log) - mean(ref_log)
       se <- sqrt(sd(ref_log)^2 / nr + sd(trt_log)^2 / nt)
-      df <- (se^2)^2 / ((sd(ref_log)^2 / nr)^2 / (nr - 1) +
-                         (sd(trt_log)^2 / nt)^2 / (nt - 1))
-      t_crit <- qt(1 - alpha / 2, df = max(df, 1))
-      gmr   <- round(exp(log_ratio), 3)
-      ci_lo <- round(exp(log_ratio - t_crit * se), 3)
-      ci_hi <- round(exp(log_ratio + t_crit * se), 3)
+      if (se == 0) {
+        # Both arms have identical log-PK values; within-group variance is zero
+        # and the Welch df formula yields 0/0 = NaN.  max(NaN, 1) returns NaN
+        # in R (max does not suppress NaN without na.rm = TRUE), so qt() would
+        # produce NaN CI bounds instead of NA.  Return NA to signal that the CI
+        # is undefined when there is no within-group variability.
+        gmr   <- round(exp(log_ratio), 3)
+        ci_lo <- ci_hi <- NA_real_
+      } else {
+        df     <- (se^2)^2 / ((sd(ref_log)^2 / nr)^2 / (nr - 1) +
+                               (sd(trt_log)^2 / nt)^2 / (nt - 1))
+        t_crit <- qt(1 - alpha / 2, df = max(df, 1, na.rm = TRUE))
+        gmr    <- round(exp(log_ratio), 3)
+        ci_lo  <- round(exp(log_ratio - t_crit * se), 3)
+        ci_hi  <- round(exp(log_ratio + t_crit * se), 3)
+      }
     }
     data.frame(
       strat    = strat,

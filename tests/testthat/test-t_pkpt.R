@@ -196,6 +196,29 @@ describe("t_pkpt11_gmr", {
     expect_error(t_pkpt11_gmr(bad), "missing required columns")
   })
 
+  it("returns NA (not NaN) CI bounds when both arms have zero within-arm log-variance", {
+    # Regression: when sd(log(ref_vals)) == sd(log(trt_vals)) == 0, the Welch df
+    # formula yields 0/0 = NaN.  max(NaN, 1) returns NaN in R (not 1), so qt()
+    # returns NaN and CI bounds become NaN rather than NA, corrupting the table.
+    zero_var_data <- data.frame(
+      USUBJID = paste0("S", 1:6),
+      TRT01A  = c("10mg", "10mg", "10mg", "50mg", "50mg", "50mg"),
+      PARAM   = "Cmax",
+      PARAMCD = "CMAX",
+      AVAL    = c(5, 5, 5, 10, 10, 10),  # identical values within each arm
+      AVALU   = "ng/mL",
+      PPCAT   = "DrugA Plasma",
+      PPSPEC  = "PLASMA",
+      stringsAsFactors = FALSE
+    )
+    result <- t_pkpt11_gmr(zero_var_data, ref_arm = "10mg")[[1]]
+    row <- result[result$PARAM == "Cmax", ]
+    expect_true(is.na(row$CI_lower), info = "CI_lower should be NA, not NaN")
+    expect_true(is.na(row$CI_upper), info = "CI_upper should be NA, not NaN")
+    # GMR itself is still computable (ratio of identical geometric means)
+    expect_true(is.finite(row$GMR))
+  })
+
   it("returns empty data frame and warns when ref_arm absent from a sub-split", {
     # Create two-split data where ref_arm "10mg" only exists in one PPCAT
     split_data <- rbind(
