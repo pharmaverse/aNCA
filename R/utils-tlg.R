@@ -96,3 +96,18 @@ filter_metabolite_rows <- function(
     "are labelled with 'metab' in PPCAT or PARAM."
   )
 }
+
+#' Return the label attribute of a column, falling back to the column name.
+#'
+#' Used by TLG plot functions to label axes.  When a column has a
+#' `formatters`-style `label` attribute it is used; otherwise the column name
+#' string is returned unchanged.
+#'
+#' @param data A data frame.
+#' @param var  Character scalar column name.
+#' @return A character scalar label.
+#' @noRd
+.get_var_label <- function(data, var) {
+  lbl <- attr(data[[var]], "label")
+  if (!is.null(lbl)) lbl else var
+}
