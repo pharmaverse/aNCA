@@ -142,6 +142,14 @@ describe("t_pkpt08_uri", {
       "no urine PK parameter data found"
     )
   })
+
+  it("warns when PPSPEC column is absent and skips the urine filter", {
+    data_no_ppspec <- pkpt_data[, setdiff(names(pkpt_data), "PPSPEC")]
+    expect_warning(
+      t_pkpt08_uri(data_no_ppspec),
+      "PPSPEC.*not found"
+    )
+  })
 })
 
 describe("t_pkpt11_gmr", {

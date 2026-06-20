@@ -229,9 +229,27 @@ p_pkpg01_cum <- function(
 ) {
   if ("PPSPEC" %in% names(data)) {
     data <- data[data$PPSPEC %in% urine_specs, , drop = FALSE]
+  } else {
+    warning(
+      "p_pkpg01_cum: 'PPSPEC' column not found in data; the urine specimen ",
+      "filter was not applied. All rows are treated as urine. If your data ",
+      "contains non-urine records, the output will be incorrect. Ensure ",
+      "PCSPEC is present in the source concentration data."
+    )
   }
-  if (!is.null(paramcd_filter) && "PARAMCD" %in% names(data)) {
+  if (!is.null(paramcd_filter) && "PARAMCD" %in% names(data) && nrow(data) > 0) {
+    available_paramcds <- sort(unique(data$PARAMCD))
     data <- data[data$PARAMCD %in% paramcd_filter, , drop = FALSE]
+    if (nrow(data) == 0) {
+      warning(
+        "p_pkpg01_cum: no rows matched paramcd_filter = c(",
+        paste(shQuote(paramcd_filter), collapse = ", "), "). ",
+        "Available PARAMCDs: ",
+        paste(shQuote(available_paramcds), collapse = ", "),
+        ". Returning an empty list. Pass NULL to skip the PARAMCD filter."
+      )
+      return(list())
+    }
   }
   if (nrow(data) == 0) return(list())
 

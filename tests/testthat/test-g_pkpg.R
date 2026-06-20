@@ -208,8 +208,16 @@ describe("p_pkpg01_cum", {
 
   it("returns single 'all' entry when list_vars absent from data", {
     data_bare <- pkpg01_data[, setdiff(names(pkpg01_data), c("PPCAT", "PPSPEC"))]
-    result <- p_pkpg01_cum(data_bare)
+    result <- suppressWarnings(p_pkpg01_cum(data_bare))
     expect_equal(names(result), "all")
+  })
+
+  it("warns when PPSPEC column is absent and skips the urine filter", {
+    data_no_ppspec <- pkpg01_data[, setdiff(names(pkpg01_data), "PPSPEC")]
+    expect_warning(
+      p_pkpg01_cum(data_no_ppspec),
+      "PPSPEC.*not found"
+    )
   })
 
   it("filters to RCAMINT params, not FREXINT", {
@@ -223,6 +231,14 @@ describe("p_pkpg01_cum", {
     data_no_pcd <- pkpg01_data[, setdiff(names(pkpg01_data), "PARAMCD")]
     result <- p_pkpg01_cum(data_no_pcd)
     expect_equal(length(result), 1)
+  })
+
+  it("warns and returns empty list when paramcd_filter matches no rows", {
+    expect_warning(
+      result <- p_pkpg01_cum(pkpg01_data, paramcd_filter = "NONEXISTENT"),
+      "no rows matched paramcd_filter"
+    )
+    expect_equal(length(result), 0)
   })
 })
 
@@ -245,8 +261,12 @@ describe("p_pkpg01_per", {
     expect_true(all(grepl("^Fe", x_vals)))
   })
 
-  it("returns empty list when only RCAMINT rows present", {
-    expect_equal(length(p_pkpg01_per(pkpg01_data)), 0)
+  it("warns and returns empty list when only RCAMINT rows present (no FREXINT)", {
+    expect_warning(
+      result <- p_pkpg01_per(pkpg01_data),
+      "no rows matched paramcd_filter"
+    )
+    expect_equal(length(result), 0)
   })
 })
 
