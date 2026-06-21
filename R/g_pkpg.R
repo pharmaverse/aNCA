@@ -32,6 +32,7 @@
 #' @importFrom ggplot2 ggplot aes geom_boxplot geom_jitter geom_text stat_summary
 #'   labs theme_bw theme element_text element_blank facet_wrap
 #' @importFrom rlang .data
+#' @importFrom stats quantile
 #' @export
 p_pkpg03_boxp <- function(
   data,

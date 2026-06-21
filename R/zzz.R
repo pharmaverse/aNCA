@@ -113,6 +113,11 @@
     "Variable",
     "adj.r.squared",
     "aucs",
+    ".iqr",
+    ".q1",
+    ".q3",
+    "mean_val",
+    "sd_val",
 
     "calculate_ratio_app",
     "color",
