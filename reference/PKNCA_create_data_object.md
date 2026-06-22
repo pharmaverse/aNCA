@@ -1,7 +1,7 @@
 # Creates a `PKNCA::PKNCAdata` object.
 
 Creates a
-[`PKNCA::PKNCAdata`](http://humanpred.github.io/pknca/reference/PKNCAdata.md)
+[`PKNCA::PKNCAdata`](https://humanpred.github.io/pknca/reference/PKNCAdata.html)
 object.
 
 ## Usage
@@ -114,16 +114,16 @@ Then it proceeds to:
     [`format_pkncadose_data()`](https://pharmaverse.github.io/aNCA/reference/format_pkncadose_data.md).
 
 3.  Creating `PKNCAconc` object using
-    [`PKNCA::PKNCAconc()`](http://humanpred.github.io/pknca/reference/PKNCAconc.md)
+    [`PKNCA::PKNCAconc()`](https://humanpred.github.io/pknca/reference/PKNCAconc.html)
     with formula
     `AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM`.
 
 4.  Creating PKNCAdose object using
-    [`PKNCA::PKNCAdose()`](http://humanpred.github.io/pknca/reference/PKNCAdose.md)
+    [`PKNCA::PKNCAdose()`](https://humanpred.github.io/pknca/reference/PKNCAdose.html)
     with formula `DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID`.
 
 5.  Creating PKNCAdata object using
-    [`PKNCA::PKNCAdata()`](http://humanpred.github.io/pknca/reference/PKNCAdata.md).
+    [`PKNCA::PKNCAdata()`](https://humanpred.github.io/pknca/reference/PKNCAdata.html).
 
 6.  Updating units in PKNCAdata object so each analyte has its own unit.
 
@@ -151,7 +151,7 @@ adnca_data <- data.frame(
 PKNCA_create_data_object(adnca_data)
 #> Formula for concentration:
 #>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM
-#> <environment: 0x556d63e8a330>
+#> <environment: 0x5616c934d110>
 #> Data are dense PK.
 #> With 1 subjects defined in the 'USUBJID' column.
 #> Nominal time column is: NFRLT

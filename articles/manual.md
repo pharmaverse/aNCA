@@ -478,9 +478,9 @@ methods helps interpret results.
 
 | Function | Purpose | aNCA Wrapper |
 |----|----|----|
-| [`PKNCA::PKNCAconc()`](http://humanpred.github.io/pknca/reference/PKNCAconc.md) | Creates concentration object | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
-| [`PKNCA::PKNCAdose()`](http://humanpred.github.io/pknca/reference/PKNCAdose.md) | Creates dose object | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
-| [`PKNCA::PKNCAdata()`](http://humanpred.github.io/pknca/reference/PKNCAdata.md) | Combines conc + dose + intervals | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
+| [`PKNCA::PKNCAconc()`](https://humanpred.github.io/pknca/reference/PKNCAconc.html) | Creates concentration object | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
+| [`PKNCA::PKNCAdose()`](https://humanpred.github.io/pknca/reference/PKNCAdose.html) | Creates dose object | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
+| [`PKNCA::PKNCAdata()`](https://humanpred.github.io/pknca/reference/PKNCAdata.html) | Combines conc + dose + intervals | [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md) |
 
 ### 5.2 NCA Calculations
 

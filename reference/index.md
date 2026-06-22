@@ -12,7 +12,7 @@
   :
 
   Creates a
-  [`PKNCA::PKNCAdata`](http://humanpred.github.io/pknca/reference/PKNCAdata.md)
+  [`PKNCA::PKNCAdata`](https://humanpred.github.io/pknca/reference/PKNCAdata.html)
   object.
 
 - [`PKNCA_hl_rules_exclusion()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_hl_rules_exclusion.md)

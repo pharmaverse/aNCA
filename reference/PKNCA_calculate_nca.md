@@ -35,7 +35,7 @@ and from most recent dose
 ## Details
 
 This function+ calculates results for PKNCA analysis using
-[`PKNCA::pk.nca()`](http://humanpred.github.io/pknca/reference/pk.nca.md).
+[`PKNCA::pk.nca()`](https://humanpred.github.io/pknca/reference/pk.nca.html).
 It then joins the results with the dosing data, to create a full results
 data frame with the start and end times for each dose, from first and
 most recent dose.
