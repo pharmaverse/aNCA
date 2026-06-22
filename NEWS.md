@@ -82,6 +82,7 @@
 * SelectInputs updated to include variable labels (#899)
 
 ### Documentation & UI
+* UI consistency pass: standardized dropdown labels to "Select the...", help button placement to right-aligned, "colour" to "color", renamed Save to "Export as ZIP", simplified download button text, and added "Short Parameter"/"Specimen" columns to Units table (#1333)
 * Searchable PK parameter reference table in NCA > Setup (#1023)
 * R Script Walkthrough vignette added to pkgdown website (#1090)
 * Ratio Calculations vignette documenting all ratio types (#1251)
