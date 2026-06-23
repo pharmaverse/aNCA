@@ -77,6 +77,7 @@
 ## Bug fixes
 
 ### NCA Calculations
+* `exclude_half.life` is now initialized to `NA` instead of `FALSE` (matching `include_half.life`), so manually selecting half-life points to include no longer errors with "Cannot both include and exclude half-life points for the same interval" under the development version of PKNCA
 * Renal clearance (RENALCL) removed from direct PK calculations (inaccurate in PKNCA) — use ratio table instead (#781)
 * Multidose parameters (MRTMDO, MRTMDP, VSSMDO, VSSMDP, TAT) removed from direct calculations (#869)
 * Last dose interval end time extends to last observed sample instead of being cut off at tau (#1235)

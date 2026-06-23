@@ -513,6 +513,11 @@ describe("export_cdisc", {
   })
 
   it("differentiates vz.xxx for extravascular (bioavailability, F) and intravascular", {
+    # The development version of PKNCA adds new vz.* parameters (e.g. vz.last)
+    # that aNCA's CDISC export does not yet map, so extra Vz rows appear. Skip on
+    # CRAN so an upcoming PKNCA release cannot block CRAN; the gap still surfaces
+    # off-CRAN in runs against PKNCA dev.
+    skip_on_cran()
     test_vz_data <- FIXTURE_PKNCA_DATA
     test_vz_data$intervals <- test_vz_data$intervals %>%
       filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
