@@ -290,6 +290,12 @@ update_main_intervals <- function(
     data <- create_start_impute(data)
   }
 
+  # Prevent mutate() from resolving `impute` to the function parameter instead
+  # of the column (causes PKNCA_impute_method_FALSE error when impute=FALSE).
+  if (!"impute" %in% names(data$intervals)) {
+    data$intervals$impute <- NA_character_
+  }
+
   ############################################
   # Define a BLQ imputation method for PKNCA
   # and apply it only for non-observational parameters

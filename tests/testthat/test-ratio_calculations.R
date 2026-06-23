@@ -574,3 +574,49 @@ describe("calculate_ratio_app with interval parameters", {
     expect_true(nrow(ratios) > 0)
   })
 })
+
+describe(".coerce_group_types", {
+  it("coerces character column to numeric when data column is numeric", {
+    groups <- data.frame(AGE = "25", stringsAsFactors = FALSE)
+    data <- data.frame(AGE = 25, USUBJID = "S1")
+    result <- .coerce_group_types(groups, data)
+    expect_type(result$AGE, "double")
+    expect_equal(result$AGE, 25)
+  })
+
+  it("coerces character column to factor with correct levels when data column is factor", {
+    groups <- data.frame(RACE = "WHITE", stringsAsFactors = FALSE)
+    data <- data.frame(
+      RACE = factor(c("WHITE", "ASIAN", "BLACK")),
+      USUBJID = "S1", stringsAsFactors = FALSE
+    )
+    result <- .coerce_group_types(groups, data)
+    expect_s3_class(result$RACE, "factor")
+    expect_setequal(levels(result$RACE), c("WHITE", "ASIAN", "BLACK"))
+  })
+
+  it("leaves already-matching types unchanged", {
+    groups <- data.frame(AGE = 25, RACE = "WHITE", stringsAsFactors = FALSE)
+    data <- data.frame(AGE = 30, RACE = "ASIAN", USUBJID = "S1",
+                       stringsAsFactors = FALSE)
+    result <- .coerce_group_types(groups, data)
+    # AGE is already numeric → unchanged
+    expect_equal(result$AGE, 25)
+    # RACE is character, data$RACE is character → unchanged
+    expect_equal(result$RACE, "WHITE")
+  })
+
+  it("handles mixed columns: some coerced, some unchanged", {
+    groups <- data.frame(AGE = "25", RACE = "WHITE", SEX = "M",
+                         stringsAsFactors = FALSE)
+    data <- data.frame(AGE = 30, RACE = "ASIAN", SEX = "F", USUBJID = "S1",
+                       stringsAsFactors = FALSE)
+    result <- .coerce_group_types(groups, data)
+    # AGE: character → numeric
+    expect_type(result$AGE, "double")
+    expect_equal(result$AGE, 25)
+    # RACE, SEX: character → character (already matching)
+    expect_equal(result$RACE, "WHITE")
+    expect_equal(result$SEX, "M")
+  })
+})
