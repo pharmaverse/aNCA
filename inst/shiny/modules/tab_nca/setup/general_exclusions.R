@@ -138,6 +138,7 @@ general_exclusions_server <- function(
 
         xbtn_counter(max(new_ids))
         exclusion_list(rehydrated_list)
+        log_info("Exclusions restored from settings: ", length(overrides), " rules loaded")
       }
     })
 
@@ -173,7 +174,12 @@ general_exclusions_server <- function(
 
     # Register observers for new remove buttons (shared helper)
     observe({
-      .register_remove_observers(exclusion_list, registered_xbtns, input)
+      .register_remove_observers(
+        exclusion_list, registered_xbtns, input,
+        on_remove = function(item) {
+          log_info("Exclusion removed: reason='", item$reason, "'")
+        }
+      )
     })
 
     # Render the exclusions table (not shown if empty)

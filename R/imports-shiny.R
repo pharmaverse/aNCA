@@ -7,7 +7,6 @@
 #' @importFrom bslib page_sidebar
 #' @importFrom htmltools tags
 #' @importFrom htmlwidgets onRender
-#' @importFrom logger log_info
 #' @importFrom reactable reactable
 #' @importFrom reactable.extras reactable_extras_dependency
 #' @importFrom shiny runApp

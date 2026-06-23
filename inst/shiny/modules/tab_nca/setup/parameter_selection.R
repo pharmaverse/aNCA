@@ -318,6 +318,18 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       )
     })
 
+    # Log parameter selection changes (debounced to avoid noise from rapid clicks)
+    selections_debounced <- debounce(selections_state, 2000)
+    observeEvent(selections_debounced(), {
+      state <- selections_debounced()
+      req(state)
+      study_types <- study_types_list()
+      for (st in study_types) {
+        n_params <- sum(state[[st]], na.rm = TRUE)
+        log_info("Parameter selection for '", st, "': ", n_params, " parameters selected.")
+      }
+    }, ignoreInit = TRUE)
+
     observeEvent(input$clear_all, {
       state <- selections_state()
       req(state)
