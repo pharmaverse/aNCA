@@ -244,8 +244,12 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           slope_rules = slope_rules(),
           filters = session$userData$applied_filters,
           time_duplicate_keys = session$userData$time_duplicate_keys,
-          nca_ran = isTRUE(session$userData$nca_ran)
+          nca_ran = isTRUE(session$userData$nca_ran),
+          input_mode = session$userData$input_mode %||% "adnca"
         )
+        if (identical(payload$input_mode, "sdtm")) {
+          payload$sdtm_metabolites <- session$userData$sdtm_metabolites
+        }
 
         dataset_name <- session$userData$dataset_filename %||% ""
 
