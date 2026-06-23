@@ -62,7 +62,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
     ),
     pickerInput(
       inputId = ns("profiles"),
-      label = "Choose the profile(s):",
+      label = "Select the profile(s):",
       choices = NULL,
       selected = NULL,
       multiple = TRUE,
@@ -91,7 +91,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
     ),
     radioButtons(
       ns("timescale"),
-      "Choose the Timescale",
+      "Select the Timescale",
       choices = c("All Time", "By Dose Profile")
     ),
     checkboxInput(ns("show_threshold"), label = "Show Threshold"),
@@ -228,7 +228,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = default_color,
                      selector_ui_wrapper = "colorby_ui_wrapper",
                      id = "colorby",
-                     label = "Choose the variables to color by:",
+                     label = "Select the variables to color by:",
                      metadata_type = "variable")
 
       # Rendering the facetby selector with labels
@@ -239,7 +239,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = default_facet,
                      selector_ui_wrapper = "facetby_ui_wrapper",
                      id = "facetby",
-                     label = "Choose the variables to facet by:",
+                     label = "Select the variables to facet by:",
                      metadata_type = "variable")
     })
 
