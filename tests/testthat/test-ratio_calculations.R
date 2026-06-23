@@ -574,3 +574,49 @@ describe("calculate_ratio_app with interval parameters", {
     expect_true(nrow(ratios) > 0)
   })
 })
+
+describe(".drop_start_end", {
+  # Default args: no aggregation, not interval params
+  args <- list(
+    aggregate_subject = "no",
+    test_parsed = list(is_interval = FALSE),
+    ref_parsed = list(is_interval = FALSE)
+  )
+
+  it("drops start/end for non-ATPTREF group variables like RACE, SEX, AGE", {
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "RACE"), args)))
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "SEX"), args)))
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "AGE"), args)))
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "COHORT"), args)))
+  })
+
+  it("keeps start/end for ATPTREF (time-linked interval identifier)", {
+    expect_false(do.call(.drop_start_end, c(list(reference_colname = "ATPTREF"), args)))
+  })
+
+  it("keeps start/end for DOSNOA (dose number, time-linked)", {
+    expect_false(do.call(.drop_start_end, c(list(reference_colname = "DOSNOA"), args)))
+  })
+
+  it("keeps start/end for type_interval (interval type identifier)", {
+    expect_false(do.call(.drop_start_end, c(list(reference_colname = "type_interval"), args)))
+  })
+
+  it("drops start/end when aggregate_subject != no", {
+    expect_true(.drop_start_end("RACE", aggregate_subject = "yes",
+      test_parsed = list(is_interval = FALSE),
+      ref_parsed = list(is_interval = FALSE)))
+    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "yes",
+      test_parsed = list(is_interval = FALSE),
+      ref_parsed = list(is_interval = FALSE)))
+  })
+
+  it("drops start/end when test or ref is an interval parameter", {
+    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "no",
+      test_parsed = list(is_interval = TRUE),
+      ref_parsed = list(is_interval = FALSE)))
+    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "no",
+      test_parsed = list(is_interval = FALSE),
+      ref_parsed = list(is_interval = TRUE)))
+  })
+})

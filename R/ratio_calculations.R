@@ -412,16 +412,28 @@ calculate_ratio_app <- function(
     )
 }
 
+#' Determine whether start/end columns should be dropped from match_cols.
+#' @noRd
+.drop_start_end <- function(reference_colname, aggregate_subject,
+                            test_parsed, ref_parsed) {
+  aggregate_subject != "no" ||
+    test_parsed$is_interval || ref_parsed$is_interval ||
+    !reference_colname %in% c("ATPTREF", "DOSNOA", "type_interval")
+}
+
 #' Build match_cols for ratio calculation based on grouping, aggregation, and interval settings
 #' @noRd
 .build_ratio_match_cols <- function(res, ref_group, aggregate_subject, test_parsed, ref_parsed) {
   reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
 
-  # Remove start/end when they cannot serve as reliable join keys
-  atptref_exists <- "ATPTREF" %in% reference_colname
-  if (atptref_exists || aggregate_subject != "no" ||
-        test_parsed$is_interval || ref_parsed$is_interval) {
+  # Remove start/end when they cannot serve as reliable join keys:
+  # - Non-time-identifier group variables (SEX, AGE, RACE, COHORT, etc.):
+  #   different groups may have different absolute dosing times (#1286)
+  # - Aggregation or interval parameters: start/end don't identify
+  #   comparable units
+  if (.drop_start_end(reference_colname, aggregate_subject,
+                      test_parsed, ref_parsed)) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
 

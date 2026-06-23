@@ -47,9 +47,9 @@ ratios_table_ui <- function(id) {
           tags$b("Mean across subjects"),
           ": Controls how test and reference rows are paired. Ratios match
           on grouping variables (e.g., USUBJID, PCSPEC, profile).
-          `no` (\u2014) includes USUBJID in matching (same subject's reference),
-          `yes` (x\u0304) removes USUBJID (mean reference across all subjects),
-          `if-needed` (x\u0304?) tries per-subject first, falls back to mean."
+          `subj` (no) includes USUBJID in matching (same subject's reference),
+          `mean` (yes) removes USUBJID (mean reference across all subjects),
+          `auto` (if-needed) tries per-subject first, falls back to mean."
         ),
         tags$li(
           tags$b("RefParameter"),
@@ -333,11 +333,13 @@ ratios_table_server <- function(
 #  ☐  PPTESTCD  =  ─────────────────────────  ×  AdjFactor
 #                  Σ  RefParam [RefGroup]
 .ratio_formula_card <- function(ns, i, row, param_opts, ref_opts, group_opts) {
-  # Map aggregate values to symbol labels for the dropdown
+  # Map aggregate values to short ASCII labels for the dropdown.
+  # Avoid Unicode combining characters (e.g. x\u0304) which render
+  # as garbled symbols in some browsers / OS font configurations.
   agg_choices <- c(
-    "\u2014"  = "no",
-    "x\u0304"  = "yes",
-    "x\u0304?" = "if-needed"
+    "subj"  = "no",
+    "mean"  = "yes",
+    "auto"  = "if-needed"
   )
 
   tags$div(
@@ -390,11 +392,11 @@ ratios_table_server <- function(
         class = "ratio-denominator",
         tags$div(
           class = "ratio-sigma",
-          title = "Mean across subjects: \u2014 = no, x\u0304 = yes, x\u0304? = if-needed",
+          title = "Mean across subjects: subj = per subject, mean = pooled, auto = subj then mean",
           selectInput(
             ns(paste0("AggregateSubject_", i)), label = NULL,
             choices = agg_choices, selected = row$AggregateSubject,
-            width = "55px"
+            width = "70px"
           )
         ),
         tags$div(
