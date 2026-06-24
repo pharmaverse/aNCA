@@ -88,7 +88,8 @@
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function( # nolint: object_name_linter
+PKNCA_create_data_object <- function(
+    # nolint: object_name_linter
     adnca_data,
     mapping = NULL,
     applied_filters = NULL,
@@ -298,7 +299,8 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #' @importFrom purrr pmap
 #'
 #' @export
-PKNCA_update_data_object <- function( # nolint: object_name_linter
+PKNCA_update_data_object <- function(
+    # nolint: object_name_linter
     adnca_data,
     method,
     selected_analytes,
@@ -313,7 +315,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     int_parameters = NULL,
     blq_imputation_rule = NULL,
     custom_units_table = NULL) {
-
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
@@ -522,9 +523,11 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
-    group_by(across(-c(intersect(names(.), c("PPSTRES", "PPORRES", "exclude",
-                                              "start_dose", "end_dose",
-                                              "PPANMETH"))))) %>%
+    group_by(across(-c(intersect(names(.), c(
+      "PPSTRES", "PPORRES", "exclude",
+      "start_dose", "end_dose",
+      "PPANMETH"
+    ))))) %>%
     slice_tail(n = 1) %>%
     ungroup()
 
@@ -881,7 +884,6 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @keywords internal
 #' @noRd
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
-
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
