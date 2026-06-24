@@ -88,8 +88,7 @@
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function(
-    # nolint: object_name_linter
+PKNCA_create_data_object <- function( # nolint  object_name_linter
     adnca_data,
     mapping = NULL,
     applied_filters = NULL,
@@ -299,8 +298,7 @@ PKNCA_create_data_object <- function(
 #' @importFrom purrr pmap
 #'
 #' @export
-PKNCA_update_data_object <- function(
-    # nolint: object_name_linter
+PKNCA_update_data_object <- function( # nolint: object_name_linter
     adnca_data,
     method,
     selected_analytes,

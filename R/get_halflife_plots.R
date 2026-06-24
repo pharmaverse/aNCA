@@ -15,7 +15,7 @@
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build event_register
 #' @importFrom PKNCA pk.nca get.parameter.deps
 #' @export
-get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
+get_halflife_plots <- function(pknca_data, add_annotations = TRUE, #nolint
                                title_vars = NULL) {
   # If the input has empty concentration or intervals, just return an empty list
   if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
