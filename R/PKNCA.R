@@ -542,16 +542,23 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     ungroup()
 
   # Debug: check for duplicate R2ADJ after join+dedup
-  r2adj_after <- results$result %>%
-    dplyr::filter(PPTESTCD == "adj.r.squared") %>%
+  r2adj_rows <- results$result %>%
+    dplyr::filter(PPTESTCD == "adj.r.squared")
+  r2adj_counts <- r2adj_rows %>%
     dplyr::count(USUBJID, start, end) %>%
     dplyr::filter(n > 1)
-  if (nrow(r2adj_after) > 0) {
+  if (nrow(r2adj_counts) > 0) {
     message("DEBUG: Duplicate adj.r.squared AFTER join+dedup:")
-    print(r2adj_after)
+    print(r2adj_counts)
+    # Show the actual differing rows for the first duplicate
+    first_dup <- r2adj_counts[1, ]
+    dup_rows <- r2adj_rows %>%
+      dplyr::filter(USUBJID == first_dup$USUBJID, start == first_dup$start, end == first_dup$end)
+    message("DEBUG: Differing rows for ", first_dup$USUBJID, ":")
+    print(as.data.frame(dup_rows))
   } else {
     message("DEBUG: No duplicate adj.r.squared after join+dedup (",
-            sum(results$result$PPTESTCD == "adj.r.squared"), " total)")
+            nrow(r2adj_rows), " total)")
   }
 
   results
