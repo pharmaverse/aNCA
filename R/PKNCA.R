@@ -540,6 +540,19 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     slice_tail(n = 1) %>%
     ungroup()
 
+  # Debug: check for duplicate R2ADJ after join+dedup
+  r2adj_after <- results$result %>%
+    dplyr::filter(PPTESTCD == "adj.r.squared") %>%
+    dplyr::count(USUBJID, start, end) %>%
+    dplyr::filter(n > 1)
+  if (nrow(r2adj_after) > 0) {
+    message("DEBUG: Duplicate adj.r.squared AFTER join+dedup:")
+    print(r2adj_after)
+  } else {
+    message("DEBUG: No duplicate adj.r.squared after join+dedup (",
+            sum(results$result$PPTESTCD == "adj.r.squared"), " total)")
+  }
+
   results
 }
 
