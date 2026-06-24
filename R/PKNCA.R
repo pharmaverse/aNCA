@@ -356,16 +356,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       by = group_vars(adnca_data$dose)
     )
 
-  # Debug: check for duplicate intervals after left_join
-  n_total <- nrow(data$intervals)
-  n_distinct <- nrow(dplyr::distinct(data$intervals))
-  if (n_total != n_distinct) {
-    message("WARNING: ", n_total - n_distinct, " duplicate interval rows after left_join (",
-            n_total, " total, ", n_distinct, " distinct)")
-  } else {
-    message("DEBUG: No duplicate intervals (", n_total, " rows)")
-  }
-
   # Apply filtering
   data$intervals <- data$intervals %>%
     filter(
@@ -508,11 +498,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
   }
 
   # Calculate results using PKNCA
-  message("DEBUG: intervals before pk.nca: ", nrow(pknca_data$intervals),
-          " | half.life TRUE: ", sum(pknca_data$intervals$half.life, na.rm = TRUE))
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
-  message("DEBUG: results after pk.nca: ", nrow(results$result),
-          " | R2ADJ rows: ", sum(results$result$PPTESTCD == "adj.r.squared", na.rm = TRUE))
 
 
   dose_data_to_join <- select(
@@ -541,26 +527,6 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
                                               "PPANMETH"))))) %>%
     slice_tail(n = 1) %>%
     ungroup()
-
-  # Debug: check for duplicate R2ADJ after join+dedup
-  r2adj_rows <- results$result %>%
-    dplyr::filter(PPTESTCD == "adj.r.squared")
-  r2adj_counts <- r2adj_rows %>%
-    dplyr::count(USUBJID, start, end) %>%
-    dplyr::filter(n > 1)
-  if (nrow(r2adj_counts) > 0) {
-    message("DEBUG: Duplicate adj.r.squared AFTER join+dedup:")
-    print(r2adj_counts)
-    # Show the actual differing rows for the first duplicate
-    first_dup <- r2adj_counts[1, ]
-    dup_rows <- r2adj_rows %>%
-      dplyr::filter(USUBJID == first_dup$USUBJID, start == first_dup$start, end == first_dup$end)
-    message("DEBUG: Differing rows for ", first_dup$USUBJID, ":")
-    print(as.data.frame(dup_rows))
-  } else {
-    message("DEBUG: No duplicate adj.r.squared after join+dedup (",
-            nrow(r2adj_rows), " total)")
-  }
 
   results
 }
@@ -866,17 +832,6 @@ select_minimal_grouping_cols <- function(df, strata_cols) {
 #' @importFrom PKNCA exclude
 #' @export
 PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
-  # Debug: check for duplicate PPTESTCD per group before applying rules
-  res_df <- as.data.frame(res)
-  group_cols <- setdiff(names(res_df), c("PPTESTCD", "PPORRES", "PPORRESU",
-                                          "PPSTRESU", "PPSTRES", "exclude"))
-  dupes <- res_df %>%
-    dplyr::count(dplyr::across(dplyr::all_of(c(group_cols, "PPTESTCD")))) %>%
-    dplyr::filter(n > 1)
-  if (nrow(dupes) > 0) {
-    message("DEBUG: Duplicate PPTESTCD per group found:")
-    print(dupes)
-  }
   for (param in names(rules)) {
     if (startsWith(param, "AUCPE")) {
       exc_fun <- PKNCA::exclude_nca_by_param(
