@@ -1,5 +1,10 @@
 # aNCA (development version)
 
+## Validation & Traceability
+
+* Replace `Vectorize` with `vapply` in `get_conversion_factor` for autovalidate traceability (#1359)
+* Add test coverage for `calculate_table_ratios()` and `run_app()` input validation (#1359)
+
 ## Testing
 
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
