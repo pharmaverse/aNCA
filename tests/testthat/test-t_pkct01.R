@@ -84,6 +84,34 @@ describe("t_pkct01", {
     expect_equal(row$n_blq, 2L)
     expect_equal(row$n, 2L)
   })
+
+  it("orders rows by stratum then by numeric (not lexical) time", {
+    # Two arms; NFRLT includes 10 to catch a lexical sort that would place
+    # "10" before "2".  Input order deliberately interleaves arms/times.
+    d <- data.frame(
+      PARAM   = "Drug A",
+      PCSPEC  = "PLASMA",
+      TRT01A  = rep(c("B_arm", "A_arm"), each = 4),
+      ATPTREF = "Day 1",
+      NFRLT   = rep(c(2, 10, 2, 10), 2),
+      AVAL    = 1:8,
+      AVALC   = as.character(1:8),
+      stringsAsFactors = FALSE
+    )
+    result <- t_pkct01(d)[[1]]
+    # Each arm's rows are contiguous: an arm value never reappears after a switch
+    expect_equal(anyDuplicated(rle(as.character(result$TRT01A))$values), 0L)
+    # Within each arm, time is ascending and numeric (2 before 10)
+    purrr::walk(split(result$NFRLT, result$TRT01A), ~ expect_false(is.unsorted(.x)))
+  })
+
+  it("attaches readable labels to statistic columns", {
+    result <- t_pkct01(pkct01_data)[[1]]
+    expect_equal(attr(result$GeoMean, "label"), "Geometric Mean")
+    expect_equal(attr(result$GeoCV_pct, "label"), "Geometric CV%")
+    expect_equal(attr(result$CV_pct, "label"), "CV%")
+    expect_equal(attr(result$n_blq, "label"), "Number BLQ")
+  })
 })
 
 describe("t_pkct01_dose", {

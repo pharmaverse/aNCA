@@ -45,6 +45,13 @@ describe("t_pkpt03_col", {
     expect_equal(row$Mean, round(mean(c(5, 6, 7)), 3))
   })
 
+  it("attaches readable labels to statistic columns", {
+    result <- t_pkpt03_col(pkpt_data)[[1]]
+    expect_equal(attr(result$GeoMean, "label"), "Geometric Mean")
+    expect_equal(attr(result$GeoCV_pct, "label"), "Geometric CV%")
+    expect_equal(attr(result$CV_pct, "label"), "CV%")
+  })
+
   it("returns NA for SD when only one observation", {
     one_obs <- pkpt_data[pkpt_data$USUBJID == "S1", ]
     result <- t_pkpt03_col(one_obs)[[1]]

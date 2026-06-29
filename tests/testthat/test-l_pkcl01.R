@@ -286,6 +286,15 @@ describe("l_pkcl02_uri", {
     expect_equal(nrow(listing_df), 2)
   })
 
+  it("matches urine specimens case-insensitively", {
+    # Lowercase 'urine' must still be kept even though the default spec is
+    # 'URINE' (CDISC); non-urine rows are dropped.
+    mixed <- uri_data
+    mixed$PCSPEC <- c("urine", "urine", "SERUM", "serum")
+    result <- l_pkcl02_uri(mixed)
+    expect_equal(sum(purrr::map_int(result, nrow)), 2L)
+  })
+
   it("includes VOLUME and VOLUMEU in displaying_vars by default", {
     result <- l_pkcl02_uri(uri_data)[[1]]
     expect_true("VOLUME" %in% names(result))
