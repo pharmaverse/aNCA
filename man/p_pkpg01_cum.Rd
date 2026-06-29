@@ -10,7 +10,7 @@ p_pkpg01_cum(
   strat_var = "TRT01A",
   param_var = "PARAM",
   value_var = "AVAL",
-  urine_specs = c("URINE", "Urine"),
+  urine_specs = c("URINE"),
   paramcd_filter = "RCAMINT",
   time_end_var = "PPENINT",
   list_vars = c("PPCAT"),
@@ -39,8 +39,8 @@ Default: \code{"PARAM"}.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 
-\item{urine_specs}{Character vector of \code{PPSPEC} values treated as urine.
-Default: \code{c("URINE", "Urine")}.}
+\item{urine_specs}{Character vector of \code{PPSPEC} values treated as urine,
+matched case-insensitively. Default: \code{c("URINE")}.}
 
 \item{paramcd_filter}{Character vector of \code{PARAMCD} values to keep. Only
 rows with a matching \code{PARAMCD} are plotted. Pass \code{NULL} to skip the

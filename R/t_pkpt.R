@@ -184,8 +184,8 @@ t_pkpt07_norm <- function(
 #'
 #' @param data A CDISC ADPP data frame. Urine records are identified by
 #'   `PPSPEC %in% urine_specs`.
-#' @param urine_specs Character vector of specimen types considered urine.
-#'   Default: `c("URINE", "Urine")`.
+#' @param urine_specs Character vector of specimen types considered urine,
+#'   matched case-insensitively. Default: `c("URINE")`.
 #' @inheritParams t_pkpt03_col
 #'
 #' @return Named list of data frames with columns: `strat_var`, `param_var`,
@@ -202,14 +202,15 @@ t_pkpt07_norm <- function(
 #' @export
 t_pkpt08_uri <- function(
   data,
-  urine_specs = c("URINE", "Urine"),
+  urine_specs = c("URINE"),
   list_vars   = c("PPCAT"),
   strat_var   = "TRT01A",
   param_var   = "PARAM",
   value_var   = "AVAL"
 ) {
   if ("PPSPEC" %in% names(data)) {
-    data <- data[data$PPSPEC %in% urine_specs, , drop = FALSE]
+    # Case-insensitive match (CDISC value is "URINE"; source casing varies).
+    data <- data[toupper(data$PPSPEC) %in% toupper(urine_specs), , drop = FALSE]
   } else {
     warning(
       "t_pkpt08_uri: 'PPSPEC' column not found in data; the urine specimen ",

@@ -190,8 +190,8 @@ p_pkpg06_mp <- function(data, ...) {
 #' @param param_var Column whose unique values label each x-axis position.
 #'   Default: `"PARAM"`.
 #' @param value_var Column containing the numeric analysis value. Default: `"AVAL"`.
-#' @param urine_specs Character vector of `PPSPEC` values treated as urine.
-#'   Default: `c("URINE", "Urine")`.
+#' @param urine_specs Character vector of `PPSPEC` values treated as urine,
+#'   matched case-insensitively. Default: `c("URINE")`.
 #' @param paramcd_filter Character vector of `PARAMCD` values to keep. Only
 #'   rows with a matching `PARAMCD` are plotted. Pass `NULL` to skip the
 #'   filter. Default: `"RCAMINT"` (cumulative amount recovered per interval).
@@ -227,7 +227,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   strat_var      = "TRT01A",
   param_var      = "PARAM",
   value_var      = "AVAL",
-  urine_specs    = c("URINE", "Urine"),
+  urine_specs    = c("URINE"),
   paramcd_filter = "RCAMINT",
   time_end_var   = "PPENINT",
   list_vars      = c("PPCAT"),
@@ -238,7 +238,8 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   ylab           = NULL
 ) {
   if ("PPSPEC" %in% names(data)) {
-    data <- data[data$PPSPEC %in% urine_specs, , drop = FALSE]
+    # Case-insensitive match (CDISC value is "URINE"; source casing varies).
+    data <- data[toupper(data$PPSPEC) %in% toupper(urine_specs), , drop = FALSE]
   } else {
     warning(
       "p_pkpg01_cum: 'PPSPEC' column not found in data; the urine specimen ",

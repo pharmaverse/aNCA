@@ -6,7 +6,7 @@
 \usage{
 t_pkpt08_uri(
   data,
-  urine_specs = c("URINE", "Urine"),
+  urine_specs = c("URINE"),
   list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
@@ -17,8 +17,8 @@ t_pkpt08_uri(
 \item{data}{A CDISC ADPP data frame. Urine records are identified by
 \code{PPSPEC \%in\% urine_specs}.}
 
-\item{urine_specs}{Character vector of specimen types considered urine.
-Default: \code{c("URINE", "Urine")}.}
+\item{urine_specs}{Character vector of specimen types considered urine,
+matched case-insensitively. Default: \code{c("URINE")}.}
 
 \item{list_vars}{Character vector of columns used to split output into
 separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP

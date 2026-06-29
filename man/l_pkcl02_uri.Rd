@@ -6,7 +6,7 @@
 \usage{
 l_pkcl02_uri(
   data,
-  urine_specs = c("URINE", "Urine"),
+  urine_specs = c("URINE"),
   listgroup_vars = c("PARAM", "PCSPEC"),
   displaying_vars = NULL,
   ...
@@ -15,8 +15,8 @@ l_pkcl02_uri(
 \arguments{
 \item{data}{A CDISC ADNCA data frame (from \code{export_cdisc()$adnca}).}
 
-\item{urine_specs}{Character vector of specimen type values to keep.
-Default: \code{c("URINE", "Urine")}.}
+\item{urine_specs}{Character vector of specimen type values to keep, matched
+case-insensitively against \code{PCSPEC}. Default: \code{c("URINE")}.}
 
 \item{listgroup_vars}{Character vector of columns used to split output into
 separate listings. Default: \code{c("PARAM", "PCSPEC")}. When \code{PCSPEC} is

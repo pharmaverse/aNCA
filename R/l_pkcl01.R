@@ -259,8 +259,8 @@ l_pkcl01_tad <- function(data, ...) {
 #' columns when those columns are present in the data.
 #'
 #' @param data A CDISC ADNCA data frame (from `export_cdisc()$adnca`).
-#' @param urine_specs Character vector of specimen type values to keep.
-#'   Default: `c("URINE", "Urine")`.
+#' @param urine_specs Character vector of specimen type values to keep, matched
+#'   case-insensitively against `PCSPEC`. Default: `c("URINE")`.
 #' @param listgroup_vars Character vector of columns used to split output into
 #'   separate listings. Default: `c("PARAM", "PCSPEC")`. When `PCSPEC` is
 #'   absent from `data`, it is silently removed from this vector.
@@ -281,13 +281,15 @@ l_pkcl01_tad <- function(data, ...) {
 #' @export
 l_pkcl02_uri <- function(
   data,
-  urine_specs     = c("URINE", "Urine"),
+  urine_specs     = c("URINE"),
   listgroup_vars  = c("PARAM", "PCSPEC"),
   displaying_vars = NULL,
   ...
 ) {
   if ("PCSPEC" %in% names(data)) {
-    data <- data[data$PCSPEC %in% urine_specs, , drop = FALSE]
+    # Case-insensitive match so "Urine"/"urine" are also kept (CDISC value is
+    # "URINE", but source data casing varies).
+    data <- data[toupper(data$PCSPEC) %in% toupper(urine_specs), , drop = FALSE]
   } else {
     warning(
       "l_pkcl02_uri: 'PCSPEC' column not found in data; the urine specimen ",
