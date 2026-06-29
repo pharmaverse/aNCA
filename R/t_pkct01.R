@@ -123,10 +123,12 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
     result <- do.call(rbind, rows)
 
     # Order so each stratum's rows are contiguous: by strat_var, then the visit
-    # reference, then the (numeric) nominal time.  The key columns retain their
-    # original types here (numeric NFRLT, character TRT01A/ATPTREF), so order()
-    # sorts time numerically rather than lexically; NA keys sort last.
-    result <- result[do.call(order, result[row_vars]), , drop = FALSE]
+    # reference, then the nominal time.  .natural_sort_key() makes the sort
+    # numeric-aware, so numeric NFRLT, factor levels, and character labels with
+    # embedded numbers (e.g. "DOSE 10" after "DOSE 2", arms "100 mg" after
+    # "50 mg") all order naturally rather than lexically; NA keys sort last.
+    order_keys <- lapply(row_vars, function(v) .natural_sort_key(result[[v]]))
+    result <- result[do.call(order, order_keys), , drop = FALSE]
     rownames(result) <- NULL
     .apply_stat_labels(apply_labels(result))
   }

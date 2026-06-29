@@ -24,8 +24,11 @@
     )
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
   }
-  strats <- sort(unique(df[[strat_var]]))
-  params <- sort(unique(df[[param_var]]))
+  # Natural-aware ordering so arms/params with embedded numbers (e.g. "10 mg"
+  # before "100 mg") sort numerically rather than lexically.
+  nat_sort <- function(v) v[order(.natural_sort_key(v))]
+  strats <- nat_sort(unique(df[[strat_var]]))
+  params <- nat_sort(unique(df[[param_var]]))
   rows <- lapply(strats, function(s) {
     sub_s <- df[df[[strat_var]] == s, , drop = FALSE]
     lapply(params, function(p) {

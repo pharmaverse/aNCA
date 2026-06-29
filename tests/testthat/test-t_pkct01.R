@@ -105,6 +105,26 @@ describe("t_pkct01", {
     purrr::walk(split(result$NFRLT, result$TRT01A), ~ expect_false(is.unsorted(.x)))
   })
 
+  it("orders treatment arms and visits naturally (10 mg before 100, DOSE 2 before DOSE 10)", {
+    d <- data.frame(
+      PARAM   = "Drug A",
+      PCSPEC  = "PLASMA",
+      TRT01A  = rep(c("100 mg", "10 mg"), each = 4),
+      ATPTREF = rep(c("DOSE 10", "DOSE 2"), times = 4),
+      NFRLT   = 1,
+      AVAL    = 1:8,
+      AVALC   = as.character(1:8),
+      stringsAsFactors = FALSE
+    )
+    result <- t_pkct01(d)[[1]]
+    # Arms natural-sorted: every "10 mg" row precedes every "100 mg" row
+    expect_true(max(which(result$TRT01A == "10 mg")) <
+                  min(which(result$TRT01A == "100 mg")))
+    # Within an arm, "DOSE 2" precedes "DOSE 10"
+    arm <- result[result$TRT01A == "10 mg", ]
+    expect_equal(arm$ATPTREF, c("DOSE 2", "DOSE 10"))
+  })
+
   it("attaches readable labels to statistic columns", {
     result <- t_pkct01(pkct01_data)[[1]]
     expect_equal(attr(result$GeoMean, "label"), "Geometric Mean")

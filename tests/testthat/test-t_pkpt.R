@@ -52,6 +52,14 @@ describe("t_pkpt03_col", {
     expect_equal(attr(result$CV_pct, "label"), "CV%")
   })
 
+  it("orders treatment arms naturally (9 mg before 10 mg, not lexically)", {
+    nat <- pkpt_data
+    nat$TRT01A <- ifelse(nat$TRT01A == "10mg", "9 mg", "10 mg")
+    result <- t_pkpt03_col(nat)[[1]]
+    expect_true(max(which(result$TRT01A == "9 mg")) <
+                  min(which(result$TRT01A == "10 mg")))
+  })
+
   it("returns NA for SD when only one observation", {
     one_obs <- pkpt_data[pkpt_data$USUBJID == "S1", ]
     result <- t_pkpt03_col(one_obs)[[1]]

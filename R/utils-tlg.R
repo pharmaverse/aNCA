@@ -179,6 +179,31 @@ filter_metabolite_rows <- function(
   df
 }
 
+#' Build an `order()` key that sorts embedded numbers numerically.
+#'
+#' `order()` on a character vector is lexical, so "DOSE 10" would sort before
+#' "DOSE 2" and arms like "100 mg" before "50 mg".  This returns a key whose
+#' lexical order matches natural order: numeric columns are returned unchanged
+#' (already numeric-sortable), factors are returned as their level codes (so an
+#' upstream-defined order is respected), and for character values each run of
+#' digits is zero-padded to a fixed width.  `NA` keys sort last, as with the
+#' default `order()`.
+#'
+#' @param x A vector (numeric, factor, or character).
+#' @return A vector suitable as an argument to [order()].
+#' @noRd
+.natural_sort_key <- function(x) {
+  if (is.numeric(x)) return(x)
+  if (is.factor(x))  return(as.integer(x))
+  vapply(as.character(x), function(s) {
+    if (is.na(s)) return(NA_character_)
+    parts  <- regmatches(s, gregexpr("[0-9]+|[^0-9]+", s))[[1]]
+    is_num <- grepl("^[0-9]+$", parts)
+    parts[is_num] <- formatC(parts[is_num], width = 12, flag = "0")
+    paste(parts, collapse = "")
+  }, character(1), USE.NAMES = FALSE)
+}
+
 #' Return the label attribute of a column, falling back to the column name.
 #'
 #' Used by TLG plot functions to label axes.  When a column has a
