@@ -39,7 +39,7 @@
   if (length(flat) == 0) return(data.frame())
   result <- do.call(rbind, flat)
   rownames(result) <- NULL
-  apply_labels(result, type = "ADPP")
+  .apply_stat_labels(apply_labels(result, type = "ADPP"))
 }
 
 #' Summary PK Parameters Table -- statistics in columns (pkpt03)

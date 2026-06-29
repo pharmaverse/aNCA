@@ -206,13 +206,29 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      page_items <- unname(tlg_list()[page_start:page_end])
+      page_slice <- tlg_list()[page_start:page_end]
+      page_items <- unname(page_slice)
 
       if (type == "table") {
-        lapply(page_items, function(df) {
-          if (!is.data.frame(df)) return(tags$pre(as.character(df)))
-          if (ncol(df) == 0) return(tags$p("No data available for this table."))
-          reactable::reactable(df, columns = define_cols(df))
+        # Names carry the split key (e.g. "Drug A / PLASMA"); render them as a
+        # header above each table so stacked analyte/specimen tables are
+        # distinguishable.  "all" is the sentinel used by split_and_apply() for
+        # un-split single tables and gets no header.
+        page_names <- names(page_slice)
+        purrr::imap(page_items, function(df, i) {
+          body <- if (!is.data.frame(df)) {
+            tags$pre(as.character(df))
+          } else if (ncol(df) == 0) {
+            tags$p("No data available for this table.")
+          } else {
+            reactable::reactable(df, columns = define_cols(df, header_from_label = TRUE))
+          }
+          nm <- page_names[i]
+          if (!is.null(nm) && nzchar(nm) && nm != "all") {
+            tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
+          } else {
+            body
+          }
         })
       } else if (type == "listing") {
         for (item in page_items) print(item)

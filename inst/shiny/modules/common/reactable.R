@@ -151,6 +151,10 @@ reactable_server <- function(
 #' @param max_px Integer. Maximum allowable base width in pixels. Default is 150.
 #' @param expand_factor Integer. Multiplier to convert character count to pixels. Default is 8.
 #' @param overrides A named list of [reactable::colDef()] objects to override defaults.
+#' @param header_from_label Logical. When `TRUE`, columns that carry a `label`
+#'   attribute use that label as the visible column header (with the raw column
+#'   name kept as a hover tooltip). When `FALSE` (default, used by most app
+#'   tables), the raw column name is the header and the label is the tooltip.
 #'
 #' @return A named list of [reactable::colDef()] objects.
 #'
@@ -180,19 +184,35 @@ reactable_server <- function(
 #' if (interactive()) {
 #'   reactable(adpc, columns = col_defs)
 #' }
-define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list()) {
+define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(),
+                        header_from_label = FALSE) {
   if (is.null(data)) {
     return(NULL)
   }
   defs <- purrr::imap(data, \(values, col_name) {
-    # Define width based on max character length
-    max_char <- max(nchar(as.character(values)), nchar(col_name), na.rm = TRUE)
-    calc_width <- max_char * expand_factor + 20
-    # Label for tooltip
+    # Label for tooltip / header
     label <- unname(attr(values, "label"))
+    # Define width based on max character length, accounting for whichever text
+    # ends up in the header.
+    header_text <- if (header_from_label && !is.null(label)) label else col_name
+    max_char <- max(nchar(as.character(values)), nchar(header_text), na.rm = TRUE)
+    calc_width <- max_char * expand_factor + 20
     min_width <-  min(calc_width, max_px)
     max_width <- 5 * max_px
-    if (!is.null(label)) {
+    if (!is.null(label) && header_from_label) {
+      reactable::colDef(
+        html = TRUE,
+        header = htmltools::tags$span(
+          label,
+          `data-toggle` = "tooltip",
+          `data-placement` = "top",
+          title = col_name
+        ),
+        minWidth = min_width,
+        maxWidth = max_width,
+        resizable = TRUE
+      )
+    } else if (!is.null(label)) {
       reactable::colDef(
         html = TRUE,
         header = htmltools::tags$span(

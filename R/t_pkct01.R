@@ -121,8 +121,14 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
     if (length(rows) == 0) return(data.frame())
 
     result <- do.call(rbind, rows)
+
+    # Order so each stratum's rows are contiguous: by strat_var, then the visit
+    # reference, then the (numeric) nominal time.  The key columns retain their
+    # original types here (numeric NFRLT, character TRT01A/ATPTREF), so order()
+    # sorts time numerically rather than lexically; NA keys sort last.
+    result <- result[do.call(order, result[row_vars]), , drop = FALSE]
     rownames(result) <- NULL
-    apply_labels(result)
+    .apply_stat_labels(apply_labels(result))
   }
 
   split_and_apply(data, list_vars, make_table)

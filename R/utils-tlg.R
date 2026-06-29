@@ -143,6 +143,42 @@ filter_metabolite_rows <- function(
   ))
 }
 
+#' Human-readable display labels for the descriptive-statistic columns shared by
+#' the summary tables (`t_pkct01`, and everything built via [.build_pkpp_table()]).
+#'
+#' The data frames keep their terse programmatic column names (`GeoMean`,
+#' `CV_pct`, ...) so downstream code and tests can reference them; these labels
+#' are attached as the `label` attribute and promoted to the rendered column
+#' header by `define_cols(header_from_label = TRUE)`.
+#' @noRd
+.STAT_LABELS <- c(
+  n         = "n",
+  n_blq     = "Number BLQ",
+  Mean      = "Mean",
+  SD        = "SD",
+  CV_pct    = "CV%",
+  Median    = "Median",
+  GeoMean   = "Geometric Mean",
+  GeoCV_pct = "Geometric CV%",
+  Min       = "Min",
+  Max       = "Max"
+)
+
+#' Attach readable labels to the statistic columns of a summary table.
+#'
+#' Only columns present in both the data frame and [.STAT_LABELS] are touched;
+#' grouping/key columns (already labelled via [apply_labels()]) are left as-is.
+#'
+#' @param df A summary-table data frame.
+#' @return `df` with `label` attributes set on its statistic columns.
+#' @noRd
+.apply_stat_labels <- function(df) {
+  for (col in intersect(names(df), names(.STAT_LABELS))) {
+    attr(df[[col]], "label") <- unname(.STAT_LABELS[[col]])
+  }
+  df
+}
+
 #' Return the label attribute of a column, falling back to the column name.
 #'
 #' Used by TLG plot functions to label axes.  When a column has a
