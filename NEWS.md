@@ -21,6 +21,7 @@
   - `l_pkpl04_mp` — individual PK parameter listing organised for treatment comparison
   - `l_pkcl02_uri` — urine concentration and volume listing
 * ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMFL = "Y"`, consistent with ADNCA exclusion via `PKSUM1F` (#1343)
+* Summary tables are easier to read: split tables (e.g. by analyte/specimen) now show the group as a header, `t_pkct01` rows are grouped by treatment arm with timepoints in numeric order, statistic columns use readable headers (e.g. "Geometric Mean", "CV%"), and urine specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively (#1343)
 
 ### Settings & Configuration
 * Settings upload auto-restores the full session: mapping, filters, data processing, tab navigation, and auto-runs NCA if previously run. Incompatible settings degrade gracefully with notifications (#1225)
