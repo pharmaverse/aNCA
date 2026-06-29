@@ -84,7 +84,8 @@ describe("export_cdisc", {
     result <- export_cdisc(test_pknca_res)
     adpp <- result$adpp
     expect_s3_class(adpp, "data.frame")
-    expect_true(all(names(adpp) %in% CDISC_COLS$ADPP$Variable))
+    allowed_cols <- c(CDISC_COLS$ADPP$Variable, "DOSEA", "DOSEU")
+    expect_true(all(names(adpp) %in% allowed_cols))
     expect_equal(nrow(adpp), 12)
     expect_equal(
       unname(formatters::var_labels(adpp)),

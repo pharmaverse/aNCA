@@ -8,17 +8,24 @@
 #' To read more check out documentation for each function of the module and the contributing
 #' guidelines.
 
-#' Filter out rows excluded from TLGs via PKSUM1F.
-#' Rows with PKSUM1F == "Y" are removed.
-#' @param data A data frame (typically conc$data).
+#' Filter out rows excluded from TLGs.
+#'
+#' Removes rows flagged for exclusion from summary tables.
+#' - ADNCA data: removes rows where `PKSUM1F == "Y"`.
+#' - ADPP data: removes rows where `PPSUMFL == "Y"`.
+#' Both flags are checked so the function works on either dataset.
+#'
+#' @param data A data frame (ADNCA or ADPP).
 #' @return The filtered data frame.
 #' @noRd
 filter_tlg_excluded <- function(data) {
   if ("PKSUM1F" %in% names(data)) {
-    data[data$PKSUM1F != "Y", , drop = FALSE]
-  } else {
-    data
+    data <- data[is.na(data$PKSUM1F) | data$PKSUM1F != "Y", , drop = FALSE]
   }
+  if ("PPSUMFL" %in% names(data)) {
+    data <- data[is.na(data$PPSUMFL) | data$PPSUMFL != "Y", , drop = FALSE]
+  }
+  data
 }
 
 #' Function generating UI for a TLG module.
@@ -101,8 +108,9 @@ tlg_module_ui <- function(id, type, options) {
     shinycssloaders::withSpinner(
       switch(
         type,
-        graph = uiOutput(ns("tlg_output")),
-        listing = verbatimTextOutput(ns("tlg_output"))
+        graph   = uiOutput(ns("tlg_output")),
+        listing = verbatimTextOutput(ns("tlg_output")),
+        table   = uiOutput(ns("tlg_output"))
       )
     )
   )
@@ -116,12 +124,13 @@ tlg_module_ui <- function(id, type, options) {
 #' @param render_list function that renders the list of entries, actual implementation of the TLG
 #' @param options     list of options to customize input parameters
 #'
-tlg_module_server <- function(id, data, type, render_list, options = NULL) {
+tlg_module_server <- function(id, data, type, render_list, options = NULL) { # nolint: cyclocomp_linter
   moduleServer(id, function(input, output, session) {
     render_fn <- switch(
       type,
-      "graph" = renderUI,
-      "listing" = renderPrint
+      "graph"   = renderUI,
+      "listing" = renderPrint,
+      "table"   = renderUI
     )
 
     current_page <- reactiveVal(1)
@@ -179,14 +188,12 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
-        tlg_data <- filter_tlg_excluded(data()$conc$data)
-        do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
+        do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
       },
       error = function(e) {
         log_error("Error in list rendering:")
         print(e)
-        "Error: list rendering failed with current options.
-        Check the R console for more information."
+        paste0("Error: ", conditionMessage(e))
       })
     }) %>%
       debounce(750)
@@ -199,7 +206,42 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      unname(tlg_list()[page_start:page_end])
+      page_slice <- tlg_list()[page_start:page_end]
+      page_items <- unname(page_slice)
+
+      if (type == "table") {
+        # Names carry the split key (e.g. "Drug A / PLASMA"); render them as a
+        # header above each table so stacked analyte/specimen tables are
+        # distinguishable.  "all" is the sentinel used by split_and_apply() for
+        # un-split single tables and gets no header.
+        page_names <- names(page_slice)
+        purrr::imap(page_items, function(df, i) {
+          body <- if (!is.data.frame(df)) {
+            tags$pre(as.character(df))
+          } else if (ncol(df) == 0) {
+            tags$p("No data available for this table.")
+          } else {
+            reactable::reactable(df, columns = define_cols(df, header_from_label = TRUE))
+          }
+          nm <- page_names[i]
+          if (!is.null(nm) && nzchar(nm) && nm != "all") {
+            tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
+          } else {
+            body
+          }
+        })
+      } else if (type == "listing") {
+        for (item in page_items) print(item)
+      } else {
+        lapply(page_items, function(item) {
+          if (is.character(item)) return(tags$pre(item))
+          if (inherits(item, c("gg", "ggplot"))) {
+            plotly::ggplotly(item)
+          } else {
+            item
+          }
+        })
+      }
     })
 
     options_values <- lapply(names(options), function(option) {

@@ -72,6 +72,8 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
         to_match_res_cols, dose_time_col,  route_col, duration_col, conc_timeu_col,
         # Raw variables that can be directly used in PP or ADPP if present
         CDISC_COLS$PP$Variable, CDISC_COLS$ADPP$Variable,
+        # Dose amount/unit — not in ADPP CDISC metadata but needed for dose-proportionality TLGs
+        "DOSEA", "DOSEU",
         # Variables that can be used to guess other missing variables
         "PCRFTDTM", "PCRFTDTC", "PCTPTREF", "VISIT", "ATPTREF", "EXFAST",
         "PCFAST", "FEDSTATE", "EPOCH"
@@ -228,7 +230,8 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
   adpp <- cdisc_info %>%
     select(any_of(c(
       CDISC_COLS$ADPP$Variable, "exclude", grouping_vars,
-      ".pp_excl", ".pp_excl_reason"
+      ".pp_excl", ".pp_excl_reason",
+      "DOSEA", "DOSEU"
     ))) %>%
     # Deselect permitted columns with only NAs
     select(

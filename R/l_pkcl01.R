@@ -127,6 +127,8 @@ l_pkcl01 <- function(
           "AVALU" %in% names(data) & var_name == "AVAL" ~ paste0(Label, " ($AVALU)"),
           "RRLTU" %in% names(data) & var_name == "AFRLT" ~ paste0(Label, " ($RRLTU)"),
           "RRLTU" %in% names(data) & var_name == "NFRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(data) & var_name == "ARRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(data) & var_name == "NRRLT" ~ paste0(Label, " ($RRLTU)"),
           .default = Label
         )
       ) %>%
@@ -238,4 +240,88 @@ l_pkcl01 <- function(
   })  %>%
 
     setNames(unique(data_grouped[["id_list"]]))
+}
+
+#' Wrapper around aNCA::l_pkcl01() for TAD-based concentration listings.
+#' @param data Data to be passed into the listing function.
+#' @param ...  Any other parameters to be passed into the listing function.
+#' @returns A named list of listing_df objects.
+#' @export
+l_pkcl01_tad <- function(data, ...) {
+  data <- apply_labels(data)
+  l_pkcl01(data, displaying_vars = c("NRRLT", "ARRLT", "AVAL"), ...)
+}
+
+#' Urine Concentration and Volume Listing (pkcl02)
+#'
+#' Filters ADNCA to urine specimen rows (where `PCSPEC %in% urine_specs`) then
+#' delegates to [l_pkcl01()] with VOLUME and VOLUMEU added to the displayed
+#' columns when those columns are present in the data.
+#'
+#' @param data A CDISC ADNCA data frame (from `export_cdisc()$adnca`).
+#' @param urine_specs Character vector of specimen type values to keep, matched
+#'   case-insensitively against `PCSPEC`. Default: `c("URINE")`.
+#' @param listgroup_vars Character vector of columns used to split output into
+#'   separate listings. Default: `c("PARAM", "PCSPEC")`. When `PCSPEC` is
+#'   absent from `data`, it is silently removed from this vector.
+#' @param displaying_vars Character vector of columns to display. When `NULL`
+#'   (default), uses `c("NFRLT", "AFRLT", "AVAL")` plus `VOLUME`/`VOLUMEU`
+#'   if those columns exist in the data.
+#' @param ... Additional arguments forwarded to [l_pkcl01()].
+#'
+#' @return A named list of `listing_df` objects.
+#'
+#' @examples
+#' \dontrun{
+#' adnca <- export_cdisc(res_nca)$adnca
+#' listings <- l_pkcl02_uri(adnca)
+#' print(listings[[1]])
+#' }
+#'
+#' @export
+l_pkcl02_uri <- function(
+  data,
+  urine_specs     = c("URINE"),
+  listgroup_vars  = c("PARAM", "PCSPEC"),
+  displaying_vars = NULL,
+  ...
+) {
+  if ("PCSPEC" %in% names(data)) {
+    # Case-insensitive match so "Urine"/"urine" are also kept (CDISC value is
+    # "URINE", but source data casing varies).
+    data <- data[toupper(data$PCSPEC) %in% toupper(urine_specs), , drop = FALSE]
+  } else {
+    warning(
+      "l_pkcl02_uri: 'PCSPEC' column not found in data; the urine specimen ",
+      "filter was not applied. All rows are treated as urine. If your data ",
+      "contains non-urine records, the output will be incorrect. Ensure ",
+      "PCSPEC is present in the source concentration data."
+    )
+    # Drop PCSPEC from listgroup_vars so l_pkcl01's all_of() doesn't fail on an
+    # absent column — mirrors the intersect() guard used by split_and_apply().
+    listgroup_vars <- intersect(listgroup_vars, names(data))
+  }
+  if (nrow(data) == 0) {
+    stop(
+      "l_pkcl02_uri: no urine concentration data found. ",
+      "Ensure PCSPEC contains one of: ",
+      paste(urine_specs, collapse = ", ")
+    )
+  }
+
+  if (is.null(displaying_vars)) {
+    vol_vars        <- intersect(c("VOLUME", "VOLUMEU"), names(data))
+    displaying_vars <- c("NFRLT", "AFRLT", "AVAL", vol_vars)
+  }
+
+  l_pkcl01(
+    data,
+    listgroup_vars  = listgroup_vars,
+    displaying_vars = displaying_vars,
+    title = paste0(
+      "Listing of Urine PK Concentration and Volume ",
+      "by Treatment Group, Subject and Nominal Time, PK Population"
+    ),
+    ...
+  )
 }

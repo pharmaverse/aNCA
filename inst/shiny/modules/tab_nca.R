@@ -340,7 +340,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca_tagged, extra_group_vars, settings)
+    cdisc <- parameter_datasets_server(
+      "parameter_datasets", res_nca_tagged, extra_group_vars, settings
+    )
 
     #' Parameter plots module
     #' res_nca: base results for picker initialization (stable across exclusion changes)
@@ -348,7 +350,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     parameter_plots_server("parameter_plots", res_nca, res_nca_tagged)
 
     # return results for use in other modules
-    list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
+    list(
+      res_nca = res_nca,
+      processed_pknca_data = processed_pknca_data,
+      adpp = reactive(cdisc()$adpp)
+    )
   })
 }
 

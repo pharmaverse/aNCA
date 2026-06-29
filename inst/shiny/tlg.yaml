@@ -386,7 +386,7 @@ g_pkcg02_sbs:
   label: "pkcg02 - Combined Side-by-Side"
   description: "Side-by-Side Linear and Log scale plots of concentration vs. time (over laid by cohort/TRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
-  fun: g_pkcg02_log
+  fun: g_pkcg02_sbs
   condition: null
   options:
     plotgroup_vars:
