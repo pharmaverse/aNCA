@@ -70,12 +70,12 @@ selector_label <- function(input, output, session,
           metadata_nca_parameters %>% select(PPTESTCD, PPTEST) %>% distinct(),
           by = c("base_pptestcd" = "PPTESTCD")
         ) %>%
-        rowwise() %>%
+        group_by(start_dose, end_dose, is_interval) %>%
         mutate(
-          desc = if (is_interval && !is.na(PPTEST)) {
-            label <- gsub("T1", as.character(start_dose), PPTEST)
-            gsub("T2", as.character(end_dose), label)
-          } else if (!is.na(PPTEST)) {
+          desc = if (is_interval[1] && !is.na(PPTEST[1])) {
+            label <- gsub("T1", as.character(start_dose[1]), PPTEST)
+            gsub("T2", as.character(end_dose[1]), label)
+          } else if (!is.na(PPTEST[1])) {
             PPTEST
           } else {
             PPTESTCD

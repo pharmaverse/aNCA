@@ -215,12 +215,12 @@ add_label_attribute <- function(df, myres) {
       ),
       PPTESTCD_cdisc = PPTESTCD_cdisc_raw
     ) %>%
-    rowwise() %>%
+    group_by(start, end, type_interval) %>%
     mutate(
-      PPTESTCD_cdisc = if (type_interval == "manual") {
+      PPTESTCD_cdisc = if (type_interval[1] == "manual") {
         label <- PPTESTCD_cdisc_raw
-        label <- gsub("T1", as.character(start), label)
-        label <- gsub("T2", as.character(end), label)
+        label <- gsub("T1", as.character(start[1]), label)
+        label <- gsub("T2", as.character(end[1]), label)
         label
       } else {
         PPTESTCD_cdisc
