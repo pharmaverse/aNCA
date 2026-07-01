@@ -15,6 +15,9 @@
 * `run_app()` accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
 
+### Exploration
+* "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
+
 ### NCA Setup
 * Renamed "Aggregate Subject" label to "Mean across subjects" in ratio calculations for clarity; updated help text to explain matching mechanics (#1297)
 * Parameter Selection tab now contains Partial Intervals, Ratio Calculations, and Units alongside the parameter matrix. The former Settings tab is renamed to General Settings (#1239)
