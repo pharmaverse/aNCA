@@ -72,7 +72,7 @@
 ## Bug fixes
 
 ### CDISC Export
-* `CRITxFL` now uses `""` instead of `"N"` when criterion is violated. `CRITx` shows the acceptance criterion with inverted operator (e.g. flag rule `R2ADJ < 0.7` produces `CRITx = "R2ADJ >= 0.7"`). `CRITxFL = "Y"` means criterion satisfied (#1278)
+* `CRITxFL` now uses `""` instead of `"N"` when criterion is violated. `CRITx` shows the acceptance criterion with inverted operator (e.g. flag rule `R2ADJ < 0.7` produces `CRITx = "R2ADJ >= 0.7"`). `CRITxFL = "Y"` means criterion satisfied (#1332)
 
 ### NCA Calculations
 * Renal clearance (RENALCL) removed from direct PK calculations (inaccurate in PKNCA) — use ratio table instead (#781)
