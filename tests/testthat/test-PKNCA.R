@@ -920,7 +920,7 @@ describe("add_exclusion_reasons", {
     expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
   })
 
-  it("sets PKSUM1F to Y for TLG exclusions", {
+  it("sets PKSUM1F to Y and PKSUM1RS to reason for TLG exclusions", {
     excl_list <- list(
       list(
         reason = "TLG only", rows = c(2, 3),
@@ -936,6 +936,10 @@ describe("add_exclusion_reasons", {
     # PKSUM1F should be "Y" for excluded rows, "" for others
     expect_equal(result$conc$data$PKSUM1F[c(2, 3)], c("Y", "Y"))
     expect_true(all(result$conc$data$PKSUM1F[-c(2, 3)] == ""))
+
+    # PKSUM1RS should contain the reason for excluded rows
+    expect_equal(result$conc$data$PKSUM1RS[c(2, 3)], c("TLG only", "TLG only"))
+    expect_true(all(result$conc$data$PKSUM1RS[-c(2, 3)] == ""))
   })
 
   it("applies NCA exclusion only when exclude_nca is TRUE", {
@@ -953,6 +957,9 @@ describe("add_exclusion_reasons", {
 
     # PKSUM1F should remain "" (no TLG exclusion)
     expect_equal(result$conc$data$PKSUM1F[1], "")
+
+    # PKSUM1RS should remain "" (no TLG exclusion)
+    expect_equal(result$conc$data$PKSUM1RS[1], "")
   })
 
   it("applies both NCA and TLG exclusion together", {
@@ -970,6 +977,25 @@ describe("add_exclusion_reasons", {
 
     # TLG exclusion applied
     expect_equal(result$conc$data$PKSUM1F[4], "Y")
+
+    # PKSUM1RS should contain the reason
+    expect_equal(result$conc$data$PKSUM1RS[4], "Both")
+  })
+
+  it("concatenates multiple TLG exclusion reasons in PKSUM1RS", {
+    excl_list <- list(
+      list(
+        reason = "Reason A", rows = 1,
+        exclude_nca = FALSE, exclude_tlg = TRUE
+      ),
+      list(
+        reason = "Reason B", rows = 1,
+        exclude_nca = FALSE, exclude_tlg = TRUE
+      )
+    )
+    result <- add_exclusion_reasons(pknca_data, excl_list)
+    expect_equal(result$conc$data$PKSUM1RS[1], "Reason A; Reason B")
+    expect_equal(result$conc$data$PKSUM1F[1], "Y")
   })
 
   it("defaults exclude_nca to TRUE for backward compatibility", {

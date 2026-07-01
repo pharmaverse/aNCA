@@ -48,6 +48,7 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+* PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
 * Export modal allows selecting which slide sections to include in PPTX/HTML exports (#972)
@@ -62,6 +63,7 @@
 * CMAX auto-selected in box plots if available (#890)
 
 ### Data & Mapping
+* ADNCA now includes `PKSUM1RS` column storing the general exclusion reason when `PKSUM1F = "Y"` (#1331)
 * Upload multiple input files, bound into a single ADNCA dataset (#821)
 * Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (#745)
 * WTBL/WTBLU columns for dose-to-body-weight conversion in excretion calculations (#959)
