@@ -109,7 +109,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = param_choices_colour[1],
                      selector_ui_wrapper = "colourvar_ui_wrapper",
                      id = "colour_var",
-                     label = "Choose the variables to colour by:",
+                     label = "Select the variables to color by:",
                      metadata_type = "variable",
                      multiple = FALSE)
 
@@ -123,7 +123,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = variable_choices_group[1],
                      selector_ui_wrapper = "groupvar_ui_wrapper",
                      id = "group_var",
-                     label = "Choose the variables to group by:",
+                     label = "Select the variables to group by:",
                      metadata_type = "variable")
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
