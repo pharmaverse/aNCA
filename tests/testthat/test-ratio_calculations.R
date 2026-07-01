@@ -485,6 +485,122 @@ describe("parse_interval_parameter", {
   })
 })
 
+describe("calculate_table_ratios", {
+  res <- FIXTURE_PKNCA_RES
+  res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+
+  # Simplify to one subject with uniform units
+  res_simple <- res
+  res_simple$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+  it("computes correct ratio values for a single-row ratio table", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "MYRATIO",
+      stringsAsFactors = FALSE
+    )
+    
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    ratio_rows <- result$result %>% filter(PPTESTCD == "MYRATIO")
+    
+    # Compute expected B/A CMAX ratios from fixture data
+    cmax_a <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "A") %>%
+      pull(PPORRES)
+    cmax_b <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "B") %>%
+      pull(PPORRES)
+    
+    expect_equal(nrow(ratio_rows), length(cmax_b))
+    expect_equal(sort(ratio_rows$PPORRES), sort(cmax_b / cmax_a), tolerance = 1e-6)
+    expect_true(all(ratio_rows$PPORRESU == "fraction"))
+  })
+  
+  it("applies adjusting factor correctly across multiple rows", {
+    ratio_table <- data.frame(
+      TestParameter = c("CMAX", "CMAX"),
+      RefParameter = c("CMAX", "CMAX"),
+      TestGroups = c("(all other levels)", "(all other levels)"),
+      RefGroups = c("PARAM: A", "PARAM: A"),
+      AggregateSubject = c("no", "no"),
+      AdjustingFactor = c("1", "100"),
+      PPTESTCD = c("RATIO1", "RATIO2"),
+      stringsAsFactors = FALSE
+    )
+    
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    r1 <- result$result %>% filter(PPTESTCD == "RATIO1")
+    r2 <- result$result %>% filter(PPTESTCD == "RATIO2")
+    
+    # RATIO2 should be exactly 100x RATIO1
+    expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
+    expect_equal(nrow(r1), nrow(r2))
+  })
+
+
+  it("uses auto-generated PPTESTCD when PPTESTCD column is empty string", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "",
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    ratio_rows <- result$result %>% filter(grepl("^RACMAX", PPTESTCD))
+
+    expect_true(nrow(ratio_rows) > 0)
+  })
+
+  it("warns when no comparable groups are found", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "PARAM: NONEXISTENT",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "BADRATIO",
+      stringsAsFactors = FALSE
+    )
+
+    expect_warning(
+      calculate_table_ratios(res_simple, ratio_table),
+      "not computed"
+    )
+  })
+
+  it("adds PPANMETH column if not already present", {
+    res_no_anmeth <- res_simple
+    res_no_anmeth$result <- res_simple$result %>% select(-any_of("PPANMETH"))
+
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "TESTRATIO",
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_no_anmeth, ratio_table)
+    expect_true("PPANMETH" %in% names(result$result))
+  })
+})
+
 describe("calculate_ratio_app with interval parameters", {
   res <- FIXTURE_PKNCA_RES
   res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
@@ -572,5 +688,52 @@ describe("calculate_ratio_app with interval parameters", {
     )
 
     expect_true(nrow(ratios) > 0)
+  })
+  
+  it("processes a single-row ratio table and appends results", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "MYRATIO",
+      stringsAsFactors = FALSE
+    )
+    
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    ratio_rows <- result$result %>% filter(PPTESTCD == "MYRATIO")
+    
+    # Verify the ratio values match B/A CMAX ratios for subject 8
+    cmax_a <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "A") %>%
+      pull(PPORRES)
+    cmax_b <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "B") %>%
+      pull(PPORRES)
+    
+    expect_equal(nrow(ratio_rows), length(cmax_b))
+    expect_equal(sort(ratio_rows$PPORRES), sort(cmax_b / cmax_a), tolerance = 1e-6)
+    expect_true(all(ratio_rows$PPORRESU == "fraction"))
+  })
+  it("applies adjusting factor correctly across rows", {
+    ratio_table <- data.frame(
+      TestParameter = c("CMAX", "CMAX"),
+      RefParameter = c("CMAX", "CMAX"),
+      TestGroups = c("(all other levels)", "(all other levels)"),
+      RefGroups = c("PARAM: A", "PARAM: A"),
+      AggregateSubject = c("no", "no"),
+      AdjustingFactor = c("1", "100"),
+      PPTESTCD = c("RATIO1", "RATIO2"),
+      stringsAsFactors = FALSE
+    )
+    
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    r1 <- result$result %>% filter(PPTESTCD == "RATIO1")
+    r2 <- result$result %>% filter(PPTESTCD == "RATIO2")
+    
+    # RATIO2 values should be exactly 100x RATIO1
+    expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
   })
 })
