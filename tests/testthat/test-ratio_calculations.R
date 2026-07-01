@@ -605,6 +605,13 @@ describe("calculate_table_ratios", {
 describe("calculate_ratio_app with interval parameters", {
   res <- FIXTURE_PKNCA_RES
   res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+  res_simple <- res
+  res_simple$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
 
   # The fixture has manual intervals with AUCINT at start_dose=0,end_dose=2
   # and start_dose=2,end_dose=4 for both ATPTREF periods.
