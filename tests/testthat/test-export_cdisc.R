@@ -740,6 +740,15 @@ describe(".get_subjid", {
     expect_equal(result, c("1", "2"))
   })
 
+  it("derives SUBJID correctly with multiple STUDYIDs", {
+    data <- data.frame(
+      USUBJID = c("STUDY1-001", "STUDY2-002", "STUDY1-003"),
+      STUDYID = c("STUDY1", "STUDY2", "STUDY1")
+    )
+    result <- get_subjid(data)
+    expect_equal(result, c("001", "002", "003"))
+  })
+
   it("returns NA when neither USUBJID nor SUBJID are present", {
     data <- data.frame()
     result <- get_subjid(data)
@@ -838,7 +847,7 @@ describe("export_cdisc: CRITy column creation", {
     adpp <- result$adpp
     expect_true("CRIT1" %in% names(adpp))
     expect_true("CRIT1FL" %in% names(adpp))
-    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
+    expect_equal(unique(adpp$CRIT1), "R2ADJ >= 0.7")
   })
 
   it("creates CRITy columns for each flag rule", {
@@ -849,20 +858,21 @@ describe("export_cdisc: CRITy column creation", {
     expect_true("CRIT1FL" %in% names(adpp))
     expect_true("CRIT2" %in% names(adpp))
     expect_true("CRIT2FL" %in% names(adpp))
-    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
-    expect_equal(unique(adpp$CRIT2), "AUCPEO > 20")
+    expect_equal(unique(adpp$CRIT1), "R2ADJ >= 0.7")
+    expect_equal(unique(adpp$CRIT2), "AUCPEO <= 20")
   })
 })
 
 describe("export_cdisc: CRITyFL values", {
 
-  it("sets CRITyFL to Y when exclude does not contain the rule message", {
+  it("CRITyFL is Y and CRITy contains inverted criterion when satisfied", {
     result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
     adpp <- result$adpp
     expect_true(all(adpp$CRIT1FL == "Y"))
+    expect_true(all(adpp$CRIT1 == "R2ADJ >= 0.7"))
   })
 
-  it("sets CRITyFL to N for records whose exclude contains the rule message", {
+  it("CRITyFL is empty and CRITy contains inverted criterion for violated records", {
     modified <- test_pknca_res
     modified$result <- modified$result %>%
       mutate(
@@ -878,8 +888,10 @@ describe("export_cdisc: CRITyFL values", {
       filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
     unflagged <- adpp %>%
       filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
-    expect_true(all(flagged$CRIT1FL == "N"))
+    expect_true(all(flagged$CRIT1FL == ""))
+    expect_true(all(flagged$CRIT1 == "R2ADJ >= 0.7"))
     expect_true(all(unflagged$CRIT1FL == "Y"))
+    expect_true(all(unflagged$CRIT1 == "R2ADJ >= 0.7"))
   })
 
   it("handles multiple rules where only one is violated", {
@@ -896,8 +908,28 @@ describe("export_cdisc: CRITyFL values", {
     adpp <- result$adpp
     flagged <- adpp %>%
       filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
-    expect_true(all(flagged$CRIT1FL == "N"))
+    expect_true(all(flagged$CRIT1FL == ""))
+    expect_true(all(flagged$CRIT1 == "R2ADJ >= 0.7"))
     expect_true(all(flagged$CRIT2FL == "Y"))
+    expect_true(all(flagged$CRIT2 == "AUCPEO <= 20"))
+  })
+})
+
+describe(".invert_criterion_operator", {
+  it("inverts < to >=", {
+    expect_equal(aNCA:::.invert_criterion_operator("R2ADJ < 0.7"), "R2ADJ >= 0.7")
+  })
+  it("inverts > to <=", {
+    expect_equal(aNCA:::.invert_criterion_operator("AUCPEO > 20"), "AUCPEO <= 20")
+  })
+  it("inverts <= to >", {
+    expect_equal(aNCA:::.invert_criterion_operator("X <= 5"), "X > 5")
+  })
+  it("inverts >= to <", {
+    expect_equal(aNCA:::.invert_criterion_operator("Y >= 10"), "Y < 10")
+  })
+  it("returns unchanged string when no operator found", {
+    expect_equal(aNCA:::.invert_criterion_operator("no operator"), "no operator")
   })
 })
 

@@ -583,12 +583,34 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     select(-!!sym(nca_excl_colname))
 }
 
+#' Invert comparison operator in a flag rule message
+#'
+#' Flag rules describe the violation condition (e.g. "R2ADJ < 0.7").
+#' CRITy should show the acceptance criterion, so the operator is inverted
+#' (e.g. "R2ADJ >= 0.7").
+#'
+#' @param msg A single flag rule string like "R2ADJ < 0.7".
+#' @returns The string with the comparison operator inverted.
+#' @noRd
+#' @keywords internal
+.invert_criterion_operator <- function(msg) {
+  # Order matters: match two-char operators before single-char ones
+  operators <- c(">=" = "<", "<=" = ">", ">" = "<=", "<" = ">=")
+  for (op in names(operators)) {
+    pattern <- paste0(" ", op, " ")
+    if (grepl(pattern, msg, fixed = TRUE)) {
+      return(sub(pattern, paste0(" ", operators[[op]], " "), msg, fixed = TRUE))
+    }
+  }
+  msg
+}
+
 #' Add CRITy/CRITyFL and PPSUMFL/PPSUMRSN columns to ADPP
 #'
-#' For each flag rule message, creates a CRITy column (criterion description)
-#' and CRITyFL column ("Y" if satisfied, "N" if violated) by grepping the
-#' `exclude` column. PPSUMFL is "Y" when the record is excluded from summaries,
-#' empty when included.
+#' For each flag rule message, creates a CRITy column (acceptance criterion
+#' with inverted operator) and CRITyFL column ("Y" if criterion satisfied,
+#' "" if violated) by grepping the `exclude` column. PPSUMFL is "Y" when the
+#' record is excluded from summaries, empty when included.
 #'
 #' @param data A data.frame with an `exclude` column from PKNCA results.
 #' @param flag_rules Character vector of exclusion messages applied during NCA
@@ -603,22 +625,23 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   exclude_vals[is.na(exclude_vals)] <- ""
 
   # Add CRITy/CRITyFL columns for each flag rule
+  # CRITy = acceptance criterion (operator inverted from violation rule)
+  # CRITyFL = "Y" when criterion is satisfied, "" when violated
   if (!is.null(flag_rules) && length(flag_rules) > 0) {
     for (i in seq_along(flag_rules)) {
       rule_msg <- flag_rules[i]
       crit_col <- paste0("CRIT", i)
       critfl_col <- paste0("CRIT", i, "FL")
 
-      # CRITy: the criterion description (constant for all rows)
-      data[[crit_col]] <- rule_msg
+      # CRITy: acceptance criterion (inverted operator)
+      data[[crit_col]] <- .invert_criterion_operator(rule_msg)
 
-      # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
       # Split on "; " (PKNCA separator) and do exact element matching to avoid
       # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
       is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
         rule_msg %in% parts
       }, logical(1))
-      data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
+      data[[critfl_col]] <- ifelse(is_violated, "", "Y")
     }
   }
 
