@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9180</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9181</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -152,6 +152,11 @@
 </div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<div class="section level4">
+<h4 id="cdisc-export-development-version">CDISC Export<a class="anchor" aria-label="anchor" href="#cdisc-export-development-version"></a></h4>
+<ul><li>
+<code>CRITxFL</code> now uses <code>""</code> instead of <code>"N"</code> when criterion is violated. <code>CRITx</code> shows the acceptance criterion with inverted operator (e.g. flag rule <code>R2ADJ &lt; 0.7</code> produces <code>CRITx = "R2ADJ &gt;= 0.7"</code>). <code>CRITxFL = "Y"</code> means criterion satisfied (<a href="https://github.com/pharmaverse/aNCA/issues/1332" class="external-link">#1332</a>)</li>
+</ul></div>
 <div class="section level4">
 <h4 id="nca-calculations-development-version">NCA Calculations<a class="anchor" aria-label="anchor" href="#nca-calculations-development-version"></a></h4>
 <ul><li>Renal clearance (RENALCL) removed from direct PK calculations (inaccurate in PKNCA) — use ratio table instead (<a href="https://github.com/pharmaverse/aNCA/issues/781" class="external-link">#781</a>)</li>
