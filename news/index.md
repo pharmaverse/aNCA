@@ -152,6 +152,9 @@
 
 #### Data & Mapping
 
+- ADNCA now includes `PKSUM1RS` column storing the general exclusion
+  reason when `PKSUM1F = "Y"`
+  ([\#1331](https://github.com/pharmaverse/aNCA/issues/1331))
 - Upload multiple input files, bound into a single ADNCA dataset
   ([\#821](https://github.com/pharmaverse/aNCA/issues/821))
 - Optional mapping of AEFRLT for excretion rate parameters (ERTLST,
