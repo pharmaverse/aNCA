@@ -10,7 +10,8 @@ describe(".build_exploration_allowlist", {
       selected_types = c("individual", "mean", "qc"),
       custom_names = character(0)
     )
-    expect_equal(result, c("individualplot", "meanplot", "qcplot"))
+    base <- c("individualplot", "meanplot", "qcplot")
+    expect_equal(result, c(base, paste0(base, "_code")))
   })
 
   it("replaces default with custom names for a type", {
@@ -19,7 +20,8 @@ describe(".build_exploration_allowlist", {
       selected_types = c("individual", "mean", "qc"),
       custom_names = custom
     )
-    expect_equal(result, c("my_plot", "spaghetti", "meanplot", "qcplot"))
+    base <- c("my_plot", "spaghetti", "meanplot", "qcplot")
+    expect_equal(result, c(base, paste0(base, "_code")))
   })
 
   it("excludes custom names for deselected types", {
@@ -28,7 +30,8 @@ describe(".build_exploration_allowlist", {
       selected_types = c("mean", "qc"),
       custom_names = custom
     )
-    expect_equal(result, c("mean1", "qcplot"))
+    base <- c("mean1", "qcplot")
+    expect_equal(result, c(base, paste0(base, "_code")))
     expect_false("indiv1" %in% result)
     expect_false("individualplot" %in% result)
   })

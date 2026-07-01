@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Testing
+
+* Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
+
 ## Features
 
 ### Settings & Configuration
@@ -10,6 +14,9 @@
 * Column mapping, data filters, ratio table, units, and time-duplicate exclusions are now included in settings YAML export/import (#1082, #1091, #1104, #1195)
 * `run_app()` accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
+
+### Exploration
+* "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup
 * Renamed "Aggregate Subject" label to "Mean across subjects" in ratio calculations for clarity; updated help text to explain matching mechanics (#1297)
@@ -41,6 +48,7 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+* PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
 * Export modal allows selecting which slide sections to include in PPTX/HTML exports (#972)
@@ -55,6 +63,7 @@
 * CMAX auto-selected in box plots if available (#890)
 
 ### Data & Mapping
+* ADNCA now includes `PKSUM1RS` column storing the general exclusion reason when `PKSUM1F = "Y"` (#1331)
 * Upload multiple input files, bound into a single ADNCA dataset (#821)
 * Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (#745)
 * WTBL/WTBLU columns for dose-to-body-weight conversion in excretion calculations (#959)
@@ -62,6 +71,7 @@
 * SelectInputs updated to include variable labels (#899)
 
 ### Documentation & UI
+* UI consistency pass: standardized dropdown labels to "Select the...", help button placement to right-aligned, "colour" to "color", renamed Save to "Export as ZIP", simplified download button text, and added "Short Parameter"/"Specimen" columns to Units table (#1333)
 * Searchable PK parameter reference table in NCA > Setup (#1023)
 * R Script Walkthrough vignette added to pkgdown website (#1090)
 * Ratio Calculations vignette documenting all ratio types (#1251)
