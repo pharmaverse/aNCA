@@ -83,6 +83,7 @@
     "PPTEST",
     "PPTESTCD",
     "PPTESTCD_cdisc",
+    "PPTESTCD_cdisc_raw",
     "PPTESTCD_ref",
     "PPTESTCD_unit",
     "PPSUMFL",

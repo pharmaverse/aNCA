@@ -119,7 +119,7 @@ describe("add_label_attribute", {
 
     expect_equal(attr(df_result[["CMAX[ng/mL]"]], "label"), "Max Conc")
     expect_equal(attr(df_result[["TMAX[hr]"]], "label"), "Time of CMAX Observation")
-    expect_equal(attr(df_result[["AUCINT_0-2[hr*ng/mL]"]], "label"), "AUC from T1 to T2")
+    expect_equal(attr(df_result[["AUCINT_0-2[hr*ng/mL]"]], "label"), "AUC from 0 to 2")
     expect_null(attr(df_result[["RandomCol"]], "label"))
   })
 
@@ -143,7 +143,7 @@ describe("add_label_attribute", {
     df_result_mod <- add_label_attribute(df_input_mod, myres_mod)
 
     expect_equal(attr(df_result_mod[["CMAX"]], "label"), "Max Conc")
-    expect_equal(attr(df_result_mod[["AUCINT_0-2"]], "label"), "AUC from T1 to T2")
+    expect_equal(attr(df_result_mod[["AUCINT_0-2"]], "label"), "AUC from 0 to 2")
   })
 
   it("handles manual intervals with NA PPSTRESU without appending NA to names", {
@@ -175,7 +175,7 @@ describe("add_label_attribute", {
       `TLST[hr]` = "Time of Last Nonzero Conc",
       `CLST[ng/mL]` = "Last Nonzero Conc",
       `LAMZ[1/hr]` = "Lambda z",
-      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2"
+      `AUCINT_0-2[hr*ng/mL]` = "AUC from 0 to 2"
     )
 
     df_input <- as.data.frame(matrix(NA, ncol = length(expected_labels_map), nrow = 1))
@@ -188,5 +188,55 @@ describe("add_label_attribute", {
       .x,
       info = paste("Checking label for", .y)
     ))
+  })
+})
+
+describe("resolve_param_labels", {
+  it("resolves interval column with unit suffix to human-readable label", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "AUCINT_0-12[hr*ng/mL]"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["AUCINT_0-12[hr*ng/mL]"]], "label"),
+      "AUC from 0 to 12"
+    )
+  })
+
+  it("resolves interval column without unit suffix", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "AUCINT_0-24"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["AUCINT_0-24"]], "label"),
+      "AUC from 0 to 24"
+    )
+  })
+
+  it("resolves non-interval column to standard PPTEST label", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "CMAX"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["CMAX"]], "label"),
+      "Max Conc"
+    )
+  })
+
+  it("preserves existing label on column", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "AUCINT_0-12"
+    attr(df[["AUCINT_0-12"]], "label") <- "Custom Label"
+    result <- resolve_param_labels(df)
+    expect_equal(
+      attr(result[["AUCINT_0-12"]], "label"),
+      "Custom Label"
+    )
+  })
+
+  it("does not set label for unrecognized column", {
+    df <- data.frame(x = 1:2)
+    names(df) <- "UNKNOWN_PARAM"
+    result <- resolve_param_labels(df)
+    expect_null(attr(result[["UNKNOWN_PARAM"]], "label"))
   })
 })

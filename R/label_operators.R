@@ -34,6 +34,47 @@ apply_labels <- function(data, labels_df = metadata_nca_variables, type = "ADNCA
   data
 }
 
+#' Resolve parameter labels for data frame columns
+#'
+#' Parses column names like `AUCINT_0-12[Hours*ug/mL]`, strips the unit suffix,
+#' resolves the parameter label via `metadata_nca_parameters`, and replaces
+#' T1/T2 placeholders with actual interval start/end values.
+#'
+#' @param data A data frame.
+#' @returns Data frame with `label` attributes set for recognized parameter columns.
+#' @noRd
+resolve_param_labels <- function(data) {
+  col_names <- names(data)
+  for (col in col_names) {
+    # Skip columns that already have a label set
+    existing_label <- attr(data[[col]], "label")
+    if (!is.null(existing_label) && !identical(existing_label, col)) next
+
+    # Strip unit suffix: "AUCINT_0-12[Hours*ug/mL]" -> "AUCINT_0-12"
+    pptestcd <- gsub("\\[.*\\]", "", col)
+    parsed <- parse_interval_parameter(pptestcd)
+    label <- if (parsed$is_interval) {
+      base_label <- metadata_nca_parameters$PPTEST[
+        match(parsed$base, metadata_nca_parameters$PPTESTCD)
+      ]
+      if (!is.na(base_label)) {
+        base_label <- gsub("T1", as.character(parsed$start), base_label)
+        gsub("T2", as.character(parsed$end), base_label)
+      } else {
+        NULL
+      }
+    } else {
+      metadata_nca_parameters$PPTEST[
+        match(pptestcd, metadata_nca_parameters$PPTESTCD)
+      ]
+    }
+    if (!is.null(label) && !is.na(label)) {
+      attr(data[[col]], "label") <- label
+    }
+  }
+  data
+}
+
 #' Get the Label of a Heading
 #'
 #' This function retrieves the label of a heading from a labels file.
@@ -169,8 +210,23 @@ add_label_attribute <- function(df, myres) {
         !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
         TRUE ~ PPTESTCD
       ),
-      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
+      PPTESTCD_cdisc_raw = translate_terms(
+        PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"
+      ),
+      PPTESTCD_cdisc = PPTESTCD_cdisc_raw
     ) %>%
+    group_by(start, end, type_interval) %>%
+    mutate(
+      PPTESTCD_cdisc = if (type_interval[1] == "manual") {
+        label <- PPTESTCD_cdisc_raw
+        label <- gsub("T1", as.character(start[1]), label)
+        label <- gsub("T2", as.character(end[1]), label)
+        label
+      } else {
+        PPTESTCD_cdisc
+      }
+    ) %>%
+    ungroup() %>%
     select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
     distinct() %>%
     pull(PPTESTCD_cdisc, PPTESTCD_unit)

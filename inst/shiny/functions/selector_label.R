@@ -53,12 +53,35 @@ selector_label <- function(input, output, session,
     } else if (metadata_type == "parameter") {
       req(metadata_nca_parameters)
       choices_df <- data.frame(PPTESTCD = choices, stringsAsFactors = FALSE)
+
+      # Parse interval suffix (e.g. AUCINT_0-24 -> base=AUCINT) for label lookup
+      parsed_info <- lapply(choices_df$PPTESTCD, parse_interval_parameter)
+      choices_df$base_pptestcd <- vapply(parsed_info, `[[`, "base", FUN.VALUE = "")
+      choices_df$is_interval <- vapply(parsed_info, `[[`, "is_interval", FUN.VALUE = TRUE)
+      choices_df$start_dose <- vapply(parsed_info, function(x) {
+        if (is.null(x$start)) NA_real_ else x$start
+      }, FUN.VALUE = 0)
+      choices_df$end_dose <- vapply(parsed_info, function(x) {
+        if (is.null(x$end)) NA_real_ else x$end
+      }, FUN.VALUE = 0)
+
       choices_df <- choices_df %>%
         left_join(
           metadata_nca_parameters %>% select(PPTESTCD, PPTEST) %>% distinct(),
-          by = "PPTESTCD"
+          by = c("base_pptestcd" = "PPTESTCD")
         ) %>%
-        mutate(desc = ifelse(is.na(PPTEST), PPTESTCD, PPTEST)) %>%
+        group_by(start_dose, end_dose, is_interval) %>%
+        mutate(
+          desc = if (is_interval[1] && !is.na(PPTEST[1])) {
+            label <- gsub("T1", as.character(start_dose[1]), PPTEST)
+            gsub("T2", as.character(end_dose[1]), label)
+          } else if (!is.na(PPTEST[1])) {
+            PPTEST
+          } else {
+            PPTESTCD
+          }
+        ) %>%
+        ungroup() %>%
         rename(val = PPTESTCD)
     } else {
       data.frame(val = choices, desc = choices)

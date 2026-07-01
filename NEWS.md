@@ -98,6 +98,7 @@
 * Fixed `Aggregate Subject = yes/if-needed` not aggregating reference values, and ratio columns not appearing in results (#1273)
 
 ### NCA Results & Export
+* Interval parameters (e.g. `AUCINT_0-24`) now display human-readable labels in parameter selectors and boxplot y-axis, instead of raw PPTESTCDs (#1305)
 * Descriptive statistics were silently ungrouped when exported before visiting the tab — now falls back to default grouping columns (#1264)
 * Fixed NA `PPSTRESU` handling: descriptive statistics no longer crash on all-NA unit groups, and manual interval parameters no longer get `NA` in column names (#1216)
 * `get_settings_code()` reads mapping, filters, ratio table, and units from YAML instead of hardcoded defaults (#1189)
