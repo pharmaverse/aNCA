@@ -37,6 +37,13 @@
 - Settings upload is flexible — non-data-specific template settings can
   be uploaded ([\#993](https://github.com/pharmaverse/aNCA/issues/993))
 
+#### Exploration
+
+- “Copy Plot Code” button in the right sidebar opens a modal with a
+  self-contained R script for the current plot, including data loading,
+  mapping, filtering, and PNG/HTML export
+  ([\#1327](https://github.com/pharmaverse/aNCA/issues/1327))
+
 #### NCA Setup
 
 - Renamed “Aggregate Subject” label to “Mean across subjects” in ratio
