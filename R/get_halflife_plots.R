@@ -15,7 +15,7 @@
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build event_register
 #' @importFrom PKNCA pk.nca get.parameter.deps
 #' @export
-get_halflife_plots <- function(pknca_data, add_annotations = TRUE, #nolint
+get_halflife_plots <- function(pknca_data, add_annotations = TRUE, # nolint: cyclocomp_linter
                                title_vars = NULL) {
   # If the input has empty concentration or intervals, just return an empty list
   if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
@@ -75,23 +75,13 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE, #nolint
     return(list(plots = list(), data = list()))
   }
 
-  # Save original exclude flags for plot rendering before resolving conflicts
+  # Save original exclude flags for plot rendering before resolving conflicts.
+  # Conflict resolution runs per-profile for computation, but the plot needs the
+  # real flags to render excluded points as red/x markers.
   original_excl <- pknca_data$conc$data[[exclude_hl_col]]
 
-  # Resolve per-interval conflicts: PKNCA errors when both include_half.life
-  # and exclude_half.life columns have non-NA values in the same interval.
-  # Convert to include-only for computation: excluded points lose their
-  # inclusion, exclude column is cleared. Plot visuals use original_excl.
-  include_hl_col <- pknca_data$conc$columns$include_half.life
-  if (!is.null(exclude_hl_col) && !is.null(include_hl_col)) {
-    has_any_excl <- any(pknca_data$conc$data[[exclude_hl_col]] %in% TRUE)
-    has_any_incl <- any(pknca_data$conc$data[[include_hl_col]] %in% TRUE)
-    if (has_any_excl && has_any_incl) {
-      excl_rows <- which(pknca_data$conc$data[[exclude_hl_col]] %in% TRUE)
-      pknca_data$conc$data[[include_hl_col]][excl_rows] <- NA
-      pknca_data$conc$data[[exclude_hl_col]] <- NA
-    }
-  }
+  # Resolve per-profile include/exclude half-life conflicts before pk.nca()
+  pknca_data <- resolve_hl_include_exclude_conflicts(pknca_data)
 
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,

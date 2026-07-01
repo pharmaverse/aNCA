@@ -47,6 +47,52 @@ update_pknca_with_rules <- function(data, slopes) {
   data
 }
 
+#' Resolve include/exclude half-life conflicts per profile
+#'
+#' PKNCA errors when both the `include_half.life` and `exclude_half.life`
+#' columns contain non-NA values within the same interval. This resolves the
+#' conflict on a per-profile basis (profiles are defined by the concentration
+#' grouping columns): for each profile that has both flags in use, the inclusion
+#' flag is cleared on the excluded points and that profile's exclude flags are
+#' reset to `NA`. This turns mixed intent into include-only semantics (selected
+#' points minus excluded points). Profiles without a conflict are left
+#' untouched, so a standalone exclusion in one profile is never cleared just
+#' because another profile has an inclusion.
+#'
+#' @param data PKNCA data object.
+#' @returns The PKNCA data object with `conc$data` conflicts resolved.
+resolve_hl_include_exclude_conflicts <- function(data) {
+  exclude_hl_col <- data$conc$columns$exclude_half.life
+  include_hl_col <- data$conc$columns$include_half.life
+  if (is.null(exclude_hl_col) || is.null(include_hl_col)) {
+    return(data)
+  }
+
+  conc <- data$conc$data
+  group_cols <- intersect(group_vars(data$conc), names(conc))
+
+  # Identify each profile so conflicts are resolved within a profile only
+  profile_id <- if (length(group_cols) > 0) {
+    do.call(paste, c(conc[group_cols], sep = "\r"))
+  } else {
+    rep("1", nrow(conc))
+  }
+
+  for (id in unique(profile_id)) {
+    rows <- which(profile_id == id)
+    has_excl <- any(conc[[exclude_hl_col]][rows] %in% TRUE)
+    has_incl <- any(conc[[include_hl_col]][rows] %in% TRUE)
+    if (has_excl && has_incl) {
+      excl_rows <- rows[conc[[exclude_hl_col]][rows] %in% TRUE]
+      conc[[include_hl_col]][excl_rows] <- NA
+      conc[[exclude_hl_col]][rows] <- NA
+    }
+  }
+
+  data$conc$data <- conc
+  data
+}
+
 .are_points_in_groups <- function(slopes, pknca_data) {
   slope_groups <- setdiff(names(slopes), c("TYPE", "RANGE", "REASON"))
   Reduce(`&`, lapply(slope_groups, function(col) {

@@ -101,3 +101,61 @@ describe("update_pknca_with_rules", {
     )
   })
 })
+
+describe("resolve_hl_include_exclude_conflicts", {
+  base_data <- FIXTURE_PKNCA_DATA
+  excl_col <- base_data$conc$columns$exclude_half.life
+  incl_col <- base_data$conc$columns$include_half.life
+  subjects <- unique(base_data$conc$data$USUBJID)
+
+  it("clears exclude within a profile that has both include and exclude", {
+    data <- base_data
+    data$conc$data[[incl_col]] <- NA
+    data$conc$data[[excl_col]] <- NA
+    # Profile A: subject 1 has an inclusion and an exclusion (conflict)
+    rows_a <- which(data$conc$data$USUBJID == subjects[1])
+    data$conc$data[[incl_col]][rows_a] <- TRUE
+    data$conc$data[[excl_col]][rows_a[1]] <- TRUE
+
+    result <- resolve_hl_include_exclude_conflicts(data)
+    res_rows_a <- which(result$conc$data$USUBJID == subjects[1])
+
+    # Exclude column fully cleared within the conflicting profile
+    expect_true(all(is.na(result$conc$data[[excl_col]][res_rows_a])))
+    # The excluded point loses its inclusion; the rest keep it
+    expect_true(is.na(result$conc$data[[incl_col]][rows_a[1]]))
+    expect_true(all(result$conc$data[[incl_col]][rows_a[-1]] %in% TRUE))
+  })
+
+  it("does not clear a standalone exclusion in another profile", {
+    data <- base_data
+    data$conc$data[[incl_col]] <- NA
+    data$conc$data[[excl_col]] <- NA
+    # Profile A (subject 1): conflict (both include and exclude)
+    rows_a <- which(data$conc$data$USUBJID == subjects[1])
+    data$conc$data[[incl_col]][rows_a] <- TRUE
+    data$conc$data[[excl_col]][rows_a[1]] <- TRUE
+    # Profile B (subject 2): standalone exclusion, no inclusion -> no conflict
+    rows_b <- which(data$conc$data$USUBJID == subjects[2])
+    data$conc$data[[excl_col]][rows_b[1]] <- TRUE
+
+    result <- resolve_hl_include_exclude_conflicts(data)
+
+    # Profile B's exclusion must survive (regression: global clearing wiped it)
+    res_rows_b <- which(result$conc$data$USUBJID == subjects[2])
+    expect_true(result$conc$data[[excl_col]][rows_b[1]] %in% TRUE)
+    expect_true(all(is.na(result$conc$data[[incl_col]][res_rows_b])))
+  })
+
+  it("leaves data untouched when no profile has a conflict", {
+    data <- base_data
+    data$conc$data[[incl_col]] <- NA
+    data$conc$data[[excl_col]] <- NA
+    # Only exclusions, no inclusions anywhere -> no conflict
+    data$conc$data[[excl_col]][1] <- TRUE
+
+    result <- resolve_hl_include_exclude_conflicts(data)
+    expect_identical(result$conc$data[[excl_col]], data$conc$data[[excl_col]])
+    expect_identical(result$conc$data[[incl_col]], data$conc$data[[incl_col]])
+  })
+})

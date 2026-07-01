@@ -88,7 +88,7 @@
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function( # nolint  object_name_linter
+PKNCA_create_data_object <- function( # nolint: object_name_linter
     adnca_data,
     mapping = NULL,
     applied_filters = NULL,
@@ -480,21 +480,8 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     add = TRUE
   )
 
-  # Resolve per-interval conflicts: PKNCA errors when both include_half.life
-  # and exclude_half.life columns have non-NA values in the same interval.
-  # Convert mixed intent to include-only: excluded points lose their inclusion,
-  # then the exclude column is cleared entirely.
-  excl_col <- pknca_data$conc$columns$exclude_half.life
-  incl_col <- pknca_data$conc$columns$include_half.life
-  if (!is.null(excl_col) && !is.null(incl_col)) {
-    has_any_excl <- any(pknca_data$conc$data[[excl_col]] %in% TRUE)
-    has_any_incl <- any(pknca_data$conc$data[[incl_col]] %in% TRUE)
-    if (has_any_excl && has_any_incl) {
-      excl_rows <- which(pknca_data$conc$data[[excl_col]] %in% TRUE)
-      pknca_data$conc$data[[incl_col]][excl_rows] <- NA
-      pknca_data$conc$data[[excl_col]] <- NA
-    }
-  }
+  # Resolve per-profile include/exclude half-life conflicts before pk.nca()
+  pknca_data <- resolve_hl_include_exclude_conflicts(pknca_data)
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
