@@ -115,6 +115,9 @@
 
 #### Export & Output
 
+- PowerPoint export includes a PPTESTCD glossary slide after the title
+  slide, listing all PK parameter codes and their full names
+  ([\#1326](https://github.com/pharmaverse/aNCA/issues/1326))
 - General button at top of page to save all NCA results, settings, and
   draft slides as a ZIP file
   ([\#638](https://github.com/pharmaverse/aNCA/issues/638))
