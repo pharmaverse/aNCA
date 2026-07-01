@@ -64,6 +64,7 @@
     "PKNCA",
     "PKSUM1F",
     "PKSUM1FN",
+    "PKSUM1RS",
     "PPANMETH",
     "PPORRES",
     "PPORRESU",

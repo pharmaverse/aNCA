@@ -280,6 +280,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
         flag
       },
       PKSUM1FN = ifelse(PKSUM1F == "Y", 1L, NA_integer_),
+      PKSUM1RS = .derive_pksum1rs(., PKSUM1F),
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT
@@ -382,6 +383,36 @@ find_common_prefix <- function(strings) {
 #'
 #' @noRd
 #' @keywords internal
+
+#' Derive PKSUM1RS (exclusion reason) for ADNCA rows
+#'
+#' Combines general exclusion reasons (stored in PKSUM1RS by
+#' `add_exclusion_reasons()`) with half-life point exclusion reasons.
+#' Returns empty string for non-excluded rows.
+#'
+#' @param data The ADNCA data frame being built.
+#' @param pksum1f Character vector of PKSUM1F values.
+#' @returns Character vector of exclusion reasons.
+#' @keywords internal
+#' @noRd
+.derive_pksum1rs <- function(data, pksum1f) {
+  reason <- if ("PKSUM1RS" %in% names(data)) {
+    data$PKSUM1RS
+  } else {
+    rep("", nrow(data))
+  }
+  # Append half-life exclusion reason when applicable
+  if ("is.excluded.hl" %in% names(data)) {
+    hl_rows <- !is.na(data$is.excluded.hl) & data$is.excluded.hl
+    reason[hl_rows] <- ifelse(
+      reason[hl_rows] == "",
+      "Half-life point exclusion",
+      paste0(reason[hl_rows], "; Half-life point exclusion")
+    )
+  }
+  ifelse(pksum1f == "Y", reason, "")
+}
+
 get_subjid <- function(data) {
   if ("SUBJID" %in% names(data)) {
     data$SUBJID
