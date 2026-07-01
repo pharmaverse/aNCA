@@ -104,7 +104,7 @@ settings_ui <- function(id) {
             4,
             pickerInput(
               ns("select_analyte"),
-              "Choose the Analyte:",
+              "Select the Analyte:",
               multiple = TRUE,
               choices = NULL,
               options = list(`actions-box` = TRUE)
@@ -114,7 +114,7 @@ settings_ui <- function(id) {
             4,
             pickerInput(
               ns("select_pcspec"),
-              "Choose the Specimen:",
+              "Select the Specimen:",
               multiple = TRUE,
               choices = NULL,
               options = list(`actions-box` = TRUE)
@@ -124,7 +124,7 @@ settings_ui <- function(id) {
             4,
             pickerInput(
               ns("select_profile"),
-              "Choose the NCA Profile:",
+              "Select the NCA Profile:",
               multiple = TRUE,
               choices = NULL,
               options = list(`actions-box` = TRUE)
