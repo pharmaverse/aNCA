@@ -32,6 +32,9 @@ update_pknca_with_rules <- function(data, slopes) {
     if (slopes$TYPE[i] == "Selection") {
       data$conc$data[[include_hl_col]][pnt_idx] <- TRUE
     } else if (slopes$TYPE[i] == "Exclusion") {
+      # Clear any inclusion on the same points to avoid PKNCA's
+      # "cannot both include and exclude" error
+      data$conc$data[[include_hl_col]][pnt_idx] <- NA
       data$conc$data[[exclude_hl_col]][pnt_idx] <- TRUE
     } else {
       stop("Unknown TYPE in slopes: ", slopes$TYPE[i])

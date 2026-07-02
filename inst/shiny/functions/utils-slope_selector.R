@@ -56,7 +56,9 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   new_concdata <- new_pknca_data$conc$data
   old_concdata <- old_pknca_data$conc$data
 
-  ix_excl_changes <- which(new_concdata[[excl_hl_col]] != old_concdata[[excl_hl_col]])
+  ix_excl_changes <- which(
+    (new_concdata[[excl_hl_col]] %in% TRUE) != (old_concdata[[excl_hl_col]] %in% TRUE)
+  )
   ix_incl_changes <- which(
     paste0(new_concdata[[incl_hl_col]]) != paste0(old_concdata[[incl_hl_col]])
   )

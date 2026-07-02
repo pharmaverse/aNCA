@@ -15,9 +15,8 @@
 #' @importFrom plotly plot_ly add_lines layout add_trace plotly_build event_register
 #' @importFrom PKNCA pk.nca get.parameter.deps
 #' @export
-get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
+get_halflife_plots <- function(pknca_data, add_annotations = TRUE, #nolint
                                title_vars = NULL) {
-
   # If the input has empty concentration or intervals, just return an empty list
   if (nrow(pknca_data$conc$data) == 0 || nrow(pknca_data$intervals) == 0) {
     return(list(plots = list(), data = list()))
@@ -43,7 +42,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 
   # Make sure to create a default exclude half life column if it does not exist
   if (is.null(exclude_hl_col)) {
-    pknca_data$conc$data[["exclude_half.life"]] <- FALSE
+    pknca_data$conc$data[["exclude_half.life"]] <- NA
     exclude_hl_col <- "exclude_half.life"
   }
 
@@ -76,10 +75,31 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     return(list(plots = list(), data = list()))
   }
 
+  # Save original exclude flags for plot rendering before resolving conflicts
+  original_excl <- pknca_data$conc$data[[exclude_hl_col]]
+
+  # Resolve per-interval conflicts: PKNCA errors when both include_half.life
+  # and exclude_half.life columns have non-NA values in the same interval.
+  # Convert to include-only for computation: excluded points lose their
+  # inclusion, exclude column is cleared. Plot visuals use original_excl.
+  include_hl_col <- pknca_data$conc$columns$include_half.life
+  if (!is.null(exclude_hl_col) && !is.null(include_hl_col)) {
+    has_any_excl <- any(pknca_data$conc$data[[exclude_hl_col]] %in% TRUE)
+    has_any_incl <- any(pknca_data$conc$data[[include_hl_col]] %in% TRUE)
+    if (has_any_excl && has_any_incl) {
+      excl_rows <- which(pknca_data$conc$data[[exclude_hl_col]] %in% TRUE)
+      pknca_data$conc$data[[include_hl_col]][excl_rows] <- NA
+      pknca_data$conc$data[[exclude_hl_col]] <- NA
+    }
+  }
+
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,
     concu_col, exclude_hl_col, title_vars
   )
+
+  # Restore original exclude flags for plot visuals (red/x markers)
+  d_conc_with_res[[exclude_hl_col]] <- original_excl[d_conc_with_res$ROWID]
 
   # Mark points used in half-life calculation
   info_per_plot_list <- d_conc_with_res %>%
@@ -114,7 +134,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
       tlast = tlast + start,
       is_halflife_used = .[[time_col]] >= lambda.z.time.first &
         .[[time_col]] <= lambda.z.time.last &
-        !.[[exclude_hl_col]]
+        !(.[[exclude_hl_col]] %in% TRUE)
     ) %>%
     group_by(!!!syms(c(group_vars(pknca_data), "start", "end"))) %>%
     mutate(
@@ -133,9 +153,9 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   info_per_plot_list <- info_per_plot_list %>%
     mutate(
       color = "black",
-      color = ifelse(.[[exclude_hl_col]], "red", color),
+      color = ifelse(.[[exclude_hl_col]] %in% TRUE, "red", color),
       color = ifelse(is_halflife_used & !is.na(is_halflife_used), "green", color),
-      symbol = ifelse(.[[exclude_hl_col]], "x", "circle")
+      symbol = ifelse(.[[exclude_hl_col]] %in% TRUE, "x", "circle")
     ) %>%
     group_by(!!!syms(c(group_vars(pknca_data), "start", "end"))) %>%
     group_split()
@@ -224,8 +244,10 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   wide_output <- o_nca
   wide_output$result <- wide_output$result %>%
     filter(
-      PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last",
-                      "lambda.z", "adj.r.squared", "span.ratio", "tlast")
+      PPTESTCD %in% c(
+        "lambda.z.time.first", "lambda.z.time.last",
+        "lambda.z", "adj.r.squared", "span.ratio", "tlast"
+      )
     ) %>%
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
@@ -234,8 +256,10 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   # return a 0-row data frame with all expected columns so callers can proceed
   # without special-casing empty results.
   if (nrow(wide_output$result) == 0) {
-    conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
-                          timeu_col, concu_col, exclude_hl_col, "ROWID")
+    conc_select_cols <- c(
+      group_vars(pknca_data), time_col, conc_col,
+      timeu_col, concu_col, exclude_hl_col, "ROWID"
+    )
     return(
       pknca_data$conc$data %>%
         select(!!!syms(conc_select_cols)) %>%
@@ -253,8 +277,10 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()
 
-  conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
-                        timeu_col, concu_col, exclude_hl_col, "ROWID")
+  conc_select_cols <- c(
+    group_vars(pknca_data), time_col, conc_col,
+    timeu_col, concu_col, exclude_hl_col, "ROWID"
+  )
   merge_by <- c(group_vars(pknca_data))
   extra <- intersect(extra_vars, names(pknca_data$conc$data))
   extra <- intersect(extra, names(wide_output))
@@ -293,20 +319,19 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
 #' @returns A plotly object representing the scatter points (plot_data)
 #' @noRd
 get_halflife_plots_single <- function(
-  plot_data,
-  fit_line_data,
-  time_col,
-  conc_col,
-  group_vars,
-  title,
-  subtitle,
-  xlab,
-  ylab,
-  color,
-  symbol,
-  add_annotations = TRUE,
-  text = NULL
-) {
+    plot_data,
+    fit_line_data,
+    time_col,
+    conc_col,
+    group_vars,
+    title,
+    subtitle,
+    xlab,
+    ylab,
+    color,
+    symbol,
+    add_annotations = TRUE,
+    text = NULL) {
   if (is.null(text)) {
     text <- paste0(
       "(", plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
@@ -316,8 +341,8 @@ get_halflife_plots_single <- function(
     plotly::event_register("plotly_click") %>%
     plotly::add_lines(
       data = fit_line_data,
-      x = ~get(time_col),
-      y = ~10^y,
+      x = ~ get(time_col),
+      y = ~ 10^y,
       line = list(color = "green", width = 2),
       name = "Fit",
       inherit = FALSE,
@@ -349,8 +374,8 @@ get_halflife_plots_single <- function(
     ) %>%
     plotly::add_trace(
       data = plot_data,
-      x = ~plot_data[[time_col]],
-      y = ~plot_data[[conc_col]],
+      x = ~ plot_data[[time_col]],
+      y = ~ plot_data[[conc_col]],
       text = text,
       hoverinfo = "text",
       showlegend = FALSE,

@@ -88,7 +88,7 @@
 #' @importFrom stats as.formula
 #'
 #' @export
-PKNCA_create_data_object <- function( # nolint: object_name_linter
+PKNCA_create_data_object <- function( # nolint  object_name_linter
     adnca_data,
     mapping = NULL,
     applied_filters = NULL,
@@ -169,7 +169,11 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- ""
-  df_conc$exclude_half.life <- FALSE
+  # NA (not FALSE) marks "no half-life exclusion yet". This mirrors how
+  # include_half.life is left NA until a point is selected and prevents PKNCA's
+  # "cannot both include and exclude half-life points" check from firing when
+  # only inclusions are set (an all-FALSE column counts as "in use").
+  df_conc$exclude_half.life <- NA
 
   # Create PKNCA conc object
 
@@ -309,7 +313,6 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     int_parameters = NULL,
     blq_imputation_rule = NULL,
     custom_units_table = NULL) {
-
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
   unique_analytes <- unique(data$conc$data[[analyte_column]])
@@ -477,6 +480,22 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     add = TRUE
   )
 
+  # Resolve per-interval conflicts: PKNCA errors when both include_half.life
+  # and exclude_half.life columns have non-NA values in the same interval.
+  # Convert mixed intent to include-only: excluded points lose their inclusion,
+  # then the exclude column is cleared entirely.
+  excl_col <- pknca_data$conc$columns$exclude_half.life
+  incl_col <- pknca_data$conc$columns$include_half.life
+  if (!is.null(excl_col) && !is.null(incl_col)) {
+    has_any_excl <- any(pknca_data$conc$data[[excl_col]] %in% TRUE)
+    has_any_incl <- any(pknca_data$conc$data[[incl_col]] %in% TRUE)
+    if (has_any_excl && has_any_incl) {
+      excl_rows <- which(pknca_data$conc$data[[excl_col]] %in% TRUE)
+      pknca_data$conc$data[[incl_col]][excl_rows] <- NA
+      pknca_data$conc$data[[excl_col]] <- NA
+    }
+  }
+
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
@@ -502,7 +521,11 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
-    group_by(across(-c(intersect(names(.), c("PPSTRES", "PPORRES", "exclude"))))) %>%
+    group_by(across(-c(intersect(names(.), c(
+      "PPSTRES", "PPORRES", "exclude",
+      "start_dose", "end_dose",
+      "PPANMETH"
+    ))))) %>%
     slice_tail(n = 1) %>%
     ungroup()
 
@@ -859,7 +882,6 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @keywords internal
 #' @noRd
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
-
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
@@ -869,7 +891,7 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
       time_col <- processed_pknca_data$conc$columns$time
 
       has_no_reason <- (nchar(data_conc[["REASON"]]) == 0) | is.na(data_conc[["REASON"]])
-      has_hl_excl <- data_conc[[excl_hl_col]]
+      has_hl_excl <- data_conc[[excl_hl_col]] %in% TRUE
       missing_reasons <- has_hl_excl & has_no_reason
 
       if (any(missing_reasons)) {
