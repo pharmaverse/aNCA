@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9181</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9182</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -174,7 +174,8 @@
 </ul></div>
 <div class="section level4">
 <h4 id="nca-results--export-development-version">NCA Results &amp; Export<a class="anchor" aria-label="anchor" href="#nca-results--export-development-version"></a></h4>
-<ul><li>Descriptive statistics were silently ungrouped when exported before visiting the tab — now falls back to default grouping columns (<a href="https://github.com/pharmaverse/aNCA/issues/1264" class="external-link">#1264</a>)</li>
+<ul><li>Interval parameters (e.g. <code>AUCINT_0-24</code>) now display human-readable labels in parameter selectors and boxplot y-axis, instead of raw PPTESTCDs (<a href="https://github.com/pharmaverse/aNCA/issues/1305" class="external-link">#1305</a>)</li>
+<li>Descriptive statistics were silently ungrouped when exported before visiting the tab — now falls back to default grouping columns (<a href="https://github.com/pharmaverse/aNCA/issues/1264" class="external-link">#1264</a>)</li>
 <li>Fixed NA <code>PPSTRESU</code> handling: descriptive statistics no longer crash on all-NA unit groups, and manual interval parameters no longer get <code>NA</code> in column names (<a href="https://github.com/pharmaverse/aNCA/issues/1216" class="external-link">#1216</a>)</li>
 <li>
 <code><a href="../reference/get_settings_code.html">get_settings_code()</a></code> reads mapping, filters, ratio table, and units from YAML instead of hardcoded defaults (<a href="https://github.com/pharmaverse/aNCA/issues/1189" class="external-link">#1189</a>)</li>

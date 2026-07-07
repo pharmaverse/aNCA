@@ -248,6 +248,9 @@
 
 #### NCA Results & Export
 
+- Interval parameters (e.g. `AUCINT_0-24`) now display human-readable
+  labels in parameter selectors and boxplot y-axis, instead of raw
+  PPTESTCDs ([\#1305](https://github.com/pharmaverse/aNCA/issues/1305))
 - Descriptive statistics were silently ungrouped when exported before
   visiting the tab — now falls back to default grouping columns
   ([\#1264](https://github.com/pharmaverse/aNCA/issues/1264))
