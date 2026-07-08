@@ -188,7 +188,16 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
-        do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
+        # Surface warnings from the render function (e.g. urine TLGs warning that
+        # PCSPEC/PPSPEC is absent so no specimen filtering was applied) as app
+        # notifications, then muffle so rendering continues with the result.
+        withCallingHandlers(
+          do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options)),
+          warning = function(w) {
+            showNotification(conditionMessage(w), type = "warning", duration = 10)
+            invokeRestart("muffleWarning")
+          }
+        )
       },
       error = function(e) {
         log_error("Error in list rendering:")
