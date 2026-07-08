@@ -122,9 +122,13 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       tlg_order(new_tlg_order)
     })
 
+    # Columns shown to the user in the Order Details table. Internal columns
+    # (PKid, Label, Description, Condition) are kept in tlg_order() but hidden:
+    # Condition drives urine auto-preselect above, Label titles the nav panels,
+    # and Description feeds the submit log — none need to be user-facing.
     displayed_order <- reactive({
       dplyr::filter(tlg_order(), Selection) %>%
-        dplyr::select(-id, -Selection)
+        dplyr::select(Type, Dataset, Output, Footnote, Stratification, Comment)
     }) %>%
       bindEvent(data(), input$confirm_add_tlg, input$remove_tlg)
 
@@ -136,7 +140,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       defaultExpanded = TRUE,
       wrap = TRUE,
       selection = "multiple",
-      editable = c("Footnote", "Stratification", "Condition", "Comment"),
+      editable = c("Footnote", "Stratification", "Comment"),
       columns = function(df) {
         define_cols(df, overrides = list(Output = colDef(html = TRUE)))
       }
