@@ -116,14 +116,8 @@ tlg_module_ui <- function(id, type, options) {
 #' @param render_list function that renders the list of entries, actual implementation of the TLG
 #' @param options     list of options to customize input parameters
 #'
-tlg_module_server <- function(id, data, type, render_list, options = NULL) {
+tlg_module_server <- function(id, data, type, render_list, options = NULL) { # nolint: cyclocomp_linter
   moduleServer(id, function(input, output, session) {
-    render_fn <- switch(
-      type,
-      "graph" = renderUI,
-      "listing" = renderPrint
-    )
-
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
@@ -180,6 +174,10 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
       tryCatch({
         tlg_data <- filter_tlg_excluded(data()$conc$data)
+        # Restore column label attributes: the PKNCA/dplyr processing pipeline
+        # strips them, which breaks the `!COLUMN` label-reference syntax in plot
+        # title/subtitle/footnote/axis inputs (resolved via parse_annotation).
+        tlg_data <- apply_labels(tlg_data, type = "ADNCA")
         do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
       },
       error = function(e) {
@@ -191,7 +189,8 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
     }) %>%
       debounce(750)
 
-    output$tlg_output <- render_fn({
+    #' entries shown on the current page (slice of the full TLG list)
+    current_page_items <- reactive({
       req(tlg_list(), entries_per_page(), current_page())
 
       num_plots <- length(tlg_list())
@@ -201,6 +200,50 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
       unname(tlg_list()[page_start:page_end])
     })
+
+    if (type == "graph") {
+      # Render each graph through its own plotlyOutput/renderPlotly pair rather
+      # than returning raw plotly widgets from renderUI. Returning raw widgets
+      # meant the plot did not redraw in place when an option changed (e.g. a
+      # custom title on combined pkcg02 plots) until the figure was hidden and
+      # shown again (issue #1336). Letting plotly own the output binding makes
+      # edits apply immediately.
+      output$tlg_output <- renderUI({
+        items <- current_page_items()
+        tagList(purrr::imap(items, function(item, i) {
+          if (is.character(item)) {
+            tags$pre(item)
+          } else {
+            # preserve the height baked into the plotly object (set via ggplotly)
+            height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
+            plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
+          }
+        }))
+      })
+
+      # Register a renderPlotly binding for each plot slot exactly once (tracked
+      # by high-water mark). The bodies read current_page_items() reactively, so
+      # option edits re-run them and plotly redraws the existing widget in place.
+      n_registered <- 0L
+      observe({
+        n <- length(current_page_items())
+        if (n > n_registered) {
+          for (i in seq.int(n_registered + 1L, n)) local({
+            my_i <- i
+            output[[paste0("plot_", my_i)]] <- plotly::renderPlotly({
+              items <- current_page_items()
+              req(my_i <= length(items))
+              item <- items[[my_i]]
+              req(!is.character(item))
+              if (inherits(item, c("gg", "ggplot"))) plotly::ggplotly(item) else item
+            })
+          })
+          n_registered <<- n
+        }
+      })
+    } else {
+      output$tlg_output <- renderPrint(current_page_items())
+    }
 
     options_values <- lapply(names(options), function(option) {
       if (is.character(options[[option]])) return(NULL)
