@@ -239,3 +239,41 @@ define_cols <- function(data, max_px = 150, expand_factor = 8, overrides = list(
   }
   defs
 }
+
+#' Column-group spanners for group-comparison summary tables.
+#'
+#' Group-comparison summary tables (see the `col_group_var` argument of
+#' `t_pkct01()` / `t_pkpt03_col()`) carry a `col_groups` attribute mapping each
+#' group level to the exact statistic leaf-column names for that level.  This
+#' turns that map into a list of [reactable::colGroup()] spanners so the table
+#' renders a two-level Group (e.g. Male / Female) x Stat (n, Mean, ...) header.
+#' Row-key columns are absent from the map and render ungrouped beside the
+#' spanned blocks.
+#'
+#' Driven by the stored map (not by parsing column names), so a group value that
+#' happens to contain the internal separator can never corrupt the grouping.
+#'
+#' @param data A data frame, optionally carrying a `col_groups` attribute.
+#' @return A list of [reactable::colGroup()] objects, or `NULL` when the
+#'   attribute is absent (an ordinary flat table) so it is a no-op for
+#'   `reactable(columnGroups = ...)`.
+#'
+#' @importFrom reactable colGroup
+define_col_groups <- function(data) {
+  cg <- attr(data, "col_groups")
+  if (is.null(cg) || length(cg) == 0) {
+    return(NULL)
+  }
+  # Index-based access (not cg[[name]]) so an empty-string level name can't
+  # silently return NULL; skip any group with no columns, which reactable
+  # rejects with "columnGroups groups must contain at least one column".
+  groups <- lapply(seq_along(cg), function(i) {
+    cols <- cg[[i]]
+    if (length(cols) == 0) {
+      return(NULL)
+    }
+    reactable::colGroup(name = names(cg)[i], columns = cols)
+  })
+  groups <- Filter(Negate(is.null), groups)
+  if (length(groups) == 0) NULL else groups
+}
