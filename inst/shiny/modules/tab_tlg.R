@@ -239,20 +239,35 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     }) %>%
       bindEvent(c(input$submit_tlg_order))
 
-    # Normalized ADNCA concentration data for graph/listing modules
-    conc_data <- reactive({
+    # Raw TLG inputs.  Individual listings must display rows excluded from
+    # summaries (PKSUM1F/PPSUMFL == "Y"), so they consume these unfiltered
+    # sources -- see tlg_data_key().
+    conc_data_all <- reactive({
       req(data())
-      filter_tlg_excluded(data()$conc$data)
+      data()$conc$data
     })
-
-    # ADPP with PPSUMFL-excluded rows removed (mirrors conc_data for ADNCA)
-    adpp_data <- reactive({
+    adpp_data_all <- reactive({
       validate(need(
         !is.null(adpp()),
         "ADPP data is not available. Run NCA first to view PK parameter outputs."
       ))
-      filter_tlg_excluded(adpp())
+      adpp()
     })
+
+    # Summary-filtered variants for tables and mean plots: rows flagged
+    # PKSUM1F (ADNCA) / PPSUMFL (ADPP) == "Y" are removed from summary
+    # statistics and mean plots, but NOT from individual listings.
+    conc_data <- reactive(filter_tlg_excluded(conc_data_all()))
+    adpp_data <- reactive(filter_tlg_excluded(adpp_data_all()))
+
+    # (dataset, type) -> data reactive.  Listings resolve to the "*_all"
+    # (unfiltered) source; tables and graphs resolve to the filtered source.
+    tlg_data_sources <- list(
+      ADNCA     = conc_data,
+      ADNCA_all = conc_data_all,
+      ADPP      = adpp_data,
+      ADPP_all  = adpp_data_all
+    )
 
     # Track which module IDs have already been registered for this session.
     # tlg_module_server() calls Shiny's moduleServer(), which registers reactive
@@ -274,7 +289,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       lapply(g_ids, function(g_id) {
         g_def     <- .TLG_DEFINITIONS[[g_id]]
         module_id <- paste0(g_id, id_suffix)
-        tlg_data  <- if (g_def$dataset == "ADPP") adpp_data else conc_data
+        tlg_data  <- tlg_data_sources[[tlg_data_key(type, g_def$dataset)]]
 
         panel_ui <- if (exists(g_def$fun)) {
           # Only register the Shiny module once per session to avoid accumulating
