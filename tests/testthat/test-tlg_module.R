@@ -87,6 +87,24 @@ describe("filter_tlg_excluded", {
 })
 
 # ---------------------------------------------------------------------------
+# tlg_data_key
+# ---------------------------------------------------------------------------
+
+describe("tlg_data_key", {
+  it("routes listings to the unfiltered '<dataset>_all' source", {
+    expect_equal(tlg_data_key("listing", "ADNCA"), "ADNCA_all")
+    expect_equal(tlg_data_key("listing", "ADPP"), "ADPP_all")
+  })
+
+  it("routes tables and graphs to the summary-filtered source", {
+    expect_equal(tlg_data_key("table", "ADNCA"), "ADNCA")
+    expect_equal(tlg_data_key("graph", "ADNCA"), "ADNCA")
+    expect_equal(tlg_data_key("table", "ADPP"), "ADPP")
+    expect_equal(tlg_data_key("graph", "ADPP"), "ADPP")
+  })
+})
+
+# ---------------------------------------------------------------------------
 # .tlg_module_edit_widget
 # ---------------------------------------------------------------------------
 
