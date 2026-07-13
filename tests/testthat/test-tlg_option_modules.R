@@ -310,3 +310,32 @@ describe("tlg_option_select_server", {
     )
   })
 })
+
+describe(".sensible_group_cols", {
+  df <- data.frame(
+    USUBJID = paste0("S", 1:20),                        # high cardinality
+    SEX     = rep(c("M", "F"), 10),                     # categorical, 2 levels
+    RACE    = rep(c("W", "B", "A", "O", "W"), 4),       # categorical, 4 levels
+    AVAL    = seq_len(20) + 0.5,                         # continuous numeric
+    DOSEA   = rep(c(5, 10, 20), length.out = 20),        # low-cardinality numeric
+    ROUTE   = "IV",                                      # single level
+    AMOUNTU = c("mg", rep(NA, 19)),                      # only one real level
+    BLANK   = "",                                        # all blank
+    stringsAsFactors = FALSE
+  )
+
+  it("keeps categorical and low-cardinality columns", {
+    cols <- .sensible_group_cols(df)
+    expect_true(all(c("SEX", "RACE", "DOSEA") %in% cols))
+  })
+
+  it("excludes identifiers, continuous, single-level and blank columns", {
+    cols <- .sensible_group_cols(df)
+    expect_false(any(c("USUBJID", "AVAL", "ROUTE", "AMOUNTU", "BLANK") %in% cols))
+  })
+
+  it("respects the max_levels cap", {
+    expect_false("RACE" %in% .sensible_group_cols(df, max_levels = 3))
+    expect_true("SEX" %in% .sensible_group_cols(df, max_levels = 3))
+  })
+})

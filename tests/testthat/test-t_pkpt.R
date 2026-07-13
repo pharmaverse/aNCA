@@ -251,3 +251,118 @@ describe("t_pkpt11_gmr", {
     expect_equal(nrow(result[[drug_b_key]]), 0)
   })
 })
+
+describe("t_pkpt03_col: col_group_var (group comparison in columns)", {
+  # Fixture with a subject-level SEX covariate. S1/S3/S5 = M, S2/S4/S6 = F.
+  pkpt_sex <- pkpt_data
+  pkpt_sex$SEX <- rep(c("M", "F"), length.out = nrow(pkpt_sex))
+
+  it("col_group_var = NULL reproduces the flat table (regression lock)", {
+    flat <- t_pkpt03_col(pkpt_sex)[[1]]
+    expect_equal(
+      names(flat),
+      c("TRT01A", "PARAM", "n", "Mean", "SD", "CV_pct",
+        "GeoMean", "GeoCV_pct", "Median", "Min", "Max")
+    )
+    expect_null(attr(flat, "col_groups"))
+  })
+
+  it("repeats the stat block per group level with the same rows", {
+    flat <- t_pkpt03_col(pkpt_sex)[[1]]
+    g    <- t_pkpt03_col(pkpt_sex, col_group_var = "SEX")[[1]]
+
+    # Same number of rows (one per strat x param); two key cols + 2 x 9 stats.
+    expect_equal(nrow(g), nrow(flat))
+    expect_equal(ncol(g), 2L + 2L * 9L)
+
+    cg <- attr(g, "col_groups")
+    expect_equal(names(cg), c("F", "M"))            # natural-sorted levels
+    expect_true(all(vapply(cg, length, integer(1)) == 9L))
+    # Every mapped leaf actually exists in the frame.
+    expect_true(all(unlist(cg) %in% names(g)))
+  })
+
+  it("carries readable stat labels on the prefixed leaf columns", {
+    g  <- t_pkpt03_col(pkpt_sex, col_group_var = "SEX")[[1]]
+    cg <- attr(g, "col_groups")
+    # Block order is n, Mean, SD, ... so leaf 2 is the Mean column.
+    expect_equal(attr(g[[cg[["M"]][2]]], "label"), "Mean")
+    expect_equal(attr(g[[cg[["M"]][1]]], "label"), "n")
+  })
+
+  it("emits an n = 0 block for a level absent from a given cell (rectangular)", {
+    # Give arm 50mg only Females so the Male block for 50mg is empty.
+    d <- pkpt_sex
+    d$SEX[d$TRT01A == "50mg"] <- "F"
+    g  <- t_pkpt03_col(d, col_group_var = "SEX")[[1]]
+    cg <- attr(g, "col_groups")
+
+    row_50 <- g[g$TRT01A == "50mg", , drop = FALSE]
+    male_n <- cg[["M"]][1]
+    expect_true(all(row_50[[male_n]] == 0))        # no ragged/short rows
+    expect_equal(ncol(g), 2L + 2L * 9L)            # still both groups present
+  })
+
+  it("coerces NA group values to a literal 'NA' level sorted last", {
+    d <- pkpt_sex
+    d$SEX[1:3] <- NA
+    g  <- t_pkpt03_col(d, col_group_var = "SEX")[[1]]
+    cg <- attr(g, "col_groups")
+    expect_true("NA" %in% names(cg))
+    expect_equal(names(cg)[length(names(cg))], "NA")
+  })
+
+  it("collapses blank / empty-string group values into a single 'NA' level", {
+    # Regression: a blank column produced an "" level -> list[[\"\"]] == NULL ->
+    # reactable "columnGroups groups must contain at least one column" crash.
+    d <- pkpt_sex
+    d$BLANKCOL <- rep(c("", " ", NA), length.out = nrow(d))
+    g  <- t_pkpt03_col(d, col_group_var = "BLANKCOL")[[1]]
+    cg <- attr(g, "col_groups")
+    expect_equal(names(cg), "NA")                # single, non-empty level name
+    expect_false(any(vapply(cg, length, integer(1)) == 0L))
+    expect_false(any(duplicated(names(g))))
+  })
+
+  it("merges a literal 'NA' string and real NA into one group (no duplicate)", {
+    d <- pkpt_sex
+    d$MIXED <- rep(c("NA", "X"), length.out = nrow(d))
+    d$MIXED[1:2] <- NA                           # real NA alongside "NA" string
+    g  <- t_pkpt03_col(d, col_group_var = "MIXED")[[1]]
+    cg <- attr(g, "col_groups")
+    expect_equal(sum(names(cg) == "NA"), 1L)     # exactly one NA level
+    expect_false(any(duplicated(names(g))))
+  })
+
+  it("errors when col_group_var clashes with a row/split variable", {
+    expect_error(
+      t_pkpt03_col(pkpt_sex, col_group_var = "TRT01A"),
+      "already used to define"
+    )
+    expect_error(
+      t_pkpt03_col(pkpt_sex, col_group_var = "PARAM"),
+      "already used to define"
+    )
+    expect_error(
+      t_pkpt03_col(pkpt_sex, col_group_var = "PPCAT"),   # a list_var
+      "already used to define"
+    )
+  })
+
+  it("errors when col_group_var is not a column in the data", {
+    expect_error(
+      t_pkpt03_col(pkpt_sex, col_group_var = "NOTACOL"),
+      "is not a column"
+    )
+  })
+
+  it("t_pkpt08_uri stays geometric-free when grouped", {
+    uri <- pkpt_sex
+    uri$PPSPEC <- "URINE"
+    g  <- t_pkpt08_uri(uri, col_group_var = "SEX")[[1]]
+    cg <- attr(g, "col_groups")
+    # Urine blocks omit GeoMean / GeoCV_pct -> 7 stats per group.
+    expect_true(all(vapply(cg, length, integer(1)) == 7L))
+    expect_false(any(grepl("GeoMean", unlist(cg))))
+  })
+})

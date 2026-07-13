@@ -39,3 +39,46 @@ describe("define_cols", {
     expect_null(define_cols(NULL))
   })
 })
+
+describe("define_col_groups", {
+  it("returns NULL for an ordinary (flat) table with no col_groups attribute", {
+    expect_null(define_col_groups(data.frame(TRT01A = "A", n = 1L)))
+  })
+
+  it("builds one colGroup per level mapping to the stored leaf columns", {
+    df <- data.frame(
+      TRT01A = "A",
+      "M_n" = 1L, "M_Mean" = 2, "F_n" = 3L, "F_Mean" = 4,
+      check.names = FALSE
+    )
+    attr(df, "col_groups") <- list(
+      M = c("M_n", "M_Mean"),
+      F = c("F_n", "F_Mean")
+    )
+    groups <- define_col_groups(df)
+
+    expect_length(groups, 2)
+    expect_equal(vapply(groups, `[[`, character(1), "name"), c("M", "F"))
+    # reactable::colGroup() stores `columns` as a list of scalars.
+    expect_equal(unlist(groups[[1]]$columns), c("M_n", "M_Mean"))
+    expect_equal(unlist(groups[[2]]$columns), c("F_n", "F_Mean"))
+    # Row-key columns are never grouped.
+    expect_false("TRT01A" %in% unlist(lapply(groups, `[[`, "columns")))
+  })
+
+  it("drops groups with no columns instead of emitting an invalid colGroup", {
+    # reactable aborts on a colGroup with zero columns; define_col_groups must
+    # skip such entries (regression for empty-string / degenerate group levels).
+    df <- data.frame(TRT01A = "A", "M_n" = 1L, check.names = FALSE)
+    attr(df, "col_groups") <- list(M = "M_n", Empty = character(0))
+    groups <- define_col_groups(df)
+    expect_length(groups, 1)
+    expect_equal(groups[[1]]$name, "M")
+  })
+
+  it("returns NULL when every group is empty", {
+    df <- data.frame(x = 1)
+    attr(df, "col_groups") <- list(A = character(0))
+    expect_null(define_col_groups(df))
+  })
+})
