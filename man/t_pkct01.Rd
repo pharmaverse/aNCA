@@ -13,7 +13,8 @@ t_pkct01(
   strat_var = "TRT01A",
   time_var = "NFRLT",
   visit_var = "ATPTREF",
-  blq_var = "AVALC"
+  blq_var = "AVALC",
+  col_group_var = NULL
 )
 
 t_pkct01_dose(data, ...)
@@ -44,6 +45,12 @@ is absent (as in \code{export_cdisc()$adnca}, which does not include \code{AVALC
 BLQ is detected via \code{AVAL == 0}, consistent with the package convention
 for post-imputation BLQ encoding.}
 
+\item{col_group_var}{Optional subject-level column (e.g. \code{"SEX"}, \code{"RACE"})
+whose values become side-by-side comparison column groups: the full
+statistic block is repeated once per level, nested under a group header.
+\code{NULL} (default) produces the standard flat table. Must differ from
+\code{strat_var}, \code{visit_var}, \code{time_var}, and the \code{list_vars}.}
+
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkct01]{t_pkct01()}}.}
 }
 \value{
@@ -51,6 +58,8 @@ A named list of data frames, one per unique combination of
 \code{list_vars}.  Each data frame contains columns for \code{strat_var},
 \code{visit_var}, \code{time_var}, and the statistics:
 \code{n}, \code{n_blq}, \code{Mean}, \code{SD}, \code{CV_pct}, \code{Median}, \code{GeoMean}, \code{GeoCV_pct}, \code{Min}, \code{Max}.
+When \code{col_group_var} is set, the statistic columns are prefixed per group
+level and a \code{col_groups} attribute drives the rendered two-level header.
 }
 \description{
 Summarizes PK concentration data by treatment/dose group and nominal timepoint.

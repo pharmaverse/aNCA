@@ -10,7 +10,8 @@ t_pkpt03_col(
   list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
-  value_var = "AVAL"
+  value_var = "AVAL",
+  col_group_var = NULL
 )
 
 t_pkpt03_MP_col(data, ...)
@@ -31,12 +32,20 @@ Default: \code{"PARAM"}.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 
+\item{col_group_var}{Optional subject-level column (e.g. \code{"SEX"}, \code{"RACE"})
+whose values become side-by-side comparison column groups: the full
+statistic block is repeated once per level, nested under a group header.
+\code{NULL} (default) produces the standard flat table. Must differ from
+\code{strat_var}, \code{param_var}, and the \code{list_vars}.}
+
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.}
 }
 \value{
 A named list of data frames, one per combination of \code{list_vars}.
 Each data frame has columns: \code{strat_var}, \code{param_var}, \code{n}, \code{Mean}, \code{SD},
-\code{CV_pct}, \code{GeoMean}, \code{GeoCV_pct}, \code{Median}, \code{Min}, \code{Max}.
+\code{CV_pct}, \code{GeoMean}, \code{GeoCV_pct}, \code{Median}, \code{Min}, \code{Max}.  When
+\code{col_group_var} is set, the statistic columns are prefixed per group level
+and a \code{col_groups} attribute drives the rendered two-level header.
 }
 \description{
 Summarizes pharmacokinetic parameters from ADPP data. Returns one data frame
@@ -57,6 +66,8 @@ the NCA run.
 adpp <- export_cdisc(res_nca)$adpp
 tables <- t_pkpt03_col(adpp)
 tables[[1]]
+# Compare sexes side by side:
+t_pkpt03_col(adpp, col_group_var = "SEX")[[1]]
 }
 
 }
