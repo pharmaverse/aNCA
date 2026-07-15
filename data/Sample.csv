@@ -1,0 +1,25 @@
+STUDYID,USUBJID,Compartment,ROUTE,TMDD,Variability,Time,LLOQ,AVAL,is_blq,DOSEA,DOSETRT,PARAM
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",0,0.01338,0.922,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",0.5,0.01338,0.715,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",1,0.01338,0.61,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",2,0.01338,0.405,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",3,0.01338,0.3,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",4,0.01338,0.329,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",8,0.01338,0.177,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",12,0.01338,0.091,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",16,0.01338,0.04,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",24,0.01338,0.014,FALSE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",36,0.01338,0,TRUE,30,mg,Drug A
+same_or_similar,2,Three compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",48,0.01338,0,TRUE,30,mg,Drug A
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",0,0.002434,1.185,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",0.5,0.002434,1.021,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",1,0.002434,0.71,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",2,0.002434,0.647,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",3,0.002434,0.516,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",4,0.002434,0.32,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",8,0.002434,0.109,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",12,0.002434,0.058,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",16,0.002434,0.023,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",24,0.002434,0.002,FALSE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",36,0.002434,0,TRUE,30,mg,Drug B
+divergent,11233,One compartment,intravascular bolus,without TMDD,"0.01 prop variance, 0 add variance",48,0.002434,0,TRUE,30,mg,Drug B
