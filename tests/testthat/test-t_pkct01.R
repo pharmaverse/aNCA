@@ -157,3 +157,49 @@ describe("t_pkct01_dose_tad", {
     expect_true("NRRLT" %in% names(result))
   })
 })
+
+describe("t_pkct01: col_group_var (group comparison in columns)", {
+  # One M and one F per (arm x timepoint) replicate pair.
+  pkct01_sex <- pkct01_data
+  pkct01_sex$SEX <- rep(c("M", "F"), length.out = nrow(pkct01_sex))
+
+  it("col_group_var = NULL reproduces the flat table (regression lock)", {
+    flat <- t_pkct01(pkct01_sex)[[1]]
+    expect_equal(
+      names(flat),
+      c("TRT01A", "ATPTREF", "NFRLT", "n", "n_blq", "Mean", "SD", "CV_pct",
+        "Median", "GeoMean", "GeoCV_pct", "Min", "Max")
+    )
+    expect_null(attr(flat, "col_groups"))
+  })
+
+  it("repeats the stat block per group level, keeping n_blq", {
+    flat <- t_pkct01(pkct01_sex)[[1]]
+    g    <- t_pkct01(pkct01_sex, col_group_var = "SEX")[[1]]
+
+    # 3 key cols (strat, visit, time) + 2 levels x 10 stats.
+    expect_equal(nrow(g), nrow(flat))
+    expect_equal(ncol(g), 3L + 2L * 10L)
+
+    cg <- attr(g, "col_groups")
+    expect_equal(names(cg), c("F", "M"))
+    expect_true(all(vapply(cg, length, integer(1)) == 10L))
+    expect_true(all(unlist(cg) %in% names(g)))
+    # Block order is n, n_blq, Mean, ... -> BLQ count survives per group.
+    expect_equal(attr(g[[cg[["M"]][2]]], "label"), "Number BLQ")
+    expect_equal(attr(g[[cg[["M"]][3]]], "label"), "Mean")
+  })
+
+  it("errors when col_group_var clashes with a row or split variable", {
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "TRT01A"), "already used to define")
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "NFRLT"), "already used to define")
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "ATPTREF"), "already used to define")
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "PARAM"), "already used to define")
+  })
+
+  it("flows through the dose/TAD wrappers via ...", {
+    g <- t_pkct01_dose(pkct01_sex, col_group_var = "SEX")[[1]]
+    expect_false(is.null(attr(g, "col_groups")))
+    expect_true("DOSEA" %in% names(g))
+  })
+})

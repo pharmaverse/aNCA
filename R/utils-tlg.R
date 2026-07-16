@@ -166,17 +166,148 @@ filter_metabolite_rows <- function(
 
 #' Attach readable labels to the statistic columns of a summary table.
 #'
-#' Only columns present in both the data frame and [.STAT_LABELS] are touched;
-#' grouping/key columns (already labelled via [apply_labels()]) are left as-is.
+#' Only statistic columns are touched; grouping/key columns (already labelled via
+#' [apply_labels()]) are left as-is.  Group-comparison tables prefix each
+#' statistic column with `"<level><.GROUP_SEP>"` (see [.pivot_group_blocks()]);
+#' the prefix is stripped before the [.STAT_LABELS] lookup so a prefixed leaf
+#' such as `"Male<SEP>Mean"` still gets the "Mean" label.  Applied AFTER the
+#' `rbind` in the builders because `rbind` drops per-column attributes.
 #'
 #' @param df A summary-table data frame.
 #' @return `df` with `label` attributes set on its statistic columns.
 #' @noRd
 .apply_stat_labels <- function(df) {
-  for (col in intersect(names(df), names(.STAT_LABELS))) {
-    attr(df[[col]], "label") <- unname(.STAT_LABELS[[col]])
+  for (col in names(df)) {
+    base <- sub(paste0("^.*", .GROUP_SEP), "", col)
+    if (base %in% names(.STAT_LABELS)) {
+      attr(df[[col]], "label") <- unname(.STAT_LABELS[[base]])
+    }
   }
   df
+}
+
+#' Sentinel separator used to prefix per-group statistic column names.
+#'
+#' A control character (unit separator) is used so it can never collide with
+#' real column-label text (arm names, RACE strings, ...).  The prefixed names
+#' are only a uniqueness device -- the group->columns mapping is carried
+#' explicitly via the `col_groups` attribute (see [.make_col_groups()]), so
+#' render code never has to parse these names back apart.
+#' @noRd
+.GROUP_SEP <- ""
+
+#' Ordered levels of a column-group variable.
+#'
+#' Natural (numeric-aware) sort of the non-missing values, with `NA` coerced to
+#' a literal `"NA"` level appended last -- mirroring how [.natural_sort_key()]
+#' and the row-key handling keep missing values visible rather than dropping
+#' them.
+#'
+#' @param x A vector.
+#' @return A character vector of ordered levels. Blank (`""`/whitespace) and `NA`
+#'   values collapse into a single `"NA"` level appended last; a literal `"NA"`
+#'   string value is merged into that same level (never duplicated).
+#' @noRd
+.group_levels <- function(x) {
+  gv <- as.character(x)
+  # Blank / whitespace-only values are treated as missing so they never become
+  # an empty-string ("") level -- reactable cannot group an "" column, and
+  # `list(...)[[""]]` returns NULL, which crashes the render.
+  gv[is.na(gv) | trimws(gv) == ""] <- NA
+  has_na <- anyNA(gv)
+  lv     <- unique(gv[!is.na(gv)])
+  lv     <- lv[order(.natural_sort_key(lv))]
+  if (has_na) lv <- c(setdiff(lv, "NA"), "NA")  # exactly one "NA" level, last
+  lv
+}
+
+#' Validate a column-group (comparison) variable and return its ordered levels.
+#'
+#' Errors when the variable is absent, or when it collides with a variable that
+#' already defines rows or table splits (which would produce degenerate,
+#' duplicated groups).  Warns when the resulting table would be very wide.
+#'
+#' @param col_group_var Character scalar column name (the comparison variable).
+#' @param data The data frame the table is built from.
+#' @param reserved Character vector of variables that must NOT be reused as the
+#'   comparison variable (stratification / parameter / split columns).
+#' @return A character vector of ordered group levels (from [.group_levels()]).
+#' @noRd
+.resolve_col_group <- function(col_group_var, data, reserved) {
+  if (!col_group_var %in% names(data)) {
+    stop("Cannot compare in columns by '", col_group_var,
+         "': it is not a column in the data.")
+  }
+  if (col_group_var %in% reserved) {
+    stop(
+      "Cannot compare in columns by '", col_group_var,
+      "': it is already used to define the table rows or splits (",
+      paste(reserved, collapse = ", "),
+      "). Pick a different variable, or change the row/split variables."
+    )
+  }
+  levels <- .group_levels(data[[col_group_var]])
+  if (length(levels) > 6L) {
+    warning(
+      "col_group_var '", col_group_var, "' has ", length(levels),
+      " levels; the comparison table will be very wide and may overflow ",
+      "horizontally."
+    )
+  }
+  levels
+}
+
+#' Pivot a per-cell statistic block into side-by-side per-group blocks.
+#'
+#' For each level in `group_levels`, `block_fn` is applied to the matching subset
+#' of `cell_df` and the resulting one-row statistic block is renamed with a
+#' `"<level><.GROUP_SEP><stat>"` prefix; all blocks are then `cbind`'d together.
+#' Empty subsets still yield a rectangular `n = 0 / NA` block (both
+#' [.summarise_adpp()] and `.summarise_group()` handle empty input), so the
+#' result is the same width regardless of which levels are populated in this cell.
+#'
+#' Readable leaf labels are (re-)applied by [.apply_stat_labels()] on the final
+#' wide table AFTER the builder's `rbind` (which drops column attributes), so this
+#' helper only computes and prefixes the blocks.
+#'
+#' @param cell_df Rows for a single (stratum x parameter) / row-key cell.
+#' @param group_var Column whose levels become side-by-side groups.
+#' @param group_levels Ordered levels defining the column order
+#'   (from [.resolve_col_group()]).
+#' @param block_fn Function taking a data-frame subset and returning a one-row
+#'   statistic data frame (e.g. `.summarise_group`, or a `summary_fn` wrapper).
+#' @return A one-row data frame of all per-group statistic blocks, side by side.
+#' @noRd
+.pivot_group_blocks <- function(cell_df, group_var, group_levels, block_fn) {
+  gvals <- as.character(cell_df[[group_var]])
+  # Match the level coercion in .group_levels(): blank/whitespace and NA both
+  # map to the single "NA" level so every row lands in exactly one group.
+  gvals[is.na(gvals) | trimws(gvals) == ""] <- "NA"
+  blocks <- lapply(group_levels, function(lvl) {
+    block <- block_fn(cell_df[gvals == lvl, , drop = FALSE])
+    names(block) <- paste0(lvl, .GROUP_SEP, names(block))
+    block
+  })
+  do.call(cbind, blocks)
+}
+
+#' Build the `col_groups` attribute map: group level -> prefixed leaf names.
+#'
+#' Consumed at render time by `define_col_groups()` to emit
+#' `reactable::colGroup()` spanners.  Storing the exact leaf names (rather than
+#' re-deriving them by parsing) means a group value containing [.GROUP_SEP] can
+#' never corrupt the grouping.
+#'
+#' @param group_levels Ordered group levels.
+#' @param stat_names Terse statistic column names of a single block
+#'   (e.g. `c("n", "Mean", ...)`).
+#' @return A named list (one entry per level) of prefixed leaf-name vectors.
+#' @noRd
+.make_col_groups <- function(group_levels, stat_names) {
+  setNames(
+    lapply(group_levels, function(lvl) paste0(lvl, .GROUP_SEP, stat_names)),
+    group_levels
+  )
 }
 
 #' Build an `order()` key that sorts embedded numbers numerically.

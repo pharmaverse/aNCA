@@ -19,11 +19,18 @@
 #'   is absent (as in `export_cdisc()$adnca`, which does not include `AVALC`),
 #'   BLQ is detected via `AVAL == 0`, consistent with the package convention
 #'   for post-imputation BLQ encoding.
+#' @param col_group_var Optional subject-level column (e.g. `"SEX"`, `"RACE"`)
+#'   whose values become side-by-side comparison column groups: the full
+#'   statistic block is repeated once per level, nested under a group header.
+#'   `NULL` (default) produces the standard flat table. Must differ from
+#'   `strat_var`, `visit_var`, `time_var`, and the `list_vars`.
 #'
 #' @return A named list of data frames, one per unique combination of
 #'   `list_vars`.  Each data frame contains columns for `strat_var`,
 #'   `visit_var`, `time_var`, and the statistics:
 #'   `n`, `n_blq`, `Mean`, `SD`, `CV_pct`, `Median`, `GeoMean`, `GeoCV_pct`, `Min`, `Max`.
+#'   When `col_group_var` is set, the statistic columns are prefixed per group
+#'   level and a `col_groups` attribute drives the rendered two-level header.
 #'
 #' @details
 #' BLQ values are excluded from all numeric statistics and counted in `n_blq`.
@@ -46,7 +53,8 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
   strat_var = "TRT01A",
   time_var  = "NFRLT",
   visit_var = "ATPTREF",
-  blq_var   = "AVALC"
+  blq_var   = "AVALC",
+  col_group_var = NULL
 ) {
   required_cols <- c("AVAL", strat_var, time_var)
   missing_cols <- setdiff(required_cols, names(data))
@@ -58,6 +66,13 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
   has_blq_col <- blq_var %in% names(data)
 
   row_vars <- c(strat_var, present_visit_var, time_var)
+
+  group_levels <- NULL
+  if (!is.null(col_group_var)) {
+    group_levels <- .resolve_col_group(
+      col_group_var, data, reserved = c(row_vars, list_vars)
+    )
+  }
 
   .summarise_group <- function(df) {
     aval_num <- df$AVAL
@@ -115,7 +130,12 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
       sub <- df[groups == grp, , drop = FALSE]
       if (nrow(sub) == 0) return(NULL)
       key <- sub[1, row_vars, drop = FALSE]
-      cbind(key, .summarise_group(sub), stringsAsFactors = FALSE)
+      cell_stats <- if (is.null(col_group_var)) {
+        .summarise_group(sub)
+      } else {
+        .pivot_group_blocks(sub, col_group_var, group_levels, .summarise_group)
+      }
+      cbind(key, cell_stats, stringsAsFactors = FALSE)
     })
     rows <- Filter(Negate(is.null), rows)
     if (length(rows) == 0) return(data.frame())
@@ -130,7 +150,12 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
     order_keys <- lapply(row_vars, function(v) .natural_sort_key(result[[v]]))
     result <- result[do.call(order, order_keys), , drop = FALSE]
     rownames(result) <- NULL
-    .apply_stat_labels(apply_labels(result))
+    result <- .apply_stat_labels(apply_labels(result))
+    if (!is.null(col_group_var)) {
+      attr(result, "col_groups") <-
+        .make_col_groups(group_levels, names(.summarise_group(df[0, , drop = FALSE])))
+    }
+    result
   }
 
   split_and_apply(data, list_vars, make_table)

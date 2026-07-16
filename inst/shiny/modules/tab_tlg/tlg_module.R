@@ -28,6 +28,21 @@ filter_tlg_excluded <- function(data) {
   data
 }
 
+#' Data-source key for a TLG module.
+#'
+#' `PKSUM1F` / `PPSUMFL == "Y"` flag rows excluded from *summary tables and mean
+#' plots* — not from individual listings.  Listings therefore consume the raw,
+#' unfiltered `"<dataset>_all"` source, while tables and graphs use the
+#' summary-filtered source keyed by dataset name.
+#'
+#' @param type    TLG type: `"table"`, `"graph"`, or `"listing"`.
+#' @param dataset Source dataset name, `"ADNCA"` or `"ADPP"`.
+#' @return A character key naming the data reactive the module should use.
+#' @noRd
+tlg_data_key <- function(type, dataset) {
+  if (identical(type, "listing")) paste0(dataset, "_all") else dataset
+}
+
 #' Function generating UI for a TLG module.
 #'
 #' @param id      id of the module, preferably with randomly generated part to avoid conflicts
@@ -230,7 +245,11 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
           } else if (ncol(df) == 0) {
             tags$p("No data available for this table.")
           } else {
-            reactable::reactable(df, columns = define_cols(df, header_from_label = TRUE))
+            reactable::reactable(
+              df,
+              columns = define_cols(df, header_from_label = TRUE),
+              columnGroups = define_col_groups(df)
+            )
           }
           nm <- page_names[i]
           if (!is.null(nm) && nzchar(nm) && nm != "all") {

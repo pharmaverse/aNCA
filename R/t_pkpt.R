@@ -9,17 +9,27 @@
 #' @param strat_var,param_var,value_var Column name strings.
 #' @param summary_fn Function that takes a numeric vector and returns a
 #'   one-row `data.frame` of summary statistics.
-#' @return A labeled `data.frame`.
+#' @param col_group_var Optional column whose levels become side-by-side column
+#'   groups: each statistic block is repeated once per level. `NULL` (default)
+#'   produces the flat single-block table.
+#' @param group_levels Ordered group levels (from [.resolve_col_group()]),
+#'   shared across splits so every table has the same columns. Ignored when
+#'   `col_group_var` is `NULL`.
+#' @return A labeled `data.frame`. When `col_group_var` is set it also carries a
+#'   `col_groups` attribute (level -> leaf column names) for the render layer.
 #' @noRd
-.build_pkpp_table <- function(df, strat_var, param_var, value_var, summary_fn) {
+.build_pkpp_table <- function(df, strat_var, param_var, value_var, summary_fn,
+                              col_group_var = NULL, group_levels = NULL) {
   if ("USUBJID" %in% names(df)) {
     # Include AVISIT in the dedup key when present so that rows from different
     # visits (genuinely different AVAL values) are kept.  AVISIT is absent from
     # single-interval ADPP; including it only when present is safe because
     # !duplicated() still collapses true within-visit duplicates (same
-    # USUBJID × strat × param × AVISIT repeated per dose event).
+    # USUBJID × strat × param × AVISIT repeated per dose event).  col_group_var
+    # is added so a subject that is constant within the group is never split
+    # across two group columns by the dedup.
     dedup_cols <- intersect(
-      c("USUBJID", strat_var, param_var, "AVISIT"),
+      c("USUBJID", strat_var, param_var, "AVISIT", col_group_var),
       names(df)
     )
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
@@ -32,17 +42,34 @@
   rows <- lapply(strats, function(s) {
     sub_s <- df[df[[strat_var]] == s, , drop = FALSE]
     lapply(params, function(p) {
-      vals <- sub_s[[value_var]][sub_s[[param_var]] == p]
       key  <- data.frame(strat = s, param = p, stringsAsFactors = FALSE)
       names(key) <- c(strat_var, param_var)
-      cbind(key, summary_fn(vals), stringsAsFactors = FALSE)
+      if (is.null(col_group_var)) {
+        vals <- sub_s[[value_var]][sub_s[[param_var]] == p]
+        cbind(key, summary_fn(vals), stringsAsFactors = FALSE)
+      } else {
+        cell <- sub_s[sub_s[[param_var]] == p, , drop = FALSE]
+        cbind(
+          key,
+          .pivot_group_blocks(
+            cell, col_group_var, group_levels,
+            block_fn = function(sd) summary_fn(sd[[value_var]])
+          ),
+          stringsAsFactors = FALSE
+        )
+      }
     })
   })
   flat <- unlist(rows, recursive = FALSE)
   if (length(flat) == 0) return(data.frame())
   result <- do.call(rbind, flat)
   rownames(result) <- NULL
-  .apply_stat_labels(apply_labels(result, type = "ADPP"))
+  result <- .apply_stat_labels(apply_labels(result, type = "ADPP"))
+  if (!is.null(col_group_var)) {
+    attr(result, "col_groups") <-
+      .make_col_groups(group_levels, names(summary_fn(numeric(0))))
+  }
+  result
 }
 
 #' Summary PK Parameters Table -- statistics in columns (pkpt03)
@@ -61,16 +88,25 @@
 #' @param param_var Column containing parameter names shown as rows.
 #'   Default: `"PARAM"`.
 #' @param value_var Column containing the numeric analysis value. Default: `"AVAL"`.
+#' @param col_group_var Optional subject-level column (e.g. `"SEX"`, `"RACE"`)
+#'   whose values become side-by-side comparison column groups: the full
+#'   statistic block is repeated once per level, nested under a group header.
+#'   `NULL` (default) produces the standard flat table. Must differ from
+#'   `strat_var`, `param_var`, and the `list_vars`.
 #'
 #' @return A named list of data frames, one per combination of `list_vars`.
 #'   Each data frame has columns: `strat_var`, `param_var`, `n`, `Mean`, `SD`,
-#'   `CV_pct`, `GeoMean`, `GeoCV_pct`, `Median`, `Min`, `Max`.
+#'   `CV_pct`, `GeoMean`, `GeoCV_pct`, `Median`, `Min`, `Max`.  When
+#'   `col_group_var` is set, the statistic columns are prefixed per group level
+#'   and a `col_groups` attribute drives the rendered two-level header.
 #'
 #' @examples
 #' \dontrun{
 #' adpp <- export_cdisc(res_nca)$adpp
 #' tables <- t_pkpt03_col(adpp)
 #' tables[[1]]
+#' # Compare sexes side by side:
+#' t_pkpt03_col(adpp, col_group_var = "SEX")[[1]]
 #' }
 #'
 #' @importFrom stats sd median
@@ -80,7 +116,8 @@ t_pkpt03_col <- function(
   list_vars  = c("PPCAT"),
   strat_var  = "TRT01A",
   param_var  = "PARAM",
-  value_var  = "AVAL"
+  value_var  = "AVAL",
+  col_group_var = NULL
 ) {
   required_cols <- c(value_var, strat_var, param_var)
   missing_cols <- setdiff(required_cols, names(data))
@@ -90,9 +127,21 @@ t_pkpt03_col <- function(
 
   if (nrow(data) == 0) return(list(data.frame()))
 
+  group_levels <- NULL
+  if (!is.null(col_group_var)) {
+    group_levels <- .resolve_col_group(
+      col_group_var, data, reserved = c(strat_var, param_var, list_vars)
+    )
+  }
+
   split_and_apply(
     data, list_vars,
-    function(df) .build_pkpp_table(df, strat_var, param_var, value_var, .summarise_adpp)
+    function(df) {
+      .build_pkpp_table(
+        df, strat_var, param_var, value_var, .summarise_adpp,
+        col_group_var = col_group_var, group_levels = group_levels
+      )
+    }
   )
 }
 
@@ -142,7 +191,8 @@ t_pkpt07_norm <- function(
   list_vars      = c("PPCAT"),
   strat_var      = "TRT01A",
   param_var      = "PARAM",
-  value_var      = "AVAL"
+  value_var      = "AVAL",
+  col_group_var  = NULL
 ) {
   if (paramcd_var %in% names(data)) {
     if (!is.null(paramcd_filter)) {
@@ -172,7 +222,8 @@ t_pkpt07_norm <- function(
     list_vars = list_vars,
     strat_var = strat_var,
     param_var = param_var,
-    value_var = value_var
+    value_var = value_var,
+    col_group_var = col_group_var
   )
 }
 
@@ -209,7 +260,8 @@ t_pkpt08_uri <- function(
   list_vars   = c("PPCAT"),
   strat_var   = "TRT01A",
   param_var   = "PARAM",
-  value_var   = "AVAL"
+  value_var   = "AVAL",
+  col_group_var = NULL
 ) {
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
@@ -237,12 +289,20 @@ t_pkpt08_uri <- function(
          paste(missing_cols, collapse = ", "))
   }
 
+  group_levels <- NULL
+  if (!is.null(col_group_var)) {
+    group_levels <- .resolve_col_group(
+      col_group_var, data, reserved = c(strat_var, param_var, list_vars)
+    )
+  }
+
   split_and_apply(
     data, list_vars,
     function(df) {
       .build_pkpp_table(
         df, strat_var, param_var, value_var,
-        function(v) .summarise_adpp(v, include_geo = FALSE)
+        function(v) .summarise_adpp(v, include_geo = FALSE),
+        col_group_var = col_group_var, group_levels = group_levels
       )
     }
   )

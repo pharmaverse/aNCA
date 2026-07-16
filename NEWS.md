@@ -22,6 +22,9 @@
   - `l_pkcl02_uri` — urine concentration and volume listing
 * ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMFL = "Y"`, consistent with ADNCA exclusion via `PKSUM1F` (#1343)
 * Summary tables are easier to read: split tables (e.g. by analyte/specimen) now show the group as a header, `t_pkct01` rows are grouped by treatment arm with timepoints in numeric order, statistic columns use readable headers (e.g. "Geometric Mean", "CV%"), and urine specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively (#1343)
+* The new TLG tables and listings now expose right-sidebar customization options (grouping/stratification variables, displayed columns, titles, and filters) matching the original `l_pkcl01` listing; stratification variables are selectable so summary tables can be grouped by covariates such as `SEX` or `RACE` (#1356)
+* Summary-exclusion flags (`PKSUM1F`/`PPSUMFL == "Y"`) are now scoped to summary outputs only: tables and mean plots exclude flagged rows as before, but individual listings show all records (matching their "subjects excluded from the summary table" footnote) (#1356)
+* Summary tables can compare covariate groups side by side: a new "Compare in columns" option on the `pkct01` and `pkpt03/07/08` tables repeats the statistic block per level of a chosen variable (e.g. `SEX`, `RACE`), rendered as a two-level Group × Statistic column header (#1356)
 
 ### TLG Order & Selection
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)

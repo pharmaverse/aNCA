@@ -11,7 +11,8 @@ t_pkpt07_norm(
   list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
-  value_var = "AVAL"
+  value_var = "AVAL",
+  col_group_var = NULL
 )
 }
 \arguments{
@@ -39,6 +40,12 @@ adding it only helps when your ADPP actually contains visit information.}
 Default: \code{"PARAM"}.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
+
+\item{col_group_var}{Optional subject-level column (e.g. \code{"SEX"}, \code{"RACE"})
+whose values become side-by-side comparison column groups: the full
+statistic block is repeated once per level, nested under a group header.
+\code{NULL} (default) produces the standard flat table. Must differ from
+\code{strat_var}, \code{param_var}, and the \code{list_vars}.}
 }
 \value{
 Named list of data frames (same format as \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}).
