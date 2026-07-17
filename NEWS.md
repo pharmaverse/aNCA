@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Testing
+
+* Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
+
 ## Features
 
 ### Settings & Configuration
@@ -10,6 +14,9 @@
 * Column mapping, data filters, ratio table, units, and time-duplicate exclusions are now included in settings YAML export/import (#1082, #1091, #1104, #1195)
 * `run_app()` accepts a `settings` parameter to pre-load a YAML settings file on startup (#514)
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
+
+### Exploration
+* "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup
 * Renamed "Aggregate Subject" label to "Mean across subjects" in ratio calculations for clarity; updated help text to explain matching mechanics (#1297)
@@ -41,6 +48,7 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+* PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
 * Export modal allows selecting which slide sections to include in PPTX/HTML exports (#972)
@@ -55,6 +63,7 @@
 * CMAX auto-selected in box plots if available (#890)
 
 ### Data & Mapping
+* ADNCA now includes `PKSUM1RS` column storing the general exclusion reason when `PKSUM1F = "Y"` (#1331)
 * Upload multiple input files, bound into a single ADNCA dataset (#821)
 * Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (#745)
 * WTBL/WTBLU columns for dose-to-body-weight conversion in excretion calculations (#959)
@@ -72,6 +81,9 @@
 
 ## Bug fixes
 
+### CDISC Export
+* `CRITxFL` now uses `""` instead of `"N"` when criterion is violated. `CRITx` shows the acceptance criterion with inverted operator (e.g. flag rule `R2ADJ < 0.7` produces `CRITx = "R2ADJ >= 0.7"`). `CRITxFL = "Y"` means criterion satisfied (#1332)
+
 ### NCA Calculations
 * `exclude_half.life` is now initialized to `NA` instead of `FALSE` (matching `include_half.life`), so manually selecting half-life points to include no longer errors with "Cannot both include and exclude half-life points for the same interval" under the development version of PKNCA
 * Include/exclude half-life conflict resolution now runs per profile instead of globally, so a standalone exclusion in one profile is no longer cleared when an unrelated profile has a selection (#1358)
@@ -88,6 +100,7 @@
 * Fixed `Aggregate Subject = yes/if-needed` not aggregating reference values, and ratio columns not appearing in results (#1273)
 
 ### NCA Results & Export
+* Interval parameters (e.g. `AUCINT_0-24`) now display human-readable labels in parameter selectors and boxplot y-axis, instead of raw PPTESTCDs (#1305)
 * Descriptive statistics were silently ungrouped when exported before visiting the tab — now falls back to default grouping columns (#1264)
 * Fixed NA `PPSTRESU` handling: descriptive statistics no longer crash on all-NA unit groups, and manual interval parameters no longer get `NA` in column names (#1216)
 * `get_settings_code()` reads mapping, filters, ratio table, and units from YAML instead of hardcoded defaults (#1189)

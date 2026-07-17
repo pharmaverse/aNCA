@@ -24,6 +24,26 @@ attr(adnca[["ROUTE"]], "label") <- "Administration"
 attr(adnca[["USUBJID"]], "label") <- "Unique Subject ID"
 attr(adnca[["ATPTREF"]], "label") <- "Actual visit"
 
+describe("l_pkcl01 (rlistings not installed)", {
+  it("stops with informative error when rlistings is unavailable", {
+    testthat::with_mocked_bindings(
+      requireNamespace = function(pkg, quietly = FALSE) {
+        if (pkg == "rlistings") FALSE else TRUE
+      },
+      .package = "base",
+      code = {
+        expect_error(
+          l_pkcl01(adnca,
+                   listgroup_vars  = c("PCSPEC"),
+                   grouping_vars   = c("TRT01A", "USUBJID", "ATPTREF"),
+                   displaying_vars = c("NFRLT", "AFRLT", "AVAL")),
+          "Package 'rlistings' is required"
+        )
+      }
+    )
+  })
+})
+
 describe("l_pkcl01", {
   skip_if_not_installed("rlistings")
 
