@@ -25,6 +25,8 @@
 * The new TLG tables and listings now expose right-sidebar customization options (grouping/stratification variables, displayed columns, titles, and filters) matching the original `l_pkcl01` listing; stratification variables are selectable so summary tables can be grouped by covariates such as `SEX` or `RACE` (#1356)
 * Summary-exclusion flags (`PKSUM1F`/`PPSUMFL == "Y"`) are now scoped to summary outputs only: tables and mean plots exclude flagged rows as before, but individual listings show all records (matching their "subjects excluded from the summary table" footnote) (#1356)
 * Summary tables can compare covariate groups side by side: a new "Compare in columns" option on the `pkct01` and `pkpt03/07/08` tables repeats the statistic block per level of a chosen variable (e.g. `SEX`, `RACE`), rendered as a two-level Group × Statistic column header (#1356)
+* Summary tables let you choose which statistics to display: a new "Statistics to show" option on the `pkct01` and `pkpt03/07/08` tables filters the columns (e.g. `n`, `Number BLQ`, `Mean`, `SD`, `CV%`); leaving it empty shows all statistics as before (#1356)
+* Summary-exclusion flags are now scoped to their own dataset: ADNCA (concentration) outputs filter on `PKSUM1F` only and ADPP (PK parameter) outputs filter on `PPSUMFL` only, so a record excluded from one summary is no longer dropped from the other's TLGs (#1356)
 
 ### Settings & Configuration
 * Settings upload auto-restores the full session: mapping, filters, data processing, tab navigation, and auto-runs NCA if previously run. Incompatible settings degrade gracefully with notifications (#1225)
