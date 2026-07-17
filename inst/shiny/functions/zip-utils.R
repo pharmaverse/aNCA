@@ -49,6 +49,8 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
     save_table_format(x, file_name, table_formats)
   } else if (inherits(x, "plotly")) {
     save_plotly_format(x, file_name, "html")
+  } else if (is.character(x) && length(x) == 1 && grepl("_code$", file_name)) {
+    writeLines(x, paste0(file_name, ".R"))
   } else {
     stop("Unsupported output type object in the list: ", paste0(class(x), collapse = ", "))
   }
@@ -74,12 +76,15 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
       allowed <- c(allowed, default_name)
     }
   }
-  allowed
+  # Include associated _code entries for each allowed plot
+  if (length(allowed) == 0) return(character(0))
+  c(allowed, paste0(allowed, "_code"))
 }
 
-# Check if an object is a saveable leaf (ggplot, data.frame, or plotly)
-.is_leaf <- function(x) {
-  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly")
+# Check if an object is a saveable leaf (ggplot, data.frame, plotly, or code string)
+.is_leaf <- function(x, name = "") {
+  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly") ||
+    (is.character(x) && length(x) == 1 && grepl("_code$", name))
 }
 
 save_output <- function(
@@ -92,7 +97,7 @@ save_output <- function(
   for (name in names(output)) {
     x <- output[[name]]
 
-    if (!.is_leaf(x) && inherits(x, "list")) {
+    if (!.is_leaf(x, name) && is.list(x)) {
       save_output(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats, obj_names
@@ -395,19 +400,31 @@ prepare_export_files <- function(target_dir,
   # Keep custom names whose type maps to a selected tree item
   selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
   custom_names <- all_custom[all_custom %in% selected_types]
-  obj_names <- unique(c(input$res_tree, names(custom_names)))
+  custom_plot_names <- names(custom_names)
+  all_plot_names <- unique(c(input$res_tree, custom_plot_names))
+  obj_names <- unique(c(all_plot_names, paste0(all_plot_names, "_code")))
 
-  # Filter exploration list to only include allowed plots
+  # Filter exploration list to only include allowed plots.
+  # Work on a copy to avoid mutating session data.
   results <- session$userData$results
-  if (!is.null(results$exploration)) {
+  exploration <- results$exploration
+  if (!is.null(exploration)) {
     allowed <- .build_exploration_allowlist(selected_types, custom_names)
-    results$exploration <- results$exploration[
-      intersect(names(results$exploration), allowed)
-    ]
+    exploration <- exploration[intersect(names(exploration), allowed)]
+  }
+
+  # Build a plain list for save_output
+  export_list <- list()
+  for (key in names(results)) {
+    if (key == "exploration") {
+      export_list[[key]] <- exploration
+    } else {
+      export_list[[key]] <- results[[key]]
+    }
   }
 
   save_output(
-    output = results,
+    output = export_list,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,
@@ -698,7 +715,10 @@ prepare_export_files <- function(target_dir,
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
   if ("qmd" %in% input$slide_formats) exts <- c(exts, "rda")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
-  fnames <- unique(c(input$res_tree, names(custom_names)))
+  custom_plot_names <- names(custom_names)
+  tree_names <- input$res_tree
+  all_plot_names <- unique(c(tree_names, custom_plot_names))
+  fnames <- unique(c(all_plot_names, paste0(all_plot_names, "_code")))
   if ("results_slides" %in% fnames) fnames <- c(fnames, "results_slides_outputs")
 
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)
