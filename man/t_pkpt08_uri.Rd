@@ -11,7 +11,8 @@ t_pkpt08_uri(
   strat_var = "TRT01A",
   param_var = "PARAM",
   value_var = "AVAL",
-  col_group_var = NULL
+  col_group_var = NULL,
+  stats = NULL
 )
 }
 \arguments{
@@ -39,6 +40,10 @@ whose values become side-by-side comparison column groups: the full
 statistic block is repeated once per level, nested under a group header.
 \code{NULL} (default) produces the standard flat table. Must differ from
 \code{strat_var}, \code{param_var}, and the \code{list_vars}.}
+
+\item{stats}{Optional character vector of statistics to display, chosen from
+\code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this
+table are ignored.}
 }
 \value{
 Named list of data frames with columns: \code{strat_var}, \code{param_var},

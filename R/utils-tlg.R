@@ -186,6 +186,43 @@ filter_metabolite_rows <- function(
   df
 }
 
+#' Keep only the user-selected statistic columns of a summary table.
+#'
+#' Summary builders always compute the full statistic block; this trims the
+#' result to the statistics the user asked for, leaving every key / grouping
+#' column (and, for group-comparison tables, the column order) intact.  A column
+#' is a statistic column when its base name -- the part after any
+#' `"<level><.GROUP_SEP>"` prefix, matching [.apply_stat_labels()] -- is one of
+#' the names in [.STAT_LABELS].  Requested statistics that a given table never
+#' produces (e.g. `n_blq` on ADPP tables, `GeoMean` on `t_pkpt08_uri`) are
+#' silently ignored.
+#'
+#' When a `col_groups` attribute is present (group-comparison tables) it is
+#' rebuilt against the surviving columns so the rendered two-level header never
+#' references a dropped leaf; groups left with no columns are removed.
+#'
+#' @param df A labelled summary-table data frame.
+#' @param stats Character vector of terse statistic names to keep (e.g.
+#'   `c("n", "Mean", "SD")`). `NULL` or empty keeps every column unchanged.
+#' @return `df` restricted to key columns plus the selected statistic columns.
+#' @noRd
+.select_stats <- function(df, stats = NULL) {
+  if (is.null(stats) || length(stats) == 0 || ncol(df) == 0) return(df)
+  base_name  <- function(col) sub(paste0("^.*", .GROUP_SEP), "", col)
+  is_stat    <- vapply(names(df), function(c) base_name(c) %in% names(.STAT_LABELS), logical(1))
+  keep_stat  <- vapply(names(df), function(c) base_name(c) %in% stats, logical(1))
+  keep       <- !is_stat | keep_stat
+  cg <- attr(df, "col_groups")
+  out <- df[, keep, drop = FALSE]
+  if (!is.null(cg)) {
+    kept_cols <- names(df)[keep]
+    cg <- lapply(cg, function(leaves) intersect(leaves, kept_cols))
+    cg <- cg[vapply(cg, length, integer(1)) > 0]
+    attr(out, "col_groups") <- cg
+  }
+  out
+}
+
 #' Sentinel separator used to prefix per-group statistic column names.
 #'
 #' A control character (unit separator) is used so it can never collide with
