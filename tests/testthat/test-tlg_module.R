@@ -18,31 +18,31 @@ local({
 envir = parent.env(environment()))
 
 describe("filter_tlg_excluded", {
-  it("removes rows where PKSUM1F is 'Y'", {
+  it("removes rows where the named flag (PKSUM1F) is 'Y'", {
     df <- data.frame(
       x = 1:5,
       PKSUM1F = c("", "Y", "", "Y", ""),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df)
+    result <- filter_tlg_excluded(df, "PKSUM1F")
     expect_equal(nrow(result), 3)
     expect_equal(result$x, c(1, 3, 5))
   })
 
-  it("returns all rows when PKSUM1F is absent", {
+  it("returns all rows when the named flag column is absent", {
     df <- data.frame(x = 1:3)
-    result <- filter_tlg_excluded(df)
+    result <- filter_tlg_excluded(df, "PKSUM1F")
     expect_equal(nrow(result), 3)
     expect_equal(result$x, 1:3)
   })
 
-  it("returns all rows when PKSUM1F is all empty", {
+  it("returns all rows when the named flag is all empty", {
     df <- data.frame(
       x = 1:3,
       PKSUM1F = rep("", 3),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df)
+    result <- filter_tlg_excluded(df, "PKSUM1F")
     expect_equal(nrow(result), 3)
   })
 
@@ -52,37 +52,36 @@ describe("filter_tlg_excluded", {
       PKSUM1F = c("Y", "Y"),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df)
+    result <- filter_tlg_excluded(df, "PKSUM1F")
     expect_equal(nrow(result), 0)
   })
 
-  it("removes rows where PPSUMFL is 'Y' (ADPP exclusion flag)", {
+  it("removes rows where the named flag (PPSUMFL) is 'Y' (ADPP exclusion flag)", {
     df <- data.frame(
       x       = 1:4,
       PPSUMFL = c("", "Y", "", "Y"),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df)
+    result <- filter_tlg_excluded(df, "PPSUMFL")
     expect_equal(nrow(result), 2)
     expect_equal(result$x, c(1L, 3L))
   })
 
-  it("filters both PKSUM1F and PPSUMFL when both are present", {
+  it("applies only the named flag and ignores the other dataset's flag", {
+    # A record excluded from the ADPP summary (PPSUMFL == "Y") but not the ADNCA
+    # summary must still survive ADNCA (PKSUM1F) filtering, and vice-versa.
     df <- data.frame(
       x       = 1:4,
       PKSUM1F = c("Y", "",  "",  ""),
       PPSUMFL = c("",  "Y", "",  ""),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df)
-    # rows 1 and 2 removed; rows 3 and 4 kept
-    expect_equal(nrow(result), 2)
-    expect_equal(result$x, c(3L, 4L))
-  })
-
-  it("returns all rows when PPSUMFL is absent", {
-    df <- data.frame(x = 1:3, stringsAsFactors = FALSE)
-    expect_equal(nrow(filter_tlg_excluded(df)), 3)
+    # Filtering as ADNCA drops only the PKSUM1F == "Y" row; the PPSUMFL row stays.
+    adnca <- filter_tlg_excluded(df, "PKSUM1F")
+    expect_equal(adnca$x, c(2L, 3L, 4L))
+    # Filtering as ADPP drops only the PPSUMFL == "Y" row; the PKSUM1F row stays.
+    adpp <- filter_tlg_excluded(df, "PPSUMFL")
+    expect_equal(adpp$x, c(1L, 3L, 4L))
   })
 })
 
@@ -225,6 +224,42 @@ describe("tlg_module_server", {
         session$setInputs(select_page = "")
         session$flushReact()
         expect_equal(current_page(), 1)
+      }
+    )
+  })
+
+  it("still renders when a multi-select option is left empty (no default)", {
+    # Regression: a `multiple` selectInput with nothing selected reports NULL.
+    # tlg_module_server's is-null guard would then return NULL and blank the
+    # whole table.  With the option server coercing NULL -> "", the empty option
+    # is simply dropped and the table renders with the function default.
+    adnca <- shiny::reactive(data.frame(
+      TRT01A = rep(c("A", "B"), each = 4),
+      ATPTREF = "D1",
+      NFRLT  = rep(c(1, 2), 4),
+      AVAL   = as.numeric(1:8),
+      PARAM  = "Drug",
+      PCSPEC = "PLASMA",
+      stringsAsFactors = FALSE
+    ))
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data        = adnca,
+        type        = "table",
+        render_list = t_pkct01,
+        options     = list(stats = list(
+          type = "select", choices = ".stats", multiple = TRUE
+        ))
+      ),
+      {
+        # `stats-select` deliberately left unset -> NULL (empty multi-select).
+        session$setInputs(entries_per_page = "All")
+        session$elapse(800)  # clear the debounce(750)
+        res <- tlg_list()
+        expect_false(is.null(res))
+        expect_gte(length(res), 1)
+        expect_s3_class(res[[1]], "data.frame")
       }
     )
   })

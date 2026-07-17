@@ -283,6 +283,32 @@ describe("tlg_option_select_server", {
     )
   })
 
+  it("coerces an empty multi-select (NULL input) to \"\" so rendering is not blocked", {
+    # A `multiple` selectInput with nothing selected reports input$select = NULL.
+    # If the server passed that NULL through, tlg_module_server's is-null guard
+    # would return NULL and blank the whole table.  It must return "" instead.
+    opt_def       <- list(
+      label    = "Stats",
+      choices  = c("n", "Mean"),
+      default  = NULL,
+      multiple = TRUE
+    )
+    reset_trigger <- shiny::reactive(0)
+
+    shiny::testServer(
+      tlg_option_select_server,
+      args = list(
+        opt_def       = opt_def,
+        data          = shiny::reactive(NULL),
+        reset_trigger = reset_trigger
+      ),
+      {
+        session$setInputs(select = NULL)
+        expect_equal(session$getReturned()(), "")
+      }
+    )
+  })
+
   it("resets without error when reset_trigger fires", {
     opt_def       <- list(
       label    = "Sel",
