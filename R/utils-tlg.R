@@ -67,8 +67,7 @@ split_and_apply <- function(data, list_vars, fn) {
 #'
 #' @return A filtered data frame containing only metabolite rows.
 #' @noRd
-filter_metabolite_rows <- function(
-    data, caller = "filter_metabolite_rows") {
+filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows") {
   # Preferred: explicit METABFL flag set by the NCA grouping variable
   if ("METABFL" %in% names(data) &&
         any(!is.na(data$METABFL) & data$METABFL != "")) {
