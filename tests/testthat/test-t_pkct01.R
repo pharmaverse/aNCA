@@ -203,3 +203,34 @@ describe("t_pkct01: col_group_var (group comparison in columns)", {
     expect_true("DOSEA" %in% names(g))
   })
 })
+
+describe("t_pkct01: stats selection", {
+  it("stats = NULL shows every statistic (default, regression lock)", {
+    result <- t_pkct01(pkct01_data)[[1]]
+    expect_true(all(
+      c("n", "n_blq", "Mean", "SD", "CV_pct",
+        "Median", "GeoMean", "GeoCV_pct", "Min", "Max") %in% names(result)
+    ))
+  })
+
+  it("keeps only the requested statistics plus the key columns", {
+    result <- t_pkct01(pkct01_data, stats = c("n", "n_blq", "Mean"))[[1]]
+    expect_equal(names(result), c("TRT01A", "ATPTREF", "NFRLT", "n", "n_blq", "Mean"))
+  })
+
+  it("applies to the group-comparison layout, trimming each block", {
+    pkct01_sex <- pkct01_data
+    pkct01_sex$SEX <- rep(c("M", "F"), length.out = nrow(pkct01_sex))
+    g <- t_pkct01(pkct01_sex, col_group_var = "SEX", stats = c("n", "Mean"))[[1]]
+    # 3 key cols + 2 levels x 2 selected stats.
+    expect_equal(ncol(g), 3L + 2L * 2L)
+    cg <- attr(g, "col_groups")
+    expect_true(all(vapply(cg, length, integer(1)) == 2L))
+    expect_true(all(unlist(cg) %in% names(g)))
+  })
+
+  it("flows through the dose/TAD wrappers via ...", {
+    result <- t_pkct01_dose(pkct01_data, stats = c("n", "Mean"))[[1]]
+    expect_equal(names(result), c("DOSEA", "ATPTREF", "NFRLT", "n", "Mean"))
+  })
+})

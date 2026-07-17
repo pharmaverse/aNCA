@@ -41,6 +41,12 @@ t_pkct01:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkct01_dose:
   is_default: false
@@ -76,6 +82,12 @@ t_pkct01_dose:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkct01_tad:
   is_default: false
@@ -111,6 +123,12 @@ t_pkct01_tad:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkct01_dose_tad:
   is_default: false
@@ -141,6 +159,12 @@ t_pkct01_dose_tad:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 ####### TABLES - PK Parameters
 t_pkpt03_col:
@@ -182,6 +206,12 @@ t_pkpt03_col:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt03_MP_col:
   is_default: false
@@ -222,6 +252,12 @@ t_pkpt03_MP_col:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt07_norm:
   is_default: false
@@ -269,6 +305,12 @@ t_pkpt07_norm:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt08_uri:
   is_default: false
@@ -315,6 +357,12 @@ t_pkpt08_uri:
       label: "Compare in columns (e.g. Sex)"
       type: select
       choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt11_gmr:
   is_default: false

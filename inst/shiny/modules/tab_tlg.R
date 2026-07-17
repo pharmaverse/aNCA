@@ -561,9 +561,12 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) { # nolint: cyclocom
 
     # Summary-filtered variants for tables and mean plots: rows flagged
     # PKSUM1F (ADNCA) / PPSUMFL (ADPP) == "Y" are removed from summary
-    # statistics and mean plots, but NOT from individual listings.
-    conc_data <- reactive(filter_tlg_excluded(conc_data_all()))
-    adpp_data <- reactive(filter_tlg_excluded(adpp_data_all()))
+    # statistics and mean plots, but NOT from individual listings.  Each dataset
+    # is filtered by its own flag only -- a record excluded from the
+    # PK-parameter summary (PPSUMFL) must still be able to appear in the
+    # concentration representations, and vice-versa.
+    conc_data <- reactive(filter_tlg_excluded(conc_data_all(), "PKSUM1F"))
+    adpp_data <- reactive(filter_tlg_excluded(adpp_data_all(), "PPSUMFL"))
 
     # (dataset, type) -> data reactive.  Listings resolve to the "*_all"
     # (unfiltered) source; tables and graphs resolve to the filtered source.

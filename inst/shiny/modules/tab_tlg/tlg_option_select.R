@@ -38,6 +38,11 @@ tlg_option_select_ui <- function(id, opt_def, data) {
       names(conc_df)
     } else if (isTRUE(opt_def$choices == ".groupcols")) {
       .sensible_group_cols(conc_df)
+    } else if (isTRUE(opt_def$choices == ".stats")) {
+      # Named vector: names are the readable labels shown in the dropdown, values
+      # are the terse statistic names passed to the `stats` function argument.
+      labels <- aNCA:::.STAT_LABELS
+      setNames(names(labels), unname(labels))
     } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
       unique(conc_df[, sub("^\\$", "", opt_def$choices)])
     } else {
@@ -80,7 +85,12 @@ tlg_option_select_server <- function(id, opt_def, data, reset_trigger) {
     observeEvent(reset_trigger(), shinyjs::reset("select"))
 
     reactive({
-      input$select
+      # A `multiple` selectInput with nothing selected returns NULL (a single
+      # select returns ""). Coerce NULL to "" so an unset optional widget flows
+      # through the option filter as "use the function default" rather than
+      # tripping the is-null guard in tlg_module_server that halts the whole
+      # render (which blanked every table carrying an empty multi-select).
+      input$select %||% ""
     })
   })
 }

@@ -366,3 +366,44 @@ describe("t_pkpt03_col: col_group_var (group comparison in columns)", {
     expect_false(any(grepl("GeoMean", unlist(cg))))
   })
 })
+
+describe("t_pkpt: stats selection", {
+  it("stats = NULL keeps every statistic (default, regression lock)", {
+    result <- t_pkpt03_col(pkpt_data)[[1]]
+    expect_true(all(
+      c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct",
+        "Median", "Min", "Max") %in% names(result)
+    ))
+  })
+
+  it("keeps only the requested statistics plus the key columns", {
+    result <- t_pkpt03_col(pkpt_data, stats = c("n", "GeoMean"))[[1]]
+    expect_equal(names(result), c("TRT01A", "PARAM", "n", "GeoMean"))
+  })
+
+  it("ignores a requested statistic the table does not produce", {
+    # t_pkpt08_uri omits geometric stats; requesting GeoMean is a no-op.
+    uri <- pkpt_data
+    uri$PPSPEC <- "URINE"
+    result <- t_pkpt08_uri(uri, stats = c("n", "Mean", "GeoMean"))[[1]]
+    expect_equal(names(result), c("TRT01A", "PARAM", "n", "Mean"))
+  })
+
+  it("applies to the group-comparison layout, trimming each block", {
+    pkpt_sex <- pkpt_data
+    pkpt_sex$SEX <- rep(c("M", "F"), length.out = nrow(pkpt_sex))
+    g <- t_pkpt03_col(pkpt_sex, col_group_var = "SEX", stats = c("n", "Mean"))[[1]]
+    expect_equal(ncol(g), 2L + 2L * 2L)
+    cg <- attr(g, "col_groups")
+    expect_true(all(vapply(cg, length, integer(1)) == 2L))
+    expect_true(all(unlist(cg) %in% names(g)))
+  })
+
+  it("flows through t_pkpt07_norm and the MP wrapper", {
+    norm <- t_pkpt07_norm(
+      transform(pkpt_data, PARAMCD = "CMAXD", PARAM = "Cmax/D"),
+      stats = c("n", "Mean")
+    )[[1]]
+    expect_equal(names(norm), c("TRT01A", "PARAM", "n", "Mean"))
+  })
+})

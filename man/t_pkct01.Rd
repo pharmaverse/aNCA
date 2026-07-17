@@ -14,7 +14,8 @@ t_pkct01(
   time_var = "NFRLT",
   visit_var = "ATPTREF",
   blq_var = "AVALC",
-  col_group_var = NULL
+  col_group_var = NULL,
+  stats = NULL
 )
 
 t_pkct01_dose(data, ...)
@@ -50,6 +51,9 @@ whose values become side-by-side comparison column groups: the full
 statistic block is repeated once per level, nested under a group header.
 \code{NULL} (default) produces the standard flat table. Must differ from
 \code{strat_var}, \code{visit_var}, \code{time_var}, and the \code{list_vars}.}
+
+\item{stats}{Optional character vector of statistics to display, chosen from
+\code{c("n", "n_blq", "Mean", "SD", "CV_pct", "Median", "GeoMean", "GeoCV_pct", "Min", "Max")}. \code{NULL} (default) shows all of them.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkct01]{t_pkct01()}}.}
 }

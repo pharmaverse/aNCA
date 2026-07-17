@@ -24,6 +24,9 @@
 #'   statistic block is repeated once per level, nested under a group header.
 #'   `NULL` (default) produces the standard flat table. Must differ from
 #'   `strat_var`, `visit_var`, `time_var`, and the `list_vars`.
+#' @param stats Optional character vector of statistics to display, chosen from
+#'   `c("n", "n_blq", "Mean", "SD", "CV_pct", "Median", "GeoMean", "GeoCV_pct",
+#'   "Min", "Max")`. `NULL` (default) shows all of them.
 #'
 #' @return A named list of data frames, one per unique combination of
 #'   `list_vars`.  Each data frame contains columns for `strat_var`,
@@ -54,7 +57,8 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
   time_var  = "NFRLT",
   visit_var = "ATPTREF",
   blq_var   = "AVALC",
-  col_group_var = NULL
+  col_group_var = NULL,
+  stats     = NULL
 ) {
   required_cols <- c("AVAL", strat_var, time_var)
   missing_cols <- setdiff(required_cols, names(data))
@@ -155,7 +159,7 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
       attr(result, "col_groups") <-
         .make_col_groups(group_levels, names(.summarise_group(df[0, , drop = FALSE])))
     }
-    result
+    .select_stats(result, stats)
   }
 
   split_and_apply(data, list_vars, make_table)

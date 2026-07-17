@@ -54,6 +54,13 @@ pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
         selected = NULL,
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
+      ),
+      actionButton(
+        ns("copy_plot_code"),
+        label = "Show Code",
+        icon = icon("code"),
+        class = "btn btn-primary btn-sm",
+        width = "100%"
       )
     ),
     plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
@@ -201,10 +208,21 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         )
     })
 
-    # Return the add_to_exports button click and the current plot
+    # Return the add_to_exports button click, the current plot, and inputs
     list(
       add_to_exports = reactive(input$add_to_exports),
-      current_plot = qc_ggplot
+      copy_plot_code = reactive(input$copy_plot_code),
+      current_plot = qc_ggplot,
+      qc_inputs = reactive(list(
+        colour_var = input$colour_var,
+        group_var = input$group_var,
+        usubjid = input$usubjid,
+        pcspec = input$pcspec,
+        show_samples_doses = input$show_samples_doses,
+        pcspec_col = "PCSPEC",
+        shape_var = "PCSPEC",
+        other_tooltip_vars = c("NFRLT", "DOSETRT")
+      ))
     )
   })
 }
