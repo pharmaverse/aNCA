@@ -61,7 +61,7 @@ update_pknca_with_rules <- function(data, slopes) {
 #'
 #' @param data PKNCA data object.
 #' @returns The PKNCA data object with `conc$data` conflicts resolved.
-resolve_hl_include_exclude_conflicts <- function(data) {
+resolve_hl_include_exclude_conflicts <- function(data) {  # nolint
   exclude_hl_col <- data$conc$columns$exclude_half.life
   include_hl_col <- data$conc$columns$include_half.life
   if (is.null(exclude_hl_col) || is.null(include_hl_col)) {

@@ -309,19 +309,19 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE, # nolint: cyc
 #' @returns A plotly object representing the scatter points (plot_data)
 #' @noRd
 get_halflife_plots_single <- function(
-    plot_data,
-    fit_line_data,
-    time_col,
-    conc_col,
-    group_vars,
-    title,
-    subtitle,
-    xlab,
-    ylab,
-    color,
-    symbol,
-    add_annotations = TRUE,
-    text = NULL) {
+  plot_data,
+  fit_line_data,
+  time_col,
+  conc_col,
+  group_vars,
+  title,
+  subtitle,
+  xlab,
+  ylab,
+  color,
+  symbol,
+  add_annotations = TRUE,
+  text = NULL) {
   if (is.null(text)) {
     text <- paste0(
       "(", plot_data[[time_col]], ", ", signif(plot_data[[conc_col]], 3), ")"
