@@ -94,6 +94,9 @@
 * Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are now normalized to `NULL` when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (#1262)
 * Interval-specific parameters (`aucint.*`, `cav.int.*`) excluded from the Parameter Selection matrix — they require finite sub-intervals and must be configured via Partial Interval Calculations (#1309)
 
+### Slope Selector
+* Slope Selector no longer crashes with `Can't transform a data frame with NA or "" names` when a grouping value (e.g. `STUDYID`, `PARAM`) contains an underscore. Plot names are now parsed at `key=` boundaries instead of splitting on every underscore (#1378)
+
 ### Ratio Calculations
 * Fixed `Aggregate Subject = yes/if-needed` not aggregating reference values, and ratio columns not appearing in results (#1273)
 
