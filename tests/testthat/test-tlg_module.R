@@ -402,3 +402,48 @@ describe("tlg_module_server", {
   # caches and re-throws the error before the tryCatch return value can be
   # observed.  This path is covered by end-to-end / integration tests.
 })
+
+# ---------------------------------------------------------------------------
+# tlg_module_server: render-warning surfacing (issue #1335)
+# ---------------------------------------------------------------------------
+
+describe("tlg_module_server: warning surfacing", {
+  test_data <- shiny::reactive(
+    list(conc = list(data = data.frame(
+      NFRLT = 1:3, AVAL = c(5, 4, 3), stringsAsFactors = FALSE
+    )))
+  )
+  # Emits a warning (e.g. a urine TLG reporting PCSPEC/PPSPEC is absent) but
+  # still returns a result.
+  render_list_warns <- function(data, ...) {
+    warning("PCSPEC/PPSPEC not found; specimen filtering skipped")
+    list("plot_a")
+  }
+
+  it("muffles render warnings, notifies with a 'Notice:' prefix, and continues", {
+    notes <- character(0)
+    mockery::stub(
+      tlg_module_server, "showNotification",
+      function(ui, ...) notes[[length(notes) + 1]] <<- ui
+    )
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data        = test_data,
+        type        = "graph",
+        render_list = render_list_warns,
+        options     = list()
+      ),
+      {
+        session$setInputs(entries_per_page = "All")
+        session$elapse(800)  # clear the debounce(750)
+        # Muffled: rendering continued and produced the returned list.
+        expect_equal(tlg_list(), list("plot_a"))
+      }
+    )
+    # The warning was surfaced to the user with the friendlier prefix.
+    expect_length(notes, 1)
+    expect_match(notes[[1]], "^Notice: ")
+    expect_match(notes[[1]], "specimen filtering skipped")
+  })
+})
