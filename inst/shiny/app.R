@@ -79,6 +79,7 @@ ui <- function() {
 
     includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
+    includeScript(file.path(assets, "tlg_add_picker.js")),
 
     sidebar = navset_pill_list(
       id = "page",

@@ -75,7 +75,7 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data, adpp = reactive(NULL)) { # nolint: cyclocomp_linter
+tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
@@ -150,291 +150,29 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) { # nolint: cyclocom
     observeEvent(selected_tlg_state()$edit(), {
       info <- selected_tlg_state()$edit()
 
+      # info$column is the display-frame column (reactable.extras reports the
+      # column name; older versions report a positional index). Resolve to a name
+      # and only ever write to an editable column, so a stray edit event can never
+      # overwrite an internal column (id/PKid/Condition/...) of the full frame.
+      editable_cols <- c("Footnote", "Stratification", "Comment")
+      col <- if (is.numeric(info$column)) names(displayed_order())[info$column] else info$column
+      req(col %in% editable_cols)
+
       new_tlg_order <- tlg_order()
-      new_tlg_order[new_tlg_order$Selection, ][info$row, info$column] <- info$value
+      new_tlg_order[new_tlg_order$Selection, ][info$row, col] <- info$value
       tlg_order(new_tlg_order)
     })
 
-    # Issue #1335: the "Add TLGs" picker was a grouped reactable whose
-    # Type/Dataset columns were blank on every selectable row.  Rebuilt as a
-    # catalog-style checklist -- dataset tabs (PK Concentrations / PK Parameters)
-    # over one column per Type (Tables / Listings / Graphs), with a search +
-    # download + select-all toolbar, per-column select-all, and a live count on
-    # the confirm button.  Selection toggling is client-side JS (window.tlgAdd);
-    # styling derives from the app's own tokens (primary #007bc2, tint #E7ECFA).
+    # Issue #1335: the "Add TLGs" picker is a catalog-style checklist -- dataset
+    # tabs (PK Concentrations / PK Parameters) over one column per Type (Tables /
+    # Listings / Graphs), with a search + download + select-all toolbar.  The UI
+    # builder and helpers live in inst/shiny/functions/tlg_add_picker.R;
+    # client-side behaviour in inst/shiny/www/tlg_add_picker.js (window.tlgAdd);
+    # styling in inst/shiny/www/styles/partials/_tlg_add_modal.scss.
     # modal_group_ids -- checkboxGroupInput ids in the current modal (read on confirm)
     # modal_avail     -- the available-TLG tibble backing the CSV/XLSX downloads
     modal_group_ids <- reactiveVal(character(0))
     modal_avail <- reactiveVal(NULL)
-
-    # Fixed left-to-right order + icon for Type columns, and dataset tab order.
-    .TLG_TYPE_ORDER <- c("Table", "Listing", "Graph")
-    .TLG_TYPE_ICON  <- c(Table = "table", Listing = "list-ul", Graph = "chart-line")
-    .TLG_DATASET_ORDER <- c("PK Concentrations", "PK Parameters")
-
-    # Escape a string for safe embedding inside a single-quoted JS literal.
-    .js_str <- function(x) paste0("'", gsub("(['\\\\])", "\\\\\\1", x), "'")
-
-    .build_add_checklist <- function(avail) {
-      present_types <- intersect(.TLG_TYPE_ORDER, unique(avail$Type))
-      datasets <- c(intersect(.TLG_DATASET_ORDER, unique(avail$Dataset)),
-                    setdiff(unique(avail$Dataset), .TLG_DATASET_ORDER))
-
-      pairs <- dplyr::distinct(avail, Type, Dataset)
-      pairs <- pairs[order(match(pairs$Type, .TLG_TYPE_ORDER), pairs$Dataset), ]
-      pairs$input_id <- paste0("modal_check_", seq_len(nrow(pairs)))
-      modal_group_ids(pairs$input_id)
-
-      spec_icon_html <- as.character(icon("circle-info"))
-
-      # One dataset block for a Type column: tagged with data-dataset so the
-      # tab bar can show/hide it.  The active tab is applied client-side.
-      build_group_ui <- function(type, dataset, input_id) {
-        rows <- dplyr::filter(avail, Type == !!type, Dataset == !!dataset)
-        choice_names <- purrr::map2(rows$Description, rows$Link, function(desc, link) {
-          spec_link <- if (is.na(link)) "" else paste0(
-            "<a href='", link, "' target='_blank' onclick='event.stopPropagation()' ",
-            "class='tlg-spec' title='View spec'>", spec_icon_html, "</a>"
-          )
-          HTML(paste0("<span class='tlg-desc'>", htmltools::htmlEscape(desc), "</span>", spec_link))
-        })
-        div(
-          class = "tlg-ds", `data-dataset` = dataset,
-          checkboxGroupInput(
-            inputId = session$ns(input_id),
-            label = NULL,
-            choiceNames = choice_names,
-            choiceValues = as.character(rows$id)
-          )
-        )
-      }
-
-      # One flex column per Type (plain flex, not the bootstrap grid, whose
-      # negative row margins would misalign the columns against the toolbar).
-      type_columns <- purrr::map(present_types, function(tp) {
-        tp_pairs <- dplyr::rename(pairs[pairs$Type == tp, ], type = Type, dataset = Dataset)
-        div(
-          class = "tlg-col",
-          div(
-            class = "tlg-col-head",
-            tags$span(
-              class = "tlg-col-title",
-              icon(.TLG_TYPE_ICON[[tp]]), paste0(" ", tp, "s"),
-              tags$span(sum(avail$Type == tp), class = "tlg-col-count")
-            ),
-            tags$button(
-              type = "button", class = "tlg-col-selall",
-              onclick = "window.tlgAdd.colSelect(this)", "Select all"
-            )
-          ),
-          div(
-            class = "tlg-col-body",
-            purrr::pmap(tp_pairs, build_group_ui),
-            div(class = "tlg-col-empty", "None in this view", style = "display: none;")
-          )
-        )
-      })
-
-      # Dataset tab bar; first dataset active by default.  data-total feeds the
-      # count badge (restored when the search box is cleared).
-      tab_bar <- div(
-        class = "tlg-tabs",
-        purrr::imap(datasets, function(ds, i) {
-          ds_total <- sum(avail$Dataset == ds)
-          tags$button(
-            type = "button",
-            class = paste("tlg-tab", if (i == 1) "active" else ""),
-            `data-dataset` = ds, `data-total` = ds_total,
-            onclick = paste0("window.tlgAdd.setTab(", .js_str(ds), ", this)"),
-            ds, tags$span(ds_total, class = "tlg-tab-count")
-          )
-        })
-      )
-
-      init_js <- paste0(
-        "window.tlgAdd.tab = ", .js_str(datasets[1]), "; ",
-        "window.tlgAdd.q = ''; window.tlgAdd.render();"
-      )
-
-      # Shared left inset so toolbar, tabs, column headers and checkbox rows all
-      # line up on the same left edge.
-      div(
-        class = "tlg-add-modal",
-        tags$style(HTML("
-          .tlg-add-modal { --tlg-inset: 0.55em; }
-          .tlg-add-modal .tlg-toolbar {
-            display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap;
-            margin: 0 0 1.25em; padding-left: var(--tlg-inset);
-          }
-          .tlg-add-modal .tlg-search-input { width: 300px; max-width: 100%; }
-          .tlg-add-modal .tlg-toolbar-sep { width: 1px; align-self: stretch;
-            background: #e5e5e5; margin: 0.1em 0.35em; }
-          .tlg-add-modal .tlg-tabs {
-            display: flex; gap: 0.25em; margin: 0 0 1.25em;
-            padding-left: var(--tlg-inset); border-bottom: 1px solid #e5e5e5;
-          }
-          .tlg-tab { background: none; border: none; padding: 0.5em 0.9em; font-weight: 600;
-            color: #7b8794; border-bottom: 2px solid transparent; margin-bottom: -1px;
-            cursor: pointer; }
-          .tlg-tab:hover { color: #21201f; }
-          .tlg-tab.active { color: #007bc2; border-bottom-color: #007bc2; }
-          .tlg-tab-count {
-            color: #8a8f98; font-weight: 600; font-size: 0.8em; margin-left: 0.35em;
-          }
-          .tlg-cols { display: flex; align-items: flex-start; gap: 1.5em; }
-          .tlg-cols .tlg-col { flex: 1 1 0; min-width: 0; }
-          .tlg-cols .tlg-col + .tlg-col { border-left: 1px solid #eee; padding-left: 1.5em; }
-          .tlg-col-body { max-height: 55vh; overflow-y: auto; }
-          .tlg-col-empty { color: #8a8f98; font-style: italic; font-size: 0.85em;
-            padding: 0.6em var(--tlg-inset); }
-          .tlg-add-checklist .tlg-col-head {
-            display: flex; align-items: baseline; margin: 0 0 0.75em;
-            padding: 0 var(--tlg-inset) 0.4em; border-bottom: 2px solid #007bc2;
-          }
-          .tlg-add-checklist .tlg-col-title { flex: 1 1 auto; font-size: 1em;
-            font-weight: 700; color: #21201f; }
-          .tlg-add-checklist .tlg-col-head svg,
-          .tlg-add-checklist .tlg-col-head .fa { color: #007bc2; margin-right: 0.3em; }
-          .tlg-add-checklist .tlg-col-count {
-            color: #8a8f98; font-weight: 600; font-size: 0.82em; margin-left: 0.25em;
-          }
-          .tlg-col-selall { flex: 0 0 auto; background: none; border: none; color: #007bc2;
-            font-size: 0.76em; font-weight: 600; cursor: pointer; padding: 0; }
-          .tlg-col-selall:hover { text-decoration: underline; }
-          .tlg-add-checklist .tlg-ds { margin-bottom: 0.5em; }
-          .tlg-add-checklist .checkbox {
-            margin: 0; padding: 0.4em var(--tlg-inset); border-radius: 5px;
-            transition: background 0.1s;
-          }
-          .tlg-add-checklist .checkbox:hover { background: #f2f6fb; }
-          .tlg-add-checklist .checkbox:has(input:checked) { background: #E7ECFA; }
-          .tlg-add-checklist .checkbox label {
-            display: flex; align-items: flex-start; gap: 0.55em; text-align: left;
-            font-weight: normal; line-height: 1.4; padding-left: 0;
-            color: #21201f; cursor: pointer;
-          }
-          .tlg-add-checklist .checkbox label > span {
-            flex: 1 1 auto; display: flex; align-items: flex-start;
-            justify-content: space-between; gap: 0.5em;
-          }
-          .tlg-add-checklist .checkbox input[type=checkbox] {
-            position: static; margin: 0.22em 0 0; flex: 0 0 auto;
-            width: 15px; height: 15px; accent-color: #007bc2; cursor: pointer;
-          }
-          .tlg-add-checklist .tlg-spec {
-            flex: 0 0 auto; color: #b0b7bf; margin-top: 0.1em;
-          }
-          .tlg-add-checklist .tlg-spec:hover { color: #007bc2; }
-          .tlg-no-matches { color: #8a8f98; font-style: italic;
-            padding: 1em 0.5em; padding-left: var(--tlg-inset); }
-        ")),
-        div(
-          class = "tlg-toolbar",
-          tags$input(
-            type = "text", class = "form-control tlg-search-input",
-            placeholder = "Search outputs…",
-            oninput = "window.tlgAdd.setQuery(this.value)"
-          ),
-          tags$button(type = "button", class = "btn btn-sm btn-default",
-                      onclick = "window.tlgAdd.selectAll()", "Select all"),
-          tags$button(type = "button", class = "btn btn-sm btn-default",
-                      onclick = "window.tlgAdd.clearAll()", "Clear all"),
-          div(class = "tlg-toolbar-sep"),
-          downloadButton(session$ns("modal_dl_csv"), "CSV", class = "btn-sm btn-default"),
-          downloadButton(session$ns("modal_dl_xlsx"), "XLSX", class = "btn-sm btn-default")
-        ),
-        tab_bar,
-        div(class = "tlg-add-checklist tlg-cols", type_columns),
-        div(class = "tlg-no-matches", "No outputs match your search.", style = "display: none;"),
-        tags$script(HTML(paste0("
-          window.tlgAdd = {
-            q: '', tab: null,
-            // visibleOnly: only toggle rows shown under the active tab / search,
-            // so Select-all respects the current dataset.  Clear-all passes
-            // false to wipe every dataset.
-            _setChecked: function(scope, checked, visibleOnly) {
-              var groups = {};
-              scope.querySelectorAll('.checkbox').forEach(function(row) {
-                if (visibleOnly && row.style.display === 'none') return;
-                var cb = row.querySelector('input[type=checkbox]');
-                if (!cb) return;
-                cb.checked = checked;
-                var g = cb.closest('.shiny-input-checkboxgroup');
-                if (g) groups[g.id] = g;
-              });
-              Object.keys(groups).forEach(function(id) {
-                var inp = groups[id].querySelector('input[type=checkbox]');
-                if (inp) inp.dispatchEvent(new Event('change', { bubbles: true }));
-              });
-            },
-            selectAll: function() {
-              var r = document.querySelector('.tlg-add-checklist');
-              if (r) this._setChecked(r, true, true);
-            },
-            clearAll: function() {
-              var r = document.querySelector('.tlg-add-checklist');
-              if (r) this._setChecked(r, false, false);
-            },
-            colSelect: function(btn) {
-              var c = btn.closest('.tlg-col'); if (c) this._setChecked(c, true, true);
-            },
-            setQuery: function(v) { this.q = v || ''; this.render(); },
-            setTab: function(v, btn) {
-              this.tab = v;
-              document.querySelectorAll('.tlg-tabs .tlg-tab').forEach(function(b) {
-                b.classList.remove('active');
-              });
-              if (btn) btn.classList.add('active');
-              this.render();
-            },
-            render: function() {
-              var root = document.querySelector('.tlg-add-checklist');
-              if (!root) return;
-              var q = this.q.trim().toLowerCase();
-              var tab = this.tab;
-              var anyGlobal = false;
-              var dsMatch = {};
-              root.querySelectorAll('.tlg-ds').forEach(function(ds) {
-                var name = ds.getAttribute('data-dataset');
-                var inTab = (q !== '') ? true : (name === tab);
-                var any = false;
-                ds.querySelectorAll('.checkbox').forEach(function(it) {
-                  var m = inTab && (q === '' || it.textContent.toLowerCase().indexOf(q) > -1);
-                  it.style.display = m ? '' : 'none';
-                  if (m) { any = true; dsMatch[name] = (dsMatch[name] || 0) + 1; }
-                });
-                ds.style.display = any ? '' : 'none';
-                if (any) anyGlobal = true;
-              });
-              // Per-column: visible count, empty state, hide select-all when empty.
-              root.querySelectorAll('.tlg-col').forEach(function(col) {
-                var vis = 0;
-                col.querySelectorAll('.checkbox').forEach(function(it) {
-                  if (it.style.display !== 'none') vis++;
-                });
-                var cnt = col.querySelector('.tlg-col-count');
-                if (cnt) cnt.textContent = vis;
-                var empty = col.querySelector('.tlg-col-empty');
-                if (empty) empty.style.display = vis ? 'none' : '';
-                var sa = col.querySelector('.tlg-col-selall');
-                if (sa) sa.style.display = vis ? '' : 'none';
-              });
-              // Tab badges: match count while searching, dataset total otherwise.
-              document.querySelectorAll('.tlg-tabs .tlg-tab').forEach(function(t) {
-                var badge = t.querySelector('.tlg-tab-count');
-                if (!badge) return;
-                badge.textContent = (q === '')
-                  ? t.getAttribute('data-total')
-                  : (dsMatch[t.getAttribute('data-dataset')] || 0);
-              });
-              var nm = document.querySelector('.tlg-no-matches');
-              if (nm) nm.style.display = anyGlobal ? 'none' : '';
-            }
-          };
-          ", init_js, "
-        ")))
-      )
-    }
 
     # Show modal when the add_tlg button is pressed
     observeEvent(input$add_tlg, {
@@ -445,7 +183,9 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) { # nolint: cyclocom
         modal_group_ids(character(0))
         tags$p("All available TLGs are already in the order.")
       } else {
-        .build_add_checklist(avail)
+        checklist <- build_add_checklist(avail, session$ns)
+        modal_group_ids(checklist$group_ids)
+        checklist$ui
       }
 
       showModal(modalDialog(
@@ -464,26 +204,18 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) { # nolint: cyclocom
     })
 
     # Download the available-TLG catalog shown in the modal.
-    .modal_dl_data <- function() {
-      df <- modal_avail()
-      if (is.null(df) || nrow(df) == 0) {
-        return(data.frame(Type = character(), Dataset = character(),
-                          PKid = character(), Description = character()))
-      }
-      dplyr::select(df, Type, Dataset, PKid, Description)
-    }
     output$modal_dl_csv <- downloadHandler(
       filename = function() "available_tlgs.csv",
-      content = function(file) write.csv(.modal_dl_data(), file, row.names = FALSE)
+      content = function(file) write.csv(tlg_modal_dl_data(modal_avail()), file, row.names = FALSE)
     )
     output$modal_dl_xlsx <- downloadHandler(
       filename = function() "available_tlgs.xlsx",
-      content = function(file) writexl::write_xlsx(.modal_dl_data(), file)
+      content = function(file) writexl::write_xlsx(tlg_modal_dl_data(modal_avail()), file)
     )
 
     # Confirm button with a live count of checked outputs; disabled at zero.
     output$modal_confirm_ui <- renderUI({
-      n <- length(unlist(lapply(modal_group_ids(), function(gid) input[[gid]])))
+      n <- length(checked_tlg_ids(input, modal_group_ids()))
       label <- if (n == 0) "Add to order" else paste0("Add ", n, " to order")
       btn <- actionButton(session$ns("confirm_add_tlg"), label, class = "btn-primary")
       if (n == 0) shinyjs::disabled(btn) else btn
@@ -491,10 +223,10 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) { # nolint: cyclocom
 
     # Update the Selection column when the confirm_add_tlg button is pressed
     observeEvent(input$confirm_add_tlg, {
-      checked_ids <- unlist(lapply(modal_group_ids(), function(gid) input[[gid]]))
+      checked_ids <- checked_tlg_ids(input, modal_group_ids())
       if (length(checked_ids) > 0) {
         tlg_order_data <- tlg_order()
-        tlg_order_data$Selection[tlg_order_data$id %in% as.integer(checked_ids)] <- TRUE
+        tlg_order_data$Selection[tlg_order_data$id %in% checked_ids] <- TRUE
         tlg_order(tlg_order_data)
       }
       removeModal()
@@ -552,6 +284,18 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) { # nolint: cyclocom
       data()$conc$data
     })
     adpp_data_all <- reactive({
+      # A PK-parameter (ADPP) output was requested but NCA has not been run, so
+      # ADPP is unavailable. Surface it as a toast (Gero, #1335) in addition to
+      # the inline placeholder, since the empty panel alone reads as a silent
+      # failure.
+      if (is.null(adpp())) {
+        # Fixed id so multiple ADPP panels collapse into one toast rather than
+        # stacking an identical message per output.
+        showNotification(
+          "ADPP data is not available. Run NCA first to view PK parameter outputs.",
+          type = "warning", duration = 10, id = session$ns("adpp_missing")
+        )
+      }
       validate(need(
         !is.null(adpp()),
         "ADPP data is not available. Run NCA first to view PK parameter outputs."
