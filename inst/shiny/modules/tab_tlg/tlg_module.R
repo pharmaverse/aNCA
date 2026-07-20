@@ -214,7 +214,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
         withCallingHandlers(
           do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options)),
           warning = function(w) {
-            showNotification(conditionMessage(w), type = "warning", duration = 10)
+            showNotification(
+              paste0("Notice: ", conditionMessage(w)), type = "warning", duration = 10
+            )
             invokeRestart("muffleWarning")
           }
         )
