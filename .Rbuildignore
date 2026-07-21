@@ -16,6 +16,7 @@
 _\.new\.png$
 inst/shiny/tests/testthat/_snaps
 ^cran-comments\.md$
+^CITATION\.cff$
 ^NEWS\.md$
 inst/shiny/data/Dummy_data_multiple_routes.csv
 inst/shiny/www/.sass_cache_keys
