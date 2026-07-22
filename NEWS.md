@@ -133,8 +133,7 @@
 
 ### TLG
 * Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in mean plots (`pkcg03`) (#1316)
-* Custom titles now apply immediately to combined graphs (`pkcg02`); graphs are rendered through dedicated `plotly` outputs so option edits redraw the plot in place instead of only after switching figures (#1336)
-* Restored the `!COLUMN` label-reference syntax in graph/listing title, subtitle, footnote, and axis inputs — column label attributes are re-applied before rendering, since the PKNCA processing pipeline strips them (#1336)
+* Fixed TLG graph title/label handling: custom titles now apply immediately to combined graphs (`pkcg02`) via dedicated `plotly` outputs, and the `!COLUMN` label-reference syntax works again across title, subtitle, footnote, and axis inputs (column labels are re-applied before rendering, since the PKNCA pipeline strips them) (#1336)
 
 ## Dependency changes
 

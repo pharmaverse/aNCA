@@ -21,6 +21,57 @@ filter_tlg_excluded <- function(data) {
   }
 }
 
+#' Wire up per-plot plotly outputs for a graph TLG module.
+#'
+#' Renders each graph through its own `plotlyOutput`/`renderPlotly` pair rather
+#' than returning raw plotly widgets from a single `renderUI`. Raw widgets did
+#' not redraw in place when an option changed (e.g. a custom title on combined
+#' pkcg02 plots) until the figure was hidden and shown again (issue #1336);
+#' letting plotly own each output binding makes edits apply immediately.
+#'
+#' @param output             Module `output` object.
+#' @param session            Module `session` object.
+#' @param current_page_items Reactive returning the items shown on the current
+#'                           page (plotly widgets, ggplots, or character errors).
+#' @noRd
+render_graph_outputs <- function(output, session, current_page_items) {
+  output$tlg_output <- renderUI({
+    items <- current_page_items()
+    tagList(purrr::imap(items, function(item, i) {
+      if (is.character(item)) {
+        tags$pre(item)
+      } else {
+        # preserve the height baked into the plotly object (set via ggplotly)
+        height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
+        plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
+      }
+    }))
+  })
+
+  # Register a renderPlotly binding for each plot slot exactly once (tracked by
+  # high-water mark). The bodies read current_page_items() reactively, so option
+  # edits re-run them and plotly redraws the existing widget in place.
+  n_registered <- 0L
+  observe({
+    n <- length(current_page_items())
+    if (n > n_registered) {
+      for (i in seq.int(n_registered + 1L, n)) local({
+        my_i <- i
+        output[[paste0("plot_", my_i)]] <- plotly::renderPlotly({
+          items <- current_page_items()
+          req(my_i <= length(items))
+          item <- items[[my_i]]
+          req(!is.character(item))
+          # g_pkcg() returns plotly widgets by default (plotly = TRUE); the
+          # ggplot branch is the fallback for plotly = FALSE callers.
+          if (inherits(item, c("gg", "ggplot"))) plotly::ggplotly(item) else item
+        })
+      })
+      n_registered <<- n
+    }
+  })
+}
+
 #' Function generating UI for a TLG module.
 #'
 #' @param id      id of the module, preferably with randomly generated part to avoid conflicts
@@ -77,7 +128,8 @@ tlg_module_ui <- function(id, type, options) {
           selectInput(
             ns("entries_per_page"),
             "",
-            choices = c("All", 1, 2, 4, 6, 8, 10)
+            choices = c("All", 1, 2, 4, 6, 8, 10),
+            selected = 1
           )
         ),
         shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page", class = "btn-page"))
@@ -116,7 +168,7 @@ tlg_module_ui <- function(id, type, options) {
 #' @param render_list function that renders the list of entries, actual implementation of the TLG
 #' @param options     list of options to customize input parameters
 #'
-tlg_module_server <- function(id, data, type, render_list, options = NULL) { # nolint: cyclocomp_linter
+tlg_module_server <- function(id, data, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
     current_page <- reactiveVal(1)
 
@@ -202,45 +254,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
     })
 
     if (type == "graph") {
-      # Render each graph through its own plotlyOutput/renderPlotly pair rather
-      # than returning raw plotly widgets from renderUI. Returning raw widgets
-      # meant the plot did not redraw in place when an option changed (e.g. a
-      # custom title on combined pkcg02 plots) until the figure was hidden and
-      # shown again (issue #1336). Letting plotly own the output binding makes
-      # edits apply immediately.
-      output$tlg_output <- renderUI({
-        items <- current_page_items()
-        tagList(purrr::imap(items, function(item, i) {
-          if (is.character(item)) {
-            tags$pre(item)
-          } else {
-            # preserve the height baked into the plotly object (set via ggplotly)
-            height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
-            plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
-          }
-        }))
-      })
-
-      # Register a renderPlotly binding for each plot slot exactly once (tracked
-      # by high-water mark). The bodies read current_page_items() reactively, so
-      # option edits re-run them and plotly redraws the existing widget in place.
-      n_registered <- 0L
-      observe({
-        n <- length(current_page_items())
-        if (n > n_registered) {
-          for (i in seq.int(n_registered + 1L, n)) local({
-            my_i <- i
-            output[[paste0("plot_", my_i)]] <- plotly::renderPlotly({
-              items <- current_page_items()
-              req(my_i <= length(items))
-              item <- items[[my_i]]
-              req(!is.character(item))
-              if (inherits(item, c("gg", "ggplot"))) plotly::ggplotly(item) else item
-            })
-          })
-          n_registered <<- n
-        }
-      })
+      render_graph_outputs(output, session, current_page_items)
     } else {
       output$tlg_output <- renderPrint(current_page_items())
     }
