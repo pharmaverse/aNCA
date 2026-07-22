@@ -15,7 +15,10 @@ data_upload_ui <- function(id) {
     div(
       class = "upload-container",
       id = ns("upload_container"),
-      p("Upload your PK dataset and Settings file (optional)."),
+      p("Upload your PK dataset and Settings file (optional).",
+        tags$br(),
+        tags$small(style = "color: #6c757d; display: block; margin-top: 4px;",
+                   sprintf("Maximum upload size: %s MB", max_upload_size_mb))),
       fileInput(
         ns("data_upload"),
         width = "50%",
