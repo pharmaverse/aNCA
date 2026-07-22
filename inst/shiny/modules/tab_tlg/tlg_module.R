@@ -62,9 +62,8 @@ render_graph_outputs <- function(output, session, current_page_items) {
           req(my_i <= length(items))
           item <- items[[my_i]]
           req(!is.character(item))
-          # g_pkcg() returns plotly widgets by default (plotly = TRUE); the
-          # ggplot branch is the fallback for plotly = FALSE callers.
-          if (inherits(item, c("gg", "ggplot"))) plotly::ggplotly(item) else item
+          # implemented graph functions (g_pkcg*) always return plotly widgets
+          item
         })
       })
       n_registered <<- n
