@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9184</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9185</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -214,6 +214,7 @@
 <div class="section level4">
 <h4 id="tlg-development-version">TLG<a class="anchor" aria-label="anchor" href="#tlg-development-version"></a></h4>
 <ul><li>Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in mean plots (<code>pkcg03</code>) (<a href="https://github.com/pharmaverse/aNCA/issues/1316" class="external-link">#1316</a>)</li>
+<li>Fixed TLG graph title/label handling: custom titles now apply immediately to combined graphs (<code>pkcg02</code>) via dedicated <code>plotly</code> outputs, and the <code>!COLUMN</code> label-reference syntax works again across title, subtitle, footnote, and axis inputs (column labels are re-applied before rendering, since the PKNCA pipeline strips them) (<a href="https://github.com/pharmaverse/aNCA/issues/1336" class="external-link">#1336</a>)</li>
 </ul></div>
 </div>
 <div class="section level3">

@@ -328,6 +328,12 @@
 - Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in
   mean plots (`pkcg03`)
   ([\#1316](https://github.com/pharmaverse/aNCA/issues/1316))
+- Fixed TLG graph title/label handling: custom titles now apply
+  immediately to combined graphs (`pkcg02`) via dedicated `plotly`
+  outputs, and the `!COLUMN` label-reference syntax works again across
+  title, subtitle, footnote, and axis inputs (column labels are
+  re-applied before rendering, since the PKNCA pipeline strips them)
+  ([\#1336](https://github.com/pharmaverse/aNCA/issues/1336))
 
 ### Dependency changes
 
