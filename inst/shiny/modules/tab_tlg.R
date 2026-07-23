@@ -242,16 +242,21 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # Raw TLG inputs.  Individual listings must display rows excluded from
     # summaries (PKSUM1F/PPSUMFL == "Y"), so they consume these unfiltered
     # sources -- see tlg_data_key().
+    # apply_labels() restores column `label` attributes (stripped by the
+    # PKNCA/dplyr pipeline and by row-subsetting) so the `!COLUMN` label-reference
+    # syntax resolves in title/subtitle/footnote/axis inputs.  It is applied as
+    # the final step of each source -- after row filtering, since `[` drops
+    # per-column attributes -- and with the flag/type matching each dataset.
     conc_data_all <- reactive({
       req(data())
-      data()$conc$data
+      apply_labels(data()$conc$data, type = "ADNCA")
     })
     adpp_data_all <- reactive({
       validate(need(
         !is.null(adpp()),
         "ADPP data is not available. Run NCA first to view PK parameter outputs."
       ))
-      adpp()
+      apply_labels(adpp(), type = "ADPP")
     })
 
     # Summary-filtered variants for tables and mean plots: rows flagged
@@ -260,8 +265,12 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # is filtered by its own flag only -- a record excluded from the
     # PK-parameter summary (PPSUMFL) must still be able to appear in the
     # concentration representations, and vice-versa.
-    conc_data <- reactive(filter_tlg_excluded(conc_data_all(), "PKSUM1F"))
-    adpp_data <- reactive(filter_tlg_excluded(adpp_data_all(), "PPSUMFL"))
+    conc_data <- reactive(
+      apply_labels(filter_tlg_excluded(conc_data_all(), "PKSUM1F"), type = "ADNCA")
+    )
+    adpp_data <- reactive(
+      apply_labels(filter_tlg_excluded(adpp_data_all(), "PPSUMFL"), type = "ADPP")
+    )
 
     # (dataset, type) -> data reactive.  Listings resolve to the "*_all"
     # (unfiltered) source; tables and graphs resolve to the filtered source.

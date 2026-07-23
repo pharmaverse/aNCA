@@ -48,6 +48,94 @@ tlg_data_key <- function(type, dataset) {
   if (identical(type, "listing")) paste0(dataset, "_all") else dataset
 }
 
+#' Wire up per-plot plotly outputs for a graph TLG module.
+#'
+#' Renders each graph through its own `plotlyOutput`/`renderPlotly` pair rather
+#' than returning raw plotly widgets from a single `renderUI`. Raw widgets did
+#' not redraw in place when an option changed (e.g. a custom title on combined
+#' pkcg02 plots) until the figure was hidden and shown again (issue #1336);
+#' letting plotly own each output binding makes edits apply immediately.
+#'
+#' @param output             Module `output` object.
+#' @param session            Module `session` object.
+#' @param current_page_items Reactive returning the items shown on the current
+#'                           page (plotly widgets, ggplots, or character errors).
+#' @noRd
+render_graph_outputs <- function(output, session, current_page_items) {
+  output$tlg_output <- renderUI({
+    items <- current_page_items()
+    tagList(purrr::imap(items, function(item, i) {
+      if (is.character(item)) {
+        tags$pre(item)
+      } else {
+        # preserve the height baked into the plotly object (set via ggplotly)
+        height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
+        plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
+      }
+    }))
+  })
+
+  # Register a renderPlotly binding for each plot slot exactly once (tracked by
+  # high-water mark). The bodies read current_page_items() reactively, so option
+  # edits re-run them and plotly redraws the existing widget in place.
+  n_registered <- 0L
+  observe({
+    n <- length(current_page_items())
+    if (n > n_registered) {
+      for (i in seq.int(n_registered + 1L, n)) local({
+        my_i <- i
+        output[[paste0("plot_", my_i)]] <- plotly::renderPlotly({
+          items <- current_page_items()
+          req(my_i <= length(items))
+          item <- items[[my_i]]
+          req(!is.character(item))
+          # implemented graph functions (g_pkcg*) always return plotly widgets
+          item
+        })
+      })
+      n_registered <<- n
+    }
+  })
+}
+
+#' Wire up the table output for a table TLG module.
+#'
+#' Renders each page item as a `reactable`, prefixed by an `<h4>` group header
+#' when the item carries a split key (e.g. `"Drug A / PLASMA"`) so stacked
+#' analyte/specimen tables are distinguishable.  `"all"` is the sentinel used by
+#' `split_and_apply()` for un-split single tables and gets no header.
+#'
+#' @param output             Module `output` object.
+#' @param current_page_items Reactive returning the (named) items shown on the
+#'                           current page.
+#' @noRd
+render_table_outputs <- function(output, current_page_items) {
+  output$tlg_output <- renderUI({
+    items <- current_page_items()
+    nms <- names(items)
+    tagList(lapply(seq_along(items), function(i) {
+      df <- items[[i]]
+      body <- if (!is.data.frame(df)) {
+        tags$pre(as.character(df))
+      } else if (ncol(df) == 0) {
+        tags$p("No data available for this table.")
+      } else {
+        reactable::reactable(
+          df,
+          columns = define_cols(df, header_from_label = TRUE),
+          columnGroups = define_col_groups(df)
+        )
+      }
+      nm <- nms[i]
+      if (!is.null(nm) && nzchar(nm) && nm != "all") {
+        tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
+      } else {
+        body
+      }
+    }))
+  })
+}
+
 #' Function generating UI for a TLG module.
 #'
 #' @param id      id of the module, preferably with randomly generated part to avoid conflicts
@@ -104,7 +192,8 @@ tlg_module_ui <- function(id, type, options) {
           selectInput(
             ns("entries_per_page"),
             "",
-            choices = c("All", 1, 2, 4, 6, 8, 10)
+            choices = c("All", 1, 2, 4, 6, 8, 10),
+            selected = 1
           )
         ),
         shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page", class = "btn-page"))
@@ -146,13 +235,6 @@ tlg_module_ui <- function(id, type, options) {
 #'
 tlg_module_server <- function(id, data, type, render_list, options = NULL) { # nolint: cyclocomp_linter
   moduleServer(id, function(input, output, session) {
-    render_fn <- switch(
-      type,
-      "graph"   = renderUI,
-      "listing" = renderPrint,
-      "table"   = renderUI
-    )
-
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
@@ -208,6 +290,12 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
 
       tryCatch({
+        # Data arrives already exclusion-filtered (per-dataset flag) and
+        # label-restored from the tab_tlg boundary (see tlg_data_sources), so
+        # it is passed straight through here.  Label restoration matters because
+        # the PKNCA/dplyr pipeline strips column `label` attributes, which breaks
+        # the `!COLUMN` label-reference syntax in title/subtitle/footnote/axis
+        # inputs (resolved via parse_annotation).
         do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
       },
       error = function(e) {
@@ -218,7 +306,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
     }) %>%
       debounce(750)
 
-    output$tlg_output <- render_fn({
+    #' raw entries shown on the current page (slice of the full TLG list); the
+    #' per-type render helpers below turn them into reactables / plotly / prints
+    current_page_items <- reactive({
       req(tlg_list(), entries_per_page(), current_page())
 
       num_plots <- length(tlg_list())
@@ -226,47 +316,18 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
 
-      page_slice <- tlg_list()[page_start:page_end]
-      page_items <- unname(page_slice)
-
-      if (type == "table") {
-        # Names carry the split key (e.g. "Drug A / PLASMA"); render them as a
-        # header above each table so stacked analyte/specimen tables are
-        # distinguishable.  "all" is the sentinel used by split_and_apply() for
-        # un-split single tables and gets no header.
-        page_names <- names(page_slice)
-        purrr::imap(page_items, function(df, i) {
-          body <- if (!is.data.frame(df)) {
-            tags$pre(as.character(df))
-          } else if (ncol(df) == 0) {
-            tags$p("No data available for this table.")
-          } else {
-            reactable::reactable(
-              df,
-              columns = define_cols(df, header_from_label = TRUE),
-              columnGroups = define_col_groups(df)
-            )
-          }
-          nm <- page_names[i]
-          if (!is.null(nm) && nzchar(nm) && nm != "all") {
-            tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
-          } else {
-            body
-          }
-        })
-      } else if (type == "listing") {
-        for (item in page_items) print(item)
-      } else {
-        lapply(page_items, function(item) {
-          if (is.character(item)) return(tags$pre(item))
-          if (inherits(item, c("gg", "ggplot"))) {
-            plotly::ggplotly(item)
-          } else {
-            item
-          }
-        })
-      }
+      tlg_list()[page_start:page_end]
     })
+
+    if (type == "graph") {
+      render_graph_outputs(output, session, current_page_items)
+    } else if (type == "table") {
+      render_table_outputs(output, current_page_items)
+    } else {
+      output$tlg_output <- renderPrint({
+        for (item in current_page_items()) print(item)
+      })
+    }
 
     options_values <- lapply(names(options), function(option) {
       if (is.character(options[[option]])) return(NULL)
