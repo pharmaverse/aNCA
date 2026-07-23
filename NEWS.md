@@ -31,8 +31,9 @@
 ### TLG Order & Selection
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)
 * Urine TLG functions filter to urine specimens internally; when `PCSPEC`/`PPSPEC` is missing, the resulting warning is surfaced as an in-app notification instead of failing silently (#1335)
-* Redesign the "Add TLGs to order" picker as a catalog checklist with dataset tabs (PK Concentrations / PK Parameters), search, CSV/XLSX export, per-column and tab-scoped select-all, and a live selection count (#1335)
+* Redesign the "Add TLGs to order" picker as a catalog checklist with dataset tabs (PK Concentrations / PK Parameters), search, CSV/XLSX export, per-column select-all, and a live selection count (#1335)
 * In the "Add TLGs to order" picker, searching now respects the active dataset tab: matches in another dataset surface as a count on that tab's badge instead of appearing under the current tab, so switching tabs reveals them (#1335)
+* In the "Add TLGs to order" picker, the toolbar **Select all** and **Clear all** now act consistently on the whole order — every output across both dataset tabs (limited to the current search when one is active) — while each column's **Select all** stays scoped to that column (#1335)
 * Notify the user when a PK-parameter (ADPP) output is requested before NCA has been run, instead of only showing an empty placeholder (#1335)
 
 ### Settings & Configuration
