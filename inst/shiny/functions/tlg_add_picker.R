@@ -127,8 +127,10 @@ build_add_checklist <- function(avail, ns) {
         oninput = "window.tlgAdd.setQuery(this.value)"
       ),
       tags$button(type = "button", class = "btn btn-sm btn-default",
+                  title = "Select every output in both tabs (matching the search)",
                   onclick = "window.tlgAdd.selectAll()", "Select all"),
       tags$button(type = "button", class = "btn btn-sm btn-default",
+                  title = "Clear every output in both tabs (matching the search)",
                   onclick = "window.tlgAdd.clearAll()", "Clear all"),
       div(class = "tlg-toolbar-sep"),
       downloadButton(ns("modal_dl_csv"), "CSV", class = "btn-sm btn-default"),

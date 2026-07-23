@@ -8,13 +8,20 @@ window.tlgAdd = {
   q: "",
   tab: null,
 
-  // visibleOnly: only toggle rows shown under the active tab / search, so
-  // Select-all respects the current dataset.  Clear-all passes false to wipe
-  // every dataset.
-  _setChecked: function(scope, checked, visibleOnly) {
+  // Toggle checkboxes within `scope`.  `mode` standardises what "all" means so
+  // the toolbar buttons behave consistently (issue #1335):
+  //   "search"  -> every row matching the current search, across BOTH dataset
+  //                tabs.  A tab is only a view, so the toolbar Select-all /
+  //                Clear-all act on the whole order; search is an intentional
+  //                filter, so they honour it (rows flagged .tlg-nomatch by
+  //                render() are skipped).
+  //   "visible" -> only rows currently shown (active tab AND search): used by
+  //                the per-column "Select all", the granular scoped tool.
+  _setChecked: function(scope, checked, mode) {
     var groups = {};
     scope.querySelectorAll(".checkbox").forEach(function(row) {
-      if (visibleOnly && row.style.display === "none") return;
+      if (mode === "visible" && row.style.display === "none") return;
+      if (mode === "search" && row.classList.contains("tlg-nomatch")) return;
       var cb = row.querySelector("input[type=checkbox]");
       if (!cb) return;
       cb.checked = checked;
@@ -29,17 +36,17 @@ window.tlgAdd = {
 
   selectAll: function() {
     var r = document.querySelector(".tlg-add-checklist");
-    if (r) this._setChecked(r, true, true);
+    if (r) this._setChecked(r, true, "search");
   },
 
   clearAll: function() {
     var r = document.querySelector(".tlg-add-checklist");
-    if (r) this._setChecked(r, false, false);
+    if (r) this._setChecked(r, false, "search");
   },
 
   colSelect: function(btn) {
     var c = btn.closest(".tlg-col");
-    if (c) this._setChecked(c, true, true);
+    if (c) this._setChecked(c, true, "visible");
   },
 
   setQuery: function(v) {
@@ -74,6 +81,10 @@ window.tlgAdd = {
       var anyVisible = false;
       ds.querySelectorAll(".checkbox").forEach(function(it) {
         var textMatch = q === "" || it.textContent.toLowerCase().indexOf(q) > -1;
+        // Flag search-match independently of the active tab, so the toolbar
+        // Select-all / Clear-all ("search" mode) can reach matches on the
+        // other dataset tab too (issue #1335).
+        it.classList.toggle("tlg-nomatch", !textMatch);
         if (textMatch) {
           dsMatch[name] = (dsMatch[name] || 0) + 1;
           totalMatches++;
