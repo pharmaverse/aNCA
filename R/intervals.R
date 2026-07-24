@@ -311,8 +311,15 @@ update_main_intervals <- function(
   }
 
   ############################################
-  # Drop the end-boundary concentration for regular parameters (main intervals
-  # only). Partial/interval parameters (type_interval == "manual") are untouched.
+  # Remove any imputation from the observational parameters
+  data <- rm_impute_obs_params(data, metadata_nca_parameters)
+
+  ############################################
+  # Drop the end-boundary concentration for main intervals. Applied after
+  # rm_impute_obs_params() so it also covers observational parameters (e.g. Cmax,
+  # Tmax), where a spurious concentration at time == end would otherwise distort
+  # the result. Partial/interval parameters (type_interval == "manual") are
+  # untouched.
   if (isTRUE(drop_end_conc)) {
     data$intervals <- data$intervals %>%
       mutate(
@@ -327,10 +334,6 @@ update_main_intervals <- function(
         )
       )
   }
-
-  ############################################
-  # Remove any imputation from the observational parameters
-  data <- rm_impute_obs_params(data, metadata_nca_parameters)
 
   data
 }
