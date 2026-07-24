@@ -206,6 +206,10 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' Each element can be a numeric value (substituting the BLQ value), or a string such as
 #' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
 #' which does not specify any BLQ imputation in any interval.
+#' @param drop_end_conc Logical. If `TRUE`, the concentration measured exactly at
+#' the end of each main interval is dropped before regular (non-partial) parameter
+#' calculations via the `end_conc_drop` imputation. This does not affect
+#' interval/partial parameter rows (`type_interval == "manual"`). Default `FALSE`.
 #'
 #' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
 #' @importFrom dplyr group_by ungroup slice_max distinct
@@ -217,7 +221,8 @@ update_main_intervals <- function(
   parameter_selections = NULL,
   int_parameters = NULL,
   impute = TRUE,
-  blq_imputation_rule = NULL
+  blq_imputation_rule = NULL,
+  drop_end_conc = FALSE
 ) {
 
   if (is.null(parameter_selections)) parameter_selections <- list()
@@ -301,6 +306,24 @@ update_main_intervals <- function(
           is.na(impute) | impute == "",
           "blq",
           paste0("blq, ", impute)
+        )
+      )
+  }
+
+  ############################################
+  # Drop the end-boundary concentration for regular parameters (main intervals
+  # only). Partial/interval parameters (type_interval == "manual") are untouched.
+  if (isTRUE(drop_end_conc)) {
+    data$intervals <- data$intervals %>%
+      mutate(
+        impute = ifelse(
+          type_interval == "main",
+          ifelse(
+            is.na(impute) | impute == "",
+            "end_conc_drop",
+            paste0(impute, ", end_conc_drop")
+          ),
+          impute
         )
       )
   }

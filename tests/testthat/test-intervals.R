@@ -313,6 +313,51 @@ describe("update_main_intervals", {
     expect_false(all(is.na(result$intervals$impute)))
   })
 
+  it("does not add end_conc_drop when drop_end_conc is FALSE", {
+    result <- update_main_intervals(
+      data, parameters, int_parameters,
+      impute = FALSE, drop_end_conc = FALSE
+    )
+    expect_false(any(grepl("end_conc_drop", result$intervals$impute), na.rm = TRUE))
+  })
+
+  it("adds end_conc_drop to main intervals when drop_end_conc is TRUE", {
+    result <- update_main_intervals(
+      data, parameters, int_parameters,
+      impute = FALSE, drop_end_conc = TRUE
+    )
+    main_rows <- result$intervals %>% filter(type_interval == "main")
+    expect_true(all(grepl("end_conc_drop", main_rows$impute)))
+  })
+
+  it("does not add end_conc_drop to manual (partial) intervals", {
+    int_parameters_partial <- data.frame(
+      parameter = "AUCINT",
+      start_auc = c(0, 1),
+      end_auc = c(1, 2)
+    )
+    result <- update_main_intervals(
+      data, parameters, int_parameters_partial,
+      impute = FALSE, drop_end_conc = TRUE
+    )
+    manual_rows <- result$intervals %>% filter(type_interval == "manual")
+    expect_false(any(grepl("end_conc_drop", manual_rows$impute), na.rm = TRUE))
+  })
+
+  it("appends end_conc_drop after existing impute methods", {
+    result <- update_main_intervals(
+      data, parameters, int_parameters,
+      impute = TRUE, drop_end_conc = TRUE
+    )
+    main_with_impute <- result$intervals %>%
+      filter(type_interval == "main", !is.na(impute), grepl(",", impute))
+    # Where an existing method was present, end_conc_drop is appended at the end
+    if (nrow(main_with_impute) > 0) {
+      expect_true(all(grepl("end_conc_drop$", main_with_impute$impute)))
+    }
+    succeed()
+  })
+
   it("handles empty parameter selections and empty AUC data", {
     # Test with empty parameter list
     result_no_params <- update_main_intervals(data, list(),

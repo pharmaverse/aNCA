@@ -670,6 +670,62 @@ describe("PKNCA_impute_method_start_c1", {
   })
 })
 
+describe("PKNCA_impute_method_end_conc_drop", {
+  it("drops a concentration sitting exactly at the end", {
+    expect_equal(
+      PKNCA_impute_method_end_conc_drop(conc = c(10, 5, 1), time = c(0, 12, 24), end = 24),
+      data.frame(conc = c(10, 5), time = c(0, 12)),
+      ignore_attr = TRUE
+    )
+  })
+
+  it("is a no-op when nothing sits exactly at the end", {
+    expect_equal(
+      PKNCA_impute_method_end_conc_drop(conc = c(10, 5, 1), time = c(0, 12, 23), end = 24),
+      data.frame(conc = c(10, 5, 1), time = c(0, 12, 23))
+    )
+  })
+
+  it("drops only the end point, leaving earlier points untouched", {
+    expect_equal(
+      PKNCA_impute_method_end_conc_drop(conc = c(10, 8, 6, 100), time = c(0, 1, 2, 24), end = 24),
+      data.frame(conc = c(10, 8, 6), time = c(0, 1, 2)),
+      ignore_attr = TRUE
+    )
+  })
+
+  it("removes the boundary spike through the impute column of pk.nca", {
+    clean <- data.frame(
+      ID = 1,
+      time = c(0, 1, 2, 4, 8, 12, 24),
+      conc = c(10, 8, 6.5, 4, 2, 1, 0.5)
+    )
+    spiked <- clean
+    spiked$conc[spiked$time == 24] <- 100
+    dose <- data.frame(ID = 1, time = 0, dose = 100)
+
+    make_tmax <- function(conc_df, impute) {
+      o_conc <- PKNCA::PKNCAconc(conc_df, formula = conc ~ time | ID)
+      o_dose <- PKNCA::PKNCAdose(dose, formula = dose ~ time | ID, route = "intravascular")
+      intervals <- data.frame(start = 0, end = 24, tmax = TRUE)
+      if (!is.null(impute)) intervals$impute <- impute
+      o_data <- PKNCA::PKNCAdata(o_conc, o_dose, intervals = intervals)
+      res <- as.data.frame(PKNCA::pk.nca(o_data))
+      res$PPORRES[res$PPTESTCD == "tmax"]
+    }
+
+    # Without imputation the boundary spike wins tmax (== end)
+    expect_equal(make_tmax(spiked, NULL), 24)
+    # With the drop imputation the spike is removed and tmax returns to 0
+    expect_equal(make_tmax(spiked, "end_conc_drop"), 0)
+    # Applying the imputation to clean data (no boundary point) is a no-op
+    expect_equal(
+      make_tmax(clean, "end_conc_drop"),
+      make_tmax(clean, NULL)
+    )
+  })
+})
+
 # Tests for PKNA_build_units_table
 describe("PKNCA_build_units_table", {
   # Subset the data to only include USUBJID 8 (2 analytes, A & B)
