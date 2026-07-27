@@ -23,6 +23,17 @@ require(utils)
 require(rlang)
 require(yaml)
 
+# Package datasets are referenced by bare name throughout the sourced app code.
+# devtools::load_all() exposes them automatically, but an installed package does
+# not put lazy-loaded data on the search path. Load them into the global
+# environment (where the modules/functions are sourced) so bare references
+# resolve in both cases.
+utils::data(
+  list = c("metadata_nca_variables", "metadata_nca_parameters"),
+  package = "aNCA",
+  envir = globalenv()
+)
+
 lapply(list.files("modules", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive = TRUE), source)
 

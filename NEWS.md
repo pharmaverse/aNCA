@@ -81,6 +81,8 @@
 
 ## Bug fixes
 
+* Load `metadata_nca_variables` and `metadata_nca_parameters` at app startup so the Shiny app launches from an installed package instead of failing with `object 'metadata_nca_variables' not found` (#1413)
+
 ### CDISC Export
 * `CRITxFL` now uses `""` instead of `"N"` when criterion is violated. `CRITx` shows the acceptance criterion with inverted operator (e.g. flag rule `R2ADJ < 0.7` produces `CRITx = "R2ADJ >= 0.7"`). `CRITxFL = "Y"` means criterion satisfied (#1332)
 
