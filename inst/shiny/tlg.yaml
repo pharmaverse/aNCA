@@ -14,6 +14,12 @@ t_pkct01:
   fun: t_pkct01
   condition: null
   options:
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NFRLT)"
+      type: select
+      choices: $NFRLT
+      multiple: true
     .group_label_1: "Grouping"
     list_vars:
       label: "Split tables by"
@@ -25,18 +31,15 @@ t_pkct01:
       label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["TRT01A"]
-    time_var:
-      label: "Time variable"
+      multiple: true
+      default: ["TRT01A", "ATPTREF", "NFRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
       type: select
       choices: .colnames
-      default: ["NFRLT"]
-    visit_var:
-      label: "Visit / timepoint reference"
-      type: select
-      choices: .colnames
-      default: ["ATPTREF"]
-    .group_label_2: "Compare (columns)"
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
     col_group_var:
       label: "Compare in columns (e.g. Sex)"
       type: select
@@ -59,7 +62,12 @@ t_pkct01_dose:
   fun: t_pkct01_dose
   condition: null
   options:
-    # `strat_var` is fixed to DOSEA by this variant, so it is not exposed.
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NFRLT)"
+      type: select
+      choices: $NFRLT
+      multiple: true
     .group_label_1: "Grouping"
     list_vars:
       label: "Split tables by"
@@ -67,17 +75,19 @@ t_pkct01_dose:
       choices: .colnames
       multiple: true
       default: ["PARAM", "PCSPEC"]
-    time_var:
-      label: "Time variable"
+    strat_var:
+      label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["NFRLT"]
-    visit_var:
-      label: "Visit / timepoint reference"
+      multiple: true
+      default: ["DOSEA", "ATPTREF", "NFRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
       type: select
       choices: .colnames
-      default: ["ATPTREF"]
-    .group_label_2: "Compare (columns)"
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
     col_group_var:
       label: "Compare in columns (e.g. Sex)"
       type: select
@@ -100,7 +110,13 @@ t_pkct01_tad:
   fun: t_pkct01_tad
   condition: null
   options:
-    # `time_var` is fixed to NRRLT by this variant, so it is not exposed.
+    # `time_var` is fixed to NRRLT by this variant (used by the timepoint filter).
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NRRLT)"
+      type: select
+      choices: $NRRLT
+      multiple: true
     .group_label_1: "Grouping"
     list_vars:
       label: "Split tables by"
@@ -112,13 +128,15 @@ t_pkct01_tad:
       label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["TRT01A"]
-    visit_var:
-      label: "Visit / timepoint reference"
+      multiple: true
+      default: ["TRT01A", "ATPTREF", "NRRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
       type: select
       choices: .colnames
-      default: ["ATPTREF"]
-    .group_label_2: "Compare (columns)"
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
     col_group_var:
       label: "Compare in columns (e.g. Sex)"
       type: select
@@ -141,7 +159,13 @@ t_pkct01_dose_tad:
   fun: t_pkct01_dose_tad
   condition: null
   options:
-    # `strat_var` (DOSEA) and `time_var` (NRRLT) are fixed by this variant.
+    # `time_var` is fixed to NRRLT by this variant (used by the timepoint filter).
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NRRLT)"
+      type: select
+      choices: $NRRLT
+      multiple: true
     .group_label_1: "Grouping"
     list_vars:
       label: "Split tables by"
@@ -149,12 +173,19 @@ t_pkct01_dose_tad:
       choices: .colnames
       multiple: true
       default: ["PARAM", "PCSPEC"]
-    visit_var:
-      label: "Visit / timepoint reference"
+    strat_var:
+      label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["ATPTREF"]
-    .group_label_2: "Compare (columns)"
+      multiple: true
+      default: ["DOSEA", "ATPTREF", "NRRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
     col_group_var:
       label: "Compare in columns (e.g. Sex)"
       type: select
@@ -178,6 +209,12 @@ t_pkpt03_col:
   fun: t_pkpt03_col
   condition: null
   options:
+    .group_label_filter: "Filtering"
+    param_filter:
+      label: "Parameters to show (PARAM)"
+      type: select
+      choices: $PARAM
+      multiple: true
     .group_label_1: "Grouping"
     list_vars:
       label: "Split tables by"
@@ -189,13 +226,9 @@ t_pkpt03_col:
       label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["TRT01A"]
-    .group_label_2: "Columns"
-    param_var:
-      label: "Parameter variable"
-      type: select
-      choices: .colnames
-      default: ["PARAM"]
+      multiple: true
+      default: .pknca_groups
+    .group_label_2: "Value"
     value_var:
       label: "Value variable"
       type: select
@@ -224,6 +257,12 @@ t_pkpt03_MP_col:
   fun: t_pkpt03_MP_col
   condition: null
   options:
+    .group_label_filter: "Filtering"
+    param_filter:
+      label: "Parameters to show (PARAM)"
+      type: select
+      choices: $PARAM
+      multiple: true
     .group_label_1: "Grouping"
     list_vars:
       label: "Split tables by"
@@ -235,13 +274,9 @@ t_pkpt03_MP_col:
       label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["TRT01A"]
-    .group_label_2: "Columns"
-    param_var:
-      label: "Parameter variable"
-      type: select
-      choices: .colnames
-      default: ["PARAM"]
+      multiple: true
+      default: .pknca_groups
+    .group_label_2: "Value"
     value_var:
       label: "Value variable"
       type: select
@@ -288,13 +323,9 @@ t_pkpt07_norm:
       label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["TRT01A"]
-    .group_label_3: "Columns"
-    param_var:
-      label: "Parameter variable"
-      type: select
-      choices: .colnames
-      default: ["PARAM"]
+      multiple: true
+      default: .pknca_groups
+    .group_label_3: "Value"
     value_var:
       label: "Value variable"
       type: select
@@ -329,6 +360,11 @@ t_pkpt08_uri:
       type: select
       choices: $PPSPEC
       multiple: true
+    param_filter:
+      label: "Parameters to show (PARAM)"
+      type: select
+      choices: $PARAM
+      multiple: true
     .group_label_2: "Grouping"
     list_vars:
       label: "Split tables by"
@@ -340,13 +376,9 @@ t_pkpt08_uri:
       label: "Stratify by (rows)"
       type: select
       choices: .colnames
-      default: ["TRT01A"]
-    .group_label_3: "Columns"
-    param_var:
-      label: "Parameter variable"
-      type: select
-      choices: .colnames
-      default: ["PARAM"]
+      multiple: true
+      default: .pknca_groups
+    .group_label_3: "Value"
     value_var:
       label: "Value variable"
       type: select

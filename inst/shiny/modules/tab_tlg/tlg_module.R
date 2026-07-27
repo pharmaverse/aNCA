@@ -232,8 +232,11 @@ tlg_module_ui <- function(id, type, options) {
 #'                    decides the rendering funciton
 #' @param render_list function that renders the list of entries, actual implementation of the TLG
 #' @param options     list of options to customize input parameters
+#' @param grouping_vars reactive returning the PKNCA grouping variables (minus the
+#'   subject column); used to resolve the `.pknca_groups` default of select options
 #'
-tlg_module_server <- function(id, data, type, render_list, options = NULL) { # nolint: cyclocomp_linter
+tlg_module_server <- function(id, data, type, render_list, options = NULL, # nolint: cyclocomp_linter
+                              grouping_vars = reactive(character())) {
   moduleServer(id, function(input, output, session) {
     current_page <- reactiveVal(1)
 
@@ -340,7 +343,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
 
     #' creates widgets responsible for custimizing the plots
     output$options <- renderUI({
-      purrr::imap(options, function(def, id) .tlg_module_edit_widget(session$ns(id), def, data))
+      purrr::imap(options, function(def, id) {
+        .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
+      })
     })
   })
 }
@@ -348,12 +353,21 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) { # n
 #' Creates editing widget of appropriate type.
 #' @param opt_def Definition of the option
 #' @param opt_id  Id of the option
-#' @param session Session object for namespacing the widgets
+#' @param data    reactive with the data object used for choices/labels
+#' @param grouping_vars reactive of PKNCA grouping variables, forwarded to select
+#'   options so they can resolve the `.pknca_groups` default token
 #' @returns Shiny widget with appropriate type, label and options
-.tlg_module_edit_widget <- function(opt_id, opt_def, data) {
+.tlg_module_edit_widget <- function(opt_id, opt_def, data,
+                                    grouping_vars = reactive(character())) {
   if (grepl(".group_label", opt_id)) {
     return(tags$h1(opt_def, class = "tlg-group-label"))
   }
   ui_fn <- get(glue::glue("tlg_option_{opt_def$type}_ui"))
-  ui_fn(opt_id, opt_def, data)
+  # Only the select widget resolves the .pknca_groups default; other widget types
+  # keep their original three-argument signature.
+  if (identical(opt_def$type, "select")) {
+    ui_fn(opt_id, opt_def, data, grouping_vars)
+  } else {
+    ui_fn(opt_id, opt_def, data)
+  }
 }

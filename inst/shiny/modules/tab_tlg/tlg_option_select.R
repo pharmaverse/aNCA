@@ -27,7 +27,9 @@
 #' @param opt_def definition of the option, as specified in the `yaml` file
 #' @param data    data object used for parsing labels, strings, inferring placeholder values or
 #'                choices etc.
-tlg_option_select_ui <- function(id, opt_def, data) {
+#' @param grouping_vars reactive returning the PKNCA grouping variables (minus the
+#'                subject column); used to resolve the `.pknca_groups` default token.
+tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(character())) {
   ns <- NS(id)
 
   label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
@@ -54,6 +56,12 @@ tlg_option_select_ui <- function(id, opt_def, data) {
     if (!is.null(opt_def$default)) {
       if (isTRUE(opt_def$default == ".all")) {
         choices
+      } else if (isTRUE(opt_def$default == ".pknca_groups")) {
+        # Default row-stratification = the PKNCA grouping variables (minus
+        # USUBJID) that are actually present in this table's dataset.  When none
+        # are available (e.g. before NCA has run) fall back to nothing selected,
+        # which lets the TLG function use its own default.
+        intersect(grouping_vars(), names(conc_df))
       } else {
         opt_def$default
       }

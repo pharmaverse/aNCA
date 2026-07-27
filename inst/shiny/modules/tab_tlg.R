@@ -281,6 +281,24 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       ADPP_all  = adpp_data_all
     )
 
+    # PKNCA grouping variables (minus the subject column) -- the sensible default
+    # row-stratification set for the summary tables (issue 1356: separate stats by
+    # every grouping variable but USUBJID).  Derived from the processed PKNCA
+    # object so it reflects the study's actual grouping structure; the option
+    # layer resolves the `.pknca_groups` default token against it.
+    grouping_vars <- reactive({
+      req(data())
+      groups  <- tryCatch(names(PKNCA::getGroups(data()$conc)), error = function(e) character())
+      subject <- tryCatch(data()$conc$columns$subject, error = function(e) NULL)
+      groups  <- setdiff(groups, subject)
+      # CDISC renames the specimen grouping column PCSPEC (ADNCA) -> PPSPEC (ADPP)
+      # via export_cdisc(); expose both aliases so each dataset's table defaults
+      # to whichever it actually carries when the option layer intersects with
+      # the data columns.
+      if ("PCSPEC" %in% groups) groups <- union(groups, "PPSPEC")
+      groups
+    })
+
     # Track which module IDs have already been registered for this session.
     # tlg_module_server() calls Shiny's moduleServer(), which registers reactive
     # observers (pagination buttons, entries-per-page, etc.) every time it is
@@ -307,7 +325,9 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
           # Only register the Shiny module once per session to avoid accumulating
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
-            tlg_module_server(module_id, tlg_data, type, get(g_def$fun), g_def$options)
+            tlg_module_server(
+              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
+            )
             assign(module_id, TRUE, envir = .registered_modules)
           }
           tlg_module_ui(session$ns(module_id), type, g_def$options)
