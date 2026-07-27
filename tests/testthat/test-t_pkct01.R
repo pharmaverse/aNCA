@@ -56,9 +56,9 @@ describe("t_pkct01", {
     expect_equal(row_t1$Max, 6)
   })
 
-  it("stops with informative error when required columns are missing", {
+  it("stops with informative error when the value column is missing", {
     bad <- pkct01_data[, setdiff(names(pkct01_data), "AVAL")]
-    expect_error(t_pkct01(bad), "missing required columns")
+    expect_error(t_pkct01(bad), "missing required column")
   })
 
   it("returns single list entry when list_vars not present in data", {
@@ -131,6 +131,41 @@ describe("t_pkct01", {
     expect_equal(attr(result$GeoCV_pct, "label"), "Geometric CV%")
     expect_equal(attr(result$CV_pct, "label"), "CV%")
     expect_equal(attr(result$n_blq, "label"), "Number BLQ")
+  })
+})
+
+describe("t_pkct01: multi-variable stratification and time filtering (#1356)", {
+  it("time_filter keeps only the requested timepoints", {
+    result <- t_pkct01(pkct01_data, time_filter = c(0, 2))[[1]]
+    expect_setequal(unique(result$NFRLT), c(0, 2))
+  })
+
+  it("accepts a vector strat_var (adds each as a row column)", {
+    # Split only by PCSPEC so PARAM is free to stratify the rows.
+    result <- t_pkct01(
+      pkct01_data, list_vars = "PCSPEC", strat_var = c("TRT01A", "PARAM")
+    )[[1]]
+    expect_true(all(c("TRT01A", "PARAM") %in% names(result)))
+    expect_setequal(unique(result$PARAM), c("Drug A", "Drug B"))
+  })
+
+  it("drops a strat variable that is also a table-split (list_vars) column", {
+    result <- t_pkct01(
+      pkct01_data, list_vars = c("PARAM", "PCSPEC"),
+      strat_var = c("TRT01A", "PARAM")
+    )[[1]]
+    # PARAM is a page split, so it must not reappear as a redundant row column.
+    expect_false("PARAM" %in% names(result))
+    expect_true("TRT01A" %in% names(result))
+  })
+
+  it("warns when a stratification variable is absent (e.g. DOSEA not in conc data)", {
+    # `pkct01_data` has no such column; mirrors DOSEA being absent from the
+    # concentration data on the "by Dose" variant.
+    expect_warning(
+      t_pkct01(pkct01_data, strat_var = c("TRT01A", "DOSEA_ABSENT", "NFRLT")),
+      "not found in the data.*DOSEA_ABSENT"
+    )
   })
 })
 
