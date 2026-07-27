@@ -401,6 +401,36 @@ describe("tlg_module_server", {
   # which requires a running Shiny session; the debounce(750) reactive also
   # caches and re-throws the error before the tryCatch return value can be
   # observed.  This path is covered by end-to-end / integration tests.
+
+  # Column-label restoration for the exclamation-mark label-reference syntax
+  # (issue 1336) now happens at the tab_tlg boundary, where labels are applied to
+  # each dataset before it reaches this module -- the module receives an
+  # already-labelled, exclusion-filtered plain data frame.  That behaviour is
+  # covered by the tab_tlg boundary tests.
+
+  it("current_page_items() returns the slice for the current page", {
+    render_5 <- function(data, ...) as.list(paste0("p", 1:5))
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data        = test_data,
+        type        = "graph",
+        render_list = render_5,
+        options     = list()
+      ),
+      {
+        session$setInputs(entries_per_page = 2)
+        session$elapse(800)
+        session$flushReact()
+        expect_equal(current_page_items(), list("p1", "p2"))
+
+        session$setInputs(next_page = 1)
+        session$elapse(800)
+        session$flushReact()
+        expect_equal(current_page_items(), list("p3", "p4"))
+      }
+    )
+  })
 })
 
 # ---------------------------------------------------------------------------

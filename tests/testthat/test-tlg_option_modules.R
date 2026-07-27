@@ -190,6 +190,48 @@ describe("tlg_option_select_ui", {
     expect_true(grepl("Y", html))
   })
 
+  it("selects the PKNCA grouping vars present in the data when default is '.pknca_groups'", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(TRT01A = "a", PARAM = "b", AVAL = 1)))
+    )
+    opt_def <- list(
+      label    = "Stratify",
+      choices  = ".colnames",
+      default  = ".pknca_groups",
+      multiple = TRUE
+    )
+    ui <- shiny::isolate(
+      tlg_option_select_ui(
+        "m-strat_var", opt_def, data = sample_data,
+        grouping_vars = shiny::reactive(c("TRT01A", "PARAM", "NOTINDATA"))
+      )
+    )
+    html <- as.character(ui)
+    # Grouping vars present in the data are pre-selected...
+    expect_true(grepl('value="TRT01A" selected', html))
+    expect_true(grepl('value="PARAM" selected', html))
+    # ...a non-grouping data column is offered but NOT selected...
+    expect_true(grepl('value="AVAL"', html))
+    expect_false(grepl('value="AVAL" selected', html))
+    # ...and a grouping var absent from the data is not offered at all.
+    expect_false(grepl("NOTINDATA", html))
+  })
+
+  it("falls back to nothing selected for '.pknca_groups' when no groups are available", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(TRT01A = "a", AVAL = 1)))
+    )
+    opt_def <- list(
+      label = "Stratify", choices = ".colnames",
+      default = ".pknca_groups", multiple = TRUE
+    )
+    ui <- shiny::isolate(
+      tlg_option_select_ui("m-strat_var", opt_def, data = sample_data)
+    )
+    html <- as.character(ui)
+    expect_false(grepl("selected", html))
+  })
+
   it("derives choices from column names when choices is '.colnames'", {
     sample_data <- shiny::reactive(
       list(conc = list(data = data.frame(COL1 = 1, COL2 = 2)))

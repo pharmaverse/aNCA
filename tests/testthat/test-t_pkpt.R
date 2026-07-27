@@ -67,9 +67,9 @@ describe("t_pkpt03_col", {
     expect_true(is.na(row$SD))
   })
 
-  it("stops with informative error when required columns are missing", {
+  it("stops with informative error when the value column is missing", {
     bad <- pkpt_data[, setdiff(names(pkpt_data), "AVAL")]
-    expect_error(t_pkpt03_col(bad), "missing required columns")
+    expect_error(t_pkpt03_col(bad), "missing required column")
   })
 
   it("produces one table per PPCAT when split by PPCAT (default)", {
@@ -88,6 +88,60 @@ describe("t_pkpt03_col", {
     )
     result <- t_pkpt03_col(two_visits, list_vars = c("AVISIT", "PPCAT"))
     expect_equal(length(result), 2)
+  })
+})
+
+describe("t_pkpt03_col: multi-variable stratification and filtering (#1356)", {
+  # Two specimens so PPSPEC actually splits the rows.
+  spec_data <- rbind(
+    pkpt_data,
+    transform(pkpt_data, PPSPEC = "Serum", AVAL = pkpt_data$AVAL * 2)
+  )
+
+  it("adds a row column per strat_var (default folds PARAM into the rows)", {
+    result <- t_pkpt03_col(pkpt_data)[[1]]
+    expect_true(all(c("TRT01A", "PARAM") %in% names(result)))
+    expect_false("param_var" %in% names(formals(t_pkpt03_col)))
+  })
+
+  it("separates statistics by an added strat variable (PPSPEC)", {
+    result <- t_pkpt03_col(spec_data, strat_var = c("TRT01A", "PARAM", "PPSPEC"))[[1]]
+    expect_true("PPSPEC" %in% names(result))
+    expect_setequal(unique(result$PPSPEC), c("Plasma", "Serum"))
+    # Serum Cmax mean is exactly double the plasma one (values * 2).
+    plasma <- result[result$PARAM == "Cmax" & result$TRT01A == "10mg" &
+                       result$PPSPEC == "Plasma", "Mean"]
+    serum  <- result[result$PARAM == "Cmax" & result$TRT01A == "10mg" &
+                       result$PPSPEC == "Serum", "Mean"]
+    expect_equal(serum, plasma * 2)
+  })
+
+  it("single scalar strat_var still works (regression, no PARAM in rows)", {
+    result <- t_pkpt03_col(pkpt_data, strat_var = "TRT01A")[[1]]
+    expect_true("TRT01A" %in% names(result))
+    expect_false("PARAM" %in% names(result))
+    # One row per treatment arm, aggregated across all parameters.
+    expect_equal(nrow(result), length(unique(pkpt_data$TRT01A)))
+  })
+
+  it("param_filter keeps only the requested PARAM values", {
+    result <- t_pkpt03_col(pkpt_data, param_filter = c("Cmax", "AUClast"))[[1]]
+    expect_setequal(unique(result$PARAM), c("Cmax", "AUClast"))
+  })
+
+  it("drops a strat variable that is also a table-split (list_vars) column", {
+    result <- t_pkpt03_col(
+      pkpt_data, list_vars = "PPCAT", strat_var = c("TRT01A", "PARAM", "PPCAT")
+    )[[1]]
+    expect_false("PPCAT" %in% names(result))
+    expect_true(all(c("TRT01A", "PARAM") %in% names(result)))
+  })
+
+  it("warns when a stratification variable is absent from the data", {
+    expect_warning(
+      t_pkpt03_col(pkpt_data, strat_var = c("TRT01A", "NOTACOL")),
+      "not found in the data.*NOTACOL"
+    )
   })
 })
 

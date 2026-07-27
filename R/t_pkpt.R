@@ -1,12 +1,17 @@
 #' Shared table builder for ADPP summary tables (pkpt03 / pkpt08 pattern).
 #'
-#' Deduplicates to one row per USUBJID x strat x param, then applies
-#' `summary_fn` to the numeric values for each stratum/parameter combination.
-#' Used internally by `t_pkpt03_col` and `t_pkpt08_uri` to avoid duplicating
-#' the identical looping/cbind/rbind boilerplate.
+#' Deduplicates to one row per subject x stratum, then applies `summary_fn` to
+#' the numeric values for each stratum.  A "stratum" is the combination of every
+#' column in `strat_vars` -- the parameter column (`PARAM`) is just one more
+#' stratification variable, so the row layout is fully controlled by the caller's
+#' `strat_var` selection (see `t_pkpt03_col`).  Rows are grouped by the
+#' `interaction()` of the (present) `strat_vars`, mirroring `t_pkct01()`.
 #'
 #' @param df Data frame (one split from `split_and_apply`).
-#' @param strat_var,param_var,value_var Column name strings.
+#' @param strat_vars Character vector of columns whose combination defines the
+#'   table rows.  Absent columns are silently dropped; an empty set yields a
+#'   single summary row over all rows.
+#' @param value_var Column name string of the numeric analysis value.
 #' @param summary_fn Function that takes a numeric vector and returns a
 #'   one-row `data.frame` of summary statistics.
 #' @param col_group_var Optional column whose levels become side-by-side column
@@ -20,53 +25,65 @@
 #' @return A labeled `data.frame`. When `col_group_var` is set it also carries a
 #'   `col_groups` attribute (level -> leaf column names) for the render layer.
 #' @noRd
-.build_pkpp_table <- function(df, strat_var, param_var, value_var, summary_fn,
+.build_pkpp_table <- function(df, strat_vars, value_var, summary_fn,
                               col_group_var = NULL, group_levels = NULL,
                               stats = NULL) {
+  strat_vars <- intersect(strat_vars, names(df))
+
   if ("USUBJID" %in% names(df)) {
     # Include AVISIT in the dedup key when present so that rows from different
     # visits (genuinely different AVAL values) are kept.  AVISIT is absent from
     # single-interval ADPP; including it only when present is safe because
     # !duplicated() still collapses true within-visit duplicates (same
-    # USUBJID × strat × param × AVISIT repeated per dose event).  col_group_var
-    # is added so a subject that is constant within the group is never split
-    # across two group columns by the dedup.
+    # USUBJID × stratum × AVISIT repeated per dose event).  col_group_var is
+    # added so a subject that is constant within the group is never split across
+    # two group columns by the dedup.
     dedup_cols <- intersect(
-      c("USUBJID", strat_var, param_var, "AVISIT", col_group_var),
+      c("USUBJID", strat_vars, "AVISIT", col_group_var),
       names(df)
     )
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
   }
-  # Natural-aware ordering so arms/params with embedded numbers (e.g. "10 mg"
-  # before "100 mg") sort numerically rather than lexically.
-  nat_sort <- function(v) v[order(.natural_sort_key(v))]
-  strats <- nat_sort(unique(df[[strat_var]]))
-  params <- nat_sort(unique(df[[param_var]]))
-  rows <- lapply(strats, function(s) {
-    sub_s <- df[df[[strat_var]] == s, , drop = FALSE]
-    lapply(params, function(p) {
-      key  <- data.frame(strat = s, param = p, stringsAsFactors = FALSE)
-      names(key) <- c(strat_var, param_var)
-      if (is.null(col_group_var)) {
-        vals <- sub_s[[value_var]][sub_s[[param_var]] == p]
-        cbind(key, summary_fn(vals), stringsAsFactors = FALSE)
-      } else {
-        cell <- sub_s[sub_s[[param_var]] == p, , drop = FALSE]
-        cbind(
-          key,
-          .pivot_group_blocks(
-            cell, col_group_var, group_levels,
-            block_fn = function(sd) summary_fn(sd[[value_var]])
-          ),
-          stringsAsFactors = FALSE
-        )
-      }
+
+  stat_block <- function(sub) {
+    if (is.null(col_group_var)) {
+      summary_fn(sub[[value_var]])
+    } else {
+      .pivot_group_blocks(
+        sub, col_group_var, group_levels,
+        block_fn = function(sd) summary_fn(sd[[value_var]])
+      )
+    }
+  }
+
+  if (length(strat_vars) == 0) {
+    # No row-grouping variables: a single summary row over all rows.
+    result <- stat_block(df)
+  } else {
+    # Coerce each grouping column to character (NA -> "NA") so interaction()
+    # keeps rows with missing group values visible, mirroring t_pkct01().
+    group_cols <- lapply(strat_vars, function(v) {
+      x <- as.character(df[[v]])
+      x[is.na(x)] <- "NA"
+      x
     })
-  })
-  flat <- unlist(rows, recursive = FALSE)
-  if (length(flat) == 0) return(data.frame())
-  result <- do.call(rbind, flat)
-  rownames(result) <- NULL
+    groups <- do.call(interaction, c(group_cols, list(sep = " | ", drop = TRUE)))
+    rows <- lapply(levels(groups), function(grp) {
+      sub <- df[groups == grp, , drop = FALSE]
+      if (nrow(sub) == 0) return(NULL)
+      key <- sub[1, strat_vars, drop = FALSE]
+      cbind(key, stat_block(sub), stringsAsFactors = FALSE)
+    })
+    rows <- Filter(Negate(is.null), rows)
+    if (length(rows) == 0) return(data.frame())
+    result <- do.call(rbind, rows)
+    # Natural-aware ordering (embedded numbers sort numerically) so each stratum
+    # is contiguous and "10 mg" sorts after "2 mg".
+    order_keys <- lapply(strat_vars, function(v) .natural_sort_key(result[[v]]))
+    result <- result[do.call(order, order_keys), , drop = FALSE]
+    rownames(result) <- NULL
+  }
+
   result <- .apply_stat_labels(apply_labels(result, type = "ADPP"))
   if (!is.null(col_group_var)) {
     attr(result, "col_groups") <-
@@ -87,31 +104,37 @@
 #'   column that is typically absent from `export_cdisc()$adpp`; it is silently
 #'   skipped when not present so there is no need to remove it manually, but
 #'   adding it only helps when your ADPP actually contains visit information.
-#' @param strat_var Column for treatment/dose stratification. Default: `"TRT01A"`.
-#' @param param_var Column containing parameter names shown as rows.
-#'   Default: `"PARAM"`.
+#' @param strat_var One or more columns whose combination defines the table rows
+#'   (stratification). Default: `c("TRT01A", "PARAM")` -- statistics are
+#'   separated by treatment arm and parameter.  Add e.g. `"PCSPEC"` to also split
+#'   by specimen.  Any variable that is also a `list_vars` (table-split) column is
+#'   dropped from the rows, since it is constant within each split.
 #' @param value_var Column containing the numeric analysis value. Default: `"AVAL"`.
+#' @param param_filter Optional character vector of `PARAM` values to keep.
+#'   `NULL` (default) keeps every parameter.
 #' @param col_group_var Optional subject-level column (e.g. `"SEX"`, `"RACE"`)
 #'   whose values become side-by-side comparison column groups: the full
 #'   statistic block is repeated once per level, nested under a group header.
 #'   `NULL` (default) produces the standard flat table. Must differ from
-#'   `strat_var`, `param_var`, and the `list_vars`.
+#'   `strat_var` and the `list_vars`.
 #' @param stats Optional character vector of statistics to display, chosen from
 #'   `c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min",
 #'   "Max")`. `NULL` (default) shows all of them. Names not produced by this
 #'   table are ignored.
 #'
 #' @return A named list of data frames, one per combination of `list_vars`.
-#'   Each data frame has columns: `strat_var`, `param_var`, `n`, `Mean`, `SD`,
-#'   `CV_pct`, `GeoMean`, `GeoCV_pct`, `Median`, `Min`, `Max`.  When
-#'   `col_group_var` is set, the statistic columns are prefixed per group level
-#'   and a `col_groups` attribute drives the rendered two-level header.
+#'   Each data frame has one column per `strat_var` followed by the statistics:
+#'   `n`, `Mean`, `SD`, `CV_pct`, `GeoMean`, `GeoCV_pct`, `Median`, `Min`, `Max`.
+#'   When `col_group_var` is set, the statistic columns are prefixed per group
+#'   level and a `col_groups` attribute drives the rendered two-level header.
 #'
 #' @examples
 #' \dontrun{
 #' adpp <- export_cdisc(res_nca)$adpp
 #' tables <- t_pkpt03_col(adpp)
 #' tables[[1]]
+#' # Separate statistics by specimen too:
+#' t_pkpt03_col(adpp, strat_var = c("TRT01A", "PARAM", "PCSPEC"))[[1]]
 #' # Compare sexes side by side:
 #' t_pkpt03_col(adpp, col_group_var = "SEX")[[1]]
 #' }
@@ -121,24 +144,38 @@
 t_pkpt03_col <- function(
   data,
   list_vars  = c("PPCAT"),
-  strat_var  = "TRT01A",
-  param_var  = "PARAM",
+  strat_var  = c("TRT01A", "PARAM"),
   value_var  = "AVAL",
+  param_filter = NULL,
   col_group_var = NULL,
   stats = NULL
 ) {
-  required_cols <- c(value_var, strat_var, param_var)
-  missing_cols <- setdiff(required_cols, names(data))
-  if (length(missing_cols) > 0) {
-    stop("t_pkpt03_col: missing required columns: ", paste(missing_cols, collapse = ", "))
+  if (!value_var %in% names(data)) {
+    stop("t_pkpt03_col: missing required column: ", value_var)
+  }
+
+  if (!is.null(param_filter) && length(param_filter) > 0 && "PARAM" %in% names(data)) {
+    data <- data[data$PARAM %in% param_filter, , drop = FALSE]
   }
 
   if (nrow(data) == 0) return(list(data.frame()))
 
+  # A table-split (list_vars) column is constant within each split, so keeping it
+  # on the rows only adds a redundant constant column.
+  strat_var <- setdiff(strat_var, list_vars)
+  missing_strat <- setdiff(strat_var, names(data))
+  if (length(missing_strat) > 0) {
+    warning(
+      "t_pkpt03_col: stratification variable(s) not found in the data and skipped: ",
+      paste(missing_strat, collapse = ", "),
+      ". The table is grouped by the remaining variable(s) only."
+    )
+  }
+
   group_levels <- NULL
   if (!is.null(col_group_var)) {
     group_levels <- .resolve_col_group(
-      col_group_var, data, reserved = c(strat_var, param_var, list_vars)
+      col_group_var, data, reserved = c(strat_var, list_vars)
     )
   }
 
@@ -146,7 +183,7 @@ t_pkpt03_col <- function(
     data, list_vars,
     function(df) {
       .build_pkpp_table(
-        df, strat_var, param_var, value_var, .summarise_adpp,
+        df, strat_var, value_var, .summarise_adpp,
         col_group_var = col_group_var, group_levels = group_levels,
         stats = stats
       )
@@ -198,8 +235,7 @@ t_pkpt07_norm <- function(
   paramcd_var    = "PARAMCD",
   paramcd_filter = c("CMAXD", "AUCLSTD", "AUCIFOD", "AUCTLSTD"),
   list_vars      = c("PPCAT"),
-  strat_var      = "TRT01A",
-  param_var      = "PARAM",
+  strat_var      = c("TRT01A", "PARAM"),
   value_var      = "AVAL",
   col_group_var  = NULL,
   stats          = NULL
@@ -231,7 +267,6 @@ t_pkpt07_norm <- function(
     data,
     list_vars = list_vars,
     strat_var = strat_var,
-    param_var = param_var,
     value_var = value_var,
     col_group_var = col_group_var,
     stats = stats
@@ -253,7 +288,7 @@ t_pkpt07_norm <- function(
 #'   matched case-insensitively. Default: `c("URINE")`.
 #' @inheritParams t_pkpt03_col
 #'
-#' @return Named list of data frames with columns: `strat_var`, `param_var`,
+#' @return Named list of data frames with one column per `strat_var` followed by
 #'   `n`, `Mean`, `SD`, `CV_pct`, `Median`, `Min`, `Max`.
 #'   Use [t_pkpt03_col()] instead if geometric mean statistics are needed.
 #'
@@ -269,9 +304,9 @@ t_pkpt08_uri <- function(
   data,
   urine_specs = c("URINE"),
   list_vars   = c("PPCAT"),
-  strat_var   = "TRT01A",
-  param_var   = "PARAM",
+  strat_var   = c("TRT01A", "PARAM"),
   value_var   = "AVAL",
+  param_filter = NULL,
   col_group_var = NULL,
   stats       = NULL
 ) {
@@ -286,6 +321,9 @@ t_pkpt08_uri <- function(
       "PPSPEC is present in the ADPP parameter data (from export_cdisc()$adpp)."
     )
   }
+  if (!is.null(param_filter) && length(param_filter) > 0 && "PARAM" %in% names(data)) {
+    data <- data[data$PARAM %in% param_filter, , drop = FALSE]
+  }
   if (nrow(data) == 0) {
     stop(
       "t_pkpt08_uri: no urine PK parameter data found in ADPP. ",
@@ -294,17 +332,26 @@ t_pkpt08_uri <- function(
     )
   }
 
-  required_cols <- c(value_var, strat_var, param_var)
-  missing_cols  <- setdiff(required_cols, names(data))
-  if (length(missing_cols) > 0) {
-    stop("t_pkpt08_uri: missing required columns: ",
-         paste(missing_cols, collapse = ", "))
+  if (!value_var %in% names(data)) {
+    stop("t_pkpt08_uri: missing required column: ", value_var)
+  }
+
+  # A table-split (list_vars) column is constant within each split, so keeping it
+  # on the rows only adds a redundant constant column.
+  strat_var <- setdiff(strat_var, list_vars)
+  missing_strat <- setdiff(strat_var, names(data))
+  if (length(missing_strat) > 0) {
+    warning(
+      "t_pkpt08_uri: stratification variable(s) not found in the data and skipped: ",
+      paste(missing_strat, collapse = ", "),
+      ". The table is grouped by the remaining variable(s) only."
+    )
   }
 
   group_levels <- NULL
   if (!is.null(col_group_var)) {
     group_levels <- .resolve_col_group(
-      col_group_var, data, reserved = c(strat_var, param_var, list_vars)
+      col_group_var, data, reserved = c(strat_var, list_vars)
     )
   }
 
@@ -312,7 +359,7 @@ t_pkpt08_uri <- function(
     data, list_vars,
     function(df) {
       .build_pkpp_table(
-        df, strat_var, param_var, value_var,
+        df, strat_var, value_var,
         function(v) .summarise_adpp(v, include_geo = FALSE),
         col_group_var = col_group_var, group_levels = group_levels,
         stats = stats
@@ -331,6 +378,11 @@ t_pkpt08_uri <- function(
 #'   `strat_var`. If `NULL` (default), the first arm in sorted order is used.
 #' @param ci_level Confidence level for the geometric mean ratio CI.
 #'   Default: `0.90`.
+#' @param strat_var Single treatment-arm column that defines the comparison axis
+#'   (each arm is compared against `ref_arm`). Default: `"TRT01A"`.  Unlike the
+#'   summary tables, this must be a single column.
+#' @param param_var Column containing parameter names shown as rows.
+#'   Default: `"PARAM"`.
 #' @inheritParams t_pkpt03_col
 #'
 #' @return Named list of data frames, one per combination of `list_vars`.

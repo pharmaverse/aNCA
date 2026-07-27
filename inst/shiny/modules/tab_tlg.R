@@ -279,9 +279,14 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # Raw TLG inputs.  Individual listings must display rows excluded from
     # summaries (PKSUM1F/PPSUMFL == "Y"), so they consume these unfiltered
     # sources -- see tlg_data_key().
+    # apply_labels() restores column `label` attributes (stripped by the
+    # PKNCA/dplyr pipeline and by row-subsetting) so the `!COLUMN` label-reference
+    # syntax resolves in title/subtitle/footnote/axis inputs.  It is applied as
+    # the final step of each source -- after row filtering, since `[` drops
+    # per-column attributes -- and with the flag/type matching each dataset.
     conc_data_all <- reactive({
       req(data())
-      data()$conc$data
+      apply_labels(data()$conc$data, type = "ADNCA")
     })
     adpp_data_all <- reactive({
       # A PK-parameter (ADPP) output was requested but NCA has not been run, so
@@ -300,7 +305,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
         !is.null(adpp()),
         "ADPP data is not available. Run NCA first to view PK parameter outputs."
       ))
-      adpp()
+      apply_labels(adpp(), type = "ADPP")
     })
 
     # Summary-filtered variants for tables and mean plots: rows flagged
@@ -309,8 +314,12 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # is filtered by its own flag only -- a record excluded from the
     # PK-parameter summary (PPSUMFL) must still be able to appear in the
     # concentration representations, and vice-versa.
-    conc_data <- reactive(filter_tlg_excluded(conc_data_all(), "PKSUM1F"))
-    adpp_data <- reactive(filter_tlg_excluded(adpp_data_all(), "PPSUMFL"))
+    conc_data <- reactive(
+      apply_labels(filter_tlg_excluded(conc_data_all(), "PKSUM1F"), type = "ADNCA")
+    )
+    adpp_data <- reactive(
+      apply_labels(filter_tlg_excluded(adpp_data_all(), "PPSUMFL"), type = "ADPP")
+    )
 
     # (dataset, type) -> data reactive.  Listings resolve to the "*_all"
     # (unfiltered) source; tables and graphs resolve to the filtered source.
@@ -320,6 +329,24 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       ADPP      = adpp_data,
       ADPP_all  = adpp_data_all
     )
+
+    # PKNCA grouping variables (minus the subject column) -- the sensible default
+    # row-stratification set for the summary tables (issue 1356: separate stats by
+    # every grouping variable but USUBJID).  Derived from the processed PKNCA
+    # object so it reflects the study's actual grouping structure; the option
+    # layer resolves the `.pknca_groups` default token against it.
+    grouping_vars <- reactive({
+      req(data())
+      groups  <- tryCatch(names(PKNCA::getGroups(data()$conc)), error = function(e) character())
+      subject <- tryCatch(data()$conc$columns$subject, error = function(e) NULL)
+      groups  <- setdiff(groups, subject)
+      # CDISC renames the specimen grouping column PCSPEC (ADNCA) -> PPSPEC (ADPP)
+      # via export_cdisc(); expose both aliases so each dataset's table defaults
+      # to whichever it actually carries when the option layer intersects with
+      # the data columns.
+      if ("PCSPEC" %in% groups) groups <- union(groups, "PPSPEC")
+      groups
+    })
 
     # Track which module IDs have already been registered for this session.
     # tlg_module_server() calls Shiny's moduleServer(), which registers reactive
@@ -347,7 +374,9 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
           # Only register the Shiny module once per session to avoid accumulating
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
-            tlg_module_server(module_id, tlg_data, type, get(g_def$fun), g_def$options)
+            tlg_module_server(
+              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
+            )
             assign(module_id, TRUE, envir = .registered_modules)
           }
           tlg_module_ui(session$ns(module_id), type, g_def$options)

@@ -27,6 +27,9 @@
 * Summary tables can compare covariate groups side by side: a new "Compare in columns" option on the `pkct01` and `pkpt03/07/08` tables repeats the statistic block per level of a chosen variable (e.g. `SEX`, `RACE`), rendered as a two-level Group × Statistic column header (#1356)
 * Summary tables let you choose which statistics to display: a new "Statistics to show" option on the `pkct01` and `pkpt03/07/08` tables filters the columns (e.g. `n`, `Number BLQ`, `Mean`, `SD`, `CV%`); leaving it empty shows all statistics as before (#1356)
 * Summary-exclusion flags are now scoped to their own dataset: ADNCA (concentration) outputs filter on `PKSUM1F` only and ADPP (PK parameter) outputs filter on `PPSUMFL` only, so a record excluded from one summary is no longer dropped from the other's TLGs (#1356)
+* Summary-table sidebar inputs are now homogeneous: every summary table (`pkct01` variants and `pkpt03/07/08`) exposes the same option layout — Filtering, Grouping (Split / Stratify), Value, Compare, and Statistics. "Stratify by (rows)" is a multi-select on all of them; on the `pkpt` tables it defaults to every PKNCA grouping variable except the subject (`USUBJID`) so statistics separate by treatment, parameter, and specimen out of the box. The redundant "Parameter variable" input on `pkpt03/07/08` and the separate "Time variable"/"Visit reference" inputs on the `pkct01` tables were removed — those columns are now selected within "Stratify by (rows)" — and the concentration tables gained a "Value variable" input to match. The `pkpt11` GMR table keeps its comparison-specific inputs as a documented exception (#1356)
+* Summary tables can filter which stratification values appear: a "Parameters to show" filter on the `pkpt03/07/08` tables and a "Timepoints to show" filter on the `pkct01` tables restrict the rows to the chosen `PARAM`/timepoint values (#1356)
+* Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
 
 ### TLG Order & Selection
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)
@@ -163,6 +166,7 @@
 
 ### TLG
 * Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in mean plots (`pkcg03`) (#1316)
+* Fixed TLG graph title/label handling: custom titles now apply immediately to combined graphs (`pkcg02`) via dedicated `plotly` outputs, and the `!COLUMN` label-reference syntax works again across title, subtitle, footnote, and axis inputs (column labels are re-applied before rendering, since the PKNCA pipeline strips them) (#1336)
 
 ## Dependency changes
 
