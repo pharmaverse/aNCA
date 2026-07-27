@@ -10,19 +10,20 @@
 t_pkct01(
   data,
   list_vars = c("PARAM", "PCSPEC"),
-  strat_var = "TRT01A",
-  time_var = "NFRLT",
-  visit_var = "ATPTREF",
+  strat_var = c("TRT01A", "ATPTREF", "NFRLT"),
+  value_var = "AVAL",
   blq_var = "AVALC",
+  time_var = "NFRLT",
+  time_filter = NULL,
   col_group_var = NULL,
   stats = NULL
 )
 
-t_pkct01_dose(data, ...)
+t_pkct01_dose(data, strat_var = c("DOSEA", "ATPTREF", "NFRLT"), ...)
 
-t_pkct01_tad(data, ...)
+t_pkct01_tad(data, strat_var = c("TRT01A", "ATPTREF", "NRRLT"), ...)
 
-t_pkct01_dose_tad(data, ...)
+t_pkct01_dose_tad(data, strat_var = c("DOSEA", "ATPTREF", "NRRLT"), ...)
 }
 \arguments{
 \item{data}{A CDISC ADNCA data frame (from \code{export_cdisc()$adnca}).}
@@ -30,27 +31,35 @@ t_pkct01_dose_tad(data, ...)
 \item{list_vars}{Character vector of columns used to split the output into
 separate tables. Default: \code{c("PARAM", "PCSPEC")}.}
 
-\item{strat_var}{Column name used for treatment/dose stratification.
-Default: \code{"TRT01A"}.}
+\item{strat_var}{One or more columns whose combination defines the table rows
+(stratification). Default: \code{c("TRT01A", "ATPTREF", "NFRLT")} -- treatment
+arm, visit reference, and nominal timepoint.  Add or remove columns to change
+how the rows are grouped.  Any variable that is also a \code{list_vars}
+(table-split) column is dropped from the rows, since it is constant within
+each split.}
 
-\item{time_var}{Column name for the nominal timepoint axis.
-Default: \code{"NFRLT"} (nominal time from first dose).}
-
-\item{visit_var}{Column name for the visit/period reference label.
-Default: \code{"ATPTREF"}.}
+\item{value_var}{Column containing the numeric analysis value. Default:
+\code{"AVAL"}.}
 
 \item{blq_var}{Column containing the character analysis value used to detect
 BLQ records. Default: \code{"AVALC"}. Records where this column equals \code{"BLQ"}
 are counted separately and excluded from numeric summaries. When \code{blq_var}
 is absent (as in \code{export_cdisc()$adnca}, which does not include \code{AVALC}),
-BLQ is detected via \code{AVAL == 0}, consistent with the package convention
+BLQ is detected via \code{value_var == 0}, consistent with the package convention
 for post-imputation BLQ encoding.}
+
+\item{time_var}{Column that the \code{time_filter} applies to (the nominal timepoint
+column). Default: \code{"NFRLT"}.  Row grouping is controlled entirely by
+\code{strat_var}; this argument only names the column that \code{time_filter} subsets.}
+
+\item{time_filter}{Optional vector of \code{time_var} values to keep. \code{NULL}
+(default) keeps every timepoint.}
 
 \item{col_group_var}{Optional subject-level column (e.g. \code{"SEX"}, \code{"RACE"})
 whose values become side-by-side comparison column groups: the full
 statistic block is repeated once per level, nested under a group header.
 \code{NULL} (default) produces the standard flat table. Must differ from
-\code{strat_var}, \code{visit_var}, \code{time_var}, and the \code{list_vars}.}
+\code{strat_var} and the \code{list_vars}.}
 
 \item{stats}{Optional character vector of statistics to display, chosen from
 \code{c("n", "n_blq", "Mean", "SD", "CV_pct", "Median", "GeoMean", "GeoCV_pct", "Min", "Max")}. \code{NULL} (default) shows all of them.}
@@ -59,8 +68,8 @@ statistic block is repeated once per level, nested under a group header.
 }
 \value{
 A named list of data frames, one per unique combination of
-\code{list_vars}.  Each data frame contains columns for \code{strat_var},
-\code{visit_var}, \code{time_var}, and the statistics:
+\code{list_vars}.  Each data frame has one column per \code{strat_var} followed by the
+statistics:
 \code{n}, \code{n_blq}, \code{Mean}, \code{SD}, \code{CV_pct}, \code{Median}, \code{GeoMean}, \code{GeoCV_pct}, \code{Min}, \code{Max}.
 When \code{col_group_var} is set, the statistic columns are prefixed per group
 level and a \code{col_groups} attribute drives the rendered two-level header.
@@ -73,8 +82,8 @@ statistics across subjects at each scheduled timepoint.
 \details{
 BLQ values are excluded from all numeric statistics and counted in \code{n_blq}.
 When \code{blq_var} is present, BLQ is identified as \code{df[[blq_var]] == "BLQ"}.
-When \code{blq_var} is absent, \code{AVAL == 0} is used as the fallback BLQ indicator.
-\code{GeoMean} is computed on positive \code{AVAL} values only.
+When \code{blq_var} is absent, \code{value_var == 0} is used as the fallback BLQ
+indicator. \code{GeoMean} is computed on positive \code{value_var} values only.
 }
 \section{Functions}{
 \itemize{

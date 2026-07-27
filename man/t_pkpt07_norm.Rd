@@ -9,8 +9,7 @@ t_pkpt07_norm(
   paramcd_var = "PARAMCD",
   paramcd_filter = c("CMAXD", "AUCLSTD", "AUCIFOD", "AUCTLSTD"),
   list_vars = c("PPCAT"),
-  strat_var = "TRT01A",
-  param_var = "PARAM",
+  strat_var = c("TRT01A", "PARAM"),
   value_var = "AVAL",
   col_group_var = NULL,
   stats = NULL
@@ -35,10 +34,11 @@ column that is typically absent from \code{export_cdisc()$adpp}; it is silently
 skipped when not present so there is no need to remove it manually, but
 adding it only helps when your ADPP actually contains visit information.}
 
-\item{strat_var}{Column for treatment/dose stratification. Default: \code{"TRT01A"}.}
-
-\item{param_var}{Column containing parameter names shown as rows.
-Default: \code{"PARAM"}.}
+\item{strat_var}{One or more columns whose combination defines the table rows
+(stratification). Default: \code{c("TRT01A", "PARAM")} -- statistics are
+separated by treatment arm and parameter.  Add e.g. \code{"PCSPEC"} to also split
+by specimen.  Any variable that is also a \code{list_vars} (table-split) column is
+dropped from the rows, since it is constant within each split.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 
@@ -46,7 +46,7 @@ Default: \code{"PARAM"}.}
 whose values become side-by-side comparison column groups: the full
 statistic block is repeated once per level, nested under a group header.
 \code{NULL} (default) produces the standard flat table. Must differ from
-\code{strat_var}, \code{param_var}, and the \code{list_vars}.}
+\code{strat_var} and the \code{list_vars}.}
 
 \item{stats}{Optional character vector of statistics to display, chosen from
 \code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this

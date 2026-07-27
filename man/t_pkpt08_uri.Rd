@@ -8,9 +8,9 @@ t_pkpt08_uri(
   data,
   urine_specs = c("URINE"),
   list_vars = c("PPCAT"),
-  strat_var = "TRT01A",
-  param_var = "PARAM",
+  strat_var = c("TRT01A", "PARAM"),
   value_var = "AVAL",
+  param_filter = NULL,
   col_group_var = NULL,
   stats = NULL
 )
@@ -28,25 +28,29 @@ column that is typically absent from \code{export_cdisc()$adpp}; it is silently
 skipped when not present so there is no need to remove it manually, but
 adding it only helps when your ADPP actually contains visit information.}
 
-\item{strat_var}{Column for treatment/dose stratification. Default: \code{"TRT01A"}.}
-
-\item{param_var}{Column containing parameter names shown as rows.
-Default: \code{"PARAM"}.}
+\item{strat_var}{One or more columns whose combination defines the table rows
+(stratification). Default: \code{c("TRT01A", "PARAM")} -- statistics are
+separated by treatment arm and parameter.  Add e.g. \code{"PCSPEC"} to also split
+by specimen.  Any variable that is also a \code{list_vars} (table-split) column is
+dropped from the rows, since it is constant within each split.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
+
+\item{param_filter}{Optional character vector of \code{PARAM} values to keep.
+\code{NULL} (default) keeps every parameter.}
 
 \item{col_group_var}{Optional subject-level column (e.g. \code{"SEX"}, \code{"RACE"})
 whose values become side-by-side comparison column groups: the full
 statistic block is repeated once per level, nested under a group header.
 \code{NULL} (default) produces the standard flat table. Must differ from
-\code{strat_var}, \code{param_var}, and the \code{list_vars}.}
+\code{strat_var} and the \code{list_vars}.}
 
 \item{stats}{Optional character vector of statistics to display, chosen from
 \code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this
 table are ignored.}
 }
 \value{
-Named list of data frames with columns: \code{strat_var}, \code{param_var},
+Named list of data frames with one column per \code{strat_var} followed by
 \code{n}, \code{Mean}, \code{SD}, \code{CV_pct}, \code{Median}, \code{Min}, \code{Max}.
 Use \code{\link[=t_pkpt03_col]{t_pkpt03_col()}} instead if geometric mean statistics are needed.
 }

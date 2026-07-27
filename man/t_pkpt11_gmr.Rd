@@ -29,7 +29,9 @@ column that is typically absent from \code{export_cdisc()$adpp}; it is silently
 skipped when not present so there is no need to remove it manually, but
 adding it only helps when your ADPP actually contains visit information.}
 
-\item{strat_var}{Column for treatment/dose stratification. Default: \code{"TRT01A"}.}
+\item{strat_var}{Single treatment-arm column that defines the comparison axis
+(each arm is compared against \code{ref_arm}). Default: \code{"TRT01A"}.  Unlike the
+summary tables, this must be a single column.}
 
 \item{param_var}{Column containing parameter names shown as rows.
 Default: \code{"PARAM"}.}
