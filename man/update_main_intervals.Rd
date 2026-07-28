@@ -32,7 +32,9 @@ which does not specify any BLQ imputation in any interval.}
 \item{drop_end_conc}{Logical. If \code{TRUE}, the concentration measured exactly at
 the end of each main interval is dropped before regular (non-partial) parameter
 calculations via the \code{end_conc_drop} imputation. This does not affect
-interval/partial parameter rows (\code{type_interval == "manual"}). Default \code{FALSE}.}
+interval/partial parameter rows (\code{type_interval == "manual"}) nor the last dose
+profile per concentration group, whose end-boundary point is a genuine terminal
+sample rather than a next-dose C0. Default \code{FALSE}.}
 }
 \value{
 An updated PKNCAdata object with parameter intervals based on user selections.

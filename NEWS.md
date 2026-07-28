@@ -25,7 +25,7 @@
 * Partial interval parameters section supports calculations beyond `AUCINT`: `RCAMINT`, `AUCINTD`, `CAVGINT`, and others. Table starts empty by default with a Remove Row button (#524, #1249)
 * "Min. Points for Half-life" setting added (range 2–10, default 3) (#1155)
 * BLQ imputation rules via `NCA Setup > Data Imputation` (#139)
-* "Drop End Concentration" switch in `NCA Setup > Data Imputation` drops the concentration at the end of each main interval before regular parameter calculations (partial/interval parameters unaffected) (#TODO)
+* "Drop End Concentration" switch in `NCA Setup > Data Imputation` drops the concentration at the end of each non-last main interval before regular parameter calculations, so a next-dose boundary point (e.g. an imputed C0) does not affect the previous dose profile. Partial/interval parameters and the last dose profile per group are unaffected (#1411)
 * General Exclusions section for in-app NCA exclusions, with "Excl. TLG" checkbox per entry (#851, #1018)
 * Parameter Exclusions tab: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
 * NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are excluded from NCA (#752)
