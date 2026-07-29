@@ -13,73 +13,80 @@ general_exclusions_ui <- function(id) {
   ns <- NS(id)
   tagList(
     # Input row: checkboxes, reason text, add button, help
-    div(
-      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
-      div(
-        style = paste(
-          "display: flex; flex-direction: column;",
-          "gap: 0; margin-right: 4px; min-width: 170px;"
-        ),
-        checkboxInput(
-          ns("cb_manual_nca"), "Manual NCA exclusion",
-          value = FALSE, width = "100%"
-        ),
-        checkboxInput(
-          ns("cb_tlg"), "TLG exclusion",
-          value = FALSE, width = "100%"
-        )
-      ),
-      textInput(
-        ns("exclusion_reason"),
-        label = NULL,
-        placeholder = "Enter exclusion reason"
-      ),
-      actionButton(
-        ns("add_exclusion_reason"),
-        label = "Add",
-        class = "btn btn-primary btn-sm"
-      ),
-      # Help button (dropdown)
-      dropdown(
+    fluidRow(
+      column(
+        width = 10,
         div(
-          style = "min-width:340px; max-width:480px;",
-          tags$h2(
-            "NCA Exclusions Help",
-            style = "font-size:1.2em; margin-bottom:8px;"
-          ),
-          p(
-            "Records excluded here can be removed from NCA PK",
-            "calculations, from mean plots and summary tables",
-            "(TLGs), or both."
-          ),
-          tags$ul(
-            tags$li(
-              tags$b("NCA exclusion"),
-              ": excluded from NCA PK calculations"
+          style = "display: flex; gap: 8px; align-items: center;",
+          div(
+            style = paste(
+              "display: flex; flex-direction: column;",
+              "gap: 0; margin-right: 4px; min-width: 170px;"
             ),
-            tags$li(
-              tags$b("TLG exclusion"),
-              ": excluded from mean plots and summary tables"
+            checkboxInput(
+              ns("cb_manual_nca"), "Manual NCA exclusion",
+              value = FALSE, width = "100%"
+            ),
+            checkboxInput(
+              ns("cb_tlg"), "TLG exclusion",
+              value = FALSE, width = "100%"
             )
           ),
-          tags$h3(
-            "Row Colors",
-            style = "font-size:1.05em; margin:10px 0 4px;"
+          textInput(
+            ns("exclusion_reason"),
+            label = NULL,
+            placeholder = "Enter exclusion reason"
           ),
-          tags$ul(
-            tags$li(tags$b("Red"), ": NCA exclusion"),
-            tags$li(tags$b("Yellow"), ": TLG exclusion only"),
-            tags$li(tags$b("Orange"), ": NCA + TLG exclusion")
-          ),
-          p(
-            "Select rows and add a reason to exclude.",
-            "Remove exclusions anytime."
+          actionButton(
+            ns("add_exclusion_reason"),
+            label = "Add",
+            class = "btn btn-primary btn-sm"
           )
-        ),
-        style = "unite",
-        right = TRUE,
-        icon = icon("question"),
-        status = "primary"
+        )
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            style = "min-width:340px; max-width:480px;",
+            tags$h2(
+              "NCA Exclusions Help",
+              style = "font-size:1.2em; margin-bottom:8px;"
+            ),
+            p(
+              "Records excluded here can be removed from NCA PK",
+              "calculations, from mean plots and summary tables",
+              "(TLGs), or both."
+            ),
+            tags$ul(
+              tags$li(
+                tags$b("NCA exclusion"),
+                ": excluded from NCA PK calculations"
+              ),
+              tags$li(
+                tags$b("TLG exclusion"),
+                ": excluded from mean plots and summary tables"
+              )
+            ),
+            tags$h3(
+              "Row Colors",
+              style = "font-size:1.05em; margin:10px 0 4px;"
+            ),
+            tags$ul(
+              tags$li(tags$b("Red"), ": NCA exclusion"),
+              tags$li(tags$b("Yellow"), ": TLG exclusion only"),
+              tags$li(tags$b("Orange"), ": NCA + TLG exclusion")
+            ),
+            p(
+              "Select rows and add a reason to exclude.",
+              "Remove exclusions anytime."
+            )
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary"
+        )
       )
     ),
     # Table of current exclusions (compact, below input)

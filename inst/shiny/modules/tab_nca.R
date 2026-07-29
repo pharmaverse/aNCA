@@ -220,13 +220,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         res <- withCallingHandlers({
           processed_pknca_data %>%
             # Check if there are exclusions that contains a filled reason
-            check_valid_pknca_data() %>%
+            aNCA:::check_valid_pknca_data() %>%
             # Perform PKNCA parameter calculations
             PKNCA_calculate_nca(
               blq_rule = settings()$data_imputation$blq_imputation_rule
             ) %>%
-            # Add bioavailability results if requested
-            add_f_to_pknca_results(settings()$bioavailability) %>%
             # Apply standard CDISC names
             mutate(
               PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")

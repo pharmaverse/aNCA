@@ -39,7 +39,7 @@ nca_results_ui <- function(id) {
     ),
 
     # Download button
-    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
+    downloadButton(ns("local_download_NCAres"), "Download NCA Data")
   )
 }
 
@@ -71,7 +71,6 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       }
 
       #' Transform results
-      # Calculate bioavailability if available
       results <- res_nca()
 
       # Transform results

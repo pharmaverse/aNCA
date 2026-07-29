@@ -14,7 +14,7 @@ settings:
   int_parameters:
     parameter:
     - AUCINT
-    - AUCINTD
+    - AUCINTda
     start_auc:
     - 0.0
     - 0.0

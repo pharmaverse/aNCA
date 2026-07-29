@@ -142,7 +142,7 @@ describe("export_cdisc", {
   })
 
   it("derives PPSTINT and PPENINT for interval (INT) parameters", {
-    for (int_param in c("AUCINT", "CAVGINT", "AUCINTD", "AUCINTPD", "RCAMINT")) {
+    for (int_param in c("AUCINT", "CAVGINT", "RCAMINT")) {
       modified_test_pknca_res <- test_pknca_res
       modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
         mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
@@ -160,6 +160,38 @@ describe("export_cdisc", {
       expect_equal(
         result$pp$PPENINT[which(result$pp$PPTESTCD == int_param)],
         rep(c("PT2H", "PT4H"), times = 3)
+      )
+    }
+  })
+
+  it("consolidates dose-aware AUCint PPTESTCDs and sets PPANMETH", {
+    da_params <- list(
+      AUCINTda   = "AUCINT",
+      AUCINTIPda = "AUCINTIP"
+    )
+    for (da_cd in names(da_params)) {
+      expected_cd <- da_params[[da_cd]]
+      modified_test_pknca_res <- test_pknca_res
+      modified_test_pknca_res$result <- modified_test_pknca_res$result %>%
+        mutate(PPTESTCD = translate_terms(PPTESTCD)) %>%
+        mutate(PPTESTCD = ifelse(PPTESTCD == "AUCINT", da_cd, PPTESTCD))
+
+      result <- export_cdisc(modified_test_pknca_res)
+
+      # Dose-aware params should be consolidated to their base PPTESTCD
+      int_rows <- which(grepl("INT", result$pp$PPTESTCD))
+      expect_true(all(result$pp$PPTESTCD[int_rows] == expected_cd))
+
+      # PPANMETH should be set for consolidated rows
+      expect_true("PPANMETH" %in% names(result$pp))
+      expect_true(all(
+        result$pp$PPANMETH[int_rows] == "Interpolation truncated at next dose time"
+      ))
+
+      # PPSTINT/PPENINT should still be derived correctly
+      expect_equal(
+        result$pp$PPSTINT[int_rows],
+        rep(c("PT0H", "PT2H"), times = 3)
       )
     }
   })
@@ -708,6 +740,15 @@ describe(".get_subjid", {
     expect_equal(result, c("1", "2"))
   })
 
+  it("derives SUBJID correctly with multiple STUDYIDs", {
+    data <- data.frame(
+      USUBJID = c("STUDY1-001", "STUDY2-002", "STUDY1-003"),
+      STUDYID = c("STUDY1", "STUDY2", "STUDY1")
+    )
+    result <- get_subjid(data)
+    expect_equal(result, c("001", "002", "003"))
+  })
+
   it("returns NA when neither USUBJID nor SUBJID are present", {
     data <- data.frame()
     result <- get_subjid(data)
@@ -806,7 +847,7 @@ describe("export_cdisc: CRITy column creation", {
     adpp <- result$adpp
     expect_true("CRIT1" %in% names(adpp))
     expect_true("CRIT1FL" %in% names(adpp))
-    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
+    expect_equal(unique(adpp$CRIT1), "R2ADJ >= 0.7")
   })
 
   it("creates CRITy columns for each flag rule", {
@@ -817,20 +858,21 @@ describe("export_cdisc: CRITy column creation", {
     expect_true("CRIT1FL" %in% names(adpp))
     expect_true("CRIT2" %in% names(adpp))
     expect_true("CRIT2FL" %in% names(adpp))
-    expect_equal(unique(adpp$CRIT1), "R2ADJ < 0.7")
-    expect_equal(unique(adpp$CRIT2), "AUCPEO > 20")
+    expect_equal(unique(adpp$CRIT1), "R2ADJ >= 0.7")
+    expect_equal(unique(adpp$CRIT2), "AUCPEO <= 20")
   })
 })
 
 describe("export_cdisc: CRITyFL values", {
 
-  it("sets CRITyFL to Y when exclude does not contain the rule message", {
+  it("CRITyFL is Y and CRITy contains inverted criterion when satisfied", {
     result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
     adpp <- result$adpp
     expect_true(all(adpp$CRIT1FL == "Y"))
+    expect_true(all(adpp$CRIT1 == "R2ADJ >= 0.7"))
   })
 
-  it("sets CRITyFL to N for records whose exclude contains the rule message", {
+  it("CRITyFL is empty and CRITy contains inverted criterion for violated records", {
     modified <- test_pknca_res
     modified$result <- modified$result %>%
       mutate(
@@ -846,8 +888,10 @@ describe("export_cdisc: CRITyFL values", {
       filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
     unflagged <- adpp %>%
       filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
-    expect_true(all(flagged$CRIT1FL == "N"))
+    expect_true(all(flagged$CRIT1FL == ""))
+    expect_true(all(flagged$CRIT1 == "R2ADJ >= 0.7"))
     expect_true(all(unflagged$CRIT1FL == "Y"))
+    expect_true(all(unflagged$CRIT1 == "R2ADJ >= 0.7"))
   })
 
   it("handles multiple rules where only one is violated", {
@@ -864,8 +908,28 @@ describe("export_cdisc: CRITyFL values", {
     adpp <- result$adpp
     flagged <- adpp %>%
       filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
-    expect_true(all(flagged$CRIT1FL == "N"))
+    expect_true(all(flagged$CRIT1FL == ""))
+    expect_true(all(flagged$CRIT1 == "R2ADJ >= 0.7"))
     expect_true(all(flagged$CRIT2FL == "Y"))
+    expect_true(all(flagged$CRIT2 == "AUCPEO <= 20"))
+  })
+})
+
+describe(".invert_criterion_operator", {
+  it("inverts < to >=", {
+    expect_equal(aNCA:::.invert_criterion_operator("R2ADJ < 0.7"), "R2ADJ >= 0.7")
+  })
+  it("inverts > to <=", {
+    expect_equal(aNCA:::.invert_criterion_operator("AUCPEO > 20"), "AUCPEO <= 20")
+  })
+  it("inverts <= to >", {
+    expect_equal(aNCA:::.invert_criterion_operator("X <= 5"), "X > 5")
+  })
+  it("inverts >= to <", {
+    expect_equal(aNCA:::.invert_criterion_operator("Y >= 10"), "Y < 10")
+  })
+  it("returns unchanged string when no operator found", {
+    expect_equal(aNCA:::.invert_criterion_operator("no operator"), "no operator")
   })
 })
 
@@ -936,5 +1000,68 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
     pp <- result$pp
     crit_cols <- grep("^CRIT|PPSUMFL|PPSUMRSN", names(pp), value = TRUE)
     expect_length(crit_cols, 0)
+  })
+
+  it("includes ATPTREF and ROUTE in ADPP when present in source data (#1276)", {
+    result <- export_cdisc(test_pknca_res)
+    expect_true("ATPTREF" %in% names(result$adpp))
+    expect_true("ROUTE" %in% names(result$adpp))
+    # Verify values are carried through, not just the column names
+    expect_true(any(!is.na(result$adpp$ATPTREF)))
+    expect_true(any(!is.na(result$adpp$ROUTE)))
+  })
+})
+
+describe("export_cdisc: PKSUM1RS column", {
+  it("includes PKSUM1RS in ADNCA output", {
+    result <- export_cdisc(test_pknca_res)
+    expect_true("PKSUM1RS" %in% names(result$adnca))
+  })
+
+  it("PKSUM1RS is empty when PKSUM1F is not Y", {
+    result <- export_cdisc(test_pknca_res)
+    adnca <- result$adnca
+    non_excluded <- adnca$PKSUM1F != "Y"
+    if (any(non_excluded)) {
+      expect_true(all(adnca$PKSUM1RS[non_excluded] == ""))
+    }
+  })
+
+  it("populates PKSUM1RS from general exclusion reasons", {
+    modified <- test_pknca_res
+    n <- nrow(modified$data$conc$data)
+    modified$data$conc$data$PKSUM1F <- rep("", n)
+    modified$data$conc$data$PKSUM1RS <- rep("", n)
+    modified$data$conc$data$PKSUM1F[c(1, 2)] <- "Y"
+    modified$data$conc$data$PKSUM1RS[c(1, 2)] <- "Protocol deviation"
+    result <- export_cdisc(modified)
+    adnca <- result$adnca
+    expect_equal(adnca$PKSUM1F[c(1, 2)], c("Y", "Y"))
+    expect_equal(adnca$PKSUM1RS[c(1, 2)], c("Protocol deviation", "Protocol deviation"))
+  })
+
+  it("PKSUM1RS contains half-life reason for half-life-only exclusions", {
+    modified <- test_pknca_res
+    modified$data$conc$data$is.excluded.hl <- FALSE
+    modified$data$conc$data$is.excluded.hl[3] <- TRUE
+    result <- export_cdisc(modified)
+    adnca <- result$adnca
+    expect_equal(adnca$PKSUM1F[3], "Y")
+    expect_equal(adnca$PKSUM1RS[3], "Half-life point exclusion")
+  })
+
+  it("combines general and half-life exclusion reasons", {
+    modified <- test_pknca_res
+    n <- nrow(modified$data$conc$data)
+    modified$data$conc$data$PKSUM1F <- rep("", n)
+    modified$data$conc$data$PKSUM1RS <- rep("", n)
+    modified$data$conc$data$PKSUM1F[3] <- "Y"
+    modified$data$conc$data$PKSUM1RS[3] <- "Protocol deviation"
+    modified$data$conc$data$is.excluded.hl <- FALSE
+    modified$data$conc$data$is.excluded.hl[3] <- TRUE
+    result <- export_cdisc(modified)
+    adnca <- result$adnca
+    expect_equal(adnca$PKSUM1F[3], "Y")
+    expect_equal(adnca$PKSUM1RS[3], "Protocol deviation; Half-life point exclusion")
   })
 })

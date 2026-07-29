@@ -206,8 +206,8 @@ describe("pivot_wider_pknca_results", {
       `LAMZHL[hr]` = "Half-Life Lambda z",
       `LAMZSPN` = "Lambda z Span",
       `AUCIFO[hr*ng/mL]` = "AUC Infinity Obs",
-      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2",
-      `AUCINT_2-4[hr*ng/mL]` = "AUC from T1 to T2",
+      `AUCINT_0-2[hr*ng/mL]` = "AUC from 0 to 2",
+      `AUCINT_2-4[hr*ng/mL]` = "AUC from 2 to 4",
       `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
     expect_equal(labels, expected_labels)

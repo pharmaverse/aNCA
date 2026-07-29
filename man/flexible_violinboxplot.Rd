@@ -23,9 +23,9 @@ flexible_violinboxplot(
 
 \item{parameter}{A string specifying the parameter to be plotted.}
 
-\item{xvars}{Variables for the x axis.}
+\item{xvars}{Character vector of column names for the x-axis grouping.}
 
-\item{colorvars}{Variables for the color aesthetic.}
+\item{colorvars}{Character vector of column names for the color aesthetic.}
 
 \item{varvalstofilter}{Character vector specifying which variable and value to pre-filter
 as \code{colname: value}. By default is NULL (no pre-filtering)}

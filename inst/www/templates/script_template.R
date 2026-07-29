@@ -60,9 +60,6 @@ pknca_res <- pknca_obj %>%
     blq_rule = blq_rule
   ) %>%
 
-  # Add bioavailability results if requested
-  add_f_to_pknca_results(settings_list$settings$bioavailability) %>%
-
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
 
