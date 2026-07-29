@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9185</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9186</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-development-version">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<ul><li>Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after <code>R CMD INSTALL</code>, and the app logo is served from <code>inst/shiny/www/</code> instead of the non-installed <code>man/figures/</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1378" class="external-link">#1378</a>)</li>
+</ul></div>
 <div class="section level3">
 <h3 id="testing-development-version">Testing<a class="anchor" aria-label="anchor" href="#testing-development-version"></a></h3>
 <ul><li>Add 100% line coverage for <code>g_pkcg.R</code>, <code>g_lineplot.R</code>, <code>l_pkcl01.R</code>, and TLG Shiny modules (<a href="https://github.com/pharmaverse/aNCA/issues/1351" class="external-link">#1351</a>)</li>
@@ -151,7 +155,7 @@
 </ul></div>
 </div>
 <div class="section level3">
-<h3 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
+<h3 id="bug-fixes-development-version-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version-1"></a></h3>
 <div class="section level4">
 <h4 id="cdisc-export-development-version">CDISC Export<a class="anchor" aria-label="anchor" href="#cdisc-export-development-version"></a></h4>
 <ul><li>
