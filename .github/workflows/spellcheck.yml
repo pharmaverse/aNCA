@@ -49,19 +49,19 @@ jobs:
       !contains(github.event.commits[0].message, '[skip spellcheck]')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup R
-        uses: r-lib/actions/setup-r@v2
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
           r-version: ${{ inputs.r-version }}
           use-public-rspm: true
 
       - name: Install R Dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
+        uses: r-lib/actions/setup-r-dependencies@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
 
       - name: Run Spellcheck
-        uses: insightsengineering/r-spellcheck-action@v3
+        uses: insightsengineering/r-spellcheck-action@33b8e19df4227812758fadd88d50b710c7620e1f # v3
         with:
           additional_options: ""
           exclude: "${{ inputs.exclude }}"

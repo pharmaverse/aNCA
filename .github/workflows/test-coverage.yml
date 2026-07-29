@@ -25,18 +25,18 @@ jobs:
       coverage-percent: ${{ steps.set-coverage-percentage.outputs.coverage-percentage }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
+        uses: r-lib/actions/setup-pandoc@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
 
       - name: Setup R
-        uses: r-lib/actions/setup-r@v2
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
           use-public-rspm: true
 
       - name: Install R Dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
+        uses: r-lib/actions/setup-r-dependencies@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
           extra-packages: |
             local::.
@@ -79,7 +79,7 @@ jobs:
 
       - name: Check whether coverage reports exists
         id: check_coverage_reports
-        uses: andstor/file-existence-action@v1
+        uses: andstor/file-existence-action@f02338908d150e00a4b8bebc2dad18bd9e5229b0 # v1
         with:
           files: "coverage.xml, coverage.txt, coverage-report.html"
 
@@ -90,7 +90,7 @@ jobs:
 
       - name: Generate Coverage Summary Report
         if: steps.check_coverage_reports.outputs.files_exists == 'true' && github.event_name == 'pull_request'
-        uses: irongut/CodeCoverageSummary@v1.2.0
+        uses: irongut/CodeCoverageSummary@5088d5eb315a46ff785c607078606c0b9107e0b6 # v1.2.0
         with:
           filename: coverage.xml
           badge: true
@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload report for review
         if: steps.check_coverage_reports.outputs.files_exists == 'true' && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-report
           path: "coverage-report.html"
@@ -112,7 +112,7 @@ jobs:
 
       - name: Add Coverage PR Comment
         if: steps.check_coverage_reports.outputs.files_exists == 'true' && github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
         with:
           header: code-coverage
           path: code-coverage-results.md
@@ -126,14 +126,14 @@ jobs:
       contents: write
     steps:
       - name: Checkout the badges branch in repo
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: badges
           path: badges
 
       # Use the output from the `coverage` step
       - name: Generate the badge SVG image
-        uses: emibcn/badge-action@v1
+        uses: emibcn/badge-action@2f70f25eed9a1b71ffb09535523b460cc8c16d04 # v1
         id: badge
         with:
           label: "Test Coverage"
@@ -162,7 +162,7 @@ jobs:
           git commit -m "Add/Update badge" || true
 
       - name: Push badges
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@881a6320fdb16eb5318c5054f31c218aec2b324c # master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: badges
