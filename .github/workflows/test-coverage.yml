@@ -9,10 +9,16 @@ on:
 
 name: Code Coverage
 
+permissions:
+  contents: read
+
 jobs:
   coverage:
     name: Test Coverage
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     outputs:
@@ -116,6 +122,8 @@ jobs:
     name: Generate badge for coverage
     needs: [coverage]
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout the badges branch in repo
         uses: actions/checkout@v4.2.2
