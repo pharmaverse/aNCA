@@ -277,6 +277,9 @@
   ([\#1159](https://github.com/pharmaverse/aNCA/issues/1159))
 - “Summarise by” selector in Matrix Ratios fixed (input ID mismatch)
   ([\#1198](https://github.com/pharmaverse/aNCA/issues/1198))
+- [`export_cdisc()`](https://pharmaverse.github.io/aNCA/reference/export_cdisc.md)
+  now includes `ATPTREF` and `ROUTE` columns in ADPP output
+  ([\#1276](https://github.com/pharmaverse/aNCA/issues/1276))
 
 #### Settings & Upload
 
