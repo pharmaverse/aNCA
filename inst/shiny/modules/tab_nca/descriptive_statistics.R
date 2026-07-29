@@ -106,7 +106,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         filter(is.na(exclude) | exclude == "") %>%
         # Rename manual interval parameters to include the range suffix
         # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
-        rename_interval_params()
+        aNCA:::rename_interval_params()
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, selected_groupby)
