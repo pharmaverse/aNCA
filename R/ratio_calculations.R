@@ -84,27 +84,27 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' @returns A data.frame result object with the calculated ratios.
 #' @export
 calculate_ratios <- function(
-  data,
-  test_parameter,
-  ref_parameter = test_parameter,
-  match_cols,
-  ref_groups,
-  test_groups = NULL,
-  adjusting_factor = 1,
-  custom_pptestcd = NULL) {
+    data,
+    test_parameter,
+    ref_parameter = test_parameter,
+    match_cols,
+    ref_groups,
+    test_groups = NULL,
+    adjusting_factor = 1,
+    custom_pptestcd = NULL) {
   UseMethod("calculate_ratios", data)
 }
 
 #' @export
 calculate_ratios.data.frame <- function(
-  data,
-  test_parameter,
-  ref_parameter = test_parameter,
-  match_cols,
-  ref_groups,
-  test_groups = NULL,
-  adjusting_factor = 1,
-  custom_pptestcd = NULL) {
+    data,
+    test_parameter,
+    ref_parameter = test_parameter,
+    match_cols,
+    ref_groups,
+    test_groups = NULL,
+    adjusting_factor = 1,
+    custom_pptestcd = NULL) {
   if (!any(data$PPTESTCD == test_parameter)) {
     warning(
       paste0(
@@ -232,14 +232,14 @@ calculate_ratios.data.frame <- function(
 
 #' @export
 calculate_ratios.PKNCAresults <- function(
-  data,
-  test_parameter,
-  ref_parameter = test_parameter,
-  match_cols,
-  ref_groups,
-  test_groups = NULL,
-  adjusting_factor = 1,
-  custom_pptestcd = NULL) {
+    data,
+    test_parameter,
+    ref_parameter = test_parameter,
+    match_cols,
+    ref_groups,
+    test_groups = NULL,
+    adjusting_factor = 1,
+    custom_pptestcd = NULL) {
   # Check if match_cols and ref_groups are valid group columns
   # Make checks on the input formats
   cols_used_for_ratios <- c(match_cols, names(ref_groups), names(test_groups))
@@ -351,14 +351,14 @@ parse_interval_parameter <- function(param) {
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
 #' @returns A data.frame with the calculated ratios for the specified settings.
 calculate_ratio_app <- function(
-  res,
-  test_parameter,
-  ref_parameter = test_parameter,
-  test_group = "(all other levels)",
-  ref_group = "PARAM: Analyte01",
-  aggregate_subject = "no",
-  adjusting_factor = 1,
-  custom_pptestcd = NULL) {
+    res,
+    test_parameter,
+    ref_parameter = test_parameter,
+    test_group = "(all other levels)",
+    ref_group = "PARAM: Analyte01",
+    aggregate_subject = "no",
+    adjusting_factor = 1,
+    custom_pptestcd = NULL) {
   # Parse interval parameters (e.g. AUCINT_0-20 -> base=AUCINT, start=0, end=20)
   test_parsed <- parse_interval_parameter(test_parameter)
   ref_parsed <- parse_interval_parameter(ref_parameter)

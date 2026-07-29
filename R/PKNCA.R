@@ -89,10 +89,10 @@
 #'
 #' @export
 PKNCA_create_data_object <- function( # nolint: object_name_linter
-  adnca_data,
-  mapping = NULL,
-  applied_filters = NULL,
-  time_duplicate_rows = NULL) {
+    adnca_data,
+    mapping = NULL,
+    applied_filters = NULL,
+    time_duplicate_rows = NULL) {
   # Derive nca_exclude_reason_columns from mapping
   nca_exclude_reason_columns <- NULL
   if (!is.null(mapping)) {
@@ -295,20 +295,20 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
-  adnca_data,
-  method,
-  selected_analytes,
-  selected_profile,
-  selected_pcspec,
-  start_impute = TRUE,
-  hl_adj_rules = NULL,
-  exclusion_list = NULL,
-  keep_interval_cols = NULL,
-  min_hl_points = 3,
-  parameter_selections = NULL,
-  int_parameters = NULL,
-  blq_imputation_rule = NULL,
-  custom_units_table = NULL) {
+    adnca_data,
+    method,
+    selected_analytes,
+    selected_profile,
+    selected_pcspec,
+    start_impute = TRUE,
+    hl_adj_rules = NULL,
+    exclusion_list = NULL,
+    keep_interval_cols = NULL,
+    min_hl_points = 3,
+    parameter_selections = NULL,
+    int_parameters = NULL,
+    blq_imputation_rule = NULL,
+    custom_units_table = NULL) {
 
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
