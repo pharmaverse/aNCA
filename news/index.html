@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9186</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9187</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -191,6 +191,10 @@
 <li>“Summarise by” selector in Matrix Ratios fixed (input ID mismatch) (<a href="https://github.com/pharmaverse/aNCA/issues/1198" class="external-link">#1198</a>)</li>
 <li>
 <code><a href="../reference/export_cdisc.html">export_cdisc()</a></code> now includes <code>ATPTREF</code> and <code>ROUTE</code> columns in ADPP output (<a href="https://github.com/pharmaverse/aNCA/issues/1276" class="external-link">#1276</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="slope-selector-development-version">Slope selector<a class="anchor" aria-label="anchor" href="#slope-selector-development-version"></a></h4>
+<ul><li>Slope Selector plots are rendered again without error <code>Can't transform a data frame with NA or '' names</code> when a grouping value (e.g. <code>STUDYID</code>, <code>PARAM</code>) contains an underscore. Plot names are now parsed at <code>key=</code> boundaries instead of splitting on every underscore (<a href="https://github.com/pharmaverse/aNCA/issues/1378" class="external-link">#1378</a>).</li>
 </ul></div>
 <div class="section level4">
 <h4 id="settings--upload-development-version">Settings &amp; Upload<a class="anchor" aria-label="anchor" href="#settings--upload-development-version"></a></h4>
