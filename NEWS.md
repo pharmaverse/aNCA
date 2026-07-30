@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug Fixes
+
+* Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)
+
 ## Testing
 
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
@@ -111,6 +115,7 @@
 * NCA results flagging correctly distinguishes missing vs not-requested parameters (#934)
 * Custom units table join uses correct keys instead of hardcoded columns (#1159)
 * "Summarise by" selector in Matrix Ratios fixed (input ID mismatch) (#1198)
+* `export_cdisc()` now includes `ATPTREF` and `ROUTE` columns in ADPP output (#1276)
 
 ### Settings & Upload
 * SASS compilation moved from runtime to build-time script, fixing startup crashes on read-only deployments (#1107)
@@ -136,6 +141,7 @@
 
 ### TLG
 * Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in mean plots (`pkcg03`) (#1316)
+* Fixed TLG graph title/label handling: custom titles now apply immediately to combined graphs (`pkcg02`) via dedicated `plotly` outputs, and the `!COLUMN` label-reference syntax works again across title, subtitle, footnote, and axis inputs (column labels are re-applied before rendering, since the PKNCA pipeline strips them) (#1336)
 
 ## Dependency changes
 
