@@ -208,6 +208,13 @@
 
 ### Bug fixes
 
+#### Data & Mapping
+
+- The “Next” button in the Data tab is no longer permanently disabled
+  after an incomplete-mapping error. Users can now correct the mapping
+  and continue without restarting the app
+  ([\#1402](https://github.com/pharmaverse/aNCA/issues/1402))
+
 #### CDISC Export
 
 - `CRITxFL` now uses `""` instead of `"N"` when criterion is violated.
