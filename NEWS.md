@@ -117,6 +117,9 @@
 * "Summarise by" selector in Matrix Ratios fixed (input ID mismatch) (#1198)
 * `export_cdisc()` now includes `ATPTREF` and `ROUTE` columns in ADPP output (#1276)
 
+### Slope selector
+* Slope Selector plots are rendered again without error `Can't transform a data frame with NA or '' names` when a grouping value (e.g. `STUDYID`, `PARAM`) contains an underscore. Plot names are now parsed at `key=` boundaries instead of splitting on every underscore (#1378).
+
 ### Settings & Upload
 * SASS compilation moved from runtime to build-time script, fixing startup crashes on read-only deployments (#1107)
 * Settings upload via ZIP file fixed (#832)
