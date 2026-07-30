@@ -454,7 +454,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
         # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
         # drop values, this was only affecting BLQ branch (#139) but not main, related
         # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
-        # done, this values dissappear and then it is considered that those times were
+        # done, this values disappear and then it is considered that those times were
         # also NA, which causes the error. In PKNCA dropping in imputation works fine,
         # but aNCA might be doing something special we are missing
         d_na <- data.frame(
