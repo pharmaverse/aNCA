@@ -544,3 +544,64 @@ describe("rm_impute_obs_params integration", {
     expect_true(all(is.na(obs_rows$impute) | obs_rows$impute == ""))
   })
 })
+
+describe("BLQ imputation end-to-end on real bug dataset (#1057)", {
+  # Dataset attached to issue #1057: IV bolus profile with trailing BLQ (0)
+  # concentrations at 24/36/48 hr. Before the fix, rm_impute_obs_params()
+  # removed BLQ imputation from half.life (dependency check was one level
+  # deep), so lambda.z was calculated on non-imputed data while aucinf.obs
+  # used imputed data, breaking the AUCIFO = AUCLST + CLST/LAMZ identity.
+  blq_adnca <- read.csv(testthat::test_path("data", "test-blq-ADNCA.csv"),
+                        na.strings = c("", "NA"))
+  blq_rule <- list(first = "keep", middle = "drop", last = 0)
+  auc_chain_params <- c("auclast", "aucinf.obs", "aucinf.pred",
+                        "half.life", "lambda.z", "clast.obs", "clast.pred",
+                        "cmax", "tmax", "tlast")
+
+  pknca_data <- PKNCA_create_data_object(blq_adnca)
+  study_types <- unique(.derive_study_types(pknca_data)$type)
+  parameter_selections <- setNames(
+    lapply(study_types, function(x) auc_chain_params),
+    study_types
+  )
+
+  updated_data <- PKNCA_update_data_object(
+    adnca_data = pknca_data,
+    method = "lin up/log down",
+    selected_analytes = "DrugA",
+    selected_profile = "DOSE 1",
+    selected_pcspec = "SERUM",
+    start_impute = FALSE,
+    parameter_selections = parameter_selections,
+    blq_imputation_rule = blq_rule
+  )
+  nca_results <- PKNCA_calculate_nca(updated_data, blq_rule = blq_rule)
+  results_df <- as.data.frame(nca_results$result)
+  get_pp <- function(pp) results_df$PPORRES[results_df$PPTESTCD == pp]
+
+  it("keeps BLQ imputation on the half-life chain and removes it from observational params", {
+    auc_chain_rows <- updated_data$intervals[updated_data$intervals$aucinf.obs, ]
+    expect_true("blq" %in% auc_chain_rows$impute)
+
+    obs_rows <- updated_data$intervals[updated_data$intervals$cmax, ]
+    expect_true(all(is.na(obs_rows$impute) | obs_rows$impute == ""))
+  })
+
+  it("produces internally consistent AUCIFO = AUCLST + CLST/LAMZ (obs and pred)", {
+    auclst <- get_pp("auclast")
+    lambda_z <- get_pp("lambda.z")
+
+    expect_false(any(is.na(c(auclst, lambda_z, get_pp("aucinf.obs")))))
+    expect_equal(get_pp("aucinf.obs"), auclst + get_pp("clast.obs") / lambda_z,
+                 tolerance = 1e-6)
+    expect_equal(get_pp("aucinf.pred"), auclst + get_pp("clast.pred") / lambda_z,
+                 tolerance = 1e-6)
+  })
+
+  it("matches the parameter values obtained in the app for the issue dataset", {
+    expect_equal(get_pp("auclast"), 251.4521, tolerance = 1e-4)
+    expect_equal(get_pp("aucinf.obs"), 259.2045, tolerance = 1e-4)
+    expect_equal(get_pp("lambda.z"), 0.32248, tolerance = 1e-4)
+    expect_equal(get_pp("half.life"), 2.1494, tolerance = 1e-4)
+  })
+})
