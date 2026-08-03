@@ -342,6 +342,12 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   consumer_map <- .build_consumer_map(metadata_nca_parameters)
   needs_impute <- .find_upstream_deps(params_auc_dep, consumer_map)
 
+  # Walk downstream too: AUC consumers (e.g., vss.obs = f(cl.obs, mrt.obs),
+  # vz.obs = f(cl.obs, lambda.z)) compute AUC-derived quantities internally,
+  # so they must use the same imputed data for consistency (#1057).
+  dependency_map <- .build_dependency_map(metadata_nca_parameters)
+  needs_impute <- .find_downstream_consumers(needs_impute, dependency_map)
+
   params_not_to_impute <- metadata_nca_parameters %>%
     filter(!PKNCA %in% needs_impute) %>%
     pull(PKNCA) %>%
@@ -396,6 +402,23 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
   rev
 }
 
+#' Build a dependency map from the Depends column.
+#' Mirror image of `.build_consumer_map()`: for each parameter A, returns the
+#' parameters A depends on.
+#' e.g., vss.obs lists "cl.obs, mrt.obs" in Depends, so
+#' dependency_map$vss.obs = c("cl.obs", "mrt.obs").
+#' @noRd
+.build_dependency_map <- function(metadata) {
+  fwd <- list()
+  for (i in seq_len(nrow(metadata))) {
+    pkg_name <- metadata$PKNCA[i]
+    dep_str <- metadata$Depends[i]
+    if (is.na(dep_str) || dep_str == "") next
+    fwd[[pkg_name]] <- trimws(strsplit(dep_str, ",")[[1]])
+  }
+  fwd
+}
+
 #' Check if a parameter is a new upstream consumer of the current chain.
 #' @noRd
 .is_new_upstream_consumer <- function(pkg, consumer_map, needs, obs_params) {
@@ -429,4 +452,26 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     needs <- c(needs, newly_found)
   }
   needs
+}
+
+#' Find all downstream consumers transitively from `start_set`.
+#' Params whose Depends list intersects the current chain consume AUC-derived
+#' quantities (e.g., vss.obs consumes cl.obs and mrt.obs) and therefore compute
+#' AUC internally — they must use the same BLQ-imputed data (#1057).
+#'
+#' The fixpoint walk is direction-agnostic: `.find_upstream_deps()` follows
+#' "who consumes X" edges, so passing the reverse (dependency) map from
+#' `.build_dependency_map()` walks the graph downstream. Purely observational
+#' leaf params (cmax, tmax, tlast) are excluded as in the upstream walk.
+#'
+#' @param start_set Character vector of starting PKNCA parameter names.
+#' @param dependency_map Named list from `.build_dependency_map()`.
+#' @param obs_params Character vector of observational params to exclude.
+#' @param max_iter Maximum iterations to guard against infinite loops from
+#'   circular dependencies.
+#' @noRd
+.find_downstream_consumers <- function(start_set, dependency_map,
+                                       obs_params = c("cmax", "tmax", "tlast"),
+                                       max_iter = 50L) {
+  .find_upstream_deps(start_set, dependency_map, obs_params, max_iter)
 }

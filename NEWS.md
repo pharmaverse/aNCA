@@ -27,7 +27,7 @@
 * BLQ imputation rules via `NCA Setup > Data Imputation` (#139)
 
 ### Bug Fixes
-* Half-life (LAMZHL) and lambda.z (LAMZ) now correctly retain BLQ imputation when half-life-dependent parameters (AUCIFO, AUCIFP) are requested. Previously `rm_impute_obs_params()` removed imputation from `half.life` because its dependency check was limited to one level — missing the transitive chain `half.life -> lambda.z -> aucinf.obs`. The dependency resolution now recursively traverses upstream dependencies to include all parameters in the AUC calculation chain (#1057).
+* Half-life (LAMZHL) and lambda.z (LAMZ) now correctly retain BLQ imputation when half-life-dependent parameters (AUCIFO, AUCIFP) are requested. Previously `rm_impute_obs_params()` removed imputation from `half.life` because its dependency check was limited to one level — missing the transitive chain `half.life -> lambda.z -> aucinf.obs`. The dependency resolution now recursively traverses upstream dependencies to include all parameters in the AUC calculation chain, and also walks downstream so AUC consumers (e.g., `vss.obs`, `vz.obs`) keep the same imputed data (#1057).
 * General Exclusions section for in-app NCA exclusions, with "Excl. TLG" checkbox per entry (#851, #1018)
 * Parameter Exclusions tab: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags (#1040)
 * NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are excluded from NCA (#752)

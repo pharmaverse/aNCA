@@ -507,6 +507,50 @@ describe(".find_upstream_deps", {
   })
 })
 
+describe(".find_downstream_consumers", {
+  it("finds AUC consumers like vss.obs/vz.obs via the dependency map (#1057)", {
+    metadata <- data.frame(
+      PKNCA = c("aucinf.obs", "cl.obs", "mrt.obs", "vss.obs", "vz.obs",
+                "cmax", "cmax.dn"),
+      Depends = c("auclast, clast.obs, lambda.z", "aucinf.obs",
+                  "aucinf.obs, aumcinf.obs", "cl.obs, mrt.obs",
+                  "cl.obs, lambda.z", NA, "cmax"),
+      stringsAsFactors = FALSE
+    )
+    dependency_map <- .build_dependency_map(metadata)
+    start_set <- c("aucinf.obs", "cl.obs", "mrt.obs", "lambda.z")
+    result <- .find_downstream_consumers(start_set, dependency_map)
+    expect_true("vss.obs" %in% result)
+    expect_true("vz.obs" %in% result)
+    # cmax.dn only depends on cmax, which is not in the chain → not added
+    expect_false("cmax" %in% result)
+    expect_false("cmax.dn" %in% result)
+  })
+
+  it("excludes observational leaf params even if they depend on the chain", {
+    metadata <- data.frame(
+      PKNCA = c("auclast", "cmax"),
+      Depends = c(NA, "auclast"),
+      stringsAsFactors = FALSE
+    )
+    dependency_map <- .build_dependency_map(metadata)
+    result <- .find_downstream_consumers(c("auclast"), dependency_map)
+    expect_false("cmax" %in% result)
+  })
+
+  it("walks transitive downstream chains", {
+    metadata <- data.frame(
+      PKNCA = c("cl.obs", "vss.obs", "vss.dn"),
+      Depends = c("aucinf.obs", "cl.obs", "vss.obs"),
+      stringsAsFactors = FALSE
+    )
+    dependency_map <- .build_dependency_map(metadata)
+    result <- .find_downstream_consumers(c("cl.obs"), dependency_map)
+    expect_true("vss.obs" %in% result)
+    expect_true("vss.dn" %in% result)
+  })
+})
+
 describe("rm_impute_obs_params integration", {
   it("retains imputation for half-life chain and removes it for observational params (#1057)", {
     data <- FIXTURE_PKNCA_DATA
@@ -603,5 +647,56 @@ describe("BLQ imputation end-to-end on real bug dataset (#1057)", {
     expect_equal(get_pp("aucinf.obs"), 259.2045, tolerance = 1e-4)
     expect_equal(get_pp("lambda.z"), 0.32248, tolerance = 1e-4)
     expect_equal(get_pp("half.life"), 2.1494, tolerance = 1e-4)
+  })
+
+  it("keeps imputation for downstream AUC consumers (vss.obs, vz.obs) and stays warning-free", {
+    # vss.obs/vz.obs have no "auc" in name or Depends, but compute AUC
+    # internally via cl.obs/mrt.obs/lambda.z. Stripping their imputation
+    # makes PKNCA warn "AUC range starting before the first measurement"
+    # and computes them on non-imputed data (#1057 downstream regression).
+    default_like_params <- c(
+      "aucinf.obs", "auclast", "cmax", "clast.obs", "tlast", "tmax",
+      "half.life", "cl.obs", "vss.obs", "vz.obs", "mrt.last", "mrt.obs",
+      "lambda.z", "r.squared", "span.ratio", "adj.r.squared"
+    )
+    default_selections <- setNames(
+      lapply(study_types, function(x) default_like_params),
+      study_types
+    )
+    default_data <- PKNCA_update_data_object(
+      adnca_data = PKNCA_create_data_object(blq_adnca),
+      method = "lin up/log down",
+      selected_analytes = "DrugA",
+      selected_profile = "DOSE 1",
+      selected_pcspec = "SERUM",
+      start_impute = TRUE,
+      parameter_selections = default_selections,
+      blq_imputation_rule = blq_rule
+    )
+
+    # Downstream consumers stay in the imputed row, cmax stays stripped
+    vss_rows <- default_data$intervals[default_data$intervals$vss.obs, ]
+    expect_true(all(grepl("blq", vss_rows$impute)))
+    cmax_rows <- default_data$intervals[default_data$intervals$cmax, ]
+    expect_true(all(is.na(cmax_rows$impute) | cmax_rows$impute == ""))
+
+    # No "AUC range starting before the first measurement" warning
+    run_warnings <- character()
+    default_results <- withCallingHandlers(
+      PKNCA_calculate_nca(default_data, blq_rule = blq_rule),
+      warning = function(w) {
+        run_warnings <<- c(run_warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    )
+    expect_false(any(grepl("before the first measurement", run_warnings)))
+
+    # Consumers are consistent with the imputed AUC chain values
+    default_df <- as.data.frame(default_results$result)
+    get_dp <- function(pp) default_df$PPORRES[default_df$PPTESTCD == pp]
+    expect_equal(get_dp("vz.obs"), get_dp("cl.obs") / get_dp("lambda.z"),
+                 tolerance = 1e-6)
+    expect_equal(get_dp("vss.obs"), get_dp("cl.obs") * get_dp("mrt.obs"),
+                 tolerance = 1e-6)
   })
 })
