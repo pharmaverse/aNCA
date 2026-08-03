@@ -1,13 +1,13 @@
 "STUDYID","USUBJID","PCSPEC","PARAM","DOSETRT","DOSEA","DOSEU","ROUTE","ADOSEDUR","AVAL","AVALU","AFRLT","NFRLT","ARRLT","NRRLT","RRLTU","ATPTREF","TRT01A","METABFL"
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,100,"ng/mL",0.5,0.5,0.5,0.5,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,80,"ng/mL",1,1,1,1,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,65,"ng/mL",1.5,1.5,1.5,1.5,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,52,"ng/mL",2,2,2,2,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,35,"ng/mL",3,3,3,3,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,25,"ng/mL",4,4,4,4,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,12,"ng/mL",6,6,6,6,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,6,"ng/mL",8,8,8,8,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,2.5,"ng/mL",12,12,12,12,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,0,"ng/mL",24,24,24,24,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,0,"ng/mL",36,36,36,36,"hr","DOSE 1","DrugA 10 mg",NA
-"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,0,"ng/mL",48,48,48,48,"hr","DOSE 1","DrugA 10 mg",NA
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,100,"ng/mL",0.5,0.5,0.5,0.5,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,80,"ng/mL",1,1,1,1,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,65,"ng/mL",1.5,1.5,1.5,1.5,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,52,"ng/mL",2,2,2,2,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,35,"ng/mL",3,3,3,3,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,25,"ng/mL",4,4,4,4,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,12,"ng/mL",6,6,6,6,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,6,"ng/mL",8,8,8,8,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,2.5,"ng/mL",12,12,12,12,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,0,"ng/mL",24,24,24,24,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,0,"ng/mL",36,36,36,36,"hr","DOSE 1","DrugA 10 mg","N"
+"S1","BLQ-TEST-01","SERUM","DrugA","DrugA",10,"mg","INTRAVENOUS BOLUS",0,0,"ng/mL",48,48,48,48,"hr","DOSE 1","DrugA 10 mg","N"
