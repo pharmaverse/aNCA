@@ -58,6 +58,11 @@
 
   observe({
     data_step()
+
+    # Re-enable after each mapping submission is processed
+    # "Next" button is never permanently disabled
+    trigger_mapping_submit()
+
     shinyjs::enable("next_step")
   })
 

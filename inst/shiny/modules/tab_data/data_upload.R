@@ -61,7 +61,7 @@ data_upload_server <- function(id) {
         settings_override(content)
         versioned_attr <- attr(content, "versioned")
         if (!is.null(versioned_attr)) {
-          chosen <- .select_version(versioned_attr$versions, settings_ver)
+          chosen <- aNCA:::.select_version(versioned_attr$versions, settings_ver)
           comment_label <- if (nzchar(chosen$comment)) {
             chosen$comment
           } else {
@@ -258,7 +258,7 @@ data_upload_server <- function(id) {
 
   chosen <- versioned$versions[[selected_idx]]
   content <- tryCatch(
-    .process_settings_payload(chosen[setdiff(names(chosen), VERSION_META_KEYS)]),
+    aNCA:::.process_settings_payload(chosen[setdiff(names(chosen), VERSION_META_KEYS)]),
     error = function(e) {
       showNotification(conditionMessage(e), type = "error")
       NULL
@@ -367,7 +367,7 @@ data_upload_server <- function(id) {
     } else if (!is.null(versioned_attr) && length(versioned_attr$versions) == 1) {
       v <- versioned_attr$versions[[1]]
       content <- tryCatch(
-        .process_settings_payload(v[setdiff(names(v), VERSION_META_KEYS)]),
+        aNCA:::.process_settings_payload(v[setdiff(names(v), VERSION_META_KEYS)]),
         error = function(e) {
           errors <<- append(errors, conditionMessage(e))
           NULL
