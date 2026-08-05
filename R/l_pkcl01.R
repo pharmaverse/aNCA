@@ -13,7 +13,8 @@
 #' @param subtitle A character string to parse specifying the subtitle to use for each list.
 #' @param footnote A character string to parse specifying the footnote of the listing table.
 #'
-#' @return A list of listings, each corresponding to a unique combination of the grouping variables.
+#' @returns A list of listings, each corresponding to a unique combination of
+#'   the grouping variables.
 #'
 #' @details
 #' The function performs the following steps:

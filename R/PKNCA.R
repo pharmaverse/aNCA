@@ -846,7 +846,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @param processed_pknca_data A processed PKNCA data object.
 #' @param check_exclusion_has_reason Logical; Check if all exclusions have a reason (default: TRUE).
 #'
-#' @return The processed_pknca_data object (input), if checks are successful.
+#' @returns The processed_pknca_data object (input), if checks are successful.
 #'
 #' @details
 #' - If any excluded half-life points are missing a reason, an error is thrown.
@@ -888,7 +888,7 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
 #' using a pivoted approach.
 #'
 #' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
-#' @return The PKNCA results object with non requested parameters removed from $result.
+#' @returns The PKNCA results object with non requested parameters removed from $result.
 #' @export
 remove_pp_not_requested <- function(pknca_res) {
   params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
@@ -934,7 +934,7 @@ remove_pp_not_requested <- function(pknca_res) {
 #'     PKSUM1F = "Y" and the reason is stored in PKSUM1RS so
 #'     TLGs can filter them out
 #'
-#' @return The modified PKNCAdata object with updated exclusion
+#' @returns The modified PKNCAdata object with updated exclusion
 #'   reasons, PKSUM1F, and PKSUM1RS in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
