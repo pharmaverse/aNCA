@@ -115,6 +115,8 @@
 * NCA results flagging correctly distinguishes missing vs not-requested parameters (#934)
 * Custom units table join uses correct keys instead of hardcoded columns (#1159)
 * "Summarise by" selector in Matrix Ratios fixed (input ID mismatch) (#1198)
+* `script_template.R` now applies parameter exclusions before `export_cdisc()`, so PPSUMFL/PPSUMRSN appear in ADPP when running the R script (#1274)
+* Parameter exclusions no longer break NCA results, ADPP preview, and CDISC export when no exclusions are defined — `.apply_param_exclusions()` restores the empty-marker contract (#1274)
 * `export_cdisc()` now includes `ATPTREF` and `ROUTE` columns in ADPP output (#1276)
 
 ### Slope selector

@@ -114,3 +114,48 @@ describe(".build_param_display", {
     expect_false("exclude" %in% names(result))
   })
 })
+
+describe(".apply_param_exclusions", {
+  make_mock_res <- function(n = 3) {
+    list(
+      result = data.frame(
+        PPTESTCD = c("CMAX", "AUCLST", "TMAX")[seq_len(n)],
+        PPORRES = c(10, 200, 2)[seq_len(n)],
+        stringsAsFactors = FALSE
+      )
+    )
+  }
+
+  it("does not error and keeps all rows when there are no exclusions (#1274)", {
+    # apply_parameter_exclusions() returns early (no marker columns) for empty
+    # indices; the app layer must always add them, as on main before #1274
+    res <- make_mock_res()
+    empty_excl <- list(indices = integer(0), reasons = character(0))
+
+    out <- .apply_param_exclusions(res, empty_excl)
+
+    expect_true(".pp_excl" %in% names(out$tagged$result))
+    expect_true(".pp_excl_reason" %in% names(out$tagged$result))
+    expect_true(all(!out$tagged$result$.pp_excl))
+    expect_equal(nrow(out$filtered$result), 3L)
+  })
+
+  it("handles NULL excl_info without error", {
+    out <- .apply_param_exclusions(make_mock_res(), NULL)
+
+    expect_true(all(!out$tagged$result$.pp_excl))
+    expect_equal(nrow(out$filtered$result), 3L)
+  })
+
+  it("tags and filters excluded rows when exclusions are present", {
+    out <- .apply_param_exclusions(
+      make_mock_res(),
+      list(indices = 1L, reasons = "Manual")
+    )
+
+    expect_equal(out$tagged$result$.pp_excl, c(TRUE, FALSE, FALSE))
+    expect_equal(out$tagged$result$.pp_excl_reason[1], "Manual")
+    expect_equal(nrow(out$filtered$result), 2L)
+    expect_false(".pp_excl" %in% names(out$filtered$result))
+  })
+})

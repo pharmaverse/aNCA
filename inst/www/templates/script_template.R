@@ -89,6 +89,12 @@ flag_rule_msgs <- if (length(checked_flags) > 0) {
   NULL
 }
 
+## Apply parameter exclusions for PPSUMFL/PPSUMRSN in ADPP (#1274)
+parameter_exclusions <- settings_list$parameter_exclusions
+if (!is.null(parameter_exclusions)) {
+  pknca_res <- apply_parameter_exclusions(pknca_res, parameter_exclusions)
+}
+
 cdisc_datasets <- pknca_res %>%
   export_cdisc(grouping_vars = extra_vars_to_keep, flag_rules = flag_rule_msgs)
 
