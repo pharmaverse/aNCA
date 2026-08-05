@@ -745,3 +745,87 @@ describe("calculate_ratio_app with interval parameters", {
     expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
   })
 })
+
+describe(".drop_start_end", {
+  # Default args: no aggregation, not interval params
+  args <- list(
+    aggregate_subject = "no",
+    test_parsed = list(is_interval = FALSE),
+    ref_parsed = list(is_interval = FALSE)
+  )
+
+  it("drops start/end for non-ATPTREF group variables like RACE, SEX, AGE", {
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "RACE"), args)))
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "SEX"), args)))
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "AGE"), args)))
+    expect_true(do.call(.drop_start_end, c(list(reference_colname = "COHORT"), args)))
+  })
+
+  it("keeps start/end for ATPTREF (time-linked interval identifier)", {
+    expect_false(do.call(.drop_start_end, c(list(reference_colname = "ATPTREF"), args)))
+  })
+
+  it("keeps start/end for DOSNOA (dose number, time-linked)", {
+    expect_false(do.call(.drop_start_end, c(list(reference_colname = "DOSNOA"), args)))
+  })
+
+  it("keeps start/end for type_interval (interval type identifier)", {
+    expect_false(do.call(.drop_start_end, c(list(reference_colname = "type_interval"), args)))
+  })
+
+  it("drops start/end when aggregate_subject != no", {
+    expect_true(.drop_start_end("RACE", aggregate_subject = "yes",
+                                test_parsed = list(is_interval = FALSE),
+                                ref_parsed = list(is_interval = FALSE)))
+    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "yes",
+                                test_parsed = list(is_interval = FALSE),
+                                ref_parsed = list(is_interval = FALSE)))
+  })
+
+  it("drops start/end when test or ref is an interval parameter", {
+    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "no",
+                                test_parsed = list(is_interval = TRUE),
+                                ref_parsed = list(is_interval = FALSE)))
+    expect_true(.drop_start_end("ATPTREF", aggregate_subject = "no",
+                                test_parsed = list(is_interval = FALSE),
+                                ref_parsed = list(is_interval = TRUE)))
+  })
+})
+
+describe(".is_between_subject_var", {
+  it("returns TRUE for subject-constant variables and FALSE for within-subject ones", {
+    res <- FIXTURE_PKNCA_RES
+    res$result$SEX <- ifelse(as.numeric(res$result$USUBJID) <= 4, "M", "F")
+    expect_true(.is_between_subject_var(res, "SEX"))
+    # PARAM varies within subject (each subject has multiple analytes)
+    expect_false(.is_between_subject_var(res, "PARAM"))
+  })
+
+  it("returns FALSE when the variable or USUBJID is missing", {
+    expect_false(.is_between_subject_var(FIXTURE_PKNCA_RES, "NONEXISTENT"))
+  })
+})
+
+describe(".build_ratio_match_cols within/between-subject handling (#1286)", {
+  parsed <- list(is_interval = FALSE)
+
+  it("keeps USUBJID and start/end for within-subject references like PARAM", {
+    mc <- .build_ratio_match_cols(
+      FIXTURE_PKNCA_RES, "PARAM: A", "no", parsed, parsed
+    )[[1]]
+    expect_true("USUBJID" %in% mc)
+    expect_true(all(c("start", "end") %in% mc))
+  })
+
+  it("uses essential keys without USUBJID/start/end for between-subject references", {
+    res <- FIXTURE_PKNCA_RES
+    res$result$SEX <- ifelse(as.numeric(res$result$USUBJID) <= 4, "M", "F")
+    mc <- .build_ratio_match_cols(res, "SEX: M", "no", parsed, parsed)[[1]]
+    expect_false("USUBJID" %in% mc)
+    expect_false(any(c("start", "end") %in% mc))
+    expect_true(all(
+      mc %in% c("STUDYID", "PCSPEC", "DOSETRT", "PARAM",
+                "ATPTREF", "DOSNOA", "type_interval")
+    ))
+  })
+})
