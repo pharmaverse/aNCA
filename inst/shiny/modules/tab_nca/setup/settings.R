@@ -588,6 +588,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
   if (!is.null(settings$int_parameters)) {
     int_parameters(settings$int_parameters)
+    reset_reactable_memory()
     refresh_reactable(refresh_reactable() + 1)
   }
 

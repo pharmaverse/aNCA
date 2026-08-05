@@ -898,6 +898,18 @@ remove_pp_not_requested <- function(pknca_res) {
     pknca_res$data$intervals$impute <- NA_character_
   }
 
+  # Match on PKNCA groups + interval IDs only; exclude keep_interval_cols
+  # to avoid type-mismatch errors on joins.
+  pknca_groups <- unique(c(
+    group_vars(pknca_res$data$conc),
+    group_vars(pknca_res$data$dose)
+  ))
+  match_cols <- unique(c(
+    pknca_groups,
+    "start", "end", "ATPTREF", "DOSNOA", "type_interval"
+  ))
+  match_cols <- intersect(match_cols, names(pknca_res$data$intervals))
+
   # Reshape intervals, filter
   params_not_requested <- pknca_res$data$intervals %>%
     pivot_longer(
@@ -906,7 +918,7 @@ remove_pp_not_requested <- function(pknca_res) {
       values_to = "is_requested"
     ) %>%
     mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
-    group_by(across(c(-impute, -is_requested))) %>%
+    group_by(across(all_of(c(match_cols, "PPTESTCD")))) %>%
     summarise(
       is_requested = any(is_requested),
       .groups = "drop"

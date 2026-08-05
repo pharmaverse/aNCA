@@ -99,10 +99,14 @@
 * DOSNOA computation fixed for specimen-level grouping — urine-only data no longer gets incorrect dose numbering (#1116)
 * Dose-aware AUCint parameters now share the same PPTESTCD as their non-dose-aware counterparts in CDISC exports, with `PPANMETH` indicating the analytical method. Internal PPTESTCDs renamed from misleading `D` suffix (e.g. `AUCINTD`) to lowercase `da` suffix (e.g. `AUCINTda`). Fixed wrong PPTEST label for `AUCINTD` which said "Normalized by Dose" (#1242)
 * Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are now normalized to `NULL` when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (#1262)
+* Fixed `PKNCA_impute_method_FALSE` error when YAML settings contain `impute_c0: no` — the `impute` column is now initialized before BLQ imputation to prevent name collision with the boolean function parameter (#1266)
 * Interval-specific parameters (`aucint.*`, `cav.int.*`) excluded from the Parameter Selection matrix — they require finite sub-intervals and must be configured via Partial Interval Calculations (#1309)
 
 ### Ratio Calculations
-* Fixed `Aggregate Subject = yes/if-needed` not aggregating reference values, and ratio columns not appearing in results (#1273)
+* Fixed AGE type-mismatch in ratio calculation joins when YAML-specified group columns are character strings but result data is numeric (#1266)
+
+### Settings & Configuration
+* Settings upload no longer leaves stale `reactable.extras` widget memory in the slope selector table, which previously corrupted manual slope data on re-render (#1266)
 
 ### NCA Results & Export
 * Interval parameters (e.g. `AUCINT_0-24`) now display human-readable labels in parameter selectors and boxplot y-axis, instead of raw PPTESTCDs (#1305)
