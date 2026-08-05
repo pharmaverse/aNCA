@@ -419,13 +419,9 @@ div[data-value="Settings"] > div.row a {
 }
 
 .slope-selector-module {
-  padding: 1em;
+  padding-bottom: 1em;
   min-height: calc(100vh - 150px);
   /* Style each group of widgets */
-}
-
-.slope-selector-module .sw-dropdown {
-  float: right;
 }
 
 .slope-selector-module .sw-dropdown-content {

@@ -280,6 +280,7 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
         flag
       },
       PKSUM1FN = ifelse(PKSUM1F == "Y", 1L, NA_integer_),
+      PKSUM1RS = .derive_pksum1rs(., PKSUM1F),
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT
@@ -382,12 +383,47 @@ find_common_prefix <- function(strings) {
 #'
 #' @noRd
 #' @keywords internal
+
+#' Derive PKSUM1RS (exclusion reason) for ADNCA rows
+#'
+#' Combines general exclusion reasons (stored in PKSUM1RS by
+#' `add_exclusion_reasons()`) with half-life point exclusion reasons.
+#' Returns empty string for non-excluded rows.
+#'
+#' @param data The ADNCA data frame being built.
+#' @param pksum1f Character vector of PKSUM1F values.
+#' @returns Character vector of exclusion reasons.
+#' @keywords internal
+#' @noRd
+.derive_pksum1rs <- function(data, pksum1f) {
+  reason <- if ("PKSUM1RS" %in% names(data)) {
+    data$PKSUM1RS
+  } else {
+    rep("", nrow(data))
+  }
+  # Append half-life exclusion reason when applicable
+  if ("is.excluded.hl" %in% names(data)) {
+    hl_rows <- !is.na(data$is.excluded.hl) & data$is.excluded.hl
+    reason[hl_rows] <- ifelse(
+      reason[hl_rows] == "",
+      "Half-life point exclusion",
+      paste0(reason[hl_rows], "; Half-life point exclusion")
+    )
+  }
+  ifelse(pksum1f == "Y", reason, "")
+}
+
 get_subjid <- function(data) {
   if ("SUBJID" %in% names(data)) {
     data$SUBJID
   } else if ("USUBJID" %in% names(data)) {
     if ("STUDYID" %in% names(data)) {
-      sub(paste0(as.character(data$STUDYID), "\\W?"), "", as.character(data$USUBJID))
+      mapply(
+        function(sid, uid) sub(paste0(sid, "\\W?"), "", uid),
+        as.character(data$STUDYID),
+        as.character(data$USUBJID),
+        USE.NAMES = FALSE
+      )
     } else {
       gsub(find_common_prefix(data$USUBJID), "", data$USUBJID)
     }
@@ -547,12 +583,34 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     select(-!!sym(nca_excl_colname))
 }
 
+#' Invert comparison operator in a flag rule message
+#'
+#' Flag rules describe the violation condition (e.g. "R2ADJ < 0.7").
+#' CRITy should show the acceptance criterion, so the operator is inverted
+#' (e.g. "R2ADJ >= 0.7").
+#'
+#' @param msg A single flag rule string like "R2ADJ < 0.7".
+#' @returns The string with the comparison operator inverted.
+#' @noRd
+#' @keywords internal
+.invert_criterion_operator <- function(msg) {
+  # Order matters: match two-char operators before single-char ones
+  operators <- c(">=" = "<", "<=" = ">", ">" = "<=", "<" = ">=")
+  for (op in names(operators)) {
+    pattern <- paste0(" ", op, " ")
+    if (grepl(pattern, msg, fixed = TRUE)) {
+      return(sub(pattern, paste0(" ", operators[[op]], " "), msg, fixed = TRUE))
+    }
+  }
+  msg
+}
+
 #' Add CRITy/CRITyFL and PPSUMFL/PPSUMRSN columns to ADPP
 #'
-#' For each flag rule message, creates a CRITy column (criterion description)
-#' and CRITyFL column ("Y" if satisfied, "N" if violated) by grepping the
-#' `exclude` column. PPSUMFL is "Y" when the record is excluded from summaries,
-#' empty when included.
+#' For each flag rule message, creates a CRITy column (acceptance criterion
+#' with inverted operator) and CRITyFL column ("Y" if criterion satisfied,
+#' "" if violated) by grepping the `exclude` column. PPSUMFL is "Y" when the
+#' record is excluded from summaries, empty when included.
 #'
 #' @param data A data.frame with an `exclude` column from PKNCA results.
 #' @param flag_rules Character vector of exclusion messages applied during NCA
@@ -567,22 +625,23 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   exclude_vals[is.na(exclude_vals)] <- ""
 
   # Add CRITy/CRITyFL columns for each flag rule
+  # CRITy = acceptance criterion (operator inverted from violation rule)
+  # CRITyFL = "Y" when criterion is satisfied, "" when violated
   if (!is.null(flag_rules) && length(flag_rules) > 0) {
     for (i in seq_along(flag_rules)) {
       rule_msg <- flag_rules[i]
       crit_col <- paste0("CRIT", i)
       critfl_col <- paste0("CRIT", i, "FL")
 
-      # CRITy: the criterion description (constant for all rows)
-      data[[crit_col]] <- rule_msg
+      # CRITy: acceptance criterion (inverted operator)
+      data[[crit_col]] <- .invert_criterion_operator(rule_msg)
 
-      # CRITyFL: "Y" if the rule is NOT found in exclude (criterion satisfied), "N" otherwise
       # Split on "; " (PKNCA separator) and do exact element matching to avoid
       # substring false positives (e.g. "R2 < 0.7" matching inside "R2ADJ < 0.7")
       is_violated <- vapply(strsplit(exclude_vals, "; ", fixed = TRUE), function(parts) {
         rule_msg %in% parts
       }, logical(1))
-      data[[critfl_col]] <- ifelse(is_violated, "N", "Y")
+      data[[critfl_col]] <- ifelse(is_violated, "", "Y")
     }
   }
 
