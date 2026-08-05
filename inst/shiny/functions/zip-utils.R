@@ -535,7 +535,7 @@ prepare_export_files <- function(target_dir,
   slide_title <- if (pn == "") "NCA Results" else paste0("NCA Results\n", pn)
 
   if ("qmd" %in% input$slide_formats) {
-    create_qmd_dose_slides(
+    aNCA:::create_qmd_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.qmd"),
       slide_title,
@@ -556,7 +556,7 @@ prepare_export_files <- function(target_dir,
         duration = 10
       )
     } else {
-      create_pptx_dose_slides(
+      aNCA:::create_pptx_dose_slides(
         res_dose_slides,
         file.path(path, "results_slides.pptx"),
         slide_title,
@@ -652,7 +652,7 @@ prepare_export_files <- function(target_dir,
 #' @noRd
 .export_script <- function(target_dir, session) {
   template_path <- "www/templates/script_template.R"
-  get_session_code(
+  aNCA:::get_session_code(
     template_path = system.file(template_path, package = "aNCA"),
     session,
     file.path(target_dir, "session_code.R")

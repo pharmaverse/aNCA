@@ -163,7 +163,7 @@ pkcg01 <- function(
       aes(color = !!sym(color_var)) +
       theme(legend.position = "none")
 
-    # Add color legend only when neccessary
+    # Add color legend only when necessary
     if (length(unique(adnca[[color_var]])) > 1) {
 
       # Make sure the variable is interpreted as a factor

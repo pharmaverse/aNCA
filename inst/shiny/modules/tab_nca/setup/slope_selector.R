@@ -168,7 +168,7 @@ slope_selector_server <- function( # nolint
       }
 
       # Update the searching widget choices based on the new data
-      if (changes$in_data | changes$in_selected_intervals) {
+      if (changes$in_data || changes$in_selected_intervals) {
         updateSelectInput(
           session = session,
           inputId = "search_subject",

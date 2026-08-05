@@ -55,7 +55,7 @@ parameter_plots_server <- function(id, res_nca, res_nca_plot = res_nca) {
     observeEvent(res_nca(), {
       # Rename manual interval parameters to include the range suffix
       # (e.g. AUCINT -> AUCINT_0-12) so each interval appears as a distinct choice
-      result_data <- rename_interval_params(res_nca()$result)
+      result_data <- aNCA:::rename_interval_params(res_nca()$result)
       param_choices <- unique(result_data$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
