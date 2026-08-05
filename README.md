@@ -30,7 +30,7 @@ This application enables users to upload their datasets and perform Non-Compartm
 
 ## Installation
 
-### From CRAN 
+### From CRAN
 
 The stable version of the package can be easily downloaded:
 
