@@ -756,64 +756,64 @@ describe(".get_subjid", {
   })
 })
 
-describe("export_cdisc PKSUM1F derivation", {
-  it("defaults PKSUM1F to empty string when not in conc data", {
+describe("export_cdisc PKSUMXF derivation", {
+  it("defaults PKSUMXF to empty string when not in conc data", {
     result <- export_cdisc(test_pknca_res)
     adnca <- result$adnca
-    expect_true("PKSUM1F" %in% names(adnca))
-    expect_true(all(adnca$PKSUM1F == ""))
+    expect_true("PKSUMXF" %in% names(adnca))
+    expect_true(all(adnca$PKSUMXF == ""))
   })
 
-  it("preserves PKSUM1F from conc data", {
+  it("preserves PKSUMXF from conc data", {
     res_with_flags <- test_pknca_res
     n <- nrow(res_with_flags$data$conc$data)
-    res_with_flags$data$conc$data$PKSUM1F <- rep("", n)
-    res_with_flags$data$conc$data$PKSUM1F[1] <- "Y"
+    res_with_flags$data$conc$data$PKSUMXF <- rep("", n)
+    res_with_flags$data$conc$data$PKSUMXF[1] <- "Y"
 
     result <- export_cdisc(res_with_flags)
     adnca <- result$adnca
 
-    expect_equal(adnca$PKSUM1F[1], "Y")
-    expect_true(all(adnca$PKSUM1F[-1] == ""))
+    expect_equal(adnca$PKSUMXF[1], "Y")
+    expect_true(all(adnca$PKSUMXF[-1] == ""))
   })
 
-  it("PKSUM1F is listed in ADNCA metadata", {
+  it("PKSUMXF is listed in ADNCA metadata", {
     adnca_vars <- metadata_nca_variables %>%
       filter(Dataset == "ADNCA")
-    expect_true("PKSUM1F" %in% adnca_vars$Variable)
-    pksum1f_row <- adnca_vars %>% filter(Variable == "PKSUM1F")
-    expect_equal(pksum1f_row$Label, "PK Summary Exclusion Flag 1")
+    expect_true("PKSUMXF" %in% adnca_vars$Variable)
+    pksum1f_row <- adnca_vars %>% filter(Variable == "PKSUMXF")
+    expect_equal(pksum1f_row$Label, "PK Summary Exclusion Flag")
     expect_equal(pksum1f_row$Type, "text")
     expect_equal(pksum1f_row$Core, "Perm")
   })
 
-  it("derives PKSUM1FN as 1 when PKSUM1F is Y, NA otherwise", {
+  it("derives PKSUMXFN as 1 when PKSUMXF is Y, NA otherwise", {
     res_with_flags <- test_pknca_res
     n <- nrow(res_with_flags$data$conc$data)
-    res_with_flags$data$conc$data$PKSUM1F <- rep("", n)
-    res_with_flags$data$conc$data$PKSUM1F[1] <- "Y"
+    res_with_flags$data$conc$data$PKSUMXF <- rep("", n)
+    res_with_flags$data$conc$data$PKSUMXF[1] <- "Y"
 
     result <- export_cdisc(res_with_flags)
     adnca <- result$adnca
 
-    expect_true("PKSUM1FN" %in% names(adnca))
-    expect_equal(adnca$PKSUM1FN[1], 1L)
-    expect_true(all(is.na(adnca$PKSUM1FN[-1])))
+    expect_true("PKSUMXFN" %in% names(adnca))
+    expect_equal(adnca$PKSUMXFN[1], 1L)
+    expect_true(all(is.na(adnca$PKSUMXFN[-1])))
   })
 
-  it("PKSUM1FN is all NA when no exclusions", {
+  it("PKSUMXFN is all NA when no exclusions", {
     result <- export_cdisc(test_pknca_res)
     adnca <- result$adnca
-    expect_true("PKSUM1FN" %in% names(adnca))
-    expect_true(all(is.na(adnca$PKSUM1FN)))
+    expect_true("PKSUMXFN" %in% names(adnca))
+    expect_true(all(is.na(adnca$PKSUMXFN)))
   })
 
-  it("PKSUM1FN is listed in ADNCA metadata", {
+  it("PKSUMXFN is listed in ADNCA metadata", {
     adnca_vars <- metadata_nca_variables %>%
       filter(Dataset == "ADNCA")
-    expect_true("PKSUM1FN" %in% adnca_vars$Variable)
-    pksum1fn_row <- adnca_vars %>% filter(Variable == "PKSUM1FN")
-    expect_equal(pksum1fn_row$Label, "PK Summary Exclusion Flag 1 (N)")
+    expect_true("PKSUMXFN" %in% adnca_vars$Variable)
+    pksum1fn_row <- adnca_vars %>% filter(Variable == "PKSUMXFN")
+    expect_equal(pksum1fn_row$Label, "PK Summary Exclusion Flag (N)")
     expect_equal(pksum1fn_row$Type, "integer")
     expect_equal(pksum1fn_row$Core, "Perm")
   })
@@ -1012,56 +1012,56 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
   })
 })
 
-describe("export_cdisc: PKSUM1RS column", {
-  it("includes PKSUM1RS in ADNCA output", {
+describe("export_cdisc: PKSUMXRS column", {
+  it("includes PKSUMXRS in ADNCA output", {
     result <- export_cdisc(test_pknca_res)
-    expect_true("PKSUM1RS" %in% names(result$adnca))
+    expect_true("PKSUMXRS" %in% names(result$adnca))
   })
 
-  it("PKSUM1RS is empty when PKSUM1F is not Y", {
+  it("PKSUMXRS is empty when PKSUMXF is not Y", {
     result <- export_cdisc(test_pknca_res)
     adnca <- result$adnca
-    non_excluded <- adnca$PKSUM1F != "Y"
+    non_excluded <- adnca$PKSUMXF != "Y"
     if (any(non_excluded)) {
-      expect_true(all(adnca$PKSUM1RS[non_excluded] == ""))
+      expect_true(all(adnca$PKSUMXRS[non_excluded] == ""))
     }
   })
 
-  it("populates PKSUM1RS from general exclusion reasons", {
+  it("populates PKSUMXRS from general exclusion reasons", {
     modified <- test_pknca_res
     n <- nrow(modified$data$conc$data)
-    modified$data$conc$data$PKSUM1F <- rep("", n)
-    modified$data$conc$data$PKSUM1RS <- rep("", n)
-    modified$data$conc$data$PKSUM1F[c(1, 2)] <- "Y"
-    modified$data$conc$data$PKSUM1RS[c(1, 2)] <- "Protocol deviation"
+    modified$data$conc$data$PKSUMXF <- rep("", n)
+    modified$data$conc$data$PKSUMXRS <- rep("", n)
+    modified$data$conc$data$PKSUMXF[c(1, 2)] <- "Y"
+    modified$data$conc$data$PKSUMXRS[c(1, 2)] <- "Protocol deviation"
     result <- export_cdisc(modified)
     adnca <- result$adnca
-    expect_equal(adnca$PKSUM1F[c(1, 2)], c("Y", "Y"))
-    expect_equal(adnca$PKSUM1RS[c(1, 2)], c("Protocol deviation", "Protocol deviation"))
+    expect_equal(adnca$PKSUMXF[c(1, 2)], c("Y", "Y"))
+    expect_equal(adnca$PKSUMXRS[c(1, 2)], c("Protocol deviation", "Protocol deviation"))
   })
 
-  it("PKSUM1RS contains half-life reason for half-life-only exclusions", {
+  it("PKSUMXRS contains half-life reason for half-life-only exclusions", {
     modified <- test_pknca_res
     modified$data$conc$data$is.excluded.hl <- FALSE
     modified$data$conc$data$is.excluded.hl[3] <- TRUE
     result <- export_cdisc(modified)
     adnca <- result$adnca
-    expect_equal(adnca$PKSUM1F[3], "Y")
-    expect_equal(adnca$PKSUM1RS[3], "Half-life point exclusion")
+    expect_equal(adnca$PKSUMXF[3], "Y")
+    expect_equal(adnca$PKSUMXRS[3], "Half-life point exclusion")
   })
 
   it("combines general and half-life exclusion reasons", {
     modified <- test_pknca_res
     n <- nrow(modified$data$conc$data)
-    modified$data$conc$data$PKSUM1F <- rep("", n)
-    modified$data$conc$data$PKSUM1RS <- rep("", n)
-    modified$data$conc$data$PKSUM1F[3] <- "Y"
-    modified$data$conc$data$PKSUM1RS[3] <- "Protocol deviation"
+    modified$data$conc$data$PKSUMXF <- rep("", n)
+    modified$data$conc$data$PKSUMXRS <- rep("", n)
+    modified$data$conc$data$PKSUMXF[3] <- "Y"
+    modified$data$conc$data$PKSUMXRS[3] <- "Protocol deviation"
     modified$data$conc$data$is.excluded.hl <- FALSE
     modified$data$conc$data$is.excluded.hl[3] <- TRUE
     result <- export_cdisc(modified)
     adnca <- result$adnca
-    expect_equal(adnca$PKSUM1F[3], "Y")
-    expect_equal(adnca$PKSUM1RS[3], "Protocol deviation; Half-life point exclusion")
+    expect_equal(adnca$PKSUMXF[3], "Y")
+    expect_equal(adnca$PKSUMXRS[3], "Protocol deviation; Half-life point exclusion")
   })
 })

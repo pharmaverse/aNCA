@@ -8,14 +8,14 @@
 #' To read more check out documentation for each function of the module and the contributing
 #' guidelines.
 
-#' Filter out rows excluded from TLGs via PKSUM1F.
-#' Rows with PKSUM1F == "Y" are removed.
+#' Filter out rows excluded from TLGs via PKSUMXF.
+#' Rows with PKSUMXF == "Y" are removed.
 #' @param data A data frame (typically conc$data).
 #' @return The filtered data frame.
 #' @noRd
 filter_tlg_excluded <- function(data) {
-  if ("PKSUM1F" %in% names(data)) {
-    data[data$PKSUM1F != "Y", , drop = FALSE]
+  if ("PKSUMXF" %in% names(data)) {
+    data[data$PKSUMXF != "Y", , drop = FALSE]
   } else {
     data
   }

@@ -268,9 +268,9 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
       } else {
         NA_character_
       },
-      PKSUM1F = {
-        flag <- if ("PKSUM1F" %in% names(.)) {
-          PKSUM1F
+      PKSUMXF = {
+        flag <- if ("PKSUMXF" %in% names(.)) {
+          PKSUMXF
         } else {
           rep("", nrow(.))
         }
@@ -279,8 +279,8 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
         }
         flag
       },
-      PKSUM1FN = ifelse(PKSUM1F == "Y", 1L, NA_integer_),
-      PKSUM1RS = .derive_pksum1rs(., PKSUM1F),
+      PKSUMXFN = ifelse(PKSUMXF == "Y", 1L, NA_integer_),
+      PKSUMXRS = .derive_pksumxrs(., PKSUMXF),
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT
@@ -384,20 +384,20 @@ find_common_prefix <- function(strings) {
 #' @noRd
 #' @keywords internal
 
-#' Derive PKSUM1RS (exclusion reason) for ADNCA rows
+#' Derive PKSUMXRS (exclusion reason) for ADNCA rows
 #'
-#' Combines general exclusion reasons (stored in PKSUM1RS by
+#' Combines general exclusion reasons (stored in PKSUMXRS by
 #' `add_exclusion_reasons()`) with half-life point exclusion reasons.
 #' Returns empty string for non-excluded rows.
 #'
 #' @param data The ADNCA data frame being built.
-#' @param pksum1f Character vector of PKSUM1F values.
+#' @param pksum1f Character vector of PKSUMXF values.
 #' @returns Character vector of exclusion reasons.
 #' @keywords internal
 #' @noRd
-.derive_pksum1rs <- function(data, pksum1f) {
-  reason <- if ("PKSUM1RS" %in% names(data)) {
-    data$PKSUM1RS
+.derive_pksumxrs <- function(data, pksum1f) {
+  reason <- if ("PKSUMXRS" %in% names(data)) {
+    data$PKSUMXRS
   } else {
     rep("", nrow(data))
   }
