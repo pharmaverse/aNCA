@@ -415,10 +415,31 @@ calculate_ratio_app <- function(
 #' Determine whether start/end columns should be dropped from match_cols.
 #' @noRd
 .drop_start_end <- function(reference_colname, aggregate_subject,
-                            test_parsed, ref_parsed) {
+                            test_parsed, ref_parsed,
+                            is_between_subject = TRUE) {
   aggregate_subject != "no" ||
     test_parsed$is_interval || ref_parsed$is_interval ||
-    !reference_colname %in% c("ATPTREF", "DOSNOA", "type_interval")
+    # Only between-subject variables (SEX, RACE, COHORT, etc.) make start/end
+    # unreliable join keys: their groups may have different absolute dosing
+    # times (#1286). Within-subject variables (e.g., PARAM) keep start/end
+    # so per-dose pairing is preserved.
+    (is_between_subject &&
+       !reference_colname %in% c("ATPTREF", "DOSNOA", "type_interval"))
+}
+
+#' Check whether a grouping variable is constant within subjects.
+#' Between-subject variables (SEX, RACE, ...) have one value per subject;
+#' within-subject variables (PARAM, DOSETRT in multi-dose studies) vary.
+#' @noRd
+.is_between_subject_var <- function(res, reference_colname) {
+  df <- res$result
+  if (!reference_colname %in% names(df) || !"USUBJID" %in% names(df)) {
+    return(FALSE)
+  }
+  values_per_subject <- df %>%
+    distinct(.data$USUBJID, .data[[reference_colname]]) %>%
+    count(.data$USUBJID, name = "n_values")
+  all(values_per_subject$n_values == 1L)
 }
 
 #' Build match_cols for ratio calculation based on grouping, aggregation, and interval settings
@@ -426,14 +447,15 @@ calculate_ratio_app <- function(
 .build_ratio_match_cols <- function(res, ref_group, aggregate_subject, test_parsed, ref_parsed) {
   reference_colname <- gsub("(.*): (.*)", "\\1", ref_group)
   match_cols <- setdiff(unique(c(dplyr::group_vars(res), "start", "end")), reference_colname)
+  is_between_subject <- .is_between_subject_var(res, reference_colname)
 
   # Remove start/end when they cannot serve as reliable join keys:
-  # - Non-time-identifier group variables (SEX, AGE, RACE, COHORT, etc.):
+  # - Between-subject group variables (SEX, AGE, RACE, COHORT, etc.):
   #   different groups may have different absolute dosing times (#1286)
   # - Aggregation or interval parameters: start/end don't identify
   #   comparable units
   if (.drop_start_end(reference_colname, aggregate_subject,
-                      test_parsed, ref_parsed)) {
+                      test_parsed, ref_parsed, is_between_subject)) {
     match_cols <- setdiff(match_cols, c("start", "end"))
   }
 
@@ -443,7 +465,10 @@ calculate_ratio_app <- function(
       # For between-subject variables (SEX, RACE, COHORT, etc.), all
       # subject-level columns differ between groups and block the merge.
       # Keep only essential PK formula columns for matching (#1286).
-      if (!reference_colname %in% c("ATPTREF", "DOSNOA", "type_interval", "USUBJID")) {
+      # Within-subject variables (e.g., PARAM) keep USUBJID and start/end
+      # so test/ref rows pair per subject and dose.
+      if (is_between_subject &&
+            !reference_colname %in% c("ATPTREF", "DOSNOA", "type_interval", "USUBJID")) {
         essential_keys <- intersect(
           c("STUDYID", "PCSPEC", "DOSETRT", "PARAM", "ATPTREF", "DOSNOA", "type_interval"),
           match_cols
