@@ -188,6 +188,7 @@ mL
 macroparameters
 md
 multidose
+namespaced
 nav
 nca
 ng
@@ -210,6 +211,7 @@ pred
 px
 qmd
 rds
+reactable
 renderable
 reproducibility
 resizable

@@ -161,10 +161,12 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     rows_with_same_cols <- is_matching_cols(c(slope_groups, "TYPE", "RANGE"), existing, new)
     if (sum(rows_with_same_cols) > 0) {
       existing <- existing[!rows_with_same_cols, ]
-      return(if (nrow(existing) == 0) NULL else existing)
+      return(if (nrow(existing) == 0) existing[0, ] else existing)
     }
     # Otherwise, just add the new exclusion
-    existing <- bind_rows(existing, new)
+    # Drop columns from existing that are not in new to prevent column mismatch (#1302)
+    common_cols <- intersect(names(existing), names(new))
+    existing <- bind_rows(existing[, common_cols, drop = FALSE], new)
   }
 
   if (new$TYPE == "Selection") {
@@ -174,9 +176,10 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
       existing <- existing[!rows_with_same_groups, ]
     }
     # Otherwise, just add the new selection
-    existing <- bind_rows(existing, new)
+    common_cols <- intersect(names(existing), names(new))
+    existing <- bind_rows(existing[, common_cols, drop = FALSE], new)
   }
-  if (nrow(existing) == 0) NULL else existing
+  if (nrow(existing) == 0) existing[0, ] else existing
 }
 
 #' Update plots with PKNCA data (for affected intervals)

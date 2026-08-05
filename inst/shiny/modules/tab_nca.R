@@ -83,7 +83,7 @@ tab_nca_ui <- function(id) {
 
 # .apply_param_exclusions is defined in inst/shiny/functions/utils-exclusions.R
 
-tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
+tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override, # nolint: cyclocomp_linter
                            auto_replay_ready) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -118,6 +118,15 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     reactable_server("manual_slopes",
                      reactive(slope_rules()),
                      columns = NULL)
+
+    # Ensure Results table clears when slope rules become NULL/empty (#1302)
+    observeEvent(slope_rules(), {
+      sr <- slope_rules()
+      if (is.null(sr) || (is.data.frame(sr) && nrow(sr) == 0)) {
+        reactable::updateReactable(ns("manual_slopes-table"),
+                                   data = data.frame(Status = "No rules defined"))
+      }
+    }, ignoreNULL = FALSE)
 
     # Auto-replay: trigger NCA run once settings are applied and data is ready.
     # Debounces processed_pknca_data to wait for the full settings cascade
