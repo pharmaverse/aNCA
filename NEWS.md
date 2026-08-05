@@ -67,7 +67,8 @@
 * CMAX auto-selected in box plots if available (#890)
 
 ### Data & Mapping
-* ADNCA now includes `PKSUM1RS` column storing the general exclusion reason when `PKSUM1F = "Y"` (#1331)
+* ADNCA PK summary exclusion variables renamed to CDISC-compliant names: `PKSUM1F` → `PKSUMXF`, `PKSUM1FN` → `PKSUMXFN`, `PKSUM1RS` → `PKSUMXRS`; exclusion semantics unchanged (`"Y"`/`1` = excluded). Duplicate legacy metadata rows removed in favor of the CDISC-named ones (#1394)
+* ADNCA now includes `PKSUMXRS` column storing the general exclusion reason when `PKSUMXF = "Y"` (#1331)
 * Upload multiple input files, bound into a single ADNCA dataset (#821)
 * Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (#745)
 * WTBL/WTBLU columns for dose-to-body-weight conversion in excretion calculations (#959)

@@ -18,10 +18,10 @@ local({
 envir = parent.env(environment()))
 
 describe("filter_tlg_excluded", {
-  it("removes rows where PKSUM1F is 'Y'", {
+  it("removes rows where PKSUMXF is 'Y'", {
     df <- data.frame(
       x = 1:5,
-      PKSUM1F = c("", "Y", "", "Y", ""),
+      PKSUMXF = c("", "Y", "", "Y", ""),
       stringsAsFactors = FALSE
     )
     result <- filter_tlg_excluded(df)
@@ -29,17 +29,17 @@ describe("filter_tlg_excluded", {
     expect_equal(result$x, c(1, 3, 5))
   })
 
-  it("returns all rows when PKSUM1F is absent", {
+  it("returns all rows when PKSUMXF is absent", {
     df <- data.frame(x = 1:3)
     result <- filter_tlg_excluded(df)
     expect_equal(nrow(result), 3)
     expect_equal(result$x, 1:3)
   })
 
-  it("returns all rows when PKSUM1F is all empty", {
+  it("returns all rows when PKSUMXF is all empty", {
     df <- data.frame(
       x = 1:3,
-      PKSUM1F = rep("", 3),
+      PKSUMXF = rep("", 3),
       stringsAsFactors = FALSE
     )
     result <- filter_tlg_excluded(df)
@@ -49,7 +49,7 @@ describe("filter_tlg_excluded", {
   it("returns empty data frame when all rows are excluded", {
     df <- data.frame(
       x = 1:2,
-      PKSUM1F = c("Y", "Y"),
+      PKSUMXF = c("Y", "Y"),
       stringsAsFactors = FALSE
     )
     result <- filter_tlg_excluded(df)
