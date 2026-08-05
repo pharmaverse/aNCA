@@ -225,8 +225,8 @@ data_upload_server <- function(id) {
     defaultPageSize = 10,
     theme = reactableTheme(
       rowSelectedStyle = list(
-        backgroundColor = "#CCE5FF",
-        boxShadow = "inset 2px 0 0 0 #0d6efd"
+        backgroundColor = BG_HIGHLIGHT_BLUE,
+        boxShadow = paste0("inset 2px 0 0 0 ", ACCENT_BLUE)
       )
     ),
     columns = list(

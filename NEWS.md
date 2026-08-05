@@ -77,6 +77,15 @@
 ### Documentation & UI
 * UI consistency pass: standardized dropdown labels to "Select the...", help button placement to right-aligned, "colour" to "color", renamed Save to "Export as ZIP", simplified download button text, and added "Short Parameter"/"Specimen" columns to Units table (#1333)
 * Searchable PK parameter reference table in NCA > Setup (#1023)
+
+### Code Quality
+* Removed debug `print()` statements from TLG module and replaced with proper logging (#1320)
+* Removed unused `require(magrittr)` and `require(stats)` calls from `app.R` (#1320)
+* Replaced deprecated HTML `align` attributes with inline CSS in TLG module (#1320)
+* Standardized button CSS classes: removed redundant `btn` prefix where duplicate with `btn-*` (#1320)
+* Replaced `label = "Help"` with `tooltip = tooltipOptions(title = "Help")` on all help dropdown buttons for accessibility (#1320)
+* Removed redundant `disabled = FALSE` default from units table actionButton (#1320)
+* Extracted inline hex colors to shared `colors.R` constants and SCSS variables (#1320)
 * R Script Walkthrough vignette added to pkgdown website (#1090)
 * Ratio Calculations vignette documenting all ratio types (#1251)
 * "About" tab with links, citation, authors, license, version, and "Copy session info" button (#1015)
@@ -97,6 +106,7 @@
 * Last dose interval end time extends to last observed sample instead of being cut off at tau (#1235)
 * Interval creation reworked to prevent doses being combined when no post-dose samples exist (#963)
 * DOSNOA computation fixed for specimen-level grouping — urine-only data no longer gets incorrect dose numbering (#1116)
+* `pkcg02` example wrapped in `\donttest{}` to avoid Windows CI timing failure (#1320)
 * Dose-aware AUCint parameters now share the same PPTESTCD as their non-dose-aware counterparts in CDISC exports, with `PPANMETH` indicating the analytical method. Internal PPTESTCDs renamed from misleading `D` suffix (e.g. `AUCINTD`) to lowercase `da` suffix (e.g. `AUCINTda`). Fixed wrong PPTEST label for `AUCINTD` which said "Normalized by Dose" (#1242)
 * Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are now normalized to `NULL` when empty, instead of persisting as 0-row data frames throughout the app and settings pipeline (#1262)
 * Interval-specific parameters (`aucint.*`, `cav.int.*`) excluded from the Parameter Selection matrix — they require finite sub-intervals and must be configured via Partial Interval Calculations (#1309)

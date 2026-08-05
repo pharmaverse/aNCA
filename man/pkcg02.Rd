@@ -88,6 +88,7 @@ A list of ggplot or plotly objects for each unique group.
 This function generates a list of plotly objects PK concentration-time profiles by group
 }
 \examples{
+\donttest{
 # Make an example small dataset
 adnca <- adnca_example
 adnca <- adnca[adnca$USUBJID \%in\% unique(adnca$USUBJID)[c(1, 2)],]
@@ -98,7 +99,7 @@ attr(adnca[["AVAL"]], "label") <- "Analysis value"
 plots <- pkcg02(adnca)
 plots_log <- pkcg02(adnca, scale = "LOG")
 plotly::plotly_build(plots[[1]]) # View the first plot
-
+}
 }
 \author{
 Kezia Kobana
