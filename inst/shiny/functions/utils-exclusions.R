@@ -243,8 +243,16 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
   # Delegate tagging to the exported function
   res_tagged <- apply_parameter_exclusions(res, excl_info)
 
-  # Build filtered view (exclude tagged rows)
+  # apply_parameter_exclusions() returns early (no marker columns) when there
+  # are no exclusions; the app contract requires the columns to always exist
   tagged_result <- res_tagged$result
+  if (!".pp_excl" %in% names(tagged_result)) {
+    tagged_result$.pp_excl <- FALSE
+    tagged_result$.pp_excl_reason <- NA_character_
+    res_tagged$result <- tagged_result
+  }
+
+  # Build filtered view (exclude tagged rows)
   keep <- !tagged_result$.pp_excl
   filtered_result <- tagged_result[keep, , drop = FALSE]
   filtered_result$.pp_excl <- NULL
