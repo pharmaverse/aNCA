@@ -187,4 +187,63 @@ describe("tlg_module_server", {
   # which requires a running Shiny session; the debounce(750) reactive also
   # caches and re-throws the error before the tryCatch return value can be
   # observed.  This path is covered by end-to-end / integration tests.
+
+  it("restores column labels before rendering (issue #1336, `!COL` syntax)", {
+    # The PKNCA/dplyr pipeline strips label attributes from conc$data, which
+    # broke the `!COLUMN` label-reference syntax. tlg_list() must re-apply
+    # labels so parse_annotation() can resolve them in plot annotations.
+    captured <- NULL
+    capture_fn <- function(data, ...) {
+      captured <<- data
+      list("plot_a")
+    }
+    unlabeled_df <- data.frame(
+      NFRLT = 1:3, AVAL = c(5, 4, 3), stringsAsFactors = FALSE
+    )
+    # sanity: input has no label attribute
+    expect_null(attr(unlabeled_df$AVAL, "label"))
+    unlabeled <- shiny::reactive(list(conc = list(data = unlabeled_df)))
+
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data        = unlabeled,
+        type        = "graph",
+        render_list = capture_fn,
+        options     = list()
+      ),
+      {
+        session$setInputs(entries_per_page = "All")
+        session$elapse(800)         # advance past debounce(750)
+        session$flushReact()
+        tlg_list()                  # force evaluation
+        expect_false(is.null(captured))
+        expect_equal(attr(captured$AVAL, "label"), "Analysis Value")
+      }
+    )
+  })
+
+  it("current_page_items() returns the slice for the current page", {
+    render_5 <- function(data, ...) as.list(paste0("p", 1:5))
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data        = test_data,
+        type        = "graph",
+        render_list = render_5,
+        options     = list()
+      ),
+      {
+        session$setInputs(entries_per_page = 2)
+        session$elapse(800)
+        session$flushReact()
+        expect_equal(current_page_items(), list("p1", "p2"))
+
+        session$setInputs(next_page = 1)
+        session$elapse(800)
+        session$flushReact()
+        expect_equal(current_page_items(), list("p3", "p4"))
+      }
+    )
+  })
 })

@@ -133,3 +133,73 @@ describe("update_pknca_with_rules", {
     )
   })
 })
+
+describe("parse_plot_names_to_df", {
+  it("parses key=value plot names into columns plus PLOTID", {
+    plots <- setNames(list(1, 2), c(
+      "USUBJID=101_PARAM=Analyte1_start=0_end=24",
+      "USUBJID=102_PARAM=Analyte1_start=0_end=24"
+    ))
+    df <- parse_plot_names_to_df(plots)
+    expect_setequal(names(df), c("USUBJID", "PARAM", "start", "end", "PLOTID"))
+    expect_equal(df$USUBJID, c("101", "102"))
+    expect_equal(df$PARAM, c("Analyte1", "Analyte1"))
+    expect_equal(df$PLOTID, names(plots))
+  })
+
+  it("keeps values that contain underscores intact (issue #1378)", {
+    # STUDYID value with underscores previously corrupted the parse and
+    # produced NA/'' column names, crashing arrange_plots_by_groups().
+    plots <- setNames(list(1, 2), c(
+      "STUDYID=same_or_similar_USUBJID=2_PARAM=Drug A_start=0_end=Inf",
+      "STUDYID=divergent_USUBJID=11233_PARAM=Drug B_start=0_end=Inf"
+    ))
+    df <- parse_plot_names_to_df(plots)
+    # Both rows must share the same, non-empty column names.
+    expect_false(any(is.na(names(df))))
+    expect_false(any(names(df) == ""))
+    expect_setequal(names(df), c("STUDYID", "USUBJID", "PARAM", "start", "end", "PLOTID"))
+    expect_equal(df$STUDYID, c("same_or_similar", "divergent"))
+    expect_equal(df$PARAM, c("Drug A", "Drug B"))
+  })
+
+  it("keeps underscores in every field, not just STUDYID", {
+    plots <- setNames(list(1), "STUDYID=a_b_c_USUBJID=x_1_PARAM=Drug_A_start=0_end=Inf")
+    df <- parse_plot_names_to_df(plots)
+    expect_equal(df$STUDYID, "a_b_c")
+    expect_equal(df$USUBJID, "x_1")
+    expect_equal(df$PARAM, "Drug_A")
+  })
+})
+
+describe("arrange_plots_by_groups", {
+  it("orders plots by the requested group columns", {
+    plots <- setNames(list("a", "b"), c(
+      "USUBJID=2_PARAM=Drug A_start=0_end=Inf",
+      "USUBJID=1_PARAM=Drug A_start=0_end=Inf"
+    ))
+    ordered <- arrange_plots_by_groups(plots, "USUBJID")
+    expect_equal(
+      names(ordered),
+      c(
+        "USUBJID=1_PARAM=Drug A_start=0_end=Inf",
+        "USUBJID=2_PARAM=Drug A_start=0_end=Inf"
+      )
+    )
+  })
+
+  it("does not error when group values contain underscores (issue #1378)", {
+    plots <- setNames(list("a", "b"), c(
+      "STUDYID=same_or_similar_USUBJID=2_PARAM=Drug A_start=0_end=Inf",
+      "STUDYID=divergent_USUBJID=11233_PARAM=Drug B_start=0_end=Inf"
+    ))
+    expect_silent(res <- arrange_plots_by_groups(plots, "STUDYID"))
+    # "divergent" sorts before "same_or_similar"
+    expect_equal(names(res)[1], "STUDYID=divergent_USUBJID=11233_PARAM=Drug B_start=0_end=Inf")
+    expect_length(res, 2)
+  })
+
+  it("returns the list unchanged when empty", {
+    expect_equal(arrange_plots_by_groups(list(), "USUBJID"), list())
+  })
+})

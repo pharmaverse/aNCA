@@ -55,7 +55,7 @@ selector_label <- function(input, output, session,
       choices_df <- data.frame(PPTESTCD = choices, stringsAsFactors = FALSE)
 
       # Parse interval suffix (e.g. AUCINT_0-24 -> base=AUCINT) for label lookup
-      parsed_info <- lapply(choices_df$PPTESTCD, parse_interval_parameter)
+      parsed_info <- lapply(choices_df$PPTESTCD, aNCA:::parse_interval_parameter)
       choices_df$base_pptestcd <- vapply(parsed_info, `[[`, "base", FUN.VALUE = "")
       choices_df$is_interval <- vapply(parsed_info, `[[`, "is_interval", FUN.VALUE = TRUE)
       choices_df$start_dose <- vapply(parsed_info, function(x) {
