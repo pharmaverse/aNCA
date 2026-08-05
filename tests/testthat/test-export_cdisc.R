@@ -1001,6 +1001,15 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
     crit_cols <- grep("^CRIT|PPSUMFL|PPSUMRSN", names(pp), value = TRUE)
     expect_length(crit_cols, 0)
   })
+
+  it("includes ATPTREF and ROUTE in ADPP when present in source data (#1276)", {
+    result <- export_cdisc(test_pknca_res)
+    expect_true("ATPTREF" %in% names(result$adpp))
+    expect_true("ROUTE" %in% names(result$adpp))
+    # Verify values are carried through, not just the column names
+    expect_true(any(!is.na(result$adpp$ATPTREF)))
+    expect_true(any(!is.na(result$adpp$ROUTE)))
+  })
 })
 
 describe("export_cdisc: PKSUM1RS column", {

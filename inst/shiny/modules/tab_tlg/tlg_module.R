@@ -21,6 +21,56 @@ filter_tlg_excluded <- function(data) {
   }
 }
 
+#' Wire up per-plot plotly outputs for a graph TLG module.
+#'
+#' Renders each graph through its own `plotlyOutput`/`renderPlotly` pair rather
+#' than returning raw plotly widgets from a single `renderUI`. Raw widgets did
+#' not redraw in place when an option changed (e.g. a custom title on combined
+#' pkcg02 plots) until the figure was hidden and shown again (issue #1336);
+#' letting plotly own each output binding makes edits apply immediately.
+#'
+#' @param output             Module `output` object.
+#' @param session            Module `session` object.
+#' @param current_page_items Reactive returning the items shown on the current
+#'                           page (plotly widgets, ggplots, or character errors).
+#' @noRd
+render_graph_outputs <- function(output, session, current_page_items) {
+  output$tlg_output <- renderUI({
+    items <- current_page_items()
+    tagList(purrr::imap(items, function(item, i) {
+      if (is.character(item)) {
+        tags$pre(item)
+      } else {
+        # preserve the height baked into the plotly object (set via ggplotly)
+        height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
+        plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
+      }
+    }))
+  })
+
+  # Register a renderPlotly binding for each plot slot exactly once (tracked by
+  # high-water mark). The bodies read current_page_items() reactively, so option
+  # edits re-run them and plotly redraws the existing widget in place.
+  n_registered <- 0L
+  observe({
+    n <- length(current_page_items())
+    if (n > n_registered) {
+      for (i in seq.int(n_registered + 1L, n)) local({
+        my_i <- i
+        output[[paste0("plot_", my_i)]] <- plotly::renderPlotly({
+          items <- current_page_items()
+          req(my_i <= length(items))
+          item <- items[[my_i]]
+          req(!is.character(item))
+          # implemented graph functions (g_pkcg*) always return plotly widgets
+          item
+        })
+      })
+      n_registered <<- n
+    }
+  })
+}
+
 #' Function generating UI for a TLG module.
 #'
 #' @param id      id of the module, preferably with randomly generated part to avoid conflicts
@@ -77,7 +127,8 @@ tlg_module_ui <- function(id, type, options) {
           selectInput(
             ns("entries_per_page"),
             "",
-            choices = c("All", 1, 2, 4, 6, 8, 10)
+            choices = c("All", 1, 2, 4, 6, 8, 10),
+            selected = 1
           )
         ),
         shinyjs::disabled(actionButton(ns("previous_page"), "Previous Page", class = "btn-page"))
@@ -121,12 +172,6 @@ tlg_module_ui <- function(id, type, options) {
 #'
 tlg_module_server <- function(id, data, type, render_list, options = NULL) {
   moduleServer(id, function(input, output, session) {
-    render_fn <- switch(
-      type,
-      "graph" = renderUI,
-      "listing" = renderPrint
-    )
-
     current_page <- reactiveVal(1)
 
     #' updating current page based on user input
@@ -183,6 +228,10 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
       tryCatch({
         tlg_data <- filter_tlg_excluded(data()$conc$data)
+        # Restore column label attributes: the PKNCA/dplyr processing pipeline
+        # strips them, which breaks the `!COLUMN` label-reference syntax in plot
+        # title/subtitle/footnote/axis inputs (resolved via parse_annotation).
+        tlg_data <- apply_labels(tlg_data, type = "ADNCA")
         do.call(render_list, purrr::list_modify(list(data = tlg_data), !!!list_options))
       },
       error = function(e) {
@@ -193,7 +242,8 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
     }) %>%
       debounce(750)
 
-    output$tlg_output <- render_fn({
+    #' entries shown on the current page (slice of the full TLG list)
+    current_page_items <- reactive({
       req(tlg_list(), entries_per_page(), current_page())
 
       num_plots <- length(tlg_list())
@@ -203,6 +253,12 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL) {
 
       unname(tlg_list()[page_start:page_end])
     })
+
+    if (type == "graph") {
+      render_graph_outputs(output, session, current_page_items)
+    } else {
+      output$tlg_output <- renderPrint(current_page_items())
+    }
 
     options_values <- lapply(names(options), function(option) {
       if (is.character(options[[option]])) return(NULL)

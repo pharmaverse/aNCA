@@ -98,7 +98,7 @@ parameter_exclusions_ui <- function(id) {
     }
   }
 
-  ppsum <- .derive_ppsum_flags(exclude_vals)
+  ppsum <- aNCA:::.derive_ppsum_flags(exclude_vals)
   df$PPSUMFL <- ppsum$PPSUMFL
   df$PPSUMRSN <- ppsum$PPSUMRSN
 

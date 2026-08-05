@@ -26,8 +26,6 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 
 assets <- system.file("shiny/www", package = "aNCA")
 
-shiny::addResourcePath("logos", system.file("man/figures", package = "aNCA"))
-
 setup_logger()
 
 ui <- function() {
@@ -37,7 +35,7 @@ ui <- function() {
       div(
         style = "display: flex; align-items: center; gap: 10px;",
         tags$img(
-          src = "logos/aNCA_logo.png", # Ensure file is in www/ or resource path
+          src = "images/aNCA_logo.png",
           alt = "aNCA logo",
           width = "40px" # Adjusted for sidebar header scale
         )
