@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Bug Fixes
+
+* Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)
+
 ## Testing
 
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
@@ -106,6 +110,9 @@
 
 ## Bug fixes
 
+### Data & Mapping
+* The "Next" button in the Data tab is no longer permanently disabled after an incomplete-mapping error. Users can now correct the mapping and continue without restarting the app (#1402)
+
 ### CDISC Export
 * `CRITxFL` now uses `""` instead of `"N"` when criterion is violated. `CRITx` shows the acceptance criterion with inverted operator (e.g. flag rule `R2ADJ < 0.7` produces `CRITx = "R2ADJ >= 0.7"`). `CRITxFL = "Y"` means criterion satisfied (#1332)
 
@@ -133,6 +140,10 @@
 * NCA results flagging correctly distinguishes missing vs not-requested parameters (#934)
 * Custom units table join uses correct keys instead of hardcoded columns (#1159)
 * "Summarise by" selector in Matrix Ratios fixed (input ID mismatch) (#1198)
+* `export_cdisc()` now includes `ATPTREF` and `ROUTE` columns in ADPP output (#1276)
+
+### Slope selector
+* Slope Selector plots are rendered again without error `Can't transform a data frame with NA or '' names` when a grouping value (e.g. `STUDYID`, `PARAM`) contains an underscore. Plot names are now parsed at `key=` boundaries instead of splitting on every underscore (#1378).
 
 ### Settings & Upload
 * SASS compilation moved from runtime to build-time script, fixing startup crashes on read-only deployments (#1107)

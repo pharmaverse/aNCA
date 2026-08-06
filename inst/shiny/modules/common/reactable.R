@@ -71,7 +71,7 @@ reactable_server <- function(
 
     labeled_data <- reactive({
       req(data())
-      resolve_param_labels(apply_labels(data()))
+      aNCA:::resolve_param_labels(apply_labels(data()))
     })
 
     output$table <- renderReactable({
