@@ -351,7 +351,10 @@ generate_title <- function(plot_data, title, scale, studyid) {
 generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names) {
   if (is.null(subtitle)) {
     paste0(
-      "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
+      # Collapse rather than interpolate: a plot group spanning more than one treatment
+      # would otherwise vectorise the whole subtitle, which plotly renders as no title.
+      "Treatment Group: ", paste(unique(plot_data[[trt_var]]), collapse = ", "),
+      " (N=", nrow(plot_data), ")<br>",
       paste(
         .plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
         unique(plot_data[, plotgroup_vars]),

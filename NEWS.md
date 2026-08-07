@@ -3,6 +3,7 @@
 ## Bug Fixes
 
 * Combined concentration plots (`pkcg02`) no longer group by `USUBJID` by default, which produced one plot per subject instead of an overlaid combined plot. They now default to the study's PKNCA grouping variables (which exclude the subject), with `USUBJID` still available as an explicit choice; the individual side-by-side plot (`pkcg01`) correspondingly groups by subject rather than by treatment (#1356)
+* Concentration plot titles no longer disappear when a plot group covers more than one treatment: the treatment names are now collapsed into a single subtitle string, where previously the subtitle became a character vector that `plotly` rendered as no title at all (#1356)
 * Concentration plot subtitles no longer mislabel grouping variables: a variable with no configured display name (e.g. `USUBJID` on `pkcg02`) is labeled with its own name instead of being dropped, which shifted every following label onto the wrong value (#1356)
 * The `pkcg03` mean plot "Summary Statistic" dropdown now opens with its default (`Mean_sdi`) selected instead of appearing blank (#1356)
 * Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)

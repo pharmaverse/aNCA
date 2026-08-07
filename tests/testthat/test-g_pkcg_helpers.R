@@ -108,6 +108,23 @@ describe("generate_subtitle", {
     expect_equal(subtitle, "My Subtitle")
   })
 
+  it("returns a single string when the plot group spans several treatments", {
+    # Interpolating a multi-value unique() vectorises the whole subtitle; plotly then
+    # receives an array for layout.title.text and renders no title at all.
+    multi_trt <- helper_data
+    multi_trt$TRT01A <- c("Treatment A", "Treatment B")[seq_len(nrow(multi_trt)) %% 2 + 1]
+
+    subtitle <- aNCA:::generate_subtitle(
+      multi_trt, subtitle = NULL,
+      trt_var        = "TRT01A",
+      plotgroup_vars  = plotgroup_vars,
+      plotgroup_names = plotgroup_names
+    )
+    expect_length(subtitle, 1)
+    expect_true(grepl("Treatment A", subtitle, fixed = TRUE))
+    expect_true(grepl("Treatment B", subtitle, fixed = TRUE))
+  })
+
   it("labels a grouping variable missing from plotgroup_names with its own name", {
     # Indexing plotgroup_names directly drops unknown variables, which used to shift the
     # remaining labels onto the wrong values (e.g. a subject ID labelled "Route").
