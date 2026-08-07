@@ -463,3 +463,31 @@ describe(".sensible_group_cols", {
     expect_true("SEX" %in% .sensible_group_cols(df, max_levels = 3))
   })
 })
+
+describe(".urine_spec_values", {
+  it("keeps only urine specimens, matched case-insensitively", {
+    df <- data.frame(PCSPEC = c("SERUM", "URINE", "PLASMA", "urine"))
+    expect_equal(.urine_spec_values(df), c("URINE", "urine"))
+  })
+
+  it("keeps non-standard urine labels so they remain selectable", {
+    df <- data.frame(PCSPEC = c("SERUM", "Urine - void"))
+    expect_equal(.urine_spec_values(df), "Urine - void")
+  })
+
+  it("reads PPSPEC when the dataset is ADPP rather than ADNCA", {
+    expect_equal(.urine_spec_values(data.frame(PPSPEC = c("SERUM", "URINE"))), "URINE")
+  })
+
+  it("returns nothing when the study has no urine specimens", {
+    expect_length(.urine_spec_values(data.frame(PCSPEC = c("SERUM", "PLASMA"))), 0)
+  })
+
+  it("returns nothing when there is no specimen column at all", {
+    expect_length(.urine_spec_values(data.frame(AVAL = 1)), 0)
+  })
+
+  it("ignores NA specimen values", {
+    expect_equal(.urine_spec_values(data.frame(PCSPEC = c(NA, "URINE"))), "URINE")
+  })
+})

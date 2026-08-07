@@ -22,6 +22,24 @@
   names(df)[keep]
 }
 
+#' Specimen values that look like urine.
+#'
+#' Restricts the specimen filter on urine-only TLGs (via the `.urinespecs` choices
+#' token) to values matching "urin", so a urine table or listing cannot be pointed at
+#' serum or plasma.  Matching on the value rather than hardcoding `"URINE"` keeps
+#' non-standard labels such as `"Urine - void"` usable.  The specimen column is named
+#' `PCSPEC` in ADNCA and `PPSPEC` in ADPP, so whichever the dataset carries is used.
+#'
+#' @param df A data frame.
+#' @return Character vector of urine specimen values, sorted; empty if none.
+.urine_spec_values <- function(df) {
+  spec_col <- intersect(c("PCSPEC", "PPSPEC"), names(df))
+  if (length(spec_col) == 0) return(character(0))
+  values <- unique(df[[spec_col[1]]])
+  values <- as.character(values[!is.na(values)])
+  sort(values[grepl("urin", values, ignore.case = TRUE)])
+}
+
 #' Function generating an input widget for TLG option.
 #' @param id      id of the input widget
 #' @param opt_def definition of the option, as specified in the `yaml` file
@@ -40,6 +58,8 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
       names(conc_df)
     } else if (isTRUE(opt_def$choices == ".groupcols")) {
       .sensible_group_cols(conc_df)
+    } else if (isTRUE(opt_def$choices == ".urinespecs")) {
+      .urine_spec_values(conc_df)
     } else if (isTRUE(opt_def$choices == ".stats")) {
       # Named vector: names are the readable labels shown in the dropdown, values
       # are the terse statistic names passed to the `stats` function argument.

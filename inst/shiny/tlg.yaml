@@ -355,10 +355,13 @@ t_pkpt08_uri:
   condition: "URINE"
   options:
     .group_label_1: "Filtering"
+    # Urine-only table: choices are restricted to urine-looking PPSPEC values so the
+    # output cannot be pointed at serum or plasma, which carry no urine parameters.
     urine_specs:
-      label: "Urine specimen values (PPSPEC)"
+      label: "Specimen Material Type"
       type: select
-      choices: $PPSPEC
+      choices: .urinespecs
+      default: .all
       multiple: true
     param_filter:
       label: "Parameters to show (PARAM)"
@@ -617,10 +620,13 @@ l_pkcl02_uri:
       type: text
       label: Footnote
     .group_label_2: "Filtering"
+    # Urine-only listing: choices are restricted to urine-looking PCSPEC values and all
+    # are selected by default, so the filter reflects what the listing actually shows.
     urine_specs:
-      label: "Urine specimen values (PCSPEC)"
+      label: "Specimen Material Type"
       type: select
-      choices: $PCSPEC
+      choices: .urinespecs
+      default: .all
       multiple: true
     .group_label_3: "Grouping"
     listgroup_vars:
