@@ -538,6 +538,9 @@ l_pkcl01_tad:
   fun: l_pkcl01_tad
   condition: null
   options:
+    # NOTE: `displaying_vars` is intentionally not exposed — l_pkcl01_tad hardcodes it as
+    # c("NRRLT", "ARRLT", "AVAL") when forwarding to l_pkcl01 (that TAD column choice is the
+    # whole point of this variant), so a user-supplied value would be a duplicate argument.
     .group_label_1: "Labs"
     title:
       type: text
@@ -1123,6 +1126,17 @@ p_pkcg03_lin_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_lin_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkcg03_log_dose:
   is_default: false
@@ -1134,6 +1148,17 @@ p_pkcg03_log_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_log_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkcg03_sbs_dose:
   is_default: false
@@ -1145,6 +1170,17 @@ p_pkcg03_sbs_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_sbs_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - Urine
 p_pkpg01_cum:
@@ -1157,6 +1193,17 @@ p_pkpg01_cum:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
   fun: p_pkpg01_cum
   condition: "URINE"
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg01_per:
   is_default: false
@@ -1168,6 +1215,17 @@ p_pkpg01_per:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
   fun: p_pkpg01_per
   condition: "URINE"
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - Dose Proportionality
 p_pkpg02_doseprop:
@@ -1180,6 +1238,17 @@ p_pkpg02_doseprop:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg02.html
   fun: p_pkpg02_doseprop
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - PK Parameters - Boxplots
 p_pkpg03_boxp:
@@ -1192,6 +1261,17 @@ p_pkpg03_boxp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg03.html
   fun: p_pkpg03_boxp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg04_boxp:
   is_default: false
@@ -1203,6 +1283,17 @@ p_pkpg04_boxp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg04.html
   fun: p_pkpg04_boxp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg06_mp:
   is_default: false
@@ -1214,3 +1305,14 @@ p_pkpg06_mp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
   fun: p_pkpg06_mp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote

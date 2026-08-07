@@ -129,10 +129,13 @@ describe("t_pkpt03_col: multi-variable stratification and filtering (#1356)", {
     expect_setequal(unique(result$PARAM), c("Cmax", "AUClast"))
   })
 
-  it("drops a strat variable that is also a table-split (list_vars) column", {
-    result <- t_pkpt03_col(
-      pkpt_data, list_vars = "PPCAT", strat_var = c("TRT01A", "PARAM", "PPCAT")
-    )[[1]]
+  it("drops a strat variable that is also a table-split (list_vars) column, and warns", {
+    expect_warning(
+      result <- t_pkpt03_col(
+        pkpt_data, list_vars = "PPCAT", strat_var = c("TRT01A", "PARAM", "PPCAT")
+      )[[1]],
+      "also used to split tables.*PPCAT"
+    )
     expect_false("PPCAT" %in% names(result))
     expect_true(all(c("TRT01A", "PARAM") %in% names(result)))
   })

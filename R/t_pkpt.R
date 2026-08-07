@@ -162,6 +162,14 @@ t_pkpt03_col <- function(
 
   # A table-split (list_vars) column is constant within each split, so keeping it
   # on the rows only adds a redundant constant column.
+  split_strat <- intersect(strat_var, list_vars)
+  if (length(split_strat) > 0) {
+    warning(
+      "t_pkpt03_col: stratification variable(s) also used to split tables and dropped from the ",
+      "rows: ", paste(split_strat, collapse = ", "),
+      ". Within a split these are constant; the value is shown in the group header instead."
+    )
+  }
   strat_var <- setdiff(strat_var, list_vars)
   missing_strat <- setdiff(strat_var, names(data))
   if (length(missing_strat) > 0) {
@@ -338,6 +346,14 @@ t_pkpt08_uri <- function(
 
   # A table-split (list_vars) column is constant within each split, so keeping it
   # on the rows only adds a redundant constant column.
+  split_strat <- intersect(strat_var, list_vars)
+  if (length(split_strat) > 0) {
+    warning(
+      "t_pkpt08_uri: stratification variable(s) also used to split tables and dropped from the ",
+      "rows: ", paste(split_strat, collapse = ", "),
+      ". Within a split these are constant; the value is shown in the group header instead."
+    )
+  }
   strat_var <- setdiff(strat_var, list_vars)
   missing_strat <- setdiff(strat_var, names(data))
   if (length(missing_strat) > 0) {

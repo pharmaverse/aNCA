@@ -36,10 +36,13 @@ split_and_apply <- function(data, list_vars, fn) {
 
   if (nrow(data) == 0) return(list(all = fn(data)))
 
+  # Keys carry the variable name as well as the value ("PPCAT: A" rather than "A") because they
+  # become the group header above each split output, where a bare value gives the reader no way
+  # to tell which variable it came from.
   split_keys <- do.call(
     interaction,
     c(
-      lapply(present, function(v) as.character(data[[v]])),
+      lapply(present, function(v) paste0(v, ": ", as.character(data[[v]]))),
       list(sep = " / ", drop = TRUE)
     )
   )

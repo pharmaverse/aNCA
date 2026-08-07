@@ -2,6 +2,8 @@
 
 ## Bug Fixes
 
+* TLG sidebar options set to `0` are no longer silently ignored: the option filter treated a literal `0` the same as "unset", so an axis limit of `0` (`xmin`/`ymin`) had no effect (#1356)
+* A TLG that produces no output now explains why instead of rendering a blank panel with no message (#1356)
 * Combined concentration plots (`pkcg02`) no longer group by `USUBJID` by default, which produced one plot per subject instead of an overlaid combined plot. They now default to the study's PKNCA grouping variables (which exclude the subject), with `USUBJID` still available as an explicit choice; the individual side-by-side plot (`pkcg01`) correspondingly groups by subject rather than by treatment (#1356)
 * Concentration plot titles no longer disappear when a plot group covers more than one treatment: the treatment names are now collapsed into a single subtitle string, where previously the subtitle became a character vector that `plotly` rendered as no title at all (#1356)
 * Concentration plot subtitles no longer mislabel grouping variables: a variable with no configured display name (e.g. `USUBJID` on `pkcg02`) is labeled with its own name instead of being dropped, which shifted every following label onto the wrong value (#1356)
@@ -36,6 +38,8 @@
 * Summary tables let you choose which statistics to display: a new "Statistics to show" option on the `pkct01` and `pkpt03/07/08` tables filters the columns (e.g. `n`, `Number BLQ`, `Mean`, `SD`, `CV%`); leaving it empty shows all statistics as before (#1356)
 * Summary-table sidebar inputs share one layout: every summary table (`pkct01` variants and `pkpt03/07/08`) exposes the same option groups — Filtering, Grouping (Split / Stratify), Value, Compare, and Statistics — with `PARAM` and the time/visit columns selected within "Stratify by (rows)" rather than through separate inputs. "Stratify by (rows)" is a multi-select on all of them; on the `pkpt` tables it defaults to every PKNCA grouping variable except the subject (`USUBJID`) so statistics separate by treatment, parameter, and specimen out of the box. The `pkpt11` GMR table keeps its comparison-specific inputs as a documented exception (#1356)
 * The urine-only TLGs (`pkpt08`, `pkcl02`) restrict their specimen filter to values that look like urine, selected by default, so a urine table or listing cannot be pointed at serum or plasma while non-standard labels such as "Urine - void" stay selectable (#1356)
+* Split-table group headers name the variable as well as the value (e.g. "PPCAT: Drug A / PCSPEC: PLASMA") so stacked outputs are self-describing, and summary tables warn when a stratification variable is dropped for also being a table-split variable (#1356)
+* The standalone mean, urine, dose-proportionality and box plot entries (`pkcg03` by dose, `pkpg01`/`pkpg02`/`pkpg03`/`pkpg04`/`pkpg06`) expose Title, Subtitle and Footnote inputs in the sidebar, matching the other graph entries (#1356)
 * Summary tables can filter which stratification values appear: a "Parameters to show" filter on the `pkpt03/07/08` tables and a "Timepoints to show" filter on the `pkct01` tables restrict the rows to the chosen `PARAM`/timepoint values (#1356)
 * Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
 

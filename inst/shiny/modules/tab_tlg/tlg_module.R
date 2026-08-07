@@ -290,7 +290,10 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
 
       if (any(sapply(list_options, is.null))) return(NULL)
 
-      list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
+      # Only "" and NA mean "unset". A literal 0 is a legitimate value — nominal timepoint 0,
+      # or an axis limit of 0 — and treating it as unset silently disabled the whole option.
+      # A cleared numeric widget arrives as NULL and is already handled above.
+      list_options <- purrr::keep(list_options, function(value) all(!value %in% c("", NA)))
 
       tryCatch({
         # Data arrives already exclusion-filtered (per-dataset flag) and
@@ -299,7 +302,19 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
         # the PKNCA/dplyr pipeline strips column `label` attributes, which breaks
         # the `!COLUMN` label-reference syntax in title/subtitle/footnote/axis
         # inputs (resolved via parse_annotation).
-        do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
+        result <- do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
+        # An empty result would render as a blank panel with no explanation. The usual causes
+        # are a filter that matched no rows, or the NCA run not having produced the parameters
+        # this output needs (e.g. RCAMINT/FREXINT for the urine plots), so say so instead.
+        if (length(result) == 0) {
+          paste0(
+            "No output was produced for this TLG. This usually means the sidebar filters ",
+            "matched no rows, or the NCA run did not compute the parameters this output ",
+            "requires."
+          )
+        } else {
+          result
+        }
       },
       error = function(e) {
         log_error("Error in list rendering:")
@@ -315,6 +330,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       req(tlg_list(), entries_per_page(), current_page())
 
       num_plots <- length(tlg_list())
+      # `x[1:0]` yields a single NULL slot rather than nothing, which renders as a blank panel.
+      if (num_plots == 0) return(list())
+
       page_end <- current_page() * entries_per_page()
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots
