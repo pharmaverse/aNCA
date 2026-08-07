@@ -2,6 +2,11 @@
 
 ## Bug Fixes
 
+* Fix the urine concentration listing (`pkcl02`) failing with `object 'Label' not found`: a sidebar "Variables formatting" table with no configured rows now keeps its declared columns, so the editor opens instead of erroring, and an empty table falls back to the built-in default formatting rather than being applied as an empty override (#1356)
+* TLG sidebar dropdowns populated from a data column (e.g. specimen selection) now list that column's values rather than the column name, and no longer error when the column is missing from the dataset (#1356)
+* Combined concentration plots (`pkcg02`) no longer group by `USUBJID` by default — doing so produced one plot per subject instead of an overlaid combined plot. They now default to the study's PKNCA grouping variables (which exclude the subject), `USUBJID` remains available as an explicit choice, and the individual side-by-side plot (`pkcg01`) now groups by subject as intended (#1356)
+* Concentration plot subtitles no longer mislabel grouping variables: a variable with no configured display name (e.g. `USUBJID` on `pkcg02`) is labelled with its own name instead of being dropped, which previously shifted every following label onto the wrong value (#1356)
+* The `pkcg03` mean plot "Summary Statistic" dropdown now opens with its default (`Mean_sdi`) selected instead of appearing blank (#1356)
 * Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)
 
 ## Testing

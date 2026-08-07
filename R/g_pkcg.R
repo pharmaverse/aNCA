@@ -335,13 +335,25 @@ generate_title <- function(plot_data, title, scale, studyid) {
   }
 }
 
+# Readable label for each grouping variable, falling back to the variable name when
+# `plotgroup_names` has no entry for it. Indexing the list directly would drop unknown
+# variables, leaving fewer labels than values and silently mislabelling the subtitle.
+.plotgroup_labels <- function(plotgroup_vars, plotgroup_names) {
+  vapply(
+    plotgroup_vars,
+    function(var) if (is.null(plotgroup_names[[var]])) var else plotgroup_names[[var]],
+    character(1),
+    USE.NAMES = FALSE
+  )
+}
+
 # Helper Function for Subtitle Generation
 generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names) {
   if (is.null(subtitle)) {
     paste0(
       "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
       paste(
-        unlist(unname(plotgroup_names[plotgroup_vars])), ": ",
+        .plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
         unique(plot_data[, plotgroup_vars]),
         sep = "", collapse = ", "
       )
@@ -448,7 +460,8 @@ pkcg02 <- function(
     "ROUTE" = "Route",
     "PCSPEC" = "Specimen",
     "PARAM" = "Analyte",
-    "TRT01A" = "Treatment"
+    "TRT01A" = "Treatment",
+    "USUBJID" = "Subject ID"
   ),
   scale = c("LIN", "LOG", "SBS")[1],
   studyid = "STUDYID",
@@ -1127,7 +1140,7 @@ generate_title_mean <- function(plot_data, title, scale, studyid, mean_group_var
 # Helper Function for Subtitle Generation
 generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgroup_names) {
   if (is.null(subtitle)) {
-    paste0(paste(unlist(unname(plotgroup_names[plotgroup_vars])), ": ",
+    paste0(paste(.plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
                  unique(plot_data[, plotgroup_vars]),
                  sep = "", collapse = ", ")
     )

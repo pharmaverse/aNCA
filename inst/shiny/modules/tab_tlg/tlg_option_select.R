@@ -46,7 +46,15 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
       labels <- aNCA:::.STAT_LABELS
       setNames(names(labels), unname(labels))
     } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
-      unique(conc_df[, sub("^\\$", "", opt_def$choices)])
+      # `[[` rather than `[` so a tibble yields a vector: `[` returns a one-column data frame,
+      # which `selectInput` then labels with the column name instead of its values.
+      col <- sub("^\\$", "", opt_def$choices)
+      if (col %in% names(conc_df)) {
+        col_values <- unique(conc_df[[col]])
+        as.character(col_values[!is.na(col_values)])
+      } else {
+        character(0)
+      }
     } else {
       opt_def$choices
     }

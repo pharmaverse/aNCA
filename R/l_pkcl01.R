@@ -106,6 +106,13 @@ l_pkcl01 <- function(
                       collapse = "\n")
   }
 
+  # A sidebar table option with no rows configured arrives as an empty data frame rather than
+  # NULL, so treat it as "not supplied" instead of failing on the absent `Label` column.
+  if (!is.null(formatting_vars_table)) {
+    has_labels <- "Label" %in% names(formatting_vars_table)
+    if (nrow(formatting_vars_table) == 0 || !has_labels) formatting_vars_table <- NULL
+  }
+
   # If the formatting table was not user defined make one standard
   if (is.null(formatting_vars_table)) {
     formatting_vars_table <-  data.frame(

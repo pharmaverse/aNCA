@@ -922,8 +922,8 @@ g_pkcg01_sbs:
         - ROUTE
         - PCSPEC
         - PARAM
-        - TRT01A
-        
+        - USUBJID
+
 ####### GRAPHS - By treatment
 g_pkcg02_lin:
   template: g_pkcg01_lin
@@ -936,6 +936,21 @@ g_pkcg02_lin:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_lin
   condition: null
+  options:
+    # Combined plots overlay subjects, so the default is the study's PKNCA grouping variables
+    # (which exclude the subject column); grouping by USUBJID would produce one plot per
+    # subject, i.e. an individual (pkcg01) plot. USUBJID stays available as an explicit choice.
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .pknca_groups
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+        - USUBJID
 
 g_pkcg02_log:
   template: g_pkcg01_lin
@@ -948,7 +963,19 @@ g_pkcg02_log:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
   condition: null
-  
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .pknca_groups
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+        - USUBJID
+
 g_pkcg02_sbs:
   template: g_pkcg01_lin
   is_default: false
@@ -964,13 +991,14 @@ g_pkcg02_sbs:
     plotgroup_vars:
       type: select
       label: "Grouping variables"
-      default: .all
+      default: .pknca_groups
       multiple: true
       choices:
         - ROUTE
         - PCSPEC
         - PARAM
         - TRT01A
+        - USUBJID
 
 ####### GRAPHS - Mean
 g_pkcg03_lin:
@@ -1005,7 +1033,7 @@ g_pkcg03_lin:
     summary_method:
       type: select
       label: "Summary Statistic"
-      default: "mean_sdi"
+      default: "Mean_sdi"
       multiple: false
       choices:
         - Mean_ci

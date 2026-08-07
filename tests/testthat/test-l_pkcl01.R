@@ -252,6 +252,47 @@ describe("l_pkcl01", {
     expect_equal(attr(listings$`B.Plasma.IV`$AVALU, "label"), "AVALU")
 
   })
+
+  it("treats an empty formatting_vars_table as if none was supplied", {
+    # A `type: table` sidebar option with no configured rows reaches the function as a
+    # zero-row, zero-column data frame rather than NULL (see tlg_option_table_server).
+    empty_table <- dplyr::bind_rows()
+
+    expect_no_error(
+      listings <- l_pkcl01(adnca,
+                           listgroup_vars  = c("PARAM", "PCSPEC", "ROUTE"),
+                           grouping_vars   = c("TRT01A", "USUBJID", "ATPTREF"),
+                           displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                           formatting_vars_table = empty_table)
+    )
+
+    # Falls back to the built-in defaults, i.e. identical to passing NULL
+    expect_equal(listings, l_pkcl01(adnca,
+                                    listgroup_vars  = c("PARAM", "PCSPEC", "ROUTE"),
+                                    grouping_vars   = c("TRT01A", "USUBJID", "ATPTREF"),
+                                    displaying_vars = c("NFRLT", "AFRLT", "AVAL")))
+    expect_equal(attr(listings$`A.Plasma.Oral`$AVAL, "label"), "Analysis value (mg/L)")
+  })
+
+  it("treats a formatting_vars_table without a Label column as if none was supplied", {
+    no_label_table <- data.frame(
+      var_name = c("TRT01A", "USUBJID"),
+      na_str = "NA",
+      zero_str = "0",
+      align = "center",
+      format_fun = NA,
+      digits = NA,
+      stringsAsFactors = FALSE
+    )
+
+    expect_no_error(
+      l_pkcl01(adnca,
+               listgroup_vars  = c("PARAM", "PCSPEC", "ROUTE"),
+               grouping_vars   = c("TRT01A", "USUBJID", "ATPTREF"),
+               displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+               formatting_vars_table = no_label_table)
+    )
+  })
 })
 
 # --- l_pkcl02_uri -----------------------------------------------------------

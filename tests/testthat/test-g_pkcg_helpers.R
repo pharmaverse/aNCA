@@ -107,6 +107,47 @@ describe("generate_subtitle", {
     )
     expect_equal(subtitle, "My Subtitle")
   })
+
+  it("labels a grouping variable missing from plotgroup_names with its own name", {
+    # Indexing plotgroup_names directly drops unknown variables, which used to shift the
+    # remaining labels onto the wrong values (e.g. a subject ID labelled "Route").
+    subtitle <- aNCA:::generate_subtitle(
+      helper_data, subtitle = NULL,
+      trt_var        = "TRT01A",
+      plotgroup_vars  = c("ROUTE", "USUBJID"),
+      plotgroup_names = plotgroup_names
+    )
+    # Before the fallback, USUBJID was dropped from the label vector, so "Route" was
+    # recycled across both values and the subject appeared labelled as a route.
+    expect_true(grepl("USUBJID: ", subtitle, fixed = TRUE))
+    n_route <- length(gregexpr("Route: ", subtitle, fixed = TRUE)[[1]])
+    expect_equal(n_route, 1)
+  })
+})
+
+# ---------------------------------------------------------------------------
+# .plotgroup_labels
+# ---------------------------------------------------------------------------
+
+describe(".plotgroup_labels", {
+  it("returns the configured label for known variables", {
+    expect_equal(
+      aNCA:::.plotgroup_labels(c("ROUTE", "PARAM"), list(ROUTE = "Route", PARAM = "Analyte")),
+      c("Route", "Analyte")
+    )
+  })
+
+  it("falls back to the variable name for unknown variables", {
+    expect_equal(
+      aNCA:::.plotgroup_labels(c("ROUTE", "NOTAVAR"), list(ROUTE = "Route")),
+      c("Route", "NOTAVAR")
+    )
+  })
+
+  it("always returns one label per variable", {
+    vars <- c("A", "B", "C")
+    expect_length(aNCA:::.plotgroup_labels(vars, list(B = "Bee")), length(vars))
+  })
 })
 
 # ---------------------------------------------------------------------------
