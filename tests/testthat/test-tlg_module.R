@@ -1,6 +1,8 @@
 # Source the TLG module to test pure utility functions
 local({
   library(shiny)
+  # The module's error handler calls log_error(); the app attaches logger in app.R.
+  library(logger)
   shiny_dir <- system.file("shiny", package = "aNCA")
   source(
     file.path(shiny_dir, "modules", "tab_tlg", "tlg_module.R"),
@@ -478,6 +480,31 @@ describe("render_graph_outputs: output IDs", {
     shiny::testServer(graph_mod, args = list(items = items), {
       html <- as.character(output$tlg_output$html)
       expect_true(grepl("PPCAT: DrugA", html, fixed = TRUE))
+    })
+  })
+})
+
+# req()/validate() raise conditions that inherit from `error`.  The render tryCatch must let
+# those propagate so Shiny gates the output, rather than painting "Error: ADPP data is not
+# available..." (or a bare "Error:") into the panel before NCA has run.
+
+describe("tlg_module_server: Shiny control-flow conditions", {
+  base_args <- function(render_list) {
+    list(type = "graph", data = shiny::reactive(data.frame(AVAL = 1)),
+         render_list = render_list, options = list(),
+         grouping_vars = shiny::reactive(character()))
+  }
+
+  it("lets req() propagate instead of rendering it as an error string", {
+    shiny::testServer(tlg_module_server, args = base_args(function(data, ...) shiny::req(FALSE)), {
+      expect_error(tlg_list())
+    })
+  })
+
+  it("still renders a genuine error as text", {
+    args <- base_args(function(data, ...) stop("a genuine failure"))
+    shiny::testServer(tlg_module_server, args = args, {
+      expect_match(tlg_list(), "^Error: a genuine failure")
     })
   })
 })

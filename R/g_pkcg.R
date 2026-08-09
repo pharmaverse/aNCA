@@ -335,6 +335,17 @@ generate_title <- function(plot_data, title, scale, studyid) {
   }
 }
 
+# "N" in a plot subtitle conventionally means the number of subjects, not the number of
+# records; `nrow()` overcounts whenever a subject contributes several samples. Falls back to
+# the row count when the data carries no subject column.
+.subject_count <- function(plot_data) {
+  if ("USUBJID" %in% names(plot_data)) {
+    dplyr::n_distinct(plot_data$USUBJID)
+  } else {
+    nrow(plot_data)
+  }
+}
+
 # Readable label for each grouping variable, falling back to the variable name when
 # `plotgroup_names` has no entry for it. Indexing the list directly would drop unknown
 # variables, leaving fewer labels than values and silently mislabelling the subtitle.
@@ -354,7 +365,7 @@ generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plot
       # Collapse rather than interpolate: a plot group spanning more than one treatment
       # would otherwise vectorise the whole subtitle, which plotly renders as no title.
       "Treatment Group: ", paste(unique(plot_data[[trt_var]]), collapse = ", "),
-      " (N=", nrow(plot_data), ")<br>",
+      " (N=", .subject_count(plot_data), ")<br>",
       paste(
         .plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
         unique(plot_data[, plotgroup_vars]),

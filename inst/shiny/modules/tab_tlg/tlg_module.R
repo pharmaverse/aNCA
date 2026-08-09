@@ -311,7 +311,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       # A cleared numeric widget arrives as NULL and is already handled above.
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c("", NA)))
 
-      tryCatch({
+      rendered <- tryCatch({
         # Data arrives already exclusion-filtered (per-dataset flag) and
         # label-restored from the tab_tlg boundary (see tlg_data_sources), so
         # it is passed straight through here.  Label restoration matters because
@@ -351,10 +351,19 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
         }
       },
       error = function(e) {
+        # `req()` and `validate()` signal "not ready yet" with conditions that inherit from
+        # `error`. Rendering those turned Shiny's normal gating into what looked like a crash
+        # — a bare `Error:`, or "ADPP data is not available...", shown in the panel before NCA
+        # had run. Hand the condition back so it can be re-raised below; re-raising here would
+        # simply be caught by this same handler.
+        if (inherits(e, "shiny.silent.error")) return(e)
         log_error("Error in list rendering:")
         print(e)
         paste0("Error: ", conditionMessage(e))
       })
+
+      if (inherits(rendered, "condition")) stop(rendered)
+      rendered
     }) %>%
       debounce(750)
 

@@ -415,3 +415,29 @@ describe("req_sbs_pkgs", {
     )
   })
 })
+
+# ---------------------------------------------------------------------------
+# .subject_count
+# ---------------------------------------------------------------------------
+
+describe(".subject_count", {
+  it("counts distinct subjects, not records", {
+    df <- data.frame(USUBJID = c("S1", "S1", "S2", "S2", "S2"), AVAL = 1:5)
+    expect_equal(aNCA:::.subject_count(df), 2)
+  })
+
+  it("falls back to the row count when there is no subject column", {
+    expect_equal(aNCA:::.subject_count(data.frame(AVAL = 1:4)), 4)
+  })
+
+  it("makes the subtitle N report subjects rather than rows", {
+    multi <- helper_data[rep(seq_len(nrow(helper_data)), 3), ]
+    subtitle <- aNCA:::generate_subtitle(
+      multi, subtitle = NULL, trt_var = "TRT01A",
+      plotgroup_vars  = c("ROUTE", "PCSPEC", "PARAM"),
+      plotgroup_names = list(ROUTE = "Route", PCSPEC = "Specimen", PARAM = "Analyte")
+    )
+    expect_true(grepl(paste0("N=", dplyr::n_distinct(multi$USUBJID)), subtitle, fixed = TRUE))
+    expect_false(grepl(paste0("N=", nrow(multi)), subtitle, fixed = TRUE))
+  })
+})
