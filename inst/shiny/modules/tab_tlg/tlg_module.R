@@ -61,17 +61,38 @@ tlg_data_key <- function(type, dataset) {
 #' @param current_page_items Reactive returning the items shown on the current
 #'                           page (plotly widgets, ggplots, or character errors).
 #' @noRd
+#' Prefix a rendered TLG item with its split-key header, e.g. "PPCAT: Drug A / PCSPEC: PLASMA",
+#' so stacked outputs are distinguishable.  `"all"` is the sentinel `split_and_apply()` uses for
+#' un-split output and gets no header.
+#'
+#' @param nm   Split key for this item, or NULL/NA when the output was not split.
+#' @param body Rendered item to prefix.
+#' @returns `body`, optionally preceded by an `<h4>` header.
+#' @noRd
+.with_group_header <- function(nm, body) {
+  if (is.null(nm) || is.na(nm) || !nzchar(nm) || nm == "all") return(body)
+  tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
+}
+
 render_graph_outputs <- function(output, session, current_page_items) {
   output$tlg_output <- renderUI({
     items <- current_page_items()
-    tagList(purrr::imap(items, function(item, i) {
-      if (is.character(item)) {
+    nms <- names(items)
+    # Index, not name: `purrr::imap()` yields the *name* for a named list, and the graph
+    # builders that split their output (g_pkcg03, the p_pkpg* family) return named lists.
+    # That produced output IDs like `plot_ROUTE: IV / PARAM: DrugA`, which never matched the
+    # `plot_<i>` bindings registered below — so those panels rendered blank — and which break
+    # Shiny's client-data handler outright once the split key contains a colon.
+    tagList(lapply(seq_along(items), function(i) {
+      item <- items[[i]]
+      body <- if (is.character(item)) {
         tags$pre(item)
       } else {
         # preserve the height baked into the plotly object (set via ggplotly)
         height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
         plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
       }
+      .with_group_header(nms[i], body)
     }))
   })
 
@@ -126,12 +147,7 @@ render_table_outputs <- function(output, current_page_items) {
           columnGroups = define_col_groups(df)
         )
       }
-      nm <- nms[i]
-      if (!is.null(nm) && nzchar(nm) && nm != "all") {
-        tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
-      } else {
-        body
-      }
+      .with_group_header(nms[i], body)
     }))
   })
 }
@@ -302,7 +318,25 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
         # the PKNCA/dplyr pipeline strips column `label` attributes, which breaks
         # the `!COLUMN` label-reference syntax in title/subtitle/footnote/axis
         # inputs (resolved via parse_annotation).
-        result <- do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options))
+        # Surface user-facing warnings (class `tlg_warning`, raised via .tlg_warn) as
+        # notifications: a dropped stratification variable or a skipped filter otherwise
+        # changes the output silently. Other warnings — ggplot2's "Removed N rows", say —
+        # are left to the console so the notifications stay meaningful.
+        tlg_warnings <- character()
+        result <- withCallingHandlers(
+          do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options)),
+          tlg_warning = function(w) {
+            tlg_warnings <<- c(tlg_warnings, conditionMessage(w))
+            invokeRestart("muffleWarning")
+          }
+        )
+        if (length(tlg_warnings) > 0) {
+          showNotification(
+            paste(unique(tlg_warnings), collapse = "\n"),
+            type = "warning",
+            duration = 12
+          )
+        }
         # An empty result would render as a blank panel with no explanation. The usual causes
         # are a filter that matched no rows, or the NCA run not having produced the parameters
         # this output needs (e.g. RCAMINT/FREXINT for the urine plots), so say so instead.

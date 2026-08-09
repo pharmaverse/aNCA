@@ -239,9 +239,9 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
 ) {
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
-    data <- data[toupper(data$PPSPEC) %in% toupper(urine_specs), , drop = FALSE]
+    data <- dplyr::filter(data, toupper(.data$PPSPEC) %in% toupper(urine_specs))
   } else {
-    warning(
+    .tlg_warn(
       "p_pkpg01_cum: 'PPSPEC' column not found in data; the urine specimen ",
       "filter was not applied. All rows are treated as urine. If your data ",
       "contains non-urine records, the output will be incorrect. Ensure ",
@@ -252,7 +252,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
     available_paramcds <- sort(unique(data$PARAMCD))
     data <- data[data$PARAMCD %in% paramcd_filter, , drop = FALSE]
     if (nrow(data) == 0) {
-      warning(
+      .tlg_warn(
         "p_pkpg01_cum: no rows matched paramcd_filter = c(",
         paste(shQuote(paramcd_filter), collapse = ", "), "). ",
         "Available PARAMCDs: ",

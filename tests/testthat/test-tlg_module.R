@@ -432,3 +432,52 @@ describe("tlg_module_server", {
     )
   })
 })
+
+# Graph panels are bound by output ID, and `render_graph_outputs()` registers those bindings as
+# `plot_<index>`.  The UI side must use the same index: several graph builders (g_pkcg03, the
+# p_pkpg* family) return NAMED lists, and deriving the ID from the name produced IDs that never
+# matched a binding — rendering a blank panel — or, once a split key contained a colon, broke
+# Shiny's client-data handler and took the session down.
+
+describe("render_graph_outputs: output IDs", {
+  # Minimal wrapper so the real render_graph_outputs() is exercised.
+  graph_mod <- function(id, items) {
+    shiny::moduleServer(id, function(input, output, session) {
+      render_graph_outputs(output, session, shiny::reactive(items))
+    })
+  }
+
+  rendered_ids <- function(items) {
+    ids <- NULL
+    shiny::testServer(graph_mod, args = list(items = items), {
+      html <- as.character(output$tlg_output$html)
+      ids <<- unlist(regmatches(html, gregexpr('plot_[^"]+', html)))
+    })
+    ids
+  }
+
+  fake_plot <- function() list(height = 400)
+
+  it("uses sequential indices for an unnamed plot list", {
+    expect_equal(rendered_ids(list(fake_plot(), fake_plot())), c("plot_1", "plot_2"))
+  })
+
+  it("uses sequential indices for a NAMED plot list, not the names", {
+    items <- setNames(list(fake_plot(), fake_plot()), c("PPCAT: DrugA", "PPCAT: DrugB"))
+    ids <- rendered_ids(items)
+    expect_equal(ids, c("plot_1", "plot_2"))
+  })
+
+  it("never emits an output ID containing a character invalid in a Shiny id", {
+    items <- setNames(list(fake_plot()), "ROUTE: IV / PARAM: DrugA")
+    expect_false(any(grepl("[: /]", rendered_ids(items))))
+  })
+
+  it("shows the split key as a group header when the list is named", {
+    items <- setNames(list(fake_plot()), "PPCAT: DrugA")
+    shiny::testServer(graph_mod, args = list(items = items), {
+      html <- as.character(output$tlg_output$html)
+      expect_true(grepl("PPCAT: DrugA", html, fixed = TRUE))
+    })
+  })
+})

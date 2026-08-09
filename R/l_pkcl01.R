@@ -121,7 +121,10 @@ l_pkcl01 <- function(
       rowwise() %>%
       # Create a label column
       mutate(
-        Label = parse_annotation(data, paste0("!", var_name)),
+        # `!VAR` resolves to the column's `label` attribute, and parse_annotation yields the
+        # literal string "ERR" when there is none — which would surface as an "ERR" column
+        # header. Fall back to the column name, as .get_var_label() does elsewhere.
+        Label = .get_var_label(data, var_name),
         na_str = "NA",
         zero_str = ifelse(var_name == "AVAL", "BLQ", "0"),
         align = "center",
@@ -218,11 +221,10 @@ l_pkcl01 <- function(
 
       # Check label is unique for the list
       if (length(label) != 1) {
-        # ToDo: Warning to display as notification in the App
-        warning(paste0("pkcl01, but not unique label in ", id_val, " for ",
-                       var_with_lab, ". Make sure when using $var that for each",
-                       " list group only 1 expression applies. Here there are many: ",
-                       paste(label, collapse = ", ")))
+        .tlg_warn("pkcl01, but not unique label in ", id_val, " for ",
+                  var_with_lab, ". Make sure when using $var that for each",
+                  " list group only 1 expression applies. Here there are many: ",
+                  paste(label, collapse = ", "))
       }
     }
 
@@ -296,9 +298,9 @@ l_pkcl02_uri <- function(
   if ("PCSPEC" %in% names(data)) {
     # Case-insensitive match so "Urine"/"urine" are also kept (CDISC value is
     # "URINE", but source data casing varies).
-    data <- data[toupper(data$PCSPEC) %in% toupper(urine_specs), , drop = FALSE]
+    data <- dplyr::filter(data, toupper(.data$PCSPEC) %in% toupper(urine_specs))
   } else {
-    warning(
+    .tlg_warn(
       "l_pkcl02_uri: 'PCSPEC' column not found in data; the urine specimen ",
       "filter was not applied. All rows are treated as urine. If your data ",
       "contains non-urine records, the output will be incorrect. Ensure ",

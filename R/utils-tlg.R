@@ -1,3 +1,16 @@
+#' Raise a user-facing TLG warning.
+#'
+#' Marks a warning as one worth showing the user in the app.  The Shiny layer surfaces
+#' conditions of class `tlg_warning` as notifications and ignores everything else, so
+#' incidental warnings from ggplot2/plotly never become UI noise.
+#'
+#' @param ... Passed to `paste0()` to build the message.
+#' @returns Invisibly `NULL`; called for the warning condition it signals.
+#' @noRd
+.tlg_warn <- function(...) {
+  warning(warningCondition(paste0(...), class = "tlg_warning"))
+}
+
 #' Split a data frame by grouping variables and apply a function to each subset
 #'
 #' Common pattern used by all TLG functions that return one output object per
@@ -27,7 +40,7 @@ split_and_apply <- function(data, list_vars, fn) {
   # meaningful group and would otherwise appear as a spurious "NA / PLASMA" page.
   complete_rows <- rowSums(is.na(data[, present, drop = FALSE])) == 0
   if (!all(complete_rows)) {
-    warning(
+    .tlg_warn(
       "split_and_apply: ", sum(!complete_rows), " row(s) with NA in split ",
       "variable(s) [", paste(present, collapse = ", "), "] were excluded."
     )
@@ -287,7 +300,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows") {
   }
   levels <- .group_levels(data[[col_group_var]])
   if (length(levels) > 6L) {
-    warning(
+    .tlg_warn(
       "col_group_var '", col_group_var, "' has ", length(levels),
       " levels; the comparison table will be very wide and may overflow ",
       "horizontally."

@@ -2,6 +2,7 @@
 
 ## Bug Fixes
 
+* Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
 * TLG sidebar options set to `0` are no longer silently ignored: the option filter treated a literal `0` the same as "unset", so an axis limit of `0` (`xmin`/`ymin`) had no effect (#1356)
 * A TLG that produces no output now explains why instead of rendering a blank panel with no message (#1356)
 * Combined concentration plots (`pkcg02`) no longer group by `USUBJID` by default, which produced one plot per subject instead of an overlaid combined plot. They now default to the study's PKNCA grouping variables (which exclude the subject), with `USUBJID` still available as an explicit choice; the individual side-by-side plot (`pkcg01`) correspondingly groups by subject rather than by treatment (#1356)
