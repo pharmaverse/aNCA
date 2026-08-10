@@ -2,6 +2,8 @@
 
 ## Bug Fixes
 
+* Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
+* The "X ticks" option on the linear and logarithmic concentration plots now takes effect. `plotly` was regenerating the axis itself, so the chosen column was ignored; the side-by-side variants were already unaffected (#1356)
 * Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
 * TLG sidebar options set to `0` are no longer silently ignored: the option filter treated a literal `0` the same as "unset", so an axis limit of `0` (`xmin`/`ymin`) had no effect (#1356)
 * A TLG that produces no output now explains why instead of rendering a blank panel with no message (#1356)

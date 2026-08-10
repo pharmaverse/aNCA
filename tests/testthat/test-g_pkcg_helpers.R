@@ -441,3 +441,29 @@ describe(".subject_count", {
     expect_false(grepl(paste0("N=", nrow(multi)), subtitle, fixed = TRUE))
   })
 })
+
+describe("keep_blq_timepoints: BLQ ratio is per subject", {
+  it("keeps a timepoint where half the subjects are BLQ, even with repeated records", {
+    # Counting BLQ *rows* against a denominator of distinct *subjects* pushes the ratio
+    # above 1 whenever a subject contributes more than one record to a timepoint.
+    df <- data.frame(
+      USUBJID = c("S1", "S1", "S2", "S2"),
+      NFRLT   = 0, DOSEA = 10,
+      AVALC   = c("BLQ", "BLQ", "5", "6"),
+      AVAL    = c(0, 0, 5, 6),
+      stringsAsFactors = FALSE
+    )
+    expect_equal(nrow(aNCA:::keep_blq_timepoints(df, "NFRLT", "DOSEA")), 1)
+  })
+
+  it("still drops a timepoint where most subjects are BLQ", {
+    df <- data.frame(
+      USUBJID = c("S1", "S2", "S3"),
+      NFRLT   = 0, DOSEA = 10,
+      AVALC   = c("BLQ", "BLQ", "7"),
+      AVAL    = c(0, 0, 7),
+      stringsAsFactors = FALSE
+    )
+    expect_equal(nrow(aNCA:::keep_blq_timepoints(df, "NFRLT", "DOSEA")), 0)
+  })
+})

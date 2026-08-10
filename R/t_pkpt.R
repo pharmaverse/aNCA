@@ -38,8 +38,13 @@
     # USUBJID × stratum × AVISIT repeated per dose event).  col_group_var is
     # added so a subject that is constant within the group is never split across
     # two group columns by the dedup.
+    # The analyte and parameter columns are always part of the key, even when they are not
+    # stratification variables: rows that differ in PPCAT or PARAM are genuinely different
+    # measurements, and collapsing them silently discarded whole analytes (a parent/metabolite
+    # pair reduced to the parent alone). Duplicate rows from repeated dose events share both,
+    # so they still collapse as intended.
     dedup_cols <- intersect(
-      c("USUBJID", strat_vars, "AVISIT", col_group_var),
+      c("USUBJID", strat_vars, "AVISIT", col_group_var, "PPCAT", "PARAM"),
       names(df)
     )
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]

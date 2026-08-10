@@ -275,7 +275,10 @@ pkcg01 <- function(
         # This because of no spec of parse annotation generates warning is.na()
         ggplotly(
           tooltip = c("x", "y"),
-          dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
+          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
+          # the SBS variant already relied on FALSE for exactly this reason.
+          dynamicTicks = FALSE,
           #' NOTE: might require some fine tuning down the line, looks fine now
           height = 500 + (footnote_y * 25) + title_margin * 50
         ) %>%
@@ -651,7 +654,10 @@ pkcg02 <- function(
         plotly_plot <- ggplotly(
           plotly_plot,
           tooltip = c("x", "y"),
-          dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
+          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
+          # the SBS variant already relied on FALSE for exactly this reason.
+          dynamicTicks = FALSE,
           #' NOTE: might require some fine tuning down the line, looks fine now
           height = 500 + (footnote_y * 25) + title_margin * 50
         ) %>%
@@ -1059,7 +1065,10 @@ pkcg03 <- function(
         plotly_plot <- plot %>%
           ggplotly(
             tooltip = c("x", "y"),
-            dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+            # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
+            # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
+            # the SBS variant already relied on FALSE for exactly this reason.
+            dynamicTicks = FALSE,
             height = 500 + (footnote_y * 25) + title_margin * 50
           ) %>%
           layout(
@@ -1125,8 +1134,11 @@ keep_blq_timepoints <- function(plot_data, xvar, mean_group_var) {
     group_by(!!sym(mean_group_var), !!sym(xvar)) %>%
     summarise( # Count number of samples for each timepoint by group
       n_samples = n_distinct(USUBJID),
-      # # Compute BLQ ratio for each timepoint by group
-      n_blq_ratio = sum(is_blq) / n_samples,
+      # Compute BLQ ratio for each timepoint by group. Counted per subject, not per row:
+      # `sum(is_blq)` over a denominator of distinct subjects can exceed 1 whenever a
+      # subject contributes several records to a timepoint, dropping timepoints that are
+      # well under the 50% threshold.
+      n_blq_ratio = n_distinct(USUBJID[is_blq]) / n_samples,
       .groups = "drop"
     ) %>%
     filter(n_blq_ratio <= 0.5, n_samples > 1) %>%
