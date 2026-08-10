@@ -81,6 +81,29 @@ describe("g_lineplot: structure and arguments", {
     expect_s3_class(p$facet, "FacetWrap")
   })
 
+  it("can lock y-axis scale across facets while keeping x free", {
+    p_free <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      facet_by = "USUBJID"
+    )
+    p_locked <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      facet_by = "USUBJID",
+      lock_y_axis = TRUE
+    )
+
+    expect_true(p_free$facet$params$free$x)
+    expect_true(p_free$facet$params$free$y)
+    expect_true(p_locked$facet$params$free$x)
+    expect_false(p_locked$facet$params$free$y)
+  })
+
   it("applies log scale", {
     p <- g_lineplot(
       data = ind_data %>% filter(AVAL > 0), # Remove non-positive for log test

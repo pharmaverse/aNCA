@@ -27,6 +27,8 @@
 #'   Default is `NULL` (no limits).
 #' @param ylog_scale A logical value (`TRUE` or `FALSE`) indicating whether to use
 #'  a logarithmic scale for the y-axis.
+#' @param lock_y_axis Logical; if `TRUE`, faceted plots use one shared
+#'   y-axis range while x-axis scales remain free. Default is `FALSE`.
 #' @param threshold_value A numeric value for the y-intercept of the threshold line.
 #'   Only used if `show_threshold` is `TRUE`.
 #' @param palette A character string specifying the color palette to use. Default is
@@ -76,6 +78,7 @@ g_lineplot <- function(data,
                        x_limits = NULL,
                        y_limits = NULL,
                        ylog_scale = FALSE,
+                       lock_y_axis = FALSE,
                        threshold_value = NULL,
                        palette = "default",
                        tooltip_vars = NULL,
@@ -127,7 +130,7 @@ g_lineplot <- function(data,
     .add_colour_palette(palette),
     .add_axis_limits(x_limits, y_limits),
     .add_y_scale(ylog_scale),
-    .add_faceting(facet_label_var),
+    .add_faceting(facet_label_var, lock_y_axis),
     .add_thr(threshold_value),
     .add_vline(data, vline_var)
   )
@@ -254,17 +257,17 @@ g_lineplot <- function(data,
     return(NULL)
   }
   scale_y_log10(
-    breaks = c(0.001, 0.01, 0.1, 1, 10, 100, 1000),
     labels = function(x) format(x, big.mark = ",", scientific = FALSE, trim = TRUE)
   )
 }
 
 #' @noRd
-.add_faceting <- function(facet_by) {
+.add_faceting <- function(facet_by, lock_y_axis = FALSE) {
   if (is.null(facet_by) || length(facet_by) == 0) {
     return(NULL)
   }
-  facet_wrap(vars(!!!syms(facet_by)), scales = "free")
+  scales <- if (isTRUE(lock_y_axis)) "free_x" else "free"
+  facet_wrap(vars(!!!syms(facet_by)), scales = scales)
 }
 
 #' @noRd

@@ -20,6 +20,7 @@
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
 
 ### Exploration
+* Faceted individual and mean exploration plots can now use a shared y-axis range across panels, with the selected setting preserved in generated plot code and saved exports (#1424)
 * "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup
