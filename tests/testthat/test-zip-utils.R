@@ -173,3 +173,52 @@ describe("get_dose_esc_results", {
     expect_equal(length(res), n_result_groups)
   })
 })
+
+# Format handling added for the bulk TLG export (issue #1344): PDF for ggplots, XLSX for
+# tables, and raster output for plotly objects that carry their source ggplot.
+
+describe("save_ggplot_format", {
+  gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+
+  it("writes a PDF when asked", {
+    d <- withr::local_tempdir()
+    save_ggplot_format(gg, file.path(d, "p"), "pdf")
+    expect_true(file.exists(file.path(d, "p.pdf")))
+  })
+})
+
+describe("save_table_format", {
+  it("writes an XLSX when asked", {
+    d <- withr::local_tempdir()
+    save_table_format(head(mtcars), file.path(d, "t"), "xlsx")
+    expect_true(file.exists(file.path(d, "t.xlsx")))
+  })
+
+  it("writes an XLSX from an rlistings listing_df, which is not a plain data.frame", {
+    skip_if_not_installed("rlistings")
+    d <- withr::local_tempdir()
+    lst <- rlistings::as_listing(data.frame(a = 1:3, b = letters[1:3]), key_cols = "a")
+    expect_no_error(save_table_format(lst, file.path(d, "l"), "xlsx"))
+    expect_true(file.exists(file.path(d, "l.xlsx")))
+  })
+})
+
+describe("save_plotly_format", {
+  gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+
+  it("renders PNG from the stashed source ggplot", {
+    d <- withr::local_tempdir()
+    save_plotly_format(aNCA:::.with_ggplot(plotly::ggplotly(gg), gg), file.path(d, "p"), "png")
+    expect_true(file.exists(file.path(d, "p.png")))
+    # Only what was asked for -- HTML drags in a multi-MB dependency folder per plot.
+    expect_false(file.exists(file.path(d, "p.html")))
+  })
+
+  it("falls back to HTML when there is no stashed ggplot to rasterise", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "png")
+    expect_false(file.exists(file.path(d, "p.png")))
+    # Never silently produce nothing: HTML is the only thing a bare plotly can yield.
+    expect_true(file.exists(file.path(d, "p.html")))
+  })
+})
