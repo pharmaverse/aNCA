@@ -222,3 +222,43 @@ describe("save_plotly_format", {
     expect_true(file.exists(file.path(d, "p.html")))
   })
 })
+
+# .make_zip_filename gained a `suffix` argument so the TLG bulk download can reuse the
+# project/study naming instead of duplicating it (issue #1344).
+local({
+  library(shiny)
+  source(
+    file.path(system.file("shiny", package = "aNCA"), "modules", "tab_nca", "zip.R"),
+    local = TRUE
+  )
+},
+envir = parent.env(environment()))
+
+describe(".make_zip_filename", {
+  fake_session <- function(project = "", label = "") {
+    list(userData = list(
+      project_name    = function() project,
+      study_ids_label = function() label
+    ))
+  }
+
+  it("defaults to the project name with a .zip extension", {
+    expect_equal(.make_zip_filename(fake_session("MyProject")), "MyProject.zip")
+  })
+
+  it("honours a custom suffix so exports are distinguishable", {
+    expect_equal(
+      .make_zip_filename(fake_session("MyProject"), "_TLGs.zip"), "MyProject_TLGs.zip"
+    )
+  })
+
+  it("falls back to the study label, then to a bare NCA name", {
+    expect_equal(.make_zip_filename(fake_session("", "S123"), "_TLGs.zip"),
+                 "NCA_S123_TLGs.zip")
+    expect_equal(.make_zip_filename(fake_session("", ""), "_TLGs.zip"), "NCA_TLGs.zip")
+  })
+
+  it("replaces characters that are not safe in a file name", {
+    expect_equal(.make_zip_filename(fake_session("My Project/v2")), "My_Project_v2.zip")
+  })
+})

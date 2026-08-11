@@ -52,6 +52,13 @@ describe(".tlg_export_basename", {
   it("treats the split_and_apply 'all' sentinel as no split", {
     expect_equal(.tlg_export_basename("t_pkct01", "all"), "pkct01")
   })
+
+  it("omits the suffix when the split key slugs down to nothing", {
+    # A key of only separators leaves no usable text; appending a bare "_" would be worse
+    # than no suffix at all.
+    expect_equal(.tlg_export_basename("t_pkct01", " / / "), "pkct01")
+    expect_equal(.tlg_export_basename("t_pkct01", ""), "pkct01")
+  })
 })
 
 describe(".prepare_export_frame", {
@@ -165,6 +172,22 @@ describe("write_tlg_exports", {
     expect_equal(m$status[m$id == "t_broken"], "skipped")
     expect_match(m$note[m$id == "t_broken"], "something went wrong")
     # The healthy TLG in the same order still made it out.
+    expect_true(file.exists(file.path(d, "Tables", "pkct01.csv")))
+  })
+
+  it("records a write failure as an error and keeps going", {
+    # save_dispatch() rejects anything that is not a ggplot / data.frame / plotly.  That
+    # must not take the download down with it.
+    d <- withr::local_tempdir()
+    m <- write_tlg_exports(
+      list(
+        t_odd    = entry("table", list(all = function() NULL)),
+        t_pkct01 = entry("table", list(all = head(mtcars)))
+      ),
+      d, table_formats = "csv"
+    )
+    expect_equal(m$status[m$id == "t_odd"], "error")
+    expect_match(m$note[m$id == "t_odd"], "Unsupported output type")
     expect_true(file.exists(file.path(d, "Tables", "pkct01.csv")))
   })
 
