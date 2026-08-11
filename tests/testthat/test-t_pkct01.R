@@ -149,11 +149,14 @@ describe("t_pkct01: multi-variable stratification and time filtering (#1356)", {
     expect_setequal(unique(result$PARAM), c("Drug A", "Drug B"))
   })
 
-  it("drops a strat variable that is also a table-split (list_vars) column", {
-    result <- t_pkct01(
-      pkct01_data, list_vars = c("PARAM", "PCSPEC"),
-      strat_var = c("TRT01A", "PARAM")
-    )[[1]]
+  it("drops a strat variable that is also a table-split (list_vars) column, and warns", {
+    expect_warning(
+      result <- t_pkct01(
+        pkct01_data, list_vars = c("PARAM", "PCSPEC"),
+        strat_var = c("TRT01A", "PARAM")
+      )[[1]],
+      "also used to split tables.*PARAM"
+    )
     # PARAM is a page split, so it must not reappear as a redundant row column.
     expect_false("PARAM" %in% names(result))
     expect_true("TRT01A" %in% names(result))

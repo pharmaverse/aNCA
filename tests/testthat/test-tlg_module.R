@@ -1,6 +1,8 @@
 # Source the TLG module to test pure utility functions
 local({
   library(shiny)
+  # The module's error handler calls log_error(); the app attaches logger in app.R.
+  library(logger)
   shiny_dir <- system.file("shiny", package = "aNCA")
   source(
     file.path(shiny_dir, "modules", "tab_tlg", "tlg_module.R"),
@@ -443,14 +445,22 @@ describe("tlg_module_server: warning surfacing", {
       NFRLT = 1:3, AVAL = c(5, 4, 3), stringsAsFactors = FALSE
     )))
   )
-  # Emits a warning (e.g. a urine TLG reporting PCSPEC/PPSPEC is absent) but
-  # still returns a result.
+  # Only warnings raised through .tlg_warn() (class `tlg_warning`) are meant for the user.
+  # A urine TLG reporting that PCSPEC/PPSPEC is absent is one; it still returns a result.
   render_list_warns <- function(data, ...) {
-    warning("PCSPEC/PPSPEC not found; specimen filtering skipped")
+    warning(warningCondition(
+      "PCSPEC/PPSPEC not found; specimen filtering skipped", class = "tlg_warning"
+    ))
     list("plot_a")
   }
 
-  it("muffles render warnings, notifies with a 'Notice:' prefix, and continues", {
+  # Incidental warnings from the plotting stack must NOT become UI noise.
+  render_list_warns_untyped <- function(data, ...) {
+    warning("Removed 3 rows containing missing values")
+    list("plot_a")
+  }
+
+  notes_from <- function(render_list) {
     notes <- character(0)
     mockery::stub(
       tlg_module_server, "showNotification",
@@ -461,7 +471,7 @@ describe("tlg_module_server: warning surfacing", {
       args = list(
         data        = test_data,
         type        = "graph",
-        render_list = render_list_warns,
+        render_list = render_list,
         options     = list()
       ),
       {
@@ -471,9 +481,90 @@ describe("tlg_module_server: warning surfacing", {
         expect_equal(tlg_list(), list("plot_a"))
       }
     )
-    # The warning was surfaced to the user with the friendlier prefix.
+    notes
+  }
+
+  it("muffles tlg_warning conditions, notifies the user, and continues rendering", {
+    notes <- notes_from(render_list_warns)
     expect_length(notes, 1)
-    expect_match(notes[[1]], "^Notice: ")
     expect_match(notes[[1]], "specimen filtering skipped")
+  })
+
+  it("leaves untyped warnings to the console rather than notifying", {
+    expect_length(notes_from(render_list_warns_untyped), 0)
+  })
+})
+
+# Graph panels are bound by output ID, and `render_graph_outputs()` registers those bindings as
+# `plot_<index>`.  The UI side must use the same index: several graph builders (g_pkcg03, the
+# p_pkpg* family) return NAMED lists, and deriving the ID from the name produced IDs that never
+# matched a binding — rendering a blank panel — or, once a split key contained a colon, broke
+# Shiny's client-data handler and took the session down.
+
+describe("render_graph_outputs: output IDs", {
+  # Minimal wrapper so the real render_graph_outputs() is exercised.
+  graph_mod <- function(id, items) {
+    shiny::moduleServer(id, function(input, output, session) {
+      render_graph_outputs(output, session, shiny::reactive(items))
+    })
+  }
+
+  rendered_ids <- function(items) {
+    ids <- NULL
+    shiny::testServer(graph_mod, args = list(items = items), {
+      html <- as.character(output$tlg_output$html)
+      ids <<- unlist(regmatches(html, gregexpr('plot_[^"]+', html)))
+    })
+    ids
+  }
+
+  fake_plot <- function() list(height = 400)
+
+  it("uses sequential indices for an unnamed plot list", {
+    expect_equal(rendered_ids(list(fake_plot(), fake_plot())), c("plot_1", "plot_2"))
+  })
+
+  it("uses sequential indices for a NAMED plot list, not the names", {
+    items <- setNames(list(fake_plot(), fake_plot()), c("PPCAT: DrugA", "PPCAT: DrugB"))
+    ids <- rendered_ids(items)
+    expect_equal(ids, c("plot_1", "plot_2"))
+  })
+
+  it("never emits an output ID containing a character invalid in a Shiny id", {
+    items <- setNames(list(fake_plot()), "ROUTE: IV / PARAM: DrugA")
+    expect_false(any(grepl("[: /]", rendered_ids(items))))
+  })
+
+  it("shows the split key as a group header when the list is named", {
+    items <- setNames(list(fake_plot()), "PPCAT: DrugA")
+    shiny::testServer(graph_mod, args = list(items = items), {
+      html <- as.character(output$tlg_output$html)
+      expect_true(grepl("PPCAT: DrugA", html, fixed = TRUE))
+    })
+  })
+})
+
+# req()/validate() raise conditions that inherit from `error`.  The render tryCatch must let
+# those propagate so Shiny gates the output, rather than painting "Error: ADPP data is not
+# available..." (or a bare "Error:") into the panel before NCA has run.
+
+describe("tlg_module_server: Shiny control-flow conditions", {
+  base_args <- function(render_list) {
+    list(type = "graph", data = shiny::reactive(data.frame(AVAL = 1)),
+         render_list = render_list, options = list(),
+         grouping_vars = shiny::reactive(character()))
+  }
+
+  it("lets req() propagate instead of rendering it as an error string", {
+    shiny::testServer(tlg_module_server, args = base_args(function(data, ...) shiny::req(FALSE)), {
+      expect_error(tlg_list())
+    })
+  })
+
+  it("still renders a genuine error as text", {
+    args <- base_args(function(data, ...) stop("a genuine failure"))
+    shiny::testServer(tlg_module_server, args = args, {
+      expect_match(tlg_list(), "^Error: a genuine failure")
+    })
   })
 })

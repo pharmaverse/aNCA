@@ -61,17 +61,38 @@ tlg_data_key <- function(type, dataset) {
 #' @param current_page_items Reactive returning the items shown on the current
 #'                           page (plotly widgets, ggplots, or character errors).
 #' @noRd
+#' Prefix a rendered TLG item with its split-key header, e.g. "PPCAT: Drug A / PCSPEC: PLASMA",
+#' so stacked outputs are distinguishable.  `"all"` is the sentinel `split_and_apply()` uses for
+#' un-split output and gets no header.
+#'
+#' @param nm   Split key for this item, or NULL/NA when the output was not split.
+#' @param body Rendered item to prefix.
+#' @returns `body`, optionally preceded by an `<h4>` header.
+#' @noRd
+.with_group_header <- function(nm, body) {
+  if (is.null(nm) || is.na(nm) || !nzchar(nm) || nm == "all") return(body)
+  tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
+}
+
 render_graph_outputs <- function(output, session, current_page_items) {
   output$tlg_output <- renderUI({
     items <- current_page_items()
-    tagList(purrr::imap(items, function(item, i) {
-      if (is.character(item)) {
+    nms <- names(items)
+    # Index, not name: `purrr::imap()` yields the *name* for a named list, and the graph
+    # builders that split their output (g_pkcg03, the p_pkpg* family) return named lists.
+    # That produced output IDs like `plot_ROUTE: IV / PARAM: DrugA`, which never matched the
+    # `plot_<i>` bindings registered below — so those panels rendered blank — and which break
+    # Shiny's client-data handler outright once the split key contains a colon.
+    tagList(lapply(seq_along(items), function(i) {
+      item <- items[[i]]
+      body <- if (is.character(item)) {
         tags$pre(item)
       } else {
         # preserve the height baked into the plotly object (set via ggplotly)
         height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
         plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
       }
+      .with_group_header(nms[i], body)
     }))
   })
 
@@ -126,12 +147,7 @@ render_table_outputs <- function(output, current_page_items) {
           columnGroups = define_col_groups(df)
         )
       }
-      nm <- nms[i]
-      if (!is.null(nm) && nzchar(nm) && nm != "all") {
-        tagList(tags$h4(nm, class = "tlg-table-group-header"), body)
-      } else {
-        body
-      }
+      .with_group_header(nms[i], body)
     }))
   })
 }
@@ -290,34 +306,64 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
 
       if (any(sapply(list_options, is.null))) return(NULL)
 
-      list_options <- purrr::keep(list_options, function(value) all(!value %in% c(NULL, "", 0, NA)))
+      # Only "" and NA mean "unset". A literal 0 is a legitimate value — nominal timepoint 0,
+      # or an axis limit of 0 — and treating it as unset silently disabled the whole option.
+      # A cleared numeric widget arrives as NULL and is already handled above.
+      list_options <- purrr::keep(list_options, function(value) all(!value %in% c("", NA)))
 
-      tryCatch({
+      rendered <- tryCatch({
         # Data arrives already exclusion-filtered (per-dataset flag) and
         # label-restored from the tab_tlg boundary (see tlg_data_sources), so
         # it is passed straight through here.  Label restoration matters because
         # the PKNCA/dplyr pipeline strips column `label` attributes, which breaks
         # the `!COLUMN` label-reference syntax in title/subtitle/footnote/axis
         # inputs (resolved via parse_annotation).
-        #
-        # Surface warnings from the render function (e.g. urine TLGs warning that
-        # PCSPEC/PPSPEC is absent so no specimen filtering was applied) as app
-        # notifications, then muffle so rendering continues with the result.
-        withCallingHandlers(
+        # Surface user-facing warnings (class `tlg_warning`, raised via .tlg_warn) as
+        # notifications: a dropped stratification variable or a skipped filter otherwise
+        # changes the output silently. Other warnings — ggplot2's "Removed N rows", say —
+        # are left to the console so the notifications stay meaningful.
+        tlg_warnings <- character()
+        result <- withCallingHandlers(
           do.call(render_list, purrr::list_modify(list(data = data()), !!!list_options)),
-          warning = function(w) {
-            showNotification(
-              paste0("Notice: ", conditionMessage(w)), type = "warning", duration = 10
-            )
+          tlg_warning = function(w) {
+            tlg_warnings <<- c(tlg_warnings, conditionMessage(w))
             invokeRestart("muffleWarning")
           }
         )
+        if (length(tlg_warnings) > 0) {
+          showNotification(
+            paste(unique(tlg_warnings), collapse = "\n"),
+            type = "warning",
+            duration = 12
+          )
+        }
+        # An empty result would render as a blank panel with no explanation. The usual causes
+        # are a filter that matched no rows, or the NCA run not having produced the parameters
+        # this output needs (e.g. RCAMINT/FREXINT for the urine plots), so say so instead.
+        if (length(result) == 0) {
+          paste0(
+            "No output was produced for this TLG. This usually means the sidebar filters ",
+            "matched no rows, or the NCA run did not compute the parameters this output ",
+            "requires."
+          )
+        } else {
+          result
+        }
       },
       error = function(e) {
+        # `req()` and `validate()` signal "not ready yet" with conditions that inherit from
+        # `error`. Rendering those turned Shiny's normal gating into what looked like a crash
+        # — a bare `Error:`, or "ADPP data is not available...", shown in the panel before NCA
+        # had run. Hand the condition back so it can be re-raised below; re-raising here would
+        # simply be caught by this same handler.
+        if (inherits(e, "shiny.silent.error")) return(e)
         log_error("Error in list rendering:")
         print(e)
         paste0("Error: ", conditionMessage(e))
       })
+
+      if (inherits(rendered, "condition")) stop(rendered)
+      rendered
     }) %>%
       debounce(750)
 
@@ -327,6 +373,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       req(tlg_list(), entries_per_page(), current_page())
 
       num_plots <- length(tlg_list())
+      # `x[1:0]` yields a single NULL slot rather than nothing, which renders as a blank panel.
+      if (num_plots == 0) return(list())
+
       page_end <- current_page() * entries_per_page()
       page_start <- page_end - entries_per_page() + 1
       if (page_end > num_plots) page_end <- num_plots

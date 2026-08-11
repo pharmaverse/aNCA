@@ -27,14 +27,23 @@ tlg_option_table_ui <- function(id, opt_def, data) {
 tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
   moduleServer(id, function(input, output, session) {
     #' Generates default table based on provided default option definition
-    default_table <- lapply(opt_def$default_rows, function(x) {
-      as.list(x) %>%
+    default_table <- if (length(opt_def$default_rows) == 0) {
+      # No default rows defined: still emit a correctly shaped zero-row table. Binding an
+      # empty list would give a 0x0 tibble, which `reactable` rejects ("`data` must have at
+      # least one column") and which consumers cannot tell apart from a configured table.
+      rep(list(character(0)), length(opt_def$cols)) %>%
         setNames(names(opt_def$cols)) %>%
-        as_tibble() %>%
-        mutate(across(everything(), as.character))
-    }) %>%
-      bind_rows() %>%
-      mutate(across(everything(), ~ ifelse(. == "$NA", NA, .)))
+        as_tibble()
+    } else {
+      lapply(opt_def$default_rows, function(x) {
+        as.list(x) %>%
+          setNames(names(opt_def$cols)) %>%
+          as_tibble() %>%
+          mutate(across(everything(), as.character))
+      }) %>%
+        bind_rows() %>%
+        mutate(across(everything(), ~ ifelse(. == "$NA", NA, .)))
+    }
 
     #' Output table with values that is returned by the module
     output_table <- reactiveVal(default_table)

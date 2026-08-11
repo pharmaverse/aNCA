@@ -275,7 +275,10 @@ pkcg01 <- function(
         # This because of no spec of parse annotation generates warning is.na()
         ggplotly(
           tooltip = c("x", "y"),
-          dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
+          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
+          # the SBS variant already relied on FALSE for exactly this reason.
+          dynamicTicks = FALSE,
           #' NOTE: might require some fine tuning down the line, looks fine now
           height = 500 + (footnote_y * 25) + title_margin * 50
         ) %>%
@@ -335,13 +338,39 @@ generate_title <- function(plot_data, title, scale, studyid) {
   }
 }
 
+# "N" in a plot subtitle conventionally means the number of subjects, not the number of
+# records; `nrow()` overcounts whenever a subject contributes several samples. Falls back to
+# the row count when the data carries no subject column.
+.subject_count <- function(plot_data) {
+  if ("USUBJID" %in% names(plot_data)) {
+    dplyr::n_distinct(plot_data$USUBJID)
+  } else {
+    nrow(plot_data)
+  }
+}
+
+# Readable label for each grouping variable, falling back to the variable name when
+# `plotgroup_names` has no entry for it. Indexing the list directly would drop unknown
+# variables, leaving fewer labels than values and silently mislabelling the subtitle.
+.plotgroup_labels <- function(plotgroup_vars, plotgroup_names) {
+  vapply(
+    plotgroup_vars,
+    function(var) if (is.null(plotgroup_names[[var]])) var else plotgroup_names[[var]],
+    character(1),
+    USE.NAMES = FALSE
+  )
+}
+
 # Helper Function for Subtitle Generation
 generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names) {
   if (is.null(subtitle)) {
     paste0(
-      "Treatment Group: ", unique(plot_data[[trt_var]]), " (N=", nrow(plot_data), ")<br>",
+      # Collapse rather than interpolate: a plot group spanning more than one treatment
+      # would otherwise vectorise the whole subtitle, which plotly renders as no title.
+      "Treatment Group: ", paste(unique(plot_data[[trt_var]]), collapse = ", "),
+      " (N=", .subject_count(plot_data), ")<br>",
       paste(
-        unlist(unname(plotgroup_names[plotgroup_vars])), ": ",
+        .plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
         unique(plot_data[, plotgroup_vars]),
         sep = "", collapse = ", "
       )
@@ -448,7 +477,8 @@ pkcg02 <- function(
     "ROUTE" = "Route",
     "PCSPEC" = "Specimen",
     "PARAM" = "Analyte",
-    "TRT01A" = "Treatment"
+    "TRT01A" = "Treatment",
+    "USUBJID" = "Subject ID"
   ),
   scale = c("LIN", "LOG", "SBS")[1],
   studyid = "STUDYID",
@@ -624,7 +654,10 @@ pkcg02 <- function(
         plotly_plot <- ggplotly(
           plotly_plot,
           tooltip = c("x", "y"),
-          dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
+          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
+          # the SBS variant already relied on FALSE for exactly this reason.
+          dynamicTicks = FALSE,
           #' NOTE: might require some fine tuning down the line, looks fine now
           height = 500 + (footnote_y * 25) + title_margin * 50
         ) %>%
@@ -1032,7 +1065,10 @@ pkcg03 <- function(
         plotly_plot <- plot %>%
           ggplotly(
             tooltip = c("x", "y"),
-            dynamicTicks = if (scale != "SBS") TRUE else FALSE,
+            # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
+            # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
+            # the SBS variant already relied on FALSE for exactly this reason.
+            dynamicTicks = FALSE,
             height = 500 + (footnote_y * 25) + title_margin * 50
           ) %>%
           layout(
@@ -1098,8 +1134,11 @@ keep_blq_timepoints <- function(plot_data, xvar, mean_group_var) {
     group_by(!!sym(mean_group_var), !!sym(xvar)) %>%
     summarise( # Count number of samples for each timepoint by group
       n_samples = n_distinct(USUBJID),
-      # # Compute BLQ ratio for each timepoint by group
-      n_blq_ratio = sum(is_blq) / n_samples,
+      # Compute BLQ ratio for each timepoint by group. Counted per subject, not per row:
+      # `sum(is_blq)` over a denominator of distinct subjects can exceed 1 whenever a
+      # subject contributes several records to a timepoint, dropping timepoints that are
+      # well under the 50% threshold.
+      n_blq_ratio = n_distinct(USUBJID[is_blq]) / n_samples,
       .groups = "drop"
     ) %>%
     filter(n_blq_ratio <= 0.5, n_samples > 1) %>%
@@ -1127,7 +1166,7 @@ generate_title_mean <- function(plot_data, title, scale, studyid, mean_group_var
 # Helper Function for Subtitle Generation
 generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgroup_names) {
   if (is.null(subtitle)) {
-    paste0(paste(unlist(unname(plotgroup_names[plotgroup_vars])), ": ",
+    paste0(paste(.plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
                  unique(plot_data[, plotgroup_vars]),
                  sep = "", collapse = ", ")
     )

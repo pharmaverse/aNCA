@@ -82,6 +82,14 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
   # on the rows only adds a redundant constant column.  Intersect with the data
   # columns so an absent (e.g. single-arm) grouping var is skipped rather than
   # crashing interaction().
+  split_strat <- intersect(strat_var, list_vars)
+  if (length(split_strat) > 0) {
+    .tlg_warn(
+      "t_pkct01: stratification variable(s) also used to split tables and dropped from the ",
+      "rows: ", paste(split_strat, collapse = ", "),
+      ". Within a split these are constant; the value is shown in the group header instead."
+    )
+  }
   requested_strat <- setdiff(strat_var, list_vars)
   row_vars <- intersect(requested_strat, names(data))
   # Tell the user which stratification variables were dropped for being absent
@@ -89,7 +97,7 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
   # concentration data) so it is clear why the table grouped by fewer variables.
   missing_strat <- setdiff(requested_strat, names(data))
   if (length(missing_strat) > 0) {
-    warning(
+    .tlg_warn(
       "t_pkct01: stratification variable(s) not found in the data and skipped: ",
       paste(missing_strat, collapse = ", "),
       ". The table is grouped by the remaining variable(s) only."

@@ -38,8 +38,13 @@
     # USUBJID × stratum × AVISIT repeated per dose event).  col_group_var is
     # added so a subject that is constant within the group is never split across
     # two group columns by the dedup.
+    # The analyte and parameter columns are always part of the key, even when they are not
+    # stratification variables: rows that differ in PPCAT or PARAM are genuinely different
+    # measurements, and collapsing them silently discarded whole analytes (a parent/metabolite
+    # pair reduced to the parent alone). Duplicate rows from repeated dose events share both,
+    # so they still collapse as intended.
     dedup_cols <- intersect(
-      c("USUBJID", strat_vars, "AVISIT", col_group_var),
+      c("USUBJID", strat_vars, "AVISIT", col_group_var, "PPCAT", "PARAM"),
       names(df)
     )
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
@@ -162,10 +167,18 @@ t_pkpt03_col <- function(
 
   # A table-split (list_vars) column is constant within each split, so keeping it
   # on the rows only adds a redundant constant column.
+  split_strat <- intersect(strat_var, list_vars)
+  if (length(split_strat) > 0) {
+    .tlg_warn(
+      "t_pkpt03_col: stratification variable(s) also used to split tables and dropped from the ",
+      "rows: ", paste(split_strat, collapse = ", "),
+      ". Within a split these are constant; the value is shown in the group header instead."
+    )
+  }
   strat_var <- setdiff(strat_var, list_vars)
   missing_strat <- setdiff(strat_var, names(data))
   if (length(missing_strat) > 0) {
-    warning(
+    .tlg_warn(
       "t_pkpt03_col: stratification variable(s) not found in the data and skipped: ",
       paste(missing_strat, collapse = ", "),
       ". The table is grouped by the remaining variable(s) only."
@@ -250,7 +263,7 @@ t_pkpt07_norm <- function(
       data <- data[grepl("[A-Z0-9]D$", data[[paramcd_var]]), , drop = FALSE]
     }
   } else {
-    warning(
+    .tlg_warn(
       "t_pkpt07_norm: column '", paramcd_var, "' not found in data; ",
       "dose-normalization filter could not be applied. All parameters are ",
       "included. Ensure PARAMCD is exported from your NCA run to use this table."
@@ -312,9 +325,9 @@ t_pkpt08_uri <- function(
 ) {
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
-    data <- data[toupper(data$PPSPEC) %in% toupper(urine_specs), , drop = FALSE]
+    data <- dplyr::filter(data, toupper(.data$PPSPEC) %in% toupper(urine_specs))
   } else {
-    warning(
+    .tlg_warn(
       "t_pkpt08_uri: 'PPSPEC' column not found in data; the urine specimen ",
       "filter was not applied. All rows are treated as urine. If your data ",
       "contains non-urine records, the output will be incorrect. Ensure ",
@@ -338,10 +351,18 @@ t_pkpt08_uri <- function(
 
   # A table-split (list_vars) column is constant within each split, so keeping it
   # on the rows only adds a redundant constant column.
+  split_strat <- intersect(strat_var, list_vars)
+  if (length(split_strat) > 0) {
+    .tlg_warn(
+      "t_pkpt08_uri: stratification variable(s) also used to split tables and dropped from the ",
+      "rows: ", paste(split_strat, collapse = ", "),
+      ". Within a split these are constant; the value is shown in the group header instead."
+    )
+  }
   strat_var <- setdiff(strat_var, list_vars)
   missing_strat <- setdiff(strat_var, names(data))
   if (length(missing_strat) > 0) {
-    warning(
+    .tlg_warn(
       "t_pkpt08_uri: stratification variable(s) not found in the data and skipped: ",
       paste(missing_strat, collapse = ", "),
       ". The table is grouped by the remaining variable(s) only."
@@ -481,7 +502,7 @@ t_pkpt11_gmr <- function(
     arms_in_split <- unique(df[[strat_var]])
 
     if (!ref_arm %in% arms_in_split) {
-      warning(
+      .tlg_warn(
         "t_pkpt11_gmr: reference arm '", ref_arm, "' is absent from this ",
         "data split. Returning an empty table for this page."
       )
@@ -490,7 +511,7 @@ t_pkpt11_gmr <- function(
 
     trt_in_split <- intersect(trt_arms, arms_in_split)
     if (length(trt_in_split) == 0) {
-      warning(
+      .tlg_warn(
         "t_pkpt11_gmr: no treatment arms other than '", ref_arm,
         "' found in this data split. Returning an empty table."
       )

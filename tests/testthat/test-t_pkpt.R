@@ -129,10 +129,13 @@ describe("t_pkpt03_col: multi-variable stratification and filtering (#1356)", {
     expect_setequal(unique(result$PARAM), c("Cmax", "AUClast"))
   })
 
-  it("drops a strat variable that is also a table-split (list_vars) column", {
-    result <- t_pkpt03_col(
-      pkpt_data, list_vars = "PPCAT", strat_var = c("TRT01A", "PARAM", "PPCAT")
-    )[[1]]
+  it("drops a strat variable that is also a table-split (list_vars) column, and warns", {
+    expect_warning(
+      result <- t_pkpt03_col(
+        pkpt_data, list_vars = "PPCAT", strat_var = c("TRT01A", "PARAM", "PPCAT")
+      )[[1]],
+      "also used to split tables.*PPCAT"
+    )
     expect_false("PPCAT" %in% names(result))
     expect_true(all(c("TRT01A", "PARAM") %in% names(result)))
   })
@@ -459,5 +462,36 @@ describe("t_pkpt: stats selection", {
       stats = c("n", "Mean")
     )[[1]]
     expect_equal(names(norm), c("TRT01A", "PARAM", "n", "Mean"))
+  })
+})
+
+describe(".build_pkpp_table: dedup key", {
+  it("keeps rows that differ only by analyte when PPCAT is not a stratification variable", {
+    # Collapsing on (USUBJID, strat) alone discarded the metabolite rows entirely and
+    # reported the parent's mean.
+    adpp <- data.frame(
+      USUBJID = rep(c("S1", "S2"), each = 2),
+      TRT01A  = "Arm A",
+      PPCAT   = rep(c("DrugA", "Metab-DrugA"), 2),
+      PARAM   = "Cmax",
+      AVAL    = c(100, 20, 120, 30),
+      stringsAsFactors = FALSE
+    )
+    res <- aNCA:::.build_pkpp_table(
+      adpp, strat_vars = "TRT01A", value_var = "AVAL", summary_fn = aNCA:::.summarise_adpp
+    )
+    expect_equal(res$n[1], 4)
+    expect_equal(res$Mean[1], mean(adpp$AVAL))
+  })
+
+  it("still collapses duplicate rows repeated across dose events", {
+    adpp <- data.frame(
+      USUBJID = rep("S1", 3), TRT01A = "Arm A", PPCAT = "DrugA",
+      PARAM = "Cmax", AVAL = 100, stringsAsFactors = FALSE
+    )
+    res <- aNCA:::.build_pkpp_table(
+      adpp, strat_vars = "TRT01A", value_var = "AVAL", summary_fn = aNCA:::.summarise_adpp
+    )
+    expect_equal(res$n[1], 1)
   })
 })

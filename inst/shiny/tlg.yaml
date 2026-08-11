@@ -355,10 +355,13 @@ t_pkpt08_uri:
   condition: "URINE"
   options:
     .group_label_1: "Filtering"
+    # Urine-only table: choices are restricted to urine-looking PPSPEC values so the
+    # output cannot be pointed at serum or plasma, which carry no urine parameters.
     urine_specs:
-      label: "Urine specimen values (PPSPEC)"
+      label: "Specimen Material Type"
       type: select
-      choices: $PPSPEC
+      choices: .urinespecs
+      default: .all
       multiple: true
     param_filter:
       label: "Parameters to show (PARAM)"
@@ -535,6 +538,9 @@ l_pkcl01_tad:
   fun: l_pkcl01_tad
   condition: null
   options:
+    # NOTE: `displaying_vars` is intentionally not exposed — l_pkcl01_tad hardcodes it as
+    # c("NRRLT", "ARRLT", "AVAL") when forwarding to l_pkcl01 (that TAD column choice is the
+    # whole point of this variant), so a user-supplied value would be a duplicate argument.
     .group_label_1: "Labs"
     title:
       type: text
@@ -617,10 +623,13 @@ l_pkcl02_uri:
       type: text
       label: Footnote
     .group_label_2: "Filtering"
+    # Urine-only listing: choices are restricted to urine-looking PCSPEC values and all
+    # are selected by default, so the filter reflects what the listing actually shows.
     urine_specs:
-      label: "Urine specimen values (PCSPEC)"
+      label: "Specimen Material Type"
       type: select
-      choices: $PCSPEC
+      choices: .urinespecs
+      default: .all
       multiple: true
     .group_label_3: "Grouping"
     listgroup_vars:
@@ -922,8 +931,8 @@ g_pkcg01_sbs:
         - ROUTE
         - PCSPEC
         - PARAM
-        - TRT01A
-        
+        - USUBJID
+
 ####### GRAPHS - By treatment
 g_pkcg02_lin:
   template: g_pkcg01_lin
@@ -936,6 +945,21 @@ g_pkcg02_lin:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_lin
   condition: null
+  options:
+    # Combined plots overlay subjects, so the default is the study's PKNCA grouping variables
+    # (which exclude the subject column); grouping by USUBJID would produce one plot per
+    # subject, i.e. an individual (pkcg01) plot. USUBJID stays available as an explicit choice.
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .pknca_groups
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+        - USUBJID
 
 g_pkcg02_log:
   template: g_pkcg01_lin
@@ -948,7 +972,19 @@ g_pkcg02_log:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
   condition: null
-  
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .pknca_groups
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+        - USUBJID
+
 g_pkcg02_sbs:
   template: g_pkcg01_lin
   is_default: false
@@ -964,13 +1000,14 @@ g_pkcg02_sbs:
     plotgroup_vars:
       type: select
       label: "Grouping variables"
-      default: .all
+      default: .pknca_groups
       multiple: true
       choices:
         - ROUTE
         - PCSPEC
         - PARAM
         - TRT01A
+        - USUBJID
 
 ####### GRAPHS - Mean
 g_pkcg03_lin:
@@ -1005,7 +1042,7 @@ g_pkcg03_lin:
     summary_method:
       type: select
       label: "Summary Statistic"
-      default: "mean_sdi"
+      default: "Mean_sdi"
       multiple: false
       choices:
         - Mean_ci
@@ -1089,6 +1126,17 @@ p_pkcg03_lin_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_lin_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkcg03_log_dose:
   is_default: false
@@ -1100,6 +1148,17 @@ p_pkcg03_log_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_log_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkcg03_sbs_dose:
   is_default: false
@@ -1111,6 +1170,17 @@ p_pkcg03_sbs_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_sbs_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - Urine
 p_pkpg01_cum:
@@ -1123,6 +1193,17 @@ p_pkpg01_cum:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
   fun: p_pkpg01_cum
   condition: "URINE"
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg01_per:
   is_default: false
@@ -1134,6 +1215,17 @@ p_pkpg01_per:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
   fun: p_pkpg01_per
   condition: "URINE"
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - Dose Proportionality
 p_pkpg02_doseprop:
@@ -1146,6 +1238,17 @@ p_pkpg02_doseprop:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg02.html
   fun: p_pkpg02_doseprop
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - PK Parameters - Boxplots
 p_pkpg03_boxp:
@@ -1158,6 +1261,17 @@ p_pkpg03_boxp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg03.html
   fun: p_pkpg03_boxp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg04_boxp:
   is_default: false
@@ -1169,6 +1283,17 @@ p_pkpg04_boxp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg04.html
   fun: p_pkpg04_boxp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg06_mp:
   is_default: false
@@ -1180,3 +1305,14 @@ p_pkpg06_mp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
   fun: p_pkpg06_mp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
