@@ -225,3 +225,18 @@ describe("write_tlg_exports", {
     expect_true(file.exists(file.path(d, "manifest.csv")))
   })
 })
+
+describe("write_tlg_exports: tidiness", {
+  it("does not leave an empty folder behind for a type whose outputs all failed", {
+    d <- withr::local_tempdir()
+    write_tlg_exports(
+      list(
+        l_broken = entry("listing", list("Error: no urine data")),
+        t_pkct01 = entry("table", list(all = head(mtcars)))
+      ),
+      d, table_formats = "csv"
+    )
+    expect_false(dir.exists(file.path(d, "Listings")))
+    expect_true(dir.exists(file.path(d, "Tables")))
+  })
+})

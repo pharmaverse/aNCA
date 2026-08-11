@@ -137,6 +137,13 @@ write_tlg_exports <- function(entries,
     recursive = FALSE
   )
 
+  # A type whose TLGs all failed leaves its folder behind empty, which reads as though the
+  # outputs were lost rather than skipped.  Drop it -- manifest.csv is the record of what
+  # did not make it.  (Same reasoning as .clean_export_dir() in zip-utils.R.)
+  for (d in list.dirs(target_dir, recursive = TRUE, full.names = TRUE)[-1]) {
+    if (length(list.files(d, recursive = TRUE)) == 0) unlink(d, recursive = TRUE)
+  }
+
   manifest <- if (length(rows) == 0) .tlg_manifest_row()[0, ] else do.call(rbind, rows)
   write.csv(manifest, file.path(target_dir, "manifest.csv"), row.names = FALSE)
   manifest
@@ -166,18 +173,25 @@ write_tlg_exports <- function(entries,
     return(invisible(NULL))
   }
 
-  target_dir <- file.path(tempdir(), "tlg_export")
-  unlink(target_dir, recursive = TRUE)
+  # tempfile(), not a fixed name under tempdir(): Shiny can serve several sessions from one
+  # R process, and a fixed directory that is unlink()ed at the start of every download
+  # would let two concurrent exports corrupt each other.  Cleaned up afterwards so a large
+  # order does not sit in the temp directory for the life of the process.
+  target_dir <- tempfile("tlg_export_")
+  on.exit(unlink(target_dir, recursive = TRUE), add = TRUE)
 
   progress$set(detail = "Writing files...", value = 0.4)
   manifest <- write_tlg_exports(entries, target_dir)
 
   progress$set(detail = "Creating archive...", value = 0.85)
-  files <- list.files(target_dir, recursive = TRUE)
-  wd <- getwd()
-  on.exit(setwd(wd), add = TRUE)
-  setwd(target_dir)
-  zip::zipr(zipfile = fname, files = files, mode = "mirror")
+  # `root` rather than setwd(): the working directory is process-global, so changing it
+  # mid-download would affect every other session in the same process.
+  zip::zipr(
+    zipfile = fname,
+    files   = list.files(target_dir, recursive = TRUE),
+    root    = target_dir,
+    mode    = "mirror"
+  )
 
   progress$set(message = "Complete!", detail = "", value = 1)
 
