@@ -491,3 +491,47 @@ describe("g_pkcg03_log", {
   })
 
 })
+
+# The bulk TLG export writes graphs as PNG (issue #1344).  A plotly widget cannot be
+# rasterised without a headless browser, so the concentration plot builders stash the
+# ggplot they were built from on the returned object.  `layout()` rebuilds a plotly object
+# and drops attributes set before it, so this also guards the ordering of that attachment.
+
+describe("plotly outputs carry their source ggplot for export", {
+  it("attaches the ggplot for every pkcg01 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      p <- pkcg01(adnca, scale = sc, plotly = TRUE)[[1]]
+      expect_s3_class(attr(p, "ggplot"), "ggplot")
+    }
+  })
+
+  it("attaches the ggplot for every pkcg02 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      p <- pkcg02(adnca, scale = sc, plotly = TRUE)[[1]]
+      expect_s3_class(attr(p, "ggplot"), "ggplot")
+    }
+  })
+
+  it("attaches the ggplot for every pkcg03 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      p <- pkcg03(adpc1, scale = sc, plotly = TRUE)[[1]]
+      expect_s3_class(attr(p, "ggplot"), "ggplot")
+    }
+  })
+
+  it("log-scales the stashed ggplot, which the plotly path applies via layout()", {
+    # On the plotly path the log axis comes from layout(), leaving the ggplot linear; it is
+    # scaled explicitly so the exported PNG matches the widget.  LIN has no y scale added.
+    has_y_scale <- function(gg) {
+      any(vapply(gg$scales$scales, function(s) "y" %in% s$aesthetics, logical(1)))
+    }
+    expect_true(has_y_scale(attr(pkcg01(adnca, scale = "LOG", plotly = TRUE)[[1]], "ggplot")))
+    expect_false(has_y_scale(attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")))
+  })
+
+  it("leaves non-plotly output as a bare ggplot with no attribute", {
+    p <- pkcg01(adnca, scale = "LIN", plotly = FALSE)[[1]]
+    expect_s3_class(p, "ggplot")
+    expect_null(attr(p, "ggplot"))
+  })
+})
