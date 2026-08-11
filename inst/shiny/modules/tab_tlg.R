@@ -60,7 +60,12 @@ tab_tlg_ui <- function(id) {
         div(
           actionButton(ns("add_tlg"), "Add TLG"),
           actionButton(ns("remove_tlg"), "Remove TLG"),
-          actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
+          actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary"),
+          # Enabled once an order has been submitted -- there is nothing to export before
+          # the modules have rendered (#1344).
+          shinyjs::disabled(
+            downloadButton(ns("download_tlgs"), "Download all TLGs", class = "btn-default")
+          )
         )
       ),
       card(reactable_ui(ns("selected_tlg_table"))),
@@ -360,6 +365,13 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # fresh per Shiny session and does not leak across sessions.
     .registered_modules <- new.env(parent = emptyenv())
 
+    # Registry of rendered outputs, keyed by TLG id, populated as modules are registered
+    # (#1344).  Each entry holds the catalog definition plus the module's `tlg_list`
+    # reactive, so the download handler can write exactly what the user is looking at --
+    # every page, with their sidebar edits applied.  Like `.registered_modules` this lives
+    # inside moduleServer(), so it is per-session.
+    .tlg_registry <- new.env(parent = emptyenv())
+
     # Shared helper: build navset_pill_list panels for one TLG type.
     # Factored out to eliminate the copy-paste across table / graph / listing
     # renderUI blocks.  `id_suffix` must be unique per type to produce
@@ -367,6 +379,11 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     .build_tlg_panels <- function(g_ids, type, id_suffix) {
       lapply(g_ids, function(g_id) {
         g_def     <- .TLG_DEFINITIONS[[g_id]]
+        # `g_id` is tlg_order()'s row number, which is the position in .TLG_DEFINITIONS
+        # (see the `row_number()` above).  The export needs the catalog key itself --
+        # "g_pkcg01_lin", not 12 -- both to name files and because assign() below
+        # requires a character name.
+        g_key     <- names(.TLG_DEFINITIONS)[g_id]
         module_id <- paste0(g_id, id_suffix)
         tlg_data  <- tlg_data_sources[[tlg_data_key(type, g_def$dataset)]]
 
@@ -374,10 +391,11 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
           # Only register the Shiny module once per session to avoid accumulating
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
-            tlg_module_server(
+            items <- tlg_module_server(
               module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
             )
             assign(module_id, TRUE, envir = .registered_modules)
+            assign(g_key, list(def = g_def, type = type, items = items), envir = .tlg_registry)
           }
           tlg_module_ui(session$ns(module_id), type, g_def$options)
         } else {
@@ -426,5 +444,54 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       panels$"widths" <- c(2, 10)
       do.call(navset_pill_list, panels)
     })
+
+    # These three uiOutputs sit in nav panels, so Shiny suspends them until their tab is
+    # opened -- and it is the renderUI that registers the modules.  Left suspended, a user
+    # who submits an order and downloads without ever clicking through to Graphs would get
+    # a zip with no graphs in it (#1344).
+    for (out_id in c("tables", "graphs", "listings")) {
+      outputOptions(output, out_id, suspendWhenHidden = FALSE)
+    }
+
+    # ---- Bulk export of the rendered TLGs (#1344) --------------------------------------
+
+    observeEvent(input$submit_tlg_order, ignoreInit = TRUE, {
+      shinyjs::enable("download_tlgs")
+    })
+
+    #' Resolve every registered module's output list.
+    #'
+    #' Each registry entry holds the module's `tlg_list` reactive.  A TLG that is still
+    #' gated (`req()`/`validate()` before NCA has produced its dataset) raises a condition
+    #' when read; that is a "not ready", not a failure, so it resolves to NULL and is
+    #' reported as `empty` in the manifest rather than aborting the whole download.
+    #'
+    #' The registry is append-only by design -- modules stay registered for the life of the
+    #' session so their observers are never created twice -- so it accumulates every TLG
+    #' rendered so far, including ones since removed from the order.  The export must show
+    #' the order as it stands now, so the registry is intersected with the current
+    #' selection rather than taken wholesale.
+    .collect_tlg_outputs <- function() {
+      selected <- tryCatch(
+        names(.TLG_DEFINITIONS)[tlg_order_filtered()$id],
+        error = function(e) character()
+      )
+      ids <- intersect(ls(envir = .tlg_registry), selected)
+      out <- lapply(ids, function(g_id) {
+        entry <- get(g_id, envir = .tlg_registry)
+        items <- tryCatch(entry$items(), error = function(e) NULL)
+        list(def = entry$def, type = entry$type, items = items)
+      })
+      setNames(out, ids)
+    }
+
+    output$download_tlgs <- downloadHandler(
+      # Shared with the NCA tab's export so both archives carry the same project/study name.
+      filename = function() .make_zip_filename(session, "_TLGs.zip"),
+      content = function(fname) {
+        # downloadHandler's content runs outside a reactive context.
+        .run_tlg_export(isolate(.collect_tlg_outputs()), fname, session)
+      }
+    )
   })
 }

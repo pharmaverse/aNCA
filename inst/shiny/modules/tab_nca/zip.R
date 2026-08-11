@@ -331,15 +331,17 @@ zip_ui <- function(id) {
   )
 }
 
-# Generate ZIP filename from session project/study info
-.make_zip_filename <- function(session) {
+# Generate ZIP filename from session project/study info.
+# `suffix` lets other exports reuse the same project/study naming -- the TLG bulk download
+# passes "_TLGs.zip" (#1344) so the two archives are distinguishable.
+.make_zip_filename <- function(session, suffix = ".zip") {
   project <- session$userData$project_name()
   if (project == "") {
     label <- session$userData$study_ids_label()
     project <- if (label != "") paste0("NCA_", label) else "NCA"
   }
   project <- gsub("[^A-Za-z0-9_-]", "_", project)
-  paste0(project, ".zip")
+  paste0(project, suffix)
 }
 
 # Resolve slide configuration from customize modal inputs

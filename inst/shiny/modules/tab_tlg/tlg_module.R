@@ -408,6 +408,12 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
       })
     })
+
+    # Hand the rendered outputs back to the caller so they can be exported (#1344).
+    # `tlg_list()` is the whole set for this TLG -- every page, with the user's current
+    # sidebar options already applied -- which is exactly what the download should write.
+    # Regenerating from the catalog at download time would silently ignore those edits.
+    tlg_list
   })
 }
 
