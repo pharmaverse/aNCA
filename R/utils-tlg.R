@@ -11,6 +11,25 @@
   warning(warningCondition(paste0(...), class = "tlg_warning"))
 }
 
+#' Keep the source ggplot alongside its plotly conversion.
+#'
+#' `ggplotly()` produces an htmlwidget that can only be written to HTML -- rendering it to
+#' PNG or PDF needs a headless browser (kaleido/webshot2), which aNCA does not depend on.
+#' Stashing the pre-conversion ggplot on the returned object lets the export layer write
+#' raster formats with plain `ggsave()` while still serving HTML from the plotly (#1344).
+#'
+#' Call this **last**, after any `layout()` chain: `layout()` rebuilds the object and
+#' silently drops attributes set before it.
+#'
+#' @param p  A plotly object returned by `ggplotly()` (and possibly `layout()`).
+#' @param gg The ggplot `p` was built from.
+#' @returns `p`, with `gg` attached as the `"ggplot"` attribute.
+#' @noRd
+.with_ggplot <- function(p, gg) {
+  attr(p, "ggplot") <- gg
+  p
+}
+
 #' Split a data frame by grouping variables and apply a function to each subset
 #'
 #' Common pattern used by all TLG functions that return one output object per

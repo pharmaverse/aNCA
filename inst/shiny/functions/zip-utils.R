@@ -10,6 +10,9 @@ save_ggplot_format <- function(x, file_name, formats) {
   if ("png" %in% formats) {
     ggsave(paste0(file_name, ".png"), plot = x, width = 10, height = 6)
   }
+  if ("pdf" %in% formats) {
+    ggsave(paste0(file_name, ".pdf"), plot = x, width = 10, height = 6)
+  }
   if ("html" %in% formats) {
     plotly_obj <- plotly::ggplotly(x)
     htmlwidgets::saveWidget(plotly_obj, file = paste0(file_name, ".html"))
@@ -20,6 +23,11 @@ save_ggplot_format <- function(x, file_name, formats) {
 save_table_format <- function(x, file_name, formats) {
   if ("csv" %in% formats) {
     write.csv(x, file = paste0(file_name, ".csv"), row.names = FALSE)
+  }
+  if ("xlsx" %in% formats) {
+    # as.data.frame(): write_xlsx() rejects the listing_df / tbl subclasses that
+    # rlistings returns, and drops the extra attributes the TLG tables carry.
+    writexl::write_xlsx(as.data.frame(x), path = paste0(file_name, ".xlsx"))
   }
   if ("rds" %in% formats) {
     saveRDS(x, file = paste0(file_name, ".rds"))
@@ -34,10 +42,26 @@ save_table_format <- function(x, file_name, formats) {
   }
 }
 
-# Helper for saving plotly objects (only html for now)
+# Helper for saving plotly objects.
+#
+# Raster output needs the source ggplot: rendering a plotly widget to PNG/PDF would require
+# a headless browser (kaleido/webshot2), which aNCA does not depend on.  The TLG graph
+# functions stash their pre-ggplotly plot on the object via .with_ggplot() (#1344); when it
+# is there, the requested formats are honoured exactly.
+#
+# Without a stashed ggplot, HTML is the only thing that can be produced, so it is written
+# whatever was asked for -- otherwise a caller requesting "png" would silently get no file
+# at all for those objects.
 save_plotly_format <- function(x, file_name, formats = "html") {
-  if ("html" %in% formats) {
+  gg <- attr(x, "ggplot")
+  has_gg <- inherits(gg, "ggplot")
+
+  if ("html" %in% formats || !has_gg) {
     htmlwidgets::saveWidget(x, file = paste0(file_name, ".html"))
+  }
+  raster <- intersect(formats, c("png", "pdf"))
+  if (has_gg && length(raster) > 0) {
+    save_ggplot_format(gg, file_name, raster)
   }
 }
 
@@ -48,7 +72,7 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
   } else if (inherits(x, "data.frame")) {
     save_table_format(x, file_name, table_formats)
   } else if (inherits(x, "plotly")) {
-    save_plotly_format(x, file_name, "html")
+    save_plotly_format(x, file_name, ggplot_formats)
   } else if (is.character(x) && length(x) == 1 && grepl("_code$", file_name)) {
     writeLines(x, paste0(file_name, ".R"))
   } else {
@@ -433,6 +457,21 @@ prepare_export_files <- function(target_dir,
 
   progress$inc(0.2)
 
+  # Rendered TLG outputs (#1344).  Written straight into TLGs/ rather than through
+  # save_output(), which knows nothing about per-type folders, split workbooks or the
+  # manifest.
+  tlg_sel   <- c(tlg_tables = "table", tlg_listings = "listing", tlg_graphs = "graph")
+  tlg_types <- unname(tlg_sel[intersect(names(tlg_sel), input$res_tree)])
+  if (length(tlg_types) > 0 && is.function(session$userData$tlg_outputs)) {
+    progress$set(message = "Creating exports...", detail = "Saving TLGs...")
+    write_tlg_exports(
+      entries        = session$userData$tlg_outputs(tlg_types),
+      target_dir     = file.path(target_dir, "TLGs"),
+      ggplot_formats = intersect(input$plot_formats, c("png", "pdf", "html")),
+      table_formats  = intersect(input$table_formats, c("csv", "xlsx"))
+    )
+  }
+
   if (!is.null(res_nca)) {
     if ("results_slides" %in% input$res_tree) {
       progress$set(message = "Creating exports...",
@@ -740,6 +779,9 @@ prepare_export_files <- function(target_dir,
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
                                    value = TRUE))
   }
+  # TLG file names come from the catalog, not from tree node names, so the pattern above
+  # will not match them (#1344).
+  files_req <- c(files_req, grep("/TLGs/", all_files, value = TRUE))
   if ("session_info" %in% fnames) {
     files_req <- c(files_req, grep("session_info\\.txt$", all_files,
                                    value = TRUE))

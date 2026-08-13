@@ -331,15 +331,17 @@ zip_ui <- function(id) {
   )
 }
 
-# Generate ZIP filename from session project/study info
-.make_zip_filename <- function(session) {
+# Generate ZIP filename from session project/study info.
+# `suffix` lets other exports reuse the same project/study naming -- the TLG bulk download
+# passes "_TLGs.zip" (#1344) so the two archives are distinguishable.
+.make_zip_filename <- function(session, suffix = ".zip") {
   project <- session$userData$project_name()
   if (project == "") {
     label <- session$userData$study_ids_label()
     project <- if (label != "") paste0("NCA_", label) else "NCA"
   }
   project <- gsub("[^A-Za-z0-9_-]", "_", project)
-  paste0(project, ".zip")
+  paste0(project, suffix)
 }
 
 # Resolve slide configuration from customize modal inputs
@@ -401,7 +403,7 @@ zip_ui <- function(id) {
               selectizeInput(
                 ns("plot_formats"),
                 "Graphics and plots:",
-                choices = c("png", "html"),
+                choices = c("png", "pdf", "html"),
                 selected = plot_formats,
                 multiple = TRUE
               ),
@@ -421,7 +423,9 @@ zip_ui <- function(id) {
               selectizeInput(
                 ns("table_formats"),
                 "Data tables:",
-                choices = c("rds", "xpt", "csv"),
+                # xlsx is used by the TLG tables/listings (#1344); the other three are
+                # the CDISC/NCA dataset formats.
+                choices = c("rds", "xpt", "csv", "xlsx"),
                 selected = table_formats,
                 multiple = TRUE
               ),
@@ -551,7 +555,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       tree_items <- .available_tree_items(
         nca_available       = isTRUE(nca_available()),
         exploration_names   = names(session$userData$results$exploration),
-        additional_analysis = session$userData$results$additional_analysis
+        additional_analysis = session$userData$results$additional_analysis,
+        tlg_types           = .available_tlg_types(session)
       )
       TREE_UI <- create_tree_from_list_names(tree_items)
       .show_export_modal(ns, TREE_UI, get_tree_leaf_ids(TREE_UI),
@@ -576,7 +581,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       tree_items_save <- .available_tree_items(
         nca_available       = isTRUE(nca_available()),
         exploration_names   = names(session$userData$results$exploration),
-        additional_analysis = session$userData$results$additional_analysis
+        additional_analysis = session$userData$results$additional_analysis,
+        tlg_types           = .available_tlg_types(session)
       )
       tree_ui_save <- create_tree_from_list_names(tree_items_save)
       export_state$res_tree      <- get_tree_ids_for_texts(tree_ui_save, input$res_tree)
@@ -649,7 +655,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       tree_items <- .available_tree_items(
         nca_available       = isTRUE(nca_available()),
         exploration_names   = names(session$userData$results$exploration),
-        additional_analysis = session$userData$results$additional_analysis
+        additional_analysis = session$userData$results$additional_analysis,
+        tlg_types           = .available_tlg_types(session)
       )
       TREE_UI <- create_tree_from_list_names(tree_items)
       saved_tree <- if (is.null(export_state$res_tree)) {
@@ -733,7 +740,20 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
 }
 
 # Build the tree of available export items based on current app state.
-.available_tree_items <- function(nca_available, exploration_names, additional_analysis = NULL) {
+#' Output types the TLG tab currently has rendered, for the export tree (#1344).
+#'
+#' `tab_tlg_server()` publishes a collector on `session$userData`; it is absent until that
+#' module has run and returns nothing until an order has been submitted.
+#' @noRd
+.available_tlg_types <- function(session) {
+  collect <- session$userData$tlg_outputs
+  if (!is.function(collect)) return(character())
+  entries <- tryCatch(collect(), error = function(e) list())
+  unique(vapply(entries, function(e) as.character(e$type)[1], character(1)))
+}
+
+.available_tree_items <- function(nca_available, exploration_names, additional_analysis = NULL,
+                                  tlg_types = character()) {
   items <- list()
 
   # Only show exploration plots that have been rendered
@@ -757,6 +777,11 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         intersect(avail_additional, names(TREE_LIST$additional_analysis))
       ]
     }
+    # TLG branch only once an order has been submitted and something rendered (#1344).
+    tlg_nodes <- c(table = "tlg_tables", listing = "tlg_listings", graph = "tlg_graphs")
+    avail_tlg <- unname(tlg_nodes[intersect(names(tlg_nodes), tlg_types)])
+    if (length(avail_tlg) > 0) items$TLGs <- TREE_LIST$TLGs[avail_tlg]
+
     items$extras            <- TREE_LIST$extras
   } else {
     items$extras <- TREE_LIST$extras[c("settings_file", "session_info")]
@@ -792,6 +817,13 @@ TREE_LIST <- list(
     matrix_ratios = "",
     excretion_results = ""
   ),
+  # Rendered TLG outputs (#1344).  Only offered once a TLG order has been submitted --
+  # see .available_tree_items().
+  TLGs = list(
+    tlg_tables = "",
+    tlg_listings = "",
+    tlg_graphs = ""
+  ),
   extras = list(
     results_slides = "",
     r_script = "",
@@ -800,7 +832,8 @@ TREE_LIST <- list(
   )
 )
 
-PLOT_NODES  <- c("individualplot", "meanplot", "qcplot")
+# TLG nodes are included so the "selected but no format chosen" validation covers them too.
+PLOT_NODES  <- c("individualplot", "meanplot", "qcplot", "tlg_graphs")
 TABLE_NODES <- c("nca_pkparam", "nca_statistics", "pp", "adpp", "adnca",
-                 "matrix_ratios", "excretion_results")
+                 "matrix_ratios", "excretion_results", "tlg_tables", "tlg_listings")
 SLIDE_NODES <- "results_slides"

@@ -96,6 +96,7 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+* Export every rendered TLG: the "Export as ZIP" button now offers Tables, Listings and Graphs alongside the other results, once a TLG order has been submitted. They are written to `TLGs/` as `Graphs/`, `Tables/` and `Listings/` plus a `manifest.csv`, named after the catalog entry and the split key (e.g. `TLGs/Graphs/pkcg01_lin/DrugA.png`). A TLG that splits gets its own folder, split tables become one workbook with a sheet per split, and CSV and XLSX are kept in separate folders. The export reflects the sidebar options currently applied to each output, and a TLG that could not be produced is recorded in the manifest instead of failing the whole download (#1344)
 * PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
