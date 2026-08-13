@@ -409,6 +409,13 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       })
     })
 
+    # The option widgets live inside a right-sidebar dropdown on a nav panel, so Shiny
+    # suspends this output until that panel is opened.  While it is suspended the widgets
+    # never reach the browser, their inputs stay NULL, and the is-null guard in tlg_list()
+    # short-circuits the whole render -- which meant a TLG on a tab the user never visited
+    # exported nothing at all (#1344).
+    outputOptions(output, "options", suspendWhenHidden = FALSE)
+
     # Hand the rendered outputs back to the caller so they can be exported (#1344).
     # `tlg_list()` is the whole set for this TLG -- every page, with the user's current
     # sidebar options already applied -- which is exactly what the download should write.

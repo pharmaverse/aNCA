@@ -149,65 +149,6 @@ write_tlg_exports <- function(entries,
   manifest
 }
 
-#' Build the TLG archive and report anything that could not be written.
-#'
-#' Split out of `tab_tlg_server()`'s `downloadHandler` so the module server stays under the
-#' cyclomatic complexity limit (the same reason `tlg_add_picker.R` exists).
-#'
-#' @param entries Resolved registry entries, as built by `.collect_tlg_outputs()`.
-#' @param fname   Destination path supplied by `downloadHandler`.
-#' @param session Shiny session, used for the progress bar and notifications.
-#' @returns Invisibly, the manifest (or `NULL` when there was nothing to export).
-#' @noRd
-.run_tlg_export <- function(entries, fname, session) {
-  progress <- shiny::Progress$new(session)
-  on.exit(progress$close(), add = TRUE)
-  progress$set(message = "Preparing TLG export...", detail = "Collecting outputs...",
-               value = 0.1)
-
-  if (length(entries) == 0) {
-    showNotification(
-      "No rendered TLGs to export. Submit an order first.",
-      type = "warning", duration = 8
-    )
-    return(invisible(NULL))
-  }
-
-  # tempfile(), not a fixed name under tempdir(): Shiny can serve several sessions from one
-  # R process, and a fixed directory that is unlink()ed at the start of every download
-  # would let two concurrent exports corrupt each other.  Cleaned up afterwards so a large
-  # order does not sit in the temp directory for the life of the process.
-  target_dir <- tempfile("tlg_export_")
-  on.exit(unlink(target_dir, recursive = TRUE), add = TRUE)
-
-  progress$set(detail = "Writing files...", value = 0.4)
-  manifest <- write_tlg_exports(entries, target_dir)
-
-  progress$set(detail = "Creating archive...", value = 0.85)
-  # `root` rather than setwd(): the working directory is process-global, so changing it
-  # mid-download would affect every other session in the same process.
-  zip::zipr(
-    zipfile = fname,
-    files   = list.files(target_dir, recursive = TRUE),
-    root    = target_dir,
-    mode    = "mirror"
-  )
-
-  progress$set(message = "Complete!", detail = "", value = 1)
-
-  skipped <- sum(manifest$status != "ok")
-  if (skipped > 0) {
-    showNotification(
-      paste0(
-        skipped, " of ", nrow(manifest), " outputs could not be exported and were left ",
-        "out; see manifest.csv in the archive for details."
-      ),
-      type = "warning", duration = 10
-    )
-  }
-  invisible(manifest)
-}
-
 #' Work out a distinct file name (no extension) for each output of one TLG.
 #'
 #' @param g_id  Catalog id.
@@ -250,34 +191,154 @@ write_tlg_exports <- function(entries,
   } else {
     "Other"
   }
-  out_dir <- file.path(target_dir, sub_dir)
+
+  if (identical(entry$type, "graph")) {
+    .export_graph_items(g_id, entry, sub_dir, target_dir, ggplot_formats)
+  } else {
+    .export_tabular_items(g_id, entry, sub_dir, target_dir, table_formats)
+  }
+}
+
+#' Write one TLG's graphs.
+#'
+#' A TLG that splits (pkcg01 produces one plot per subject) gets its own subdirectory, so
+#' `Graphs/` stays navigable instead of being a flat wall of a hundred-odd PNGs.  Inside it
+#' the file is named after the split key alone -- the directory already carries the TLG.
+#'
+#' @param g_id,entry,sub_dir,target_dir,ggplot_formats See `.export_one_tlg()`.
+#' @returns A list of one-row data frames.
+#' @noRd
+.export_graph_items <- function(g_id, entry, sub_dir, target_dir, ggplot_formats) {
+  items  <- entry$items
+  bases  <- .tlg_export_basenames(g_id, items)
+  split  <- length(items) > 1
+  stem   <- .tlg_export_basename(g_id, NULL)
+  rel    <- if (split) file.path(sub_dir, stem) else sub_dir
+  out_dir <- file.path(target_dir, rel)
   dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
-  bases <- .tlg_export_basenames(g_id, items)
+  # Inside a per-TLG directory the stem is redundant, so strip it back to the split key.
+  names_out <- if (split) sub(paste0("^", stem, "_?"), "", bases) else bases
 
   lapply(seq_along(items), function(i) {
-    item <- items[[i]]
-    # A failed or empty TLG renders as an explanatory string; keep it out of the zip but
-    # say so in the manifest.
-    if (is.null(item) || is.character(item)) {
-      return(.tlg_manifest_row(
-        g_id, entry, NA_character_, "skipped", if (is.character(item)) item[1] else ""
-      ))
-    }
-
-    if (is.data.frame(item)) item <- .prepare_export_frame(item)
-
-    status <- "ok"
-    note   <- ""
-    tryCatch(
-      save_dispatch(item, file.path(out_dir, bases[i]), ggplot_formats, table_formats),
-      error = function(e) {
-        status <<- "error"
-        note   <<- conditionMessage(e)
-      }
+    skip <- .tlg_skip_row(g_id, entry, items[[i]])
+    if (!is.null(skip)) return(skip)
+    .tlg_write_one(
+      items[[i]], file.path(out_dir, names_out[i]), file.path(rel, names_out[i]),
+      g_id, entry, ggplot_formats, character()
     )
-    .tlg_manifest_row(g_id, entry, file.path(sub_dir, bases[i]), status, note)
   })
+}
+
+#' Write one TLG's tables or listings, in each requested format.
+#'
+#' CSV and XLSX go to their own subdirectories so neither listing is cluttered by the
+#' other's files.  They are shaped differently on purpose: a split TLG becomes one workbook
+#' with a sheet per split under `xlsx/`, which is what you would hand to someone, while
+#' `csv/` keeps one file per split because CSV has no notion of sheets.
+#'
+#' @param g_id,entry,sub_dir,target_dir,table_formats See `.export_one_tlg()`.
+#' @returns A list of one-row data frames.
+#' @noRd
+.export_tabular_items <- function(g_id, entry, sub_dir, target_dir, table_formats) {
+  items <- entry$items
+  bases <- .tlg_export_basenames(g_id, items)
+  stem  <- .tlg_export_basename(g_id, NULL)
+
+  # Prepare every frame up front: both formats write the same content.
+  prepared <- lapply(items, function(x) if (is.data.frame(x)) .prepare_export_frame(x) else x)
+  usable   <- vapply(prepared, is.data.frame, logical(1))
+
+  rows <- lapply(seq_along(items), function(i) {
+    skip <- .tlg_skip_row(g_id, entry, items[[i]])
+    if (!is.null(skip)) return(skip)
+    if (!"csv" %in% table_formats) return(NULL)
+    dir.create(file.path(target_dir, sub_dir, "csv"), showWarnings = FALSE, recursive = TRUE)
+    .tlg_write_one(
+      prepared[[i]], file.path(target_dir, sub_dir, "csv", bases[i]),
+      file.path(sub_dir, "csv", bases[i]), g_id, entry, character(), "csv"
+    )
+  })
+
+  if ("xlsx" %in% table_formats && any(usable)) {
+    rows <- c(rows, list(.tlg_write_workbook(
+      prepared[usable], names(items)[usable], bases[usable],
+      stem, sub_dir, target_dir, g_id, entry
+    )))
+  }
+  Filter(Negate(is.null), rows)
+}
+
+#' Manifest row for an output that cannot be written, or `NULL` if it can.
+#'
+#' A failed or empty TLG arrives as an explanatory string rather than an object (see the
+#' `tryCatch` in `tlg_module_server()`); keep it out of the archive but say so.
+#' @noRd
+.tlg_skip_row <- function(g_id, entry, item) {
+  if (!is.null(item) && !is.character(item)) return(NULL)
+  .tlg_manifest_row(
+    g_id, entry, NA_character_, "skipped", if (is.character(item)) item[1] else ""
+  )
+}
+
+#' Write one object and return its manifest row.
+#' @noRd
+.tlg_write_one <- function(item, path, rel_path, g_id, entry, ggplot_formats, table_formats) {
+  status <- "ok"
+  note   <- ""
+  tryCatch(
+    save_dispatch(item, path, ggplot_formats, table_formats),
+    error = function(e) {
+      status <<- "error"
+      note   <<- conditionMessage(e)
+    }
+  )
+  .tlg_manifest_row(g_id, entry, rel_path, status, note)
+}
+
+#' Write one TLG's splits as a single multi-sheet workbook.
+#'
+#' @param frames Prepared data frames.
+#' @param keys   Their split keys (may be `NULL` for an unnamed list).
+#' @param bases  Their unique base names, used when there is no split key.
+#' @returns A single manifest row for the workbook.
+#' @noRd
+.tlg_write_workbook <- function(frames, keys, bases, stem, sub_dir, target_dir, g_id, entry) {
+  out_dir <- file.path(target_dir, sub_dir, "xlsx")
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+  rel <- file.path(sub_dir, "xlsx", paste0(stem, ".xlsx"))
+
+  names(frames) <- .tlg_sheet_names(keys, bases, stem)
+  status <- "ok"
+  note   <- if (length(frames) > 1) paste(length(frames), "sheets") else ""
+  tryCatch(
+    writexl::write_xlsx(frames, path = file.path(target_dir, rel)),
+    error = function(e) {
+      status <<- "error"
+      note   <<- conditionMessage(e)
+    }
+  )
+  .tlg_manifest_row(g_id, entry, rel, status, note)
+}
+
+#' Excel-safe, unique sheet names for a TLG's splits.
+#'
+#' Excel rejects `[]:*?/\` and caps names at 31 characters, so the split key cannot be used
+#' verbatim -- the full key stays in the file name and the manifest.
+#' @noRd
+.tlg_sheet_names <- function(keys, bases, stem) {
+  raw <- if (is.null(keys)) bases else ifelse(is.na(keys) | !nzchar(keys), bases, keys)
+  # "all" is split_and_apply()'s un-split sentinel, not a group.
+  raw <- ifelse(raw == "all", stem, raw)
+  # Whitelist rather than blacklist: Excel rejects [ ] : * ? / \ , and a bracket expression
+  # spelling all of those out is easy to get subtly wrong (`[:` opens a POSIX class).
+  nm  <- gsub("[^A-Za-z0-9 _.()+-]", "-", raw)
+  nm  <- gsub("-{2,}", "-", nm)
+  nm  <- gsub("^[ -]+|[ -]+$", "", nm)
+  nm  <- substr(nm, 1, 31)
+  nm  <- ifelse(nzchar(nm), nm, "Sheet")
+  # make.unique can push past 31 again, so trim once more from the left of the suffix.
+  substr(make.unique(nm, sep = "_"), 1, 31)
 }
 
 #' One manifest row. Called with no arguments it yields the empty prototype.

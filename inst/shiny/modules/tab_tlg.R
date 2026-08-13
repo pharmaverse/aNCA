@@ -60,12 +60,7 @@ tab_tlg_ui <- function(id) {
         div(
           actionButton(ns("add_tlg"), "Add TLG"),
           actionButton(ns("remove_tlg"), "Remove TLG"),
-          actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary"),
-          # Enabled once an order has been submitted -- there is nothing to export before
-          # the modules have rendered (#1344).
-          shinyjs::disabled(
-            downloadButton(ns("download_tlgs"), "Download all TLGs", class = "btn-default")
-          )
+          actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
         )
       ),
       card(reactable_ui(ns("selected_tlg_table"))),
@@ -454,10 +449,13 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     }
 
     # ---- Bulk export of the rendered TLGs (#1344) --------------------------------------
-
-    observeEvent(input$submit_tlg_order, ignoreInit = TRUE, {
-      shinyjs::enable("download_tlgs")
-    })
+    #
+    # The download itself lives in the app-wide "Export as ZIP" button rather than here:
+    # that button is in the sidebar header and so is already on screen on this tab, and a
+    # second export control with its own modal would be the sort of inconsistency the
+    # tables review pushed back on.  This module only publishes its outputs; `zip.R` reads
+    # them through `session$userData` (the module-communication channel in AGENTS.md) and
+    # `write_tlg_exports()` does the writing.
 
     #' Resolve every registered module's output list.
     #'
@@ -471,7 +469,8 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     #' rendered so far, including ones since removed from the order.  The export must show
     #' the order as it stands now, so the registry is intersected with the current
     #' selection rather than taken wholesale.
-    .collect_tlg_outputs <- function() {
+    #' @param types Output types to keep, matching the registry's `type` field.
+    .collect_tlg_outputs <- function(types = names(.TLG_EXPORT_DIRS)) {
       selected <- tryCatch(
         names(.TLG_DEFINITIONS)[tlg_order_filtered()$id],
         error = function(e) character()
@@ -482,16 +481,12 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
         items <- tryCatch(entry$items(), error = function(e) NULL)
         list(def = entry$def, type = entry$type, items = items)
       })
-      setNames(out, ids)
+      names(out) <- ids
+      out[vapply(out, function(e) isTRUE(e$type %in% types), logical(1))]
     }
 
-    output$download_tlgs <- downloadHandler(
-      # Shared with the NCA tab's export so both archives carry the same project/study name.
-      filename = function() .make_zip_filename(session, "_TLGs.zip"),
-      content = function(fname) {
-        # downloadHandler's content runs outside a reactive context.
-        .run_tlg_export(isolate(.collect_tlg_outputs()), fname, session)
-      }
-    )
+    # Published for the app-wide ZIP export.  A function rather than the raw environment so
+    # the reactives are read at download time, in the caller's context.
+    session$userData$tlg_outputs <- .collect_tlg_outputs
   })
 }

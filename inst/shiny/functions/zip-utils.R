@@ -457,6 +457,21 @@ prepare_export_files <- function(target_dir,
 
   progress$inc(0.2)
 
+  # Rendered TLG outputs (#1344).  Written straight into TLGs/ rather than through
+  # save_output(), which knows nothing about per-type folders, split workbooks or the
+  # manifest.
+  tlg_sel   <- c(tlg_tables = "table", tlg_listings = "listing", tlg_graphs = "graph")
+  tlg_types <- unname(tlg_sel[intersect(names(tlg_sel), input$res_tree)])
+  if (length(tlg_types) > 0 && is.function(session$userData$tlg_outputs)) {
+    progress$set(message = "Creating exports...", detail = "Saving TLGs...")
+    write_tlg_exports(
+      entries        = session$userData$tlg_outputs(tlg_types),
+      target_dir     = file.path(target_dir, "TLGs"),
+      ggplot_formats = intersect(input$plot_formats, c("png", "pdf", "html")),
+      table_formats  = intersect(input$table_formats, c("csv", "xlsx"))
+    )
+  }
+
   if (!is.null(res_nca)) {
     if ("results_slides" %in% input$res_tree) {
       progress$set(message = "Creating exports...",
@@ -764,6 +779,9 @@ prepare_export_files <- function(target_dir,
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
                                    value = TRUE))
   }
+  # TLG file names come from the catalog, not from tree node names, so the pattern above
+  # will not match them (#1344).
+  files_req <- c(files_req, grep("/TLGs/", all_files, value = TRUE))
   if ("session_info" %in% fnames) {
     files_req <- c(files_req, grep("session_info\\.txt$", all_files,
                                    value = TRUE))

@@ -110,9 +110,16 @@ describe("write_tlg_exports", {
       d
     )
     expect_true(file.exists(file.path(d, "Graphs", "pkcg01_lin.png")))
-    expect_true(file.exists(file.path(d, "Tables", "pkct01.csv")))
-    expect_true(file.exists(file.path(d, "Tables", "pkct01.xlsx")))
-    expect_true(file.exists(file.path(d, "Listings", "pkcl01.csv")))
+    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01.csv")))
+    expect_true(file.exists(file.path(d, "Tables", "xlsx", "pkct01.xlsx")))
+    expect_true(file.exists(file.path(d, "Listings", "csv", "pkcl01.csv")))
+  })
+
+  it("separates csv and xlsx so neither folder listing is cluttered by the other", {
+    d <- withr::local_tempdir()
+    write_tlg_exports(list(t_pkct01 = entry("table", list(all = head(mtcars)))), d)
+    expect_setequal(basename(list.dirs(file.path(d, "Tables"), recursive = FALSE)),
+                    c("csv", "xlsx"))
   })
 
   it("defaults graphs to PNG only -- HTML would add a _files/ dependency tree per graph", {
@@ -122,14 +129,37 @@ describe("write_tlg_exports", {
     expect_length(list.dirs(file.path(d, "Graphs"), recursive = FALSE), 0)
   })
 
-  it("names split outputs after the split key", {
+  it("gives a split graph its own folder so Graphs/ stays navigable", {
+    # pkcg01 emits one plot per subject; a hundred-odd of them flat in Graphs/ is unusable.
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly()), c("S1", "S2"))
+    write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d)
+    expect_setequal(list.files(file.path(d, "Graphs", "pkcg01_lin")),
+                    c("S1.png", "S2.png"))
+  })
+
+  it("keeps an unsplit graph at the top level rather than in a folder of one", {
+    d <- withr::local_tempdir()
+    write_tlg_exports(list(g_pkcg02_lin = entry("graph", list(all = stashed_plotly()))), d)
+    expect_equal(list.files(file.path(d, "Graphs")), "pkcg02_lin.png")
+  })
+
+  it("names split csv outputs after the split key", {
     d <- withr::local_tempdir()
     items <- setNames(list(head(mtcars), head(mtcars)), c("PARAM: DrugA", "PARAM: DrugB"))
     write_tlg_exports(list(t_pkct01 = entry("table", items)), d, table_formats = "csv")
     expect_setequal(
-      list.files(file.path(d, "Tables")),
+      list.files(file.path(d, "Tables", "csv")),
       c("pkct01_PARAM_DrugA.csv", "pkct01_PARAM_DrugB.csv")
     )
+  })
+
+  it("collapses a split table into one workbook with a sheet per split", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(head(mtcars), head(iris)), c("PARAM: DrugA", "PARAM: DrugB"))
+    m <- write_tlg_exports(list(t_pkct01 = entry("table", items)), d, table_formats = "xlsx")
+    expect_equal(list.files(file.path(d, "Tables", "xlsx")), "pkct01.xlsx")
+    expect_match(m$note[m$status == "ok"], "2 sheets")
   })
 
   it("numbers every file when the builder returns an unnamed list", {
@@ -141,7 +171,7 @@ describe("write_tlg_exports", {
       d, table_formats = "csv"
     )
     expect_setequal(
-      list.files(file.path(d, "Tables")),
+      list.files(file.path(d, "Tables", "csv")),
       c("pkct01_1.csv", "pkct01_2.csv", "pkct01_3.csv")
     )
   })
@@ -150,14 +180,14 @@ describe("write_tlg_exports", {
     d <- withr::local_tempdir()
     write_tlg_exports(list(t_pkct01 = entry("table", list(head(mtcars)))), d,
                       table_formats = "csv")
-    expect_equal(list.files(file.path(d, "Tables")), "pkct01.csv")
+    expect_equal(list.files(file.path(d, "Tables", "csv")), "pkct01.csv")
   })
 
   it("does not let two split keys that slug alike overwrite each other", {
     d <- withr::local_tempdir()
     items <- setNames(list(head(mtcars), head(mtcars)), c("DrugA / SERUM", "DrugA - SERUM"))
     write_tlg_exports(list(t_pkct01 = entry("table", items)), d, table_formats = "csv")
-    expect_length(list.files(file.path(d, "Tables")), 2)
+    expect_length(list.files(file.path(d, "Tables", "csv")), 2)
   })
 
   it("skips a failed TLG and records it rather than aborting the export", {
@@ -172,7 +202,7 @@ describe("write_tlg_exports", {
     expect_equal(m$status[m$id == "t_broken"], "skipped")
     expect_match(m$note[m$id == "t_broken"], "something went wrong")
     # The healthy TLG in the same order still made it out.
-    expect_true(file.exists(file.path(d, "Tables", "pkct01.csv")))
+    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01.csv")))
   })
 
   it("records a write failure as an error and keeps going", {
@@ -188,7 +218,7 @@ describe("write_tlg_exports", {
     )
     expect_equal(m$status[m$id == "t_odd"], "error")
     expect_match(m$note[m$id == "t_odd"], "Unsupported output type")
-    expect_true(file.exists(file.path(d, "Tables", "pkct01.csv")))
+    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01.csv")))
   })
 
   it("records a TLG that produced nothing as empty", {
@@ -206,7 +236,7 @@ describe("write_tlg_exports", {
     man <- read.csv(file.path(d, "manifest.csv"))
     expect_named(man, c("id", "label", "type", "dataset", "file", "status", "note"))
     expect_equal(man$label, "pkct01 - Summary")
-    expect_equal(man$file, "Tables/pkct01")
+    expect_equal(man$file[man$file != ""][1], "Tables/csv/pkct01")
   })
 
   it("routes an unrecognised type to Other/ instead of erroring", {
@@ -215,7 +245,7 @@ describe("write_tlg_exports", {
       write_tlg_exports(list(x = entry("mystery", list(all = head(mtcars)))), d,
                         table_formats = "csv")
     )
-    expect_true(file.exists(file.path(d, "Other", "x.csv")))
+    expect_true(file.exists(file.path(d, "Other", "csv", "x.csv")))
   })
 
   it("returns an empty manifest when there is nothing to export", {

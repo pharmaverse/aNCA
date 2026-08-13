@@ -262,3 +262,59 @@ describe(".make_zip_filename", {
     expect_equal(.make_zip_filename(fake_session("My Project/v2")), "My_Project_v2.zip")
   })
 })
+
+# Rendered TLGs are exported through the app-wide "Export as ZIP" button rather than a
+# second control on the TLG tab (issue #1344).
+local({
+  library(shiny)
+  source(
+    file.path(system.file("shiny", package = "aNCA"), "modules", "tab_nca", "zip.R"),
+    local = TRUE
+  )
+},
+envir = parent.env(environment()))
+
+describe(".available_tlg_types", {
+  it("reports nothing before the TLG module has published anything", {
+    expect_length(.available_tlg_types(list(userData = list())), 0)
+  })
+
+  it("reports only the types that actually rendered", {
+    rendered <- list(a = list(type = "table"), b = list(type = "graph"))
+    sess <- list(userData = list(tlg_outputs = function(types = c("table", "listing", "graph")) {
+      Filter(function(e) e$type %in% types, rendered)
+    }))
+    expect_setequal(.available_tlg_types(sess), c("table", "graph"))
+  })
+})
+
+describe(".available_tree_items: TLG branch", {
+  it("omits the branch when no TLGs have rendered", {
+    expect_null(.available_tree_items(TRUE, character(), NULL, character())$TLGs)
+  })
+
+  it("offers only the nodes matching the rendered types", {
+    items <- .available_tree_items(TRUE, character(), NULL, c("table", "graph"))
+    expect_named(items$TLGs, c("tlg_tables", "tlg_graphs"))
+  })
+})
+
+describe(".clean_export_dir: TLG outputs", {
+  it("keeps TLG files, whose names come from the catalog and not from tree nodes", {
+    d <- withr::local_tempdir()
+    dir.create(file.path(d, "TLGs", "Tables", "xlsx"), recursive = TRUE)
+    writeLines("x", file.path(d, "TLGs", "Tables", "xlsx", "pkct01.xlsx"))
+    writeLines("x", file.path(d, "TLGs", "manifest.csv"))
+    writeLines("x", file.path(d, "junk.txt"))
+
+    .clean_export_dir(
+      d,
+      list(res_tree = "tlg_tables", table_formats = "xlsx",
+           plot_formats = "png", slide_formats = NULL),
+      NULL
+    )
+    expect_true(file.exists(file.path(d, "TLGs", "Tables", "xlsx", "pkct01.xlsx")))
+    expect_true(file.exists(file.path(d, "TLGs", "manifest.csv")))
+    expect_false(file.exists(file.path(d, "junk.txt")))
+  })
+})

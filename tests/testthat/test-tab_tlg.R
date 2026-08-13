@@ -241,27 +241,24 @@ describe("tab_tlg_server: TLG export registry", {
   })
 })
 
-describe("tab_tlg_server: download handler", {
-  it("produces a zip containing a manifest", {
+
+describe("tab_tlg_server: publishes outputs for the app-wide export", {
+  it("exposes a collector on session$userData that zip.R can call", {
+    # The download lives in the global "Export as ZIP" button, so this module only has to
+    # publish; zip.R reads it through session$userData (#1344).
     testServer(tab_tlg_server, args = list(data = test_data), {
       session$setInputs(submit_tlg_order = 1)
       session$flushReact()
       render_tlg_panels(output)
       session$flushReact()
 
-      zipfile <- withr::local_tempfile(fileext = ".zip")
-      .run_tlg_export(.collect_tlg_outputs(), zipfile, session)
-
-      expect_true(file.exists(zipfile))
-      expect_true("manifest.csv" %in% zip::zip_list(zipfile)$filename)
-    })
-  })
-
-  it("notifies instead of writing an archive when nothing has rendered", {
-    testServer(tab_tlg_server, args = list(data = test_data), {
-      zipfile <- withr::local_tempfile(fileext = ".zip")
-      expect_null(.run_tlg_export(list(), zipfile, session))
-      expect_false(file.exists(zipfile))
+      collect <- session$userData$tlg_outputs
+      expect_true(is.function(collect))
+      expect_gt(length(collect()), 0)
+      # Callable with a type filter, which is how the tree selection is applied.
+      tables_only <- collect("table")
+      expect_true(all(vapply(tables_only, function(e) e$type == "table", logical(1))))
+      expect_lt(length(tables_only), length(collect()))
     })
   })
 })
