@@ -91,6 +91,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
         ),
         PKid = .x$pkid,
         Output = paste0("<a href='", .x$link, "' target='_blank'>", .x$description, "</a>"),
+        Link = if (is.null(.x$link)) NA_character_ else .x$link,
         Label = .x$label,
         Description = .x$description,
         Condition = .x$condition,
@@ -122,9 +123,13 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       tlg_order(new_tlg_order)
     })
 
+    # Columns shown to the user in the Order Details table. Internal columns
+    # (PKid, Label, Description, Condition) are kept in tlg_order() but hidden:
+    # Condition drives urine auto-preselect above, Label titles the nav panels,
+    # and Description feeds the submit log — none need to be user-facing.
     displayed_order <- reactive({
       dplyr::filter(tlg_order(), Selection) %>%
-        dplyr::select(-id, -Selection)
+        dplyr::select(Type, Dataset, Output, Footnote, Stratification, Comment)
     }) %>%
       bindEvent(data(), input$confirm_add_tlg, input$remove_tlg)
 
@@ -136,7 +141,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       defaultExpanded = TRUE,
       wrap = TRUE,
       selection = "multiple",
-      editable = c("Footnote", "Stratification", "Condition", "Comment"),
+      editable = c("Footnote", "Stratification", "Comment"),
       columns = function(df) {
         define_cols(df, overrides = list(Output = colDef(html = TRUE)))
       }
@@ -145,51 +150,83 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     observeEvent(selected_tlg_state()$edit(), {
       info <- selected_tlg_state()$edit()
 
+      # info$column is the display-frame column (reactable.extras reports the
+      # column name; older versions report a positional index). Resolve to a name
+      # and only ever write to an editable column, so a stray edit event can never
+      # overwrite an internal column (id/PKid/Condition/...) of the full frame.
+      editable_cols <- c("Footnote", "Stratification", "Comment")
+      col <- if (is.numeric(info$column)) names(displayed_order())[info$column] else info$column
+      req(col %in% editable_cols)
+
       new_tlg_order <- tlg_order()
-      new_tlg_order[new_tlg_order$Selection, ][info$row, info$column] <- info$value
+      new_tlg_order[new_tlg_order$Selection, ][info$row, col] <- info$value
       tlg_order(new_tlg_order)
     })
 
+    # Issue #1335: the "Add TLGs" picker is a catalog-style checklist -- dataset
+    # tabs (PK Concentrations / PK Parameters) over one column per Type (Tables /
+    # Listings / Graphs), with a search + download + select-all toolbar.  The UI
+    # builder and helpers live in inst/shiny/functions/tlg_add_picker.R;
+    # client-side behaviour in inst/shiny/www/tlg_add_picker.js (window.tlgAdd);
+    # styling in inst/shiny/www/styles/partials/_tlg_add_modal.scss.
+    # modal_group_ids -- checkboxGroupInput ids in the current modal (read on confirm)
+    # modal_avail     -- the available-TLG tibble backing the CSV/XLSX downloads
+    modal_group_ids <- reactiveVal(character(0))
+    modal_avail <- reactiveVal(NULL)
+
     # Show modal when the add_tlg button is pressed
     observeEvent(input$add_tlg, {
+      avail <- dplyr::arrange(dplyr::filter(tlg_order(), !Selection), Type, Dataset)
+      modal_avail(avail)
+
+      body <- if (nrow(avail) == 0) {
+        modal_group_ids(character(0))
+        tags$p("All available TLGs are already in the order.")
+      } else {
+        checklist <- build_add_checklist(avail, session$ns)
+        modal_group_ids(checklist$group_ids)
+        checklist$ui
+      }
+
       showModal(modalDialog(
         title = div(
-          "Add TLGs to Order",
+          "Add TLGs to order",
           js_close_button,
           style = "position: relative;"
         ),
-        reactable_ui(session$ns("modal_tlg_table")),
+        body,
         footer = tagList(
           modalButton("Close"),
-          actionButton(session$ns("confirm_add_tlg"), "Add TLGs to Order")
+          uiOutput(session$ns("modal_confirm_ui"), inline = TRUE)
         ),
         size = "l"
       ))
     })
 
-    modal_tlg_state <- reactable_server(
-      "modal_tlg_table",
-      reactive({
-        dplyr::filter(tlg_order(), !Selection) %>%
-          dplyr::select(-id, -Selection, -Footnote, -Stratification, -Condition, -Comment)
-      }),
-      download_buttons = c("csv", "xlsx"),
-      groupBy = c("Type", "Dataset"),
-      wrap = TRUE,
-      selection = "multiple",
-      defaultExpanded = TRUE,
-      width = "775px", # fit to the modal width
-      columns = function(df) {
-        define_cols(df, overrides = list(Output = colDef(html = TRUE)))
-      }
+    # Download the available-TLG catalog shown in the modal.
+    output$modal_dl_csv <- downloadHandler(
+      filename = function() "available_tlgs.csv",
+      content = function(file) write.csv(tlg_modal_dl_data(modal_avail()), file, row.names = FALSE)
     )
+    output$modal_dl_xlsx <- downloadHandler(
+      filename = function() "available_tlgs.xlsx",
+      content = function(file) writexl::write_xlsx(tlg_modal_dl_data(modal_avail()), file)
+    )
+
+    # Confirm button with a live count of checked outputs; disabled at zero.
+    output$modal_confirm_ui <- renderUI({
+      n <- length(checked_tlg_ids(input, modal_group_ids()))
+      label <- if (n == 0) "Add to order" else paste0("Add ", n, " to order")
+      btn <- actionButton(session$ns("confirm_add_tlg"), label, class = "btn-primary")
+      if (n == 0) shinyjs::disabled(btn) else btn
+    })
 
     # Update the Selection column when the confirm_add_tlg button is pressed
     observeEvent(input$confirm_add_tlg, {
-      selected_rows <- modal_tlg_state()$selected
-      if (length(selected_rows) > 0) {
+      checked_ids <- checked_tlg_ids(input, modal_group_ids())
+      if (length(checked_ids) > 0) {
         tlg_order_data <- tlg_order()
-        tlg_order_data$Selection[!tlg_order_data$Selection][selected_rows] <- TRUE
+        tlg_order_data$Selection[tlg_order_data$id %in% checked_ids] <- TRUE
         tlg_order(tlg_order_data)
       }
       removeModal()
@@ -252,6 +289,18 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       apply_labels(data()$conc$data, type = "ADNCA")
     })
     adpp_data_all <- reactive({
+      # A PK-parameter (ADPP) output was requested but NCA has not been run, so
+      # ADPP is unavailable. Surface it as a toast (Gero, #1335) in addition to
+      # the inline placeholder, since the empty panel alone reads as a silent
+      # failure.
+      if (is.null(adpp())) {
+        # Fixed id so multiple ADPP panels collapse into one toast rather than
+        # stacking an identical message per output.
+        showNotification(
+          "ADPP data is not available. Run NCA first to view PK parameter outputs.",
+          type = "warning", duration = 10, id = session$ns("adpp_missing")
+        )
+      }
       validate(need(
         !is.null(adpp()),
         "ADPP data is not available. Run NCA first to view PK parameter outputs."
