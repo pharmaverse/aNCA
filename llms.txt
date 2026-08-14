@@ -318,6 +318,12 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
   Wrapper around aNCA::pkcg01() function. Calls the function with `LOG`
   scale argument.
 
+- [`g_pkcg01_sbs()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg01_sbs.md)
+  :
+
+  Wrapper around aNCA::pkcg01() function. Calls the function with `SBS`
+  scale argument.
+
 - [`g_pkcg02_lin()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg02_lin.md)
   :
 
@@ -330,6 +336,12 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
   Wrapper around aNCA::pkcg02() function. Calls the function with `LOG`
   scale argument.
 
+- [`g_pkcg02_sbs()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg02_sbs.md)
+  :
+
+  Wrapper around aNCA::pkcg02() function. Calls the function with `SBS`
+  scale argument.
+
 - [`g_pkcg03_lin()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg03_lin.md)
   :
 
@@ -340,6 +352,12 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
   :
 
   Wrapper around aNCA::pkcg03() function. Calls the function with `LOG`
+  scale argument.
+
+- [`g_pkcg03_sbs()`](https://pharmaverse.github.io/aNCA/reference/g_pkcg03_sbs.md)
+  :
+
+  Wrapper around aNCA::pkcg03() function. Calls the function with `SBS`
   scale argument.
 
 - [`generate_pre_specs()`](https://pharmaverse.github.io/aNCA/reference/generate_pre_specs.md)
@@ -374,6 +392,20 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 - [`l_pkcl01()`](https://pharmaverse.github.io/aNCA/reference/l_pkcl01.md)
   : Create PK Concentration Listing
 
+- [`l_pkcl01_tad()`](https://pharmaverse.github.io/aNCA/reference/l_pkcl01_tad.md)
+  : Wrapper around aNCA::l_pkcl01() for TAD-based concentration
+  listings.
+
+- [`l_pkcl02_uri()`](https://pharmaverse.github.io/aNCA/reference/l_pkcl02_uri.md)
+  : Urine Concentration and Volume Listing (pkcl02)
+
+- [`l_pkpl01()`](https://pharmaverse.github.io/aNCA/reference/l_pkpl01.md)
+  [`l_pkpl01_mp()`](https://pharmaverse.github.io/aNCA/reference/l_pkpl01.md)
+  : Individual PK Parameters Listing (pkpl01)
+
+- [`l_pkpl04_mp()`](https://pharmaverse.github.io/aNCA/reference/l_pkpl04_mp.md)
+  : Individual Treatment Comparison Listing (pkpl04)
+
 - [`metadata_nca_parameters`](https://pharmaverse.github.io/aNCA/reference/metadata_nca_parameters.md)
   : metadata_nca_parameters
 
@@ -385,6 +417,33 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
   given data set, based on the shared time points for each matrix
   concentration sample. The user can input multiple tissues for which
   ratios should be calculated.
+
+- [`p_pkcg03_lin_dose()`](https://pharmaverse.github.io/aNCA/reference/p_pkcg03_lin_dose.md)
+  : Wrapper around aNCA::pkcg03() function. Mean linear plot grouped by
+  dose.
+
+- [`p_pkcg03_log_dose()`](https://pharmaverse.github.io/aNCA/reference/p_pkcg03_log_dose.md)
+  : Wrapper around aNCA::pkcg03() function. Mean log plot grouped by
+  dose.
+
+- [`p_pkcg03_sbs_dose()`](https://pharmaverse.github.io/aNCA/reference/p_pkcg03_sbs_dose.md)
+  : Wrapper around aNCA::pkcg03() function. Mean side-by-side plot
+  grouped by dose.
+
+- [`p_pkpg01_cum()`](https://pharmaverse.github.io/aNCA/reference/p_pkpg01_cum.md)
+  [`p_pkpg01_per()`](https://pharmaverse.github.io/aNCA/reference/p_pkpg01_cum.md)
+  : Mean Urine PK Parameter Profile Plot (pkpg01)
+
+- [`p_pkpg02_doseprop()`](https://pharmaverse.github.io/aNCA/reference/p_pkpg02_doseprop.md)
+  : Dose-Proportionality Scatter Plot with Power-Model Regression
+  (pkpg02)
+
+- [`p_pkpg03_boxp()`](https://pharmaverse.github.io/aNCA/reference/p_pkpg03_boxp.md)
+  [`p_pkpg04_boxp()`](https://pharmaverse.github.io/aNCA/reference/p_pkpg03_boxp.md)
+  : Boxplot of Primary PK Parameters (pkpg03)
+
+- [`p_pkpg06_mp()`](https://pharmaverse.github.io/aNCA/reference/p_pkpg06_mp.md)
+  : Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)
 
 - [`parse_annotation()`](https://pharmaverse.github.io/aNCA/reference/parse_annotation.md)
   : Generate an Empty Plotly Object
@@ -446,6 +505,25 @@ guidelines](https://github.com/pharmaverse/aNCA/blob/main/CONTRIBUTING.md).
 
 - [`simplify_unit()`](https://pharmaverse.github.io/aNCA/reference/simplify_unit.md)
   : Simplify compound unit expressions
+
+- [`t_pkct01()`](https://pharmaverse.github.io/aNCA/reference/t_pkct01.md)
+  [`t_pkct01_dose()`](https://pharmaverse.github.io/aNCA/reference/t_pkct01.md)
+  [`t_pkct01_tad()`](https://pharmaverse.github.io/aNCA/reference/t_pkct01.md)
+  [`t_pkct01_dose_tad()`](https://pharmaverse.github.io/aNCA/reference/t_pkct01.md)
+  : Summary Concentration Table (pkct01)
+
+- [`t_pkpt03_col()`](https://pharmaverse.github.io/aNCA/reference/t_pkpt03_col.md)
+  [`t_pkpt03_MP_col()`](https://pharmaverse.github.io/aNCA/reference/t_pkpt03_col.md)
+  : Summary PK Parameters Table – statistics in columns (pkpt03)
+
+- [`t_pkpt07_norm()`](https://pharmaverse.github.io/aNCA/reference/t_pkpt07_norm.md)
+  : Mean Dose-Normalized PK Parameters Table (pkpt07)
+
+- [`t_pkpt08_uri()`](https://pharmaverse.github.io/aNCA/reference/t_pkpt08_uri.md)
+  : Mean Urine Amount and Percent Recovered Table (pkpt08)
+
+- [`t_pkpt11_gmr()`](https://pharmaverse.github.io/aNCA/reference/t_pkpt11_gmr.md)
+  : GMR Table with Confidence Intervals (pkpt11)
 
 - [`translate_terms()`](https://pharmaverse.github.io/aNCA/reference/translate_terms.md)
   : Translate Terms from One Nomenclature to Another

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9188</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9189</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -462,6 +462,13 @@
 
         <dt>
 
+          <code><a href="g_pkcg01_sbs.html">g_pkcg01_sbs()</a></code>
+
+        </dt>
+        <dd>Wrapper around aNCA::pkcg01() function. Calls the function with <code>SBS</code> scale argument.</dd>
+
+        <dt>
+
           <code><a href="g_pkcg02_lin.html">g_pkcg02_lin()</a></code>
 
         </dt>
@@ -476,6 +483,13 @@
 
         <dt>
 
+          <code><a href="g_pkcg02_sbs.html">g_pkcg02_sbs()</a></code>
+
+        </dt>
+        <dd>Wrapper around aNCA::pkcg02() function. Calls the function with <code>SBS</code> scale argument.</dd>
+
+        <dt>
+
           <code><a href="g_pkcg03_lin.html">g_pkcg03_lin()</a></code>
 
         </dt>
@@ -487,6 +501,13 @@
 
         </dt>
         <dd>Wrapper around aNCA::pkcg03() function. Calls the function with <code>LOG</code> scale argument.</dd>
+
+        <dt>
+
+          <code><a href="g_pkcg03_sbs.html">g_pkcg03_sbs()</a></code>
+
+        </dt>
+        <dd>Wrapper around aNCA::pkcg03() function. Calls the function with <code>SBS</code> scale argument.</dd>
 
         <dt>
 
@@ -560,6 +581,34 @@
 
         <dt>
 
+          <code><a href="l_pkcl01_tad.html">l_pkcl01_tad()</a></code>
+
+        </dt>
+        <dd>Wrapper around aNCA::l_pkcl01() for TAD-based concentration listings.</dd>
+
+        <dt>
+
+          <code><a href="l_pkcl02_uri.html">l_pkcl02_uri()</a></code>
+
+        </dt>
+        <dd>Urine Concentration and Volume Listing (pkcl02)</dd>
+
+        <dt>
+
+          <code><a href="l_pkpl01.html">l_pkpl01()</a></code> <code><a href="l_pkpl01.html">l_pkpl01_mp()</a></code>
+
+        </dt>
+        <dd>Individual PK Parameters Listing (pkpl01)</dd>
+
+        <dt>
+
+          <code><a href="l_pkpl04_mp.html">l_pkpl04_mp()</a></code>
+
+        </dt>
+        <dd>Individual Treatment Comparison Listing (pkpl04)</dd>
+
+        <dt>
+
           <code><a href="metadata_nca_parameters.html">metadata_nca_parameters</a></code>
 
         </dt>
@@ -578,6 +627,55 @@
 
         </dt>
         <dd>Calculate Matrix Ratios This function calculates the ratios for a given data set, based on the shared time points for each matrix concentration sample. The user can input multiple tissues for which ratios should be calculated.</dd>
+
+        <dt>
+
+          <code><a href="p_pkcg03_lin_dose.html">p_pkcg03_lin_dose()</a></code>
+
+        </dt>
+        <dd>Wrapper around aNCA::pkcg03() function. Mean linear plot grouped by dose.</dd>
+
+        <dt>
+
+          <code><a href="p_pkcg03_log_dose.html">p_pkcg03_log_dose()</a></code>
+
+        </dt>
+        <dd>Wrapper around aNCA::pkcg03() function. Mean log plot grouped by dose.</dd>
+
+        <dt>
+
+          <code><a href="p_pkcg03_sbs_dose.html">p_pkcg03_sbs_dose()</a></code>
+
+        </dt>
+        <dd>Wrapper around aNCA::pkcg03() function. Mean side-by-side plot grouped by dose.</dd>
+
+        <dt>
+
+          <code><a href="p_pkpg01_cum.html">p_pkpg01_cum()</a></code> <code><a href="p_pkpg01_cum.html">p_pkpg01_per()</a></code>
+
+        </dt>
+        <dd>Mean Urine PK Parameter Profile Plot (pkpg01)</dd>
+
+        <dt>
+
+          <code><a href="p_pkpg02_doseprop.html">p_pkpg02_doseprop()</a></code>
+
+        </dt>
+        <dd>Dose-Proportionality Scatter Plot with Power-Model Regression (pkpg02)</dd>
+
+        <dt>
+
+          <code><a href="p_pkpg03_boxp.html">p_pkpg03_boxp()</a></code> <code><a href="p_pkpg03_boxp.html">p_pkpg04_boxp()</a></code>
+
+        </dt>
+        <dd>Boxplot of Primary PK Parameters (pkpg03)</dd>
+
+        <dt>
+
+          <code><a href="p_pkpg06_mp.html">p_pkpg06_mp()</a></code>
+
+        </dt>
+        <dd>Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)</dd>
 
         <dt>
 
@@ -718,6 +816,41 @@
 
         </dt>
         <dd>Simplify compound unit expressions</dd>
+
+        <dt>
+
+          <code><a href="t_pkct01.html">t_pkct01()</a></code> <code><a href="t_pkct01.html">t_pkct01_dose()</a></code> <code><a href="t_pkct01.html">t_pkct01_tad()</a></code> <code><a href="t_pkct01.html">t_pkct01_dose_tad()</a></code>
+
+        </dt>
+        <dd>Summary Concentration Table (pkct01)</dd>
+
+        <dt>
+
+          <code><a href="t_pkpt03_col.html">t_pkpt03_col()</a></code> <code><a href="t_pkpt03_col.html">t_pkpt03_MP_col()</a></code>
+
+        </dt>
+        <dd>Summary PK Parameters Table – statistics in columns (pkpt03)</dd>
+
+        <dt>
+
+          <code><a href="t_pkpt07_norm.html">t_pkpt07_norm()</a></code>
+
+        </dt>
+        <dd>Mean Dose-Normalized PK Parameters Table (pkpt07)</dd>
+
+        <dt>
+
+          <code><a href="t_pkpt08_uri.html">t_pkpt08_uri()</a></code>
+
+        </dt>
+        <dd>Mean Urine Amount and Percent Recovered Table (pkpt08)</dd>
+
+        <dt>
+
+          <code><a href="t_pkpt11_gmr.html">t_pkpt11_gmr()</a></code>
+
+        </dt>
+        <dd>GMR Table with Confidence Intervals (pkpt11)</dd>
 
         <dt>
 
