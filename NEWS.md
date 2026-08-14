@@ -2,6 +2,15 @@
 
 ## Bug Fixes
 
+* Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
+* The "X ticks" option on the linear and logarithmic concentration plots now takes effect. `plotly` was regenerating the axis itself, so the chosen column was ignored; the side-by-side variants were already unaffected (#1356)
+* Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
+* TLG sidebar options set to `0` are no longer silently ignored: the option filter treated a literal `0` the same as "unset", so an axis limit of `0` (`xmin`/`ymin`) had no effect (#1356)
+* A TLG that produces no output now explains why instead of rendering a blank panel with no message (#1356)
+* Combined concentration plots (`pkcg02`) no longer group by `USUBJID` by default, which produced one plot per subject instead of an overlaid combined plot. They now default to the study's PKNCA grouping variables (which exclude the subject), with `USUBJID` still available as an explicit choice; the individual side-by-side plot (`pkcg01`) correspondingly groups by subject rather than by treatment (#1356)
+* Concentration plot titles no longer disappear when a plot group covers more than one treatment: the treatment names are now collapsed into a single subtitle string, where previously the subtitle became a character vector that `plotly` rendered as no title at all (#1356)
+* Concentration plot subtitles no longer mislabel grouping variables: a variable with no configured display name (e.g. `USUBJID` on `pkcg02`) is labeled with its own name instead of being dropped, which shifted every following label onto the wrong value (#1356)
+* The `pkcg03` mean plot "Summary Statistic" dropdown now opens with its default (`Mean_sdi`) selected instead of appearing blank (#1356)
 * Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)
 
 ## Testing
@@ -9,6 +18,33 @@
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
 
 ## Features
+
+### TLG Catalog
+* Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
+  - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
+  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent filtered)
+  - `t_pkpt07_norm` — dose-normalized PK parameter summary table
+  - `t_pkpt08_uri` — urine cumulative amount and % dose recovered summary table (n, Mean, SD, CV%, Median, Min, Max)
+  - `t_pkpt11_gmr` — geometric mean ratio table with 90% CIs
+  - `p_pkpg03_boxp` / `p_pkpg04_boxp` — boxplots of primary PK parameters (with and without individual data points)
+  - `p_pkpg06_mp` — boxplot of metabolite/parent PK parameter ratios
+  - `p_pkpg01_cum` / `p_pkpg01_per` — mean cumulative urine amount and % dose recovered line plots
+  - `p_pkpg02_doseprop` — dose-proportionality scatter plot with power-model regression on log-log scale
+  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite-filtered)
+  - `l_pkpl04_mp` — individual PK parameter listing organised for treatment comparison
+  - `l_pkcl02_uri` — urine concentration and volume listing
+* ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMFL = "Y"`, consistent with ADNCA exclusion via `PKSUM1F` (#1343)
+* Summary tables are easier to read: split tables (e.g. by analyte/specimen) now show the group as a header, `t_pkct01` rows are grouped by treatment arm with timepoints in numeric order, statistic columns use readable headers (e.g. "Geometric Mean", "CV%"), and urine specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively (#1343)
+* The new TLG tables and listings expose right-sidebar customization options (grouping/stratification variables, displayed columns, titles, and filters) matching the original `l_pkcl01` listing; stratification variables are selectable so summary tables can be grouped by covariates such as `SEX` or `RACE` (#1356)
+* Summary-exclusion flags are scoped both to summary outputs and to their own dataset: ADNCA (concentration) outputs filter on `PKSUM1F` and ADPP (PK parameter) outputs on `PPSUMFL`, so a record excluded from one summary is not dropped from the other's TLGs, and individual listings show all records (matching their "subjects excluded from the summary table" footnote) (#1356)
+* Summary tables can compare covariate groups side by side: a new "Compare in columns" option on the `pkct01` and `pkpt03/07/08` tables repeats the statistic block per level of a chosen variable (e.g. `SEX`, `RACE`), rendered as a two-level Group × Statistic column header (#1356)
+* Summary tables let you choose which statistics to display: a new "Statistics to show" option on the `pkct01` and `pkpt03/07/08` tables filters the columns (e.g. `n`, `Number BLQ`, `Mean`, `SD`, `CV%`); leaving it empty shows all statistics as before (#1356)
+* Summary-table sidebar inputs share one layout: every summary table (`pkct01` variants and `pkpt03/07/08`) exposes the same option groups — Filtering, Grouping (Split / Stratify), Value, Compare, and Statistics — with `PARAM` and the time/visit columns selected within "Stratify by (rows)" rather than through separate inputs. "Stratify by (rows)" is a multi-select on all of them; on the `pkpt` tables it defaults to every PKNCA grouping variable except the subject (`USUBJID`) so statistics separate by treatment, parameter, and specimen out of the box. The `pkpt11` GMR table keeps its comparison-specific inputs as a documented exception (#1356)
+* The urine-only TLGs (`pkpt08`, `pkcl02`) restrict their specimen filter to values that look like urine, selected by default, so a urine table or listing cannot be pointed at serum or plasma while non-standard labels such as "Urine - void" stay selectable (#1356)
+* Split-table group headers name the variable as well as the value (e.g. "PPCAT: Drug A / PCSPEC: PLASMA") so stacked outputs are self-describing, and summary tables warn when a stratification variable is dropped for also being a table-split variable (#1356)
+* The standalone mean, urine, dose-proportionality and box plot entries (`pkcg03` by dose, `pkpg01`/`pkpg02`/`pkpg03`/`pkpg04`/`pkpg06`) expose Title, Subtitle and Footnote inputs in the sidebar, matching the other graph entries (#1356)
+* Summary tables can filter which stratification values appear: a "Parameters to show" filter on the `pkpt03/07/08` tables and a "Timepoints to show" filter on the `pkct01` tables restrict the rows to the chosen `PARAM`/timepoint values (#1356)
+* Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
 
 ### Settings & Configuration
 * Settings upload auto-restores the full session: mapping, filters, data processing, tab navigation, and auto-runs NCA if previously run. Incompatible settings degrade gracefully with notifications (#1225)

@@ -190,6 +190,48 @@ describe("tlg_option_select_ui", {
     expect_true(grepl("Y", html))
   })
 
+  it("selects the PKNCA grouping vars present in the data when default is '.pknca_groups'", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(TRT01A = "a", PARAM = "b", AVAL = 1)))
+    )
+    opt_def <- list(
+      label    = "Stratify",
+      choices  = ".colnames",
+      default  = ".pknca_groups",
+      multiple = TRUE
+    )
+    ui <- shiny::isolate(
+      tlg_option_select_ui(
+        "m-strat_var", opt_def, data = sample_data,
+        grouping_vars = shiny::reactive(c("TRT01A", "PARAM", "NOTINDATA"))
+      )
+    )
+    html <- as.character(ui)
+    # Grouping vars present in the data are pre-selected...
+    expect_true(grepl('value="TRT01A" selected', html))
+    expect_true(grepl('value="PARAM" selected', html))
+    # ...a non-grouping data column is offered but NOT selected...
+    expect_true(grepl('value="AVAL"', html))
+    expect_false(grepl('value="AVAL" selected', html))
+    # ...and a grouping var absent from the data is not offered at all.
+    expect_false(grepl("NOTINDATA", html))
+  })
+
+  it("falls back to nothing selected for '.pknca_groups' when no groups are available", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(TRT01A = "a", AVAL = 1)))
+    )
+    opt_def <- list(
+      label = "Stratify", choices = ".colnames",
+      default = ".pknca_groups", multiple = TRUE
+    )
+    ui <- shiny::isolate(
+      tlg_option_select_ui("m-strat_var", opt_def, data = sample_data)
+    )
+    html <- as.character(ui)
+    expect_false(grepl("selected", html))
+  })
+
   it("derives choices from column names when choices is '.colnames'", {
     sample_data <- shiny::reactive(
       list(conc = list(data = data.frame(COL1 = 1, COL2 = 2)))
@@ -225,6 +267,62 @@ describe("tlg_option_select_ui", {
     html <- as.character(ui)
     expect_true(grepl("G1", html))
     expect_true(grepl("G2", html))
+  })
+
+  it("derives choices from a tibble column, not the column name", {
+    # `[` on a tibble returns a one-column tibble, which would make selectInput label the
+    # option with the column name instead of its values.
+    sample_data <- shiny::reactive(
+      list(conc = list(data = dplyr::tibble(PPSPEC = c("SERUM", "URINE", "SERUM"))))
+    )
+    opt_def <- list(label = "Select", choices = "$PPSPEC", default = NULL, multiple = TRUE)
+    ui   <- shiny::isolate(
+      tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+    )
+    html <- as.character(ui)
+    expect_true(grepl("SERUM", html))
+    expect_true(grepl("URINE", html))
+    expect_false(grepl("PPSPEC", html))
+  })
+
+  it("derives a single-value choice list without leaking the column name", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = dplyr::tibble(PPSPEC = c("SERUM", "SERUM"))))
+    )
+    opt_def <- list(label = "Select", choices = "$PPSPEC", default = NULL, multiple = TRUE)
+    ui   <- shiny::isolate(
+      tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+    )
+    html <- as.character(ui)
+    expect_true(grepl("SERUM", html))
+    expect_false(grepl("PPSPEC", html))
+  })
+
+  it("returns no choices when the '$' column is absent from the data", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(OTHER = c("A", "B"))))
+    )
+    opt_def <- list(label = "Select", choices = "$PPSPEC", default = NULL, multiple = TRUE)
+    expect_no_error(
+      ui <- shiny::isolate(
+        tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+      )
+    )
+    expect_false(grepl("PPSPEC", as.character(ui)))
+  })
+
+  it("drops NA values from '$' column choices", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(GRP = c("G1", NA, "G2"))))
+    )
+    opt_def <- list(label = "Select", choices = "$GRP", default = NULL, multiple = TRUE)
+    ui   <- shiny::isolate(
+      tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+    )
+    html <- as.character(ui)
+    expect_true(grepl("G1", html))
+    expect_true(grepl("G2", html))
+    expect_false(grepl(">NA<", html))
   })
 
   it("falls back to extracting label from id when label is NULL", {
@@ -283,6 +381,32 @@ describe("tlg_option_select_server", {
     )
   })
 
+  it("coerces an empty multi-select (NULL input) to \"\" so rendering is not blocked", {
+    # A `multiple` selectInput with nothing selected reports input$select = NULL.
+    # If the server passed that NULL through, tlg_module_server's is-null guard
+    # would return NULL and blank the whole table.  It must return "" instead.
+    opt_def       <- list(
+      label    = "Stats",
+      choices  = c("n", "Mean"),
+      default  = NULL,
+      multiple = TRUE
+    )
+    reset_trigger <- shiny::reactive(0)
+
+    shiny::testServer(
+      tlg_option_select_server,
+      args = list(
+        opt_def       = opt_def,
+        data          = shiny::reactive(NULL),
+        reset_trigger = reset_trigger
+      ),
+      {
+        session$setInputs(select = NULL)
+        expect_equal(session$getReturned()(), "")
+      }
+    )
+  })
+
   it("resets without error when reset_trigger fires", {
     opt_def       <- list(
       label    = "Sel",
@@ -308,5 +432,62 @@ describe("tlg_option_select_server", {
         }
       )
     )
+  })
+})
+
+describe(".sensible_group_cols", {
+  df <- data.frame(
+    USUBJID = paste0("S", 1:20),                        # high cardinality
+    SEX     = rep(c("M", "F"), 10),                     # categorical, 2 levels
+    RACE    = rep(c("W", "B", "A", "O", "W"), 4),       # categorical, 4 levels
+    AVAL    = seq_len(20) + 0.5,                         # continuous numeric
+    DOSEA   = rep(c(5, 10, 20), length.out = 20),        # low-cardinality numeric
+    ROUTE   = "IV",                                      # single level
+    AMOUNTU = c("mg", rep(NA, 19)),                      # only one real level
+    BLANK   = "",                                        # all blank
+    stringsAsFactors = FALSE
+  )
+
+  it("keeps categorical and low-cardinality columns", {
+    cols <- .sensible_group_cols(df)
+    expect_true(all(c("SEX", "RACE", "DOSEA") %in% cols))
+  })
+
+  it("excludes identifiers, continuous, single-level and blank columns", {
+    cols <- .sensible_group_cols(df)
+    expect_false(any(c("USUBJID", "AVAL", "ROUTE", "AMOUNTU", "BLANK") %in% cols))
+  })
+
+  it("respects the max_levels cap", {
+    expect_false("RACE" %in% .sensible_group_cols(df, max_levels = 3))
+    expect_true("SEX" %in% .sensible_group_cols(df, max_levels = 3))
+  })
+})
+
+describe(".urine_spec_values", {
+  it("keeps only urine specimens, matched case-insensitively", {
+    df <- data.frame(PCSPEC = c("SERUM", "URINE", "PLASMA", "urine"))
+    expect_equal(.urine_spec_values(df), c("URINE", "urine"))
+  })
+
+  it("keeps non-standard urine labels so they remain selectable", {
+    df <- data.frame(PCSPEC = c("SERUM", "Urine - void"))
+    expect_equal(.urine_spec_values(df), "Urine - void")
+  })
+
+  it("reads PPSPEC when the dataset is ADPP rather than ADNCA", {
+    expect_equal(.urine_spec_values(data.frame(PPSPEC = c("SERUM", "URINE"))), "URINE")
+  })
+
+  it("returns nothing when the study has no urine specimens", {
+    expect_length(.urine_spec_values(data.frame(PCSPEC = c("SERUM", "PLASMA"))), 0)
+  })
+
+  it("returns nothing when there is no specimen column at all", {
+    expect_length(.urine_spec_values(data.frame(AVAL = 1)), 0)
+  })
+
+  it("ignores NA specimen values", {
+    expect_equal(.urine_spec_values(data.frame(PCSPEC = c(NA, "URINE"))), "URINE")
   })
 })

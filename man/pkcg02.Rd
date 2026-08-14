@@ -25,7 +25,7 @@ pkcg02(
   footnote = NULL,
   plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM", "TRT01A"),
   plotgroup_names = list(ROUTE = "Route", PCSPEC = "Specimen", PARAM = "Analyte", TRT01A
-    = "Treatment"),
+    = "Treatment", USUBJID = "Subject ID"),
   scale = c("LIN", "LOG", "SBS")[1],
   studyid = "STUDYID",
   trt_var = "TRT01A",

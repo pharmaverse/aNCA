@@ -65,7 +65,7 @@ tab_tlg_ui <- function(id) {
       ),
       card(reactable_ui(ns("selected_tlg_table"))),
     ),
-    nav_panel("Tables", "To be added"),
+    nav_panel("Tables", uiOutput(ns("tables"), class = "tlg-module"), value = "Tables"),
     nav_panel("Listings", uiOutput(ns("listings"), class = "tlg-module"), value = "Listings"),
     nav_panel("Graphs", uiOutput(ns("graphs"), class = "tlg-module"), value = "Graphs"),
     # disable loader for initial empty UI render #
@@ -75,7 +75,7 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data) {
+tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
@@ -232,7 +232,6 @@ tab_tlg_server <- function(id, data) {
     # Submit the TLG order, filter selected TLGs
     tlg_order_filtered <- reactive({
       req(data())
-      print(tlg_order())
       tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
       log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
 
@@ -240,43 +239,127 @@ tab_tlg_server <- function(id, data) {
     }) %>%
       bindEvent(c(input$submit_tlg_order))
 
+    # Raw TLG inputs.  Individual listings must display rows excluded from
+    # summaries (PKSUM1F/PPSUMFL == "Y"), so they consume these unfiltered
+    # sources -- see tlg_data_key().
+    # apply_labels() restores column `label` attributes (stripped by the
+    # PKNCA/dplyr pipeline and by row-subsetting) so the `!COLUMN` label-reference
+    # syntax resolves in title/subtitle/footnote/axis inputs.  It is applied as
+    # the final step of each source -- after row filtering, since `[` drops
+    # per-column attributes -- and with the flag/type matching each dataset.
+    conc_data_all <- reactive({
+      req(data())
+      apply_labels(data()$conc$data, type = "ADNCA")
+    })
+    adpp_data_all <- reactive({
+      validate(need(
+        !is.null(adpp()),
+        "ADPP data is not available. Run NCA first to view PK parameter outputs."
+      ))
+      apply_labels(adpp(), type = "ADPP")
+    })
+
+    # Summary-filtered variants for tables and mean plots: rows flagged
+    # PKSUM1F (ADNCA) / PPSUMFL (ADPP) == "Y" are removed from summary
+    # statistics and mean plots, but NOT from individual listings.  Each dataset
+    # is filtered by its own flag only -- a record excluded from the
+    # PK-parameter summary (PPSUMFL) must still be able to appear in the
+    # concentration representations, and vice-versa.
+    conc_data <- reactive(
+      apply_labels(filter_tlg_excluded(conc_data_all(), "PKSUM1F"), type = "ADNCA")
+    )
+    adpp_data <- reactive(
+      apply_labels(filter_tlg_excluded(adpp_data_all(), "PPSUMFL"), type = "ADPP")
+    )
+
+    # (dataset, type) -> data reactive.  Listings resolve to the "*_all"
+    # (unfiltered) source; tables and graphs resolve to the filtered source.
+    tlg_data_sources <- list(
+      ADNCA     = conc_data,
+      ADNCA_all = conc_data_all,
+      ADPP      = adpp_data,
+      ADPP_all  = adpp_data_all
+    )
+
+    # PKNCA grouping variables (minus the subject column) -- the sensible default
+    # row-stratification set for the summary tables (issue 1356: separate stats by
+    # every grouping variable but USUBJID).  Derived from the processed PKNCA
+    # object so it reflects the study's actual grouping structure; the option
+    # layer resolves the `.pknca_groups` default token against it.
+    grouping_vars <- reactive({
+      req(data())
+      groups  <- tryCatch(names(PKNCA::getGroups(data()$conc)), error = function(e) character())
+      subject <- tryCatch(data()$conc$columns$subject, error = function(e) NULL)
+      groups  <- setdiff(groups, subject)
+      # CDISC renames the specimen grouping column PCSPEC (ADNCA) -> PPSPEC (ADPP)
+      # via export_cdisc(); expose both aliases so each dataset's table defaults
+      # to whichever it actually carries when the option layer intersects with
+      # the data columns.
+      if ("PCSPEC" %in% groups) groups <- union(groups, "PPSPEC")
+      groups
+    })
+
+    # Track which module IDs have already been registered for this session.
+    # tlg_module_server() calls Shiny's moduleServer(), which registers reactive
+    # observers (pagination buttons, entries-per-page, etc.) every time it is
+    # called.  Because renderUI re-executes on re-submit, calling
+    # tlg_module_server() with the same ID a second time would accumulate
+    # duplicate observers that fire multiple times per user action.
+    # output$tlg_output is safely deduplicated by Shiny (second assignment
+    # destroys the first), but observers are not — only this environment prevents
+    # the duplication.  The environment lives inside moduleServer(), so it is
+    # fresh per Shiny session and does not leak across sessions.
+    .registered_modules <- new.env(parent = emptyenv())
+
+    # Shared helper: build navset_pill_list panels for one TLG type.
+    # Factored out to eliminate the copy-paste across table / graph / listing
+    # renderUI blocks.  `id_suffix` must be unique per type to produce
+    # deterministic, stable module IDs.
+    .build_tlg_panels <- function(g_ids, type, id_suffix) {
+      lapply(g_ids, function(g_id) {
+        g_def     <- .TLG_DEFINITIONS[[g_id]]
+        module_id <- paste0(g_id, id_suffix)
+        tlg_data  <- tlg_data_sources[[tlg_data_key(type, g_def$dataset)]]
+
+        panel_ui <- if (exists(g_def$fun)) {
+          # Only register the Shiny module once per session to avoid accumulating
+          # duplicate pagination observers on re-submit.
+          if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
+            tlg_module_server(
+              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
+            )
+            assign(module_id, TRUE, envir = .registered_modules)
+          }
+          tlg_module_ui(session$ns(module_id), type, g_def$options)
+        } else {
+          tags$div(paste(tools::toTitleCase(type), "not implemented yet"))
+        }
+
+        nav_panel(g_def$label, panel_ui)
+      })
+    }
+
+    # Create and render Table interface and modules
+    output$tables <- renderUI({
+      req(tlg_order_filtered())
+      ids    <- filter(tlg_order_filtered(), Type == "Table") %>% pull("id")
+      panels <- .build_tlg_panels(ids, "table", "_tbl")
+      panels$"widths" <- c(2, 10)
+      do.call(navset_pill_list, panels)
+    })
+
     # Create and render Graph interface and modules
     output$graphs <- renderUI({
       req(tlg_order_filtered())
-      tlg_order_graphs <- filter(tlg_order_filtered(), Type == "Graph") %>%
-        select("id") %>%
-        pull()
-
-      panels <- lapply(tlg_order_graphs, function(g_id) {
-        graph_ui <- {
-          g_def <- .TLG_DEFINITIONS[[g_id]]
-          module_id <- paste0(
-            g_id,
-            paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
-          )
-
-          if (exists(g_def$fun)) {
-            tlg_module_server(module_id, data, "graph", get(g_def$fun), g_def$options)
-            tlg_module_ui(session$ns(module_id), "graph", g_def$options)
-          } else {
-            tags$div("Graph not implemented yet")
-          }
-        }
-
-        nav_panel(g_def$label, graph_ui)
-      })
-
+      ids    <- filter(tlg_order_filtered(), Type == "Graph") %>% pull("id")
+      panels <- .build_tlg_panels(ids, "graph", "_grp")
       panels$"widths" <- c(2, 10)
-
       do.call(navset_pill_list, panels)
     })
 
     output$listings <- renderUI({
       req(tlg_order_filtered())
-
-      tlg_order_listings <- filter(tlg_order_filtered(), Type == "Listing") %>%
-        select("id") %>%
-        pull()
+      ids <- filter(tlg_order_filtered(), Type == "Listing") %>% pull("id")
 
       if (!requireNamespace("rlistings", quietly = TRUE)) {
         panels <- list(nav_panel(
@@ -288,28 +371,10 @@ tab_tlg_server <- function(id, data) {
           )
         ))
       } else {
-        panels <- lapply(tlg_order_listings, function(g_id) {
-          list_ui <- {
-            g_def <- .TLG_DEFINITIONS[[g_id]]
-            module_id <- paste0(
-              g_id,
-              paste0(sample(c(letters, 0:9), 5, replace = TRUE), collapse = "")
-            )
-
-            if (exists(g_def$fun)) {
-              tlg_module_server(module_id, data, "listing", get(g_def$fun), g_def$options)
-              tlg_module_ui(session$ns(module_id), "listing", g_def$options)
-            } else {
-              tags$div("Listing not implemented yet")
-            }
-          }
-
-          nav_panel(g_def$label, list_ui)
-        })
+        panels <- .build_tlg_panels(ids, "listing", "_lst")
       }
 
       panels$"widths" <- c(2, 10)
-
       do.call(navset_pill_list, panels)
     })
   })
