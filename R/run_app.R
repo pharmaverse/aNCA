@@ -50,10 +50,12 @@
 #'   run_app(settings = "/path/to/settings.yaml", settings_version = "NCA draft")
 #' }
 #' @export
+
+max_upload_size_mb <- 30
 run_app <- function(datapath = NULL, settings = NULL,
                     settings_version = 1L, ...) {
   # Increase max upload size to 30 MB
-  options(shiny.maxRequestSize = 30 * 1024^2)
+  options(shiny.maxRequestSize = max_upload_size_mb * 1024^2)
   if (!is.null(datapath)) {
     stopifnot(
       "Data file does not exist" = file.exists(datapath),
