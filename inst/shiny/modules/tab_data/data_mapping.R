@@ -251,7 +251,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 #'
 #' @param id The module ID.
 #' @param adnca_data A reactive expression that returns the dataset to be processed.
-#' @param on_submit A callback function to be executed when the submit button is clicked.
+#' @param imported_mapping Reactive expression containing imported settings mapping.
+#' @param trigger Reactive value used to submit the current mapping.
+#' @param on_mapping_complete Callback called when a mapping attempt is no longer busy.
+#' @param on_duplicate_cancel Callback called when the duplicate modal is cancelled.
 #'
 #' @returns A list containing:
 #' \item{processed_data}{A reactive expression that returns the processed dataset.}
@@ -308,7 +311,9 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
+data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
+                                on_mapping_complete = function() {},
+                                on_duplicate_cancel = function() {}) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -416,6 +421,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
         error = function(e) {
           log_error(conditionMessage(e))
           showNotification(conditionMessage(e), type = "error", duration = NULL)
+          on_mapping_complete()
           NULL
         }
       )
@@ -450,9 +456,11 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       tryCatch(
         {
           result <- aNCA:::annotate_duplicates(mapped_data(), dup_rows)
+          on_mapping_complete()
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
+          on_mapping_complete()
           df_duplicates(e$duplicate_data)
           NULL
         }
@@ -497,7 +505,14 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       )
     })
 
+    observeEvent(input$cancel_duplicates_btn, {
+      removeModal()
+      df_duplicates(NULL)
+      on_duplicate_cancel()
+    })
+
     observeEvent(df_duplicates(), {
+      req(df_duplicates())
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -513,8 +528,10 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
           ),
           easyClose = FALSE,
           footer = tagList(
-            actionButton(ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"),
-            modalButton("Cancel")
+            actionButton(
+              ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"
+            ),
+            actionButton(ns("cancel_duplicates_btn"), "Cancel")
           ),
           size = "l"
         )
