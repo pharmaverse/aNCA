@@ -7,9 +7,7 @@ AEFRLT
 AFRLT
 ARRLT
 ATPTREF
-AUCIFOD
 AUCINT
-AUCLSTD
 AUCPEO
 AUCPEP
 AUCTLSTD
@@ -31,7 +29,6 @@ Bioavailability
 Buckeridge
 CDISC
 CMAX
-CMAXD
 CRITy
 CRITyFL
 Clast
@@ -161,7 +158,6 @@ adnca
 analysing
 analyte
 analytes
-aucint
 aucpext
 aucs
 bioavailability
@@ -189,6 +185,7 @@ frac
 ggplot
 ggplots
 hardcoded
+humanpred
 ifelse
 img
 intravascular
@@ -211,7 +208,6 @@ organised
 pak
 parseable
 pc
-pcspec
 pharmacodynamics
 pharmacokinetic
 pharmacokinetics
@@ -225,12 +221,10 @@ pkpl
 pkpt
 plotly
 pptest
-pptestcd
 pre
 pred
 px
 qmd
-rds
 renderable
 reproducibility
 resizable
@@ -238,7 +232,6 @@ reupload
 roadmap
 rpptx
 runnable
-scrollable
 selectable
 signif
 src

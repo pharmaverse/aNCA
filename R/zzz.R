@@ -4,6 +4,7 @@
     ".dose_time",
     ".facet_label_values",
     ".facet_n",
+    ".is_last_main",
     ".pp_excl",
     ".pp_excl_reason",
     ".ROWID",

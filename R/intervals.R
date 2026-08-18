@@ -206,9 +206,15 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' Each element can be a numeric value (substituting the BLQ value), or a string such as
 #' `"drop"` (ignores the value) or `"keep"` (keeps the value as 0). Default is NULL,
 #' which does not specify any BLQ imputation in any interval.
+#' @param drop_end_conc Logical. If `TRUE`, the concentration measured exactly at
+#' the end of each main interval is dropped before regular (non-partial) parameter
+#' calculations via the `end_conc_drop` imputation. This does not affect
+#' interval/partial parameter rows (`type_interval == "manual"`) nor the last dose
+#' profile per concentration group, whose end-boundary point is a genuine terminal
+#' sample rather than a next-dose C0. Default `FALSE`.
 #'
 #' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
-#' @importFrom dplyr group_by ungroup slice_max distinct
+#' @importFrom dplyr group_by ungroup slice_max distinct group_vars
 #' @importFrom purrr pmap
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
@@ -217,7 +223,8 @@ update_main_intervals <- function(
   parameter_selections = NULL,
   int_parameters = NULL,
   impute = TRUE,
-  blq_imputation_rule = NULL
+  blq_imputation_rule = NULL,
+  drop_end_conc = FALSE
 ) {
 
   if (is.null(parameter_selections)) parameter_selections <- list()
@@ -308,6 +315,35 @@ update_main_intervals <- function(
   ############################################
   # Remove any imputation from the observational parameters
   data <- rm_impute_obs_params(data, metadata_nca_parameters)
+
+  ############################################
+  # Drop the end-boundary concentration for main intervals. Applied after
+  # rm_impute_obs_params() so it also covers observational parameters (e.g. Cmax,
+  # Tmax), where a spurious concentration at time == end would otherwise distort
+  # the result. Partial/interval parameters (type_interval == "manual") are
+  # untouched. The last dose profile per concentration group is also left
+  # untouched: its end-boundary point is a genuine terminal sample (the interval
+  # end is finite only because there is no next dose), not a next-dose C0.
+  if (isTRUE(drop_end_conc)) {
+    conc_groups <- intersect(group_vars(data$conc), names(data$intervals))
+    data$intervals <- data$intervals %>%
+      group_by(across(all_of(conc_groups))) %>%
+      mutate(
+        .is_last_main = type_interval == "main" &
+          start == suppressWarnings(max(start[type_interval == "main"])),
+        impute = ifelse(
+          type_interval == "main" & !.is_last_main,
+          ifelse(
+            is.na(impute) | impute == "",
+            "end_conc_drop",
+            paste0(impute, ", end_conc_drop")
+          ),
+          impute
+        )
+      ) %>%
+      ungroup() %>%
+      select(-.is_last_main)
+  }
 
   data
 }
