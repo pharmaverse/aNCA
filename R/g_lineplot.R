@@ -90,17 +90,38 @@ g_lineplot <- function(data,
     return(error_plot("No data available for the plot"))
   }
 
+  y_family <- intersect(c("SD_min", "SD_max", "CI_lower", "CI_upper"), names(data))
+  unit_res <- .resolve_facet_units(
+    data = data,
+    y_var = y_var,
+    y_unit = y_unit,
+    facet_by = facet_by,
+    lock_y_axis = lock_y_axis,
+    linetype_by = linetype_by,
+    y_family = y_family
+  )
+  if (!is.null(unit_res$error)) {
+    warning(unit_res$error)
+    return(error_plot(unit_res$error))
+  }
+  if (!is.null(unit_res$warning)) {
+    warning(unit_res$warning)
+  }
+  data <- unit_res$data
+
   color_labels <- .resolve_color_labels(color_by, color_labels, labels_df)
   x_lab <- .build_axis_label(x_var, x_unit, data, labels_df)
-  y_lab <- .build_axis_label(y_var, y_unit, data, labels_df)
+  y_lab <- .build_axis_label(y_var, y_unit, data, labels_df, unit_override = unit_res$target)
   title <- "PK Concentration - Time Profile"
 
   data <- .build_tooltip(data, tooltip_vars, labels_df)
   plot_data <- .build_plot_data(
     data, x_var, color_by, group_by, linetype_by,
-    facet_by, facet_count_n
+    facet_by, facet_count_n, unit_res$annotate_units
   )
-  facet_label_var <- if (!is.null(facet_count_n) && length(facet_by) > 0) {
+  needs_facet_label <- (!is.null(facet_count_n) && length(facet_by) > 0) ||
+    length(unit_res$annotate_units) > 0
+  facet_label_var <- if (needs_facet_label) {
     "facet_label"
   } else {
     facet_by
@@ -155,7 +176,7 @@ g_lineplot <- function(data,
 #' Prepare plot data with color, group, and facet variables
 #' @noRd
 .build_plot_data <- function(data, x_var, color_by, group_by, linetype_by,
-                             facet_by, facet_count_n) {
+                             facet_by, facet_count_n, annotate_units = character(0)) {
   group_by_vars <- if (!is.null(group_by)) {
     if (!is.null(linetype_by)) c(group_by, linetype_by) else group_by
   } else {
@@ -190,8 +211,10 @@ g_lineplot <- function(data,
 
   plot_data <- plot_data %>% arrange(!!sym(x_var))
 
-  if (!is.null(facet_count_n) && length(facet_by) > 0) {
-    plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n)
+  build_labels <- length(facet_by) > 0 &&
+    (!is.null(facet_count_n) || length(annotate_units) > 0)
+  if (build_labels) {
+    plot_data <- .build_facet_labels(plot_data, facet_by, facet_count_n, annotate_units)
   }
   plot_data
 }
@@ -224,11 +247,120 @@ g_lineplot <- function(data,
 }
 
 #' Build axis label with optional unit suffix
+#'
+#' `unit_override` forces a single unit string (used when facet units have been
+#' harmonised to a shared target), bypassing the data-derived unit collapse.
 #' @noRd
-.build_axis_label <- function(var, unit_col, data, labels_df) {
-  unit_str <- if (is.null(unit_col)) NULL else paste0(unique(data[[unit_col]]), collapse = ", ")
+.build_axis_label <- function(var, unit_col, data, labels_df, unit_override = NULL) {
+  unit_str <- if (!is.null(unit_override)) {
+    unit_override
+  } else if (is.null(unit_col)) {
+    NULL
+  } else {
+    paste0(unique(data[[unit_col]]), collapse = ", ")
+  }
   label <- get_label(var, labels_df = labels_df)
   if (is.null(unit_str)) label else paste0(label, " [", unit_str, "]")
+}
+
+#' Resolve y-axis units across facets
+#'
+#' Handles unit alignment for faceted plots:
+#' * A facet containing more than one y-unit is a data-integrity error and
+#'   short-circuits with an `error` message (rendered as a plot error).
+#' * When `lock_y_axis` is `TRUE` and facets span several units, values are
+#'   converted to a shared target unit where possible. Facets whose unit cannot
+#'   be converted keep their values and are flagged in `annotate_units` so their
+#'   strip label can carry the unit.
+#'
+#' Skipped entirely when there is no y-unit column, no faceting, dose-normalised
+#' "both" mode is active (`linetype_by` set, units mixed by design), or only a
+#' single unit is present.
+#'
+#' @returns A list with `data` (possibly converted), `target` (shared unit or
+#'   `NULL`), `annotate_units` (named unit vector per non-convertible facet),
+#'   `warning`, and `error`.
+#' @noRd
+.resolve_facet_units <- function(data, y_var, y_unit, facet_by, lock_y_axis,
+                                 linetype_by, y_family = character(0)) {
+  empty <- list(
+    data = data, target = NULL, annotate_units = character(0),
+    warning = NULL, error = NULL
+  )
+  no_facets <- is.null(facet_by) || length(facet_by) == 0
+  if (is.null(y_unit) || !y_unit %in% names(data) || no_facets) {
+    return(empty)
+  }
+
+  facet_key <- interaction(data[facet_by], drop = TRUE)
+  units_by_facet <- tapply(
+    as.character(data[[y_unit]]), facet_key,
+    function(u) unique(u[!is.na(u)])
+  )
+
+  # Within-facet integrity check: a single panel must carry a single unit.
+  multi <- Filter(function(u) length(u) > 1, units_by_facet)
+  if (length(multi) > 0) {
+    bad <- names(multi)[1]
+    return(modifyList(empty, list(
+      error = paste0(
+        "Facet '", bad, "' contains multiple units: ",
+        paste(multi[[bad]], collapse = ", ")
+      )
+    )))
+  }
+
+  # Dose-normalised "both" mode mixes units by design; leave untouched.
+  all_units <- unique(as.character(data[[y_unit]]))
+  all_units <- all_units[!is.na(all_units)]
+  if (!is.null(linetype_by) || length(all_units) <= 1 || !isTRUE(lock_y_axis)) {
+    return(empty)
+  }
+
+  # Target = most frequent unit (ties -> first alphabetically for determinism).
+  counts <- table(as.character(data[[y_unit]]))
+  target <- names(sort(counts, decreasing = TRUE))
+  target <- sort(target[counts[target] == max(counts)])[1]
+
+  factors <- get_conversion_factor(all_units, target)
+  names(factors) <- all_units
+  convertible <- all_units[!is.na(factors)]
+  non_convertible <- all_units[is.na(factors)]
+
+  y_cols <- unique(c(y_var, y_family))
+  row_unit <- as.character(data[[y_unit]])
+  for (u in setdiff(convertible, target)) {
+    rows <- which(row_unit == u)
+    if (length(rows) == 0) next
+    for (col in y_cols) {
+      data[[col]][rows] <- data[[col]][rows] * factors[[u]]
+    }
+    data[[y_unit]][rows] <- target
+  }
+
+  annotate_units <- character(0)
+  warning_msg <- NULL
+  if (length(non_convertible) > 0) {
+    keep <- names(units_by_facet)[
+      vapply(units_by_facet, function(u) any(u %in% non_convertible), logical(1))
+    ]
+    facet_units <- vapply(
+      units_by_facet[keep], function(u) u[u %in% non_convertible][1], character(1)
+    )
+    annotate_units <- facet_units
+    warning_msg <- paste0(
+      "Y-axis units not aligned for all facets; incompatible units shown per ",
+      "facet: ", paste(sort(unique(non_convertible)), collapse = ", ")
+    )
+  }
+
+  list(
+    data = data,
+    target = target,
+    annotate_units = annotate_units,
+    warning = warning_msg,
+    error = NULL
+  )
 }
 
 #' Build tooltip text column on data
@@ -270,11 +402,19 @@ g_lineplot <- function(data,
   facet_wrap(vars(!!!syms(facet_by)), scales = scales)
 }
 
+#' Build facet strip labels
+#'
+#' Appends an optional subject count `(n=...)` when `facet_count_n` is supplied
+#' and an optional unit suffix `[unit]` for facets listed in `annotate_units`
+#' (keyed by the `interaction()` of `facet_by`).
 #' @noRd
-.build_facet_labels <- function(data, facet_by, facet_count_n) {
-  use_precomputed_count <- grepl("count", facet_count_n, ignore.case = TRUE)
+.build_facet_labels <- function(data, facet_by, facet_count_n = NULL,
+                                annotate_units = character(0)) {
+  add_count <- !is.null(facet_count_n)
+  use_precomputed_count <- add_count &&
+    grepl("count", facet_count_n, ignore.case = TRUE)
 
-  data %>%
+  data <- data %>%
     mutate(
       .facet_label_values = purrr::pmap_chr(
         across(all_of(facet_by)),
@@ -282,20 +422,48 @@ g_lineplot <- function(data,
           vals <- list(...)
           paste(paste(names(vals), vals, sep = ": "), collapse = " | ")
         }
-      )
-    ) %>%
-    group_by(!!!syms(facet_by)) %>%
-    mutate(.facet_n = {
-      values <- .data[[facet_count_n]]
-      if (use_precomputed_count && is.numeric(values) && n_distinct(values) == 1) {
-        values[1]
+      ),
+      .facet_key = as.character(interaction(across(all_of(facet_by)), drop = TRUE))
+    )
+
+  if (add_count) {
+    data <- data %>%
+      group_by(!!!syms(facet_by)) %>%
+      mutate(.facet_n = {
+        values <- .data[[facet_count_n]]
+        if (use_precomputed_count && is.numeric(values) && n_distinct(values) == 1) {
+          values[1]
+        } else {
+          n_distinct(values)
+        }
+      }) %>%
+      ungroup()
+  }
+
+  data <- data %>%
+    mutate(
+      .facet_unit = if (length(annotate_units) > 0) {
+        unname(annotate_units[.facet_key])
       } else {
-        n_distinct(values)
-      }
-    }) %>%
-    ungroup() %>%
-    mutate(facet_label = paste0(.facet_label_values, " (n=", .facet_n, ")")) %>%
-    select(-.facet_label_values, -.facet_n)
+        NA_character_
+      },
+      facet_label = .facet_label_values,
+      facet_label = if (add_count) {
+        paste0(facet_label, " (n=", .facet_n, ")")
+      } else {
+        facet_label
+      },
+      facet_label = ifelse(
+        is.na(.facet_unit), facet_label,
+        paste0(facet_label, " [", .facet_unit, "]")
+      )
+    )
+
+  drop_cols <- intersect(
+    c(".facet_label_values", ".facet_n", ".facet_key", ".facet_unit"),
+    names(data)
+  )
+  data %>% select(-all_of(drop_cols))
 }
 
 #' @noRd

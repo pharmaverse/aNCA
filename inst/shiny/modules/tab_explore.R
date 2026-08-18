@@ -86,23 +86,30 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(pknca_data(), individual_inputs()$color_by)
       log_info("Rendering individual plots")
 
-      exploration_individualplot(
-        pknca_data = isolate(pknca_data()),
-        color_by = individual_inputs()$color_by,
-        facet_by = individual_inputs()$facet_by,
-        show_facet_n = individual_inputs()$show_facet_n,
-        lock_y_axis = individual_inputs()$lock_y_axis,
-        filtering_list = individual_inputs()$filtering_list,
-        show_dose = individual_inputs()$show_dose,
-        ylog_scale = individual_inputs()$ylog_scale,
-        show_legend = individual_inputs()$show_legend,
-        x_limits = individual_inputs()$x_limits,
-        y_limits = individual_inputs()$y_limits,
-        threshold_value = individual_inputs()$threshold_value,
-        labels_df = metadata_nca_variables,
-        use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
-        palette = individual_inputs()$palette,
-        line_type = individual_inputs()$y_axis_values
+      withCallingHandlers(
+        exploration_individualplot(
+          pknca_data = isolate(pknca_data()),
+          color_by = individual_inputs()$color_by,
+          facet_by = individual_inputs()$facet_by,
+          show_facet_n = individual_inputs()$show_facet_n,
+          lock_y_axis = individual_inputs()$lock_y_axis,
+          filtering_list = individual_inputs()$filtering_list,
+          show_dose = individual_inputs()$show_dose,
+          ylog_scale = individual_inputs()$ylog_scale,
+          show_legend = individual_inputs()$show_legend,
+          x_limits = individual_inputs()$x_limits,
+          y_limits = individual_inputs()$y_limits,
+          threshold_value = individual_inputs()$threshold_value,
+          labels_df = metadata_nca_variables,
+          use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
+          palette = individual_inputs()$palette,
+          line_type = individual_inputs()$y_axis_values
+        ),
+        warning = function(w) {
+          log_warn(conditionMessage(w))
+          showNotification(conditionMessage(w), type = "warning", duration = 10)
+          invokeRestart("muffleWarning")
+        }
       )
     })
 
@@ -116,26 +123,33 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(pknca_data(), mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
 
-      exploration_meanplot(
-        pknca_data = isolate(pknca_data()),
-        color_by = mean_inputs()$color_by,
-        facet_by = mean_inputs()$facet_by,
-        show_facet_n = mean_inputs()$show_facet_n,
-        lock_y_axis = mean_inputs()$lock_y_axis,
-        filtering_list = mean_inputs()$filtering_list,
-        show_dose = mean_inputs()$show_dose,
-        palette = mean_inputs()$palette,
-        sd_min = mean_inputs()$sd_min,
-        sd_max = mean_inputs()$sd_max,
-        ci = mean_inputs()$ci,
-        ylog_scale = mean_inputs()$ylog_scale,
-        show_legend = mean_inputs()$show_legend,
-        x_limits = mean_inputs()$x_limits,
-        y_limits = mean_inputs()$y_limits,
-        threshold_value = mean_inputs()$threshold_value,
-        labels_df = metadata_nca_variables,
-        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
-        line_type = mean_inputs()$y_axis_values
+      withCallingHandlers(
+        exploration_meanplot(
+          pknca_data = isolate(pknca_data()),
+          color_by = mean_inputs()$color_by,
+          facet_by = mean_inputs()$facet_by,
+          show_facet_n = mean_inputs()$show_facet_n,
+          lock_y_axis = mean_inputs()$lock_y_axis,
+          filtering_list = mean_inputs()$filtering_list,
+          show_dose = mean_inputs()$show_dose,
+          palette = mean_inputs()$palette,
+          sd_min = mean_inputs()$sd_min,
+          sd_max = mean_inputs()$sd_max,
+          ci = mean_inputs()$ci,
+          ylog_scale = mean_inputs()$ylog_scale,
+          show_legend = mean_inputs()$show_legend,
+          x_limits = mean_inputs()$x_limits,
+          y_limits = mean_inputs()$y_limits,
+          threshold_value = mean_inputs()$threshold_value,
+          labels_df = metadata_nca_variables,
+          use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
+          line_type = mean_inputs()$y_axis_values
+        ),
+        warning = function(w) {
+          log_warn(conditionMessage(w))
+          showNotification(conditionMessage(w), type = "warning", duration = 10)
+          invokeRestart("muffleWarning")
+        }
       )
     })
 
