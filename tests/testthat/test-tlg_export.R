@@ -109,10 +109,10 @@ describe("write_tlg_exports", {
       ),
       d
     )
-    expect_true(file.exists(file.path(d, "Graphs", "pkcg01_lin.png")))
-    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01.csv")))
+    expect_true(file.exists(file.path(d, "Graphs", "png", "pkcg01_lin", "pkcg01_lin.png")))
+    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01", "pkct01.csv")))
     expect_true(file.exists(file.path(d, "Tables", "xlsx", "pkct01.xlsx")))
-    expect_true(file.exists(file.path(d, "Listings", "csv", "pkcl01.csv")))
+    expect_true(file.exists(file.path(d, "Listings", "csv", "pkcl01", "pkcl01.csv")))
   })
 
   it("separates csv and xlsx so neither folder listing is cluttered by the other", {
@@ -122,11 +122,12 @@ describe("write_tlg_exports", {
                     c("csv", "xlsx"))
   })
 
-  it("defaults graphs to PNG only -- HTML would add a _files/ dependency tree per graph", {
+  it("defaults graphs to PNG only -- HTML is an order of magnitude larger per graph", {
     d <- withr::local_tempdir()
     write_tlg_exports(list(g_pkcg01_lin = entry("graph", list(all = stashed_plotly()))), d)
-    expect_false(file.exists(file.path(d, "Graphs", "pkcg01_lin.html")))
-    expect_length(list.dirs(file.path(d, "Graphs"), recursive = FALSE), 0)
+    expect_equal(basename(list.dirs(file.path(d, "Graphs"), recursive = FALSE)), "png")
+    expect_length(list.files(file.path(d, "Graphs"), pattern = "\\.html$",
+                             recursive = TRUE), 0)
   })
 
   it("gives a split graph its own folder so Graphs/ stays navigable", {
@@ -134,23 +135,37 @@ describe("write_tlg_exports", {
     d <- withr::local_tempdir()
     items <- setNames(list(stashed_plotly(), stashed_plotly()), c("S1", "S2"))
     write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d)
-    expect_setequal(list.files(file.path(d, "Graphs", "pkcg01_lin")),
+    expect_setequal(list.files(file.path(d, "Graphs", "png", "pkcg01_lin")),
                     c("S1.png", "S2.png"))
   })
 
-  it("keeps an unsplit graph at the top level rather than in a folder of one", {
+  it("gives an unsplit graph a folder too, so the layout stays predictable", {
+    # Loose files sitting beside directories at the top of Graphs/ read as untidy (#1344).
     d <- withr::local_tempdir()
     write_tlg_exports(list(g_pkcg02_lin = entry("graph", list(all = stashed_plotly()))), d)
-    expect_equal(list.files(file.path(d, "Graphs")), "pkcg02_lin.png")
+    expect_equal(list.files(file.path(d, "Graphs", "png")), "pkcg02_lin")
+    expect_equal(list.files(file.path(d, "Graphs", "png", "pkcg02_lin")), "pkcg02_lin.png")
   })
 
-  it("names split csv outputs after the split key", {
+  it("keeps each graph format in its own directory rather than interleaving them", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly()), c("S1", "S2"))
+    write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d,
+                      ggplot_formats = c("png", "html"))
+    expect_setequal(list.files(file.path(d, "Graphs")), c("png", "html"))
+    expect_setequal(list.files(file.path(d, "Graphs", "png", "pkcg01_lin")),
+                    c("S1.png", "S2.png"))
+    expect_setequal(list.files(file.path(d, "Graphs", "html", "pkcg01_lin")),
+                    c("S1.html", "S2.html"))
+  })
+
+  it("names split csv outputs after the split key, grouped by TLG", {
     d <- withr::local_tempdir()
     items <- setNames(list(head(mtcars), head(mtcars)), c("PARAM: DrugA", "PARAM: DrugB"))
     write_tlg_exports(list(t_pkct01 = entry("table", items)), d, table_formats = "csv")
     expect_setequal(
-      list.files(file.path(d, "Tables", "csv")),
-      c("pkct01_PARAM_DrugA.csv", "pkct01_PARAM_DrugB.csv")
+      list.files(file.path(d, "Tables", "csv", "pkct01")),
+      c("PARAM_DrugA.csv", "PARAM_DrugB.csv")
     )
   })
 
@@ -171,8 +186,8 @@ describe("write_tlg_exports", {
       d, table_formats = "csv"
     )
     expect_setequal(
-      list.files(file.path(d, "Tables", "csv")),
-      c("pkct01_1.csv", "pkct01_2.csv", "pkct01_3.csv")
+      list.files(file.path(d, "Tables", "csv", "pkct01")),
+      c("1.csv", "2.csv", "3.csv")
     )
   })
 
@@ -180,14 +195,25 @@ describe("write_tlg_exports", {
     d <- withr::local_tempdir()
     write_tlg_exports(list(t_pkct01 = entry("table", list(head(mtcars)))), d,
                       table_formats = "csv")
-    expect_equal(list.files(file.path(d, "Tables", "csv")), "pkct01.csv")
+    expect_equal(list.files(file.path(d, "Tables", "csv", "pkct01")), "pkct01.csv")
   })
 
   it("does not let two split keys that slug alike overwrite each other", {
     d <- withr::local_tempdir()
     items <- setNames(list(head(mtcars), head(mtcars)), c("DrugA / SERUM", "DrugA - SERUM"))
     write_tlg_exports(list(t_pkct01 = entry("table", items)), d, table_formats = "csv")
-    expect_length(list.files(file.path(d, "Tables", "csv")), 2)
+    expect_length(list.files(file.path(d, "Tables", "csv", "pkct01")), 2)
+  })
+
+  it("records the written format in the manifest file column", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly()), "S1")
+    m <- write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d,
+                           ggplot_formats = c("png", "html"))
+    expect_setequal(
+      m$file[m$status == "ok"],
+      c("Graphs/png/pkcg01_lin/S1.png", "Graphs/html/pkcg01_lin/S1.html")
+    )
   })
 
   it("skips a failed TLG and records it rather than aborting the export", {
@@ -202,7 +228,7 @@ describe("write_tlg_exports", {
     expect_equal(m$status[m$id == "t_broken"], "skipped")
     expect_match(m$note[m$id == "t_broken"], "something went wrong")
     # The healthy TLG in the same order still made it out.
-    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01.csv")))
+    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01", "pkct01.csv")))
   })
 
   it("records a write failure as an error and keeps going", {
@@ -218,7 +244,7 @@ describe("write_tlg_exports", {
     )
     expect_equal(m$status[m$id == "t_odd"], "error")
     expect_match(m$note[m$id == "t_odd"], "Unsupported output type")
-    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01.csv")))
+    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01", "pkct01.csv")))
   })
 
   it("records a TLG that produced nothing as empty", {
@@ -236,7 +262,7 @@ describe("write_tlg_exports", {
     man <- read.csv(file.path(d, "manifest.csv"))
     expect_named(man, c("id", "label", "type", "dataset", "file", "status", "note"))
     expect_equal(man$label, "pkct01 - Summary")
-    expect_equal(man$file[man$file != ""][1], "Tables/csv/pkct01")
+    expect_equal(man$file[man$file != ""][1], "Tables/csv/pkct01/pkct01.csv")
   })
 
   it("routes an unrecognised type to Other/ instead of erroring", {
@@ -245,7 +271,7 @@ describe("write_tlg_exports", {
       write_tlg_exports(list(x = entry("mystery", list(all = head(mtcars)))), d,
                         table_formats = "csv")
     )
-    expect_true(file.exists(file.path(d, "Other", "csv", "x.csv")))
+    expect_true(file.exists(file.path(d, "Other", "csv", "x", "x.csv")))
   })
 
   it("returns an empty manifest when there is nothing to export", {
@@ -268,5 +294,56 @@ describe("write_tlg_exports: tidiness", {
     )
     expect_false(dir.exists(file.path(d, "Listings")))
     expect_true(dir.exists(file.path(d, "Tables")))
+  })
+})
+
+describe("write_tlg_exports: PDF output", {
+  # Read as bytes: readLines() on a PDF produces invalid multibyte strings and a wall of
+  # encoding warnings.  "/Type /Pages" is the single page-tree node, so subtract it.
+  pdf_pages <- function(path) {
+    raw <- readBin(path, "raw", file.size(path))
+    n_page  <- length(grepRaw("/Type /Page", raw, all = TRUE, fixed = TRUE))
+    n_pages <- length(grepRaw("/Type /Pages", raw, all = TRUE, fixed = TRUE))
+    n_page - n_pages
+  }
+
+  it("writes one multi-page document per TLG rather than a file per plot", {
+    # Paging through pkcg01_lin.pdf beats opening twenty-odd separate files.
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly(), stashed_plotly()),
+                      c("S1", "S2", "S3"))
+    m <- write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d,
+                           ggplot_formats = "pdf")
+    expect_equal(list.files(file.path(d, "Graphs", "pdf")), "pkcg01_lin.pdf")
+    expect_equal(pdf_pages(file.path(d, "Graphs", "pdf", "pkcg01_lin.pdf")), 3)
+    expect_match(m$note[m$status == "ok"], "3 pages")
+  })
+
+  it("still writes the per-plot formats alongside it", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly()), c("S1", "S2"))
+    write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d,
+                      ggplot_formats = c("png", "pdf"))
+    expect_length(list.files(file.path(d, "Graphs", "png", "pkcg01_lin")), 2)
+    expect_equal(list.files(file.path(d, "Graphs", "pdf")), "pkcg01_lin.pdf")
+  })
+
+  it("reports a failed output once, not once per requested format", {
+    d <- withr::local_tempdir()
+    m <- write_tlg_exports(list(g_broken = entry("graph", list(all = "Error: nope"))), d,
+                           ggplot_formats = c("png", "pdf"))
+    expect_equal(nrow(m), 1)
+    expect_equal(m$status, "skipped")
+  })
+
+  it("says so rather than emitting a blank page when nothing can be drawn", {
+    # A plotly with no stashed ggplot cannot be rendered to a vector device.
+    d <- withr::local_tempdir()
+    bare <- plotly::ggplotly(ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+                               ggplot2::geom_point())
+    m <- write_tlg_exports(list(g_x = entry("graph", list(all = bare))), d,
+                           ggplot_formats = "pdf")
+    expect_equal(m$status, "skipped")
+    expect_match(m$note, "none of the plots could be rendered")
   })
 })

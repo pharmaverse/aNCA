@@ -199,35 +199,105 @@ write_tlg_exports <- function(entries,
   }
 }
 
-#' Write one TLG's graphs.
+#' Strip the TLG stem off each base name, leaving just the split key.
 #'
-#' A TLG that splits (pkcg01 produces one plot per subject) gets its own subdirectory, so
-#' `Graphs/` stays navigable instead of being a flat wall of a hundred-odd PNGs.  Inside it
-#' the file is named after the split key alone -- the directory already carries the TLG.
+#' Inside a per-TLG directory the stem is redundant.  An unsplit TLG has nothing left after
+#' the strip, so it falls back to the stem rather than producing an extension-only file.
+#' @noRd
+.tlg_leaf_names <- function(bases, stem) {
+  leaf <- sub(paste0("^", stem, "_?"), "", bases)
+  ifelse(nzchar(leaf), leaf, stem)
+}
+
+#' Write one TLG's graphs, one directory per format.
+#'
+#' Formats are kept apart -- `Graphs/png/pkcg01_lin/` rather than PNG and HTML interleaved
+#' in one listing -- so that "give me the plots for my report" is a single folder.  This
+#' mirrors the `csv/` and `xlsx/` split the tables already use.  Every TLG gets its own
+#' subdirectory even when it produced a single output, so the layout is predictable instead
+#' of mixing loose files and directories at the top level (#1344).
 #'
 #' @param g_id,entry,sub_dir,target_dir,ggplot_formats See `.export_one_tlg()`.
-#' @returns A list of one-row data frames.
+#' @returns A list of one-row data frames, one per output per format.
 #' @noRd
 .export_graph_items <- function(g_id, entry, sub_dir, target_dir, ggplot_formats) {
-  items  <- entry$items
-  bases  <- .tlg_export_basenames(g_id, items)
-  split  <- length(items) > 1
-  stem   <- .tlg_export_basename(g_id, NULL)
-  rel    <- if (split) file.path(sub_dir, stem) else sub_dir
-  out_dir <- file.path(target_dir, rel)
-  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+  items <- entry$items
+  stem  <- .tlg_export_basename(g_id, NULL)
+  leaf  <- .tlg_leaf_names(.tlg_export_basenames(g_id, items), stem)
 
-  # Inside a per-TLG directory the stem is redundant, so strip it back to the split key.
-  names_out <- if (split) sub(paste0("^", stem, "_?"), "", bases) else bases
+  # PDF is written as one multi-page document per TLG rather than a file per plot: paging
+  # through pkcg01_lin.pdf beats opening twenty-odd separate files, and it is smaller.
+  per_file <- setdiff(ggplot_formats, "pdf")
 
-  lapply(seq_along(items), function(i) {
+  rows <- lapply(seq_along(items), function(i) {
+    # Emitted once per output, not once per format: a TLG that failed to render did so
+    # regardless of what it would have been written as.
     skip <- .tlg_skip_row(g_id, entry, items[[i]])
-    if (!is.null(skip)) return(skip)
-    .tlg_write_one(
-      items[[i]], file.path(out_dir, names_out[i]), file.path(rel, names_out[i]),
-      g_id, entry, ggplot_formats, character()
-    )
+    if (!is.null(skip)) return(list(skip))
+
+    lapply(per_file, function(fmt) {
+      rel_dir <- file.path(sub_dir, fmt, stem)
+      dir.create(file.path(target_dir, rel_dir), showWarnings = FALSE, recursive = TRUE)
+      .tlg_write_one(
+        items[[i]],
+        file.path(target_dir, rel_dir, leaf[i]),
+        file.path(rel_dir, paste0(leaf[i], ".", fmt)),
+        g_id, entry, fmt, character()
+      )
+    })
   })
+  rows <- unlist(rows, recursive = FALSE)
+
+  if ("pdf" %in% ggplot_formats) {
+    renderable <- Filter(function(x) !is.null(x) && !is.character(x), items)
+    if (length(renderable) > 0) {
+      rows <- c(rows, list(
+        .tlg_write_graph_pdf(renderable, stem, sub_dir, target_dir, g_id, entry)
+      ))
+    }
+  }
+  rows
+}
+
+#' Write one TLG's graphs as a single multi-page PDF.
+#'
+#' Pages come from the ggplot each plot was built from -- `.with_ggplot()` stashes it on the
+#' plotly object precisely so raster and vector output do not need a headless browser.  A
+#' plot with no stashed ggplot cannot be drawn and is reported in the manifest note rather
+#' than silently producing a blank page.
+#'
+#' @param plots  The TLG's renderable outputs (no error strings).
+#' @param stem   Base name for the TLG, e.g. `"pkcg01_lin"`.
+#' @param sub_dir,target_dir,g_id,entry As for `.export_one_tlg()`.
+#' @returns A single manifest row for the document.
+#' @noRd
+.tlg_write_graph_pdf <- function(plots, stem, sub_dir, target_dir, g_id, entry) {
+  rel_dir <- file.path(sub_dir, "pdf")
+  dir.create(file.path(target_dir, rel_dir), showWarnings = FALSE, recursive = TRUE)
+  rel <- file.path(rel_dir, paste0(stem, ".pdf"))
+
+  gg <- lapply(plots, function(x) if (inherits(x, "ggplot")) x else attr(x, "ggplot"))
+  drawable <- Filter(function(x) inherits(x, "ggplot"), gg)
+
+  status <- "ok"
+  note   <- paste(length(drawable), if (length(drawable) == 1) "page" else "pages")
+  if (length(drawable) < length(gg)) {
+    note <- paste0(note, "; ", length(gg) - length(drawable), " could not be drawn")
+  }
+  if (length(drawable) == 0) {
+    return(.tlg_manifest_row(g_id, entry, NA_character_, "skipped",
+                             "none of the plots could be rendered to PDF"))
+  }
+
+  tryCatch({
+    grDevices::pdf(file.path(target_dir, rel), width = 10, height = 6, onefile = TRUE)
+    on.exit(grDevices::dev.off(), add = TRUE)
+    for (p in drawable) print(p)
+  }, error = function(e) {
+    status <<- "error"
+    note   <<- conditionMessage(e)
+  })
+  .tlg_manifest_row(g_id, entry, rel, status, note)
 }
 
 #' Write one TLG's tables or listings, in each requested format.
@@ -235,7 +305,8 @@ write_tlg_exports <- function(entries,
 #' CSV and XLSX go to their own subdirectories so neither listing is cluttered by the
 #' other's files.  They are shaped differently on purpose: a split TLG becomes one workbook
 #' with a sheet per split under `xlsx/`, which is what you would hand to someone, while
-#' `csv/` keeps one file per split because CSV has no notion of sheets.
+#' `csv/` keeps one file per split because CSV has no notion of sheets -- grouped into a
+#' per-TLG directory, the same way the graphs are (#1344).
 #'
 #' @param g_id,entry,sub_dir,target_dir,table_formats See `.export_one_tlg()`.
 #' @returns A list of one-row data frames.
@@ -244,19 +315,22 @@ write_tlg_exports <- function(entries,
   items <- entry$items
   bases <- .tlg_export_basenames(g_id, items)
   stem  <- .tlg_export_basename(g_id, NULL)
+  leaf  <- .tlg_leaf_names(bases, stem)
 
   # Prepare every frame up front: both formats write the same content.
   prepared <- lapply(items, function(x) if (is.data.frame(x)) .prepare_export_frame(x) else x)
   usable   <- vapply(prepared, is.data.frame, logical(1))
 
+  csv_dir <- file.path(sub_dir, "csv", stem)
+
   rows <- lapply(seq_along(items), function(i) {
     skip <- .tlg_skip_row(g_id, entry, items[[i]])
     if (!is.null(skip)) return(skip)
     if (!"csv" %in% table_formats) return(NULL)
-    dir.create(file.path(target_dir, sub_dir, "csv"), showWarnings = FALSE, recursive = TRUE)
+    dir.create(file.path(target_dir, csv_dir), showWarnings = FALSE, recursive = TRUE)
     .tlg_write_one(
-      prepared[[i]], file.path(target_dir, sub_dir, "csv", bases[i]),
-      file.path(sub_dir, "csv", bases[i]), g_id, entry, character(), "csv"
+      prepared[[i]], file.path(target_dir, csv_dir, leaf[i]),
+      file.path(csv_dir, paste0(leaf[i], ".csv")), g_id, entry, character(), "csv"
     )
   })
 
