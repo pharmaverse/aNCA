@@ -318,7 +318,10 @@ pkcg01 <- function(
       }
 
       # Attached last: layout() rebuilds the object and would drop it.
-      .with_ggplot(plotly_plot, gg_plot)
+      .with_ggplot(
+        plotly_plot,
+        .label_stashed_ggplot(gg_plot, title, subtitle, footnote)
+      )
     } else {
       plot +
         labs(
@@ -328,8 +331,11 @@ pkcg01 <- function(
         )
     }
   })
+  # `id_plot` is created on `adnca_grouped`, not on `adnca` -- naming from the latter
+  # returned NULL, which silently stripped the names and left the export numbering the
+  # files 1..n instead of using the group (#1344).
   plots %>%
-    setNames(unique(adnca[["id_plot"]]))
+    setNames(unique(adnca_grouped[["id_plot"]]))
 }
 
 # Helper Function for Title Generation
@@ -707,7 +713,10 @@ pkcg02 <- function(
         }
 
         # Attached last: layout() rebuilds the object and would drop it.
-        .with_ggplot(plotly_plot, gg_plot)
+        .with_ggplot(
+          plotly_plot,
+          .label_stashed_ggplot(gg_plot, title, subtitle, footnote)
+        )
       })
     } else {
       plot +
@@ -718,8 +727,10 @@ pkcg02 <- function(
         )
     }
   })
+  # See the note in g_pkcg01(): the names come from `adnca_grouped`, which is where
+  # `id_plot` is created (#1344).
   plots %>%
-    setNames(unique(adnca[["id_plot"]]))
+    setNames(unique(adnca_grouped[["id_plot"]]))
 
 }
 
@@ -1126,7 +1137,10 @@ pkcg03 <- function(
         }
 
         # Attached last: layout() rebuilds the object and would drop it.
-        .with_ggplot(plotly_plot, plot)
+        .with_ggplot(
+          plotly_plot,
+          .label_stashed_ggplot(plot, title, subtitle, footnote)
+        )
       })
     } else {
       plot <- plot +
