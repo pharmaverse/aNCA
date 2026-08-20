@@ -15,8 +15,18 @@ save_ggplot_format <- function(x, file_name, formats) {
   }
   if ("html" %in% formats) {
     plotly_obj <- plotly::ggplotly(x)
-    htmlwidgets::saveWidget(plotly_obj, file = paste0(file_name, ".html"))
+    .save_widget_selfcontained(plotly_obj, file_name)
   }
+}
+
+# saveWidget() defaults to selfcontained = TRUE, which inlines every dependency into the
+# HTML and is supposed to delete the `<name>_files/` library directory afterwards.  It does
+# not always do so, and the leftovers are pure dead weight: nothing in the self-contained
+# HTML references them.  A 114-graph order shipped 413 MB of inlined HTML *plus* 479 MB of
+# orphaned `_files/` folders (#1344).  Remove the directory ourselves.
+.save_widget_selfcontained <- function(widget, file_name) {
+  htmlwidgets::saveWidget(widget, file = paste0(file_name, ".html"))
+  unlink(paste0(file_name, "_files"), recursive = TRUE)
 }
 
 # Helper for saving data.frame objects (multiple formats)
@@ -57,7 +67,7 @@ save_plotly_format <- function(x, file_name, formats = "html") {
   has_gg <- inherits(gg, "ggplot")
 
   if ("html" %in% formats || !has_gg) {
-    htmlwidgets::saveWidget(x, file = paste0(file_name, ".html"))
+    .save_widget_selfcontained(x, file_name)
   }
   raster <- intersect(formats, c("png", "pdf"))
   if (has_gg && length(raster) > 0) {
@@ -467,8 +477,11 @@ prepare_export_files <- function(target_dir,
     write_tlg_exports(
       entries        = session$userData$tlg_outputs(tlg_types),
       target_dir     = file.path(target_dir, "TLGs"),
-      ggplot_formats = intersect(input$plot_formats, c("png", "pdf", "html")),
-      table_formats  = intersect(input$table_formats, c("csv", "xlsx"))
+      # Rendered TLGs have their own format control, so that the dataset formats (rds/xpt)
+      # and the TLG ones (png/xlsx) can each default to what suits them (#1344).  Older
+      # saved settings predate the control; fall back rather than exporting nothing.
+      ggplot_formats = intersect(input$tlg_formats %||% "png", c("png", "pdf", "html")),
+      table_formats  = intersect(input$tlg_formats %||% "xlsx", c("csv", "xlsx"))
     )
   }
 

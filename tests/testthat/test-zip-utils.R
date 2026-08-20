@@ -221,6 +221,33 @@ describe("save_plotly_format", {
     # Never silently produce nothing: HTML is the only thing a bare plotly can yield.
     expect_true(file.exists(file.path(d, "p.html")))
   })
+
+  # saveWidget() inlines every dependency but does not reliably delete the library
+  # directory it staged them in, so the archive carried a full copy of plotly and jQuery
+  # per graph that no HTML file even referenced (#1344).
+  it("leaves no orphaned _files directory next to the HTML", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "html")
+    expect_true(file.exists(file.path(d, "p.html")))
+    expect_false(dir.exists(file.path(d, "p_files")))
+  })
+
+  it("writes a self-contained HTML, so dropping _files loses nothing", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "html")
+    html <- paste(readLines(file.path(d, "p.html"), warn = FALSE), collapse = "\n")
+    expect_false(grepl("<script[^>]+src=\"p_files/", html))
+  })
+})
+
+describe("save_ggplot_format: html", {
+  it("cleans up the widget library directory for ggplot input too", {
+    d <- withr::local_tempdir()
+    gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+    save_ggplot_format(gg, file.path(d, "g"), "html")
+    expect_true(file.exists(file.path(d, "g.html")))
+    expect_false(dir.exists(file.path(d, "g_files")))
+  })
 })
 
 # .make_zip_filename gained a `suffix` argument so the TLG bulk download can reuse the
@@ -316,5 +343,72 @@ describe(".clean_export_dir: TLG outputs", {
     expect_true(file.exists(file.path(d, "TLGs", "Tables", "xlsx", "pkct01.xlsx")))
     expect_true(file.exists(file.path(d, "TLGs", "manifest.csv")))
     expect_false(file.exists(file.path(d, "junk.txt")))
+  })
+})
+
+# Rendered TLGs get their own format control rather than sharing the dataset ones, whose
+# defaults were wrong in both directions for TLGs: "html" was on (hundreds of MB of widgets
+# nobody asked for) and "xlsx" was not (tables could only ever be CSV) -- see #1344.
+describe("TLG export formats", {
+  it("defaults to PNG for graphs and XLSX for tables", {
+    expect_setequal(TLG_FORMATS_DEFAULT, c("png", "xlsx"))
+    expect_true("png" %in% TLG_GRAPH_FORMATS)
+    expect_false("html" %in% TLG_FORMATS_DEFAULT)
+    expect_true("xlsx" %in% TLG_TABLE_FORMATS)
+  })
+
+  it("keeps TLG nodes out of the dataset format checks", {
+    # They have their own control now, so a TLG selection must not demand a dataset format.
+    expect_length(
+      .check_format_selections(
+        tree = "tlg_graphs", plot_formats = character(), table_formats = character(),
+        slide_formats = character(), tlg_formats = "png"
+      ),
+      0
+    )
+  })
+
+  it("accepts the defaults for any TLG selection", {
+    expect_length(
+      .check_format_selections(
+        tree = TLG_NODES, plot_formats = "png", table_formats = "csv",
+        slide_formats = "qmd", tlg_formats = TLG_FORMATS_DEFAULT
+      ),
+      0
+    )
+  })
+
+  it("complains when TLGs are selected with no format at all", {
+    msgs <- .check_format_selections(
+      tree = "tlg_tables", plot_formats = "png", table_formats = "csv",
+      slide_formats = "qmd", tlg_formats = character()
+    )
+    expect_match(paste(msgs, collapse = " "), "no TLG format is chosen")
+  })
+
+  it("names which half is missing when the selection covers only the other", {
+    # Graphs and tables draw from disjoint halves, so a non-empty selection can still
+    # leave one of them with nothing to write.
+    graphs_only <- .check_format_selections(
+      tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
+      slide_formats = "qmd", tlg_formats = "png"
+    )
+    expect_match(paste(graphs_only, collapse = " "), "no table format is chosen")
+
+    tables_only <- .check_format_selections(
+      tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
+      slide_formats = "qmd", tlg_formats = "xlsx"
+    )
+    expect_match(paste(tables_only, collapse = " "), "no image format is chosen")
+  })
+
+  it("says nothing about TLGs when none are selected", {
+    expect_length(
+      .check_format_selections(
+        tree = "adnca", plot_formats = "png", table_formats = "csv",
+        slide_formats = "qmd", tlg_formats = character()
+      ),
+      0
+    )
   })
 })
