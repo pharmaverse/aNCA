@@ -23,11 +23,11 @@ envir = parent.env(environment()))
 describe("tab_tlg_server: data boundary", {
   adnca_df <- data.frame(
     USUBJID = c("S1", "S2"), AVAL = c(1, 2),
-    PKSUM1F = c("Y", NA_character_), stringsAsFactors = FALSE
+    PKSUMXF = c("Y", NA_character_), stringsAsFactors = FALSE
   )
   adpp_df <- data.frame(
     USUBJID = c("S1", "S2"), AVAL = c(3, 4),
-    PPSUMFL = c("Y", NA_character_), stringsAsFactors = FALSE
+    PPSUMXF = c("Y", NA_character_), stringsAsFactors = FALSE
   )
 
   it("restores column labels on every data source (issue 1336)", {
@@ -51,7 +51,7 @@ describe("tab_tlg_server: data boundary", {
   })
 
   it("scopes each exclusion flag to its own dataset", {
-    # A record flagged PPSUMFL (drop from PK-param summary) must still survive in
+    # A record flagged PPSUMXF (drop from PK-param summary) must still survive in
     # the concentration source, and vice-versa (issue 1356 / Gero review).
     shiny::testServer(
       tab_tlg_server,

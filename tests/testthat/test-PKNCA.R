@@ -920,7 +920,7 @@ describe("add_exclusion_reasons", {
     expect_equal(pknca_data_excl$conc$data[["exclude"]][1], "Exclusion reason")
   })
 
-  it("sets PKSUM1F to Y and PKSUM1RS to reason for TLG exclusions", {
+  it("sets PKSUMXF to Y and PKSUM1RS to reason for TLG exclusions", {
     excl_list <- list(
       list(
         reason = "TLG only", rows = c(2, 3),
@@ -933,13 +933,29 @@ describe("add_exclusion_reasons", {
     # NCA exclude column should be untouched for these rows
     expect_true(all(result$conc$data[[excl_col]][c(2, 3)] %in% c("", NA)))
 
-    # PKSUM1F should be "Y" for excluded rows, "" for others
-    expect_equal(result$conc$data$PKSUM1F[c(2, 3)], c("Y", "Y"))
-    expect_true(all(result$conc$data$PKSUM1F[-c(2, 3)] == ""))
+    # PKSUMXF should be "Y" for excluded rows, "" for others
+    expect_equal(result$conc$data$PKSUMXF[c(2, 3)], c("Y", "Y"))
+    expect_true(all(result$conc$data$PKSUMXF[-c(2, 3)] == ""))
 
     # PKSUM1RS should contain the reason for excluded rows
     expect_equal(result$conc$data$PKSUM1RS[c(2, 3)], c("TLG only", "TLG only"))
     expect_true(all(result$conc$data$PKSUM1RS[-c(2, 3)] == ""))
+  })
+
+  it("preserves legacy PKSUM1F flags when creating PKSUMXF", {
+    legacy_data <- pknca_data
+    legacy_data$conc$data$PKSUM1F <- rep("", nrow(legacy_data$conc$data))
+    legacy_data$conc$data$PKSUM1F[1] <- "Y"
+
+    result <- add_exclusion_reasons(
+      legacy_data,
+      list(list(
+        reason = "Summary only", rows = 2,
+        exclude_nca = FALSE, exclude_tlg = TRUE
+      ))
+    )
+
+    expect_equal(result$conc$data$PKSUMXF[1:2], c("Y", "Y"))
   })
 
   it("applies NCA exclusion only when exclude_nca is TRUE", {
@@ -955,8 +971,8 @@ describe("add_exclusion_reasons", {
     # NCA exclude column should have the reason
     expect_equal(result$conc$data[[excl_col]][1], "NCA only")
 
-    # PKSUM1F should remain "" (no TLG exclusion)
-    expect_equal(result$conc$data$PKSUM1F[1], "")
+    # PKSUMXF should remain "" (no TLG exclusion)
+    expect_equal(result$conc$data$PKSUMXF[1], "")
 
     # PKSUM1RS should remain "" (no TLG exclusion)
     expect_equal(result$conc$data$PKSUM1RS[1], "")
@@ -976,7 +992,7 @@ describe("add_exclusion_reasons", {
     expect_equal(result$conc$data[[excl_col]][4], "Both")
 
     # TLG exclusion applied
-    expect_equal(result$conc$data$PKSUM1F[4], "Y")
+    expect_equal(result$conc$data$PKSUMXF[4], "Y")
 
     # PKSUM1RS should contain the reason
     expect_equal(result$conc$data$PKSUM1RS[4], "Both")
@@ -995,7 +1011,7 @@ describe("add_exclusion_reasons", {
     )
     result <- add_exclusion_reasons(pknca_data, excl_list)
     expect_equal(result$conc$data$PKSUM1RS[1], "Reason A; Reason B")
-    expect_equal(result$conc$data$PKSUM1F[1], "Y")
+    expect_equal(result$conc$data$PKSUMXF[1], "Y")
   })
 
   it("defaults exclude_nca to TRUE for backward compatibility", {
@@ -1010,7 +1026,7 @@ describe("add_exclusion_reasons", {
     expect_equal(result$conc$data[[excl_col]][5], "Legacy")
 
     # No TLG exclusion (exclude_tlg not set)
-    expect_equal(result$conc$data$PKSUM1F[5], "")
+    expect_equal(result$conc$data$PKSUMXF[5], "")
   })
 })
 
