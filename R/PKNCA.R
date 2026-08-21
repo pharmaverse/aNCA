@@ -169,7 +169,11 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
   df_conc$is.excluded.hl <- FALSE
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- ""
-  df_conc$exclude_half.life <- FALSE
+  # NA (not FALSE) marks "no half-life exclusion yet". This mirrors how
+  # include_half.life is left NA until a point is selected and prevents PKNCA's
+  # "cannot both include and exclude half-life points" check from firing when
+  # only inclusions are set (an all-FALSE column counts as "in use").
+  df_conc$exclude_half.life <- NA
 
   # Create PKNCA conc object
 
@@ -477,6 +481,9 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     add = TRUE
   )
 
+  # Resolve per-profile include/exclude half-life conflicts before pk.nca()
+  pknca_data <- resolve_hl_include_exclude_conflicts(pknca_data)
+
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
@@ -502,7 +509,11 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
-    group_by(across(-c(intersect(names(.), c("PPSTRES", "PPORRES", "exclude"))))) %>%
+    group_by(across(-c(intersect(names(.), c(
+      "PPSTRES", "PPORRES", "exclude",
+      "start_dose", "end_dose",
+      "PPANMETH"
+    ))))) %>%
     slice_tail(n = 1) %>%
     ungroup()
 
@@ -859,7 +870,6 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @keywords internal
 #' @noRd
 check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_reason = TRUE) {
-
   if (check_exclusion_has_reason) {
     excl_hl_col <- processed_pknca_data$conc$columns$exclude_half.life
 
@@ -869,7 +879,7 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
       time_col <- processed_pknca_data$conc$columns$time
 
       has_no_reason <- (nchar(data_conc[["REASON"]]) == 0) | is.na(data_conc[["REASON"]])
-      has_hl_excl <- data_conc[[excl_hl_col]]
+      has_hl_excl <- data_conc[[excl_hl_col]] %in% TRUE
       missing_reasons <- has_hl_excl & has_no_reason
 
       if (any(missing_reasons)) {

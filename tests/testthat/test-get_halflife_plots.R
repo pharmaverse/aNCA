@@ -84,8 +84,8 @@ describe("get_halflife_plot", {
 
   it("renders markers, colors and shapes with no exclusion/inclusion", {
     pknca_no_excl_incl <- base_pknca
-    pknca_no_excl_incl$conc$data$exclude_half.life <- FALSE
-    pknca_no_excl_incl$conc$data$include_half.life <- FALSE
+    pknca_no_excl_incl$conc$data$exclude_half.life <- NA
+    pknca_no_excl_incl$conc$data$include_half.life <- NA
     plots <- withCallingHandlers(
       get_halflife_plots(pknca_no_excl_incl)[["plots"]],
       # Ignore the warning associated with the expected missing records
@@ -138,7 +138,7 @@ describe("get_halflife_plot", {
   it("renders markers, colors and shapes with inclusion of lambda.z points", {
     pknca_incl <- base_pknca
     pknca_incl$intervals <- pknca_incl$intervals[3, ]
-    pknca_incl$conc$data$exclude_half.life <- FALSE
+    pknca_incl$conc$data$exclude_half.life <- NA
     pknca_incl$conc$data$include_half.life <- NA
     pknca_incl_with_incl <- pknca_incl
     pknca_incl_with_incl$conc$data <- pknca_incl$conc$data %>%
