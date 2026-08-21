@@ -81,6 +81,183 @@ describe("g_lineplot: structure and arguments", {
     expect_s3_class(p$facet, "FacetWrap")
   })
 
+  it("can lock y-axis scale across facets while keeping x free", {
+    p_free <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      facet_by = "USUBJID"
+    )
+    p_locked <- g_lineplot(
+      data = ind_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      color_by = "USUBJID",
+      facet_by = "USUBJID",
+      lock_y_axis = TRUE
+    )
+
+    expect_true(p_free$facet$params$free$x)
+    expect_true(p_free$facet$params$free$y)
+    expect_true(p_locked$facet$params$free$x)
+    expect_false(p_locked$facet$params$free$y)
+  })
+
+  it("converts compatible units mixed within a single facet (no warning)", {
+    # One panel (Subject1) pools ng/mL and ug/mL - compatible, so it converges
+    # onto the panel's most frequent unit without any notification or error.
+    within_data <- ind_data %>%
+      filter(USUBJID == "Subject1", AVAL > 0) %>%
+      mutate(AVALU = ifelse(NFRLT <= 1, "ug/mL", "ng/mL"))
+
+    expect_no_warning(
+      p <- g_lineplot(
+        data = within_data,
+        x_var = "NFRLT",
+        y_var = "AVAL",
+        y_unit = "AVALU",
+        color_by = "USUBJID",
+        facet_by = "USUBJID"
+      )
+    )
+    # All rows converge to ng/mL (the majority unit); no "Error" plot.
+    expect_true(all(p$data$AVALU == "ng/mL"))
+    expect_false(identical(p$labels$title, "Error"))
+    # The originally-ug/mL rows (NFRLT <= 1) are scaled by 1000.
+    ug_in <- within_data$AVAL[within_data$NFRLT <= 1]
+    ug_out <- p$data$AVAL[p$data$NFRLT <= 1]
+    expect_equal(sort(ug_out), sort(ug_in * 1000))
+  })
+
+  it("notifies and shows units per facet for incompatible within-panel units", {
+    # A single panel mixing mass (ng/mL) and molar (nmol/L) cannot converge.
+    # PARAM co-varies with the unit, so it should be suggested as a facet var.
+    incompat <- ind_data %>%
+      filter(USUBJID == "Subject1", AVAL > 0) %>%
+      mutate(
+        PARAM = ifelse(NFRLT <= 1, "Analyte1", "Analyte2"),
+        AVALU = ifelse(NFRLT <= 1, "nmol/L", "ng/mL")
+      )
+
+    expect_warning(
+      p <- g_lineplot(
+        data = incompat,
+        x_var = "NFRLT",
+        y_var = "AVAL",
+        y_unit = "AVALU",
+        color_by = "USUBJID",
+        facet_by = "USUBJID"
+      ),
+      "PARAM"
+    )
+    # No hard error; the panel strip lists both units comma-separated.
+    expect_false(identical(p$labels$title, "Error"))
+    lbl <- unique(p$data$facet_label)
+    expect_true(any(grepl("ng/mL, nmol/L", lbl)))
+  })
+
+  it("converts convertible facet units to a shared target when locked", {
+    # Two facets, equal row counts; target resolves to ng/mL (alphabetical tie-break)
+    conv_data <- ind_data %>%
+      filter(AVAL > 0) %>%
+      mutate(AVALU = ifelse(USUBJID == "Subject2", "ug/mL", "ng/mL"))
+
+    p <- g_lineplot(
+      data = conv_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      y_unit = "AVALU",
+      color_by = "USUBJID",
+      facet_by = "USUBJID",
+      lock_y_axis = TRUE
+    )
+
+    # y-axis label uses the single shared target unit, not a collapsed list
+    expect_equal(p$labels$y, "AVAL [ng/mL]")
+    expect_false(grepl("ug/mL", p$labels$y))
+    expect_false(p$facet$params$free$y)
+
+    # Subject2 values scaled by 1000 (ug/mL -> ng/mL); all rows now ng/mL
+    expect_true(all(p$data$AVALU == "ng/mL"))
+    s2_in <- conv_data$AVAL[conv_data$USUBJID == "Subject2"]
+    s2_out <- p$data$AVAL[p$data$USUBJID == "Subject2"]
+    expect_equal(sort(s2_out), sort(s2_in * 1000))
+  })
+
+  it("does not convert when lock_y_axis is FALSE", {
+    conv_data <- ind_data %>%
+      filter(AVAL > 0) %>%
+      mutate(AVALU = ifelse(USUBJID == "Subject2", "ug/mL", "ng/mL"))
+
+    p <- g_lineplot(
+      data = conv_data,
+      x_var = "NFRLT",
+      y_var = "AVAL",
+      y_unit = "AVALU",
+      color_by = "USUBJID",
+      facet_by = "USUBJID",
+      lock_y_axis = FALSE
+    )
+
+    s2_out <- p$data$AVAL[p$data$USUBJID == "Subject2"]
+    s2_in <- conv_data$AVAL[conv_data$USUBJID == "Subject2"]
+    expect_equal(sort(s2_out), sort(s2_in))
+  })
+
+  it("scales the SD/CI family with y when converting units", {
+    fam_data <- mean_data %>%
+      filter(Mean > 0) %>%
+      mutate(
+        facet_grp = rep(c("F1", "F2"), length.out = n()),
+        AVALU = ifelse(facet_grp == "F2", "ug/mL", "ng/mL")
+      )
+
+    p <- g_lineplot(
+      data = fam_data,
+      x_var = "NFRLT",
+      y_var = "Mean",
+      y_unit = "AVALU",
+      color_by = "color_var",
+      facet_by = "facet_grp",
+      lock_y_axis = TRUE
+    )
+
+    in_f2 <- fam_data %>% filter(facet_grp == "F2")
+    out_f2 <- p$data %>% filter(facet_grp == "F2")
+    # ug/mL -> ng/mL multiplies every y-family column by 1000
+    expect_equal(sort(out_f2$Mean), sort(in_f2$Mean * 1000))
+    expect_equal(sort(out_f2$SD_min), sort(in_f2$SD_min * 1000))
+    expect_equal(sort(out_f2$CI_upper), sort(in_f2$CI_upper * 1000))
+  })
+
+  it("annotates facet strip with unit when conversion is impossible", {
+    # nmol/L is not convertible to a mass/volume unit without molecular weight
+    mixed_data <- ind_data %>%
+      filter(AVAL > 0) %>%
+      mutate(AVALU = ifelse(USUBJID == "Subject2", "nmol/L", "ng/mL"))
+
+    expect_warning(
+      p <- g_lineplot(
+        data = mixed_data,
+        x_var = "NFRLT",
+        y_var = "AVAL",
+        y_unit = "AVALU",
+        color_by = "USUBJID",
+        facet_by = "USUBJID",
+        lock_y_axis = TRUE
+      ),
+      "could not be aligned"
+    )
+
+    expect_true("facet_label" %in% names(p$data))
+    non_conv_label <- unique(p$data$facet_label[p$data$USUBJID == "Subject2"])
+    expect_true(any(grepl("\\[nmol/L\\]", non_conv_label)))
+    # Convertible facet keeps the target unit and is not annotated
+    conv_label <- unique(p$data$facet_label[p$data$USUBJID == "Subject1"])
+    expect_false(any(grepl("\\[", conv_label)))
+  })
+
   it("applies log scale", {
     p <- g_lineplot(
       data = ind_data %>% filter(AVAL > 0), # Remove non-positive for log test

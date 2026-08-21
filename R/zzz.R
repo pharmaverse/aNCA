@@ -2,8 +2,10 @@
   utils::globalVariables(c(
     ".",
     ".dose_time",
+    ".facet_key",
     ".facet_label_values",
     ".facet_n",
+    ".facet_unit",
     ".pp_excl",
     ".pp_excl_reason",
     ".ROWID",
