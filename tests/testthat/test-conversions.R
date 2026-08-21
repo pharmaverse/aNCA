@@ -402,3 +402,58 @@ describe("apply_unit_defaults", {
     expect_equal(nrow(result$failed), 0)
   })
 })
+
+describe("changed_units", {
+  base_units <- data.frame(
+    PPTESTCD = c("CMAX", "AUCLST", "VZFO", "TMAX"),
+    PPORRESU = c("ng/mL", "h*ng/mL", "mL", "h"),
+    PPSTRESU = c("ng/mL", "h*ng/mL", "mL", "h"),
+    conversion_factor = c(1, 1, 1, 1),
+    stringsAsFactors = FALSE
+  )
+
+  it("returns only rows where PPSTRESU differs from PPORRESU", {
+    units <- base_units
+    units$PPSTRESU[units$PPTESTCD == "CMAX"] <- "ug/mL"
+    units$PPSTRESU[units$PPTESTCD == "VZFO"] <- "L"
+
+    result <- changed_units(units)
+
+    expect_equal(sort(result$PPTESTCD), c("CMAX", "VZFO"))
+    expect_true(all(result$PPSTRESU != result$PPORRESU))
+  })
+
+  it("captures automatic volume simplification (mg*L/mL -> mg)", {
+    units <- base_units
+    units$PPORRESU[units$PPTESTCD == "VZFO"] <- "mg*L/mL"
+    units$PPSTRESU[units$PPTESTCD == "VZFO"] <- "mg"
+
+    result <- changed_units(units)
+
+    expect_equal(result$PPTESTCD, "VZFO")
+    expect_equal(result$PPSTRESU, "mg")
+  })
+
+  it("returns zero rows when nothing changed", {
+    result <- changed_units(base_units)
+    expect_equal(nrow(result), 0)
+    expect_equal(names(result), names(base_units))
+  })
+
+  it("excludes rows where either unit is NA", {
+    units <- base_units
+    units$PPSTRESU[units$PPTESTCD == "CMAX"] <- NA_character_
+    units$PPORRESU[units$PPTESTCD == "AUCLST"] <- NA_character_
+    units$PPSTRESU[units$PPTESTCD == "VZFO"] <- "L"
+
+    result <- changed_units(units)
+
+    expect_equal(result$PPTESTCD, "VZFO")
+  })
+
+  it("returns the input unchanged when it is NULL or empty", {
+    expect_null(changed_units(NULL))
+    empty <- base_units[0, ]
+    expect_equal(nrow(changed_units(empty)), 0)
+  })
+})
