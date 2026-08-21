@@ -100,10 +100,6 @@ g_lineplot <- function(data,
     linetype_by = linetype_by,
     y_family = y_family
   )
-  if (!is.null(unit_res$error)) {
-    warning(unit_res$error)
-    return(error_plot(unit_res$error))
-  }
   if (!is.null(unit_res$warning)) {
     warning(unit_res$warning)
   }
@@ -265,71 +261,136 @@ g_lineplot <- function(data,
 
 #' Resolve y-axis units across facets
 #'
-#' Handles unit alignment for faceted plots:
-#' * A facet containing more than one y-unit is a data-integrity error and
-#'   short-circuits with an `error` message (rendered as a plot error).
-#' * When `lock_y_axis` is `TRUE` and facets span several units, values are
-#'   converted to a shared target unit where possible. Facets whose unit cannot
-#'   be converted keep their values and are flagged in `annotate_units` so their
-#'   strip label can carry the unit.
+#' Handles unit alignment for faceted plots in two stages:
+#' * Within each panel: a panel may pool several units when the analyte/matrix
+#'   (`PARAM` x `PCSPEC`) is not part of the facet key. Compatible units are
+#'   converted to the panel's most frequent unit. Panels still mixing units
+#'   (incompatible dimensions) keep their values, show the units comma-separated
+#'   in the strip, and drive a notification suggesting which grouping columns to
+#'   add to `facet by`.
+#' * Across panels: when `lock_y_axis` is `TRUE` and facets span several units,
+#'   values are converted to a shared target unit where possible; facets whose
+#'   unit cannot be converted are flagged so their strip can carry the unit.
 #'
-#' Skipped entirely when there is no y-unit column, no faceting, dose-normalised
-#' "both" mode is active (`linetype_by` set, units mixed by design), or only a
-#' single unit is present.
+#' Skipped entirely when there is no y-unit column, no faceting, or dose-
+#' normalised "both" mode is active (`linetype_by` set, units mixed by design).
 #'
 #' @returns A list with `data` (possibly converted), `target` (shared unit or
-#'   `NULL`), `annotate_units` (named unit vector per non-convertible facet),
-#'   `warning`, and `error`.
+#'   `NULL`), `annotate_units` (named unit string per affected facet), and
+#'   `warning` (mismatch notification or `NULL`).
 #' @noRd
 .resolve_facet_units <- function(data, y_var, y_unit, facet_by, lock_y_axis,
                                  linetype_by, y_family = character(0)) {
   empty <- list(
     data = data, target = NULL, annotate_units = character(0),
-    warning = NULL, error = NULL
+    warning = NULL
   )
   no_facets <- is.null(facet_by) || length(facet_by) == 0
   if (is.null(y_unit) || !y_unit %in% names(data) || no_facets) {
     return(empty)
   }
-
-  facet_key <- interaction(data[facet_by], drop = TRUE)
-  units_by_facet <- tapply(
-    as.character(data[[y_unit]]), facet_key,
-    function(u) unique(u[!is.na(u)])
-  )
-
-  # Within-facet integrity check: a single panel must carry a single unit.
-  multi <- Filter(function(u) length(u) > 1, units_by_facet)
-  if (length(multi) > 0) {
-    bad <- names(multi)[1]
-    return(modifyList(empty, list(
-      error = paste0(
-        "Facet '", bad, "' contains multiple units: ",
-        paste(multi[[bad]], collapse = ", ")
-      )
-    )))
-  }
-
   # Dose-normalised "both" mode mixes units by design; leave untouched.
-  all_units <- unique(as.character(data[[y_unit]]))
-  all_units <- all_units[!is.na(all_units)]
-  if (!is.null(linetype_by) || length(all_units) <= 1 || !isTRUE(lock_y_axis)) {
+  if (!is.null(linetype_by)) {
     return(empty)
   }
 
-  # Target = most frequent unit (ties -> first alphabetically for determinism).
+  y_cols <- unique(c(y_var, y_family))
+
+  # A single panel may legitimately pool several units when the analyte/matrix
+  # (PARAM x PCSPEC) is not part of the facet key. Where those units are
+  # compatible we converge each panel onto its own most-frequent unit; where
+  # they are not, we surface them per facet (comma-separated) and warn.
+  panel_res <- .converge_panel_units(data, y_var, y_unit, facet_by, y_cols)
+  data <- panel_res$data
+  panel_annotate <- panel_res$annotate_units
+  incompatible_panels <- panel_res$incompatible
+
+  # Across-facet alignment: only when locking a shared y-axis is requested.
+  all_units <- unique(as.character(data[[y_unit]]))
+  all_units <- all_units[!is.na(all_units)]
+  target <- NULL
+  across_annotate <- character(0)
+  non_convertible <- character(0)
+  if (isTRUE(lock_y_axis) && length(all_units) > 1) {
+    align <- .align_units_across_facets(data, y_unit, all_units, y_cols, facet_by)
+    data <- align$data
+    target <- align$target
+    across_annotate <- align$annotate_units
+    non_convertible <- align$non_convertible
+  }
+
+  annotate_units <- .merge_annotations(panel_annotate, across_annotate)
+  warning_msg <- .build_unit_warning(
+    incompatible_panels = incompatible_panels,
+    non_convertible = non_convertible,
+    data = data,
+    facet_by = facet_by,
+    y_unit = y_unit
+  )
+
+  list(
+    data = data,
+    target = target,
+    annotate_units = annotate_units,
+    warning = warning_msg
+  )
+}
+
+#' Converge units within each facet panel
+#'
+#' For every panel that pools more than one unit, convert compatible units to the
+#' panel's most frequent unit. Panels left with several units (incompatible
+#' dimensions) are recorded so their strip can show the units comma-separated.
+#' @noRd
+.converge_panel_units <- function(data, y_var, y_unit, facet_by, y_cols) {
+  facet_key <- as.character(interaction(data[facet_by], drop = TRUE))
+  row_unit <- as.character(data[[y_unit]])
+  annotate_units <- character(0)
+  incompatible <- character(0)
+
+  for (panel in unique(facet_key)) {
+    idx <- which(facet_key == panel)
+    units <- unique(row_unit[idx][!is.na(row_unit[idx])])
+    if (length(units) <= 1) next
+
+    counts <- table(row_unit[idx])
+    p_target <- names(sort(counts, decreasing = TRUE))
+    p_target <- sort(p_target[counts[p_target] == max(counts)])[1]
+
+    factors <- get_conversion_factor(units, p_target)
+    names(factors) <- units
+    for (u in setdiff(units[!is.na(factors)], p_target)) {
+      rows <- idx[row_unit[idx] == u]
+      for (col in y_cols) {
+        data[[col]][rows] <- data[[col]][rows] * factors[[u]]
+      }
+      data[[y_unit]][rows] <- p_target
+      row_unit[rows] <- p_target
+    }
+
+    remaining <- unique(row_unit[idx][!is.na(row_unit[idx])])
+    if (length(remaining) > 1) {
+      annotate_units[panel] <- paste(sort(remaining), collapse = ", ")
+      incompatible[panel] <- annotate_units[panel]
+    }
+  }
+
+  list(data = data, annotate_units = annotate_units, incompatible = incompatible)
+}
+
+#' Align units across facets onto a shared target when locking the y-axis
+#' @noRd
+.align_units_across_facets <- function(data, y_unit, all_units, y_cols, facet_by) {
   counts <- table(as.character(data[[y_unit]]))
   target <- names(sort(counts, decreasing = TRUE))
   target <- sort(target[counts[target] == max(counts)])[1]
 
   factors <- get_conversion_factor(all_units, target)
   names(factors) <- all_units
-  convertible <- all_units[!is.na(factors)]
   non_convertible <- all_units[is.na(factors)]
 
-  y_cols <- unique(c(y_var, y_family))
   row_unit <- as.character(data[[y_unit]])
-  for (u in setdiff(convertible, target)) {
+  for (u in setdiff(all_units[!is.na(factors)], target)) {
     rows <- which(row_unit == u)
     if (length(rows) == 0) next
     for (col in y_cols) {
@@ -339,28 +400,104 @@ g_lineplot <- function(data,
   }
 
   annotate_units <- character(0)
-  warning_msg <- NULL
   if (length(non_convertible) > 0) {
-    keep <- names(units_by_facet)[
-      vapply(units_by_facet, function(u) any(u %in% non_convertible), logical(1))
-    ]
-    facet_units <- vapply(
-      units_by_facet[keep], function(u) u[u %in% non_convertible][1], character(1)
-    )
-    annotate_units <- facet_units
-    warning_msg <- paste0(
-      "Y-axis units not aligned for all facets; incompatible units shown per ",
-      "facet: ", paste(sort(unique(non_convertible)), collapse = ", ")
-    )
+    facet_key <- as.character(interaction(data[facet_by], drop = TRUE))
+    unit_now <- as.character(data[[y_unit]])
+    for (panel in unique(facet_key)) {
+      pu <- unique(unit_now[facet_key == panel])
+      hit <- pu[pu %in% non_convertible]
+      if (length(hit) > 0) annotate_units[panel] <- hit[1]
+    }
   }
 
   list(
-    data = data,
-    target = target,
-    annotate_units = annotate_units,
-    warning = warning_msg,
-    error = NULL
+    data = data, target = target,
+    annotate_units = annotate_units, non_convertible = non_convertible
   )
+}
+
+#' Merge per-panel unit annotations, panel-level taking precedence
+#' @noRd
+.merge_annotations <- function(panel_annotate, across_annotate) {
+  merged <- across_annotate
+  for (panel in names(panel_annotate)) {
+    merged[panel] <- panel_annotate[panel]
+  }
+  merged
+}
+
+#' Suggest the grouping columns that would split mixed-unit panels
+#'
+#' Given the panels that still mix units, find the columns (beyond the current
+#' facet key) whose values vary inside those panels. Splitting on them would
+#' separate the units. Returns a character vector of column names.
+#' @noRd
+.suggest_facet_cols <- function(data, facet_by, y_unit, mixed_panels,
+                                candidates = c("PARAM", "PCSPEC")) {
+  candidates <- intersect(candidates, names(data))
+  candidates <- setdiff(candidates, facet_by)
+  if (length(candidates) == 0 || length(mixed_panels) == 0) {
+    return(character(0))
+  }
+  facet_key <- as.character(interaction(data[facet_by], drop = TRUE))
+  unit_now <- as.character(data[[y_unit]])
+
+  useful <- character(0)
+  for (col in candidates) {
+    helps <- FALSE
+    for (panel in mixed_panels) {
+      idx <- which(facet_key == panel)
+      panel_units <- unique(unit_now[idx][!is.na(unit_now[idx])])
+      if (length(panel_units) <= 1) next
+      # Splitting by `col` helps if at least one of its values maps to a
+      # strict subset of the panel's units (i.e. it reduces heterogeneity).
+      units_per_value <- tapply(
+        unit_now[idx], as.character(data[[col]][idx]),
+        function(u) length(unique(u[!is.na(u)]))
+      )
+      if (any(units_per_value < length(panel_units))) {
+        helps <- TRUE
+        break
+      }
+    }
+    if (helps) useful <- c(useful, col)
+  }
+  useful
+}
+
+#' Build the unit-mismatch warning message
+#'
+#' Combines incompatible within-panel units and non-convertible across-facet
+#' units into a single message, with a dynamic suggestion of which grouping
+#' columns to add to `facet by` to separate them.
+#' @noRd
+.build_unit_warning <- function(incompatible_panels, non_convertible,
+                                data, facet_by, y_unit) {
+  mixed_panels <- names(incompatible_panels)
+  units_seen <- unique(c(
+    unlist(strsplit(unname(incompatible_panels), ", ")),
+    non_convertible
+  ))
+  units_seen <- sort(units_seen[nzchar(units_seen)])
+  if (length(mixed_panels) == 0 && length(non_convertible) == 0) {
+    return(NULL)
+  }
+
+  msg <- paste0(
+    "Y-axis units could not be aligned: incompatible units shown per facet (",
+    paste(units_seen, collapse = ", "), ")."
+  )
+
+  suggest <- .suggest_facet_cols(data, facet_by, y_unit, mixed_panels)
+  if (length(suggest) > 0) {
+    msg <- paste0(
+      msg, " Consider adding ", paste(suggest, collapse = " and "),
+      " to 'facet by' to separate them."
+    )
+  } else if (length(mixed_panels) > 0) {
+    msg <- paste0(msg, " Consider adding more variables to 'facet by'.")
+  }
+  msg
 }
 
 #' Build tooltip text column on data

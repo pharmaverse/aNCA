@@ -104,24 +104,57 @@ describe("g_lineplot: structure and arguments", {
     expect_false(p_locked$facet$params$free$y)
   })
 
-  it("errors when a single facet contains more than one unit", {
-    bad_data <- ind_data %>%
-      filter(USUBJID == "Subject1") %>%
-      mutate(AVALU = ifelse(NFRLT <= 2, "ng/mL", "ug/mL"))
+  it("converts compatible units mixed within a single facet (no warning)", {
+    # One panel (Subject1) pools ng/mL and ug/mL - compatible, so it converges
+    # onto the panel's most frequent unit without any notification or error.
+    within_data <- ind_data %>%
+      filter(USUBJID == "Subject1", AVAL > 0) %>%
+      mutate(AVALU = ifelse(NFRLT <= 1, "ug/mL", "ng/mL"))
 
-    expect_warning(
+    expect_no_warning(
       p <- g_lineplot(
-        data = bad_data,
+        data = within_data,
         x_var = "NFRLT",
         y_var = "AVAL",
         y_unit = "AVALU",
         color_by = "USUBJID",
-        facet_by = "USUBJID",
-        lock_y_axis = TRUE
-      ),
-      "multiple units"
+        facet_by = "USUBJID"
+      )
     )
-    expect_equal(p$labels$title, "Error")
+    # All rows converge to ng/mL (the majority unit); no "Error" plot.
+    expect_true(all(p$data$AVALU == "ng/mL"))
+    expect_false(identical(p$labels$title, "Error"))
+    # The originally-ug/mL rows (NFRLT <= 1) are scaled by 1000.
+    ug_in <- within_data$AVAL[within_data$NFRLT <= 1]
+    ug_out <- p$data$AVAL[p$data$NFRLT <= 1]
+    expect_equal(sort(ug_out), sort(ug_in * 1000))
+  })
+
+  it("notifies and shows units per facet for incompatible within-panel units", {
+    # A single panel mixing mass (ng/mL) and molar (nmol/L) cannot converge.
+    # PARAM co-varies with the unit, so it should be suggested as a facet var.
+    incompat <- ind_data %>%
+      filter(USUBJID == "Subject1", AVAL > 0) %>%
+      mutate(
+        PARAM = ifelse(NFRLT <= 1, "Analyte1", "Analyte2"),
+        AVALU = ifelse(NFRLT <= 1, "nmol/L", "ng/mL")
+      )
+
+    expect_warning(
+      p <- g_lineplot(
+        data = incompat,
+        x_var = "NFRLT",
+        y_var = "AVAL",
+        y_unit = "AVALU",
+        color_by = "USUBJID",
+        facet_by = "USUBJID"
+      ),
+      "PARAM"
+    )
+    # No hard error; the panel strip lists both units comma-separated.
+    expect_false(identical(p$labels$title, "Error"))
+    lbl <- unique(p$data$facet_label)
+    expect_true(any(grepl("ng/mL, nmol/L", lbl)))
   })
 
   it("converts convertible facet units to a shared target when locked", {
@@ -214,7 +247,7 @@ describe("g_lineplot: structure and arguments", {
         facet_by = "USUBJID",
         lock_y_axis = TRUE
       ),
-      "not aligned"
+      "could not be aligned"
     )
 
     expect_true("facet_label" %in% names(p$data))
