@@ -84,7 +84,8 @@ describe("export_cdisc", {
     result <- export_cdisc(test_pknca_res)
     adpp <- result$adpp
     expect_s3_class(adpp, "data.frame")
-    expect_true(all(names(adpp) %in% CDISC_COLS$ADPP$Variable))
+    allowed_cols <- c(CDISC_COLS$ADPP$Variable, "DOSEA", "DOSEU")
+    expect_true(all(names(adpp) %in% allowed_cols))
     expect_equal(nrow(adpp), 12)
     expect_equal(
       unname(formatters::var_labels(adpp)),
@@ -1005,6 +1006,15 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
     pp <- result$pp
     crit_cols <- grep("^CRIT|PPSUMFL|PPSUMRSN", names(pp), value = TRUE)
     expect_length(crit_cols, 0)
+  })
+
+  it("includes ATPTREF and ROUTE in ADPP when present in source data (#1276)", {
+    result <- export_cdisc(test_pknca_res)
+    expect_true("ATPTREF" %in% names(result$adpp))
+    expect_true("ROUTE" %in% names(result$adpp))
+    # Verify values are carried through, not just the column names
+    expect_true(any(!is.na(result$adpp$ATPTREF)))
+    expect_true(any(!is.na(result$adpp$ROUTE)))
   })
 })
 

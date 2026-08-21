@@ -1,0 +1,274 @@
+# Shared fixture: minimal ADNCA-like data frame
+pkct01_data <- data.frame(
+  PARAM   = rep(c("Drug A", "Drug B"), each = 12),
+  PCSPEC  = rep("PLASMA", 24),
+  TRT01A  = rep(rep(c("10mg", "50mg"), each = 6), 2),
+  DOSEA   = rep(rep(c(10, 50), each = 6), 2),
+  ATPTREF = rep("Day 1", 24),
+  NFRLT   = rep(rep(c(0, 1, 2), each = 2), 4),
+  NRRLT   = rep(rep(c(0, 1, 2), each = 2), 4),
+  AVAL    = c(0, 0, 5, 6, 3, 4,   # Drug A / 10mg
+              0, 0, 10, 11, 7, 8,  # Drug A / 50mg
+              0, 0, 2, 3, 1, 2,    # Drug B / 10mg
+              0, 0, 4, 5, 3, 3),   # Drug B / 50mg
+  AVALC   = c(rep("BLQ", 2), "5", "6", "3", "4",
+              rep("BLQ", 2), "10", "11", "7", "8",
+              rep("BLQ", 2), "2", "3", "1", "2",
+              rep("BLQ", 2), "4", "5", "3", "3"),
+  stringsAsFactors = FALSE
+)
+
+describe("t_pkct01", {
+  it("returns a named list with one entry per PARAM/PCSPEC combination", {
+    result <- t_pkct01(pkct01_data)
+    expect_type(result, "list")
+    expect_equal(length(result), 2)
+    expect_true(all(grepl("PLASMA", names(result))))
+  })
+
+  it("each element is a data frame", {
+    result <- t_pkct01(pkct01_data)
+    purrr::walk(result, ~ expect_s3_class(.x, "data.frame"))
+  })
+
+  it("output contains expected statistic columns", {
+    result <- t_pkct01(pkct01_data)[[1]]
+    expected_cols <- c("TRT01A", "ATPTREF", "NFRLT",
+                       "n", "n_blq", "Mean", "SD", "CV_pct",
+                       "Median", "GeoMean", "Min", "Max")
+    expect_true(all(expected_cols %in% names(result)))
+  })
+
+  it("BLQ rows produce NA for numeric stats and non-zero n_blq", {
+    result <- t_pkct01(pkct01_data)[[1]]
+    blq_rows <- result[result$NFRLT == 0, ]
+    expect_true(all(is.na(blq_rows$Mean)))
+    expect_true(all(blq_rows$n_blq > 0))
+  })
+
+  it("non-BLQ rows have correct n and numeric stats", {
+    result <- t_pkct01(pkct01_data)[[1]]
+    row_t1 <- result[result$TRT01A == "10mg" & result$NFRLT == 1, ]
+    expect_equal(row_t1$n, 2)
+    expect_equal(row_t1$n_blq, 0)
+    expect_equal(row_t1$Mean, round(mean(c(5, 6)), 3))
+    expect_equal(row_t1$Min, 5)
+    expect_equal(row_t1$Max, 6)
+  })
+
+  it("stops with informative error when the value column is missing", {
+    bad <- pkct01_data[, setdiff(names(pkct01_data), "AVAL")]
+    expect_error(t_pkct01(bad), "missing required column")
+  })
+
+  it("returns single list entry when list_vars not present in data", {
+    data_no_pcspec <- pkct01_data[, setdiff(names(pkct01_data), "PCSPEC")]
+    result <- t_pkct01(data_no_pcspec, list_vars = c("PARAM", "PCSPEC"))
+    expect_equal(length(result), 2)  # PARAM still present
+  })
+
+  it("falls back to AVAL==0 for BLQ detection when blq_var column is absent", {
+    data_no_avalc <- pkct01_data[, setdiff(names(pkct01_data), "AVALC")]
+    result <- t_pkct01(data_no_avalc)[[1]]
+    blq_rows <- result[result$NFRLT == 0, ]
+    # AVAL==0 rows should still be counted as BLQ and excluded from stats
+    expect_true(all(is.na(blq_rows$Mean)))
+    expect_true(all(blq_rows$n_blq > 0))
+  })
+
+  it("AVAL==0 fallback: n_blq matches count of zero-AVAL rows per group", {
+    data_no_avalc <- pkct01_data[, setdiff(names(pkct01_data), "AVALC")]
+    result <- t_pkct01(data_no_avalc)[[1]]
+    row <- result[result$TRT01A == "10mg" & result$NFRLT == 0, ]
+    # 10mg arm at NFRLT=0 has 2 rows with AVAL=0
+    expect_equal(row$n_blq, 2L)
+    expect_equal(row$n, 2L)
+  })
+
+  it("orders rows by stratum then by numeric (not lexical) time", {
+    # Two arms; NFRLT includes 10 to catch a lexical sort that would place
+    # "10" before "2".  Input order deliberately interleaves arms/times.
+    d <- data.frame(
+      PARAM   = "Drug A",
+      PCSPEC  = "PLASMA",
+      TRT01A  = rep(c("B_arm", "A_arm"), each = 4),
+      ATPTREF = "Day 1",
+      NFRLT   = rep(c(2, 10, 2, 10), 2),
+      AVAL    = 1:8,
+      AVALC   = as.character(1:8),
+      stringsAsFactors = FALSE
+    )
+    result <- t_pkct01(d)[[1]]
+    # Each arm's rows are contiguous: an arm value never reappears after a switch
+    expect_equal(anyDuplicated(rle(as.character(result$TRT01A))$values), 0L)
+    # Within each arm, time is ascending and numeric (2 before 10)
+    purrr::walk(split(result$NFRLT, result$TRT01A), ~ expect_false(is.unsorted(.x)))
+  })
+
+  it("orders treatment arms and visits naturally (10 mg before 100, DOSE 2 before DOSE 10)", {
+    d <- data.frame(
+      PARAM   = "Drug A",
+      PCSPEC  = "PLASMA",
+      TRT01A  = rep(c("100 mg", "10 mg"), each = 4),
+      ATPTREF = rep(c("DOSE 10", "DOSE 2"), times = 4),
+      NFRLT   = 1,
+      AVAL    = 1:8,
+      AVALC   = as.character(1:8),
+      stringsAsFactors = FALSE
+    )
+    result <- t_pkct01(d)[[1]]
+    # Arms natural-sorted: every "10 mg" row precedes every "100 mg" row
+    expect_true(max(which(result$TRT01A == "10 mg")) <
+                  min(which(result$TRT01A == "100 mg")))
+    # Within an arm, "DOSE 2" precedes "DOSE 10"
+    arm <- result[result$TRT01A == "10 mg", ]
+    expect_equal(arm$ATPTREF, c("DOSE 2", "DOSE 10"))
+  })
+
+  it("attaches readable labels to statistic columns", {
+    result <- t_pkct01(pkct01_data)[[1]]
+    expect_equal(attr(result$GeoMean, "label"), "Geometric Mean")
+    expect_equal(attr(result$GeoCV_pct, "label"), "Geometric CV%")
+    expect_equal(attr(result$CV_pct, "label"), "CV%")
+    expect_equal(attr(result$n_blq, "label"), "Number BLQ")
+  })
+})
+
+describe("t_pkct01: multi-variable stratification and time filtering (#1356)", {
+  it("time_filter keeps only the requested timepoints", {
+    result <- t_pkct01(pkct01_data, time_filter = c(0, 2))[[1]]
+    expect_setequal(unique(result$NFRLT), c(0, 2))
+  })
+
+  it("accepts a vector strat_var (adds each as a row column)", {
+    # Split only by PCSPEC so PARAM is free to stratify the rows.
+    result <- t_pkct01(
+      pkct01_data, list_vars = "PCSPEC", strat_var = c("TRT01A", "PARAM")
+    )[[1]]
+    expect_true(all(c("TRT01A", "PARAM") %in% names(result)))
+    expect_setequal(unique(result$PARAM), c("Drug A", "Drug B"))
+  })
+
+  it("drops a strat variable that is also a table-split (list_vars) column, and warns", {
+    expect_warning(
+      result <- t_pkct01(
+        pkct01_data, list_vars = c("PARAM", "PCSPEC"),
+        strat_var = c("TRT01A", "PARAM")
+      )[[1]],
+      "also used to split tables.*PARAM"
+    )
+    # PARAM is a page split, so it must not reappear as a redundant row column.
+    expect_false("PARAM" %in% names(result))
+    expect_true("TRT01A" %in% names(result))
+  })
+
+  it("warns when a stratification variable is absent (e.g. DOSEA not in conc data)", {
+    # `pkct01_data` has no such column; mirrors DOSEA being absent from the
+    # concentration data on the "by Dose" variant.
+    expect_warning(
+      t_pkct01(pkct01_data, strat_var = c("TRT01A", "DOSEA_ABSENT", "NFRLT")),
+      "not found in the data.*DOSEA_ABSENT"
+    )
+  })
+})
+
+describe("t_pkct01_dose", {
+  it("stratifies by DOSEA instead of TRT01A", {
+    result <- t_pkct01_dose(pkct01_data)[[1]]
+    expect_true("DOSEA" %in% names(result))
+    expect_false("TRT01A" %in% names(result))
+  })
+})
+
+describe("t_pkct01_tad", {
+  it("uses NRRLT as time variable instead of NFRLT", {
+    result <- t_pkct01_tad(pkct01_data)[[1]]
+    expect_true("NRRLT" %in% names(result))
+    expect_false("NFRLT" %in% names(result))
+  })
+})
+
+describe("t_pkct01_dose_tad", {
+  it("uses DOSEA for stratification and NRRLT for time", {
+    result <- t_pkct01_dose_tad(pkct01_data)[[1]]
+    expect_true("DOSEA" %in% names(result))
+    expect_true("NRRLT" %in% names(result))
+  })
+})
+
+describe("t_pkct01: col_group_var (group comparison in columns)", {
+  # One M and one F per (arm x timepoint) replicate pair.
+  pkct01_sex <- pkct01_data
+  pkct01_sex$SEX <- rep(c("M", "F"), length.out = nrow(pkct01_sex))
+
+  it("col_group_var = NULL reproduces the flat table (regression lock)", {
+    flat <- t_pkct01(pkct01_sex)[[1]]
+    expect_equal(
+      names(flat),
+      c("TRT01A", "ATPTREF", "NFRLT", "n", "n_blq", "Mean", "SD", "CV_pct",
+        "Median", "GeoMean", "GeoCV_pct", "Min", "Max")
+    )
+    expect_null(attr(flat, "col_groups"))
+  })
+
+  it("repeats the stat block per group level, keeping n_blq", {
+    flat <- t_pkct01(pkct01_sex)[[1]]
+    g    <- t_pkct01(pkct01_sex, col_group_var = "SEX")[[1]]
+
+    # 3 key cols (strat, visit, time) + 2 levels x 10 stats.
+    expect_equal(nrow(g), nrow(flat))
+    expect_equal(ncol(g), 3L + 2L * 10L)
+
+    cg <- attr(g, "col_groups")
+    expect_equal(names(cg), c("F", "M"))
+    expect_true(all(vapply(cg, length, integer(1)) == 10L))
+    expect_true(all(unlist(cg) %in% names(g)))
+    # Block order is n, n_blq, Mean, ... -> BLQ count survives per group.
+    expect_equal(attr(g[[cg[["M"]][2]]], "label"), "Number BLQ")
+    expect_equal(attr(g[[cg[["M"]][3]]], "label"), "Mean")
+  })
+
+  it("errors when col_group_var clashes with a row or split variable", {
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "TRT01A"), "already used to define")
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "NFRLT"), "already used to define")
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "ATPTREF"), "already used to define")
+    expect_error(t_pkct01(pkct01_sex, col_group_var = "PARAM"), "already used to define")
+  })
+
+  it("flows through the dose/TAD wrappers via ...", {
+    g <- t_pkct01_dose(pkct01_sex, col_group_var = "SEX")[[1]]
+    expect_false(is.null(attr(g, "col_groups")))
+    expect_true("DOSEA" %in% names(g))
+  })
+})
+
+describe("t_pkct01: stats selection", {
+  it("stats = NULL shows every statistic (default, regression lock)", {
+    result <- t_pkct01(pkct01_data)[[1]]
+    expect_true(all(
+      c("n", "n_blq", "Mean", "SD", "CV_pct",
+        "Median", "GeoMean", "GeoCV_pct", "Min", "Max") %in% names(result)
+    ))
+  })
+
+  it("keeps only the requested statistics plus the key columns", {
+    result <- t_pkct01(pkct01_data, stats = c("n", "n_blq", "Mean"))[[1]]
+    expect_equal(names(result), c("TRT01A", "ATPTREF", "NFRLT", "n", "n_blq", "Mean"))
+  })
+
+  it("applies to the group-comparison layout, trimming each block", {
+    pkct01_sex <- pkct01_data
+    pkct01_sex$SEX <- rep(c("M", "F"), length.out = nrow(pkct01_sex))
+    g <- t_pkct01(pkct01_sex, col_group_var = "SEX", stats = c("n", "Mean"))[[1]]
+    # 3 key cols + 2 levels x 2 selected stats.
+    expect_equal(ncol(g), 3L + 2L * 2L)
+    cg <- attr(g, "col_groups")
+    expect_true(all(vapply(cg, length, integer(1)) == 2L))
+    expect_true(all(unlist(cg) %in% names(g)))
+  })
+
+  it("flows through the dose/TAD wrappers via ...", {
+    result <- t_pkct01_dose(pkct01_data, stats = c("n", "Mean"))[[1]]
+    expect_equal(names(result), c("DOSEA", "ATPTREF", "NFRLT", "n", "Mean"))
+  })
+})
