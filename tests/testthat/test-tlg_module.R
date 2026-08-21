@@ -20,69 +20,77 @@ local({
 envir = parent.env(environment()))
 
 describe("filter_tlg_excluded", {
-  it("removes rows where the named flag (PKSUM1F) is 'Y'", {
+  it("removes rows where the named flag (PKSUMXF) is 'Y'", {
     df <- data.frame(
       x = 1:5,
-      PKSUM1F = c("", "Y", "", "Y", ""),
+      PKSUMXF = c("", "Y", "", "Y", ""),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 3)
     expect_equal(result$x, c(1, 3, 5))
   })
 
   it("returns all rows when the named flag column is absent", {
     df <- data.frame(x = 1:3)
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 3)
     expect_equal(result$x, 1:3)
+  })
+
+  it("supports legacy dataset flag names", {
+    adnca <- data.frame(x = 1:2, PKSUM1F = c("Y", ""))
+    adpp <- data.frame(x = 1:2, PPSUMFL = c("", "Y"))
+
+    expect_equal(filter_tlg_excluded(adnca, "PKSUMXF")$x, 2L)
+    expect_equal(filter_tlg_excluded(adpp, "PPSUMXF")$x, 1L)
   })
 
   it("returns all rows when the named flag is all empty", {
     df <- data.frame(
       x = 1:3,
-      PKSUM1F = rep("", 3),
+      PKSUMXF = rep("", 3),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 3)
   })
 
   it("returns empty data frame when all rows are excluded", {
     df <- data.frame(
       x = 1:2,
-      PKSUM1F = c("Y", "Y"),
+      PKSUMXF = c("Y", "Y"),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 0)
   })
 
-  it("removes rows where the named flag (PPSUMFL) is 'Y' (ADPP exclusion flag)", {
+  it("removes rows where the named flag (PPSUMXF) is 'Y' (ADPP exclusion flag)", {
     df <- data.frame(
       x       = 1:4,
-      PPSUMFL = c("", "Y", "", "Y"),
+      PPSUMXF = c("", "Y", "", "Y"),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PPSUMFL")
+    result <- filter_tlg_excluded(df, "PPSUMXF")
     expect_equal(nrow(result), 2)
     expect_equal(result$x, c(1L, 3L))
   })
 
   it("applies only the named flag and ignores the other dataset's flag", {
-    # A record excluded from the ADPP summary (PPSUMFL == "Y") but not the ADNCA
-    # summary must still survive ADNCA (PKSUM1F) filtering, and vice-versa.
+    # A record excluded from the ADPP summary (PPSUMXF == "Y") but not the ADNCA
+    # summary must still survive ADNCA (PKSUMXF) filtering, and vice-versa.
     df <- data.frame(
       x       = 1:4,
-      PKSUM1F = c("Y", "",  "",  ""),
-      PPSUMFL = c("",  "Y", "",  ""),
+      PKSUMXF = c("Y", "",  "",  ""),
+      PPSUMXF = c("",  "Y", "",  ""),
       stringsAsFactors = FALSE
     )
-    # Filtering as ADNCA drops only the PKSUM1F == "Y" row; the PPSUMFL row stays.
-    adnca <- filter_tlg_excluded(df, "PKSUM1F")
+    # Filtering as ADNCA drops only the PKSUMXF == "Y" row; the PPSUMXF row stays.
+    adnca <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(adnca$x, c(2L, 3L, 4L))
-    # Filtering as ADPP drops only the PPSUMFL == "Y" row; the PKSUM1F row stays.
-    adpp <- filter_tlg_excluded(df, "PPSUMFL")
+    # Filtering as ADPP drops only the PPSUMXF == "Y" row; the PKSUMXF row stays.
+    adpp <- filter_tlg_excluded(df, "PPSUMXF")
     expect_equal(adpp$x, c(1L, 3L, 4L))
   })
 })

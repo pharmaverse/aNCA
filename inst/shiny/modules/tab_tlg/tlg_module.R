@@ -12,30 +12,39 @@
 #'
 #' Removes rows flagged for exclusion from summary tables using the flag that
 #' belongs to that dataset only:
-#' - ADNCA data: filter by `PKSUM1F` (`"Y"` == excluded).
-#' - ADPP data: filter by `PPSUMFL` (`"Y"` == excluded).
+#' - ADNCA data: filter by `PKSUMXF` (`"Y"` == excluded).
+#' - ADPP data: filter by `PPSUMXF` (`"Y"` == excluded).
 #'
 #' Only the flag named by `flag` is applied; the other dataset's flag is
 #' intentionally ignored even when both columns are present. A record may be
-#' excluded from the PK-parameter summary (`PPSUMFL == "Y"`) while still being
+#' excluded from the PK-parameter summary (`PPSUMXF == "Y"`) while still being
 #' wanted in the concentration representations, and vice-versa, so scoping each
 #' flag to its own dataset avoids dropping such records from the other TLGs.
 #'
 #' @param data A data frame (ADNCA or ADPP).
 #' @param flag Name of the exclusion-flag column to apply
-#'   (`"PKSUM1F"` for ADNCA, `"PPSUMFL"` for ADPP). Absent columns are a no-op.
+#'   (`"PKSUMXF"` for ADNCA, `"PPSUMXF"` for ADPP). Absent columns are a no-op.
 #' @return The filtered data frame.
 #' @noRd
 filter_tlg_excluded <- function(data, flag) {
-  if (flag %in% names(data)) {
-    data <- data[is.na(data[[flag]]) | data[[flag]] != "Y", , drop = FALSE]
+  legacy_flags <- c(PKSUMXF = "PKSUM1F", PPSUMXF = "PPSUMFL")
+  active_flag <- flag
+  if (!active_flag %in% names(data) && flag %in% names(legacy_flags)) {
+    active_flag <- unname(legacy_flags[[flag]])
+  }
+  if (active_flag %in% names(data)) {
+    data <- data[
+      is.na(data[[active_flag]]) | data[[active_flag]] != "Y",
+      ,
+      drop = FALSE
+    ]
   }
   data
 }
 
 #' Data-source key for a TLG module.
 #'
-#' `PKSUM1F` / `PPSUMFL == "Y"` flag rows excluded from *summary tables and mean
+#' `PKSUMXF` / `PPSUMXF == "Y"` flag rows excluded from *summary tables and mean
 #' plots* — not from individual listings.  Listings therefore consume the raw,
 #' unfiltered `"<dataset>_all"` source, while tables and graphs use the
 #' summary-filtered source keyed by dataset name.
