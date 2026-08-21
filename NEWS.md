@@ -2,6 +2,7 @@
 
 ## Bug Fixes
 
+* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
 * Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
 * The "X ticks" option on the linear and logarithmic concentration plots now takes effect. `plotly` was regenerating the axis itself, so the chosen column was ignored; the side-by-side variants were already unaffected (#1356)
 * Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
