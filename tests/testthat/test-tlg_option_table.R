@@ -113,6 +113,29 @@ describe("tlg_option_table_server: default table", {
       }
     )
   })
+
+  it("returns a zero-row table with the declared columns when default_rows is absent", {
+    # A 0x0 tibble (from binding an empty list) is rejected by reactable with
+    # "`data` must have at least one column", leaving the editor unopenable.
+    opt_def       <- make_opt_def(default_rows = NULL)
+    reset_trigger <- shiny::reactive(0)
+
+    shiny::testServer(
+      tlg_option_table_server,
+      args = list(
+        opt_def       = opt_def,
+        data          = make_data(),
+        reset_trigger = reset_trigger
+      ),
+      {
+        result <- session$getReturned()()
+        expect_s3_class(result, "tbl_df")
+        expect_equal(nrow(result), 0)
+        expect_equal(names(result), names(opt_def$cols))
+        expect_no_error(reactable::reactable(result))
+      }
+    )
+  })
 })
 
 describe("tlg_option_table_server: confirm_changes applies edits", {
