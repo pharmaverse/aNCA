@@ -202,6 +202,7 @@ macroparameters
 md
 metab
 multidose
+namespaced
 nav
 nca
 ng
@@ -231,6 +232,7 @@ pred
 px
 qmd
 rds
+reactable
 renderable
 reproducibility
 resizable

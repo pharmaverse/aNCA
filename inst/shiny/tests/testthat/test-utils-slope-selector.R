@@ -93,7 +93,38 @@ describe("check_slope_rule_overlap", {
       RANGE = "3:6"
     )
 
-    expect_null(check_slope_rule_overlap(EXISTING_FIXTURE, NEW))
+    expect_equal(nrow(check_slope_rule_overlap(EXISTING_FIXTURE, NEW)), 0)
+  })
+
+  it("drops extra columns from existing that are not in new (column normalization)", {
+    EXISTING_WITH_EXTRA <- cbind(
+      EXISTING_FIXTURE,
+      data.frame(EXTRA_COL = "should_be_dropped", stringsAsFactors = FALSE)
+    )
+    NEW_SELECTION <- data.frame(
+      TYPE = "Selection", USUBJID = 1, ATPTREF = 1,
+      PARAM = "A", PCSPEC = 1, RANGE = "1:3",
+      stringsAsFactors = FALSE
+    )
+    result <- check_slope_rule_overlap(EXISTING_WITH_EXTRA, NEW_SELECTION)
+    expect_false("EXTRA_COL" %in% names(result))
+    expect_equal(nrow(result), 2)
+  })
+
+  it("keeps only common columns when new has missing columns (e.g. no REASON)", {
+    EXISTING_WITH_REASON <- data.frame(
+      TYPE = "Exclusion", USUBJID = 1, ATPTREF = 1,
+      PARAM = "A", PCSPEC = 1, RANGE = "3:6",
+      REASON = "outlier", stringsAsFactors = FALSE
+    )
+    NEW_NO_REASON <- data.frame(
+      TYPE = "Selection", USUBJID = 1, ATPTREF = 1,
+      PARAM = "B", PCSPEC = 1, RANGE = "1:3",
+      stringsAsFactors = FALSE
+    )
+    result <- check_slope_rule_overlap(EXISTING_WITH_REASON, NEW_NO_REASON)
+    expect_false("REASON" %in% names(result))
+    expect_equal(nrow(result), 2)
   })
 
   it("should warn if more than one range for single subject, profile and rule type is detected", {
