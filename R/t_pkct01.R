@@ -72,6 +72,8 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
     stop("t_pkct01: missing required column: ", value_var)
   }
 
+  data <- filter_summary_excluded(data)
+
   if (!is.null(time_filter) && length(time_filter) > 0 && time_var %in% names(data)) {
     data <- data[as.character(data[[time_var]]) %in% as.character(time_filter), , drop = FALSE]
   }
