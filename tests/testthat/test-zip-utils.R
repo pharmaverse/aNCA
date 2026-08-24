@@ -350,9 +350,11 @@ describe(".clean_export_dir: TLG outputs", {
 # defaults were wrong in both directions for TLGs: "html" was on (hundreds of MB of widgets
 # nobody asked for) and "xlsx" was not (tables could only ever be CSV) -- see #1344.
 describe("TLG export formats", {
-  it("defaults to PNG for graphs and XLSX for tables", {
-    expect_setequal(TLG_FORMATS_DEFAULT, c("png", "xlsx"))
-    expect_true("png" %in% TLG_GRAPH_FORMATS)
+  it("defaults to PDF for graphs and XLSX for tables", {
+    # PDF is written as one multi-page document per TLG, so the default keeps a full order
+    # to a handful of files rather than one image per plot.
+    expect_setequal(TLG_FORMATS_DEFAULT, c("pdf", "xlsx"))
+    expect_true(all(c("png", "pdf") %in% TLG_GRAPH_FORMATS))
     expect_false("html" %in% TLG_FORMATS_DEFAULT)
     expect_true("xlsx" %in% TLG_TABLE_FORMATS)
   })

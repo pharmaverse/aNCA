@@ -893,4 +893,8 @@ SLIDE_NODES <- "results_slides"
 TLG_NODES   <- c("tlg_tables", "tlg_listings", "tlg_graphs")
 TLG_GRAPH_FORMATS <- c("png", "pdf", "html")
 TLG_TABLE_FORMATS <- c("csv", "xlsx")
-TLG_FORMATS_DEFAULT <- c("png", "xlsx")
+# PDF rather than PNG for graphs: it is written as one multi-page document per TLG, so a
+# per-subject output is a single file to page through instead of twenty-odd images, and it
+# is vector rather than raster.  PNG stays a click away for anyone who wants images to drop
+# into slides.
+TLG_FORMATS_DEFAULT <- c("pdf", "xlsx")
