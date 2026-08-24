@@ -65,7 +65,7 @@ general_exclusions_ui <- function(id) {
               ),
               tags$li(
                 tags$b("Summary exclusion"),
-                ": retained in ADNCA but excluded from summary statistics",
+                ": excluded from summary statistics tables and graphs (i.e. mean calculation)",
                 "and applicable plots"
               )
             ),
@@ -112,7 +112,7 @@ general_exclusions_ui <- function(id) {
         EXCL_COLOR_TLG,
         "Summary exclusion",
         paste(
-          "Keeps the record in ADNCA but excludes it from summary statistics",
+          "Excludes the concentration from summary statistics",
           "and applicable plots."
         )
       ),
