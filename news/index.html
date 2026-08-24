@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9189</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9190</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -120,6 +120,15 @@
 <li>The standalone mean, urine, dose-proportionality and box plot entries (<code>pkcg03</code> by dose, <code>pkpg01</code>/<code>pkpg02</code>/<code>pkpg03</code>/<code>pkpg04</code>/<code>pkpg06</code>) expose Title, Subtitle and Footnote inputs in the sidebar, matching the other graph entries (<a href="https://github.com/pharmaverse/aNCA/issues/1356" class="external-link">#1356</a>)</li>
 <li>Summary tables can filter which stratification values appear: a “Parameters to show” filter on the <code>pkpt03/07/08</code> tables and a “Timepoints to show” filter on the <code>pkct01</code> tables restrict the rows to the chosen <code>PARAM</code>/timepoint values (<a href="https://github.com/pharmaverse/aNCA/issues/1356" class="external-link">#1356</a>)</li>
 <li>Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the “by Dose” concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (<a href="https://github.com/pharmaverse/aNCA/issues/1356" class="external-link">#1356</a>)</li>
+</ul></div>
+<div class="section level4">
+<h4 id="tlg-order--selection-development-version">TLG Order &amp; Selection<a class="anchor" aria-label="anchor" href="#tlg-order--selection-development-version"></a></h4>
+<ul><li>Simplify the TLG Order Details table: the internal <code>Condition</code> column is hidden (it stays in <code>tlg.yaml</code> as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (<a href="https://github.com/pharmaverse/aNCA/issues/1335" class="external-link">#1335</a>)</li>
+<li>Urine TLG functions filter to urine specimens internally; when <code>PCSPEC</code>/<code>PPSPEC</code> is missing, the resulting warning is surfaced as an in-app notification instead of failing silently (<a href="https://github.com/pharmaverse/aNCA/issues/1335" class="external-link">#1335</a>)</li>
+<li>Redesign the “Add TLGs to order” picker as a catalog checklist with dataset tabs (PK Concentrations / PK Parameters), search, CSV/XLSX export, per-column select-all, and a live selection count (<a href="https://github.com/pharmaverse/aNCA/issues/1335" class="external-link">#1335</a>)</li>
+<li>In the “Add TLGs to order” picker, searching now respects the active dataset tab: matches in another dataset surface as a count on that tab’s badge instead of appearing under the current tab, so switching tabs reveals them (<a href="https://github.com/pharmaverse/aNCA/issues/1335" class="external-link">#1335</a>)</li>
+<li>In the “Add TLGs to order” picker, the toolbar <strong>Select all</strong> and <strong>Clear all</strong> now act consistently on the whole order — every output across both dataset tabs (limited to the current search when one is active) — while each column’s <strong>Select all</strong> stays scoped to that column (<a href="https://github.com/pharmaverse/aNCA/issues/1335" class="external-link">#1335</a>)</li>
+<li>Notify the user when a PK-parameter (ADPP) output is requested before NCA has been run, instead of only showing an empty placeholder (<a href="https://github.com/pharmaverse/aNCA/issues/1335" class="external-link">#1335</a>)</li>
 </ul></div>
 <div class="section level4">
 <h4 id="settings--configuration-development-version">Settings &amp; Configuration<a class="anchor" aria-label="anchor" href="#settings--configuration-development-version"></a></h4>
