@@ -778,18 +778,6 @@ describe("export_cdisc PKSUMXF derivation", {
     expect_true(all(adnca$PKSUMXF[-1] == ""))
   })
 
-  it("migrates legacy PKSUM1F values to PKSUMXF", {
-    res_with_flags <- test_pknca_res
-    n <- nrow(res_with_flags$data$conc$data)
-    res_with_flags$data$conc$data$PKSUM1F <- rep("", n)
-    res_with_flags$data$conc$data$PKSUM1F[1] <- "Y"
-
-    adnca <- export_cdisc(res_with_flags)$adnca
-
-    expect_equal(adnca$PKSUMXF[1], "Y")
-    expect_false("PKSUM1F" %in% names(adnca))
-  })
-
   it("PKSUMXF is listed in ADNCA metadata", {
     adnca_vars <- metadata_nca_variables %>%
       filter(Dataset == "ADNCA")

@@ -59,7 +59,7 @@
 * "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup
-* Summary exclusions now use dataset-specific flags (`PKSUMXF` for ADNCA and `PPSUMXF` for ADPP), with legacy flag names accepted on input. The exclusion tabs and accessible row-color tooltips now describe NCA calculation and summary effects explicitly (#1436)
+* Summary exclusions now use dataset-specific flags (`PKSUMXF` for ADNCA and `PPSUMXF` for ADPP). The exclusion tabs and accessible row-color tooltips now describe NCA calculation and summary effects explicitly (#1436)
 * Renamed "Aggregate Subject" label to "Mean across subjects" in ratio calculations for clarity; updated help text to explain matching mechanics (#1297)
 * Parameter Selection tab now contains Partial Intervals, Ratio Calculations, and Units alongside the parameter matrix. The former Settings tab is renamed to General Settings (#1239)
 * Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters) with Select All, Defaults, and Clear All buttons (#795)

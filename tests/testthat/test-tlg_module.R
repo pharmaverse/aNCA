@@ -38,14 +38,6 @@ describe("filter_tlg_excluded", {
     expect_equal(result$x, 1:3)
   })
 
-  it("supports legacy dataset flag names", {
-    adnca <- data.frame(x = 1:2, PKSUM1F = c("Y", ""))
-    adpp <- data.frame(x = 1:2, PPSUMFL = c("", "Y"))
-
-    expect_equal(filter_tlg_excluded(adnca, "PKSUMXF")$x, 2L)
-    expect_equal(filter_tlg_excluded(adpp, "PPSUMXF")$x, 1L)
-  })
-
   it("returns all rows when the named flag is all empty", {
     df <- data.frame(
       x = 1:3,

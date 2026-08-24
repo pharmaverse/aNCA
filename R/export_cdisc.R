@@ -274,8 +274,6 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
       PKSUMXF = {
         flag <- if ("PKSUMXF" %in% names(.)) {
           PKSUMXF
-        } else if ("PKSUM1F" %in% names(.)) {
-          .data[["PKSUM1F"]]
         } else {
           rep("", nrow(.))
         }

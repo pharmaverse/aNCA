@@ -27,14 +27,9 @@
 #' @return The filtered data frame.
 #' @noRd
 filter_tlg_excluded <- function(data, flag) {
-  legacy_flags <- c(PKSUMXF = "PKSUM1F", PPSUMXF = "PPSUMFL")
-  active_flag <- flag
-  if (!active_flag %in% names(data) && flag %in% names(legacy_flags)) {
-    active_flag <- unname(legacy_flags[[flag]])
-  }
-  if (active_flag %in% names(data)) {
+  if (flag %in% names(data)) {
     data <- data[
-      is.na(data[[active_flag]]) | data[[active_flag]] != "Y",
+      is.na(data[[flag]]) | data[[flag]] != "Y",
       ,
       drop = FALSE
     ]

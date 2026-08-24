@@ -942,22 +942,6 @@ describe("add_exclusion_reasons", {
     expect_true(all(result$conc$data$PKSUM1RS[-c(2, 3)] == ""))
   })
 
-  it("preserves legacy PKSUM1F flags when creating PKSUMXF", {
-    legacy_data <- pknca_data
-    legacy_data$conc$data$PKSUM1F <- rep("", nrow(legacy_data$conc$data))
-    legacy_data$conc$data$PKSUM1F[1] <- "Y"
-
-    result <- add_exclusion_reasons(
-      legacy_data,
-      list(list(
-        reason = "Summary only", rows = 2,
-        exclude_nca = FALSE, exclude_tlg = TRUE
-      ))
-    )
-
-    expect_equal(result$conc$data$PKSUMXF[1:2], c("Y", "Y"))
-  })
-
   it("applies NCA exclusion only when exclude_nca is TRUE", {
     excl_list <- list(
       list(

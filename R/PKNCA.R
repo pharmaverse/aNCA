@@ -949,16 +949,9 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     exclude_col <- "exclude"
   }
 
-  # Initialise PKSUMXF and PKSUM1RS if not present. Preserve flags from
-  # concentration objects created before PKSUMXF became the canonical name.
+  # Initialise summary-exclusion columns if not present.
   if (!"PKSUMXF" %in% names(pknca_data$conc$data)) {
-    pknca_data$conc$data$PKSUMXF <- if (
-      "PKSUM1F" %in% names(pknca_data$conc$data)
-    ) {
-      pknca_data$conc$data$PKSUM1F
-    } else {
-      ""
-    }
+    pknca_data$conc$data$PKSUMXF <- ""
   }
   if (!"PKSUM1RS" %in% names(pknca_data$conc$data)) {
     pknca_data$conc$data$PKSUM1RS <- ""
