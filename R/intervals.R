@@ -210,6 +210,7 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
 #' @importFrom dplyr group_by ungroup slice_max distinct
 #' @importFrom purrr pmap
+#' @importFrom rlang .data sym
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
 update_main_intervals <- function(
@@ -290,17 +291,29 @@ update_main_intervals <- function(
     data <- create_start_impute(data)
   }
 
+  # Guarantee a per-interval `impute` column exists. `create_start_impute()`
+  # only adds it when start imputation runs, so when `impute = FALSE` (or it
+  # early-returns) the column is absent. The BLQ block below then references
+  # `impute` inside dplyr data-masking; without a column, the bare symbol would
+  # silently resolve to the `impute` function argument (a logical), producing
+  # nonsense like "blq, FALSE" and an unregistered `PKNCA_impute_method_FALSE`.
+  if (!"impute" %in% names(data$intervals)) {
+    data$intervals$impute <- NA_character_
+  }
+
   ############################################
   # Define a BLQ imputation method for PKNCA
   # and apply it only for non-observational parameters
 
+  # `.data$impute` pins the reference to the column so it can never fall through
+  # to the `impute` argument, even if the guard above is ever removed.
   if (!is.null(blq_imputation_rule)) {
     data$intervals <- data$intervals %>%
       mutate(
         impute = ifelse(
-          is.na(impute) | impute == "",
+          is.na(.data$impute) | .data$impute == "",
           "blq",
-          paste0("blq, ", impute)
+          paste0("blq, ", .data$impute)
         )
       )
   }

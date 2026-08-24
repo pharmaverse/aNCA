@@ -423,6 +423,37 @@ describe("update_main_intervals", {
     expect_equal(res_after %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
     expect_equal(res_both %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
   })
+
+  it("applies BLQ imputation when start imputation is off (impute = FALSE)", {
+    # Regression: with impute = FALSE, create_start_impute() is skipped so the
+    # intervals have no `impute` column. The BLQ block must still resolve the
+    # column (not the `impute` logical argument); otherwise it produced
+    # "blq, FALSE" and PKNCA looked for the non-existent
+    # PKNCA_impute_method_FALSE.
+    subj1 <- unique(data$conc$data$USUBJID)[1]
+    data$conc$data <- data$conc$data %>% filter(USUBJID == subj1)
+    data$intervals <- data$intervals %>% filter(USUBJID == subj1)
+
+    param_list <- list(`Single Extravascular` = c("tmax", "auclast"))
+    auc_empty <- tibble(parameter = "AUCINT", start_auc = NA_real_, end_auc = NA_real_)
+    blq_rule <- list(first = "keep", middle = "keep", last = "keep")
+
+    result <- update_main_intervals(
+      data, param_list, auc_empty,
+      impute = FALSE,
+      blq_imputation_rule = blq_rule
+    )
+
+    # The impute column exists and holds "blq" only -- never "blq, FALSE".
+    expect_true("impute" %in% names(result$intervals))
+    non_na <- result$intervals$impute[!is.na(result$intervals$impute)]
+    expect_true(all(non_na == "blq"))
+    expect_false(any(grepl("FALSE", result$intervals$impute, fixed = TRUE)))
+
+    # And the run completes without the PKNCA_impute_method_FALSE error.
+    res <- suppressWarnings(PKNCA_calculate_nca(result, blq_rule = blq_rule))
+    expect_s3_class(res, "PKNCAresults")
+  })
 })
 
 describe("rm_impute_obs_params", {
