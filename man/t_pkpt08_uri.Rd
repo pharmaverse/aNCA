@@ -22,11 +22,10 @@ t_pkpt08_uri(
 \item{urine_specs}{Character vector of specimen types considered urine,
 matched case-insensitively. Default: \code{c("URINE")}.}
 
-\item{list_vars}{Character vector of columns used to split output into
-separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
-column that is typically absent from \code{export_cdisc()$adpp}; it is silently
-skipped when not present so there is no need to remove it manually, but
-adding it only helps when your ADPP actually contains visit information.}
+\item{list_vars}{Columns to split tables by. Defaults to the derived \code{RATIO}
+label and \code{PPSPEC}, so each table covers one metabolite/parent pair in one
+specimen -- the same analyte pair measured in serum and in urine gives the
+same \code{RATIO} label, and pooling the two would summarize unlike ratios together.}
 
 \item{strat_var}{One or more columns whose combination defines the table rows
 (stratification). Default: \code{c("TRT01A", "PARAM")} -- statistics are

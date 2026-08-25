@@ -66,50 +66,260 @@ split_and_apply <- function(data, list_vars, fn) {
   setNames(results, levels(split_keys))
 }
 
-#' Filter ADPP rows to metabolite records
-#'
-#' Applies a three-tier fallback to identify metabolite rows in ADPP:
-#' 1. `METABFL` column -- preferred when included as a grouping variable in
-#'    the NCA run (non-missing, non-empty values are kept).
-#' 2. `PPCAT` containing "metab" (case-insensitive) -- used when `METABFL`
-#'    is absent or all-missing.
-#' 3. `PARAM` containing "metab" (case-insensitive) -- final fallback.
-#'
-#' Throws an informative error when no metabolite data can be found.
-#'
-#' @param data A CDISC ADPP data frame.
-#' @param caller Character string naming the calling function, used in the
-#'   error message. Default: `"filter_metabolite_rows"`.
-#'
-#' @return A filtered data frame containing only metabolite rows.
+# The analyte column is fixed to "PARAM" when the PKNCA objects are built
+# (see `R/PKNCA.R`), so a ratio whose reference group is keyed on `PARAM` is one
+# analyte divided by another -- a metabolite/parent ratio.  `export_cdisc()`
+# moves that analyte into `PPCAT` and reuses `PARAM` for the parameter name, so
+# the bracketed keys in PPANMETH are pre-export column names and have to be
+# translated before they can be read off an ADPP row.
+.RATIO_ANALYTE_KEY <- "PARAM"
+.RATIO_ADPP_COLUMN <- c(PARAM = "PPCAT", PCSPEC = "PPSPEC")
+
+#' Name of the ADPP column holding the values of a PPANMETH reference key
 #' @noRd
-filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows") {
-  # Preferred: explicit METABFL flag set by the NCA grouping variable
-  if ("METABFL" %in% names(data) &&
-        any(!is.na(data$METABFL) & data$METABFL != "")) {
-    return(
-      data[!is.na(data$METABFL) & data$METABFL != "", , drop = FALSE]
-    )
+.ratio_key_column <- function(key) {
+  renamed <- .RATIO_ADPP_COLUMN[key]
+  unname(ifelse(is.na(renamed), key, renamed))
+}
+
+#' Split the reference groups out of a PPANMETH string
+#'
+#' `calculate_ratios()` stamps each ratio row with
+#' `"<PPTESTCD> TO <PPTESTCD_ref> [<key>: <value>, ...]"`.  Two things make this
+#' worth parsing defensively rather than with a single tidy regex: the bracket is
+#' omitted when the test and reference groups are identical, and
+#' `.apply_metadata_ppanmeth()` can prepend a parameter's own analysis method with
+#' `"; "`, so the ratio string is not always the whole field.
+#'
+#' @param ppanmeth Character vector of PPANMETH values.
+#' @returns A list the same length as `ppanmeth`, each element a named character
+#'   vector mapping reference key to reference value (empty when there is no
+#'   parseable bracket).
+#' @noRd
+.parse_ratio_reference <- function(ppanmeth) {
+  lapply(ppanmeth, function(x) {
+    empty <- setNames(character(0), character(0))
+    if (is.na(x)) return(empty)
+
+    # Anchored at the end so a prepended analysis method is ignored.
+    bracket <- regmatches(x, regexpr("\\[[^][]*\\]$", x))
+    if (length(bracket) == 0) return(empty)
+
+    pairs <- strsplit(substr(bracket, 2, nchar(bracket) - 1), ", ", fixed = TRUE)[[1]]
+    # A value containing ", " would split into a fragment with no "key: " prefix;
+    # dropping those is preferable to attributing the fragment to the wrong key.
+    pairs <- pairs[grepl("^[^:]+: ", pairs)]
+    if (length(pairs) == 0) return(empty)
+
+    setNames(sub("^[^:]+: ", "", pairs), sub(": .*$", "", pairs))
+  })
+}
+
+#' Split the test and reference parameters out of a PPANMETH string
+#'
+#' The `"<PPTESTCD> TO <PPTESTCD_ref>"` half of the field, which -- unlike the
+#' bracket -- is always written.  It is the only thing identifying a ratio whose
+#' test and reference groups are the same: there `calculate_ratios()` omits the
+#' bracket entirely, because what is being divided is one parameter by another
+#' rather than one group by another.
+#'
+#' @param ppanmeth Character vector of PPANMETH values.
+#' @returns A character matrix with columns `test` and `ref`, `NA` on rows where
+#'   the pair could not be read.
+#' @noRd
+.parse_ratio_parameters <- function(ppanmeth) {
+  # Drop a trailing reference bracket and any analysis method
+  # `.apply_metadata_ppanmeth()` prepended with "; ", leaving the pair alone.
+  bare <- trimws(sub("\\s*\\[[^][]*\\]$", "", ppanmeth))
+  bare <- sub("^.*; ", "", bare)
+
+  # Parameter codes never contain whitespace, so requiring non-space tokens keeps
+  # a free-text field that merely mentions " TO " from being read as a ratio.
+  matched <- regmatches(bare, regexec("^(\\S+) TO (\\S+)$", bare))
+  out <- vapply(matched, function(m) {
+    if (length(m) == 3) m[2:3] else c(NA_character_, NA_character_)
+  }, character(2))
+  matrix(t(out), ncol = 2, dimnames = list(NULL, c("test", "ref")))
+}
+
+#' Select the ratio rows written by Parameter Selection > Ratios
+#'
+#' Ratio rows are identified by the `" TO "` that `calculate_ratios()` writes into
+#' `PPANMETH`, never by a `PPTESTCD`/`PARAMCD` prefix: the package default code is
+#' `RA<param>`, the app only emits `MR<param>` when the reference happens to be the
+#' analyte column, the code is user-editable free text, and `MR` additionally
+#' collides with the mean-residence-time parameters (`MRTLST`, `MRTIFO`, ...).
+#'
+#' Two columns are added for display, so a ratio is readable without the user
+#' having to decode PPANMETH:
+#' * `RATIOREF` -- the reference (denominator) group value, e.g. the parent analyte.
+#'   `NA` for a same-group ratio, which has no reference group.
+#' * `RATIO` -- `"<numerator> / <denominator>"`, e.g. `"Metab-DrugA / DrugA"`, or
+#'   the parameter pair (`"AUCLST / CMAX"`) for a same-group ratio.
+#'
+#' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
+#' @param caller Character string naming the calling function, used in error messages.
+#' @param ref_type `"analyte"` keeps ratios whose reference is another analyte
+#'   (metabolite/parent); `"other"` keeps the rest (treatment, dose profile, route,
+#'   specimen); `"any"` keeps all ratio rows.
+#'
+#' @returns The ratio rows of `data`, with `RATIOREF` and `RATIO` added.
+#' @noRd
+filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "any")) {
+  ref_type <- match.arg(ref_type)
+
+  # PPANMETH is a permitted ADPP variable, so export_cdisc() drops it outright when
+  # every value is missing -- which is exactly the "no ratios were set up" case.
+  setup_hint <- paste0(
+    "Set them up in Parameter Selection > Ratios and re-run the NCA: ratios are ",
+    "computed as part of the NCA run, so adding one afterwards has no effect until ",
+    "the run is repeated."
+  )
+  if (!"PPANMETH" %in% names(data) || !any(grepl(" TO ", data$PPANMETH))) {
+    stop(caller, ": no ratio parameters found in the data. ", setup_hint)
   }
 
-  # Fallback: PPCAT or PARAM column containing "metab"
-  for (col in c("PPCAT", "PARAM")) {
-    if (col %in% names(data) &&
-          any(grepl("metab", data[[col]], ignore.case = TRUE))) {
-      return(
-        data[grepl("metab", data[[col]], ignore.case = TRUE), ,
-             drop = FALSE]
+  ratios <- data[!is.na(data$PPANMETH) & grepl(" TO ", data$PPANMETH), , drop = FALSE]
+  refs <- .parse_ratio_reference(ratios$PPANMETH)
+  is_analyte <- vapply(refs, function(r) .RATIO_ANALYTE_KEY %in% names(r), logical(1))
+
+  keep <- switch(ref_type, analyte = is_analyte, other = !is_analyte, any = rep(TRUE, nrow(ratios)))
+  if (!any(keep)) {
+    wanted <- if (ref_type == "analyte") {
+      "metabolite/parent ratios (reference group on the analyte)"
+    } else {
+      "treatment ratios (reference group on treatment, dose profile, route or specimen)"
+    }
+    # The complement of the analyte family is not necessarily treatment ratios --
+    # it also holds route, specimen and same-group ones -- so only name the family
+    # in the direction where it is exact.
+    found <- if (ref_type == "analyte") {
+      "only ratios referenced against something other than the analyte were found"
+    } else {
+      "only metabolite/parent ratios were found"
+    }
+    stop(
+      caller, ": the data contains ratio parameters, but none are ", wanted, " -- ",
+      found, ". ", setup_hint
+    )
+  }
+  ratios <- ratios[keep, , drop = FALSE]
+  refs <- refs[keep]
+
+  # A ratio the NCA run could not compute (no comparable reference rows, or units
+  # that would not convert) still reaches ADPP, with a missing value.  A summary
+  # table renders that as a statistics row of all-NA and a listing as blank cells,
+  # neither of which says why -- so name the parameters involved.  The rows are
+  # kept rather than dropped: in a listing the blank cell is the honest answer for
+  # that subject, and silently removing rows would understate the ratios requested.
+  if (all(c("AVAL", "PARAM") %in% names(ratios))) {
+    all_na <- vapply(
+      split(ratios$AVAL, ratios$PARAM), function(v) all(is.na(v)), logical(1)
+    )
+    if (any(all_na)) {
+      .tlg_warn(
+        caller, ": no value was computed for ", sum(all_na), " of ",
+        length(all_na), " ratio parameter(s) -- ",
+        paste(names(all_na)[all_na], collapse = ", "),
+        " -- so they appear empty. The NCA run found no comparable reference ",
+        "rows for them, or their units could not be converted."
       )
     }
   }
 
-  stop(
-    caller, ": no metabolite data found. ",
-    "METABFL is absent or all missing, and no PPCAT/PARAM values ",
-    "contain 'metab'. To use this output, include METABFL as a ",
-    "grouping variable in your NCA run, or ensure metabolite rows ",
-    "are labelled with 'metab' in PPCAT or PARAM."
+  .add_ratio_labels(ratios, refs, ref_type)
+}
+
+#' Add the `RATIO` and `RATIOREF` display columns to selected ratio rows
+#'
+#' @param ratios Ratio rows, already narrowed to one `ref_type`.
+#' @param refs Parsed reference groups for those rows, from `.parse_ratio_reference()`.
+#' @param ref_type As in `filter_ratio_rows()`.
+#' @returns `ratios` with the two labelled columns added. `RATIO` is never `NA`.
+#' @noRd
+.add_ratio_labels <- function(ratios, refs, ref_type) {
+  # For an analyte ratio only the analyte key is meaningful; for the others the
+  # reference can span several grouping variables, so all of them are shown.
+  keys <- lapply(refs, function(r) {
+    if (ref_type == "analyte") intersect(.RATIO_ANALYTE_KEY, names(r)) else names(r)
+  })
+
+  # Denominator: the reference values parsed out of PPANMETH.  Numerator: the same
+  # keys read off the row itself, which is where the test group's values live.
+  ratios$RATIOREF <- .collapse_values(
+    lapply(seq_along(refs), function(i) unname(refs[[i]][keys[[i]]]))
   )
+  numerator <- .collapse_values(
+    lapply(seq_along(refs), function(i) {
+      cols <- .ratio_key_column(keys[[i]])
+      # All or nothing: reading only the keys that happen to have an ADPP column
+      # produced "50mg / 10mg, iv", where the two sides of the "/" describe
+      # different things.  Showing the reference alone is the honest fallback.
+      if (length(cols) == 0 || !all(cols %in% names(ratios))) return(character(0))
+      vapply(cols, function(cl) as.character(ratios[[cl]][i]), character(1))
+    })
+  )
+
+  # An unparseable bracket leaves nothing to divide by; showing whichever side is
+  # known is still more use than an "NA / NA" header.
+  ratios$RATIO <- ifelse(
+    is.na(numerator) | is.na(ratios$RATIOREF),
+    ifelse(is.na(numerator), ratios$RATIOREF, numerator),
+    paste0(numerator, " / ", ratios$RATIOREF)
+  )
+  ratios$RATIO <- .fill_missing_ratio_labels(ratios$RATIO, ratios$PPANMETH)
+
+  # Both columns are derived here rather than coming from ADPP, so they have no
+  # entry in `metadata_nca_variables` and `apply_labels()` would fall back to the
+  # bare column name -- which is what the `!VAR` annotation syntax renders.
+  attr(ratios$RATIO, "label") <- if (ref_type == "analyte") {
+    "Metabolite / Parent"
+  } else {
+    "Test / Reference"
+  }
+  attr(ratios$RATIOREF, "label") <- if (ref_type == "analyte") {
+    "Parent (reference analyte)"
+  } else {
+    "Reference group"
+  }
+  ratios
+}
+
+#' Fill in `RATIO` labels the reference groups could not supply
+#'
+#' A same-group ratio carries no bracket at all, so neither side of the label is
+#' known -- but it is still a real ratio of one parameter by another.  Left as `NA`
+#' the row was dropped by `split_and_apply()` and the output rendered empty, so
+#' every remaining gap is filled: first from the parameter pair, then from
+#' `PPANMETH` itself, which is non-missing on every row that reaches here.
+#'
+#' @param ratio Character vector of labels built from the reference groups.
+#' @param ppanmeth The `PPANMETH` values of the same rows.
+#' @returns `ratio` with no missing values.
+#' @noRd
+.fill_missing_ratio_labels <- function(ratio, ppanmeth) {
+  if (!anyNA(ratio)) return(ratio)
+
+  params <- .parse_ratio_parameters(ppanmeth)
+  pair <- ifelse(
+    is.na(params[, "test"]) | is.na(params[, "ref"]),
+    NA_character_,
+    paste0(params[, "test"], " / ", params[, "ref"])
+  )
+  ratio <- ifelse(is.na(ratio), pair, ratio)
+
+  # Last resort, for text that reached PPANMETH from somewhere other than
+  # calculate_ratios() and so matches neither parser.
+  ifelse(is.na(ratio), ppanmeth, ratio)
+}
+
+#' Collapse each element of a list of values into one label, `NA` when empty
+#' @noRd
+.collapse_values <- function(values) {
+  vapply(values, function(v) {
+    v <- v[!is.na(v)]
+    if (length(v) == 0) NA_character_ else paste(v, collapse = ", ")
+  }, character(1))
 }
 
 #' Compute descriptive statistics for a numeric vector of PK values.

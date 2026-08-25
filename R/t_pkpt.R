@@ -205,14 +205,23 @@ t_pkpt03_col <- function(
 }
 
 #' @describeIn t_pkpt03_col Summary of metabolite-to-parent ratios (stats in columns).
-#'   Filters to metabolite rows using `METABFL` (preferred) or, when absent from ADPP,
-#'   falls back to rows where `PPCAT` or `PARAM` contains "metab" (case-insensitive).
-#'   `METABFL` is present in ADPP only when it was included as a grouping variable in
-#'   the NCA run.
+#'   Summarizes the M/P ratio rows computed by **Parameter Selection > Ratios** during
+#'   the NCA run -- the ones whose `PPANMETH` reference group is another analyte -- and
+#'   splits the table by `"<metabolite> / <parent>"` so the denominator is explicit.
+#'   Errors when no such ratios are present rather than falling back to raw metabolite
+#'   values, which would show numbers that are not ratios under a ratio heading.
+#' @param list_vars Columns to split tables by. Defaults to the derived `RATIO`
+#'   label and `PPSPEC`, so each table covers one metabolite/parent pair in one
+#'   specimen -- the same analyte pair measured in serum and in urine gives the
+#'   same `RATIO` label, and pooling the two would summarize unlike ratios together.
 #' @param ... Additional arguments forwarded to [t_pkpt03_col()].
 #' @export
-t_pkpt03_MP_col <- function(data, ...) { # nolint: object_name_linter
-  t_pkpt03_col(filter_metabolite_rows(data, "t_pkpt03_MP_col"), ...)
+t_pkpt03_MP_col <- function(data, list_vars = c("RATIO", "PPSPEC"), ...) { # nolint: object_name_linter
+  t_pkpt03_col(
+    filter_ratio_rows(data, "t_pkpt03_MP_col", ref_type = "analyte"),
+    list_vars = list_vars,
+    ...
+  )
 }
 
 #' Mean Dose-Normalized PK Parameters Table (pkpt07)

@@ -15,16 +15,15 @@ t_pkpt03_col(
   stats = NULL
 )
 
-t_pkpt03_MP_col(data, ...)
+t_pkpt03_MP_col(data, list_vars = c("RATIO", "PPSPEC"), ...)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
 
-\item{list_vars}{Character vector of columns used to split output into
-separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
-column that is typically absent from \code{export_cdisc()$adpp}; it is silently
-skipped when not present so there is no need to remove it manually, but
-adding it only helps when your ADPP actually contains visit information.}
+\item{list_vars}{Columns to split tables by. Defaults to the derived \code{RATIO}
+label and \code{PPSPEC}, so each table covers one metabolite/parent pair in one
+specimen -- the same analyte pair measured in serum and in urine gives the
+same \code{RATIO} label, and pooling the two would summarize unlike ratios together.}
 
 \item{strat_var}{One or more columns whose combination defines the table rows
 (stratification). Default: \code{c("TRT01A", "PARAM")} -- statistics are
@@ -64,10 +63,11 @@ statistics as columns.
 \section{Functions}{
 \itemize{
 \item \code{t_pkpt03_MP_col()}: Summary of metabolite-to-parent ratios (stats in columns).
-Filters to metabolite rows using \code{METABFL} (preferred) or, when absent from ADPP,
-falls back to rows where \code{PPCAT} or \code{PARAM} contains "metab" (case-insensitive).
-\code{METABFL} is present in ADPP only when it was included as a grouping variable in
-the NCA run.
+Summarizes the M/P ratio rows computed by \strong{Parameter Selection > Ratios} during
+the NCA run -- the ones whose \code{PPANMETH} reference group is another analyte -- and
+splits the table by \code{"<metabolite> / <parent>"} so the denominator is explicit.
+Errors when no such ratios are present rather than falling back to raw metabolite
+values, which would show numbers that are not ratios under a ratio heading.
 
 }}
 \examples{

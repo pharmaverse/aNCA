@@ -156,11 +156,21 @@ p_pkpg04_boxp <- function(data, ...) {
 
 #' Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)
 #'
-#' Filters ADPP to metabolite rows using the same fallback logic as
-#' [t_pkpt03_MP_col()] (METABFL preferred, then PPCAT/PARAM grep for "metab"),
-#' then delegates to [p_pkpg03_boxp()].
+#' Plots the M/P ratio rows computed by **Parameter Selection > Ratios** during the
+#' NCA run, then delegates to [p_pkpg03_boxp()]. Ratio rows are selected on the
+#' `" TO "` that `calculate_ratios()` writes into `PPANMETH` and narrowed to those
+#' whose reference group is the analyte column, which is what makes a ratio a
+#' metabolite/parent one. One plot is produced per `"<metabolite> / <parent>"` pair
+#' so the denominator is named on the plot.
+#'
+#' Ratios are computed as part of the NCA run, so a ratio added afterwards does not
+#' appear until the run is repeated. When the data holds no M/P ratios the plot
+#' errors with that instruction rather than drawing boxplots of raw metabolite
+#' values, which are not ratios. See [t_pkpt03_MP_col()].
 #'
 #' @inheritParams p_pkpg03_boxp
+#' @param list_vars Columns to split plots by. Defaults to the derived `RATIO`
+#'   label and `PPSPEC`.
 #' @param ... Additional arguments forwarded to [p_pkpg03_boxp()].
 #'
 #' @return A named list of ggplot objects (same format as [p_pkpg03_boxp()]).
@@ -173,8 +183,12 @@ p_pkpg04_boxp <- function(data, ...) {
 #' }
 #'
 #' @export
-p_pkpg06_mp <- function(data, ...) {
-  p_pkpg03_boxp(filter_metabolite_rows(data, "p_pkpg06_mp"), ...)
+p_pkpg06_mp <- function(data, list_vars = c("RATIO", "PPSPEC"), ...) {
+  p_pkpg03_boxp(
+    filter_ratio_rows(data, "p_pkpg06_mp", ref_type = "analyte"),
+    list_vars = list_vars,
+    ...
+  )
 }
 
 #' Mean Urine PK Parameter Profile Plot (pkpg01)

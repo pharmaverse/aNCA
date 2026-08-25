@@ -12,12 +12,31 @@ pkpl_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-pkpl_metab_data <- pkpl_data
-pkpl_metab_data$PPCAT <- ifelse(
-  pkpl_metab_data$TRT01A == "50mg", "Metab-DrugA Plasma", "DrugA Plasma"
-)
-pkpl_metab_data$METABFL <- ifelse(
-  pkpl_metab_data$TRT01A == "50mg", "Y", NA_character_
+# The parent rows plus the ratio rows that Parameter Selection > Ratios appends
+# during the NCA run: one metabolite/parent family (reference on the analyte) and
+# one treatment family (reference on TRT01A).
+.pkpl_ratio_rows <- function(ppcat, bracket, prefix, rows = TRUE) {
+  # `rows` keeps the fixture honest: a ratio row exists only for the test side of
+  # the comparison, never for the reference group itself.
+  src <- pkpl_data[rows, , drop = FALSE]
+  transform(
+    src,
+    PPCAT    = ppcat,
+    PARAM    = paste(prefix, src$PARAM),
+    PARAMCD  = paste0(substr(prefix, 1, 2), src$PARAMCD),
+    AVAL     = src$AVAL / 2,
+    AVALU    = "fraction",
+    PPANMETH = paste0(src$PARAMCD, " TO ", src$PARAMCD, " [", bracket, "]")
+  )
+}
+
+pkpl_ratio_data <- rbind(
+  transform(pkpl_data, PPANMETH = NA_character_),
+  .pkpl_ratio_rows("Metab-DrugA Plasma", "PARAM: DrugA Plasma", "MRatio"),
+  .pkpl_ratio_rows(
+    "DrugA Plasma", "TRT01A: 10mg", "TRatio",
+    rows = pkpl_data$TRT01A == "50mg"
+  )
 )
 
 describe("l_pkpl01 (rlistings not installed)", {
@@ -85,64 +104,70 @@ describe("l_pkpl01", {
 })
 
 describe("l_pkpl01_mp", {
-  it("filters to metabolite rows via METABFL (preferred path)", {
-    result <- l_pkpl01_mp(pkpl_metab_data)
-    # Only Metab-DrugA rows — listing name contains "Metab"
-    expect_true(all(grepl("Metab", names(result), ignore.case = TRUE)))
-  })
-
-  it("falls back to PPCAT grep when METABFL absent", {
-    data_ppcat <- pkpl_data
-    data_ppcat$PPCAT <- ifelse(
-      data_ppcat$TRT01A == "50mg", "Metab-DrugA", "DrugA"
+  it("lists the M/P ratio rows and names the parent in the listing key", {
+    result <- l_pkpl01_mp(pkpl_ratio_data)
+    expect_equal(
+      names(result),
+      "RATIO: Metab-DrugA Plasma / DrugA Plasma / PPSPEC: SERUM"
     )
-    data_ppcat <- data_ppcat[, setdiff(names(data_ppcat), "METABFL")]
-    result <- l_pkpl01_mp(data_ppcat)
-    expect_type(result, "list")
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("falls back to PARAM grep when METABFL and PPCAT absent", {
-    data_param <- pkpl_data
-    data_param$PARAM <- ifelse(
-      data_param$TRT01A == "50mg",
-      paste0("Metab-", data_param$PARAM),
-      data_param$PARAM
-    )
-    data_param <- data_param[,
-      setdiff(names(data_param), c("METABFL", "PPCAT"))
-    ]
-    result <- l_pkpl01_mp(data_param)
-    expect_type(result, "list")
-    purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  it("excludes treatment ratios and raw parameter rows", {
+    # Only the analyte-referenced family belongs here; TRatio rows reference
+    # TRT01A and the un-prefixed rows are not ratios at all.
+    cols <- names(l_pkpl01_mp(pkpl_ratio_data)[[1]])
+    expect_true(any(grepl("MRatio", cols)))
+    expect_false(any(grepl("TRatio", cols)))
+    expect_false(any(grepl("^Cmax|^AUClast", cols)))
   })
 
-  it("stops with informative error when no metabolite data found", {
-    data_no_metab <- pkpl_data[, setdiff(names(pkpl_data), "METABFL")]
-    expect_error(l_pkpl01_mp(data_no_metab), "no metabolite data found")
+  it("errors instead of listing raw rows when no ratios were configured", {
+    expect_error(
+      l_pkpl01_mp(transform(pkpl_data, PPANMETH = NA_character_)),
+      "l_pkpl01_mp: no ratio parameters found"
+    )
+  })
+
+  it("does not treat mean-residence-time parameters as ratios", {
+    mrt <- transform(
+      pkpl_data,
+      PARAMCD = rep(c("MRTLST", "MRTIFO"), 4),
+      PPANMETH = NA_character_
+    )
+    expect_error(l_pkpl01_mp(mrt), "no ratio parameters found")
   })
 })
 
 describe("l_pkpl04_mp", {
-  it("returns a named list of listing_df objects", {
-    result <- l_pkpl04_mp(pkpl_data)
-    expect_type(result, "list")
+  it("lists treatment ratios, the complement of the M/P ones", {
+    result <- l_pkpl04_mp(pkpl_ratio_data)
+    expect_equal(names(result), "RATIO: 50mg / 10mg / PPSPEC: SERUM")
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("has PARAM as a key (grouping) column", {
-    result <- l_pkpl04_mp(pkpl_data)[[1]]
-    # l_pkpl04_mp has PARAM in grouping_vars so it appears in the listing
-    expect_true(length(result) > 0)
-    expect_s3_class(result, "listing_df")
+  it("excludes metabolite/parent ratios and raw parameter rows", {
+    cols <- names(l_pkpl04_mp(pkpl_ratio_data)[[1]])
+    expect_true(any(grepl("TRatio", cols)))
+    expect_false(any(grepl("MRatio", cols)))
+    expect_false(any(grepl("^Cmax|^AUClast", cols)))
   })
 
-  it("splits by PPCAT/PPSPEC — consistent with l_pkpl01", {
-    two_specs <- rbind(
-      pkpl_data,
-      transform(pkpl_data, PPSPEC = "URINE")
+  it("errors when the data holds only metabolite/parent ratios", {
+    mp_only <- rbind(
+      transform(pkpl_data, PPANMETH = NA_character_),
+      .pkpl_ratio_rows("Metab-DrugA Plasma", "PARAM: DrugA Plasma", "MRatio")
     )
-    result <- l_pkpl04_mp(two_specs)
-    expect_equal(length(result), 2)
+    expect_error(
+      l_pkpl04_mp(mp_only),
+      "none are treatment ratios.*only metabolite/parent ratios were found"
+    )
+  })
+
+  it("errors instead of listing raw rows when no ratios were configured", {
+    expect_error(
+      l_pkpl04_mp(transform(pkpl_data, PPANMETH = NA_character_)),
+      "l_pkpl04_mp: no ratio parameters found"
+    )
   })
 })

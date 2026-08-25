@@ -2,17 +2,21 @@
 % Please edit documentation in R/l_pkpl01.R
 \name{l_pkpl04_mp}
 \alias{l_pkpl04_mp}
-\title{Individual Treatment Comparison Listing (pkpl04)}
+\title{Individual Treatment Ratio Listing (pkpl04)}
 \usage{
 l_pkpl04_mp(
   data,
+  listgroup_vars = c("RATIO", "PPSPEC"),
   grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
-  title = "Listing of Individual PK Parameter Values by Treatment",
+  title = "Listing of Individual Treatment Ratios",
   ...
 )
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
+
+\item{listgroup_vars}{Columns used to split the output into separate listings.
+Defaults to the derived \code{RATIO} label and \code{PPSPEC}.}
 
 \item{grouping_vars}{Columns used to identify row keys before pivoting.
 \code{PARAM} must be included so it is spread into display columns.
@@ -26,19 +30,22 @@ Default: \code{c("PARAM", "TRT01A", "USUBJID")}.}
 A named list of \code{listing_df} objects.
 }
 \description{
-Produces a per-subject listing of individual PK parameter values organised
-for treatment comparison. Each listing page covers one PPCAT/PPSPEC
-combination. PK parameters become display columns (one column per PARAM value)
-and the rows are keyed by \code{TRT01A} and \code{USUBJID}.
+Produces a per-subject listing of the treatment ratios computed by
+\strong{Parameter Selection > Ratios} during the NCA run. PK parameters become
+display columns (one column per PARAM value) and the rows are keyed by
+\code{TRT01A} and \code{USUBJID}.
 }
 \details{
-This listing shows the raw individual \code{AVAL} values from ADPP, not
-pre-computed ratios. If your ADPP contains NCA ratio parameters (e.g.
-metabolite-to-parent AUC ratios added via the aNCA ratio-calculation
-module), those parameters are displayed here just like any other PARAM row.
-The \verb{_mp} suffix in the function name reflects its typical use with
-metabolite/parent ratio parameters, but no metabolite filtering is applied --
-all PARAM values in the data are included.
+Ratio rows are selected on the \code{" TO "} that \code{calculate_ratios()} writes into
+\code{PPANMETH}, and narrowed to those whose reference group is \emph{not} the analyte
+column: treatment, dose profile, route or specimen references. Analyte
+references are metabolite/parent ratios and belong to \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}}, which
+selects the complement of this set from the same mechanism.
+
+Ratios are computed as part of the NCA run, so a ratio added afterwards does
+not appear until the run is repeated. When the data holds no treatment ratios
+the listing errors with that instruction rather than silently listing raw
+parameter values, which are not ratios.
 
 Note: \code{PARAM} is listed in \code{grouping_vars} so that it participates in the
 \code{pivot_wider} step (each unique PARAM value becomes a column header). After

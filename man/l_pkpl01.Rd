@@ -17,13 +17,13 @@ l_pkpl01(
   footnote = NULL
 )
 
-l_pkpl01_mp(data, ...)
+l_pkpl01_mp(data, listgroup_vars = c("RATIO", "PPSPEC"), ...)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
 
-\item{listgroup_vars}{Character vector of columns used to split the output
-into separate listings. Default: \code{c("PPCAT", "PPSPEC")}.}
+\item{listgroup_vars}{Columns used to split the output into separate listings.
+Defaults to the derived \code{RATIO} label and \code{PPSPEC}.}
 
 \item{grouping_vars}{Character vector of key/header columns within each
 listing (shown as indented row keys). Default: \code{c("TRT01A", "USUBJID")}.}
@@ -56,8 +56,11 @@ same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per uni
 }
 \section{Functions}{
 \itemize{
-\item \code{l_pkpl01_mp()}: Listing filtered to metabolite rows (pkpl01 M/P).
-Uses the same METABFL -> PPCAT -> PARAM fallback as \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
+\item \code{l_pkpl01_mp()}: Listing of metabolite-to-parent ratios (pkpl01 M/P).
+Lists the M/P ratio rows computed by \strong{Parameter Selection > Ratios} during the
+NCA run -- the ones whose \code{PPANMETH} reference group is another analyte -- with
+one listing per \code{"<metabolite> / <parent>"} pair, so the denominator is named
+rather than left for the reader to infer. See \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
 
 }}
 \examples{

@@ -72,3 +72,267 @@ describe(".select_stats", {
     expect_equal(length(attr(out, "col_groups")), 0L)
   })
 })
+
+describe(".parse_ratio_reference", {
+  it("extracts a single key/value pair from the bracket", {
+    out <- .parse_ratio_reference("CMAX TO CMAX [PARAM: DrugA]")[[1]]
+    expect_equal(out, c(PARAM = "DrugA"))
+  })
+
+  it("extracts every key when the reference spans several grouping variables", {
+    out <- .parse_ratio_reference("CMAX TO CMAX [PARAM: DrugA, PCSPEC: Plasma]")[[1]]
+    expect_equal(out, c(PARAM = "DrugA", PCSPEC = "Plasma"))
+  })
+
+  it("ignores an analysis method prepended by .apply_metadata_ppanmeth()", {
+    # export_cdisc() prepends the parameter's own method with "; ", so the ratio
+    # string is not always the whole field.
+    out <- .parse_ratio_reference(
+      "Interpolation truncated at next dose time; AUCINT TO AUCINT [PARAM: DrugA]"
+    )[[1]]
+    expect_equal(out, c(PARAM = "DrugA"))
+  })
+
+  it("returns nothing when the groups are identical and no bracket was written", {
+    expect_length(.parse_ratio_reference("CMAX TO CMAX")[[1]], 0)
+  })
+
+  it("returns nothing for NA or an unparseable bracket", {
+    expect_length(.parse_ratio_reference(NA_character_)[[1]], 0)
+    expect_length(.parse_ratio_reference("CMAX TO CMAX [DrugA]")[[1]], 0)
+  })
+
+  it("is vectorized over the column", {
+    out <- .parse_ratio_reference(c("A TO B [PARAM: X]", "A TO B"))
+    expect_length(out, 2)
+    expect_equal(out[[1]], c(PARAM = "X"))
+    expect_length(out[[2]], 0)
+  })
+})
+
+describe(".parse_ratio_parameters", {
+  it("reads the pair with and without a reference bracket", {
+    expect_equal(
+      .parse_ratio_parameters(c("AUCLST TO CMAX", "AUCLST TO CMAX [PARAM: DrugA]")),
+      matrix(
+        c("AUCLST", "AUCLST", "CMAX", "CMAX"),
+        ncol = 2, dimnames = list(NULL, c("test", "ref"))
+      )
+    )
+  })
+
+  it("ignores an analysis method prepended by .apply_metadata_ppanmeth()", {
+    out <- .parse_ratio_parameters("Linear up log down; AUCLST TO CMAX")
+    expect_equal(unname(out[1, ]), c("AUCLST", "CMAX"))
+  })
+
+  it("returns NA for NA and for free text that merely contains ' TO '", {
+    out <- .parse_ratio_parameters(c(NA_character_, "measured from dose TO last conc"))
+    expect_true(all(is.na(out)))
+  })
+})
+
+describe("filter_ratio_rows", {
+  # Minimal ADPP shape: one parent row, one analyte-referenced (M/P) ratio row,
+  # one treatment-referenced ratio row.
+  adpp <- data.frame(
+    PARAMCD = c("CMAX", "MRCMAX", "RACMAX"),
+    PPCAT   = c("DrugA", "Metab-DrugA", "DrugA"),
+    TRT01A  = c("50mg", "50mg", "50mg"),
+    AVAL    = c(10, 0.5, 2),
+    PPANMETH = c(
+      NA_character_,
+      "CMAX TO CMAX [PARAM: DrugA]",
+      "CMAX TO CMAX [TRT01A: 10mg]"
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  it("selects ratio rows on PPANMETH and names the parent alongside the metabolite", {
+    out <- filter_ratio_rows(adpp, "caller", "analyte")
+    expect_equal(nrow(out), 1)
+    expect_equal(out$PARAMCD, "MRCMAX")
+    expect_equal(as.character(out$RATIOREF), "DrugA")
+    expect_equal(as.character(out$RATIO), "Metab-DrugA / DrugA")
+  })
+
+  it("reads the numerator from PPCAT, where export_cdisc() puts the analyte", {
+    # The bracket key is the pre-export column name (PARAM); in ADPP that value
+    # lives in PPCAT, so the numerator must be resolved through the rename.
+    out <- filter_ratio_rows(adpp, "caller", "analyte")
+    expect_equal(
+      as.character(out$RATIO),
+      paste0(out$PPCAT, " / ", as.character(out$RATIOREF))
+    )
+  })
+
+  it("labels the derived columns so !RATIO annotations resolve", {
+    out <- filter_ratio_rows(adpp, "caller", "analyte")
+    expect_equal(attr(out$RATIO, "label"), "Metabolite / Parent")
+    expect_equal(attr(out$RATIOREF, "label"), "Parent (reference analyte)")
+  })
+
+  it("selects treatment ratios as the complement of the analyte ones", {
+    out <- filter_ratio_rows(adpp, "caller", "other")
+    expect_equal(nrow(out), 1)
+    expect_equal(out$PARAMCD, "RACMAX")
+    expect_equal(as.character(out$RATIO), "50mg / 10mg")
+    expect_equal(attr(out$RATIO, "label"), "Test / Reference")
+  })
+
+  it("keeps both families under ref_type = 'any'", {
+    expect_equal(nrow(filter_ratio_rows(adpp, "caller", "any")), 2)
+  })
+
+  it("does not mistake mean-residence-time parameters for ratios", {
+    # Every MRT parameter starts with "MR", which is why selection keys on
+    # PPANMETH rather than on a PARAMCD prefix.
+    mrt <- data.frame(
+      PARAMCD = c("MRTLST", "MRTIFO", "MRTIBLST", "MRTICIFO", "MRTEVIFP"),
+      PPCAT   = "DrugA",
+      AVAL    = 1:5,
+      PPANMETH = NA_character_,
+      stringsAsFactors = FALSE
+    )
+    expect_error(
+      filter_ratio_rows(mrt, "caller", "analyte"),
+      "no ratio parameters found"
+    )
+  })
+
+  it("errors with re-run instructions when no ratios were configured", {
+    no_ratios <- adpp[adpp$PARAMCD == "CMAX", ]
+    expect_error(filter_ratio_rows(no_ratios, "caller", "analyte"), "^caller: ")
+    expect_error(
+      filter_ratio_rows(no_ratios, "caller", "analyte"),
+      "Parameter Selection > Ratios and re-run the NCA"
+    )
+  })
+
+  it("errors when PPANMETH was dropped entirely for being all-missing", {
+    expect_error(
+      filter_ratio_rows(adpp[, setdiff(names(adpp), "PPANMETH")], "caller", "analyte"),
+      "no ratio parameters found"
+    )
+  })
+
+  it("says which family was found when the wrong one is requested", {
+    only_mp <- adpp[adpp$PARAMCD != "RACMAX", ]
+    expect_error(
+      filter_ratio_rows(only_mp, "caller", "other"),
+      "none are treatment ratios.*only metabolite/parent ratios were found"
+    )
+  })
+
+  it("does not claim the complement is all treatment ratios", {
+    # The non-analyte family also holds route, specimen and same-group ratios, so
+    # the message must not name treatment in that direction.
+    only_same_group <- adpp[adpp$PARAMCD == "MRCMAX", ]
+    only_same_group$PPANMETH <- "AUCLST TO CMAX"
+    expect_error(
+      filter_ratio_rows(only_same_group, "caller", "analyte"),
+      "only ratios referenced against something other than the analyte were found"
+    )
+  })
+
+  it("names the parameter pair for a same-group ratio, which has no bracket", {
+    bare <- adpp[adpp$PARAMCD == "MRCMAX", ]
+    bare$PPANMETH <- "AUCLST TO CMAX"
+    # No bracket means no reference key, so nothing identifies it as M/P.
+    expect_error(filter_ratio_rows(bare, "caller", "analyte"), "none are metabolite")
+
+    # Left as NA these rows were dropped by split_and_apply() and l_pkpl04_mp
+    # rendered an empty listing, even though this is a real ratio.
+    out <- filter_ratio_rows(bare, "caller", "other")
+    expect_true(is.na(out$RATIOREF))
+    expect_equal(as.character(out$RATIO), "AUCLST / CMAX")
+  })
+
+  it("prefers the reference group over the parameter pair when both are readable", {
+    out <- filter_ratio_rows(adpp, "caller", "analyte")
+    expect_equal(as.character(out$RATIO), "Metab-DrugA / DrugA")
+  })
+
+  it("falls back to PPANMETH itself when neither parser recognises the field", {
+    # RATIO must never be NA: split_and_apply() drops rows with an NA split value,
+    # so a missing label makes the row vanish behind a stray-NA warning.
+    bare <- adpp[adpp$PARAMCD == "MRCMAX", ]
+    bare$PPANMETH <- "ratio of one thing TO another thing"
+    out <- filter_ratio_rows(bare, "caller", "any")
+    expect_equal(as.character(out$RATIO), "ratio of one thing TO another thing")
+  })
+
+  it("shows the reference alone when only some reference keys reach ADPP", {
+    # ROUTE has no ADPP column here, so reading TRT01A alone would render
+    # "50mg / 10mg, iv" -- two sides of a "/" describing different things.
+    partial <- adpp[adpp$PARAMCD == "RACMAX", ]
+    partial$PPANMETH <- "CMAX TO CMAX [TRT01A: 10mg, ROUTE: iv]"
+    out <- filter_ratio_rows(partial, "caller", "other")
+    expect_equal(as.character(out$RATIOREF), "10mg, iv")
+    expect_equal(as.character(out$RATIO), "10mg, iv")
+  })
+
+  it("names both sides when every reference key does reach ADPP", {
+    both <- adpp[adpp$PARAMCD == "RACMAX", ]
+    both$TRT01A <- "50mg"
+    both$PPANMETH <- "CMAX TO CMAX [TRT01A: 10mg]"
+    out <- filter_ratio_rows(both, "caller", "other")
+    expect_equal(as.character(out$RATIO), "50mg / 10mg")
+  })
+
+  it("keeps a reference key whose ADPP column is absent from the data", {
+    # PCSPEC is renamed to PPSPEC on export; if neither is present the reference
+    # is still reported, only the numerator side is unknown.
+    spec <- adpp[adpp$PARAMCD == "RACMAX", ]
+    spec$PPANMETH <- "CMAX TO CMAX [PCSPEC: Plasma]"
+    out <- filter_ratio_rows(spec, "caller", "other")
+    expect_equal(as.character(out$RATIOREF), "Plasma")
+    expect_equal(as.character(out$RATIO), "Plasma")
+  })
+})
+
+describe("filter_ratio_rows: ratios that could not be computed", {
+  # One M/P ratio with a value, one the NCA run left empty.
+  adpp <- data.frame(
+    PARAMCD  = c("MRCMAX", "MRAUCLST"),
+    PARAM    = c("Metabolite Ratio for Max Conc", "Metabolite Ratio for AUClast"),
+    PPCAT    = "Metab-DrugA",
+    AVAL     = c(0.5, NA_real_),
+    PPANMETH = "CMAX TO CMAX [PARAM: DrugA]",
+    stringsAsFactors = FALSE
+  )
+
+  it("warns and names the parameter that came back empty", {
+    expect_warning(
+      filter_ratio_rows(adpp, "caller", "analyte"),
+      "no value was computed for 1 of 2 ratio parameter\\(s\\).*AUClast"
+    )
+  })
+
+  it("raises it as a user-facing tlg_warning, not console noise", {
+    # Only `tlg_warning` conditions are surfaced as notifications by the Shiny layer.
+    expect_warning(
+      filter_ratio_rows(adpp, "caller", "analyte"),
+      class = "tlg_warning"
+    )
+  })
+
+  it("keeps the empty rows rather than silently dropping them", {
+    out <- suppressWarnings(filter_ratio_rows(adpp, "caller", "analyte"))
+    expect_equal(nrow(out), 2)
+    expect_true(any(is.na(out$AVAL)))
+  })
+
+  it("stays quiet when every ratio has a value", {
+    ok <- adpp
+    ok$AVAL <- c(0.5, 0.8)
+    expect_no_warning(filter_ratio_rows(ok, "caller", "analyte"))
+  })
+
+  it("stays quiet when a parameter is only partly missing", {
+    # A single subject with no value is normal; the warning is for a parameter
+    # that produced nothing at all.
+    partial <- rbind(adpp, transform(adpp[2, ], AVAL = 0.9))
+    expect_no_warning(filter_ratio_rows(partial, "caller", "analyte"))
+  })
+})

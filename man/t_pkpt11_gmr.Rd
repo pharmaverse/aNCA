@@ -23,11 +23,10 @@ t_pkpt11_gmr(
 \item{ci_level}{Confidence level for the geometric mean ratio CI.
 Default: \code{0.90}.}
 
-\item{list_vars}{Character vector of columns used to split output into
-separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
-column that is typically absent from \code{export_cdisc()$adpp}; it is silently
-skipped when not present so there is no need to remove it manually, but
-adding it only helps when your ADPP actually contains visit information.}
+\item{list_vars}{Columns to split tables by. Defaults to the derived \code{RATIO}
+label and \code{PPSPEC}, so each table covers one metabolite/parent pair in one
+specimen -- the same analyte pair measured in serum and in urine gives the
+same \code{RATIO} label, and pooling the two would summarize unlike ratios together.}
 
 \item{strat_var}{Single treatment-arm column that defines the comparison axis
 (each arm is compared against \code{ref_arm}). Default: \code{"TRT01A"}.  Unlike the
