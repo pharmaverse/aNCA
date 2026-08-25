@@ -2,6 +2,7 @@
 
 ## Bug Fixes
 
+* The metabolite/parent TLG entries now show actual M/P ratios. `t_pkpt03_MP_col`, `l_pkpl01_mp` and `p_pkpg06_mp` filtered the data down to metabolite rows and then summarized, listed or plotted those rows as-is, so the output showed raw metabolite values under a heading that promised a ratio. They now consume the ratio rows that **Parameter Selection > Ratios** computes during the NCA run, selected on the `" TO "` marker `calculate_ratios()` writes into `PPANMETH` rather than on a parameter-code prefix, and each output is split by `"<metabolite> / <parent>"` and specimen, so the denominator is named and ratios measured in different matrices are not pooled. `l_pkpl04_mp` selects the complement — ratios referenced against treatment, dose profile, route or specimen, plus same-group ratios of one parameter by another, which carry no reference group and are named by their parameter pair instead. When no ratios of the relevant kind are present the output explains how to set them up instead of rendering misleading numbers, and a ratio the NCA run could not compute is named in a warning rather than appearing as an unexplained empty row. The M/P summary table also no longer defaults its row stratification to the PKNCA grouping variables: ADPP renames two of them, so the token resolved to `STUDYID` plus the parameter name and pooled every treatment arm into a single row (#1429)
 * Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
 * The "X ticks" option on the linear and logarithmic concentration plots now takes effect. `plotly` was regenerating the axis itself, so the chosen column was ignored; the side-by-side variants were already unaffected (#1356)
 * Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
@@ -22,7 +23,7 @@
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
-  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent filtered)
+  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent ratios)
   - `t_pkpt07_norm` — dose-normalized PK parameter summary table
   - `t_pkpt08_uri` — urine cumulative amount and % dose recovered summary table (n, Mean, SD, CV%, Median, Min, Max)
   - `t_pkpt11_gmr` — geometric mean ratio table with 90% CIs
@@ -30,8 +31,8 @@
   - `p_pkpg06_mp` — boxplot of metabolite/parent PK parameter ratios
   - `p_pkpg01_cum` / `p_pkpg01_per` — mean cumulative urine amount and % dose recovered line plots
   - `p_pkpg02_doseprop` — dose-proportionality scatter plot with power-model regression on log-log scale
-  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite-filtered)
-  - `l_pkpl04_mp` — individual PK parameter listing organised for treatment comparison
+  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite/parent ratios)
+  - `l_pkpl04_mp` — individual treatment ratio listing
   - `l_pkcl02_uri` — urine concentration and volume listing
 * ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMFL = "Y"`, consistent with ADNCA exclusion via `PKSUM1F` (#1343)
 * Summary tables are easier to read: split tables (e.g. by analyte/specimen) now show the group as a header, `t_pkct01` rows are grouped by treatment arm with timepoints in numeric order, statistic columns use readable headers (e.g. "Geometric Mean", "CV%"), and urine specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively (#1343)
