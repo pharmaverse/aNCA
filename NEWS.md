@@ -2,6 +2,7 @@
 
 ## Bug Fixes
 
+* Fix the "Processing data mapping..." spinner hanging forever when advancing through mapping with unchanged mappings (e.g. the default data with no duplicates). The reactive that closes the loading modal was keyed only on the mapped data and duplicate rows, so it never re-ran when neither changed; it now also keys on the submit trigger (#1420)
 * Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)
 
 ## Testing

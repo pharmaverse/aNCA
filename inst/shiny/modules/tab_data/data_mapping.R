@@ -467,7 +467,12 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
       )
     }) %>%
       bindEvent(
-        list(mapped_data(), resolved_time_duplicate_rows()),
+        # Key on trigger() so this fires on every mapping submit, even when the
+        # mapping (and thus mapped_data()) is unchanged -- otherwise the
+        # completion callback that closes the loading modal never runs on the
+        # default "next-next" path, and it spins forever. Keep
+        # resolved_time_duplicate_rows() so resolving duplicates re-runs it.
+        list(trigger(), mapped_data(), resolved_time_duplicate_rows()),
         ignoreInit = FALSE
       )
 

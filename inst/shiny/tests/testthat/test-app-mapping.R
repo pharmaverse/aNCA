@@ -37,4 +37,19 @@ describe("Test for mapping interface", {
     # mapping inputs are not null after clicking
     expect_false(any(purrr::map_lgl(mapping_inputs_set, is.null)))
   })
+
+  it("advances past mapping on the default path without hanging (#1420)", {
+    # With the default data (no duplicates) and unchanged mappings, submitting
+    # the mapping must complete and advance to the Filtering step. Previously the
+    # "Processing data mapping..." modal hung forever because the completion
+    # callback lived in a reactive keyed only on values that never changed.
+    app <- AppDriver$new(name = "app_mapping_advance")
+
+    app$click("data-next_step") # upload -> mapping
+    app$wait_for_idle()
+    app$click("data-next_step") # mapping -> submit (must reach filtering)
+    app$wait_for_idle()
+
+    expect_equal(app$get_value(input = "data-data_navset"), "Filtering")
+  })
 })
