@@ -199,7 +199,9 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param data A PKNCAdata object containing intervals and dosing data.
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
 #' @param int_parameters A data frame containing partial AUC ranges.
-#' @param impute Logical indicating whether to impute start values for parameters.
+#' @param start_impute Logical indicating whether to impute start values for
+#' parameters. Named `start_impute` (not `impute`) to avoid colliding with the
+#' per-interval `impute` column referenced under dplyr data-masking below.
 #' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
 #' imputation rule using PKNCA format. The list should either contain three elements named:
 #' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
@@ -217,7 +219,7 @@ update_main_intervals <- function(
   data,
   parameter_selections = NULL,
   int_parameters = NULL,
-  impute = TRUE,
+  start_impute = TRUE,
   blq_imputation_rule = NULL
 ) {
 
@@ -287,7 +289,7 @@ update_main_intervals <- function(
   data$impute <- NA_character_
 
   # Impute start values if requested
-  if (impute) {
+  if (start_impute) {
     data <- create_start_impute(data)
   }
 

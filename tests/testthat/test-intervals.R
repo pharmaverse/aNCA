@@ -253,7 +253,7 @@ describe("update_main_intervals", {
   it("correctly updates parameter flags based on study type", {
     result <- update_main_intervals(data, parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
 
     # Check a specific profile: USUBJID 1 is 'Single Extravascular'
@@ -283,7 +283,7 @@ describe("update_main_intervals", {
       data,
       parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
 
     manual_intervals <- result$intervals %>% filter(type_interval == "manual")
@@ -301,14 +301,14 @@ describe("update_main_intervals", {
       data,
       parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
     expect_true("impute" %in% names(result))
     expect_true(all(is.na(result$intervals$impute)))
   })
 
   it("imputes c0 when requested", {
-    result <- update_main_intervals(data, parameters, int_parameters, impute = TRUE)
+    result <- update_main_intervals(data, parameters, int_parameters, start_impute = TRUE)
     expect_true("impute" %in% names(result))
     expect_false(all(is.na(result$intervals$impute)))
   })
@@ -317,7 +317,7 @@ describe("update_main_intervals", {
     # Test with empty parameter list
     result_no_params <- update_main_intervals(data, list(),
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
     param_flags <- result_no_params$intervals %>% select(all_of(all_pknca_params))
     expect_true(all(param_flags == FALSE))
@@ -325,7 +325,7 @@ describe("update_main_intervals", {
     # Test with empty int_parameters
     result_no_auc <- update_main_intervals(data, parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
     expect_equal(nrow(result_no_auc$intervals), nrow(data$intervals))
   })
@@ -340,7 +340,7 @@ describe("update_main_intervals", {
     original_rows <- nrow(data$intervals)
     result <- update_main_intervals(data, parameters,
       invalid_int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
 
     # Expect one new set of intervals for the single valid AUC range
@@ -354,7 +354,7 @@ describe("update_main_intervals", {
     expect_error(
       update_main_intervals(data, parameters,
         int_parameters,
-        impute = FALSE
+        start_impute = FALSE
       ),
       "Missing required columns: USUBJID"
     )
@@ -390,7 +390,7 @@ describe("update_main_intervals", {
     # --- 2. All BLQ points kept (should match no imputation) ---
     blq_keep <- list(first = "keep", middle = "keep", last = "keep")
     all_keep <- update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_keep
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_keep
     )
     res_all_keep <- get_results(all_keep, blq_keep)
     expect_equal(res_no_blq, res_all_keep)
@@ -401,13 +401,13 @@ describe("update_main_intervals", {
     blq_both <- list(before.tmax = 100, after.tmax = 100)
 
     res_before <- get_results(update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_before
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_before
     ), blq_before)
     res_after <- get_results(update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_after
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_after
     ), blq_after)
     res_both <- get_results(update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_both
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_both
     ), blq_both)
 
     # --- 4. Check that BLQ imputation affects only non-observational parameters ---
@@ -424,12 +424,11 @@ describe("update_main_intervals", {
     expect_equal(res_both %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
   })
 
-  it("applies BLQ imputation when start imputation is off (impute = FALSE)", {
-    # Regression: with impute = FALSE, create_start_impute() is skipped so the
-    # intervals have no `impute` column. The BLQ block must still resolve the
-    # column (not the `impute` logical argument); otherwise it produced
-    # "blq, FALSE" and PKNCA looked for the non-existent
-    # PKNCA_impute_method_FALSE.
+  it("applies BLQ imputation when start imputation is off (start_impute = FALSE)", {
+    # Regression: with start_impute = FALSE, create_start_impute() is skipped so
+    # the intervals have no `impute` column. The BLQ block must still resolve the
+    # column (not any same-named argument); otherwise it produced "blq, FALSE"
+    # and PKNCA looked for the non-existent PKNCA_impute_method_FALSE.
     subj1 <- unique(data$conc$data$USUBJID)[1]
     data$conc$data <- data$conc$data %>% filter(USUBJID == subj1)
     data$intervals <- data$intervals %>% filter(USUBJID == subj1)
@@ -440,7 +439,7 @@ describe("update_main_intervals", {
 
     result <- update_main_intervals(
       data, param_list, auc_empty,
-      impute = FALSE,
+      start_impute = FALSE,
       blq_imputation_rule = blq_rule
     )
 
