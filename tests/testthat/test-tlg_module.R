@@ -435,6 +435,66 @@ describe("tlg_module_server", {
   })
 })
 
+# ---------------------------------------------------------------------------
+# tlg_module_server: render-warning surfacing (issue #1335)
+# ---------------------------------------------------------------------------
+
+describe("tlg_module_server: warning surfacing", {
+  test_data <- shiny::reactive(
+    list(conc = list(data = data.frame(
+      NFRLT = 1:3, AVAL = c(5, 4, 3), stringsAsFactors = FALSE
+    )))
+  )
+  # Only warnings raised through .tlg_warn() (class `tlg_warning`) are meant for the user.
+  # A urine TLG reporting that PCSPEC/PPSPEC is absent is one; it still returns a result.
+  render_list_warns <- function(data, ...) {
+    warning(warningCondition(
+      "PCSPEC/PPSPEC not found; specimen filtering skipped", class = "tlg_warning"
+    ))
+    list("plot_a")
+  }
+
+  # Incidental warnings from the plotting stack must NOT become UI noise.
+  render_list_warns_untyped <- function(data, ...) {
+    warning("Removed 3 rows containing missing values")
+    list("plot_a")
+  }
+
+  notes_from <- function(render_list) {
+    notes <- character(0)
+    mockery::stub(
+      tlg_module_server, "showNotification",
+      function(ui, ...) notes[[length(notes) + 1]] <<- ui
+    )
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data        = test_data,
+        type        = "graph",
+        render_list = render_list,
+        options     = list()
+      ),
+      {
+        session$setInputs(entries_per_page = "All")
+        session$elapse(800)  # clear the debounce(750)
+        # Muffled: rendering continued and produced the returned list.
+        expect_equal(tlg_list(), list("plot_a"))
+      }
+    )
+    notes
+  }
+
+  it("muffles tlg_warning conditions, notifies the user, and continues rendering", {
+    notes <- notes_from(render_list_warns)
+    expect_length(notes, 1)
+    expect_match(notes[[1]], "specimen filtering skipped")
+  })
+
+  it("leaves untyped warnings to the console rather than notifying", {
+    expect_length(notes_from(render_list_warns_untyped), 0)
+  })
+})
+
 # Graph panels are bound by output ID, and `render_graph_outputs()` registers those bindings as
 # `plot_<index>`.  The UI side must use the same index: several graph builders (g_pkcg03, the
 # p_pkpg* family) return NAMED lists, and deriving the ID from the name produced IDs that never
