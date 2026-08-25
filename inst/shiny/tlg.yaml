@@ -252,7 +252,7 @@ t_pkpt03_MP_col:
   dataset: ADPP
   pkid: pkpt03
   label: "pkpt03 - Summary M/P Ratios (stats in cols)"
-  description: "Summary of metabolite to parent ratios by TRT [stats in columns]"
+  description: "Summary of the metabolite to parent ratios set up in Parameter Selection > Ratios, by TRT [stats in columns]"
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
   fun: t_pkpt03_MP_col
   condition: null
@@ -264,18 +264,24 @@ t_pkpt03_MP_col:
       choices: $PARAM
       multiple: true
     .group_label_1: "Grouping"
+    # No default: the function splits by its derived "<metabolite> / <parent>"
+    # label, which is not a column of ADPP and so cannot be a `.colnames` default.
     list_vars:
       label: "Split tables by"
       type: select
       choices: .colnames
       multiple: true
-      default: ["PPCAT"]
+    # No `.pknca_groups` default here: that token resolves the PKNCA grouping
+    # variables against the dataset, and ADPP renames two of them (PCSPEC ->
+    # PPSPEC, the analyte from PARAM -> PPCAT), so on ADPP it collapses to
+    # STUDYID + PARAM.  For this table that pooled every treatment arm into one
+    # row.  Falling through to the function default stratifies by TRT01A and the
+    # ratio parameter, which is what the entry label promises.
     strat_var:
       label: "Stratify by (rows)"
       type: select
       choices: .colnames
       multiple: true
-      default: .pknca_groups
     .group_label_2: "Value"
     value_var:
       label: "Value variable"
@@ -735,7 +741,7 @@ l_pkpl01_mp:
   dataset: ADPP
   pkid: pkpl01
   label: "pkpl01 - M/P Ratio Listing"
-  description: "Individual listings of metabolite to parent ratios vs. TRT, by TRT/dose (Metabolite/Parent Ratio as header names)"
+  description: "Individual listings of the metabolite to parent ratios set up in Parameter Selection > Ratios, by TRT/dose"
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
   fun: l_pkpl01_mp
   condition: null
@@ -751,12 +757,13 @@ l_pkpl01_mp:
       type: text
       label: Footnote
     .group_label_2: "Grouping"
+    # No default: the function groups by its derived "<metabolite> / <parent>"
+    # label, which is not a column of ADPP and so cannot be a `.colnames` default.
     listgroup_vars:
       label: "Table grouping variables"
       type: select
       choices: .colnames
       multiple: true
-      default: ["PPCAT", "PPSPEC"]
     grouping_vars:
       label: "Listing grouping variables"
       type: select
@@ -783,7 +790,7 @@ l_pkpl04_mp:
   dataset: ADPP
   pkid: pkpl04
   label: "pkpl04 - Treatment Ratio Listing"
-  description: "Individual listing of treatment ratios for selected PK parameters, by TRT"
+  description: "Individual listing of the treatment ratios set up in Parameter Selection > Ratios, by TRT"
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl04.html
   fun: l_pkpl04_mp
   condition: null
@@ -799,12 +806,13 @@ l_pkpl04_mp:
       type: text
       label: Footnote
     .group_label_2: "Grouping"
+    # No default: the function groups by its derived "<test> / <reference>" label,
+    # which is not a column of ADPP and so cannot be a `.colnames` default.
     listgroup_vars:
       label: "Table grouping variables"
       type: select
       choices: .colnames
       multiple: true
-      default: ["PPCAT", "PPSPEC"]
     grouping_vars:
       label: "Listing grouping variables"
       type: select
@@ -1301,7 +1309,7 @@ p_pkpg06_mp:
   dataset: ADPP
   pkid: pkpg06
   label: "pkpg06 - Boxplot Metabolite/Parent Ratios"
-  description: "Boxplots for Metabolite/Parent ratios by TRT"
+  description: "Boxplots of the metabolite to parent ratios set up in Parameter Selection > Ratios, by TRT"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
   fun: p_pkpg06_mp
   condition: null
