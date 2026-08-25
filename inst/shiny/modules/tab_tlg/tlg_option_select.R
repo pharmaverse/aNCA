@@ -22,6 +22,41 @@
   names(df)[keep]
 }
 
+#' Column choices for the ratio TLG entries.
+#'
+#' `filter_ratio_rows()` derives `RATIO` and `RATIOREF` inside the TLG function, so
+#' they are not columns of ADPP and the `.colnames` token cannot offer them.  The
+#' four ratio entries default to splitting on `RATIO`; without this token (used via
+#' `.ratiocols`) a user who touched the split dropdown lost the derived label with
+#' no way to select it back.
+#'
+#' `RATIOREF` is missing on same-group ratios, which have no reference group, so
+#' splitting by it drops those rows -- `split_and_apply()` says so when it happens.
+#'
+#' @param df A data frame.
+#' @return The derived ratio columns followed by the data's own column names.
+.ratio_col_names <- function(df) {
+  unique(c(aNCA:::.RATIO_DERIVED_COLS, names(df)))
+}
+
+#' Parameter values that belong to a ratio.
+#'
+#' Restricts the parameter filter on the ratio TLG entries (via the `.ratioparams`
+#' choices token) to parameters that can actually appear.  The entries drop every
+#' non-ratio row before summarizing, so offering the full `PARAM` list let a user
+#' pick a value that could only ever produce an empty output.  Ratio rows are
+#' identified the same way `filter_ratio_rows()` identifies them: the `" TO "` that
+#' `calculate_ratios()` writes into `PPANMETH`.
+#'
+#' @param df A data frame.
+#' @return Character vector of ratio parameter names, sorted; empty if none.
+.ratio_param_values <- function(df) {
+  if (!all(c("PARAM", "PPANMETH") %in% names(df))) return(character(0))
+  is_ratio <- !is.na(df$PPANMETH) & grepl(" TO ", df$PPANMETH)
+  values <- unique(as.character(df$PARAM[is_ratio]))
+  sort(values[!is.na(values)])
+}
+
 #' Specimen values that look like urine.
 #'
 #' Restricts the specimen filter on urine-only TLGs (via the `.urinespecs` choices
@@ -40,6 +75,43 @@
   sort(values[grepl("urin", values, ignore.case = TRUE)])
 }
 
+#' Resolve a `choices:` entry from the TLG yaml against the data behind an entry.
+#'
+#' A `.token` is looked up in the table below; a `$COLUMN` reference yields that
+#' column's distinct values; anything else is a literal list taken as written.
+#'
+#' @param choices The option definition's `choices` value.
+#' @param conc_df The data frame backing the TLG entry.
+#' @return A character vector of choices, named where the dropdown label should
+#'   differ from the value passed to the function.
+.resolve_option_choices <- function(choices, conc_df) {
+  token <- if (length(choices) == 1 && is.character(choices)) choices else ""
+
+  resolvers <- list(
+    .colnames    = function() names(conc_df),
+    .ratiocols   = function() .ratio_col_names(conc_df),
+    .ratioparams = function() .ratio_param_values(conc_df),
+    .groupcols   = function() .sensible_group_cols(conc_df),
+    .urinespecs  = function() .urine_spec_values(conc_df),
+    # Named vector: names are the readable labels shown in the dropdown, values
+    # are the terse statistic names passed to the `stats` function argument.
+    .stats       = function() {
+      labels <- aNCA:::.STAT_LABELS
+      setNames(names(labels), unname(labels))
+    }
+  )
+  if (token %in% names(resolvers)) return(resolvers[[token]]())
+
+  if (!grepl("^\\$", token)) return(choices)
+
+  # `[[` rather than `[` so a tibble yields a vector: `[` returns a one-column data frame,
+  # which `selectInput` then labels with the column name instead of its values.
+  col <- sub("^\\$", "", token)
+  if (!col %in% names(conc_df)) return(character(0))
+  col_values <- unique(conc_df[[col]])
+  as.character(col_values[!is.na(col_values)])
+}
+
 #' Function generating an input widget for TLG option.
 #' @param id      id of the input widget
 #' @param opt_def definition of the option, as specified in the `yaml` file
@@ -53,32 +125,7 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
   label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
 
   conc_df <- if (is.data.frame(data())) data() else data()$conc$data
-  choices <- {
-    if (isTRUE(opt_def$choices == ".colnames")) {
-      names(conc_df)
-    } else if (isTRUE(opt_def$choices == ".groupcols")) {
-      .sensible_group_cols(conc_df)
-    } else if (isTRUE(opt_def$choices == ".urinespecs")) {
-      .urine_spec_values(conc_df)
-    } else if (isTRUE(opt_def$choices == ".stats")) {
-      # Named vector: names are the readable labels shown in the dropdown, values
-      # are the terse statistic names passed to the `stats` function argument.
-      labels <- aNCA:::.STAT_LABELS
-      setNames(names(labels), unname(labels))
-    } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
-      # `[[` rather than `[` so a tibble yields a vector: `[` returns a one-column data frame,
-      # which `selectInput` then labels with the column name instead of its values.
-      col <- sub("^\\$", "", opt_def$choices)
-      if (col %in% names(conc_df)) {
-        col_values <- unique(conc_df[[col]])
-        as.character(col_values[!is.na(col_values)])
-      } else {
-        character(0)
-      }
-    } else {
-      opt_def$choices
-    }
-  }
+  choices <- .resolve_option_choices(opt_def$choices, conc_df)
 
   selected <- {
     if (!is.null(opt_def$default)) {

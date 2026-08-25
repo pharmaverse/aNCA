@@ -261,15 +261,19 @@ t_pkpt03_MP_col:
     param_filter:
       label: "Parameters to show (PARAM)"
       type: select
-      choices: $PARAM
+      # Only ratio parameters survive the filtering this entry applies, so the full
+      # PARAM list would offer values that can only ever produce an empty table.
+      choices: .ratioparams
       multiple: true
     .group_label_1: "Grouping"
     # No default: the function splits by its derived "<metabolite> / <parent>"
     # label, which is not a column of ADPP and so cannot be a `.colnames` default.
+    # `.ratiocols` still offers it as a choice, so a user who changes this can put
+    # the split back.
     list_vars:
       label: "Split tables by"
       type: select
-      choices: .colnames
+      choices: .ratiocols
       multiple: true
     # No `.pknca_groups` default here: that token resolves the PKNCA grouping
     # variables against the dataset, and ADPP renames two of them (PCSPEC ->
@@ -280,7 +284,7 @@ t_pkpt03_MP_col:
     strat_var:
       label: "Stratify by (rows)"
       type: select
-      choices: .colnames
+      choices: .ratiocols
       multiple: true
     .group_label_2: "Value"
     value_var:
@@ -759,15 +763,17 @@ l_pkpl01_mp:
     .group_label_2: "Grouping"
     # No default: the function groups by its derived "<metabolite> / <parent>"
     # label, which is not a column of ADPP and so cannot be a `.colnames` default.
+    # `.ratiocols` still offers it as a choice, so a user who changes this can put
+    # the grouping back.
     listgroup_vars:
       label: "Table grouping variables"
       type: select
-      choices: .colnames
+      choices: .ratiocols
       multiple: true
     grouping_vars:
       label: "Listing grouping variables"
       type: select
-      choices: .colnames
+      choices: .ratiocols
       multiple: true
       default: ["TRT01A", "USUBJID"]
     .group_label_3: "Columns"
@@ -808,15 +814,17 @@ l_pkpl04_mp:
     .group_label_2: "Grouping"
     # No default: the function groups by its derived "<test> / <reference>" label,
     # which is not a column of ADPP and so cannot be a `.colnames` default.
+    # `.ratiocols` still offers it as a choice, so a user who changes this can put
+    # the grouping back.
     listgroup_vars:
       label: "Table grouping variables"
       type: select
-      choices: .colnames
+      choices: .ratiocols
       multiple: true
     grouping_vars:
       label: "Listing grouping variables"
       type: select
-      choices: .colnames
+      choices: .ratiocols
       multiple: true
       default: ["PARAM", "TRT01A", "USUBJID"]
     .group_label_3: "Columns"

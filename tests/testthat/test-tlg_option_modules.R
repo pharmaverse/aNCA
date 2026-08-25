@@ -251,6 +251,56 @@ describe("tlg_option_select_ui", {
     expect_true(grepl("COL2", html))
   })
 
+  it("offers the derived ratio columns as well as the data's own for '.ratiocols'", {
+    # RATIO is produced inside filter_ratio_rows(), so `.colnames` cannot see it and
+    # a user who changed the split could not put it back.
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(PPCAT = "DrugA", PPSPEC = "SERUM")))
+    )
+    opt_def <- list(
+      label = "Select", choices = ".ratiocols", default = NULL, multiple = TRUE
+    )
+    html <- as.character(shiny::isolate(
+      tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+    ))
+    expect_true(grepl("RATIO", html))
+    expect_true(grepl("RATIOREF", html))
+    expect_true(grepl("PPCAT", html))
+  })
+
+  it("offers only ratio parameters for '.ratioparams'", {
+    # A non-ratio parameter can only ever produce an empty table on these entries.
+    sample_data <- shiny::reactive(list(conc = list(data = data.frame(
+      PARAM    = c("Max Conc", "Metabolite Ratio for Max Conc", "AUC to Last"),
+      PPANMETH = c(NA, "CMAX TO CMAX [PARAM: DrugA]", NA),
+      stringsAsFactors = FALSE
+    ))))
+    opt_def <- list(
+      label = "Select", choices = ".ratioparams", default = NULL, multiple = TRUE
+    )
+    html <- as.character(shiny::isolate(
+      tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+    ))
+    # Anchored on the option tag: "Metabolite Ratio for Max Conc" itself ends with
+    # "Max Conc", so a bare substring test would never fail.
+    expect_true(grepl(">Metabolite Ratio for Max Conc<", html))
+    expect_false(grepl(">Max Conc<", html))
+    expect_false(grepl(">AUC to Last<", html))
+  })
+
+  it("offers no ratio parameters when the data has no PPANMETH", {
+    sample_data <- shiny::reactive(
+      list(conc = list(data = data.frame(PARAM = "Max Conc")))
+    )
+    opt_def <- list(
+      label = "Select", choices = ".ratioparams", default = NULL, multiple = TRUE
+    )
+    html <- as.character(shiny::isolate(
+      tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+    ))
+    expect_false(grepl("Max Conc", html))
+  })
+
   it("derives choices from a data column when choices starts with '$'", {
     sample_data <- shiny::reactive(
       list(conc = list(data = data.frame(GRP = c("G1", "G2", "G1"))))

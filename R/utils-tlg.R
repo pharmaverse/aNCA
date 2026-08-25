@@ -75,6 +75,11 @@ split_and_apply <- function(data, list_vars, fn) {
 .RATIO_ANALYTE_KEY <- "PARAM"
 .RATIO_ADPP_COLUMN <- c(PARAM = "PPCAT", PCSPEC = "PPSPEC")
 
+# Columns `filter_ratio_rows()` derives.  They are not in ADPP, so the sidebar's
+# `.colnames` choices token cannot offer them -- `.ratiocols` exists to append
+# them for the entries that default to splitting on one.
+.RATIO_DERIVED_COLS <- c("RATIO", "RATIOREF")
+
 #' Name of the ADPP column holding the values of a PPANMETH reference key
 #' @noRd
 .ratio_key_column <- function(key) {
