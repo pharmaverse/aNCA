@@ -195,6 +195,62 @@ describe("format_pkncadata_intervals", {
     expect_true(all(result$start >= 0))
   })
 
+  it("anchors start to C1, not the predose sample, when start_from_last_dose is FALSE", {
+    # Regression (#1121): a predose sample has a negative ARRLT. slice(1) used to
+    # pick an arbitrary row, often the predose one, so start = dose_time + ARRLT
+    # collapsed to the predose time instead of C1 (first post-dose sample).
+    predose_adnca <- data.frame(
+      STUDYID = 1,
+      USUBJID = 1,
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      PARAM = "Analyte1",
+      # dose_time = AFRLT - ARRLT = 5 for every row (predose then C1..C3).
+      # The predose sample carries a negative ARRLT (-0.5).
+      AFRLT = c(4.5, 5.5, 6.5, 7.5),
+      ARRLT = c(-0.5, 0.5, 1.5, 2.5),
+      NFRLT = c(4.5, 5.5, 6.5, 7.5),
+      ATPTREF = 1,
+      DOSEA = 10,
+      ROUTE = "extravascular",
+      ADOSEDUR = 0,
+      AVAL = c(0, 5, 3, 1)
+    )
+
+    df_conc_pd <- format_pkncaconc_data(
+      predose_adnca,
+      group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT", "PARAM"),
+      time_column = "AFRLT",
+      dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")
+    )
+    df_dose_pd <- format_pkncadose_data(
+      df_conc_pd,
+      group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT")
+    )
+
+    pknca_conc_pd <- PKNCA::PKNCAconc(
+      df_conc_pd,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+    pknca_dose_pd <- PKNCA::PKNCAdose(
+      data = df_dose_pd,
+      formula = DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID
+    )
+
+    result <- format_pkncadata_intervals(
+      pknca_conc = pknca_conc_pd,
+      pknca_dose = pknca_dose_pd,
+      start_from_last_dose = FALSE
+    )
+
+    # C1 is the first sample at/after the dose: dose_time (5) + first ARRLT >= 0 (0.5) = 5.5.
+    # The predose sample would have given 5 + (-0.5) = 4.5, which must not happen.
+    expect_equal(result$start[1], 5.5)
+    expect_true(all(result$start >= 5))
+  })
+
   it("filters out intervals where start > end time", {
     # Force an impossible scenario:
     # start = 10 (from dose time) but end = 5 (from next dose or max_end)

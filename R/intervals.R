@@ -62,7 +62,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     c("start", "end")
   )
 
-  # Select conc data and for time column give priority to non-predose samples
+  # Select conc data (non-predose samples are prioritised later via arrange())
   sub_pknca_conc <- pknca_conc$data %>%
     select(any_of(c(
       conc_groups, "ARRLT", "ATPTREF", "DOSNOA",
@@ -93,7 +93,14 @@ format_pkncadata_intervals <- function(pknca_conc,
     # max_end is the last sample time relative to this dose
     mutate(max_end = max(ARRLT, na.rm = TRUE)) %>%
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
-    slice(1) %>% # slice one row per conc group
+    # Anchor start to C1: keep the first sample at or after the dose, i.e. the
+    # smallest non-negative ARRLT. `ARRLT < 0` sorts post-dose rows (FALSE)
+    # ahead of predose rows (TRUE), then ascending ARRLT puts C1 first.
+    # Without this ordering, slice(1) could land on a predose sample whose
+    # negative ARRLT dragged `start` before the dose (predose time) instead of
+    # to C1 when start_from_last_dose = FALSE (#1121).
+    arrange(ARRLT < 0, ARRLT, .by_group = TRUE) %>%
+    slice(1) %>% # one row per conc group + dose, now the C1 sample
     ungroup() %>%
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
     mutate(start = if (start_from_last_dose) {
