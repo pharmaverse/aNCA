@@ -318,6 +318,20 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
   ifelse(is.na(ratio), ppanmeth, ratio)
 }
 
+#' First non-missing value, or `NA` when there is none
+#'
+#' Used where several rows collapse to one cell and the choice between them is
+#' arbitrary: picking a missing value over an available one is never the useful
+#' arbitrary choice.
+#'
+#' @param x A vector.
+#' @returns A length-one vector of the same type as `x`.
+#' @noRd
+.first_present <- function(x) {
+  present <- x[!is.na(x)]
+  if (length(present) == 0) x[NA_integer_][1] else present[1]
+}
+
 #' Collapse each element of a list of values into one label, `NA` when empty
 #' @noRd
 .collapse_values <- function(values) {

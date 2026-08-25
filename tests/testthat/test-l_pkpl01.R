@@ -91,6 +91,29 @@ describe("l_pkpl01", {
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
+  it("shows a later dose profile's value rather than a leading NA", {
+    # A ratio is missing for any dose profile where either side could not be
+    # computed, and the first profile is often one of them.  Taking the first row
+    # regardless left the listing blank for a subject the summary table counted
+    # and averaged -- the two outputs disagreed on the same data.
+    multi <- do.call(rbind, lapply(c("S1", "S2"), function(s) {
+      transform(
+        pkpl_data[pkpl_data$USUBJID == s, ][rep(1, 4), ],
+        AVISIT = paste("Cycle", 1:4),
+        AVAL   = c(NA, NA, 7, 9)
+      )
+    }))
+    out <- l_pkpl01(multi)[[1]]
+    expect_equal(as.numeric(out[["Cmax"]]), c(7, 7))
+  })
+
+  it("still reports NA when every row for a subject is missing", {
+    all_na <- transform(
+      pkpl_data[rep(1, 3), ], AVISIT = paste("Cycle", 1:3), AVAL = NA_real_
+    )
+    expect_true(is.na(l_pkpl01(all_na)[[1]][["Cmax"]]))
+  })
+
   it("handles multi-interval ADPP (duplicate PARAM rows per subject) without error", {
     # Simulate ADPP with two dose intervals: same USUBJID+PARAM appears twice
     dup_data <- rbind(pkpl_data, pkpl_data)

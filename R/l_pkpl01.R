@@ -94,8 +94,13 @@ l_pkpl01 <- function(
         names_from  = dplyr::all_of(param_var),
         values_from = ".val_fmt",
         # When a subject has multiple rows for the same PARAM (e.g. multi-
-        # interval ADPP), take the first value rather than creating list-columns.
-        values_fn   = dplyr::first,
+        # interval ADPP), take one value rather than creating list-columns --
+        # the first that is actually present.  `dplyr::first` returned a leading
+        # NA even when a later dose profile had a value, so the listing showed a
+        # blank cell for a subject the summary table counted and averaged.  That
+        # is routine for ratios: a ratio is missing for any profile where either
+        # side could not be computed, and the first profile is often one of them.
+        values_fn   = .first_present,
         values_fill = NA_real_
       )
 
