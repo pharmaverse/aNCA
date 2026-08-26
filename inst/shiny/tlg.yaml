@@ -815,7 +815,10 @@ l_pkpl04_mp:
     # No default: the function groups by its derived "<test> / <reference>" label,
     # which is not a column of ADPP and so cannot be a `.colnames` default.
     # `.ratiocols` still offers it as a choice, so a user who changes this can put
-    # the grouping back.
+    # the grouping back.  The function pairs that label with PPCAT, because a
+    # treatment ratio compares groups within an analyte and so its label does not
+    # name one; dropping PPCAT here puts the parent's and the metabolite's ratios
+    # in the same column and only one of them survives the pivot.
     listgroup_vars:
       label: "Table grouping variables"
       type: select

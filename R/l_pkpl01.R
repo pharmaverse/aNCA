@@ -178,7 +178,11 @@ l_pkpl01_mp <- function(data, listgroup_vars = c("RATIO", "PPSPEC"), ...) {
 #'
 #' @inheritParams l_pkpl01
 #' @param listgroup_vars Columns used to split the output into separate listings.
-#'   Defaults to the derived `RATIO` label and `PPSPEC`.
+#'   Defaults to the derived `RATIO` label, `PPCAT` and `PPSPEC`. Unlike a
+#'   metabolite/parent ratio, a treatment ratio compares one group against another
+#'   *within* an analyte, so its `RATIO` label ("DOSE 2 / DOSE 1") does not name
+#'   the analyte. `PPCAT` has to split the listings as well, or the parent's and
+#'   the metabolite's ratios share a column and `pivot_wider` keeps one of them.
 #' @param grouping_vars Columns used to identify row keys before pivoting.
 #'   `PARAM` must be included so it is spread into display columns.
 #'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
@@ -196,7 +200,7 @@ l_pkpl01_mp <- function(data, listgroup_vars = c("RATIO", "PPSPEC"), ...) {
 #' @export
 l_pkpl04_mp <- function(
   data,
-  listgroup_vars = c("RATIO", "PPSPEC"),
+  listgroup_vars = c("RATIO", "PPCAT", "PPSPEC"),
   grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
   title         = "Listing of Individual Treatment Ratios",
   ...

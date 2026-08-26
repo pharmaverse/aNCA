@@ -47,6 +47,15 @@
       c("USUBJID", strat_vars, "AVISIT", col_group_var, "PPCAT", "PARAM"),
       names(df)
     )
+    # Rows that carry a value come first, so the survivor of the dedup is one the
+    # listings and plots would also have picked -- they skip missing values when
+    # they collapse the same rows.  Taking the leading row regardless dropped a
+    # subject from the table that the listing showed a value for, so the outputs
+    # contradicted each other on the same data.  `order()` is stable, so among
+    # rows that all have a value the first still wins.
+    if (value_var %in% names(df)) {
+      df <- df[order(is.na(df[[value_var]]), method = "radix"), , drop = FALSE]
+    }
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
   }
 

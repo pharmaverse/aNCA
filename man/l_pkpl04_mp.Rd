@@ -6,7 +6,7 @@
 \usage{
 l_pkpl04_mp(
   data,
-  listgroup_vars = c("RATIO", "PPSPEC"),
+  listgroup_vars = c("RATIO", "PPCAT", "PPSPEC"),
   grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
   title = "Listing of Individual Treatment Ratios",
   ...
@@ -16,7 +16,11 @@ l_pkpl04_mp(
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
 
 \item{listgroup_vars}{Columns used to split the output into separate listings.
-Defaults to the derived \code{RATIO} label and \code{PPSPEC}.}
+Defaults to the derived \code{RATIO} label, \code{PPCAT} and \code{PPSPEC}. Unlike a
+metabolite/parent ratio, a treatment ratio compares one group against another
+\emph{within} an analyte, so its \code{RATIO} label ("DOSE 2 / DOSE 1") does not name
+the analyte. \code{PPCAT} has to split the listings as well, or the parent's and
+the metabolite's ratios share a column and \code{pivot_wider} keeps one of them.}
 
 \item{grouping_vars}{Columns used to identify row keys before pivoting.
 \code{PARAM} must be included so it is spread into display columns.
