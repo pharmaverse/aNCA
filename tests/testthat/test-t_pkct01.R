@@ -62,9 +62,10 @@ describe("t_pkct01", {
   })
 
   it("drops PKSUMXF == 'Y' rows from the summary (#1438)", {
-    # Flag both non-BLQ records of the 10mg / NFRLT==1 group for summary
-    # exclusion; that cell's n must drop from 2 to 0 while the unflagged
-    # comparison run keeps n == 2.
+    # Flag both records of the 10mg / NFRLT==1 group for summary exclusion.
+    # Every row of that cell is removed, so the group has no data left and the
+    # row drops out of the table entirely (empty groups are not emitted). The
+    # unflagged comparison run keeps the cell with n == 2.
     flagged <- pkct01_data
     flagged$PKSUMXF <- ""
     flagged$PKSUMXF[flagged$PARAM == "Drug A" &
@@ -73,7 +74,7 @@ describe("t_pkct01", {
 
     excl <- t_pkct01(flagged)[[1]]
     row_excl <- excl[excl$TRT01A == "10mg" & excl$NFRLT == 1, ]
-    expect_equal(row_excl$n, 0)
+    expect_equal(nrow(row_excl), 0)
 
     kept <- t_pkct01(pkct01_data)[[1]]
     row_kept <- kept[kept$TRT01A == "10mg" & kept$NFRLT == 1, ]
