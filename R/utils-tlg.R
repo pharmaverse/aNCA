@@ -160,12 +160,13 @@ split_and_apply <- function(data, list_vars, fn) {
 
 #' Classify each PPANMETH value as a ratio row, and which family it belongs to
 #'
-#' A row counts as a ratio when at least one of the two PPANMETH parsers
-#' recognises it: `calculate_ratios()` always writes a reference bracket, except
-#' for a same-group ratio where it writes the bare parameter pair instead.  A
-#' plain `grepl(" TO ", ...)` was too loose -- `PPANMETH` is a permitted ADPP
-#' variable carrying free-text analysis method, and any sentence containing the
-#' word "to" in upper case would have been summarized under a ratio heading.
+#' Every ratio carries `"<test> TO <ref>"`, with a reference bracket appended
+#' unless the test and reference groups are the same.  A row counts as a ratio
+#' when that pair is the whole field, or when a reference bracket accompanies it.
+#' Both halves of that test earn their place: `PPANMETH` is a permitted ADPP
+#' variable carrying free-text analysis method, so a plain `grepl(" TO ", ...)`
+#' read any sentence mentioning "TO" as a ratio, while a bracket on its own
+#' matched an annotation with no comparison in it at all.
 #'
 #' @param ppanmeth Character vector of PPANMETH values.
 #' @returns A character vector the same length as `ppanmeth`: `"analyte"` for a
@@ -175,7 +176,15 @@ split_and_apply <- function(data, list_vars, fn) {
 .ratio_row_type <- function(ppanmeth) {
   ppanmeth <- as.character(ppanmeth)
   refs <- .parse_ratio_reference(ppanmeth)
-  has_ref <- lengths(refs) > 0
+
+  # A reference bracket identifies a ratio whose codes are not bare tokens -- a
+  # chained ratio carries "RACMAX (mean)" -- but only when what remains once the
+  # bracket is stripped is still a comparison.  The bracket alone is not enough:
+  # an analysis method such as "Interpolated [source: nominal]" contains no
+  # " TO " at all, and admitting it summarized a free-text annotation under a
+  # ratio heading, labelled with the bracket's value.
+  has_ref <- lengths(refs) > 0 &
+    grepl(" TO ", sub("\\s*\\[[^][]*\\]$", "", ppanmeth))
   is_ratio <- !is.na(ppanmeth) &
     (has_ref | !is.na(.parse_ratio_parameters(ppanmeth)[, "test"]))
 

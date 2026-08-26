@@ -204,6 +204,15 @@ describe("filter_ratio_rows", {
     expect_error(filter_ratio_rows(prose, "caller", "any"), "no ratio parameters found")
   })
 
+  it("does not read a bracketed annotation with no comparison as a ratio", {
+    # The bracket alone used to be enough, so an analysis method that happens to
+    # carry a "key: value" note was summarized under a ratio heading and labelled
+    # with the note's value -- without containing " TO " anywhere.
+    noted <- adpp[adpp$PARAMCD == "CMAX", ]
+    noted$PPANMETH <- "Interpolated [source: nominal]"
+    expect_error(filter_ratio_rows(noted, "caller", "any"), "no ratio parameters found")
+  })
+
   it("still selects a ratio whose parameter code is not a bare token", {
     # A ratio of a ratio carries "RAAUCLST (mean)" as its parameter, so the pair
     # is not a two-token string; the reference bracket identifies it instead.
