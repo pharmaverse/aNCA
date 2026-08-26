@@ -50,7 +50,18 @@
     } else if (current_step == "mapping") {
       mapping_busy(TRUE)
       loading_popup("Processing data mapping...")
-      trigger_mapping_submit(trigger_mapping_submit() + 1)
+      # Defer the submit to a later flush so the loading modal is sent to the
+      # browser and painted first. The mapping pipeline is synchronous, so if
+      # we incremented the trigger in this same observer it would run to
+      # completion within the same flush cycle -- including the removeModal()
+      # in on_mapping_complete(). Shiny batches all queued messages until the
+      # end of the flush, so the browser would then receive showModal and
+      # removeModal together; hiding a Bootstrap modal mid fade-in drops the
+      # hide and the spinner stays on screen forever. Deferring puts the submit
+      # (and its removeModal) in a subsequent flush where the hide applies.
+      shinyjs::delay(100, {
+        trigger_mapping_submit(trigger_mapping_submit() + 1)
+      })
     } else if (current_step == "preview") {
       shinyjs::runjs(
         "document.querySelector(`a[data-value='exploration']`).click();"

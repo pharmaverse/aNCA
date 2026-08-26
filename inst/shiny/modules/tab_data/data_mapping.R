@@ -467,11 +467,15 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
       )
     }) %>%
       bindEvent(
-        # Key on trigger() so this fires on every mapping submit, even when the
+        # Key on trigger() so this re-runs on every submit, even when the
         # mapping (and thus mapped_data()) is unchanged -- otherwise the
-        # completion callback that closes the loading modal never runs on the
-        # default "next-next" path, and it spins forever. Keep
-        # resolved_time_duplicate_rows() so resolving duplicates re-runs it.
+        # on_mapping_complete() callback that closes the loading modal is never
+        # even enqueued on the default "next-next" path. This is necessary but
+        # not sufficient: the parent (tab_data.R) must also defer incrementing
+        # the trigger so removeModal() lands in a later flush than the modal's
+        # showModal(), otherwise the hide races the Bootstrap fade-in and is
+        # dropped. Keep resolved_time_duplicate_rows() so resolving duplicates
+        # re-runs it.
         list(trigger(), mapped_data(), resolved_time_duplicate_rows()),
         ignoreInit = FALSE
       )

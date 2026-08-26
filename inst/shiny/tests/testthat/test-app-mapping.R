@@ -38,11 +38,14 @@ describe("Test for mapping interface", {
     expect_false(any(purrr::map_lgl(mapping_inputs_set, is.null)))
   })
 
-  it("advances past mapping on the default path without hanging (#1420)", {
+  it("dismisses the loading modal and advances past mapping (#1420)", {
     # With the default data (no duplicates) and unchanged mappings, submitting
-    # the mapping must complete and advance to the Filtering step. Previously the
-    # "Processing data mapping..." modal hung forever because the completion
-    # callback lived in a reactive keyed only on values that never changed.
+    # the mapping must dismiss the "Processing data mapping..." loading modal
+    # and advance to the Filtering step. Previously the modal hung forever: the
+    # submit was triggered in the same flush as showModal(), so the pipeline's
+    # removeModal() was batched with the show and dropped mid Bootstrap
+    # fade-in. Deferring the submit lets the show paint first so the later hide
+    # applies.
     app <- AppDriver$new(name = "app_mapping_advance")
 
     app$click("data-next_step") # upload -> mapping
@@ -50,6 +53,13 @@ describe("Test for mapping interface", {
     app$click("data-next_step") # mapping -> submit (must reach filtering)
     app$wait_for_idle()
 
+    # Navigation advanced ...
     expect_equal(app$get_value(input = "data-data_navset"), "Filtering")
+
+    # ... and the loading modal is actually gone from the DOM. This is the part
+    # that would fail if removeModal() raced the fade-in: the spinner element
+    # would still be present even though processing finished.
+    modal_html <- app$get_html(".modal-content")
+    expect_null(modal_html)
   })
 })

@@ -2,7 +2,7 @@
 
 ## Bug Fixes
 
-* Fix the "Processing data mapping..." spinner hanging forever when advancing through mapping with unchanged mappings (e.g. the default data with no duplicates). The reactive that closes the loading modal was keyed only on the mapped data and duplicate rows, so it never re-ran when neither changed; it now also keys on the submit trigger (#1420)
+* Fix the "Processing data mapping..." spinner hanging forever when advancing through mapping (e.g. the default data with no duplicates). The mapping submit ran synchronously in the same flush cycle as the loading modal's `showModal()`, so the pipeline's `removeModal()` was batched with the show and dropped mid Bootstrap fade-in. The submit is now deferred to a later flush so the spinner paints first and the later hide applies; the completion reactive also keys on the submit trigger so it re-runs (and dismisses the modal) even when the mapping is unchanged (#1420)
 * Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)
 
 ## Testing
