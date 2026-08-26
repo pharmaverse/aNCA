@@ -16,7 +16,7 @@ export_cdisc(res_nca, grouping_vars = character(0), flag_rules = NULL)
 
   Object with results of the NCA analysis. If `res_nca$result` contains
   a `.pp_excl` column (logical), excluded rows are merged into the
-  `exclude` column so they appear in `PPSUMFL`/`PPSUMRSN`. If
+  `exclude` column so they appear in `PPSUMXF`/`PPSUMRSN`. If
   `.pp_excl_reason` (character) is also present, it populates
   `PPSUMRSN`.
 
@@ -30,7 +30,7 @@ export_cdisc(res_nca, grouping_vars = character(0), flag_rules = NULL)
 
   Character vector of flag rule exclusion messages applied during NCA
   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). Each entry generates a
-  CRITy/CRITyFL column pair in ADPP, plus PPSUMFL and PPSUMRSN columns.
+  CRITy/CRITyFL column pair in ADPP, plus PPSUMXF and PPSUMRSN columns.
   Defaults to `NULL` (no flags).
 
 ## Value

@@ -385,7 +385,7 @@ pknca_res <- pknca_res %>%
 
 [`export_cdisc()`](https://pharmaverse.github.io/aNCA/reference/export_cdisc.md)
 produces PP, ADPP, and ADNCA datasets from the NCA results. Flag rules
-are formatted into CRITy/CRITyFL/PPSUMFL columns in ADPP:
+are formatted into CRITy/CRITyFL/PPSUMXF columns in ADPP:
 
 ``` r
 
@@ -411,7 +411,7 @@ cdisc_datasets <- pknca_res %>%
 `cdisc_datasets` is a named list with three data frames: -
 **`cdisc_datasets$pp`**: PP domain — one row per parameter per
 subject. - **`cdisc_datasets$adpp`**: ADPP — PP with ADaM-style flags
-and criterion columns (CRITy, CRITyFL, PPSUMFL, PPSUMRSN). -
+and criterion columns (CRITy, CRITyFL, PPSUMXF, PPSUMRSN). -
 **`cdisc_datasets$adnca`**: ADNCA — the full analysis dataset with
 results joined back to the concentration-time data.
 

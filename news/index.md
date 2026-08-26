@@ -90,7 +90,7 @@
     treatment comparison
   - `l_pkcl02_uri` — urine concentration and volume listing
 - ADPP-based TLG outputs now correctly exclude rows flagged via
-  `PPSUMFL = "Y"`, consistent with ADNCA exclusion via `PKSUM1F`
+  `PPSUMXF = "Y"`, consistent with ADNCA exclusion via `PKSUMXF`
   ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343))
 - Summary tables are easier to read: split tables (e.g. by
   analyte/specimen) now show the group as a header, `t_pkct01` rows are
@@ -105,8 +105,8 @@
   covariates such as `SEX` or `RACE`
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
 - Summary-exclusion flags are scoped both to summary outputs and to
-  their own dataset: ADNCA (concentration) outputs filter on `PKSUM1F`
-  and ADPP (PK parameter) outputs on `PPSUMFL`, so a record excluded
+  their own dataset: ADNCA (concentration) outputs filter on `PKSUMXF`
+  and ADPP (PK parameter) outputs on `PPSUMXF`, so a record excluded
   from one summary is not dropped from the other’s TLGs, and individual
   listings show all records (matching their “subjects excluded from the
   summary table” footnote)
@@ -223,6 +223,10 @@
 
 #### NCA Setup
 
+- Summary exclusions now use dataset-specific flags (`PKSUMXF` for ADNCA
+  and `PPSUMXF` for ADPP). The exclusion tabs and accessible row-color
+  tooltips now describe NCA calculation and summary effects explicitly
+  ([\#1436](https://github.com/pharmaverse/aNCA/issues/1436))
 - Renamed “Aggregate Subject” label to “Mean across subjects” in ratio
   calculations for clarity; updated help text to explain matching
   mechanics ([\#1297](https://github.com/pharmaverse/aNCA/issues/1297))
@@ -247,7 +251,7 @@
   ([\#851](https://github.com/pharmaverse/aNCA/issues/851),
   [\#1018](https://github.com/pharmaverse/aNCA/issues/1018))
 - Parameter Exclusions tab: exclude individual PK parameter rows from
-  descriptive statistics and ADPP export via PPSUMFL/PPSUMRSN flags
+  descriptive statistics and ADPP export via PPSUMXF/PPSUMRSN flags
   ([\#1040](https://github.com/pharmaverse/aNCA/issues/1040))
 - NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are
   excluded from NCA
@@ -315,7 +319,7 @@
   session info ([\#998](https://github.com/pharmaverse/aNCA/issues/998),
   [\#829](https://github.com/pharmaverse/aNCA/issues/829))
 - ADPP includes CRITy/CRITyFL columns for flag rules and
-  PPSUMFL/PPSUMRSN for summary exclusion status
+  PPSUMXF/PPSUMRSN for summary exclusion status
   ([\#1141](https://github.com/pharmaverse/aNCA/issues/1141))
 - Non-standard grouping variables included in ADPP and ADNCA outputs
   ([\#1077](https://github.com/pharmaverse/aNCA/issues/1077))
@@ -337,7 +341,7 @@
 #### Data & Mapping
 
 - ADNCA now includes `PKSUM1RS` column storing the general exclusion
-  reason when `PKSUM1F = "Y"`
+  reason when `PKSUMXF = "Y"`
   ([\#1331](https://github.com/pharmaverse/aNCA/issues/1331))
 - Upload multiple input files, bound into a single ADNCA dataset
   ([\#821](https://github.com/pharmaverse/aNCA/issues/821))

@@ -79,7 +79,7 @@ Attention: All parameters that do no match pptest dataframe will be lost in this
 <dl><dt id="arg-res-nca">res_nca<a class="anchor" aria-label="anchor" href="#arg-res-nca"></a></dt>
 <dd><p>Object with results of the NCA analysis. If
 <code>res_nca$result</code> contains a <code>.pp_excl</code> column (logical), excluded rows
-are merged into the <code>exclude</code> column so they appear in <code>PPSUMFL</code>/<code>PPSUMRSN</code>.
+are merged into the <code>exclude</code> column so they appear in <code>PPSUMXF</code>/<code>PPSUMRSN</code>.
 If <code>.pp_excl_reason</code> (character) is also present, it populates <code>PPSUMRSN</code>.</p></dd>
 
 
@@ -91,7 +91,7 @@ as additional columns in ADNCA, ADPP, and PP outputs. Defaults to <code>characte
 <dt id="arg-flag-rules">flag_rules<a class="anchor" aria-label="anchor" href="#arg-flag-rules"></a></dt>
 <dd><p>Character vector of flag rule exclusion messages applied during NCA
 (e.g., <code>c("R2ADJ &lt; 0.8", "AUCPEO &gt; 20")</code>). Each entry generates a CRITy/CRITyFL
-column pair in ADPP, plus PPSUMFL and PPSUMRSN columns. Defaults to <code>NULL</code> (no flags).</p></dd>
+column pair in ADPP, plus PPSUMXF and PPSUMRSN columns. Defaults to <code>NULL</code> (no flags).</p></dd>
 
 </dl></div>
     <div class="section level2">

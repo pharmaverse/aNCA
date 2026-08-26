@@ -513,7 +513,7 @@ selected in <code>parameters_selected_per_study</code>:</p>
 </h3>
 <p><code><a href="../reference/export_cdisc.html">export_cdisc()</a></code> produces PP, ADPP, and ADNCA datasets
 from the NCA results. Flag rules are formatted into
-CRITy/CRITyFL/PPSUMFL columns in ADPP:</p>
+CRITy/CRITyFL/PPSUMXF columns in ADPP:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Build flag rule messages for ADPP criterion columns</span></span>
 <span><span class="va">flag_operators</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -536,7 +536,7 @@ CRITy/CRITyFL/PPSUMFL columns in ADPP:</p>
 <strong><code>cdisc_datasets$pp</code></strong>: PP domain — one row per
 parameter per subject. -
 <strong><code>cdisc_datasets$adpp</code></strong>: ADPP — PP with
-ADaM-style flags and criterion columns (CRITy, CRITyFL, PPSUMFL,
+ADaM-style flags and criterion columns (CRITy, CRITyFL, PPSUMXF,
 PPSUMRSN). - <strong><code>cdisc_datasets$adnca</code></strong>: ADNCA —
 the full analysis dataset with results joined back to the
 concentration-time data.</p>
