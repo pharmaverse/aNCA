@@ -2,7 +2,6 @@
 
 ## Bug Fixes
 
-* Individual and combined concentration plots (`pkcg01`, `pkcg02`) now return a named list again: the output was named from a column that only existed on the intermediate grouped data, leaving the list unnamed (#1448)
 * Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
 
 * Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
