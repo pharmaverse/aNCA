@@ -4,23 +4,33 @@ EXCL_COLOR_TLG   <- "#FFFFCC"  # yellow — TLG exclusion only
 EXCL_COLOR_BOTH  <- "#FFD9B3"  # orange — NCA + TLG
 EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
 
-#' Build a legend swatch (color box + label)
+#' Build an accessible legend swatch with explanatory tooltip
+#' @param color Background color used for excluded rows.
+#' @param label Visible exclusion-state label.
+#' @param description Short explanation of the exclusion behavior.
 #' @noRd
-.legend_swatch <- function(color, label) {
-  div(
-    style = "display:flex; align-items:center; gap:6px;",
-    div(style = paste0(
-      "width:14px; height:14px; background:", color,
-      "; border:1px solid #ddd;"
-    )),
-    span(label, style = "font-size:0.9em;")
+.legend_swatch <- function(color, label, description) {
+  bslib::tooltip(
+    shiny::div(
+      tabindex = "0",
+      `aria-label` = paste(label, description),
+      style = "display:flex; align-items:center; gap:6px; cursor:help;",
+      shiny::div(style = paste0(
+        "width:14px; height:14px; background:", color,
+        "; border:1px solid #ddd;"
+      )),
+      shiny::span(label, style = "font-size:0.9em;")
+    ),
+    description,
+    placement = "top"
   )
 }
 
-#' Check whether a row has manual NCA or TLG exclusions.
+#' Check whether a row has manual NCA or summary exclusions.
 #' @param index Row index.
 #' @param exclusion_lst List of exclusion entries.
-#' @returns Named logical list with `nca` and `tlg`.
+#' @returns Named logical list with `nca` and `tlg`. The `tlg` field name is
+#'   retained for compatibility with existing settings.
 #' @noRd
 .row_exclusion_flags <- function(index, exclusion_lst) {
   nca <- FALSE
@@ -99,7 +109,7 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
 .exclusion_type_label <- function(nca, tlg) {
   parts <- c()
   if (isTRUE(nca)) parts <- c(parts, "NCA")
-  if (isTRUE(tlg)) parts <- c(parts, "TLG")
+  if (isTRUE(tlg)) parts <- c(parts, "Summary")
   paste(parts, collapse = " + ")
 }
 
