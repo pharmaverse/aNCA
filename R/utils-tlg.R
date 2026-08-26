@@ -110,11 +110,20 @@ split_and_apply <- function(data, list_vars, fn) {
     bracket <- regmatches(x, regexpr("\\[[^][]*\\]$", x))
     if (length(bracket) == 0) return(empty)
 
-    pairs <- strsplit(substr(bracket, 2, nchar(bracket) - 1), ", ", fixed = TRUE)[[1]]
-    # A value containing ", " would split into a fragment with no "key: " prefix;
-    # dropping those is preferable to attributing the fragment to the wrong key.
-    pairs <- pairs[grepl("^[^:]+: ", pairs)]
-    if (length(pairs) == 0) return(empty)
+    frags <- strsplit(substr(bracket, 2, nchar(bracket) - 1), ", ", fixed = TRUE)[[1]]
+    # ", " is both the separator between pairs and a character a reference value
+    # may contain, so a value like "Drug A, Extended Release" splits into a
+    # fragment with no "key: " prefix.  Such a fragment belongs to the pair before
+    # it: re-joining is what keeps two references that share a prefix ("Drug A, ER"
+    # and "Drug A, IR") from both collapsing to "Drug A" and being pooled into one
+    # table under a truncated denominator.  A leading fragment has no pair to
+    # rejoin to and is dropped.
+    starts_pair <- grepl("^[^:]+: ", frags)
+    if (!any(starts_pair)) return(empty)
+    pairs <- vapply(
+      split(frags[cumsum(starts_pair) > 0], cumsum(starts_pair)[cumsum(starts_pair) > 0]),
+      paste, character(1), collapse = ", "
+    )
 
     setNames(sub("^[^:]+: ", "", pairs), sub(": .*$", "", pairs))
   })
@@ -138,8 +147,10 @@ split_and_apply <- function(data, list_vars, fn) {
   bare <- trimws(sub("\\s*\\[[^][]*\\]$", "", ppanmeth))
   bare <- sub("^.*; ", "", bare)
 
-  # Parameter codes never contain whitespace, so requiring non-space tokens keeps
-  # a free-text field that merely mentions " TO " from being read as a ratio.
+  # Parameter codes never contain whitespace, and anchoring both ends means the
+  # pair has to be the whole field rather than a phrase inside one.  That rules
+  # out sentence-shaped text ("interpolated from dose TO last conc"); it cannot
+  # rule out a bare three-word field that happens to read "X TO Y".
   matched <- regmatches(bare, regexec("^(\\S+) TO (\\S+)$", bare))
   out <- vapply(matched, function(m) {
     if (length(m) == 3) m[2:3] else c(NA_character_, NA_character_)
@@ -147,13 +158,38 @@ split_and_apply <- function(data, list_vars, fn) {
   matrix(t(out), ncol = 2, dimnames = list(NULL, c("test", "ref")))
 }
 
+#' Classify each PPANMETH value as a ratio row, and which family it belongs to
+#'
+#' A row counts as a ratio when at least one of the two PPANMETH parsers
+#' recognises it: `calculate_ratios()` always writes a reference bracket, except
+#' for a same-group ratio where it writes the bare parameter pair instead.  A
+#' plain `grepl(" TO ", ...)` was too loose -- `PPANMETH` is a permitted ADPP
+#' variable carrying free-text analysis method, and any sentence containing the
+#' word "to" in upper case would have been summarized under a ratio heading.
+#'
+#' @param ppanmeth Character vector of PPANMETH values.
+#' @returns A character vector the same length as `ppanmeth`: `"analyte"` for a
+#'   metabolite/parent ratio, `"other"` for any other reference group, `NA` for a
+#'   row that is not a ratio at all.
+#' @noRd
+.ratio_row_type <- function(ppanmeth) {
+  ppanmeth <- as.character(ppanmeth)
+  refs <- .parse_ratio_reference(ppanmeth)
+  has_ref <- lengths(refs) > 0
+  is_ratio <- !is.na(ppanmeth) &
+    (has_ref | !is.na(.parse_ratio_parameters(ppanmeth)[, "test"]))
+
+  is_analyte <- vapply(refs, function(r) .RATIO_ANALYTE_KEY %in% names(r), logical(1))
+  ifelse(!is_ratio, NA_character_, ifelse(is_analyte, "analyte", "other"))
+}
+
 #' Select the ratio rows written by Parameter Selection > Ratios
 #'
-#' Ratio rows are identified by the `" TO "` that `calculate_ratios()` writes into
-#' `PPANMETH`, never by a `PPTESTCD`/`PARAMCD` prefix: the package default code is
-#' `RA<param>`, the app only emits `MR<param>` when the reference happens to be the
-#' analyte column, the code is user-editable free text, and `MR` additionally
-#' collides with the mean-residence-time parameters (`MRTLST`, `MRTIFO`, ...).
+#' Ratio rows are identified by what `calculate_ratios()` writes into `PPANMETH`
+#' (see `.ratio_row_type()`), never by a `PPTESTCD`/`PARAMCD` prefix: the package
+#' default code is `RA<param>`, the app only emits `MR<param>` when the reference
+#' happens to be the analyte column, the code is user-editable free text, and `MR`
+#' additionally collides with the mean-residence-time parameters (`MRTLST`, ...).
 #'
 #' Two columns are added for display, so a ratio is readable without the user
 #' having to decode PPANMETH:
@@ -180,15 +216,13 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
     "computed as part of the NCA run, so adding one afterwards has no effect until ",
     "the run is repeated."
   )
-  if (!"PPANMETH" %in% names(data) || !any(grepl(" TO ", data$PPANMETH))) {
+  row_type <- if ("PPANMETH" %in% names(data)) .ratio_row_type(data$PPANMETH) else character(0)
+  if (!any(!is.na(row_type))) {
     stop(caller, ": no ratio parameters found in the data. ", setup_hint)
   }
 
-  ratios <- data[!is.na(data$PPANMETH) & grepl(" TO ", data$PPANMETH), , drop = FALSE]
-  refs <- .parse_ratio_reference(ratios$PPANMETH)
-  is_analyte <- vapply(refs, function(r) .RATIO_ANALYTE_KEY %in% names(r), logical(1))
-
-  keep <- switch(ref_type, analyte = is_analyte, other = !is_analyte, any = rep(TRUE, nrow(ratios)))
+  wanted_type <- switch(ref_type, analyte = "analyte", other = "other", any = c("analyte", "other"))
+  keep <- !is.na(row_type) & row_type %in% wanted_type
   if (!any(keep)) {
     wanted <- if (ref_type == "analyte") {
       "metabolite/parent ratios (reference group on the analyte)"
@@ -208,8 +242,20 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
       found, ". ", setup_hint
     )
   }
-  ratios <- ratios[keep, , drop = FALSE]
-  refs <- refs[keep]
+  ratios <- data[keep, , drop = FALSE]
+  refs <- .parse_ratio_reference(ratios$PPANMETH)
+
+  # `RATIO`/`RATIOREF` are derived below and would overwrite same-named input
+  # columns.  Neither is an ADPP variable, so this only happens on hand-built
+  # data, but silently replacing a column the caller supplied is worse than saying so.
+  clobbered <- intersect(.RATIO_DERIVED_COLS, names(ratios))
+  if (length(clobbered) > 0) {
+    .tlg_warn(
+      caller, ": the data already has a column named ",
+      paste(clobbered, collapse = " and "),
+      "; it is replaced by the derived ratio label."
+    )
+  }
 
   # A ratio the NCA run could not compute (no comparable reference rows, or units
   # that would not convert) still reaches ADPP, with a missing value.  A summary
@@ -243,11 +289,12 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
 #' @returns `ratios` with the two labelled columns added. `RATIO` is never `NA`.
 #' @noRd
 .add_ratio_labels <- function(ratios, refs, ref_type) {
-  # For an analyte ratio only the analyte key is meaningful; for the others the
-  # reference can span several grouping variables, so all of them are shown.
-  keys <- lapply(refs, function(r) {
-    if (ref_type == "analyte") intersect(.RATIO_ANALYTE_KEY, names(r)) else names(r)
-  })
+  # Every reference key is shown, including on an analyte ratio.  Keeping only the
+  # analyte key there read "Metab-DrugA / DrugA" for a metabolite in urine
+  # referenced against the parent in serum, hiding that the denominator is a
+  # different matrix -- and `list_vars` carries the numerator's specimen, so the
+  # two directions of that comparison would have shared a table.
+  keys <- lapply(refs, names)
 
   # Denominator: the reference values parsed out of PPANMETH.  Numerator: the same
   # keys read off the row itself, which is where the test group's values live.
@@ -294,9 +341,12 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
 #'
 #' A same-group ratio carries no bracket at all, so neither side of the label is
 #' known -- but it is still a real ratio of one parameter by another.  Left as `NA`
-#' the row was dropped by `split_and_apply()` and the output rendered empty, so
-#' every remaining gap is filled: first from the parameter pair, then from
-#' `PPANMETH` itself, which is non-missing on every row that reaches here.
+#' the row was dropped by `split_and_apply()` and the output rendered empty, so the
+#' gap is filled from the parameter pair instead.
+#'
+#' Every gap can be filled: `.ratio_row_type()` admits a row only when one of the
+#' two parsers reads it, so a row whose reference groups were unreadable is one
+#' whose parameter pair was not.
 #'
 #' @param ratio Character vector of labels built from the reference groups.
 #' @param ppanmeth The `PPANMETH` values of the same rows.
@@ -306,16 +356,8 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
   if (!anyNA(ratio)) return(ratio)
 
   params <- .parse_ratio_parameters(ppanmeth)
-  pair <- ifelse(
-    is.na(params[, "test"]) | is.na(params[, "ref"]),
-    NA_character_,
-    paste0(params[, "test"], " / ", params[, "ref"])
-  )
-  ratio <- ifelse(is.na(ratio), pair, ratio)
-
-  # Last resort, for text that reached PPANMETH from somewhere other than
-  # calculate_ratios() and so matches neither parser.
-  ifelse(is.na(ratio), ppanmeth, ratio)
+  pair <- paste0(params[, "test"], " / ", params[, "ref"])
+  ifelse(is.na(ratio), pair, ratio)
 }
 
 #' First non-missing value, or `NA` when there is none

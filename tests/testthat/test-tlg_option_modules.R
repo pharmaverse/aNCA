@@ -288,6 +288,25 @@ describe("tlg_option_select_ui", {
     expect_false(grepl(">AUC to Last<", html))
   })
 
+  it("offers no treatment-only ratio parameter to a metabolite/parent entry", {
+    # `.ratioparams` serves the M/P entries, which render only the analyte family.
+    # A parameter that exists solely as a treatment ratio is exactly as empty
+    # there as a non-ratio one.
+    sample_data <- shiny::reactive(list(conc = list(data = data.frame(
+      PARAM    = c("Metabolite Ratio for AUClast", "Treatment Ratio for Max Conc"),
+      PPANMETH = c("AUCLST TO AUCLST [PARAM: DrugA]", "CMAX TO CMAX [TRT01A: 10mg]"),
+      stringsAsFactors = FALSE
+    ))))
+    opt_def <- list(
+      label = "Select", choices = ".ratioparams", default = NULL, multiple = TRUE
+    )
+    html <- as.character(shiny::isolate(
+      tlg_option_select_ui("test-sel", opt_def, data = sample_data)
+    ))
+    expect_true(grepl(">Metabolite Ratio for AUClast<", html))
+    expect_false(grepl(">Treatment Ratio for Max Conc<", html))
+  })
+
   it("offers no ratio parameters when the data has no PPANMETH", {
     sample_data <- shiny::reactive(
       list(conc = list(data = data.frame(PARAM = "Max Conc")))

@@ -39,20 +39,23 @@
   unique(c(aNCA:::.RATIO_DERIVED_COLS, names(df)))
 }
 
-#' Parameter values that belong to a ratio.
+#' Parameter values that belong to a ratio of one family.
 #'
 #' Restricts the parameter filter on the ratio TLG entries (via the `.ratioparams`
 #' choices token) to parameters that can actually appear.  The entries drop every
 #' non-ratio row before summarizing, so offering the full `PARAM` list let a user
-#' pick a value that could only ever produce an empty output.  Ratio rows are
-#' identified the same way `filter_ratio_rows()` identifies them: the `" TO "` that
-#' `calculate_ratios()` writes into `PPANMETH`.
+#' pick a value that could only ever produce an empty output.  The family matters
+#' for the same reason: a parameter that only ever carries a treatment ratio is
+#' just as empty on a metabolite/parent entry as a non-ratio one.  Rows are
+#' classified exactly as `filter_ratio_rows()` classifies them.
 #'
 #' @param df A data frame.
+#' @param ref_type Ratio family to keep, as in `aNCA:::filter_ratio_rows()`.
+#'   Defaults to `"analyte"`, the family the `.ratioparams` entries render.
 #' @return Character vector of ratio parameter names, sorted; empty if none.
-.ratio_param_values <- function(df) {
+.ratio_param_values <- function(df, ref_type = "analyte") {
   if (!all(c("PARAM", "PPANMETH") %in% names(df))) return(character(0))
-  is_ratio <- !is.na(df$PPANMETH) & grepl(" TO ", df$PPANMETH)
+  is_ratio <- aNCA:::.ratio_row_type(df$PPANMETH) %in% ref_type
   values <- unique(as.character(df$PARAM[is_ratio]))
   sort(values[!is.na(values)])
 }

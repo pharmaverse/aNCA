@@ -102,6 +102,21 @@ describe(".parse_ratio_reference", {
     expect_length(.parse_ratio_reference("CMAX TO CMAX [DrugA]")[[1]], 0)
   })
 
+  it("keeps a reference value that itself contains the ', ' separator", {
+    # ", " separates pairs and can also occur inside an analyte name.  Dropping
+    # the unprefixed fragment truncated the denominator, and truncation merges:
+    # two distinct references collapse to one split key and get pooled.
+    er <- .parse_ratio_reference("CMAX TO CMAX [PARAM: Drug A, Extended Release]")[[1]]
+    ir <- .parse_ratio_reference("CMAX TO CMAX [PARAM: Drug A, Immediate Release]")[[1]]
+    expect_equal(er, c(PARAM = "Drug A, Extended Release"))
+    expect_false(identical(unname(er), unname(ir)))
+  })
+
+  it("still separates the pairs when a value contains ', '", {
+    out <- .parse_ratio_reference("CMAX TO CMAX [PARAM: Drug A, ER, PCSPEC: Plasma]")[[1]]
+    expect_equal(out, c(PARAM = "Drug A, ER", PCSPEC = "Plasma"))
+  })
+
   it("is vectorized over the column", {
     out <- .parse_ratio_reference(c("A TO B [PARAM: X]", "A TO B"))
     expect_length(out, 2)
@@ -180,6 +195,43 @@ describe("filter_ratio_rows", {
     expect_equal(attr(out$RATIO, "label"), "Test / Reference")
   })
 
+  it("does not read free-text analysis method as a ratio", {
+    # PPANMETH is a permitted ADPP variable carrying free text, and
+    # .apply_metadata_ppanmeth() writes a parameter's own method into it.  A bare
+    # grepl(" TO ") swept those rows into the ratio outputs.
+    prose <- adpp[adpp$PARAMCD == "CMAX", ]
+    prose$PPANMETH <- "Concentrations interpolated from dose TO last measurable conc"
+    expect_error(filter_ratio_rows(prose, "caller", "any"), "no ratio parameters found")
+  })
+
+  it("still selects a ratio whose parameter code is not a bare token", {
+    # A ratio of a ratio carries "RAAUCLST (mean)" as its parameter, so the pair
+    # is not a two-token string; the reference bracket identifies it instead.
+    chained <- adpp[adpp$PARAMCD == "RACMAX", ]
+    chained$PPANMETH <- "RACMAX (mean) TO RACMAX (mean) [TRT01A: 10mg]"
+    expect_equal(nrow(filter_ratio_rows(chained, "caller", "other")), 1)
+  })
+
+  it("names both sides of a reference that spans analyte and specimen", {
+    # Keeping only the analyte key read "Metab / DrugA" for a metabolite in urine
+    # referenced against the parent in serum, hiding the change of matrix.
+    cross <- adpp[adpp$PARAMCD == "MRCMAX", ]
+    cross$PPSPEC <- "URINE"
+    cross$PPANMETH <- "CMAX TO CMAX [PARAM: DrugA, PCSPEC: SERUM]"
+    out <- filter_ratio_rows(cross, "caller", "analyte")
+    expect_equal(as.character(out$RATIOREF), "DrugA, SERUM")
+    expect_equal(as.character(out$RATIO), "Metab-DrugA, URINE / DrugA, SERUM")
+  })
+
+  it("warns rather than silently replacing a RATIO column already in the data", {
+    clash <- adpp
+    clash$RATIO <- "pre-existing"
+    expect_warning(
+      filter_ratio_rows(clash, "caller", "analyte"),
+      "already has a column named RATIO"
+    )
+  })
+
   it("keeps both families under ref_type = 'any'", {
     expect_equal(nrow(filter_ratio_rows(adpp, "caller", "any")), 2)
   })
@@ -253,13 +305,17 @@ describe("filter_ratio_rows", {
     expect_equal(as.character(out$RATIO), "Metab-DrugA / DrugA")
   })
 
-  it("falls back to PPANMETH itself when neither parser recognises the field", {
-    # RATIO must never be NA: split_and_apply() drops rows with an NA split value,
-    # so a missing label makes the row vanish behind a stray-NA warning.
-    bare <- adpp[adpp$PARAMCD == "MRCMAX", ]
-    bare$PPANMETH <- "ratio of one thing TO another thing"
-    out <- filter_ratio_rows(bare, "caller", "any")
-    expect_equal(as.character(out$RATIO), "ratio of one thing TO another thing")
+  it("gives every selected row a label, so none is dropped as a stray NA", {
+    # RATIO is a split key and split_and_apply() drops rows with an NA there, so a
+    # missing label makes the row vanish behind a warning.  Selection admits a row
+    # only when one of the two parsers reads it, and either one supplies a label:
+    # the reference groups, or the parameter pair for a bracket-less same-group ratio.
+    mixed <- adpp[rep(which(adpp$PARAMCD != "CMAX"), 2), ]
+    mixed$PPANMETH[3:4] <- "AUCLST TO CMAX"
+    out <- filter_ratio_rows(mixed, "caller", "any")
+    expect_equal(nrow(out), 4)
+    expect_false(anyNA(out$RATIO))
+    expect_true("AUCLST / CMAX" %in% as.character(out$RATIO))
   })
 
   it("shows the reference alone when only some reference keys reach ADPP", {
