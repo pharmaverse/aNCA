@@ -94,8 +94,8 @@ Practical workarounds:
   offline.
 
 If you’d like this feature built into the app (an option to choose
-nominal/actual/conditional), I can add a small enhancement proposal and
-a TODO entry so we can implement it later.
+nominal/actual/conditional), please open an enhancement request on the
+[GitHub repository](https://github.com/pharmaverse/aNCA/issues).
 
 ### Validation and CDISC outputs
 

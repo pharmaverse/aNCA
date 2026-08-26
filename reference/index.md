@@ -98,9 +98,6 @@
 - [`convert_volume_units()`](https://pharmaverse.github.io/aNCA/reference/convert_volume_units.md)
   : Convert Volume Units to Match Concentration Denominator Units
 
-- [`create_html_dose_slides()`](https://pharmaverse.github.io/aNCA/reference/create_html_dose_slides.md)
-  : Render dose escalation results to HTML via Quarto
-
 - [`create_metabfl()`](https://pharmaverse.github.io/aNCA/reference/create_metabfl.md)
   : Create METABFL Column Based on Selected Metabolites
 
