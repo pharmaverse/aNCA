@@ -1,12 +1,18 @@
 # --- Setup: Sample Data ---
 
+# Seed and small noise keep AVAL strictly positive so `filter(AVAL > 0)` never
+# drops rows. Several unit-conversion tests rely on both facets keeping equal
+# row counts (the target unit is the most frequent, tie-broken alphabetically);
+# unequal counts from dropped rows would flip the target and break conversion.
+set.seed(1424)
+
 # 1. Sample data for INDIVIDUAL plot mode
 ind_data <- expand.grid(
   NFRLT = c(0, 1, 2, 4, 8, 12),
   USUBJID = c("Subject1", "Subject2")
 ) %>%
   mutate(
-    AVAL = ifelse(USUBJID == "Subject1", 50, 80) * exp(-0.5 * NFRLT) + rnorm(n(), 0, 1),
+    AVAL = ifelse(USUBJID == "Subject1", 50, 80) * exp(-0.5 * NFRLT) + rnorm(n(), 0, 0.01),
     PARAM = "Analyte1",
     DOSEA = "Dose 1",
     color_var = interaction(USUBJID, DOSEA, sep = ", "),
