@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9190</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9191</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="anca-development-version">aNCA (development version)<a class="anchor" aria-label="anchor" href="#anca-development-version"></a></h2>
+<div class="section level3">
+<h3 id="maintenance-development-version">Maintenance<a class="anchor" aria-label="anchor" href="#maintenance-development-version"></a></h3>
+<ul><li>Refresh stale in-code TODO comments whose referenced issues have since closed: the slope-selector <code>na.omit</code> guard is now documented as a defensive safety net (<a href="https://github.com/pharmaverse/aNCA/issues/641" class="external-link">#641</a> reworked the reactivity), and the BLQ dropped-record workaround points to the current imputation-consistency issues (<a href="https://github.com/pharmaverse/aNCA/issues/1057" class="external-link">#1057</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1442" class="external-link">#1442</a>, <a href="https://github.com/pharmaverse/aNCA/issues/1443" class="external-link">#1443</a>) instead of the closed <a href="https://github.com/pharmaverse/aNCA/issues/139" class="external-link">#139</a>. Clarified why meta-mapping keys are excluded in <code><a href="../reference/apply_mapping.html">apply_mapping()</a></code>. Part of the TODO inventory in <a href="https://github.com/pharmaverse/aNCA/issues/1447" class="external-link">#1447</a></li>
+</ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
 <ul><li>Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (<a href="https://github.com/pharmaverse/aNCA/issues/1356" class="external-link">#1356</a>)</li>
