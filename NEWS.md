@@ -2,6 +2,8 @@
 
 ## Maintenance
 
+* Shortened the `desc` strings registered with `PKNCA::add.interval.col()` for `ertlst`, `ertmax`, and `volpk` to 40 characters or fewer, as SDTM requires. PKNCA 0.12.1.9000 warns about longer descriptions, and an earlier development version rejected them outright, which made aNCA fail to install (#1102)
+
 * Refresh stale in-code TODO comments whose referenced issues have since closed: the slope-selector `na.omit` guard is now documented as a defensive safety net (#641 reworked the reactivity), and the BLQ dropped-record workaround points to the current imputation-consistency issues (#1057, #1442, #1443) instead of the closed #139. Clarified why meta-mapping keys are excluded in `apply_mapping()`. Part of the TODO inventory in #1447
 
 ## Bug Fixes
