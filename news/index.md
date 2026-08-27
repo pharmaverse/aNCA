@@ -21,6 +21,32 @@
 
 ### Bug Fixes
 
+- Running NCA with “Impute Start Concentration” turned off no longer
+  errors with `PKNCA_impute_method_FALSE not found`. When start
+  imputation was off, the per-interval `impute` column was absent, so
+  the BLQ step read the `impute` function argument instead of the column
+  and built the method string `"blq, FALSE"`. The column is now always
+  present, the reference is pinned to it, and the
+  [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)
+  argument was renamed `impute` -\> `start_impute` so it can no longer
+  collide with the column
+  ([\#1121](https://github.com/pharmaverse/aNCA/issues/1121),
+  [\#1266](https://github.com/pharmaverse/aNCA/issues/1266))
+- With “Impute Start Concentration” turned off, the first interval now
+  starts at C1 (the first sample at or after the dose) instead of the
+  predose time. The sample feeding the start time was picked by an
+  unordered `slice(1)`, so it could be the predose record whose negative
+  `ARRLT` pulled the interval start before the dose
+  ([\#1121](https://github.com/pharmaverse/aNCA/issues/1121))
+- The generated R-script (session code) now passes `blq_imputation_rule`
+  to
+  [`PKNCA_update_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_update_data_object.md),
+  matching the app. The template only applied the BLQ rule at
+  calculation time
+  ([`PKNCA_calculate_nca()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_calculate_nca.md))
+  and omitted it during interval setup, so exported scripts did not
+  reproduce the app’s BLQ handling
+  ([\#1445](https://github.com/pharmaverse/aNCA/issues/1445))
 - Mean concentration plots no longer drop timepoints that are well under
   the BLQ threshold: the BLQ ratio counted flagged records against a
   denominator of distinct subjects, so a subject contributing several

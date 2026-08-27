@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9191</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9192</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,7 @@
 <span>  <span class="va">data</span>,</span>
 <span>  parameter_selections <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  int_parameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  impute <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  start_impute <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  blq_imputation_rule <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -91,8 +91,10 @@
 <dd><p>A data frame containing partial AUC ranges.</p></dd>
 
 
-<dt id="arg-impute">impute<a class="anchor" aria-label="anchor" href="#arg-impute"></a></dt>
-<dd><p>Logical indicating whether to impute start values for parameters.</p></dd>
+<dt id="arg-start-impute">start_impute<a class="anchor" aria-label="anchor" href="#arg-start-impute"></a></dt>
+<dd><p>Logical indicating whether to impute start values for
+parameters. Named <code>start_impute</code> (not <code>impute</code>) to avoid colliding with the
+per-interval <code>impute</code> column referenced under dplyr data-masking below.</p></dd>
 
 
 <dt id="arg-blq-imputation-rule">blq_imputation_rule<a class="anchor" aria-label="anchor" href="#arg-blq-imputation-rule"></a></dt>

@@ -10,7 +10,7 @@ update_main_intervals(
   data,
   parameter_selections = NULL,
   int_parameters = NULL,
-  impute = TRUE,
+  start_impute = TRUE,
   blq_imputation_rule = NULL
 )
 ```
@@ -29,9 +29,12 @@ update_main_intervals(
 
   A data frame containing partial AUC ranges.
 
-- impute:
+- start_impute:
 
   Logical indicating whether to impute start values for parameters.
+  Named `start_impute` (not `impute`) to avoid colliding with the
+  per-interval `impute` column referenced under dplyr data-masking
+  below.
 
 - blq_imputation_rule:
 
