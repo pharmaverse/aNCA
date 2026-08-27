@@ -388,6 +388,34 @@ prepare_export_files <- function(target_dir,
                                  progress,
                                  slide_config = NULL) {
 
+  # Validate CDISC datasets against metadata-declared data types before any
+  # files are written. Writes a QC report as an export artifact and aborts the
+  # save when error-severity findings exist.
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
+  if (length(selected_cdisc) > 0 &&
+        !is.null(session$userData$results$CDISC)) {
+    progress$set(message = "Creating exports...",
+                 detail = "Validating CDISC data types...")
+    dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
+    validation <- write_cdisc_validation_report(
+      cdisc_data = session$userData$results$CDISC,
+      target_dir = target_dir,
+      project = tryCatch(session$userData$project_name(), error = function(e) NULL)
+    )
+    if (validation$blocks_save) {
+      n_err <- sum(validation$findings$Severity == "error")
+      showNotification(
+        sprintf(
+          "Save blocked: %d CDISC data-type error(s). See cdisc_validation_report.html.",
+          n_err
+        ),
+        type = "error",
+        duration = NULL
+      )
+      stop(sprintf("CDISC validation failed with %d error(s).", n_err))
+    }
+  }
+
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
                detail = "Saving tables and images...")
@@ -443,7 +471,6 @@ prepare_export_files <- function(target_dir,
     progress$inc(0.4)
 
     # Export pre-specification files for selected CDISC datasets
-    selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
     if (length(selected_cdisc) > 0) {
       progress$set(message = "Creating exports...",
                    detail = "Saving CDISC pre-specifications...")
@@ -735,9 +762,12 @@ prepare_export_files <- function(target_dir,
     files_req <- c(files_req, grep("results_slides_outputs\\.rda$", all_files, value = TRUE))
   }
 
-  # Preserve pre-specs only when at least one CDISC dataset is selected
+  # Preserve pre-specs and the validation QC report only when at least one
+  # CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                   value = TRUE))
+    files_req <- c(files_req, grep("cdisc_validation_report\\.html$", all_files,
                                    value = TRUE))
   }
   if ("session_info" %in% fnames) {
