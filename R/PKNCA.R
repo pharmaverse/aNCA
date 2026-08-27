@@ -370,7 +370,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     data = data,
     parameter_selections = parameter_selections,
     int_parameters = int_parameters,
-    impute = start_impute,
+    start_impute = start_impute,
     blq_imputation_rule = blq_imputation_rule
   )
 
