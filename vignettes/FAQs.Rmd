@@ -76,7 +76,7 @@ Practical workarounds:
 - Pre-compute a column in your dataset that selects nominal or actual time per-row based on your deviation rule (for example, create a `USE_TIME` column: if |AFRLT - NFRLT| < threshold then NFRLT else AFRLT) and map that column as the time variable in the app.
 - Export the session script after mapping and modify the partial AUC calculation to use your chosen time variable or conditional logic offline.
 
-If you'd like this feature built into the app (an option to choose nominal/actual/conditional), I can add a small enhancement proposal and a TODO entry so we can implement it later.
+If you'd like this feature built into the app (an option to choose nominal/actual/conditional), please open an enhancement request on the [GitHub repository](https://github.com/pharmaverse/aNCA/issues).
 </details>
 
 

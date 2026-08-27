@@ -10,13 +10,13 @@
 #'
 #' @param res_nca Object with results of the NCA analysis. If
 #'   `res_nca$result` contains a `.pp_excl` column (logical), excluded rows
-#'   are merged into the `exclude` column so they appear in `PPSUMFL`/`PPSUMRSN`.
+#'   are merged into the `exclude` column so they appear in `PPSUMXF`/`PPSUMRSN`.
 #'   If `.pp_excl_reason` (character) is also present, it populates `PPSUMRSN`.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #' @param flag_rules Character vector of flag rule exclusion messages applied during NCA
 #'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). Each entry generates a CRITy/CRITyFL
-#'   column pair in ADPP, plus PPSUMFL and PPSUMRSN columns. Defaults to `NULL` (no flags).
+#'   column pair in ADPP, plus PPSUMXF and PPSUMRSN columns. Defaults to `NULL` (no flags).
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -242,9 +242,9 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
       )
     ) %>%
     # Merge manual exclusions (.pp_excl) into the exclude column
-    # so .add_crit_flags() picks them up for PPSUMFL/PPSUMRSN
+    # so .add_crit_flags() picks them up for PPSUMXF/PPSUMRSN
     .merge_manual_exclusions() %>%
-    # Add CRITy/CRITyFL flags and PPSUMFL/PPSUMRSN based on flag rules
+    # Add CRITy/CRITyFL flags and PPSUMXF/PPSUMRSN based on flag rules
     .add_crit_flags(flag_rules) %>%
     select(-any_of(c("exclude", ".pp_excl", ".pp_excl_reason"))) %>%
     # Apply labels to columns added by .add_crit_flags()
@@ -271,9 +271,9 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
       } else {
         NA_character_
       },
-      PKSUM1F = {
-        flag <- if ("PKSUM1F" %in% names(.)) {
-          PKSUM1F
+      PKSUMXF = {
+        flag <- if ("PKSUMXF" %in% names(.)) {
+          PKSUMXF
         } else {
           rep("", nrow(.))
         }
@@ -282,8 +282,8 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
         }
         flag
       },
-      PKSUM1FN = ifelse(PKSUM1F == "Y", 1L, NA_integer_),
-      PKSUM1RS = .derive_pksum1rs(., PKSUM1F),
+      PKSUMXFN = ifelse(PKSUMXF == "Y", 1L, NA_integer_),
+      PKSUM1RS = .derive_pksum1rs(., PKSUMXF),
       SUBJID = get_subjid(.),
       ATPT = if ("ATPT" %in% names(.)) {
         ATPT
@@ -394,11 +394,11 @@ find_common_prefix <- function(strings) {
 #' Returns empty string for non-excluded rows.
 #'
 #' @param data The ADNCA data frame being built.
-#' @param pksum1f Character vector of PKSUM1F values.
+#' @param pksumxf Character vector of PKSUMXF values.
 #' @returns Character vector of exclusion reasons.
 #' @keywords internal
 #' @noRd
-.derive_pksum1rs <- function(data, pksum1f) {
+.derive_pksum1rs <- function(data, pksumxf) {
   reason <- if ("PKSUM1RS" %in% names(data)) {
     data$PKSUM1RS
   } else {
@@ -413,7 +413,7 @@ find_common_prefix <- function(strings) {
       paste0(reason[hl_rows], "; Half-life point exclusion")
     )
   }
-  ifelse(pksum1f == "Y", reason, "")
+  ifelse(pksumxf == "Y", reason, "")
 }
 
 get_subjid <- function(data) {
@@ -608,18 +608,18 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   msg
 }
 
-#' Add CRITy/CRITyFL and PPSUMFL/PPSUMRSN columns to ADPP
+#' Add CRITy/CRITyFL and PPSUMXF/PPSUMRSN columns to ADPP
 #'
 #' For each flag rule message, creates a CRITy column (acceptance criterion
 #' with inverted operator) and CRITyFL column ("Y" if criterion satisfied,
-#' "" if violated) by grepping the `exclude` column. PPSUMFL is "Y" when the
+#' "" if violated) by grepping the `exclude` column. PPSUMXF is "Y" when the
 #' record is excluded from summaries, empty when included.
 #'
 #' @param data A data.frame with an `exclude` column from PKNCA results.
 #' @param flag_rules Character vector of exclusion messages applied during NCA
 #'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). If `NULL` or empty, returns
 #'   data unchanged.
-#' @returns The input data with CRITy, CRITyFL, PPSUMFL, and PPSUMRSN columns added.
+#' @returns The input data with CRITy, CRITyFL, PPSUMXF, and PPSUMRSN columns added.
 #' @noRd
 #' @keywords internal
 .add_crit_flags <- function(data, flag_rules) {
@@ -648,25 +648,25 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     }
   }
 
-  # PPSUMFL/PPSUMRSN: derived from whether exclude is populated
+  # PPSUMXF/PPSUMRSN: derived from whether exclude is populated
   # (covers both flag-rule and manual exclusions)
   ppsum <- .derive_ppsum_flags(exclude_vals)
-  data[["PPSUMFL"]] <- ppsum$PPSUMFL
+  data[["PPSUMXF"]] <- ppsum$PPSUMXF
   data[["PPSUMRSN"]] <- ppsum$PPSUMRSN
 
   data
 }
 
-#' Derive PPSUMFL and PPSUMRSN from an exclude-values vector
+#' Derive PPSUMXF and PPSUMRSN from an exclude-values vector
 #'
-#' Single source of truth for the PPSUMFL/PPSUMRSN derivation used by both
+#' Single source of truth for the PPSUMXF/PPSUMRSN derivation used by both
 #' the CDISC export pipeline and the parameter exclusions UI preview.
 #'
 #' @param exclude_vals Character vector where non-empty entries indicate exclusion.
 #'   NA values are treated as no exclusion.
 #' @param max_reason_len Maximum character length for PPSUMRSN. Values exceeding
 #'   this are truncated with a trailing ellipsis. Default 200 (from ADPP metadata).
-#' @returns A list with `PPSUMFL` (character) and `PPSUMRSN` (character).
+#' @returns A list with `PPSUMXF` (character) and `PPSUMRSN` (character).
 #' @noRd
 #' @keywords internal
 .derive_ppsum_flags <- function(exclude_vals, max_reason_len = 200L) {
@@ -680,7 +680,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     )
   }
   list(
-    PPSUMFL = ifelse(has_exclusions, "Y", ""),
+    PPSUMXF = ifelse(has_exclusions, "Y", ""),
     PPSUMRSN = exclude_vals
   )
 }
@@ -689,7 +689,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #'
 #' If `.pp_excl` (logical) and `.pp_excl_reason` (character) columns are present,
 #' appends the manual exclusion reason to the `exclude` column so that
-#' `.add_crit_flags()` picks them up for PPSUMFL/PPSUMRSN.
+#' `.add_crit_flags()` picks them up for PPSUMXF/PPSUMRSN.
 #'
 #' @param data A data.frame with optional `.pp_excl` and `.pp_excl_reason` columns.
 #' @returns The input data with manual exclusions merged into `exclude`.

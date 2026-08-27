@@ -451,12 +451,13 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
           conc.na = "drop"
         )
 
-        # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
-        # drop values, this was only affecting BLQ branch (#139) but not main, related
-        # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
-        # done, this values disappear and then it is considered that those times were
-        # also NA, which causes the error. In PKNCA dropping in imputation works fine,
-        # but aNCA might be doing something special we are missing
+        # BLQ imputation (shipped via #139) can drop concentration records.
+        # aNCA's pk.nca.interval() handling then treats those dropped times as
+        # NA, which errors out. Re-insert the dropped times with NA conc so PKNCA
+        # drops them itself (which works cleanly) instead of aNCA mishandling
+        # them. This is a stopgap for a mismatch between how PKNCA and aNCA drop
+        # values during imputation; the imputation-consistency work in #1057,
+        # #1442, and #1443 tracks resolving it properly.
         d_na <- data.frame(
           conc = rep(NA, sum(!time %in% d$time)), # PKNCA will drop the value
           time = time[!time %in% d$time]
@@ -931,11 +932,11 @@ remove_pp_not_requested <- function(pknca_res) {
 #'   - exclude_nca: logical, if TRUE the rows are excluded from NCA
 #'     calculations (added to the exclude column)
 #'   - exclude_tlg: logical, if TRUE the rows are flagged with
-#'     PKSUM1F = "Y" and the reason is stored in PKSUM1RS so
+#'     PKSUMXF = "Y" and the reason is stored in PKSUM1RS so
 #'     TLGs can filter them out
 #'
 #' @return The modified PKNCAdata object with updated exclusion
-#'   reasons, PKSUM1F, and PKSUM1RS in the concentration object.
+#'   reasons, PKSUMXF, and PKSUM1RS in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   if (is.null(exclusion_list) || length(exclusion_list) == 0) {
@@ -949,9 +950,9 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     exclude_col <- "exclude"
   }
 
-  # Initialise PKSUM1F and PKSUM1RS if not present
-  if (!"PKSUM1F" %in% names(pknca_data$conc$data)) {
-    pknca_data$conc$data$PKSUM1F <- ""
+  # Initialise summary-exclusion columns if not present.
+  if (!"PKSUMXF" %in% names(pknca_data$conc$data)) {
+    pknca_data$conc$data$PKSUMXF <- ""
   }
   if (!"PKSUM1RS" %in% names(pknca_data$conc$data)) {
     pknca_data$conc$data$PKSUM1RS <- ""
@@ -980,7 +981,7 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     }
     # TLG exclusion: flag rows and store reason
     if (isTRUE(excl$exclude_tlg)) {
-      pknca_data$conc$data$PKSUM1F[rows] <- "Y"
+      pknca_data$conc$data$PKSUMXF[rows] <- "Y"
       pknca_data$conc$data$PKSUM1RS[rows] <- ifelse(
         pknca_data$conc$data$PKSUM1RS[rows] == "",
         reason,
