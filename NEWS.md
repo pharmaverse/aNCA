@@ -26,7 +26,7 @@
 
 ## Features
 
-* Exporting results now validates the CDISC datasets (ADNCA, ADPP, PP) against the data types and lengths declared in the package metadata. A `cdisc_validation_report.html` QC report is written with the export, and the save is blocked when values of the wrong type are detected (#1451)
+* Exporting results now validates the CDISC datasets (ADNCA, ADPP, PP) against the data types and lengths declared in the package metadata. A `cdisc_validation_report.html` QC report is written with the export listing any problems first and a per-variable summary (label, class, length, status) below, and the save is blocked when values of the wrong type are detected. Indexed CDISC variable families (e.g. `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are recognised so they are no longer wrongly reported as undeclared, and `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP (#1451)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):

@@ -8,7 +8,8 @@ cdisc_validation_report(
   findings,
   datasets_checked = NULL,
   project = NULL,
-  generated_at = Sys.time()
+  generated_at = Sys.time(),
+  summary = NULL
 )
 }
 \arguments{
@@ -23,14 +24,20 @@ checked, used for the report metadata line. Defaults to \code{NULL}.}
 
 \item{generated_at}{Timestamp shown in the report. Defaults to
 \code{Sys.time()}.}
+
+\item{summary}{Optional per-variable descriptive summary data frame as
+returned by \code{\link[=describe_cdisc_variables]{describe_cdisc_variables()}}. When supplied, it is rendered as
+a second section after the problems. Defaults to \code{NULL}.}
 }
 \value{
 A single character string containing a complete HTML document.
 }
 \description{
-Produces a styled, standalone HTML string (inline CSS, no external assets)
-summarising the findings from \code{\link[=validate_cdisc_types]{validate_cdisc_types()}}: a PASS/FAIL banner,
-a per-finding table, and a footer noting the metadata-driven scope.
+Produces a styled, standalone HTML string (inline CSS, no external assets):
+a PASS/FAIL banner, the problems found by \code{\link[=validate_cdisc_types]{validate_cdisc_types()}} as the
+first section (so issues are seen immediately), an optional per-variable
+descriptive summary as a second section, and a footer noting the
+metadata-driven scope.
 }
 \examples{
 findings <- validate_cdisc_types(list())

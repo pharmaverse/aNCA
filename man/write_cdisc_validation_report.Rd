@@ -30,8 +30,9 @@ Defaults to \code{metadata_nca_variables}.}
 }
 \value{
 A list with elements \code{findings} (the findings data frame),
-\code{report_path} (path to the written HTML report), and \code{blocks_save}
-(logical from \code{\link[=cdisc_validation_blocks_save]{cdisc_validation_blocks_save()}}).
+\code{summary} (the per-variable descriptive summary), \code{report_path} (path to
+the written HTML report), and \code{blocks_save} (logical from
+\code{\link[=cdisc_validation_blocks_save]{cdisc_validation_blocks_save()}}).
 }
 \description{
 Convenience wrapper for the export/Save flow: runs

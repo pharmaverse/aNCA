@@ -32,6 +32,12 @@ storage class and maximum length declared in \code{metadata_nca_variables}.
 This is intentionally not a full CDISC conformance engine: it covers only
 what the metadata can assert (class and length), and never fails on
 metadata \code{Type} values it cannot interpret.
+
+Indexed CDISC variable families are resolved to their metadata template: a
+data column falls back from an exact name match to an index-agnostic match,
+so \code{NCA1XRS}/\code{NCA2XRS} match the \code{NCAwXRS} template and \code{CRIT2}/\code{CRIT3FL}
+match the \code{CRIT1}/\code{CRIT1FL} family. An exact metadata entry always takes
+precedence over the template.
 }
 \examples{
 cdisc_data <- list(

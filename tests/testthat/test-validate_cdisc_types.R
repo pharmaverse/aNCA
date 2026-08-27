@@ -37,6 +37,20 @@ describe("validate_cdisc_types: type -> class mapping", {
   })
 })
 
+describe(".cdisc_normalise_name", {
+  it("collapses digit-index instances to a template key", {
+    expect_equal(.cdisc_normalise_name("NCA1XRS"), "NCA#XRS")
+    expect_equal(.cdisc_normalise_name("CRIT12FL"), "CRIT#FL")
+  })
+
+  it("collapses lowercase placeholders only for metadata names", {
+    expect_equal(.cdisc_normalise_name("NCAwXRS", is_metadata = TRUE), "NCA#XRS")
+    expect_equal(.cdisc_normalise_name("CRIT1", is_metadata = TRUE), "CRIT#")
+    # Data names keep uppercase intact; only digits are collapsed
+    expect_equal(.cdisc_normalise_name("NCA2XRS"), "NCA#XRS")
+  })
+})
+
 describe("validate_cdisc_types: conforming data", {
   it("returns zero rows when all columns conform", {
     cdisc_data <- list(
@@ -126,6 +140,88 @@ describe("validate_cdisc_types: length checks", {
       cdisc_data, metadata = test_metadata, check_length = FALSE
     )
     expect_equal(nrow(findings[findings$Check == "length", ]), 0)
+  })
+})
+
+describe("validate_cdisc_types: indexed CDISC variable families", {
+  # Metadata declares the CDISC templates NCAwXRS/NCAwXRSN (w = index) and the
+  # indexed family CRIT1/CRIT1FL. Exported data contains concrete instances.
+  indexed_meta <- data.frame(
+    Dataset = rep("ADNCA", 4),
+    Variable = c("NCAwXRS", "NCAwXRSN", "CRIT1", "CRIT1FL"),
+    Type = c("Character", "integer", "text", "text"),
+    Length = c(200, 12, 70, 1),
+    stringsAsFactors = FALSE
+  )
+
+  it("matches NCA1XRS/NCA2XRS to the NCAwXRS template (no warning)", {
+    cdisc_data <- list(
+      adnca = data.frame(
+        NCA1XRS = "Late Sample",
+        NCA2XRS = "Vomit",
+        stringsAsFactors = FALSE
+      )
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = indexed_meta)
+    expect_equal(nrow(findings), 0)
+  })
+
+  it("matches numeric NCA1XRSN to the NCAwXRSN template", {
+    cdisc_data <- list(
+      adnca = data.frame(NCA1XRSN = 1L, stringsAsFactors = FALSE)
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = indexed_meta)
+    expect_equal(nrow(findings), 0)
+  })
+
+  it("matches CRIT2/CRIT3FL to the CRIT1/CRIT1FL index family", {
+    cdisc_data <- list(
+      adnca = data.frame(
+        CRIT2 = "R2ADJ < 0.8",
+        CRIT3FL = "Y",
+        stringsAsFactors = FALSE
+      )
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = indexed_meta)
+    expect_equal(nrow(findings), 0)
+  })
+
+  it("still enforces the template's class on indexed instances", {
+    cdisc_data <- list(
+      adnca = data.frame(NCA1XRSN = "not-a-number", stringsAsFactors = FALSE)
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = indexed_meta)
+    expect_equal(nrow(findings), 1)
+    expect_equal(findings$Check, "class")
+    expect_equal(findings$Variable, "NCA1XRSN")
+    expect_equal(findings$Expected, "numeric")
+  })
+
+  it("prefers an exact metadata match over the template", {
+    meta <- rbind(
+      indexed_meta,
+      data.frame(
+        Dataset = "ADNCA", Variable = "NCA1XRS", Type = "float", Length = 8,
+        stringsAsFactors = FALSE
+      )
+    )
+    # Exact NCA1XRS spec is numeric, so a character value must error
+    cdisc_data <- list(
+      adnca = data.frame(NCA1XRS = "text", stringsAsFactors = FALSE)
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = meta)
+    expect_equal(findings$Check, "class")
+    expect_equal(findings$Expected, "numeric")
+  })
+
+  it("keeps truly unknown non-indexed columns as warnings", {
+    cdisc_data <- list(
+      adnca = data.frame(DOSFRM = "TABLET", stringsAsFactors = FALSE)
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = indexed_meta)
+    unk <- findings[findings$Check == "unknown_variable", ]
+    expect_equal(nrow(unk), 1)
+    expect_equal(unk$Variable, "DOSFRM")
   })
 })
 
@@ -219,6 +315,98 @@ describe("cdisc_validation_blocks_save", {
   })
 })
 
+describe("describe_cdisc_variables", {
+  it("returns one row per column with pass status for conforming data", {
+    cdisc_data <- list(
+      adnca = data.frame(
+        STUDYID = "S001", AVAL = 1.2, USUBJID = "U1",
+        stringsAsFactors = FALSE
+      )
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    expect_s3_class(summary, "data.frame")
+    expect_equal(nrow(summary), 3)
+    expect_equal(names(summary), CDISC_SUMMARY_COLS)
+    expect_true(all(summary$Status == "pass"))
+    expect_true(all(c("STUDYID", "AVAL", "USUBJID") %in% summary$Variable))
+  })
+
+  it("includes the metadata label, expected and observed class", {
+    cdisc_data <- list(
+      adnca = data.frame(AVAL = 1.2, stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "AVAL", ]
+    expect_equal(row$Expected_Class, "numeric")
+    expect_equal(row$Observed_Class, "numeric")
+    expect_equal(row$Type, "float")
+  })
+
+  it("marks wrong-type columns as error with a detail message", {
+    cdisc_data <- list(
+      adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "STUDYID", ]
+    expect_equal(row$Status, "error")
+    expect_match(row$Detail, "Expected character")
+  })
+
+  it("marks over-length columns as error and reports the longest value", {
+    cdisc_data <- list(
+      adnca = data.frame(USUBJID = "SUBJECT-TOO-LONG", stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "USUBJID", ]
+    expect_equal(row$Status, "error")
+    expect_equal(row$Longest_Value, nchar("SUBJECT-TOO-LONG"))
+    expect_match(row$Detail, "exceeds declared length")
+  })
+
+  it("marks unknown columns as unknown status", {
+    cdisc_data <- list(
+      adnca = data.frame(NOTINMETA = "x", stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "NOTINMETA", ]
+    expect_equal(row$Status, "unknown")
+  })
+
+  it("resolves indexed variables to their template label and passes", {
+    indexed_meta <- data.frame(
+      Dataset = "ADNCA", Variable = "NCAwXRS",
+      Label = "Reason w for PK NCA Exclusion",
+      Type = "Character", Length = 200, stringsAsFactors = FALSE
+    )
+    cdisc_data <- list(
+      adnca = data.frame(NCA1XRS = "Late Sample", stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = indexed_meta)
+    row <- summary[summary$Variable == "NCA1XRS", ]
+    expect_equal(row$Status, "pass")
+    expect_equal(row$Label, "Reason w for PK NCA Exclusion")
+    expect_equal(row$Expected_Class, "character")
+  })
+
+  it("marks uninterpretable metadata types as skipped", {
+    meta <- data.frame(
+      Dataset = "ADNCA", Variable = "MYSTERY", Label = "Mystery",
+      Type = "weird", Length = NA, stringsAsFactors = FALSE
+    )
+    cdisc_data <- list(
+      adnca = data.frame(MYSTERY = 1, stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = meta)
+    expect_equal(summary$Status, "skipped")
+  })
+
+  it("returns empty summary for NULL or empty input", {
+    expect_equal(nrow(describe_cdisc_variables(NULL)), 0)
+    expect_equal(nrow(describe_cdisc_variables(list())), 0)
+    expect_equal(names(describe_cdisc_variables(NULL)), CDISC_SUMMARY_COLS)
+  })
+})
+
 describe("cdisc_validation_report", {
   it("renders a PASS banner for conforming data", {
     findings <- validate_cdisc_types(list())
@@ -248,6 +436,29 @@ describe("cdisc_validation_report", {
     html <- cdisc_validation_report(findings)
     expect_match(html, "A&lt;B")
   })
+
+  it("shows the Problems section before the Variable summary section", {
+    cdisc_data <- list(
+      adnca = data.frame(STUDYID = "S1", AVAL = 1.2, stringsAsFactors = FALSE)
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = test_metadata)
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    html <- cdisc_validation_report(findings, summary = summary)
+    expect_match(html, "<h2>Problems</h2>")
+    expect_match(html, "<h2>Variable summary</h2>")
+    expect_lt(
+      regexpr("<h2>Problems</h2>", html, fixed = TRUE),
+      regexpr("<h2>Variable summary</h2>", html, fixed = TRUE)
+    )
+    # The summary lists the variable and its declared class
+    expect_match(html, "STUDYID")
+    expect_match(html, "Conforms")
+  })
+
+  it("omits the Variable summary section when no summary is supplied", {
+    html <- cdisc_validation_report(validate_cdisc_types(list()))
+    expect_no_match(html, "<h2>Variable summary</h2>")
+  })
 })
 
 describe("write_cdisc_validation_report", {
@@ -262,6 +473,9 @@ describe("write_cdisc_validation_report", {
     expect_true(file.exists(res$report_path))
     expect_false(res$blocks_save)
     expect_equal(nrow(res$findings), 0)
+    expect_s3_class(res$summary, "data.frame")
+    expect_equal(nrow(res$summary), 2)
+    expect_true(all(res$summary$Status == "pass"))
     unlink(tmp, recursive = TRUE)
   })
 
