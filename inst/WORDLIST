@@ -83,14 +83,15 @@ PKNCAdose
 PKNCAresult
 PKNCAresults
 PKSUM
+PKSUMXF
 PPANMETH
 PPCAT
 PPORRES
 PPSPEC
 PPSTRES
 PPSTRESU
-PPSUMFL
 PPSUMRSN
+PPSUMXF
 PPT
 PPTEST
 PPTESTCD
@@ -142,6 +143,7 @@ VSSMDP
 WTBL
 WTBLU
 Walkthrough
+XLSX
 XPT
 YAML
 aNCA's
@@ -170,6 +172,7 @@ devtools
 df
 dm
 doi
+dplyr
 dropdown
 dropdowns
 extravascular
@@ -212,6 +215,7 @@ plotly
 pptest
 pre
 pred
+predose
 px
 qmd
 renderable
