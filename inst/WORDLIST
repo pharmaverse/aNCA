@@ -7,20 +7,15 @@ AEFRLT
 AFRLT
 ARRLT
 ATPTREF
-AUCIFOD
 AUCINT
-AUCLSTD
 AUCPEO
 AUCPEP
-AUCTLSTD
 AUCall
 AUCinf
 AUCint
 AUClast
 AVAL
-AVALC
 AVALU
-AVISIT
 AdjustingFactor
 Ae
 AggregateSubject
@@ -31,7 +26,6 @@ Bioavailability
 Buckeridge
 CDISC
 CMAX
-CMAXD
 CRITy
 CRITyFL
 Clast
@@ -57,10 +51,8 @@ EXTRAVASCULAR
 Extravascular
 FABS
 FREL
-FREXINT
 GMR
 INTRAVASCULAR
-ISO
 Kezia
 Kobana
 LAMZ
@@ -71,7 +63,6 @@ METABFL
 MRTMDO
 MRTMDP
 MSCW
-MYPARAMD
 Metab
 Multidose
 NCA
@@ -82,6 +73,7 @@ Noncompartmental
 Num
 PARAM
 PARAMCD
+PARAMCDs
 PCSPEC
 PKNCA
 PKNCA's
@@ -91,15 +83,15 @@ PKNCAdose
 PKNCAresult
 PKNCAresults
 PKSUM
+PKSUMXF
 PPANMETH
 PPCAT
-PPENINT
 PPORRES
 PPSPEC
 PPSTRES
 PPSTRESU
-PPSUMFL
 PPSUMRSN
+PPSUMXF
 PPT
 PPTEST
 PPTESTCD
@@ -131,12 +123,10 @@ SMS
 STUDYID
 SelectInputs
 Summarise
-TAD
 TLG
 TLGs
 TMAX
 TRT
-TRT01A
 TRTRINT
 TestGroups
 TestParameter
@@ -145,7 +135,6 @@ Tlast
 Tmax
 Tooltip
 UI
-URINE
 USUBJID
 UX
 VOLUMEU
@@ -154,6 +143,7 @@ VSSMDP
 WTBL
 WTBLU
 Walkthrough
+XLSX
 XPT
 YAML
 aNCA's
@@ -161,7 +151,6 @@ adnca
 analysing
 analyte
 analytes
-aucint
 aucpext
 aucs
 bioavailability
@@ -182,6 +171,7 @@ devtools
 df
 dm
 doi
+dplyr
 dropdown
 dropdowns
 extravascular
@@ -201,8 +191,6 @@ mL
 macroparameters
 md
 metab
-multidose
-nav
 nca
 ng
 normalised
@@ -211,7 +199,6 @@ organised
 pak
 parseable
 pc
-pcspec
 pharmacodynamics
 pharmacokinetic
 pharmacokinetics
@@ -225,12 +212,11 @@ pkpl
 pkpt
 plotly
 pptest
-pptestcd
 pre
 pred
+predose
 px
 qmd
-rds
 renderable
 reproducibility
 resizable
@@ -238,7 +224,6 @@ reupload
 roadmap
 rpptx
 runnable
-scrollable
 selectable
 signif
 src

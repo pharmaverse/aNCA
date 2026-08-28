@@ -14,6 +14,21 @@ source(
   local = TRUE
 )
 
+describe(".legend_swatch", {
+  it("keeps a visible label and exposes an accessible tooltip", {
+    legend <- .legend_swatch(
+      EXCL_COLOR_NCA,
+      "NCA calculation exclusion",
+      "Excludes the concentration record from the complete NCA calculation."
+    )
+    html <- as.character(legend)
+
+    expect_match(html, "NCA calculation exclusion", fixed = TRUE)
+    expect_match(html, "complete NCA calculation", fixed = TRUE)
+    expect_match(html, 'tabindex="0"', fixed = TRUE)
+  })
+})
+
 describe(".row_exclusion_flags", {
   it("returns FALSE/FALSE when row is not in any exclusion", {
     exclusions <- list(
@@ -115,12 +130,12 @@ describe(".exclusion_type_label", {
     expect_equal(.exclusion_type_label(TRUE, FALSE), "NCA")
   })
 
-  it("returns TLG for TLG-only", {
-    expect_equal(.exclusion_type_label(FALSE, TRUE), "TLG")
+  it("returns Summary for summary-only", {
+    expect_equal(.exclusion_type_label(FALSE, TRUE), "Summary")
   })
 
-  it("returns NCA + TLG for both", {
-    expect_equal(.exclusion_type_label(TRUE, TRUE), "NCA + TLG")
+  it("returns NCA + Summary for both", {
+    expect_equal(.exclusion_type_label(TRUE, TRUE), "NCA + Summary")
   })
 
   it("returns empty string for neither", {
