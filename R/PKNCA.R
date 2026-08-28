@@ -936,7 +936,7 @@ remove_pp_not_requested <- function(pknca_res) {
 #'     TLGs can filter them out
 #'
 #' @returns The modified PKNCAdata object with updated exclusion
-#'   reasons, PKSUMXF, and PKSUMXRS in the concentration object.
+#'   reasons, PKSUMXF, and PKSUM1RS in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   if (is.null(exclusion_list) || length(exclusion_list) == 0) {
