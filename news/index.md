@@ -383,6 +383,9 @@
 
 #### Data & Mapping
 
+- Mapping section assertion error now reports the count and offending
+  `mapping_section` values for easier debugging
+  ([\#1367](https://github.com/pharmaverse/aNCA/issues/1367))
 - ADNCA now includes `PKSUM1RS` column storing the general exclusion
   reason when `PKSUMXF = "Y"`
   ([\#1331](https://github.com/pharmaverse/aNCA/issues/1331))
