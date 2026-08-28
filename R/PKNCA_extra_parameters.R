@@ -35,7 +35,7 @@ PKNCA::add.interval.col("ertlst",
                  FUN="pk.calc.ertlst",
                  unit_type="time",
                  pretty_name="Tlast excretion rate",
-                 desc="The midpoint collection time of the last measurable excretion rate (typically in urine or feces)")
+                 desc="Midpoint time of last excretion rate")
 
 PKNCA::PKNCA.set.summary(
   name="ertlst",
@@ -122,7 +122,7 @@ PKNCA::add.interval.col(
   FUN = "pk.calc.ertmax",
   unit_type = "time",
   pretty_name = "Tmax excretion rate",
-  desc = "The midpoint collection time of the maximum excretion rate (typically in urine or feces)"
+  desc = "Midpoint time of max excretion rate"
 )
 
 PKNCA::PKNCA.set.summary(
@@ -201,7 +201,7 @@ PKNCA::add.interval.col(
   values = c(FALSE, TRUE),
   unit_type = "volume",
   pretty_name = "Total Urine Volume",
-  desc = "The sum of urine volumes for the interval"
+  desc = "Sum of urine volumes for the interval"
 )
 PKNCA::PKNCA.set.summary(
   name = "volpk",
