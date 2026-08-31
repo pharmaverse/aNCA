@@ -21,6 +21,7 @@ g_lineplot(
   x_limits = NULL,
   y_limits = NULL,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   threshold_value = NULL,
   palette = "default",
   tooltip_vars = NULL,
@@ -96,6 +97,11 @@ g_lineplot(
 
   A logical value (`TRUE` or `FALSE`) indicating whether to use a
   logarithmic scale for the y-axis.
+
+- lock_y_axis:
+
+  Logical; if `TRUE`, faceted plots use one shared y-axis range while
+  x-axis scales remain free. Default is `FALSE`.
 
 - threshold_value:
 

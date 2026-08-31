@@ -150,7 +150,9 @@
 </ul></div>
 <div class="section level4">
 <h4 id="exploration-development-version">Exploration<a class="anchor" aria-label="anchor" href="#exploration-development-version"></a></h4>
-<ul><li>“Copy Plot Code” button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (<a href="https://github.com/pharmaverse/aNCA/issues/1327" class="external-link">#1327</a>)</li>
+<ul><li>Faceted individual and mean exploration plots can now use a shared y-axis range across panels, with the selected setting preserved in generated plot code and saved exports (<a href="https://github.com/pharmaverse/aNCA/issues/1424" class="external-link">#1424</a>)</li>
+<li>Faceted exploration plots now align differing units automatically: compatible units (within or across panels) are rescaled to a common unit, and incompatible units are shown per facet (comma-separated in the strip label) with a notification suggesting which grouping variables (e.g. PARAM, PCSPEC) to add to ‘facet by’ (<a href="https://github.com/pharmaverse/aNCA/issues/1424" class="external-link">#1424</a>)</li>
+<li>“Copy Plot Code” button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (<a href="https://github.com/pharmaverse/aNCA/issues/1327" class="external-link">#1327</a>)</li>
 </ul></div>
 <div class="section level4">
 <h4 id="nca-setup-development-version">NCA Setup<a class="anchor" aria-label="anchor" href="#nca-setup-development-version"></a></h4>

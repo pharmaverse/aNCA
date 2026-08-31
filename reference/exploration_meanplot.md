@@ -12,6 +12,7 @@ exploration_meanplot(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   show_legend = TRUE,
   threshold_value = NULL,
   show_dose = FALSE,
@@ -54,6 +55,11 @@ exploration_meanplot(
 
   Logical; whether to use a logarithmic scale for the y-axis. Default is
   `FALSE`.
+
+- lock_y_axis:
+
+  Logical; if `TRUE`, faceted plots use one shared y-axis range while
+  x-axis scales remain free. Default is `FALSE`.
 
 - show_legend:
 
