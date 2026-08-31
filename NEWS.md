@@ -6,6 +6,7 @@
 
 ## Bug Fixes
 
+* Selecting `ROUTE` as a grouping variable in the Mapping section no longer crashes the app (`Column ROUTE doesn't exist`). `PKNCA_update_data_object()` re-joined route information from the dose data after `format_pkncadata_intervals()` had already kept `ROUTE` via `keep_interval_cols`, producing `ROUTE.x` / `ROUTE.y` and dropping the plain `ROUTE` column that `pk.nca()` requires. The join now only adds route columns not already present in the intervals. This is the `ROUTE` follow-up to the `DOSETRT` fix in #1079 (#1461)
 * Running NCA with "Impute Start Concentration" turned off no longer errors with `PKNCA_impute_method_FALSE not found`. When start imputation was off, the per-interval `impute` column was absent, so the BLQ step read the `impute` function argument instead of the column and built the method string `"blq, FALSE"`. The column is now always present, the reference is pinned to it, and the `update_main_intervals()` argument was renamed `impute` -> `start_impute` so it can no longer collide with the column (#1121, #1266)
 * With "Impute Start Concentration" turned off, the first interval now starts at C1 (the first sample at or after the dose) instead of the predose time. The sample feeding the start time was picked by an unordered `slice(1)`, so it could be the predose record whose negative `ARRLT` pulled the interval start before the dose (#1121)
 * The generated R-script (session code) now passes `blq_imputation_rule` to `PKNCA_update_data_object()`, matching the app. The template only applied the BLQ rule at calculation time (`PKNCA_calculate_nca()`) and omitted it during interval setup, so exported scripts did not reproduce the app's BLQ handling (#1445)
@@ -25,6 +26,9 @@
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
 
 ## Features
+
+### NCA Descriptive Statistics
+* `ROUTE` is now offered as a "Group by" option in the NCA descriptive statistics table. `ROUTE` is already carried into the results data, so it no longer needs to be added as a supplemental grouping variable in the Mapping section (#1461)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
