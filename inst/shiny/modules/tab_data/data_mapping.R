@@ -102,7 +102,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 .column_mapping_section <- function(ns, mapping_df) {
   section_title <- unique(mapping_df$mapping_section)
   if (length(section_title) != 1) {
-    stop("mapping_df must contain exactly one unique mapping_section value.")
+    stop(
+      "mapping_df must contain exactly one unique mapping_section value, but found ",
+      length(section_title), ": ", paste(section_title, collapse = ", ")
+    )
   }
   tags$section(
     h5(section_title),
@@ -146,7 +149,7 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 .restore_duplicate_exclusions <- function(data, keys_df) {
   if (is.null(keys_df) || nrow(keys_df) == 0) return(NULL)
 
-  matched_indices <- match_time_dup_keys(data, keys_df)
+  matched_indices <- aNCA:::match_time_dup_keys(data, keys_df)
   n_stored <- nrow(keys_df)
   n_matched <- length(matched_indices %||% integer(0))
 
@@ -428,7 +431,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     observe({
       session$userData$time_duplicate_rows <- resolved_time_duplicate_rows()
       # Store key-based representation for settings export
-      session$userData$time_duplicate_keys <- extract_time_dup_keys(
+      session$userData$time_duplicate_keys <- aNCA:::extract_time_dup_keys(
         mapped_data(), resolved_time_duplicate_rows()
       )
     })
@@ -449,7 +452,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
 
       tryCatch(
         {
-          result <- annotate_duplicates(mapped_data(), dup_rows)
+          result <- aNCA:::annotate_duplicates(mapped_data(), dup_rows)
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
@@ -480,7 +483,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       # Validate: check if the selection resolves all time duplicates
       tryCatch(
         {
-          annotate_duplicates(mapped_data(), new_exclusions)
+          aNCA:::annotate_duplicates(mapped_data(), new_exclusions)
           # Selection resolves all duplicates — proceed
           resolved_time_duplicate_rows(new_exclusions)
           removeModal()
