@@ -113,4 +113,20 @@ describe(".build_param_display", {
     expect_false("some_internal_col" %in% names(result))
     expect_false("exclude" %in% names(result))
   })
+
+  it("adds .row_id and .excl_type classifying flag/manual/both/none", {
+    df <- data.frame(
+      PPTESTCD = c("cmax", "tmax", "auclast", "clast"),
+      PPTEST = c("Cmax", "Tmax", "AUClast", "Clast"),
+      PPORRES = c("10", "2", "50", "5"),
+      # row1: flag only, row2: none, row3: manual only, row4: flag + manual
+      exclude = c("R2ADJ < 0.8", NA, "", "AUCPEO > 20"),
+      stringsAsFactors = FALSE
+    )
+    manual <- list(list(rows = c(3, 4), reason = "Manual reason"))
+    result <- .build_param_display(df, group_cols = character(0),
+                                  manual_exclusions = manual)
+    expect_equal(result$.row_id, 1:4)
+    expect_equal(result$.excl_type, c("flag", "none", "manual", "both"))
+  })
 })

@@ -26,6 +26,17 @@
 
 ## Features
 
+### ADPP Exclusions
+* Reworked the ADPP Exclusions tab (now the third Results sub-tab) to make the exclusion workflow clearer (#1466):
+  - Excluded records are colour-coded by source: red for default flag-rule exclusions, yellow for custom (user) exclusions, and orange when a record is both. The colour coding is shared by the table rows and the boxplot crosses, with a legend shown alongside the plots.
+  - Violin/box plots are embedded directly in the tab. The parameter selector ("Select PPs") now accepts multiple parameters, rendering one boxplot per selection, and the exclusion table is filtered to the selected parameters.
+  - A "Filter PPs" control narrows the parameter choices to those "With a flagged result" or "With an outlier" (Tukey/IQR rule, computed within the current X/colour grouping over non-excluded records only).
+  - Clicking a point in a boxplot highlights the matching row in the exclusion table.
+* Added exported helpers `is_iqr_outlier()` and `params_with_outliers()` for Tukey/IQR outlier detection.
+
+### Descriptive Statistics
+* Descriptive statistics now derive their grouping and exclusions from the ADPP dataset directly, instead of re-joining grouping columns from the concentration data. This removes an ad-hoc join (the source of the ROUTE column collision) and guarantees the summary grouping matches the exported ADPP (#1466).
+
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)

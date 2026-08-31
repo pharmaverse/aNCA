@@ -368,6 +368,38 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
     expect_null(violin_layer$mapping$text)
   })
 
+  it("colours excluded crosses by exclusion type", {
+    # Flag-exclude one record and manually exclude another for CMAX
+    res_excl <- boxplotdata
+    cmax_rows <- which(res_excl$result$PPTESTCD == "CMAX")
+    res_excl$result$exclude <- ""
+    res_excl$result$exclude[cmax_rows[1]] <- "R2ADJ < 0.8"
+    res_excl$result$.pp_excl <- FALSE
+    res_excl$result$.pp_excl[cmax_rows[2]] <- TRUE
+
+    p <- flexible_violinboxplot(
+      res_nca = res_excl,
+      parameter = "CMAX",
+      xvars = "DOSEA",
+      colorvars = "ATPTREF",
+      tooltip_vars = c("USUBJID"),
+      box = TRUE,
+      plotly = FALSE,
+      show_excluded = TRUE,
+      seed = 123
+    )
+
+    # Collect the fixed colours used by the excluded-cross point layers
+    point_layers <- Filter(
+      function(l) inherits(l$geom, "GeomPoint") &&
+        !is.null(l$aes_params$colour),
+      p$layers
+    )
+    used_colours <- unlist(lapply(point_layers, function(l) l$aes_params$colour))
+    expect_true(aNCA:::EXCL_TYPE_POINT_COLORS[["flag"]] %in% used_colours)
+    expect_true(aNCA:::EXCL_TYPE_POINT_COLORS[["manual"]] %in% used_colours)
+  })
+
   it("handles aucint parameter mutation logic", {
     # Test manual interval renaming: type_interval == "manual" triggers
     # PPTESTCD rename using signif(start_dose)/signif(end_dose)

@@ -98,8 +98,12 @@ flexible_violinboxplot <- function(res_nca,
 #' @noRd
 .prepare_boxplot_data <- function(res_nca, parameter, varvalstofilter) {
   group_columns <- group_vars(res_nca$data$conc)
+  result_with_id <- res_nca$result
+  # Stable row id into the original result, used to link plot points back to
+  # the ADPP Exclusions table rows. Preserved through join and filtering.
+  result_with_id$.row_id <- seq_len(nrow(result_with_id))
   boxplotdata <- left_join(
-    res_nca$result,
+    result_with_id,
     res_nca$data$conc$data %>%
       distinct(across(all_of(group_columns)), .keep_all = TRUE),
     by = group_columns,
@@ -114,15 +118,26 @@ flexible_violinboxplot <- function(res_nca,
     filter(!!filter_expr, PPTESTCD == parameter)
 
   # Rows excluded by PKNCA flag rules (populated exclude column)
-  is_excluded <- !is.na(filtered[["exclude"]]) & filtered[["exclude"]] != ""
+  is_flag <- !is.na(filtered[["exclude"]]) & filtered[["exclude"]] != ""
   # Rows excluded manually via parameter exclusions (.pp_excl marker)
   if (".pp_excl" %in% names(filtered)) {
     pp_excl <- filtered[[".pp_excl"]]
-    is_excluded <- is_excluded | (!is.na(pp_excl) & pp_excl)
+    is_manual <- !is.na(pp_excl) & pp_excl
+  } else {
+    is_manual <- rep(FALSE, nrow(filtered))
   }
+  is_excluded <- is_flag | is_manual
+
+  excluded <- filtered[is_excluded, , drop = FALSE]
+  # Tag each excluded record with its source so crosses can be coloured
+  # red (flag) / yellow (manual) / orange (both).
+  excluded$.excl_type <- .classify_exclusion(
+    is_flag[is_excluded], is_manual[is_excluded]
+  )
+
   list(
     included = filtered[!is_excluded, , drop = FALSE],
-    excluded = filtered[is_excluded, , drop = FALSE]
+    excluded = excluded
   )
 }
 
@@ -149,18 +164,32 @@ flexible_violinboxplot <- function(res_nca,
 #' @noRd
 .geom_excluded <- function(excluded_data, show_excluded, colorvars, xvars, seed) {
   if (!show_excluded || nrow(excluded_data) == 0) return(NULL)
-  geom_point(
-    data = excluded_data %>% arrange(!!!syms(colorvars)),
-    aes(
-      x = interaction(!!!syms(xvars), sep = "\n"),
-      y = PPSTRES,
-      color = interaction(!!!syms(colorvars)),
-      text = tooltip_text
-    ),
-    shape = 4, size = 3,
-    position = position_jitterdodge(seed = seed),
-    inherit.aes = FALSE
-  )
+
+  # Colour crosses by exclusion source: red (flag), yellow (manual),
+  # orange (both). Fixed colours (not mapped to the boxplot colour scale) so
+  # the plot keeps a single group colour legend; the exclusion-colour legend
+  # is shown alongside the plot in the UI.
+  if (!".excl_type" %in% names(excluded_data)) {
+    excluded_data$.excl_type <- "flag"
+  }
+
+  layers <- lapply(names(EXCL_TYPE_POINT_COLORS), function(type) {
+    df <- excluded_data[excluded_data$.excl_type == type, , drop = FALSE]
+    if (nrow(df) == 0) return(NULL)
+    geom_point(
+      data = df %>% arrange(!!!syms(colorvars)),
+      aes(
+        x = interaction(!!!syms(xvars), sep = "\n"),
+        y = PPSTRES,
+        text = tooltip_text
+      ),
+      shape = 4, size = 3, stroke = 1.1,
+      colour = EXCL_TYPE_POINT_COLORS[[type]],
+      position = position_jitterdodge(seed = seed),
+      inherit.aes = FALSE
+    )
+  })
+  Filter(Negate(is.null), layers)
 }
 
 #' Build y-axis label from parameter name and unit
