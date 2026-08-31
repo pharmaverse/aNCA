@@ -180,7 +180,7 @@ settings_ui <- function(id) {
                 ),
                 p(
                   "Each checked rule also generates criterion columns",
-                  "(CRITy / CRITyFL) and a summary analysis flag (PPSUMFL)",
+                  "(CRITy / CRITyFL) and a summary analysis flag (PPSUMXF)",
                   "in the ADPP dataset."
                 )
               ),
