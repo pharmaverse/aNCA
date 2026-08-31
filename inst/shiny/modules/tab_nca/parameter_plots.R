@@ -31,6 +31,11 @@ parameter_plots_ui <- function(id) {
         value = TRUE,
         onLabel = "Boxplot",
         offLabel = "Violinplot"
+      ),
+      checkboxInput(
+        inputId = ns("show_excluded"),
+        label = "Show excluded points (\u2717)",
+        value = FALSE
       )
     ),
     plotlyOutput(ns("boxplot"))
@@ -38,22 +43,19 @@ parameter_plots_ui <- function(id) {
 }
 
 
-parameter_plots_server <- function(id, res_nca) {
+parameter_plots_server <- function(id, res_nca, res_nca_plot = res_nca) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # TAB: Parameter Box plots ----------------------------------------------------
 
-    # Update picker inputs when boxplotdata is available
+    # Update picker inputs only when the base NCA results change (not on
+    # every exclusion toggle). res_nca_plot carries exclusion markers for
+    # the actual plot rendering.
     observeEvent(res_nca(), {
       # Rename manual interval parameters to include the range suffix
       # (e.g. AUCINT -> AUCINT_0-12) so each interval appears as a distinct choice
-      result_data <- res_nca()$result %>%
-        mutate(PPTESTCD = ifelse(
-          type_interval == "manual",
-          paste0(PPTESTCD, "_", start, "-", end),
-          PPTESTCD
-        ))
+      result_data <- aNCA:::rename_interval_params(res_nca()$result)
       param_choices <- unique(result_data$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
@@ -75,7 +77,7 @@ parameter_plots_server <- function(id, res_nca) {
                      initial_selection = default_selection,
                      selector_ui_wrapper = "params_to_display_ui_wrapper",
                      id = "selected_param_boxplot",
-                     label = "Choose the parameter to display:",
+                     label = "Select the parameter to display:",
                      metadata_type = "parameter",
                      multiple = FALSE)
 
@@ -129,23 +131,24 @@ parameter_plots_server <- function(id, res_nca) {
       )
     })
 
-    # compute the box plot
+    # compute the box plot (uses res_nca_plot which carries .pp_excl markers)
     boxplot <- reactive({
       req(input$selected_param_boxplot)
       req(input$selected_xvars_boxplot)
       req(input$selected_colorvars_boxplot)
       req(input$selected_filters_boxplot)
-      req(res_nca())
+      req(res_nca_plot())
       log_info("Rendering boxplot")
 
       boxplot <- flexible_violinboxplot(
-        res_nca = res_nca(),
+        res_nca = res_nca_plot(),
         parameter = input$selected_param_boxplot,
         xvars = input$selected_xvars_boxplot,
         colorvars = input$selected_colorvars_boxplot,
         varvalstofilter = input$selected_filters_boxplot,
-        tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
+        tooltip_vars = unname(unlist(res_nca_plot()$data$conc$columns$groups)),
         box = input$violinplot_toggle_switch,
+        show_excluded = input$show_excluded
       )
     })
 

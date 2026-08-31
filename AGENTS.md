@@ -203,6 +203,7 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 
 ## PR Workflow
 
+- **Before creating a branch**: Always `git fetch origin main && git checkout origin/main` to ensure you branch from the latest remote main. Do not rely on the local `main` ref being up to date.
 - **Branch name**: `<issue-number>-<type>/<short-description>` (e.g., `123-bug/data-upload-fails`)
 - **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes
 - **PR template**: Use `.github/PULL_REQUEST_TEMPLATE.md`. Link issue with `Closes #<number>`, describe changes, complete the contributor checklist
@@ -211,6 +212,7 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 
 ## Anti-patterns
 
+- Do not use `git push --force` or `git push --force-with-lease` — always use separate commits instead of amending and force-pushing
 - Do not edit `man/` or `NAMESPACE` files manually
 - Do not add unused globalVariables to `R/zzz.R`
 - Do not push without running `devtools::document()` first

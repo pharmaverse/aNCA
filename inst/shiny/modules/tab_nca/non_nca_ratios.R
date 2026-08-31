@@ -86,7 +86,7 @@ non_nca_ratio_server <- function(id, data, grouping_vars) {
                      choices = ratio_groups(),
                      initial_selection = NULL,
                      selector_ui_wrapper = "summary_groups_ui_wrapper",
-                     id = "summarygroups",
+                     id = "summary_groups",
                      label = "Summarise by:",
                      metadata_type = "variable")
     })

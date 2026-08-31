@@ -11,7 +11,8 @@ format_pkncaconc_data(
   rrlt_column = "ARRLT",
   route_column = "ROUTE",
   time_end_column = NULL,
-  nca_exclude_reason_columns = NULL
+  nca_exclude_reason_columns = NULL,
+  dose_group_columns
 )
 }
 \arguments{
@@ -30,6 +31,10 @@ calculate \code{CONCDUR}.}
 
 \item{nca_exclude_reason_columns}{A character vector specifying the columns to indicate reasons
 for excluding records from NCA analysis.}
+
+\item{dose_group_columns}{Character vector of columns to group by when computing
+DOSNOA. Should use dose-level grouping (without specimen/analyte columns)
+to ensure consistent dose numbering across specimen types.}
 }
 \value{
 A data frame containing the filtered and processed concentration data. The following new
@@ -68,6 +73,7 @@ conc_data <- format_pkncaconc_data(
   group_columns = c("STUDYID", "DOSETRT", "USUBJID", "PARAM"),
   time_column = "AFRLT",
   rrlt_column = "ARRLT",
-  route_column = "ROUTE"
+  route_column = "ROUTE",
+  dose_group_columns = c("STUDYID", "DOSETRT", "USUBJID")
 )
 }

@@ -11,21 +11,26 @@
 #' get_conversion_factor("sec", "min")
 #' @importFrom units set_units
 #' @export
-get_conversion_factor <- Vectorize(function(initial_unit, target_unit) {
-  tryCatch({
-    conversion <- units::set_units(
-      units::set_units(1, initial_unit, mode = "standard"),
-      target_unit, mode = "standard"
-    )
-    unname(as.numeric(conversion))
-  }, error = function(e) {
-    if (isTRUE(paste0(initial_unit) == paste0(target_unit))) {
-      1
-    } else {
-      NA
-    }
-  })
-}, USE.NAMES = FALSE)
+get_conversion_factor <- function(initial_unit, target_unit) {
+  initial_unit <- rep_len(initial_unit, max(length(initial_unit), length(target_unit)))
+  target_unit <- rep_len(target_unit, length(initial_unit))
+
+  vapply(seq_along(initial_unit), function(i) {
+    tryCatch({
+      conversion <- units::set_units(
+        units::set_units(1, initial_unit[i], mode = "standard"),
+        target_unit[i], mode = "standard"
+      )
+      unname(as.numeric(conversion))
+    }, error = function(e) {
+      if (isTRUE(paste0(initial_unit[i]) == paste0(target_unit[i]))) {
+        1
+      } else {
+        NA_real_
+      }
+    })
+  }, FUN.VALUE = numeric(1))
+}
 
 
 #' Apply default target units onto a data-derived units table

@@ -14,7 +14,8 @@ flexible_violinboxplot(
   labels_df = metadata_nca_variables,
   box = TRUE,
   plotly = TRUE,
-  seed = NULL
+  seed = NULL,
+  show_excluded = FALSE
 )
 }
 \arguments{
@@ -22,9 +23,9 @@ flexible_violinboxplot(
 
 \item{parameter}{A string specifying the parameter to be plotted.}
 
-\item{xvars}{Variables for the x axis.}
+\item{xvars}{Character vector of column names for the x-axis grouping.}
 
-\item{colorvars}{Variables for the color aesthetic.}
+\item{colorvars}{Character vector of column names for the color aesthetic.}
 
 \item{varvalstofilter}{Character vector specifying which variable and value to pre-filter
 as \code{colname: value}. By default is NULL (no pre-filtering)}
@@ -43,6 +44,10 @@ or ggplot otherwise (FALSE)}
 
 \item{seed}{An integer value to set the seed for reproducibility of jittering.
 Default (NULL) will use the current R seed.}
+
+\item{show_excluded}{Logical. If \code{TRUE}, excluded records (those with a populated
+\code{exclude} column) are overlaid as cross-shaped points. They are
+never included in box/violin statistics. Default is \code{FALSE}.}
 }
 \value{
 A plotly object representing the violin or box plot.

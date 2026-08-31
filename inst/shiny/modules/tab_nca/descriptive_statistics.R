@@ -52,7 +52,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       ]
 
       grouping_vars <- c(group_cols, classification_cols, subj_col)
-      initial_selection <-  c(group_cols, classification_cols)
+      initial_selection <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
 
       # Rendering the group by selector
       selector_label(input = input,
@@ -67,7 +67,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
       updatePickerInput(session, "summary_groupby",
                         choices = unique(c(group_cols, classification_cols, subj_col)),
-                        selected = unique(c(group_cols, classification_cols)))
+                        selected = unique(c(group_cols, intersect("ATPTREF", classification_cols))))
 
     })
 
@@ -75,37 +75,52 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
     summary_stats <- reactive({
       req(res_nca())
 
-      classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose))
+      subj_col <- res_nca()$data$conc$columns$subject
+      group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
+                            subj_col)
+      classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose, "ATPTREF"))
       classification_cols <- classification_cols[
         classification_cols %in% names(res_nca()$data$conc$data)
       ]
+
+      # Fall back to default grouping when the picker hasn't rendered yet
+      selected_groupby <- input$summary_groupby
+      if (is.null(selected_groupby)) {
+        selected_groupby <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
+      }
 
       results <- res_nca()
 
       # Join subject data to allow the user to group by it
       cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
-      results_to_join <- select(res_nca()$data$conc$data, any_of(cols_to_join))
+      results_to_join <- res_nca()$data$conc$data %>%
+        select(any_of(cols_to_join)) %>%
+        distinct()
       stats_data <- inner_join(
         results$result,
         results_to_join,
         by = intersect(names(results$result), names(results_to_join)),
         relationship = "many-to-many"
       ) %>%
+        # Exclude flagged records from summary statistics
+        filter(is.na(exclude) | exclude == "") %>%
         # Rename manual interval parameters to include the range suffix
         # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
-        mutate(PPTESTCD = ifelse(
-          type_interval == "manual",
-          paste0(PPTESTCD, "_", start, "-", end),
-          PPTESTCD
-        ))
+        aNCA:::rename_interval_params()
 
       # Calculate summary stats and filter by selected parameters
-      calculate_summary_stats(stats_data, input$summary_groupby)
+      calculate_summary_stats(stats_data, selected_groupby)
     })
 
     summary_stats_filtered <- reactive({
+      # Map clean parameter names (e.g. "CMAX") back to actual column names
+      # that include units (e.g. "CMAX[ng/mL]")
+      all_cols <- colnames(summary_stats())
+      selected_params <- input$select_display_parameters
+      matched_cols <- all_cols[gsub("\\[.*", "", all_cols) %in% selected_params]
+
       summary_stats() %>%
-        select(any_of(c(input$summary_groupby, "Statistic", input$select_display_parameters))) %>%
+        select(any_of(c(input$summary_groupby, "Statistic", matched_cols))) %>%
         filter(Statistic %in% input$select_display_statistic)
     })
 
