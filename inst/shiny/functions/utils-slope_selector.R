@@ -143,6 +143,7 @@ handle_interval_change <- function(new_pknca_data, old_pknca_data, plot_outputs)
 #' @export
 check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
   slope_groups <- setdiff(names(new), c("TYPE", "RANGE", "REASON"))
+  if (is.null(existing)) return(as.data.frame(new))
   existing <- filter(existing, !is.na(TYPE))
 
   # Helper to match group columns between existing and new
@@ -160,7 +161,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     rows_with_same_cols <- is_matching_cols(c(slope_groups, "TYPE", "RANGE"), existing, new)
     if (sum(rows_with_same_cols) > 0) {
       existing <- existing[!rows_with_same_cols, ]
-      return(existing)
+      return(if (nrow(existing) == 0) NULL else existing)
     }
     # Otherwise, just add the new exclusion
     existing <- bind_rows(existing, new)
@@ -175,7 +176,7 @@ check_slope_rule_overlap <- function(existing, new, .keep = FALSE) {
     # Otherwise, just add the new selection
     existing <- bind_rows(existing, new)
   }
-  existing
+  if (nrow(existing) == 0) NULL else existing
 }
 
 #' Update plots with PKNCA data (for affected intervals)
@@ -207,26 +208,42 @@ update_plots_with_pknca <- function(pknca_data, plot_outputs, intervals_to_updat
 
 #' Parse Plot Names to Data Frame
 #'
-#' Converts a named list of plots (with names in the format 'col1: val1, col2: val2, ...')
-#' into a data frame with one row per plot and columns for each key.
+#' Converts a named list of plots (with names in the format
+#' 'key1=val1_key2=val2_...') into a data frame with one row per plot and one
+#' column per key, plus a `PLOTID` column holding the original name.
 #'
-#' @param named_list A named list or vector, where names are key-value pairs separated by commas.
-#' @return A data frame with columns for each key and a `PLOTID` column with the original names.
+#' The name is split only at underscores that start a new `key=` segment, so
+#' underscores or spaces inside a value (e.g. `STUDYID = "same_or_similar"`) do
+#' not corrupt the parse. Keys are grouping column names and are assumed not to
+#' contain underscores. Rows are combined with `bind_rows()` so columns are
+#' aligned by name; this prevents the misaligned `NA`/`""` column names that
+#' `rbind()` produced when values contained underscores.
+#'
+#' @param named_list A named list or vector whose names are `key=value` pairs
+#'   joined by underscores.
+#' @return A data frame with one column per key and a `PLOTID` column with the
+#'   original names.
+#' @importFrom dplyr bind_rows
 parse_plot_names_to_df <- function(named_list) {
   plot_names <- names(named_list)
   parsed <- lapply(plot_names, function(x) {
-    pairs <- strsplit(x, "_\\s*")[[1]]
-    kv <- strsplit(pairs, "=\\s*")
-    setNames(
-      vapply(kv, function(y) y[2], character(1)),
-      vapply(kv, function(y) y[1], character(1))
+    # Split before each "_key=" boundary. The key class excludes "_" so that
+    # underscores inside values are never treated as segment separators.
+    segments <- strsplit(x, "_(?=[A-Za-z.][A-Za-z0-9.]*=)", perl = TRUE)[[1]]
+    kv <- regmatches(segments, regexec("^([^=]+)=(.*)$", segments))
+    # Keep only segments that actually matched a key=value pair, so malformed
+    # fragments can never become empty/NA column names.
+    kv <- kv[vapply(kv, length, integer(1)) == 3L]
+    keys <- vapply(kv, `[[`, character(1), 2L)
+    vals <- vapply(kv, `[[`, character(1), 3L)
+    as.data.frame(
+      as.list(setNames(vals, keys)),
+      stringsAsFactors = FALSE,
+      check.names = FALSE
     )
   })
-  as.data.frame(
-    do.call(rbind, parsed),
-    stringsAsFactors = FALSE
-  ) %>%
-    mutate(PLOTID = names(named_list))
+  bind_rows(parsed) %>%
+    mutate(PLOTID = plot_names)
 }
 
 #' Arrange Plots by Group Columns

@@ -25,7 +25,7 @@ pkcg02(
   footnote = NULL,
   plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM", "TRT01A"),
   plotgroup_names = list(ROUTE = "Route", PCSPEC = "Specimen", PARAM = "Analyte", TRT01A
-    = "Treatment"),
+    = "Treatment", USUBJID = "Subject ID"),
   scale = c("LIN", "LOG", "SBS")[1],
   studyid = "STUDYID",
   trt_var = "TRT01A",
@@ -97,7 +97,6 @@ attr(adnca[["AVAL"]], "label") <- "Analysis value"
 # Run the function
 plots <- pkcg02(adnca)
 plots_log <- pkcg02(adnca, scale = "LOG")
-plots_custom <- pkcg02(adnca, xmin = 0, xmax = 48, title = "PK Profile", footnote = "Study X")
 plotly::plotly_build(plots[[1]]) # View the first plot
 
 }

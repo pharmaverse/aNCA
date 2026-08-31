@@ -8,7 +8,7 @@ update_main_intervals(
   data,
   parameter_selections = NULL,
   int_parameters = NULL,
-  impute = TRUE,
+  start_impute = TRUE,
   na_imputation_rule = NULL,
   blq_imputation_rule = NULL
 )
@@ -20,7 +20,13 @@ update_main_intervals(
 
 \item{int_parameters}{A data frame containing partial AUC ranges.}
 
-\item{impute}{Logical indicating whether to impute start values for parameters.}
+\item{start_impute}{Logical indicating whether to impute start values for
+parameters. Named \code{start_impute} (not \code{impute}) to avoid colliding with the
+per-interval \code{impute} column referenced under dplyr data-masking below.}
+
+\item{na_imputation_rule}{A rule passed to \code{PKNCA::clean.conc.na()} defining how
+NA concentrations are imputed, applied only to non-observational parameters.
+Default is NULL, which applies no NA imputation.}
 
 \item{blq_imputation_rule}{A list defining the Below Limit of Quantification (BLQ)
 imputation rule using PKNCA format. The list should either contain three elements named:

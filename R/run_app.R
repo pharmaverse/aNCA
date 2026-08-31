@@ -86,43 +86,24 @@ run_app <- function(datapath = NULL, settings = NULL,
 }
 
 #' Check if all dependencies required to run shiny application are installed.
-#' If not, install them.
-#' This list of packages should also be provided as `Suggests` in the DESCRIPTION file.
+#'
+#' Reads the Imports field from DESCRIPTION and verifies each package is
+#' available. This keeps the check in sync with DESCRIPTION automatically.
 #' @noRd
 check_app_dependencies <- function() {
-  deps <- c(
-    "bslib",
-    "dplyr",
-    "htmlwidgets",
-    "logger",
-    "formatters",
-    "magrittr",
-    "plotly",
-    "purrr",
-    "reactable",
-    "reactable.extras",
-    "shiny",
-    "shinycssloaders",
-    "shinyjs",
-    "shinyjqui",
-    "shinyWidgets",
-    "stats",
-    "stringi",
-    "tidyr",
-    "tools",
-    "utils",
-    "rlang",
-    "yaml"
-  )
+  desc <- read.dcf(system.file("DESCRIPTION", package = "aNCA"), fields = "Imports")
+  deps <- trimws(unlist(strsplit(desc[1, "Imports"], ",")))
+  deps <- gsub("\\s*\\(.*\\)", "", deps) # strip version constraints
+  deps <- deps[nzchar(deps)]
 
-  missing_packages <- purrr::keep(deps, function(dep) !requireNamespace(dep, quietly = TRUE))
+  missing_packages <- deps[!vapply(deps, requireNamespace, logical(1), quietly = TRUE)]
 
-  if (length(missing_packages) != 0) {
-    stop(paste0(
-      "Some packages required for Shiny application are missing. ",
-      "You can install them by running `install.packages(c(",
-      paste0("'", missing_packages, "'", collapse = ", "),
-      "))`"
-    ))
+  if (length(missing_packages) > 0) {
+    stop(
+      "Some packages required for the Shiny application are missing. ",
+      "You can install them by running:\n",
+      "  install.packages(c(", paste0("'", missing_packages, "'", collapse = ", "), "))",
+      call. = FALSE
+    )
   }
 }

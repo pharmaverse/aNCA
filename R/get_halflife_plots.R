@@ -215,6 +215,11 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
       o_nca$result$PPSTRESU <- o_nca$result$PPORRESU
     }
   }
+  # pk.nca() with units can return 0-row results containing PPSTRES but not
+  # PPORRES. Ensure PPORRES exists so as.data.frame(out_format="wide") works.
+  if (!"PPORRES" %in% names(o_nca$result)) {
+    o_nca$result$PPORRES <- o_nca$result$PPSTRES
+  }
 
   wide_output <- o_nca
   wide_output$result <- wide_output$result %>%
@@ -225,6 +230,26 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
 
+  # If no half-life results were produced (e.g. no conc data in interval range),
+  # return a 0-row data frame with all expected columns so callers can proceed
+  # without special-casing empty results.
+  if (nrow(wide_output$result) == 0) {
+    conc_select_cols <- c(group_vars(pknca_data), time_col, conc_col,
+                          timeu_col, concu_col, exclude_hl_col, "ROWID")
+    return(
+      pknca_data$conc$data %>%
+        select(!!!syms(conc_select_cols)) %>%
+        filter(FALSE) %>%
+        mutate(
+          start = numeric(0), end = numeric(0),
+          lambda.z = numeric(0), adj.r.squared = numeric(0),
+          span.ratio = numeric(0), lambda.z.time.first = numeric(0),
+          lambda.z.time.last = numeric(0), tlast = numeric(0),
+          exclude = character(0)
+        )
+    )
+  }
+
   wide_output <- as.data.frame(wide_output, out_format = "wide") %>%
     unique()
 
@@ -232,6 +257,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
                         timeu_col, concu_col, exclude_hl_col, "ROWID")
   merge_by <- c(group_vars(pknca_data))
   extra <- intersect(extra_vars, names(pknca_data$conc$data))
+  extra <- intersect(extra, names(wide_output))
   conc_select_cols <- c(conc_select_cols, extra)
   merge_by <- c(merge_by, extra)
 

@@ -154,10 +154,13 @@ excretion_server <- function(id, input_pknca_data) {
       }
 
       # Update intervals
+      # Translate user-selected PPTESTCDs to PKNCA column names
+      pknca_params <- translate_terms(input$param_select, "PPTESTCD", "PKNCA")
+
       # dose profile intervals
       data$intervals <- format_pkncadata_intervals(data$conc,
                                                    data$dose) %>%
-        mutate(across(any_of(input$param_select), ~ TRUE, .names = "{.col}"),
+        mutate(across(any_of(pknca_params), ~ TRUE, .names = "{.col}"),
                type_interval = "profile") %>%
         filter(PCSPEC %in% input$matrix_select)
 
@@ -185,7 +188,7 @@ excretion_server <- function(id, input_pknca_data) {
         distinct() %>%
         # Create logical columns with only TRUE for the NCA parameters requested by the user
         mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
-        mutate(across(any_of(input$param_select), ~ TRUE, .names = "{.col}"),
+        mutate(across(any_of(pknca_params), ~ TRUE, .names = "{.col}"),
                type_interval = "sample")
 
       # Combine dose profile intervals and excretion sample intervals
@@ -207,7 +210,6 @@ excretion_server <- function(id, input_pknca_data) {
 
     results_output <- reactive({
       req(analysis_result())
-
       conc_groups <- unname(unlist(input_pknca_data()$conc$columns$groups))
       #pivot wider
       analysis_result()$result %>%

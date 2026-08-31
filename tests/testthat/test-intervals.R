@@ -79,7 +79,7 @@ describe("format_pkncadata_intervals", {
     )
   })
 
-  it("correctly uses tau if column is available", {
+  it("sets last time to end AFRLT for last dose when TRTRINT available", {
     df_conc_tau <- df_conc %>%
       mutate(TRTRINT = 5) # Add a tau column for testing
 
@@ -92,7 +92,43 @@ describe("format_pkncadata_intervals", {
 
     result_tau <- format_pkncadata_intervals(pknca_conc_tau, pknca_dose)
 
-    expect_equal(result_tau$end[4], 10)
+    expect_equal(result_tau$end[4], 9)
+  })
+
+  it("ends at last sample time even when samples stop before tau", {
+    # TRTRINT = 10 but last sample at ARRLT = 4
+    # → end should be start + max_end = 5 + 4 = 9, not start + TRTRINT = 5 + 10 = 15
+    df_conc_long_tau <- df_conc %>%
+      mutate(TRTRINT = 10)
+
+    pknca_conc_long_tau <- PKNCA::PKNCAconc(
+      df_conc_long_tau,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+
+    result <- format_pkncadata_intervals(pknca_conc_long_tau, pknca_dose)
+
+    expect_equal(result$end[4], 9)
+  })
+
+  it("ends at last sample time even when samples extend beyond tau", {
+    # TRTRINT = 2 but last sample at ARRLT = 4
+    # → end should be start + max_end = 5 + 4 = 9, not start + TRTRINT = 5 + 2 = 7
+    df_conc_short_tau <- df_conc %>%
+      mutate(TRTRINT = 2)
+
+    pknca_conc_short_tau <- PKNCA::PKNCAconc(
+      df_conc_short_tau,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+
+    result <- format_pkncadata_intervals(pknca_conc_short_tau, pknca_dose)
+
+    expect_equal(result$end[4], 9)
   })
 
   it("sets last time to end AFRLT if no TRTRINT available", {
@@ -159,6 +195,62 @@ describe("format_pkncadata_intervals", {
     expect_true(all(result$start >= 0))
   })
 
+  it("anchors start to C1, not the predose sample, when start_from_last_dose is FALSE", {
+    # Regression (#1121): a predose sample has a negative ARRLT. slice(1) used to
+    # pick an arbitrary row, often the predose one, so start = dose_time + ARRLT
+    # collapsed to the predose time instead of C1 (first post-dose sample).
+    predose_adnca <- data.frame(
+      STUDYID = 1,
+      USUBJID = 1,
+      PCSPEC = "Plasma",
+      DOSETRT = "DrugA",
+      PARAM = "Analyte1",
+      # dose_time = AFRLT - ARRLT = 5 for every row (predose then C1..C3).
+      # The predose sample carries a negative ARRLT (-0.5).
+      AFRLT = c(4.5, 5.5, 6.5, 7.5),
+      ARRLT = c(-0.5, 0.5, 1.5, 2.5),
+      NFRLT = c(4.5, 5.5, 6.5, 7.5),
+      ATPTREF = 1,
+      DOSEA = 10,
+      ROUTE = "extravascular",
+      ADOSEDUR = 0,
+      AVAL = c(0, 5, 3, 1)
+    )
+
+    df_conc_pd <- format_pkncaconc_data(
+      predose_adnca,
+      group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT", "PARAM"),
+      time_column = "AFRLT",
+      dose_group_columns = c("STUDYID", "USUBJID", "DOSETRT")
+    )
+    df_dose_pd <- format_pkncadose_data(
+      df_conc_pd,
+      group_columns = c("STUDYID", "USUBJID", "PCSPEC", "DOSETRT")
+    )
+
+    pknca_conc_pd <- PKNCA::PKNCAconc(
+      df_conc_pd,
+      formula = AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID / PARAM,
+      exclude_half.life = "exclude_half.life",
+      time.nominal = "NFRLT"
+    )
+    pknca_dose_pd <- PKNCA::PKNCAdose(
+      data = df_dose_pd,
+      formula = DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID
+    )
+
+    result <- format_pkncadata_intervals(
+      pknca_conc = pknca_conc_pd,
+      pknca_dose = pknca_dose_pd,
+      start_from_last_dose = FALSE
+    )
+
+    # C1 is the first sample at/after the dose: dose_time (5) + first ARRLT >= 0 (0.5) = 5.5.
+    # The predose sample would have given 5 + (-0.5) = 4.5, which must not happen.
+    expect_equal(result$start[1], 5.5)
+    expect_true(all(result$start >= 5))
+  })
+
   it("filters out intervals where start > end time", {
     # Force an impossible scenario:
     # start = 10 (from dose time) but end = 5 (from next dose or max_end)
@@ -217,7 +309,7 @@ describe("update_main_intervals", {
   it("correctly updates parameter flags based on study type", {
     result <- update_main_intervals(data, parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
 
     # Check a specific profile: USUBJID 1 is 'Single Extravascular'
@@ -247,7 +339,7 @@ describe("update_main_intervals", {
       data,
       parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
 
     manual_intervals <- result$intervals %>% filter(type_interval == "manual")
@@ -265,14 +357,14 @@ describe("update_main_intervals", {
       data,
       parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
     expect_true("impute" %in% names(result))
     expect_true(all(is.na(result$intervals$impute)))
   })
 
   it("imputes c0 when requested", {
-    result <- update_main_intervals(data, parameters, int_parameters, impute = TRUE)
+    result <- update_main_intervals(data, parameters, int_parameters, start_impute = TRUE)
     expect_true("impute" %in% names(result))
     expect_false(all(is.na(result$intervals$impute)))
   })
@@ -281,7 +373,7 @@ describe("update_main_intervals", {
     # Test with empty parameter list
     result_no_params <- update_main_intervals(data, list(),
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
     param_flags <- result_no_params$intervals %>% select(all_of(all_pknca_params))
     expect_true(all(param_flags == FALSE))
@@ -289,7 +381,7 @@ describe("update_main_intervals", {
     # Test with empty int_parameters
     result_no_auc <- update_main_intervals(data, parameters,
       int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
     expect_equal(nrow(result_no_auc$intervals), nrow(data$intervals))
   })
@@ -304,7 +396,7 @@ describe("update_main_intervals", {
     original_rows <- nrow(data$intervals)
     result <- update_main_intervals(data, parameters,
       invalid_int_parameters,
-      impute = FALSE
+      start_impute = FALSE
     )
 
     # Expect one new set of intervals for the single valid AUC range
@@ -318,7 +410,7 @@ describe("update_main_intervals", {
     expect_error(
       update_main_intervals(data, parameters,
         int_parameters,
-        impute = FALSE
+        start_impute = FALSE
       ),
       "Missing required columns: USUBJID"
     )
@@ -354,7 +446,7 @@ describe("update_main_intervals", {
     # --- 2. All BLQ points kept (should match no imputation) ---
     blq_keep <- list(first = "keep", middle = "keep", last = "keep")
     all_keep <- update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_keep
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_keep
     )
     res_all_keep <- get_results(all_keep, blq_keep)
     expect_equal(res_no_blq, res_all_keep)
@@ -365,13 +457,13 @@ describe("update_main_intervals", {
     blq_both <- list(before.tmax = 100, after.tmax = 100)
 
     res_before <- get_results(update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_before
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_before
     ), blq_before)
     res_after <- get_results(update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_after
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_after
     ), blq_after)
     res_both <- get_results(update_main_intervals(
-      data, param_list, auc_empty, impute = TRUE, blq_imputation_rule = blq_both
+      data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_both
     ), blq_both)
 
     # --- 4. Check that BLQ imputation affects only non-observational parameters ---
@@ -386,5 +478,60 @@ describe("update_main_intervals", {
     expect_equal(res_before %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
     expect_equal(res_after %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
     expect_equal(res_both %>% filter(PPTESTCD == "tmax") %>% pull(PPORRES), tmax_no_blq)
+  })
+
+  it("applies BLQ imputation when start imputation is off (start_impute = FALSE)", {
+    # Regression: with start_impute = FALSE, create_start_impute() is skipped so
+    # the intervals have no `impute` column. The BLQ block must still resolve the
+    # column (not any same-named argument); otherwise it produced "blq, FALSE"
+    # and PKNCA looked for the non-existent PKNCA_impute_method_FALSE.
+    subj1 <- unique(data$conc$data$USUBJID)[1]
+    data$conc$data <- data$conc$data %>% filter(USUBJID == subj1)
+    data$intervals <- data$intervals %>% filter(USUBJID == subj1)
+
+    param_list <- list(`Single Extravascular` = c("tmax", "auclast"))
+    auc_empty <- tibble(parameter = "AUCINT", start_auc = NA_real_, end_auc = NA_real_)
+    blq_rule <- list(first = "keep", middle = "keep", last = "keep")
+
+    result <- update_main_intervals(
+      data, param_list, auc_empty,
+      start_impute = FALSE,
+      blq_imputation_rule = blq_rule
+    )
+
+    # The impute column exists and holds "blq" only -- never "blq, FALSE".
+    expect_true("impute" %in% names(result$intervals))
+    non_na <- result$intervals$impute[!is.na(result$intervals$impute)]
+    expect_true(all(non_na == "blq"))
+    expect_false(any(grepl("FALSE", result$intervals$impute, fixed = TRUE)))
+
+    # And the run completes without the PKNCA_impute_method_FALSE error.
+    res <- suppressWarnings(PKNCA_calculate_nca(result, blq_rule = blq_rule))
+    expect_s3_class(res, "PKNCAresults")
+  })
+})
+
+describe("rm_impute_obs_params", {
+  it("initializes impute column and returns data unchanged when column is missing", {
+    data <- FIXTURE_PKNCA_DATA
+    data$intervals <- data$intervals[, !names(data$intervals) %in% "impute"]
+    expect_false("impute" %in% names(data$intervals))
+
+    result <- rm_impute_obs_params(data, metadata_nca_parameters)
+    expect_true("impute" %in% names(result$intervals))
+    expect_true(all(is.na(result$intervals$impute)))
+  })
+
+  it("returns early when no target params are TRUE", {
+    data <- FIXTURE_PKNCA_DATA
+    all_params <- setdiff(
+      names(PKNCA::get.interval.cols()), c("start", "end")
+    )
+    present_params <- intersect(all_params, names(data$intervals))
+    data$intervals[, present_params] <- FALSE
+    intervals_before <- data$intervals
+
+    result <- rm_impute_obs_params(data, metadata_nca_parameters)
+    expect_equal(result$intervals, intervals_before)
   })
 })

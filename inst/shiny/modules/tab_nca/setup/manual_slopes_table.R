@@ -4,21 +4,23 @@
 #' Provides buttons to add/remove rules and a reactable table for editing.
 #'
 #' @param id Shiny module id
-#' @return Shiny UI element (fluidRow)
-manual_slopes_table_ui <- function(id) {
+#' @param help_widget Optional Shiny UI element to display in the header row (e.g., help dropdown)
+#' @return Shiny UI element (tagList of fluidRows)
+manual_slopes_table_ui <- function(id, help_widget = NULL) {
   ns <- NS(id)
 
-  fluidRow(
-    # Selection and exclusion controls #
-    div(
-      class = "plot-widget-group",
-      actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success")
+  tagList(
+    fluidRow(
+      column(
+        width = 10,
+        div(
+          style = "display: flex; gap: 8px; align-items: center;",
+          actionButton(ns("add_rule"), "+ Exclusion/Selection", class = "btn-success"),
+          actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
+        )
+      ),
+      if (!is.null(help_widget)) column(width = 2, help_widget)
     ),
-    div(
-      class = "plot-widget-group",
-      actionButton(ns("remove_rule"), "- Remove selected rows", class = "btn-warning")
-    ),
-    # Table with selections and exclusions #
     fluidRow(
       reactableOutput(ns("manual_slopes"))
     )
@@ -49,22 +51,13 @@ manual_slopes_table_server <- function(
         select(any_of(c(group_vars(pknca_data()))))
     })
 
-    # manual_slopes: stores the current table of user rules (inclusion/exclusion)
+    # manual_slopes: stores the current table of user rules (inclusion/exclusion).
+    # Stays NULL until the user adds a rule or a settings override is applied.
     manual_slopes <- reactiveVal(NULL)
-    # When pknca_data() changes, reset the manual_slopes table to empty with correct columns
+
+    # When pknca_data() changes with a settings override, apply it
     observeEvent(pknca_data(), {
       req(is.null(manual_slopes()), slopes_pknca_groups())
-
-      ms_colnames <- c(colnames(slopes_pknca_groups()), c("TYPE", "RANGE", "REASON"))
-      initial_manual_slopes <- data.frame(
-        matrix(
-          character(),
-          ncol = length(ms_colnames),
-          nrow = 0,
-          dimnames = list(character(), ms_colnames)
-        )
-      )
-      manual_slopes(initial_manual_slopes)
 
       if (!is.null(manual_slopes_override())) {
         # Integrate slope rules to work with settings upload
@@ -114,7 +107,11 @@ manual_slopes_table_server <- function(
         )
       )
 
-      old_rows <- filter(manual_slopes(), !is.na(TYPE))
+      old_rows <- if (!is.null(manual_slopes())) {
+        filter(manual_slopes(), !is.na(TYPE))
+      } else {
+        new_row[0, ] # empty DF with matching columns
+      }
       updated_data <- as.data.frame(
         rbind(old_rows, new_row),
         stringsAsFactors = FALSE
@@ -127,9 +124,11 @@ manual_slopes_table_server <- function(
     # Remove selected rows from the table when the user clicks the remove button
     observeEvent(input$remove_rule, {
       log_trace("{id}: removing manual slopes row")
+      req(manual_slopes())
       selected <- getReactableState("manual_slopes", "selected")
       req(selected)
       edited_slopes <- manual_slopes()[-selected, ]
+      if (nrow(edited_slopes) == 0) edited_slopes <- NULL
       manual_slopes(edited_slopes)
       reset_reactable_memory()
       refresh_reactable(refresh_reactable() + 1)

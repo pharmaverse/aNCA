@@ -7,7 +7,7 @@ NON_STD_MAPPING_INFO <- data.frame(
   mapping_tooltip = c(
     "Additional column(s) to use to group the data in the outputs (i.e, 'AGE', 'SEX')",
     paste0(
-      "Choose the PARAM values to flag as metabolites of the parent drug (METABFL = 'Y'). ",
+      "Select the PARAM values to flag as metabolites of the parent drug (METABFL = 'Y'). ",
       "If empty, it is assumed that all PARAM values correspond to the parent drug (METABFL = '')"
     )
   ),
@@ -102,7 +102,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 .column_mapping_section <- function(ns, mapping_df) {
   section_title <- unique(mapping_df$mapping_section)
   if (length(section_title) != 1) {
-    stop("mapping_df must contain exactly one unique mapping_section value.")
+    stop(
+      "mapping_df must contain exactly one unique mapping_section value, but found ",
+      length(section_title), ": ", paste(section_title, collapse = ", ")
+    )
   }
   tags$section(
     h5(section_title),
@@ -135,62 +138,111 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   })
 }
 
-.process_imported_mapping <- function(mapping, adnca_data, session) {
+#' Restore duplicate exclusions from stored key-based representation.
+#' Matches stored keys against the current dataset and notifies the user
+#' if some exclusions could not be matched.
+#' @param data The current mapped dataset.
+#' @param keys_df A data.frame of key columns (from settings), or NULL.
+#' @returns Matched row indices, or NULL if nothing to restore.
+#' @keywords internal
+#' @noRd
+.restore_duplicate_exclusions <- function(data, keys_df) {
+  if (is.null(keys_df) || nrow(keys_df) == 0) return(NULL)
 
-  if (!is.null(mapping)) {
-    column_names <- names(adnca_data)
-    skipped <- character(0)
+  matched_indices <- aNCA:::match_time_dup_keys(data, keys_df)
+  n_stored <- nrow(keys_df)
+  n_matched <- length(matched_indices %||% integer(0))
 
-    for (var in MAPPING_INFO$Variable) {
-      if (!var %in% names(mapping) || var == "Metabolites") next
-      val <- mapping[[var]]
-
-      # Build the set of valid values: column names + predefined Values +
-      # numeric literals for allow_create_numeric variables.
-      var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
-      predefined <- strsplit(var_info$Values, ", ")[[1]]
-      valid_values <- c(column_names, predefined)
-
-      is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
-      invalid <- val[val != "" & !val %in% valid_values]
-      if (is_numeric_ok) {
-        invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
-      }
-
-      if (length(invalid) > 0) {
-        skipped <- c(skipped, paste0(var, " (", paste(invalid, collapse = ", "), ")"))
-        next
-      }
-
-      # For allow_create_numeric variables with custom numeric values,
-      # the value must be added to choices or updateSelectizeInput ignores it.
-      custom_numeric <- if (is_numeric_ok) {
-        val[!val %in% c(column_names, predefined)]
-      } else {
-        character(0)
-      }
-      if (length(custom_numeric) > 0) {
-        updateSelectizeInput(
-          session, paste0("select_", var),
-          choices = list(
-            "Select Column" = "",
-            "Mapping Columns" = c(column_names, custom_numeric),
-            "Mapping Values" = predefined
-          ),
-          selected = val
-        )
-      } else {
-        updateSelectizeInput(session, paste0("select_", var), selected = val)
-      }
-    }
-
-    if (length(skipped) > 0) {
-      showNotification(
-        paste("Mapping skipped for missing columns:", paste(skipped, collapse = "; ")),
-        type = "warning", duration = 10
-      )
-    }
+  if (n_matched < n_stored) {
+    showNotification(
+      sprintf(
+        paste(
+          "%d of %d stored duplicate exclusions could not be",
+          "matched to the current dataset."
+        ),
+        n_stored - n_matched, n_stored
+      ),
+      type = "warning",
+      duration = 10
+    )
   }
+
+  matched_indices
+}
+
+#' Validate and apply a single mapping variable.
+#' @param var Variable name from MAPPING_INFO.
+#' @param val Value(s) from the imported mapping.
+#' @param column_names Available column names in the dataset.
+#' @param session Shiny session for updating inputs.
+#' @returns Error string if the mapping was skipped, or NULL on success.
+#' @keywords internal
+#' @noRd
+.apply_single_mapping <- function(var, val, column_names, session) {
+  var_info <- MAPPING_INFO[MAPPING_INFO$Variable == var, ]
+  predefined <- strsplit(var_info$Values, ", ")[[1]]
+  valid_values <- c(column_names, predefined)
+
+  is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
+  invalid <- val[val != "" & !val %in% valid_values]
+  if (is_numeric_ok) {
+    invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
+  }
+
+  if (length(invalid) > 0) {
+    return(paste0(var, " (", paste(invalid, collapse = ", "), ")"))
+  }
+
+  custom_numeric <- if (is_numeric_ok) {
+    val[!val %in% c(column_names, predefined)]
+  } else {
+    character(0)
+  }
+
+  if (length(custom_numeric) > 0) {
+    updateSelectizeInput(
+      session, paste0("select_", var),
+      choices = list(
+        "Select Column" = "",
+        "Mapping Columns" = c(column_names, custom_numeric),
+        "Mapping Values" = predefined
+      ),
+      selected = val
+    )
+  } else {
+    updateSelectizeInput(
+      session, paste0("select_", var), selected = val
+    )
+  }
+
+  NULL
+}
+
+.process_imported_mapping <- function(mapping, adnca_data, session) {
+  if (is.null(mapping)) return(character(0))
+
+  column_names <- names(adnca_data)
+  skipped <- character(0)
+
+  for (var in MAPPING_INFO$Variable) {
+    if (!var %in% names(mapping) || var == "Metabolites") next
+    result <- .apply_single_mapping(
+      var, mapping[[var]], column_names, session
+    )
+    if (!is.null(result)) skipped <- c(skipped, result)
+  }
+
+  if (length(skipped) > 0) {
+    showNotification(
+      paste(
+        "Mapping skipped for missing columns:",
+        paste(skipped, collapse = "; ")
+      ),
+      type = "warning", duration = 10
+    )
+  }
+
+  skipped
 }
 
 #' Column Mapping Module
@@ -292,7 +344,8 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       mapping <- imported_mapping()$mapping
       if (!is.null(mapping)) {
         # process mapping using settings to override default selections
-        .process_imported_mapping(mapping, adnca_data(), session)
+        skipped <- .process_imported_mapping(mapping, adnca_data(), session)
+        session$userData$mapping_skipped <- skipped
       }
     })
     # Populate the dynamic input Metabolites
@@ -378,7 +431,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     observe({
       session$userData$time_duplicate_rows <- resolved_time_duplicate_rows()
       # Store key-based representation for settings export
-      session$userData$time_duplicate_keys <- extract_time_dup_keys(
+      session$userData$time_duplicate_keys <- aNCA:::extract_time_dup_keys(
         mapped_data(), resolved_time_duplicate_rows()
       )
     })
@@ -386,40 +439,20 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     processed_data <- reactive({
       req(mapped_data())
 
-      # On first run, if settings contain stored keys, match them against
-      # the current dataset to recover row indices synchronously before
-      # annotate_duplicates() runs. Must be inline to avoid a race with
-      # the reactive flush cycle.
       dup_rows <- resolved_time_duplicate_rows()
       if (is.null(dup_rows)) {
-        keys_df <- imported_mapping()$time_duplicate_keys
-        if (!is.null(keys_df) && nrow(keys_df) > 0) {
-          matched_indices <- match_time_dup_keys(mapped_data(), keys_df)
-          n_stored <- nrow(keys_df)
-          n_matched <- length(matched_indices %||% integer(0))
-          if (n_matched < n_stored) {
-            showNotification(
-              sprintf(
-                paste(
-                  "%d of %d stored duplicate exclusions could not be",
-                  "matched to the current dataset."
-                ),
-                n_stored - n_matched, n_stored
-              ),
-              type = "warning",
-              duration = 10
-            )
-          }
-          if (!is.null(matched_indices)) {
-            resolved_time_duplicate_rows(matched_indices)
-            dup_rows <- matched_indices
-          }
+        restored <- .restore_duplicate_exclusions(
+          mapped_data(), imported_mapping()$time_duplicate_keys
+        )
+        if (!is.null(restored)) {
+          resolved_time_duplicate_rows(restored)
+          dup_rows <- restored
         }
       }
 
       tryCatch(
         {
-          result <- annotate_duplicates(mapped_data(), dup_rows)
+          result <- aNCA:::annotate_duplicates(mapped_data(), dup_rows)
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
@@ -450,7 +483,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       # Validate: check if the selection resolves all time duplicates
       tryCatch(
         {
-          annotate_duplicates(mapped_data(), new_exclusions)
+          aNCA:::annotate_duplicates(mapped_data(), new_exclusions)
           # Selection resolves all duplicates — proceed
           resolved_time_duplicate_rows(new_exclusions)
           removeModal()

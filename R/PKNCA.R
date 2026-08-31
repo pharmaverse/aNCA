@@ -89,10 +89,10 @@
 #'
 #' @export
 PKNCA_create_data_object <- function( # nolint: object_name_linter
-    adnca_data,
-    mapping = NULL,
-    applied_filters = NULL,
-    time_duplicate_rows = NULL) {
+  adnca_data,
+  mapping = NULL,
+  applied_filters = NULL,
+  time_duplicate_rows = NULL) {
   # Derive nca_exclude_reason_columns from mapping
   nca_exclude_reason_columns <- NULL
   if (!is.null(mapping)) {
@@ -295,20 +295,20 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #'
 #' @export
 PKNCA_update_data_object <- function( # nolint: object_name_linter
-    adnca_data,
-    method,
-    selected_analytes,
-    selected_profile,
-    selected_pcspec,
-    start_impute = TRUE,
-    hl_adj_rules = NULL,
-    exclusion_list = NULL,
-    keep_interval_cols = NULL,
-    min_hl_points = 3,
-    parameter_selections = NULL,
-    int_parameters = NULL,
-    blq_imputation_rule = NULL,
-    custom_units_table = NULL) {
+  adnca_data,
+  method,
+  selected_analytes,
+  selected_profile,
+  selected_pcspec,
+  start_impute = TRUE,
+  hl_adj_rules = NULL,
+  exclusion_list = NULL,
+  keep_interval_cols = NULL,
+  min_hl_points = 3,
+  parameter_selections = NULL,
+  int_parameters = NULL,
+  blq_imputation_rule = NULL,
+  custom_units_table = NULL) {
 
   data <- adnca_data
   analyte_column <- data$conc$columns$groups$group_analyte
@@ -370,7 +370,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     data = data,
     parameter_selections = parameter_selections,
     int_parameters = int_parameters,
-    impute = start_impute,
+    start_impute = start_impute,
     blq_imputation_rule = blq_imputation_rule
   )
 
@@ -468,12 +468,13 @@ PKNCA_calculate_nca <- function(pknca_data, na_rule = NULL, blq_rule = NULL) { #
           conc.na = if (!is.null(na_rule)) na_rule else "drop"
         )
 
-        # TODO (Gerardo): This is a temporary fix to prevent issues when datasets
-        # drop values, this was only affecting BLQ branch (#139) but not main, related
-        # with pk.nca.interval() for how we deal with it in aNCA. If BLQ imputation is
-        # done, this values dissappear and then it is considered that those times were
-        # also NA, which causes the error. In PKNCA dropping in imputation works fine,
-        # but aNCA might be doing something special we are missing
+        # BLQ imputation (shipped via #139) can drop concentration records.
+        # aNCA's pk.nca.interval() handling then treats those dropped times as
+        # NA, which errors out. Re-insert the dropped times with NA conc so PKNCA
+        # drops them itself (which works cleanly) instead of aNCA mishandling
+        # them. This is a stopgap for a mismatch between how PKNCA and aNCA drop
+        # values during imputation; the imputation-consistency work in #1057,
+        # #1442, and #1443 tracks resolving it properly.
         d_na <- data.frame(
           conc = rep(NA, sum(!time %in% d$time)), # PKNCA will drop the value
           time = time[!time %in% d$time]
@@ -866,7 +867,7 @@ PKNCA_hl_rules_exclusion <- function(res, rules) { # nolint
 #' @param processed_pknca_data A processed PKNCA data object.
 #' @param check_exclusion_has_reason Logical; Check if all exclusions have a reason (default: TRUE).
 #'
-#' @return The processed_pknca_data object (input), if checks are successful.
+#' @returns The processed_pknca_data object (input), if checks are successful.
 #'
 #' @details
 #' - If any excluded half-life points are missing a reason, an error is thrown.
@@ -905,13 +906,19 @@ check_valid_pknca_data <- function(processed_pknca_data, check_exclusion_has_rea
 #' Filter Out Parameters Not Requested in PKNCA Results (Pivot Version)
 #'
 #' This function removes parameters from the PKNCA results that were not requested by the user,
-#' using a pivoted approach that also handles bioavailability settings.
+#' using a pivoted approach.
 #'
 #' @param pknca_res A PKNCA results object containing at least $data$intervals and $result.
-#' @return The PKNCA results object with non requested parameters removed from $result.
+#' @returns The PKNCA results object with non requested parameters removed from $result.
 #' @export
 remove_pp_not_requested <- function(pknca_res) {
   params <- c(setdiff(names(PKNCA::get.interval.cols()), c("start", "end")))
+
+  # If the impute column doesn't exist, initialize it so the group_by exclusion works
+  if (!"impute" %in% names(pknca_res$data$intervals)) {
+    pknca_res$data$intervals$impute <- NA_character_
+  }
+
   # Reshape intervals, filter
   params_not_requested <- pknca_res$data$intervals %>%
     pivot_longer(
@@ -945,10 +952,11 @@ remove_pp_not_requested <- function(pknca_res) {
 #'   - exclude_nca: logical, if TRUE the rows are excluded from NCA
 #'     calculations (added to the exclude column)
 #'   - exclude_tlg: logical, if TRUE the rows are flagged with
-#'     PKSUM1F = "Y" so TLGs can filter them out
+#'     PKSUMXF = "Y" and the reason is stored in PKSUM1RS so
+#'     TLGs can filter them out
 #'
-#' @return The modified PKNCAdata object with updated exclusion
-#'   reasons and PKSUM1F in the concentration object.
+#' @returns The modified PKNCAdata object with updated exclusion
+#'   reasons, PKSUMXF, and PKSUM1RS in the concentration object.
 #' @export
 add_exclusion_reasons <- function(pknca_data, exclusion_list) {
   if (is.null(exclusion_list) || length(exclusion_list) == 0) {
@@ -962,9 +970,12 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
     exclude_col <- "exclude"
   }
 
-  # Initialise PKSUM1F if not present
-  if (!"PKSUM1F" %in% names(pknca_data$conc$data)) {
-    pknca_data$conc$data$PKSUM1F <- ""
+  # Initialise summary-exclusion columns if not present.
+  if (!"PKSUMXF" %in% names(pknca_data$conc$data)) {
+    pknca_data$conc$data$PKSUMXF <- ""
+  }
+  if (!"PKSUM1RS" %in% names(pknca_data$conc$data)) {
+    pknca_data$conc$data$PKSUM1RS <- ""
   }
 
   for (excl in exclusion_list) {
@@ -988,9 +999,17 @@ add_exclusion_reasons <- function(pknca_data, exclusion_list) {
         )
       )
     }
-    # TLG exclusion: flag rows for PK summary exclusion
+    # TLG exclusion: flag rows and store reason
     if (isTRUE(excl$exclude_tlg)) {
-      pknca_data$conc$data$PKSUM1F[rows] <- "Y"
+      pknca_data$conc$data$PKSUMXF[rows] <- "Y"
+      pknca_data$conc$data$PKSUM1RS[rows] <- ifelse(
+        pknca_data$conc$data$PKSUM1RS[rows] == "",
+        reason,
+        paste0(
+          pknca_data$conc$data$PKSUM1RS[rows],
+          "; ", reason
+        )
+      )
     }
   }
   pknca_data

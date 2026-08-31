@@ -5,10 +5,8 @@
 #'
 #' @param res_nca            A PKNCA results object containing the results and concentration data.
 #' @param parameter           A string specifying the parameter to be plotted.
-# TODO(mateusz): I have added the following three parameters as they were missing, this needs to
-#                be checked over.
-#' @param xvars               Variables for the x axis.
-#' @param colorvars           Variables for the color aesthetic.
+#' @param xvars               Character vector of column names for the x-axis grouping.
+#' @param colorvars           Character vector of column names for the color aesthetic.
 #' @param varvalstofilter     Character vector specifying which variable and value to pre-filter
 #'                            as `colname: value`. By default is NULL (no pre-filtering)
 #' @param tooltip_vars        A character vector indicating the column names from result_data that
@@ -25,7 +23,7 @@
 #'                            `exclude` column) are overlaid as cross-shaped points. They are
 #'                            never included in box/violin statistics. Default is `FALSE`.
 #'
-#' @return A plotly object representing the violin or box plot.
+#' @returns A plotly object representing the violin or box plot.
 #' @import dplyr
 #' @import ggplot2
 #' @export
@@ -115,7 +113,13 @@ flexible_violinboxplot <- function(res_nca,
   filtered <- boxplotdata %>%
     filter(!!filter_expr, PPTESTCD == parameter)
 
+  # Rows excluded by PKNCA flag rules (populated exclude column)
   is_excluded <- !is.na(filtered[["exclude"]]) & filtered[["exclude"]] != ""
+  # Rows excluded manually via parameter exclusions (.pp_excl marker)
+  if (".pp_excl" %in% names(filtered)) {
+    pp_excl <- filtered[[".pp_excl"]]
+    is_excluded <- is_excluded | (!is.na(pp_excl) & pp_excl)
+  }
   list(
     included = filtered[!is_excluded, , drop = FALSE],
     excluded = filtered[is_excluded, , drop = FALSE]
@@ -165,6 +169,19 @@ flexible_violinboxplot <- function(res_nca,
 #' @returns Formatted y-axis label.
 #' @noRd
 .build_ylabel <- function(parameter, unit) {
+  # Resolve interval parameter label (e.g. AUCINT_0-24 -> "AUC from 0 to 24")
+  parsed <- parse_interval_parameter(parameter)
+  if (parsed$is_interval) {
+    label <- metadata_nca_parameters$PPTEST[
+      match(parsed$base, metadata_nca_parameters$PPTESTCD)
+    ]
+    if (!is.na(label)) {
+      label <- gsub("T1", as.character(parsed$start), label)
+      label <- gsub("T2", as.character(parsed$end), label)
+      parameter <- label
+    }
+  }
+
   if (is.null(unit) || is.na(unit) || unit == "" || unit == "unitless") {
     parameter
   } else {
@@ -212,7 +229,7 @@ flexible_violinboxplot <- function(res_nca,
 #'
 #' @param box_data Data frame to check.
 #' @param parameter Parameter name for error message context.
-#' @return NULL if valid, or a ggplot error plot if invalid.
+#' @returns NULL if valid, or a ggplot error plot if invalid.
 #' @noRd
 .check_boxplot_data <- function(box_data, parameter) {
   # Check for empty data

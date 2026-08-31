@@ -305,7 +305,6 @@ describe("calculate_ratios", {
     )
     expect_equal(ratios$PPSTRES, c(2 / 3, 4 / 5), tolerance = 1e-2)
     expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
-
   })
   it("returns only PPORRESU when PPSTRESU is not defined in the input", {
     res_no_units <- res_simple
@@ -325,5 +324,424 @@ describe("calculate_ratios", {
 
     expect_equal(ratios_df$PPORRESU, rep("fraction", 2))
     expect_false("PPSTRESU" %in% names(ratios_df))
+  })
+
+  it("aggregates reference values with aggregate_subject='yes'", {
+    # Fixture: subjects 1,2,7 are EX PARAM A; subjects 3,4,5 are IV PARAM A
+    # No subject has both routes, so aggregate uses mean of IV subjects
+    res_agg <- res
+    res_agg$result <- res$result %>%
+      filter(PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_agg,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "yes"
+    )
+
+    ex_subjects <- res_agg$result %>% filter(ROUTE == "extravascular")
+    iv_mean <- mean(
+      res_agg$result$PPORRES[res_agg$result$ROUTE == "intravascular"],
+      na.rm = TRUE
+    )
+
+    expect_equal(nrow(ratios), nrow(ex_subjects))
+    expect_equal(sort(ratios$PPORRES), sort(ex_subjects$PPORRES / iv_mean))
+    expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+  })
+
+  it("if-needed uses individual match when available", {
+    # Subject 8 has both EX (ATPTREF=1) and IV (ATPTREF=2) for PARAM A
+    # With if-needed, subject 8 gets an individual ratio (no aggregation needed)
+    res_ifn <- res
+    res_ifn$result <- res$result %>%
+      filter(USUBJID == 8, PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_ifn,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "if-needed"
+    )
+
+    ex_val <- res_ifn$result %>%
+      filter(ROUTE == "extravascular") %>%
+      pull(PPORRES)
+    iv_val <- res_ifn$result %>%
+      filter(ROUTE == "intravascular") %>%
+      pull(PPORRES)
+
+    expect_equal(nrow(ratios), 1)
+    expect_equal(ratios$PPORRES, ex_val / iv_val)
+    expect_false(grepl("\\(mean\\)", ratios$PPTESTCD))
+  })
+
+  it("if-needed falls back to aggregation when no individual match exists", {
+    # Subjects 1,2,7 are EX only; subjects 3,4,5 are IV only (PARAM A)
+    # No subject has both routes, so if-needed must fall back to aggregation
+    res_ifn <- res
+    res_ifn$result <- res$result %>%
+      filter(
+        PARAM == "A", PPTESTCD == "CMAX", type_interval == "main",
+        USUBJID %in% c(1, 2, 3, 4, 5, 7)
+      ) %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_ifn,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "if-needed"
+    )
+
+    ex_subjects <- res_ifn$result %>% filter(ROUTE == "extravascular")
+    iv_mean <- mean(
+      res_ifn$result$PPORRES[res_ifn$result$ROUTE == "intravascular"],
+      na.rm = TRUE
+    )
+
+    expect_equal(nrow(ratios), nrow(ex_subjects))
+    expect_equal(sort(ratios$PPORRES), sort(ex_subjects$PPORRES / iv_mean))
+    expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+  })
+
+  it("if-needed uses individual where available and aggregates the rest", {
+    # Subject 8 has both routes (individual match possible)
+    # Subjects 1,2,7 are EX only (must fall back to aggregation)
+    # IV subjects: 3,4,5 (IV only) + 8 (both routes)
+    res_mix <- res
+    res_mix$result <- res$result %>%
+      filter(PARAM == "A", PPTESTCD == "CMAX", type_interval == "main") %>%
+      mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+    ratios <- calculate_ratio_app(
+      res = res_mix,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      test_group = "(all other levels)",
+      ref_group = "ROUTE: intravascular",
+      aggregate_subject = "if-needed"
+    )
+
+    # Subject 8: individual ratio (EX / IV for that subject, no mean suffix)
+    s8_ex <- res_mix$result %>%
+      filter(USUBJID == 8, ROUTE == "extravascular") %>%
+      pull(PPORRES)
+    s8_iv <- res_mix$result %>%
+      filter(USUBJID == 8, ROUTE == "intravascular") %>%
+      pull(PPORRES)
+    s8_ratio <- ratios %>% filter(USUBJID == 8)
+    expect_equal(nrow(s8_ratio), 1)
+    expect_equal(s8_ratio$PPORRES, s8_ex / s8_iv)
+    expect_false(grepl("\\(mean\\)", s8_ratio$PPTESTCD))
+
+    # Subjects 1,2,7: aggregated ratio (EX / mean of all IV, with mean suffix)
+    # Subject 2 has 2 ATPTREFs (both EX), so 4 rows total
+    other_ratios <- ratios %>% filter(USUBJID != 8)
+    expect_equal(nrow(other_ratios), 4)
+    expect_true(all(grepl("\\(mean\\)", other_ratios$PPTESTCD)))
+  })
+})
+
+describe("parse_interval_parameter", {
+  it("parses a range-suffixed parameter", {
+    result <- parse_interval_parameter("AUCINT_0-20")
+    expect_true(result$is_interval)
+    expect_equal(result$base, "AUCINT")
+    expect_equal(result$start, 0)
+    expect_equal(result$end, 20)
+  })
+
+  it("parses decimal start/end values", {
+    result <- parse_interval_parameter("AUCINT_0.5-12.5")
+    expect_true(result$is_interval)
+    expect_equal(result$base, "AUCINT")
+    expect_equal(result$start, 0.5)
+    expect_equal(result$end, 12.5)
+  })
+
+  it("returns is_interval=FALSE for a regular parameter", {
+    result <- parse_interval_parameter("CMAX")
+    expect_false(result$is_interval)
+    expect_equal(result$base, "CMAX")
+    expect_null(result$start)
+    expect_null(result$end)
+  })
+
+  it("handles multi-part base names", {
+    result <- parse_interval_parameter("AUCINTAda_0-24")
+    expect_true(result$is_interval)
+    expect_equal(result$base, "AUCINTAda")
+    expect_equal(result$start, 0)
+    expect_equal(result$end, 24)
+  })
+})
+
+describe("calculate_table_ratios", {
+  res <- FIXTURE_PKNCA_RES
+  res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+
+  # Simplify to one subject with uniform units
+  res_simple <- res
+  res_simple$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+
+  it("computes correct ratio values for a single-row ratio table", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "MYRATIO",
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    ratio_rows <- result$result %>% filter(PPTESTCD == "MYRATIO")
+
+    # Compute expected B/A CMAX ratios from fixture data
+    cmax_a <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "A") %>%
+      pull(PPORRES)
+    cmax_b <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "B") %>%
+      pull(PPORRES)
+
+    expect_equal(nrow(ratio_rows), length(cmax_b))
+    expect_equal(sort(ratio_rows$PPORRES), sort(cmax_b / cmax_a), tolerance = 1e-6)
+    expect_true(all(ratio_rows$PPORRESU == "fraction"))
+  })
+
+  it("applies adjusting factor correctly across multiple rows", {
+    ratio_table <- data.frame(
+      TestParameter = c("CMAX", "CMAX"),
+      RefParameter = c("CMAX", "CMAX"),
+      TestGroups = c("(all other levels)", "(all other levels)"),
+      RefGroups = c("PARAM: A", "PARAM: A"),
+      AggregateSubject = c("no", "no"),
+      AdjustingFactor = c("1", "100"),
+      PPTESTCD = c("RATIO1", "RATIO2"),
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    r1 <- result$result %>% filter(PPTESTCD == "RATIO1")
+    r2 <- result$result %>% filter(PPTESTCD == "RATIO2")
+
+    # RATIO2 should be exactly 100x RATIO1
+    expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
+    expect_equal(nrow(r1), nrow(r2))
+  })
+
+
+  it("uses auto-generated PPTESTCD when PPTESTCD column is empty string", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "",
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    ratio_rows <- result$result %>% filter(grepl("^RACMAX", PPTESTCD))
+
+    expect_true(nrow(ratio_rows) > 0)
+  })
+
+  it("warns when no comparable groups are found", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "PARAM: NONEXISTENT",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "BADRATIO",
+      stringsAsFactors = FALSE
+    )
+
+    expect_warning(
+      calculate_table_ratios(res_simple, ratio_table),
+      "not computed"
+    )
+  })
+
+  it("adds PPANMETH column if not already present", {
+    res_no_anmeth <- res_simple
+    res_no_anmeth$result <- res_simple$result %>% select(-any_of("PPANMETH"))
+
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "TESTRATIO",
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_no_anmeth, ratio_table)
+    expect_true("PPANMETH" %in% names(result$result))
+  })
+})
+
+describe("calculate_ratio_app with interval parameters", {
+  res <- FIXTURE_PKNCA_RES
+  res$result$PPTEST <- translate_terms(res$result$PPTESTCD, "PPTESTCD", "PPTEST")
+  res_simple <- res
+  res_simple$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
+
+  # The fixture has manual intervals with AUCINT at start_dose=0,end_dose=2
+  # and start_dose=2,end_dose=4 for both ATPTREF periods.
+  res_interval <- res
+  res_interval$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
+
+  it("computes ratios using interval parameter as test", {
+    interval_rows <- res_interval$result %>%
+      filter(PPTESTCD == "AUCINT", start_dose == 0, end_dose == 2)
+    skip_if(nrow(interval_rows) == 0, "No AUCINT_0-2 rows in fixture")
+
+    ratios <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_0-2",
+      ref_parameter = "AUCINT_0-2",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    expect_true(nrow(ratios) > 0)
+    expect_true(all(grepl("RAAUCINT", ratios$PPTESTCD)))
+  })
+
+  it("filters to the correct interval and excludes other intervals", {
+    ratios_0_2 <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_0-2",
+      ref_parameter = "AUCINT_0-2",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    ratios_2_4 <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_2-4",
+      ref_parameter = "AUCINT_2-4",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    if (nrow(ratios_0_2) > 0 && nrow(ratios_2_4) > 0) {
+      expect_false(identical(ratios_0_2$PPORRES, ratios_2_4$PPORRES))
+    }
+  })
+
+  it("works with non-interval parameters unchanged", {
+    ratios <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "CMAX",
+      ref_parameter = "CMAX",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    expect_true(nrow(ratios) > 0)
+    expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
+  })
+
+  it("supports different interval params as test and ref", {
+    # When test and ref are different interval parameters with different ranges,
+    # start/end must be excluded from match_cols so the merge can succeed.
+    interval_rows_0_2 <- res_interval$result %>%
+      filter(PPTESTCD == "AUCINT", start_dose == 0, end_dose == 2)
+    skip_if(nrow(interval_rows_0_2) == 0, "No AUCINT_0-2 rows in fixture")
+
+    ratios <- calculate_ratio_app(
+      res = res_interval,
+      test_parameter = "AUCINT_0-2",
+      ref_parameter = "AUCINT_2-4",
+      ref_group = "PARAM: A",
+      test_group = "(all other levels)",
+      aggregate_subject = "no"
+    )
+
+    expect_true(nrow(ratios) > 0)
+  })
+
+  it("processes a single-row ratio table and appends results", {
+    ratio_table <- data.frame(
+      TestParameter = "CMAX",
+      RefParameter = "CMAX",
+      TestGroups = "(all other levels)",
+      RefGroups = "PARAM: A",
+      AggregateSubject = "no",
+      AdjustingFactor = "1",
+      PPTESTCD = "MYRATIO",
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    ratio_rows <- result$result %>% filter(PPTESTCD == "MYRATIO")
+
+    # Verify the ratio values match B/A CMAX ratios for subject 8
+    cmax_a <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "A") %>%
+      pull(PPORRES)
+    cmax_b <- res_simple$result %>%
+      filter(PPTESTCD == "CMAX", PARAM == "B") %>%
+      pull(PPORRES)
+
+    expect_equal(nrow(ratio_rows), length(cmax_b))
+    expect_equal(sort(ratio_rows$PPORRES), sort(cmax_b / cmax_a), tolerance = 1e-6)
+    expect_true(all(ratio_rows$PPORRESU == "fraction"))
+  })
+  it("applies adjusting factor correctly across rows", {
+    ratio_table <- data.frame(
+      TestParameter = c("CMAX", "CMAX"),
+      RefParameter = c("CMAX", "CMAX"),
+      TestGroups = c("(all other levels)", "(all other levels)"),
+      RefGroups = c("PARAM: A", "PARAM: A"),
+      AggregateSubject = c("no", "no"),
+      AdjustingFactor = c("1", "100"),
+      PPTESTCD = c("RATIO1", "RATIO2"),
+      stringsAsFactors = FALSE
+    )
+
+    result <- calculate_table_ratios(res_simple, ratio_table)
+    r1 <- result$result %>% filter(PPTESTCD == "RATIO1")
+    r2 <- result$result %>% filter(PPTESTCD == "RATIO2")
+
+    # RATIO2 values should be exactly 100x RATIO1
+    expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
   })
 })

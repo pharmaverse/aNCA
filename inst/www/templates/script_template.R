@@ -44,7 +44,8 @@ pknca_obj <- adnca_data %>%
     min_hl_points = settings_list$settings$min_hl_points %||% 3,
     parameter_selections = parameters_selected_per_study,
     int_parameters = int_parameters,
-    custom_units_table = units_table
+    custom_units_table = units_table,
+    blq_imputation_rule = settings_list$settings$data_imputation$blq_imputation_rule
   )
 
 ## Run NCA calculations ########################################
@@ -59,9 +60,6 @@ pknca_res <- pknca_obj %>%
   PKNCA_calculate_nca(
     blq_rule = blq_rule
   ) %>%
-
-  # Add bioavailability results if requested
-  add_f_to_pknca_results(settings_list$settings$bioavailability) %>%
 
   # Apply standard CDISC names
   mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD")) %>%
@@ -81,7 +79,7 @@ pknca_res <- pknca_obj %>%
 
 ## Obtain PP, ADPP, ADNCA & Pivoted results #########################
 
-# Build flag rule exclusion messages for ADPP CRITy/CRITyFL/PPSUMFL columns
+# Build flag rule exclusion messages for ADPP CRITy/CRITyFL/PPSUMXF columns
 flag_operators <- c(R2ADJ = " < ", R2 = " < ", AUCPEO = " > ", AUCPEP = " > ", LAMZSPN = " < ")
 checked_flags <- purrr::keep(flag_rules, function(x) x$is.checked)
 flag_rule_msgs <- if (length(checked_flags) > 0) {

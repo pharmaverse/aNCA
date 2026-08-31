@@ -3,20 +3,20 @@
 #' Iterates over the given rules and updates the PKNCA object setting inclusion/exclusion flags.
 #' @param data PKNCA data object
 #' @param slopes Data frame of slope rules (TYPE, RANGE, REASON, group columns)
-#' @return Modified data object with updated flags
+#' @returns Modified data object with updated flags
 update_pknca_with_rules <- function(data, slopes) {
   slope_groups <- intersect(group_vars(data), names(slopes))
   time_col <- data$conc$columns$time
   exclude_hl_col <- data$conc$columns$exclude_half.life
   include_hl_col <- data$conc$columns$include_half.life
 
-  #####################################################
-  # TODO: Make a better fix to understand why slopes is constructed 2 times
-  # when adding exclusion, running NCA and then removing slope (#641)
-
-  # Make sure when rows are removed no NA value is left
+  # Defensive guard: drop any incomplete slope rules before applying them.
+  # Editing the manual-slopes table (add exclusion -> run NCA -> remove a slope)
+  # can momentarily leave rows with NA cells; na.omit keeps those partial rows
+  # from producing invalid ranges below. The slope-selector reactivity was
+  # reworked in #641, so the original "slopes constructed twice" behaviour may
+  # no longer occur -- this guard is cheap and kept as a safety net.
   slopes <- na.omit(slopes)
-  #####################################################
 
   for (i in seq_len(nrow(slopes))) {
     # Determine the time range for the points adjusted

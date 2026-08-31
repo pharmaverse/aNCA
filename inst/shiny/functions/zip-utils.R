@@ -49,6 +49,8 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
     save_table_format(x, file_name, table_formats)
   } else if (inherits(x, "plotly")) {
     save_plotly_format(x, file_name, "html")
+  } else if (is.character(x) && length(x) == 1 && grepl("_code$", file_name)) {
+    writeLines(x, paste0(file_name, ".R"))
   } else {
     stop("Unsupported output type object in the list: ", paste0(class(x), collapse = ", "))
   }
@@ -74,12 +76,15 @@ save_dispatch <- function(x, file_name, ggplot_formats, table_formats) {
       allowed <- c(allowed, default_name)
     }
   }
-  allowed
+  # Include associated _code entries for each allowed plot
+  if (length(allowed) == 0) return(character(0))
+  c(allowed, paste0(allowed, "_code"))
 }
 
-# Check if an object is a saveable leaf (ggplot, data.frame, or plotly)
-.is_leaf <- function(x) {
-  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly")
+# Check if an object is a saveable leaf (ggplot, data.frame, plotly, or code string)
+.is_leaf <- function(x, name = "") {
+  inherits(x, "ggplot") || inherits(x, "data.frame") || inherits(x, "plotly") ||
+    (is.character(x) && length(x) == 1 && grepl("_code$", name))
 }
 
 save_output <- function(
@@ -92,7 +97,7 @@ save_output <- function(
   for (name in names(output)) {
     x <- output[[name]]
 
-    if (!.is_leaf(x) && inherits(x, "list")) {
+    if (!.is_leaf(x, name) && is.list(x)) {
       save_output(
         x, paste0(output_path, "/", name),
         ggplot_formats, table_formats, obj_names
@@ -126,6 +131,8 @@ format_to_xpt_compatible <- function(data) {
 #' @param facet_vars Character vector of column names to facet plots by (default: "DOSEA").
 #' @param stats_parameters Character vector of parameter codes to summarize
 #' @param boxplot_parameters Character vector of parameters to use for boxplots.
+#' @param dose_norm_parameters Character vector of dose-normalized parameter codes to include
+#'   (default: `c("CMAXD", "AUCLSTD", "AUCIFOD")`).
 #' @param info_vars Character vector of additional info columns to include
 #' @param labels_df Data frame containing variable labels (default: metadata_nca_variables).
 #'
@@ -139,6 +146,7 @@ get_dose_esc_results <- function(
   summary_stats_parameters = stats_parameters,
   boxplot_parameters = c("AUCIFO"),
   info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  dose_norm_parameters = c("CMAXD", "AUCLSTD", "AUCIFOD"),
   labels_df = metadata_nca_variables
 ) {
   # Define column names
@@ -183,18 +191,39 @@ get_dose_esc_results <- function(
       sd_max = TRUE
     )
 
+    dose_norm_meanplot_i <- exploration_meanplot(
+      pknca_data = o_nca_i$data,
+      color_by = group_by_vars,
+      facet_by = facet_vars,
+      filtering_list = list(
+        PARAM = unique(d_conc_i[[analyte_col]]),
+        PCSPEC = unique(d_conc_i[[pcspec_col]]),
+        ATPTREF = unique(d_conc_i[[profile_col]])
+      ),
+      ylog_scale = FALSE,
+      sd_max = TRUE,
+      line_type = "dose-normalized"
+    )
+
     # TODO: Filter out excluded records (where `exclude` is populated) before
     # calculating summary statistics, consistent with descriptive_statistics.R
-    stats_i <- calculate_summary_stats(
+    all_stats_i <- calculate_summary_stats(
       data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
       input_groups = facet_vars
     ) %>%
-      filter(
-        Statistic %in% statistics
-      ) %>%
+      filter(Statistic %in% statistics)
+
+    stats_i <- all_stats_i %>%
       select(
         any_of(c(facet_vars, "Statistic")),
         any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% summary_stats_parameters])
+      ) %>%
+      unique()
+
+    dose_norm_stats_i <- all_stats_i %>%
+      select(
+        any_of(c(facet_vars, "Statistic")),
+        any_of(names(.)[gsub("\\[.*\\]", "", names(.)) %in% dose_norm_parameters])
       ) %>%
       unique()
 
@@ -242,7 +271,9 @@ get_dose_esc_results <- function(
           "start", "end", "parameter_unit", "PPSTRES"
         )
       )) %>%
-      pivot_wider(names_from = parameter_unit, values_from = PPSTRES) %>%
+      pivot_wider(names_from = parameter_unit, values_from = PPSTRES,
+                  values_fn = list) %>%
+      mutate(across(where(is.list), ~ sapply(., `[`, 1))) %>%
       split(.[[o_nca$data$conc$columns$subject]])
 
     ind_plots <- merge(o_nca$data$conc$data, group_i) %>%
@@ -264,7 +295,9 @@ get_dose_esc_results <- function(
     output_list[[paste0("Group_", i)]] <- list(
       linplot = linplot_i,
       meanplot = meanplot_i,
+      dose_norm_meanplot = dose_norm_meanplot_i,
       statistics = stats_i,
+      dose_norm_statistics = dose_norm_stats_i,
       boxplot = boxplots_i,
       info = info_i,
       ind_params = ind_params,
@@ -367,19 +400,31 @@ prepare_export_files <- function(target_dir,
   # Keep custom names whose type maps to a selected tree item
   selected_types <- names(type_to_default)[type_to_default %in% input$res_tree]
   custom_names <- all_custom[all_custom %in% selected_types]
-  obj_names <- unique(c(input$res_tree, names(custom_names)))
+  custom_plot_names <- names(custom_names)
+  all_plot_names <- unique(c(input$res_tree, custom_plot_names))
+  obj_names <- unique(c(all_plot_names, paste0(all_plot_names, "_code")))
 
-  # Filter exploration list to only include allowed plots
+  # Filter exploration list to only include allowed plots.
+  # Work on a copy to avoid mutating session data.
   results <- session$userData$results
-  if (!is.null(results$exploration)) {
+  exploration <- results$exploration
+  if (!is.null(exploration)) {
     allowed <- .build_exploration_allowlist(selected_types, custom_names)
-    results$exploration <- results$exploration[
-      intersect(names(results$exploration), allowed)
-    ]
+    exploration <- exploration[intersect(names(exploration), allowed)]
+  }
+
+  # Build a plain list for save_output
+  export_list <- list()
+  for (key in names(results)) {
+    if (key == "exploration") {
+      export_list[[key]] <- exploration
+    } else {
+      export_list[[key]] <- results[[key]]
+    }
   }
 
   save_output(
-    output = results,
+    output = export_list,
     output_path = target_dir,
     ggplot_formats = input$plot_formats,
     table_formats = input$table_formats,
@@ -454,6 +499,11 @@ prepare_export_files <- function(target_dir,
   boxplot_parameters       <- slide_config$boxplot_parameters
   if (length(boxplot_parameters) == 0) boxplot_parameters <- c("CMAX", "AUCIFO", "LAMZHL")
 
+  dose_norm_parameters <- rlang::`%||%`(
+    slide_config$dose_norm_parameters, c("CMAXD", "AUCLSTD", "AUCIFOD")
+  )
+  if (length(dose_norm_parameters) == 0) dose_norm_parameters <- c("CMAXD", "AUCLSTD", "AUCIFOD")
+
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
     group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
@@ -463,7 +513,8 @@ prepare_export_files <- function(target_dir,
     ind_stats_parameters     = ind_stats_parameters,
     summary_stats_parameters = summary_stats_parameters,
     boxplot_parameters        = boxplot_parameters,
-    info_vars = grouping_vars
+    info_vars = grouping_vars,
+    dose_norm_parameters = dose_norm_parameters
   )
 
   # Attach additional_analysis from session results
@@ -484,7 +535,7 @@ prepare_export_files <- function(target_dir,
   slide_title <- if (pn == "") "NCA Results" else paste0("NCA Results\n", pn)
 
   if ("qmd" %in% input$slide_formats) {
-    create_qmd_dose_slides(
+    aNCA:::create_qmd_dose_slides(
       res_dose_slides,
       file.path(path, "results_slides.qmd"),
       slide_title,
@@ -505,7 +556,7 @@ prepare_export_files <- function(target_dir,
         duration = 10
       )
     } else {
-      create_pptx_dose_slides(
+      aNCA:::create_pptx_dose_slides(
         res_dose_slides,
         file.path(path, "results_slides.pptx"),
         slide_title,
@@ -536,7 +587,8 @@ prepare_export_files <- function(target_dir,
     mapping = session$userData$mapping,
     slope_rules = session$userData$slope_rules(),
     filters = session$userData$applied_filters,
-    time_duplicate_keys = session$userData$time_duplicate_keys
+    time_duplicate_keys = session$userData$time_duplicate_keys,
+    nca_ran = isTRUE(session$userData$nca_ran)
   )
 
   dataset_name <- session$userData$dataset_filename %||% ""
@@ -599,7 +651,7 @@ prepare_export_files <- function(target_dir,
 #' @noRd
 .export_script <- function(target_dir, session) {
   template_path <- "www/templates/script_template.R"
-  get_session_code(
+  aNCA:::get_session_code(
     template_path = system.file(template_path, package = "aNCA"),
     session,
     file.path(target_dir, "session_code.R")
@@ -611,32 +663,43 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_session_info <- function(target_dir) {
-  si <- utils::sessionInfo()
-  lines <- c(
-    paste("R version:", si$R.version$version.string),
-    paste("Platform: ", si$platform),
-    paste("Running under:", si$running),
-    "",
-    "aNCA and attached packages:",
-    ""
-  )
-
-  # Collect attached packages (base + other) with versions, sorted alphabetically
-
-  attached <- c(
-    vapply(si$otherPkgs, function(p) paste0("  ", p$Package, " ", p$Version), ""),
-    vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
-  )
-  lines <- c(lines, sort(attached))
-
-  # Loaded-only (namespace) packages
-  if (length(si$loadedOnly) > 0) {
-    loaded <- vapply(
-      si$loadedOnly,
-      function(p) paste0("  ", p$Package, " ", p$Version), ""
+  lines <- tryCatch({
+    si <- utils::sessionInfo()
+    hdr <- c(
+      paste("R version:", si$R.version$version.string),
+      paste("Platform: ", si$platform),
+      paste("Running under:", si$running),
+      "",
+      "aNCA and attached packages:",
+      ""
     )
-    lines <- c(lines, "", "Loaded via namespace (not attached):", "", sort(loaded))
-  }
+
+    # Collect attached packages (base + other) with versions, sorted alphabetically
+    attached <- c(
+      vapply(si$otherPkgs, function(p) {
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
+      }, ""),
+      vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
+    )
+    hdr <- c(hdr, sort(attached))
+
+    # Loaded-only (namespace) packages
+    if (length(si$loadedOnly) > 0) {
+      loaded <- vapply(si$loadedOnly, function(p) {
+        tryCatch(
+          paste0("  ", p$Package, " ", p$Version),
+          error = function(e) paste0("  ", p$Package)
+        )
+      }, "")
+      hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
+    }
+    hdr
+  }, error = function(e) {
+    c("Session info unavailable:", e$message)
+  })
 
   writeLines(lines, file.path(target_dir, "session_info.txt"))
 }
@@ -652,7 +715,10 @@ prepare_export_files <- function(target_dir,
   exts <- c(input$table_formats, input$plot_formats, input$slide_formats, "yaml", "R")
   if ("qmd" %in% input$slide_formats) exts <- c(exts, "rda")
   exts_patt <- paste0("((", paste0(exts, collapse = ")|("), "))$")
-  fnames <- unique(c(input$res_tree, names(custom_names)))
+  custom_plot_names <- names(custom_names)
+  tree_names <- input$res_tree
+  all_plot_names <- unique(c(tree_names, custom_plot_names))
+  fnames <- unique(c(all_plot_names, paste0(all_plot_names, "_code")))
   if ("results_slides" %in% fnames) fnames <- c(fnames, "results_slides_outputs")
 
   fnames <- ifelse(fnames == "r_script", "session_code", fnames)

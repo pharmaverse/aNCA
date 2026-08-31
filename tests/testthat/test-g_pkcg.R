@@ -419,21 +419,39 @@ describe("pkcg03", {
   })
 
   it("correctly selects whiskers for 'Upper' option", {
-    # Generate the plot
     plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Upper", plotly = FALSE)
     p <- plots[[1]]
 
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymin), "mean")
     expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_upr")
   })
 
   it("correctly selects whiskers for 'Lower' option", {
-    # Generate the plot
     plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Lower", plotly = FALSE)
     p <- plots[[1]]
 
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_lwr")
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymin), "mean_sdi_lwr")
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean")
+  })
+
+  it("renders visible one-sided error bars (ymin != ymax)", {
+    plots_upper <- pkcg03(adpc1, summary_method = "Mean_sdi",
+                          whiskers_lwr_upr = "Upper", plotly = FALSE)
+    plots_lower <- pkcg03(adpc1, summary_method = "Mean_sdi",
+                          whiskers_lwr_upr = "Lower", plotly = FALSE)
+
+    build_upper <- ggplot2::ggplot_build(plots_upper[[1]])
+    build_lower <- ggplot2::ggplot_build(plots_lower[[1]])
+
+    # Find the errorbar layer data
+    eb_upper <- Find(function(d) "ymin" %in% names(d), build_upper$data)
+    eb_lower <- Find(function(d) "ymin" %in% names(d), build_lower$data)
+
+    # Error bars must have non-zero height
+    expect_true(any(eb_upper$ymin != eb_upper$ymax))
+    expect_true(any(eb_lower$ymin != eb_lower$ymax))
   })
 
   it("returns error if missing scales package for SBS scale", {
