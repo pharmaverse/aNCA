@@ -201,6 +201,53 @@ format_pkncadata_intervals <- function(pknca_conc,
     distinct(across(all_of(grouping_cols)), .keep_all = TRUE)
 }
 
+# Set the selected parameter flags to TRUE for each study type. `intervals`
+# must already carry the `type` column. Returns the intervals with the flags
+# applied (still carrying `type`).
+.apply_parameter_selections <- function(intervals, parameter_selections) {
+  if (length(parameter_selections) == 0) return(intervals)
+  for (study_type in names(parameter_selections)) {
+    params_for_type <- parameter_selections[[study_type]]
+    if (length(params_for_type) == 0) next
+    intervals <- intervals %>%
+      mutate(across(
+        .cols = all_of(params_for_type),
+        .fns = \(x) if_else(type == study_type, TRUE, x)
+      ))
+  }
+  intervals
+}
+
+# Build the list of manual partial-AUC interval rows from valid ranges. Each
+# range may carry a custom name (kept in `interval_name`) and may be restricted
+# to a single study type; "All"/NA/"" applies it to every study type.
+# `base_intervals` must carry the `type` column.
+.build_partial_intervals <- function(auc_ranges, base_intervals) {
+  pmap(
+    auc_ranges,
+    function(start_auc, end_auc, parameter, custom_name, study_type, ...) {
+      rows <- base_intervals
+      if (!is.na(study_type) && !study_type %in% c("", "All")) {
+        rows <- filter(rows, type == study_type)
+      }
+      rows %>%
+        select(-type) %>%
+        mutate(
+          start = start + start_auc,
+          end = start + (end_auc - start_auc),
+          across(where(is.logical), ~FALSE),
+          !!sym(parameter) := TRUE,
+          type_interval = "manual",
+          interval_name = if (is.na(custom_name) || custom_name == "") {
+            NA_character_
+          } else {
+            custom_name
+          }
+        )
+    }
+  )
+}
+
 #' Update an intervals data frame with user-selected parameters by study type
 #'
 #' @param data A PKNCAdata object containing intervals and dosing data.
@@ -248,11 +295,13 @@ update_main_intervals <- function(
   # Normalise the optional partial-interval columns so downstream code can rely
   # on them existing. `custom_name` NA means "fall back to the standard name";
   # `study_type` NA means "apply to every study type" (same as "All").
+  # Use rep(..., nrow) so the assignment also works on a 0-row int_parameters
+  # (a bare length-1 NA would error with "replacement has 1 row, data has 0").
   if (!"custom_name" %in% names(int_parameters)) {
-    int_parameters$custom_name <- NA_character_
+    int_parameters$custom_name <- rep(NA_character_, nrow(int_parameters))
   }
   if (!"study_type" %in% names(int_parameters)) {
-    int_parameters$study_type <- NA_character_
+    int_parameters$study_type <- rep(NA_character_, nrow(int_parameters))
   }
 
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
@@ -269,25 +318,14 @@ update_main_intervals <- function(
   intervals_with_types <- data$intervals %>%
     left_join(study_types_df, by = grouping_cols)
 
-  # Iterate over selections to set new flags to TRUE
-  updated_intervals <- intervals_with_types
-  if (length(parameter_selections) > 0) {
-    for (study_type in names(parameter_selections)) {
-      params_for_type <- parameter_selections[[study_type]]
-      if (length(params_for_type) > 0) {
-        updated_intervals <- updated_intervals %>%
-          mutate(across(
-            .cols = all_of(params_for_type),
-            .fns = \(x) if_else(type == study_type, TRUE, x)
-          ))
-      }
-    }
-  }
+  # Set the selected parameter flags to TRUE, per study type.
+  updated_intervals_with_types <- .apply_parameter_selections(
+    intervals_with_types, parameter_selections
+  )
 
   # Keep the study-type-annotated intervals so partial intervals can be
   # restricted per study type below; the main intervals drop the helper column.
-  updated_intervals_with_types <- updated_intervals
-  data$intervals <- updated_intervals %>%
+  data$intervals <- updated_intervals_with_types %>%
     select(-type)
 
   # Add partial AUCs if any
@@ -295,32 +333,7 @@ update_main_intervals <- function(
     filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc) %>%
     mutate(parameter = translate_terms(parameter, "PPTESTCD", "PKNCA"))
 
-  # Make a list of intervals from valid AUC ranges. Each range may carry a
-  # custom name (kept in `interval_name`) and may be restricted to a single
-  # study type; "All"/NA/"" applies it to every study type.
-  intervals_list <- pmap(
-    auc_ranges,
-    function(start_auc, end_auc, parameter, custom_name, study_type, ...) {
-      base_intervals <- updated_intervals_with_types
-      if (!is.na(study_type) && !study_type %in% c("", "All")) {
-        base_intervals <- filter(base_intervals, type == study_type)
-      }
-      base_intervals %>%
-        select(-type) %>%
-        mutate(
-          start = start + start_auc,
-          end = start + (end_auc - start_auc),
-          across(where(is.logical), ~FALSE),
-          !!sym(parameter) := TRUE,
-          type_interval = "manual",
-          interval_name = if (is.na(custom_name) || custom_name == "") {
-            NA_character_
-          } else {
-            custom_name
-          }
-        )
-    }
-  )
+  intervals_list <- .build_partial_intervals(auc_ranges, updated_intervals_with_types)
 
   # Always carry an `interval_name` column so it can be listed in
   # `keep_interval_cols` unconditionally: pk.nca() subsets those columns from

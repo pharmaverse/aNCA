@@ -22,7 +22,7 @@ the required \code{parameter}, \code{start_auc} and \code{end_auc} columns, two 
 are honoured when present:
 \itemize{
 \item \code{custom_name}: a user-defined label for the interval. When non-empty it replaces
-the standard \code{PPTESTCD_<start>-<end>} name in user-facing outputs. Carried onto the
+the standard \verb{PPTESTCD_<start>-<end>} name in user-facing outputs. Carried onto the
 generated interval rows as the \code{interval_name} column.
 \item \code{study_type}: restricts the interval to a single study type (as produced by
 \code{\link[=detect_study_types]{detect_study_types()}}). \code{NA}, an empty string, or \code{"All"} applies the interval to
