@@ -563,7 +563,11 @@ describe("PKNCA_update_data_object", {
     # ROUTE column pk.nca() requires disappears, crashing the calculation.
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
-      method = method,
+      # Use the AUC method string PKNCA::pk.nca() accepts. The describe-level
+      # `method` ("lin up log down") is only ever passed to update in the other
+      # tests, never to a real calculation, so it would fail pk.nca()'s
+      # match.arg() here.
+      method = "lin up/log down",
       selected_analytes = analytes,
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
