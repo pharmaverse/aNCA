@@ -26,6 +26,10 @@
 
 ## Features
 
+### Partial Interval Calculations
+* Partial interval parameters can now be given a custom name. When set, the custom name replaces the standard `PPTESTCD_<start>-<end>` label (e.g. `AUCINT_0-24`) in the results table, plots and ratio-parameter options; the underlying PKNCA parameter and CDISC `PPTESTCD` are unchanged. Leaving the name blank keeps the standard label (#1463)
+* Each partial interval parameter can now be restricted to a single study type detected in the data (e.g. only `Excretion Data`), via a new "Study Type" column. The default "All" keeps the previous behaviour of calculating the interval for every study type. Both fields round-trip through the settings file and the exported R script (#1463)
+
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)

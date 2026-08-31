@@ -205,7 +205,15 @@ format_pkncadata_intervals <- function(pknca_conc,
 #'
 #' @param data A PKNCAdata object containing intervals and dosing data.
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
-#' @param int_parameters A data frame containing partial AUC ranges.
+#' @param int_parameters A data frame containing partial AUC ranges. In addition to
+#' the required `parameter`, `start_auc` and `end_auc` columns, two optional columns
+#' are honoured when present:
+#' - `custom_name`: a user-defined label for the interval. When non-empty it replaces
+#'   the standard `PPTESTCD_<start>-<end>` name in user-facing outputs. Carried onto the
+#'   generated interval rows as the `interval_name` column.
+#' - `study_type`: restricts the interval to a single study type (as produced by
+#'   [detect_study_types()]). `NA`, an empty string, or `"All"` applies the interval to
+#'   every study type (the default).
 #' @param start_impute Logical indicating whether to impute start values for
 #' parameters. Named `start_impute` (not `impute`) to avoid colliding with the
 #' per-interval `impute` column referenced under dplyr data-masking below.
@@ -237,6 +245,16 @@ update_main_intervals <- function(
     )
   }
 
+  # Normalise the optional partial-interval columns so downstream code can rely
+  # on them existing. `custom_name` NA means "fall back to the standard name";
+  # `study_type` NA means "apply to every study type" (same as "All").
+  if (!"custom_name" %in% names(int_parameters)) {
+    int_parameters$custom_name <- NA_character_
+  }
+  if (!"study_type" %in% names(int_parameters)) {
+    int_parameters$study_type <- NA_character_
+  }
+
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 
   study_types_df <- .derive_study_types(data)
@@ -266,7 +284,9 @@ update_main_intervals <- function(
     }
   }
 
-  # Return the final data frame, removing the temporary 'type' column
+  # Keep the study-type-annotated intervals so partial intervals can be
+  # restricted per study type below; the main intervals drop the helper column.
+  updated_intervals_with_types <- updated_intervals
   data$intervals <- updated_intervals %>%
     select(-type)
 
@@ -275,17 +295,40 @@ update_main_intervals <- function(
     filter(!is.na(start_auc), !is.na(end_auc), start_auc >= 0, end_auc > start_auc) %>%
     mutate(parameter = translate_terms(parameter, "PPTESTCD", "PKNCA"))
 
-  # Make a list of intervals from valid AUC ranges
-  intervals_list <- pmap(auc_ranges, function(start_auc, end_auc, parameter) {
-    data$intervals %>%
-      mutate(
-        start = start + start_auc,
-        end = start + (end_auc - start_auc),
-        across(where(is.logical), ~FALSE),
-        !!sym(parameter) := TRUE,
-        type_interval = "manual"
-      )
-  })
+  # Make a list of intervals from valid AUC ranges. Each range may carry a
+  # custom name (kept in `interval_name`) and may be restricted to a single
+  # study type; "All"/NA/"" applies it to every study type.
+  intervals_list <- pmap(
+    auc_ranges,
+    function(start_auc, end_auc, parameter, custom_name, study_type, ...) {
+      base_intervals <- updated_intervals_with_types
+      if (!is.na(study_type) && !study_type %in% c("", "All")) {
+        base_intervals <- filter(base_intervals, type == study_type)
+      }
+      base_intervals %>%
+        select(-type) %>%
+        mutate(
+          start = start + start_auc,
+          end = start + (end_auc - start_auc),
+          across(where(is.logical), ~FALSE),
+          !!sym(parameter) := TRUE,
+          type_interval = "manual",
+          interval_name = if (is.na(custom_name) || custom_name == "") {
+            NA_character_
+          } else {
+            custom_name
+          }
+        )
+    }
+  )
+
+  # Always carry an `interval_name` column so it can be listed in
+  # `keep_interval_cols` unconditionally: pk.nca() subsets those columns from
+  # every interval, and a missing column would crash it (same failure mode as
+  # the ROUTE join collision, #1461). Main intervals have no custom name (NA).
+  if (!"interval_name" %in% names(data$intervals)) {
+    data$intervals$interval_name <- NA_character_
+  }
 
   data$intervals <- bind_rows(
     data$intervals,

@@ -17,7 +17,17 @@ update_main_intervals(
 
 \item{parameter_selections}{A named list of selected PKNCA parameters by study type.}
 
-\item{int_parameters}{A data frame containing partial AUC ranges.}
+\item{int_parameters}{A data frame containing partial AUC ranges. In addition to
+the required \code{parameter}, \code{start_auc} and \code{end_auc} columns, two optional columns
+are honoured when present:
+\itemize{
+\item \code{custom_name}: a user-defined label for the interval. When non-empty it replaces
+the standard \code{PPTESTCD_<start>-<end>} name in user-facing outputs. Carried onto the
+generated interval rows as the \code{interval_name} column.
+\item \code{study_type}: restricts the interval to a single study type (as produced by
+\code{\link[=detect_study_types]{detect_study_types()}}). \code{NA}, an empty string, or \code{"All"} applies the interval to
+every study type (the default).
+}}
 
 \item{start_impute}{Logical indicating whether to impute start values for
 parameters. Named \code{start_impute} (not \code{impute}) to avoid colliding with the

@@ -50,6 +50,19 @@ partial_intervals_ui <- function(id) {
               tags$li(
                 tags$b("End"),
                 ": End time of the interval."
+              ),
+              tags$li(
+                tags$b("Custom Name"),
+                ": Optional label for the interval. When set, it replaces the",
+                " standard name (e.g. AUCINT_0-24) in results, plots and ratio",
+                " options. Leave blank to keep the standard name."
+              ),
+              tags$li(
+                tags$b("Study Type"),
+                ": Restrict the calculation to a single study type detected in",
+                " the data. Choose \"All\" (default) to calculate it for every",
+                " study type. To target several specific types, add one row per",
+                " type."
               )
             ),
             p(
@@ -369,9 +382,42 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       tibble(
         parameter = character(),
         start_auc = numeric(),
-        end_auc = numeric()
+        end_auc = numeric(),
+        custom_name = character(),
+        study_type = character()
       )
     )
+
+    # Study types detected in the loaded data, offered as choices for restricting
+    # a partial interval to a single type. "All" (the default) applies to every
+    # study type. Mirrors the detection used by the parameter-selection matrix.
+    study_type_choices <- reactive({
+      pknca_data <- adnca_data()
+      if (is.null(pknca_data)) return("All")
+
+      conc_group_columns <- group_vars(pknca_data$conc)
+      dose_group_columns <- group_vars(pknca_data$dose)
+      group_columns <- unique(c(conc_group_columns, dose_group_columns))
+
+      groups <- group_columns %>%
+        purrr::keep(\(col) {
+          !is.null(col) &&
+            length(unique(pknca_data$conc$data[[col]])) > 1
+        })
+
+      detected <- tryCatch(
+        detect_study_types(
+          pknca_data$conc$data,
+          groups,
+          metabfl_column = "METABFL",
+          route_column = pknca_data$dose$columns$route,
+          volume_column = pknca_data$conc$columns$volume
+        )$type,
+        error = function(e) character()
+      )
+
+      c("All", sort(unique(detected)))
+    })
 
     # Render the editable reactable table
     refresh_reactable <- reactiveVal(1)
@@ -397,6 +443,20 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             name = "End", # Display name
             cell = text_extra(id = ns("edit_end_auc")),
             align = "center"
+          ),
+          custom_name = colDef(
+            name = "Custom Name", # Optional user-defined label
+            cell = text_extra(id = ns("edit_custom_name")),
+            align = "center"
+          ),
+          study_type = colDef(
+            name = "Study Type", # Restrict calculation to a study type
+            cell = dropdown_extra(
+              id = ns("edit_study_type"),
+              choices = study_type_choices(),
+              class = "dropdown-extra"
+            ),
+            align = "center"
           )
         ),
         selection = "multiple",
@@ -409,7 +469,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
         )
       )
     }) %>%
-      shiny::bindEvent(refresh_reactable())
+      shiny::bindEvent(refresh_reactable(), study_type_choices())
 
     # Add a blank row on button click
     observeEvent(input$addRow, {
@@ -418,7 +478,9 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           tibble(
             parameter = PARTIAL_INT_PARAMS$PPTESTCD[1],
             start_auc = NA_real_,
-            end_auc = NA_real_
+            end_auc = NA_real_,
+            custom_name = NA_character_,
+            study_type = "All"
           )
         ) %>%
         int_parameters()
@@ -437,12 +499,23 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     #' Attach edit observers once (not inside observe() to avoid accumulating
     #' duplicate handlers on every int_parameters() change).
-    purrr::walk(c("edit_parameter", "edit_start_auc", "edit_end_auc"), function(edit_input) {
+    #' `start_auc`/`end_auc` are numeric; `parameter`, `custom_name` and
+    #' `study_type` are text columns and must not be coerced to numeric.
+    numeric_edit_cols <- c("start_auc", "end_auc")
+    edit_inputs <- c(
+      "edit_parameter", "edit_start_auc", "edit_end_auc",
+      "edit_custom_name", "edit_study_type"
+    )
+    purrr::walk(edit_inputs, function(edit_input) {
       observeEvent(input[[edit_input]], {
         edit <- input[[edit_input]]
         partial_aucs <- int_parameters()
         if (edit$row <= nrow(partial_aucs)) {
-          val <- if (edit$column != "parameter") as.numeric(edit$value) else edit$value
+          val <- if (edit$column %in% numeric_edit_cols) {
+            as.numeric(edit$value)
+          } else {
+            edit$value
+          }
           partial_aucs[edit$row, edit$column] <- val
           int_parameters(partial_aucs)
         }
@@ -587,7 +660,17 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   # Data imputation is restored by data_imputation_server via settings_override
 
   if (!is.null(settings$int_parameters)) {
-    int_parameters(settings$int_parameters)
+    restored_int <- tibble::as_tibble(settings$int_parameters)
+    # Backward compatibility: settings files saved before custom naming /
+    # per-study-type support lack these columns. Default them so the table and
+    # downstream logic always find them.
+    if (!"custom_name" %in% names(restored_int)) {
+      restored_int$custom_name <- NA_character_
+    }
+    if (!"study_type" %in% names(restored_int)) {
+      restored_int$study_type <- "All"
+    }
+    int_parameters(restored_int)
     refresh_reactable(refresh_reactable() + 1)
   }
 
