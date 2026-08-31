@@ -3,8 +3,10 @@
     c(
       ".",
       ".dose_time",
+      ".facet_key",
       ".facet_label_values",
       ".facet_n",
+      ".facet_unit",
       ".iqr",
       ".pp_excl",
       ".pp_excl_reason",
