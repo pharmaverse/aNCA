@@ -297,8 +297,8 @@ arrange_plots_by_groups <- function(named_list, group_cols) {
       if (is.na(val)) return(TRUE)
       val < active_flags[[flag_name]]$threshold
     }, logical(1)))
-  }, logical(1)) |>
-    Filter(isTRUE, x = _) |>
+  }, logical(1)) %>%
+    Filter(isTRUE, x = .) %>%
     names()
 }
 
@@ -341,8 +341,7 @@ arrange_plots_by_groups <- function(named_list, group_cols) {
       if (is.na(val)) return(TRUE)
       val < active_flags[[flag_name]]$threshold
     }, logical(1)))
-  }, logical(1)) |>
-    Filter(isTRUE, x = _) |>
+  }, logical(1)) %>%
+    Filter(isTRUE, x = .) %>%
     names()
 }
-
