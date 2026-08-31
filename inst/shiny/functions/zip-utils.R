@@ -379,6 +379,36 @@ get_tree_ids_for_texts <- function(tree, texts) {
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
+# Validate selected CDISC datasets before export. Writes the QC report and
+# stops the save when error-severity findings are present. No-op when no CDISC
+# dataset is selected or none is available in the session.
+.validate_cdisc_before_export <- function(target_dir, selected_cdisc, session,
+                                          progress) {
+  if (length(selected_cdisc) == 0 || is.null(session$userData$results$CDISC)) {
+    return(invisible(NULL))
+  }
+  progress$set(message = "Creating exports...",
+               detail = "Validating CDISC data types...")
+  dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
+  validation <- write_cdisc_validation_report(
+    cdisc_data = session$userData$results$CDISC,
+    target_dir = target_dir,
+    project = tryCatch(session$userData$project_name(), error = function(e) NULL)
+  )
+  if (!validation$blocks_save) return(invisible(NULL))
+
+  n_err <- sum(validation$findings$Severity == "error")
+  showNotification(
+    sprintf(
+      "Save blocked: %d CDISC data-type error(s). See cdisc_validation_report.html.",
+      n_err
+    ),
+    type = "error",
+    duration = NULL
+  )
+  stop(sprintf("CDISC validation failed with %d error(s).", n_err))
+}
+
 prepare_export_files <- function(target_dir,
                                  res_nca,
                                  settings,
@@ -392,29 +422,7 @@ prepare_export_files <- function(target_dir,
   # files are written. Writes a QC report as an export artifact and aborts the
   # save when error-severity findings exist.
   selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
-  if (length(selected_cdisc) > 0 &&
-        !is.null(session$userData$results$CDISC)) {
-    progress$set(message = "Creating exports...",
-                 detail = "Validating CDISC data types...")
-    dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
-    validation <- write_cdisc_validation_report(
-      cdisc_data = session$userData$results$CDISC,
-      target_dir = target_dir,
-      project = tryCatch(session$userData$project_name(), error = function(e) NULL)
-    )
-    if (validation$blocks_save) {
-      n_err <- sum(validation$findings$Severity == "error")
-      showNotification(
-        sprintf(
-          "Save blocked: %d CDISC data-type error(s). See cdisc_validation_report.html.",
-          n_err
-        ),
-        type = "error",
-        duration = NULL
-      )
-      stop(sprintf("CDISC validation failed with %d error(s).", n_err))
-    }
-  }
+  .validate_cdisc_before_export(target_dir, selected_cdisc, session, progress)
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",

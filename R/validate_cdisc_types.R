@@ -188,6 +188,34 @@ CDISC_FINDING_COLS <- c(
   do.call(rbind, findings)
 }
 
+# A data frame with at least one column that can be processed?
+.cdisc_processable_df <- function(df) {
+  !is.null(df) && is.data.frame(df) && ncol(df) > 0
+}
+
+# Apply `per_dataset(df, ds_name, ds_meta, check_length)` to each recognised
+# CDISC dataset and row-bind the results. `empty` is returned when nothing is
+# processed; `cols` fixes the output column order.
+
+.iterate_cdisc_datasets <- function(cdisc_data, metadata, check_length,
+                                    per_dataset, empty, cols) {
+  if (is.null(cdisc_data) || length(cdisc_data) == 0) return(empty)
+
+  keys <- intersect(names(cdisc_data), names(CDISC_KEY_DS_MAP))
+  keys <- Filter(function(k) .cdisc_processable_df(cdisc_data[[k]]), keys)
+  if (length(keys) == 0) return(empty)
+
+  results <- lapply(keys, function(key) {
+    ds_name <- CDISC_KEY_DS_MAP[[key]]
+    ds_meta <- metadata[metadata$Dataset == ds_name, , drop = FALSE]
+    per_dataset(cdisc_data[[key]], ds_name, ds_meta, check_length)
+  })
+
+  out <- do.call(rbind, results)
+  rownames(out) <- NULL
+  out[cols]
+}
+
 #' Validate CDISC datasets against metadata-declared data types
 #'
 #' Checks each column of the supplied CDISC datasets against the expected
@@ -220,33 +248,6 @@ CDISC_FINDING_COLS <- c(
 #'   adnca = data.frame(STUDYID = "S1", AVAL = 1.2, stringsAsFactors = FALSE)
 #' )
 #' validate_cdisc_types(cdisc_data)
-# Apply `per_dataset(df, ds_name, ds_meta, check_length)` to each recognised
-# CDISC dataset and row-bind the results. `empty` is returned when nothing is
-# processed; `cols` fixes the output column order.
-# A data frame with at least one column that can be processed?
-.cdisc_processable_df <- function(df) {
-  !is.null(df) && is.data.frame(df) && ncol(df) > 0
-}
-
-.iterate_cdisc_datasets <- function(cdisc_data, metadata, check_length,
-                                    per_dataset, empty, cols) {
-  if (is.null(cdisc_data) || length(cdisc_data) == 0) return(empty)
-
-  keys <- intersect(names(cdisc_data), names(CDISC_KEY_DS_MAP))
-  keys <- Filter(function(k) .cdisc_processable_df(cdisc_data[[k]]), keys)
-  if (length(keys) == 0) return(empty)
-
-  results <- lapply(keys, function(key) {
-    ds_name <- CDISC_KEY_DS_MAP[[key]]
-    ds_meta <- metadata[metadata$Dataset == ds_name, , drop = FALSE]
-    per_dataset(cdisc_data[[key]], ds_name, ds_meta, check_length)
-  })
-
-  out <- do.call(rbind, results)
-  rownames(out) <- NULL
-  out[cols]
-}
-
 validate_cdisc_types <- function(cdisc_data,
                                  metadata = metadata_nca_variables,
                                  check_length = TRUE) {
