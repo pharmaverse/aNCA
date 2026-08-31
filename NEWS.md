@@ -28,7 +28,7 @@
 ## Features
 
 ### NCA Descriptive Statistics
-* `ROUTE` is now offered as a "Group by" option in the NCA descriptive statistics table. `ROUTE` is already carried into the results data, so it no longer needs to be added as a supplemental grouping variable in the Mapping section (#1461)
+* `ROUTE` is now offered as a "Group by" option in the NCA descriptive statistics table. `ROUTE` is already carried into the results data, so it no longer needs to be added as a supplemental grouping variable in the Mapping section. When the study has more than one distinct route, `ROUTE` is also selected by default; single-route studies leave it available but unselected (#1461)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):

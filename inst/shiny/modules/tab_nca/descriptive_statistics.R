@@ -9,6 +9,26 @@
 #'
 #' @returns A list containing the reactive expression for the summary statistics table.
 
+# Default "Group by" selection for the descriptive statistics table.
+#
+# Always defaults to the PKNCA group columns plus ATPTREF (dose profile).
+# ROUTE is added only when it is available and actually distinguishes records
+# (more than one distinct route in the results), so single-route studies are
+# not cluttered with a constant grouping column while multi-route studies get
+# a route split out of the box. ROUTE stays available in the picker either way.
+default_summary_groupby <- function(res_nca, group_cols, classification_cols) {
+  default <- c(group_cols, intersect("ATPTREF", classification_cols))
+
+  if ("ROUTE" %in% classification_cols) {
+    route_values <- res_nca$data$conc$data[["ROUTE"]]
+    if (length(unique(route_values[!is.na(route_values)])) > 1) {
+      default <- c(default, "ROUTE")
+    }
+  }
+
+  unique(default)
+}
+
 # UI function for the summary statistics module
 descriptive_statistics_ui <- function(id) {
   ns <- NS(id)
@@ -52,7 +72,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       ]
 
       grouping_vars <- c(group_cols, classification_cols, subj_col)
-      initial_selection <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
+      initial_selection <- default_summary_groupby(
+        res_nca(), group_cols, classification_cols
+      )
 
       # Rendering the group by selector
       selector_label(input = input,
@@ -67,7 +89,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
 
       updatePickerInput(session, "summary_groupby",
                         choices = unique(c(group_cols, classification_cols, subj_col)),
-                        selected = unique(c(group_cols, intersect("ATPTREF", classification_cols))))
+                        selected = initial_selection)
 
     })
 
@@ -88,7 +110,9 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
       # Fall back to default grouping when the picker hasn't rendered yet
       selected_groupby <- input$summary_groupby
       if (is.null(selected_groupby)) {
-        selected_groupby <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
+        selected_groupby <- default_summary_groupby(
+          res_nca(), group_cols, classification_cols
+        )
       }
 
       results <- res_nca()
