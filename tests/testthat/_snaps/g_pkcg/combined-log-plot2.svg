@@ -117,7 +117,7 @@
 <line x1='387.23' y1='543.04' x2='401.05' y2='543.04' style='stroke-width: 0.85; stroke: #F8766D; stroke-linecap: butt;' />
 <circle cx='394.14' cy='543.04' r='2.49' style='stroke-width: 0.71; stroke: #F8766D; fill: #F8766D;' />
 <text x='408.26' y='546.07' style='font-size: 8.80px; font-family: sans;' textLength='4.89px' lengthAdjust='spacingAndGlyphs'>3</text>
-<text x='27.90' y='31.07' style='font-size: 11.00px; font-family: sans;' textLength='649.04px' lengthAdjust='spacingAndGlyphs'>Treatment Group: Dummy Treatment (N=10)&lt;br&gt;Route: intravascular, Specimen: SERUM, Analyte: A, Treatment: Dummy Treatment</text>
+<text x='27.90' y='31.07' style='font-size: 11.00px; font-family: sans;' textLength='642.92px' lengthAdjust='spacingAndGlyphs'>Treatment Group: Dummy Treatment (N=1)&lt;br&gt;Route: intravascular, Specimen: SERUM, Analyte: A, Treatment: Dummy Treatment</text>
 <text x='27.90' y='15.11' style='font-size: 14.00px; font-family: sans;' textLength='434.23px' lengthAdjust='spacingAndGlyphs'>Plot of PK Concentration-Time Profile logarithmic scale, by Cohort: S1</text>
 </g>
 </svg>

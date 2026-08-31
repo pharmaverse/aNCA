@@ -34,7 +34,8 @@ l_pkcl01(
 \item{footnote}{A character string to parse specifying the footnote of the listing table.}
 }
 \value{
-A list of listings, each corresponding to a unique combination of the grouping variables.
+A list of listings, each corresponding to a unique combination of
+the grouping variables.
 }
 \description{
 This function creates a listing of pharmacokinetic (PK) concentration data segregating a dataset
