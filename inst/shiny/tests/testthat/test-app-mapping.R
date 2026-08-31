@@ -48,9 +48,9 @@ describe("Test for mapping interface", {
     # applies.
     app <- AppDriver$new(name = "app_mapping_advance")
 
-    app$click("data-next_step") # upload -> mapping
+    app$click("data-next_step") # advance from upload to mapping
     app$wait_for_idle()
-    app$click("data-next_step") # mapping -> submit (must reach filtering)
+    app$click("data-next_step") # advance from mapping to submit (must reach filtering)
     app$wait_for_idle()
 
     # Navigation advanced ...
