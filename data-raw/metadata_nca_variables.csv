@@ -357,9 +357,6 @@ ADNCA,171,VISITDY,Planned Study Day of Visit,integer,Grouping Qualifier,Req,FALS
 ADNCA,172,VISITNUM,Visit Number,integer,Grouping Qualifier,Req,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,160,WBCBL,WBC Count at Baseline,float,Synonym Qualifier,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,161,WBCBLU,WBC Count at baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA,FALSE
-ADNCA,264,PKSUM1F,PK Summary Exclusion Flag 1,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
-ADNCA,265,PKSUM1FN,PK Summary Exclusion Flag 1 (N),integer,Record Qualifier,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
-ADPP,193,PPSUMFL,PP Summary Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,194,PPSUMRSN,PP Summary Exclusion Reason,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
 SDTM,1,STUDYID,Study Identifier,text,Identifier,Req,FALSE,TRUE,8,,TRUE,,TRUE,Character column to identify the study. Must be present in all uploaded domains,SDTM General,,0,FALSE
 SDTM,2,USUBJID,Unique Subject Identifier,text,Identifier,Req,FALSE,TRUE,50,,TRUE,,TRUE,Character column to identify a subject. Must be present in all uploaded domains,SDTM General,,0,FALSE
@@ -393,3 +390,7 @@ DM,9,ACTARM,Actual Arm,text,Record Qualifier,Perm,FALSE,FALSE,200,,TRUE,,FALSE,,
 DM,10,DOMAIN,Domain Abbreviation,text,Identifier,Req,FALSE,TRUE,2,,TRUE,,FALSE,,,,NA,FALSE
 DM,11,WTBL,Weight at Baseline,float,Record Qualifier,Perm,TRUE,FALSE,12,,FALSE,,TRUE,Numeric column for subject weight. Only required for excretion studies,Supplemental Variables,"WEIGHT, BWEIGHT",19,FALSE
 DM,12,WTBLU,Weight at Baseline Unit,text,Variable Qualifier,Perm,TRUE,FALSE,40,,FALSE,,TRUE,"Character column for weight unit. Instead of a column name, a unique value can be mapped (e.g. ""kg"")",Supplemental Variables,WEIGHTU,20,FALSE
+ADNCA,266,PKSUM1RS,PK Summary Exclusion Reason 1,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,193,PPSUMXF,PP Summary Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,229,ATPTREF,Analysis Timepoint Reference,text,Timing,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,88,ROUTE,Route of Administration,text,Topic,Perm,FALSE,FALSE,40,C66729,FALSE,,FALSE,,,,NA,FALSE

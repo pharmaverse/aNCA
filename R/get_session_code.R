@@ -4,7 +4,7 @@
 #' @param setts_obj The read settings object with all analysis specifications
 #' or the full session object from the App.
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R")
-#' @return The output_path (invisibly)
+#' @returns The output_path (invisibly)
 #' @keywords internal
 #' @noRd
 get_code <- function(
@@ -80,7 +80,7 @@ get_code <- function(
 #' @param min_to_rep Minimum number of repeated elements to use `rep()` for
 #'   long vectors/lists.
 #' @param indent Integer indentation level for multi-line outputs.
-#' @return A single string containing R code that, when evaluated, will
+#' @returns A single string containing R code that, when evaluated, will
 #'   reconstruct `obj` (or a close approximation for complex types).
 #' @keywords internal
 clean_deparse <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
@@ -207,7 +207,7 @@ clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep
 #'   the one installed from your aNCA package version.
 #' @param output_path Path to write the resulting script file.
 #'
-#' @return Invisibly returns the output_path.
+#' @returns Invisibly returns the output_path.
 #' @export
 get_settings_code <- function(
   settings_file_path,
@@ -261,7 +261,7 @@ get_settings_code <- function(
 #' @param output_path Path to write the resulting script file (e.g., "output_script.R").
 #' @param template_path Path to the R script template file. By default, uses the one
 #' installed from your aNCA package version.
-#' @return Invisibly returns the output_path.
+#' @returns Invisibly returns the output_path.
 #' @keywords Internal
 #' @noRd
 get_session_code <- function(

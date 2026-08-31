@@ -41,7 +41,7 @@ nca_setup_ui <- function(id) {
       )
     ),
     nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
-    nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
+    nav_panel("ADNCA Exclusions", general_exclusions_ui(ns("general_exclusions")))
   )
 }
 

@@ -55,7 +55,7 @@ parameter_plots_server <- function(id, res_nca, res_nca_plot = res_nca) {
     observeEvent(res_nca(), {
       # Rename manual interval parameters to include the range suffix
       # (e.g. AUCINT -> AUCINT_0-12) so each interval appears as a distinct choice
-      result_data <- rename_interval_params(res_nca()$result)
+      result_data <- aNCA:::rename_interval_params(res_nca()$result)
       param_choices <- unique(result_data$PPTESTCD)
 
       default_selection <- if ("CMAX" %in% param_choices) {
@@ -77,7 +77,7 @@ parameter_plots_server <- function(id, res_nca, res_nca_plot = res_nca) {
                      initial_selection = default_selection,
                      selector_ui_wrapper = "params_to_display_ui_wrapper",
                      id = "selected_param_boxplot",
-                     label = "Choose the parameter to display:",
+                     label = "Select the parameter to display:",
                      metadata_type = "parameter",
                      multiple = FALSE)
 
