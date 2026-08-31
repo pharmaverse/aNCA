@@ -81,7 +81,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   main_intervals_vals <- myres$result %>%
     distinct() %>%
     filter(type_interval == "main")  %>%
-    mutate(PPTESTCD = ifelse(PPSTRESU != "",
+    mutate(PPTESTCD = ifelse(!is.na(PPSTRESU) & PPSTRESU != "",
                              paste0(PPTESTCD, "[", PPSTRESU, "]"),
                              PPTESTCD)) %>%
     select(-PPSTRESU, -PPORRES, -PPORRESU, -exclude, -type_interval) %>%
@@ -109,7 +109,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       mutate(
         interval_name = paste0(
           signif(start_dose), "-", signif(end_dose),
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
         ),
         interval_name_col = paste0(PPTESTCD, "_", interval_name)
       ) %>%
@@ -123,7 +123,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       mutate(
         interval_name = paste0(
           signif(start_dose), "-", signif(end_dose),
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
         ),
         interval_name_col = paste0("exclude.", PPTESTCD, "_", interval_name)
       ) %>%
@@ -205,36 +205,6 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   unique_values <- unique(trimws(split_values))
 
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
-}
-
-#' Helper function to add "label" attribute to columns based on parameter names.
-#' @noRd
-#' @keywords internal
-add_label_attribute <- function(df, myres) {
-  mapping_vr <- myres$result %>%
-    mutate(
-      PPTESTCD_unit = case_when(
-        type_interval == "manual" ~ paste0(
-          PPTESTCD, "_", start, "-", end,
-          ifelse(PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        ),
-        PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
-        TRUE ~ PPTESTCD
-      ),
-      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
-    ) %>%
-    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
-    distinct() %>%
-    pull(PPTESTCD_cdisc, PPTESTCD_unit)
-
-  mapping_cols <- intersect(names(df), names(mapping_vr))
-  attrs <- unname(mapping_vr[mapping_cols])
-
-  df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
-    attr(col, "label") <- bw
-    col
-  }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
-  df
 }
 
 #' Apply Flagging Logic to NCA Results

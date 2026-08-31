@@ -15,8 +15,8 @@
 #' The function performs the following steps:
 #'   - Creates a vector with all pharmacokinetic parameters.
 #'   - Based on dose times, creates a data frame with start and end times.
-#'   - If TRTRINT column is present in data, sets last dose end time to start + TRTRINT,
-#'   or if TRTRINT is NA then either Inf if only one dose present, or max end time if not.
+#'   - If TRTRINT column is present in data, if TRTRINT is NA then it sets end time
+#'    to Inf if only one dose present, or max end time if not.
 #'   - If no TRTRINT column in data, sets last dose end time to the time of last sample
 #'   or Inf if single dose data.
 #'   - Adds logical columns for each specified parameter.
@@ -62,7 +62,7 @@ format_pkncadata_intervals <- function(pknca_conc,
     c("start", "end")
   )
 
-  # Select conc data and for time column give priority to non-predose samples
+  # Select conc data (non-predose samples are prioritised later via arrange())
   sub_pknca_conc <- pknca_conc$data %>%
     select(any_of(c(
       conc_groups, "ARRLT", "ATPTREF", "DOSNOA",
@@ -90,9 +90,17 @@ format_pkncadata_intervals <- function(pknca_conc,
   ) %>%
     # Pick 1 per concentration group and dose number
     group_by(!!!syms(dose_groups), DOSNOA) %>%
-    mutate(max_end = max(ARRLT, na.rm = TRUE)) %>% # calculate max end time for Dose group
+    # max_end is the last sample time relative to this dose
+    mutate(max_end = max(ARRLT, na.rm = TRUE)) %>%
     group_by(!!!syms(c(conc_groups, "DOSNOA"))) %>%
-    slice(1) %>% # slice one row per conc group
+    # Anchor start to C1: keep the first sample at or after the dose, i.e. the
+    # smallest non-negative ARRLT. `ARRLT < 0` sorts post-dose rows (FALSE)
+    # ahead of predose rows (TRUE), then ascending ARRLT puts C1 first.
+    # Without this ordering, slice(1) could land on a predose sample whose
+    # negative ARRLT dragged `start` before the dose (predose time) instead of
+    # to C1 when start_from_last_dose = FALSE (#1121).
+    arrange(ARRLT < 0, ARRLT, .by_group = TRUE) %>%
+    slice(1) %>% # one row per conc group + dose, now the C1 sample
     ungroup() %>%
     # Make start from last dose (pknca_dose) or first concentration (pknca_conc)
     mutate(start = if (start_from_last_dose) {
@@ -102,13 +110,12 @@ format_pkncadata_intervals <- function(pknca_conc,
     }) %>%
     group_by(!!!syms(conc_groups)) %>%
     arrange(start) %>%
-    # Make end based on next dose time (if no more, TRTRINT or last NFRLT)
+    # Make end based on next dose time (if no more, last NFRLT)
     mutate(end = if (has_trtrint) {
       case_when(
         !is.na(lead(!!sym(time_column))) ~ lead(!!sym(time_column)),
-        is.na(TRTRINT) & is_one_dose ~ Inf,
-        is.na(TRTRINT) ~ start + max_end,
-        TRUE ~ start + TRTRINT
+        is.na(TRTRINT) & is_one_dose ~ Inf, # TAU = NA assumes single dose
+        TRUE ~ start + max_end
       )
     } else {
       case_when(
@@ -145,7 +152,8 @@ format_pkncadata_intervals <- function(pknca_conc,
   conc_data <- data$conc$data
   conc_groups <- group_vars(data$conc)
   dose_groups <- group_vars(data$dose)
-  groups <- intersect(dose_groups, conc_groups)
+  # Use union of conc and dose groups (to include PCSPEC for excretion detection)
+  groups <- unique(c(conc_groups, dose_groups))
   groups <- groups[vapply(groups, function(col) {
     !is.null(col) && length(unique(conc_data[[col]])) > 1
   }, logical(1))]
@@ -198,7 +206,9 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param data A PKNCAdata object containing intervals and dosing data.
 #' @param parameter_selections A named list of selected PKNCA parameters by study type.
 #' @param int_parameters A data frame containing partial AUC ranges.
-#' @param impute Logical indicating whether to impute start values for parameters.
+#' @param start_impute Logical indicating whether to impute start values for
+#' parameters. Named `start_impute` (not `impute`) to avoid colliding with the
+#' per-interval `impute` column referenced under dplyr data-masking below.
 #' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
 #' imputation rule using PKNCA format. The list should either contain three elements named:
 #' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
@@ -209,15 +219,17 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @importFrom dplyr left_join mutate across where select all_of if_else bind_rows filter
 #' @importFrom dplyr group_by ungroup slice_max distinct
 #' @importFrom purrr pmap
+#' @importFrom rlang .data sym
 #' @returns An updated PKNCAdata object with parameter intervals based on user selections.
 #' @export
 update_main_intervals <- function(
   data,
   parameter_selections = NULL,
   int_parameters = NULL,
-  impute = TRUE,
+  start_impute = TRUE,
   blq_imputation_rule = NULL
 ) {
+
   if (is.null(parameter_selections)) parameter_selections <- list()
   if (is.null(int_parameters)) {
     int_parameters <- data.frame(
@@ -281,24 +293,36 @@ update_main_intervals <- function(
   ) %>%
     unique()
 
-  data$impute <- NA
+  data$impute <- NA_character_
 
   # Impute start values if requested
-  if (impute) {
+  if (start_impute) {
     data <- create_start_impute(data)
+  }
+
+  # Guarantee a per-interval `impute` column exists. `create_start_impute()`
+  # only adds it when start imputation runs, so when `impute = FALSE` (or it
+  # early-returns) the column is absent. The BLQ block below then references
+  # `impute` inside dplyr data-masking; without a column, the bare symbol would
+  # silently resolve to the `impute` function argument (a logical), producing
+  # nonsense like "blq, FALSE" and an unregistered `PKNCA_impute_method_FALSE`.
+  if (!"impute" %in% names(data$intervals)) {
+    data$intervals$impute <- NA_character_
   }
 
   ############################################
   # Define a BLQ imputation method for PKNCA
   # and apply it only for non-observational parameters
 
+  # `.data$impute` pins the reference to the column so it can never fall through
+  # to the `impute` argument, even if the guard above is ever removed.
   if (!is.null(blq_imputation_rule)) {
     data$intervals <- data$intervals %>%
       mutate(
         impute = ifelse(
-          is.na(impute) | impute == "",
+          is.na(.data$impute) | .data$impute == "",
           "blq",
-          paste0("blq, ", impute)
+          paste0("blq, ", .data$impute)
         )
       )
   }
@@ -335,10 +359,20 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))
 
+  # If the impute column doesn't exist, initialize it so downstream access is safe
+  if (!"impute" %in% names(data$intervals)) {
+    data$intervals$impute <- NA_character_
+  }
+
   all_impute_methods <- na.omit(unique(data$intervals$impute))
-  if (length(all_impute_methods) == 0) {
+
+  # If none of the target params are TRUE in any interval, there's nothing to
+  # remove imputation from, and if no impute methods, nothin to impute.
+  if (length(all_impute_methods) == 0 || !has_requested_params(data$intervals,
+                                                               params_not_to_impute)) {
     return(data)
   }
+
   all_impute_methods <- all_impute_methods %>%
     strsplit(split = ",") %>%
     unlist() %>%

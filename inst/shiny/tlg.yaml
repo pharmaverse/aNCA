@@ -13,6 +13,43 @@ t_pkct01:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
   fun: t_pkct01
   condition: null
+  options:
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NFRLT)"
+      type: select
+      choices: $NFRLT
+      multiple: true
+    .group_label_1: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "ATPTREF", "NFRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkct01_dose:
   is_default: false
@@ -24,6 +61,43 @@ t_pkct01_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
   fun: t_pkct01_dose
   condition: null
+  options:
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NFRLT)"
+      type: select
+      choices: $NFRLT
+      multiple: true
+    .group_label_1: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["DOSEA", "ATPTREF", "NFRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkct01_tad:
   is_default: false
@@ -35,6 +109,44 @@ t_pkct01_tad:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
   fun: t_pkct01_tad
   condition: null
+  options:
+    # `time_var` is fixed to NRRLT by this variant (used by the timepoint filter).
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NRRLT)"
+      type: select
+      choices: $NRRLT
+      multiple: true
+    .group_label_1: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "ATPTREF", "NRRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkct01_dose_tad:
   is_default: false
@@ -46,6 +158,44 @@ t_pkct01_dose_tad:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkct01.html
   fun: t_pkct01_dose_tad
   condition: null
+  options:
+    # `time_var` is fixed to NRRLT by this variant (used by the timepoint filter).
+    .group_label_filter: "Filtering"
+    time_filter:
+      label: "Timepoints to show (NRRLT)"
+      type: select
+      choices: $NRRLT
+      multiple: true
+    .group_label_1: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["DOSEA", "ATPTREF", "NRRLT"]
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 ####### TABLES - PK Parameters
 t_pkpt03_col:
@@ -58,6 +208,43 @@ t_pkpt03_col:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
   fun: t_pkpt03_col
   condition: null
+  options:
+    .group_label_filter: "Filtering"
+    param_filter:
+      label: "Parameters to show (PARAM)"
+      type: select
+      choices: $PARAM
+      multiple: true
+    .group_label_1: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: .pknca_groups
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt03_MP_col:
   is_default: false
@@ -69,6 +256,43 @@ t_pkpt03_MP_col:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
   fun: t_pkpt03_MP_col
   condition: null
+  options:
+    .group_label_filter: "Filtering"
+    param_filter:
+      label: "Parameters to show (PARAM)"
+      type: select
+      choices: $PARAM
+      multiple: true
+    .group_label_1: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: .pknca_groups
+    .group_label_2: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_3: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt07_norm:
   is_default: false
@@ -80,6 +304,44 @@ t_pkpt07_norm:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt07.html
   fun: t_pkpt07_norm
   condition: null
+  options:
+    .group_label_1: "Filtering"
+    paramcd_filter:
+      label: "Dose-normalized parameter codes (PARAMCD)"
+      type: select
+      choices: $PARAMCD
+      multiple: true
+      default: ["CMAXD", "AUCLSTD", "AUCIFOD", "AUCTLSTD"]
+    .group_label_2: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: .pknca_groups
+    .group_label_3: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_4: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt08_uri:
   is_default: false
@@ -91,6 +353,51 @@ t_pkpt08_uri:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt08.html
   fun: t_pkpt08_uri
   condition: "URINE"
+  options:
+    .group_label_1: "Filtering"
+    # Urine-only table: choices are restricted to urine-looking PPSPEC values so the
+    # output cannot be pointed at serum or plasma, which carry no urine parameters.
+    urine_specs:
+      label: "Specimen Material Type"
+      type: select
+      choices: .urinespecs
+      default: .all
+      multiple: true
+    param_filter:
+      label: "Parameters to show (PARAM)"
+      type: select
+      choices: $PARAM
+      multiple: true
+    .group_label_2: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: .pknca_groups
+    .group_label_3: "Value"
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
+    .group_label_4: "Compare (columns)"
+    col_group_var:
+      label: "Compare in columns (e.g. Sex)"
+      type: select
+      choices: .groupcols
+    .group_label_stats: "Statistics"
+    stats:
+      label: "Statistics to show"
+      type: select
+      choices: .stats
+      multiple: true
 
 t_pkpt11_gmr:
   is_default: false
@@ -102,6 +409,39 @@ t_pkpt11_gmr:
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt11.html
   fun: t_pkpt11_gmr
   condition: null
+  options:
+    .group_label_1: "Reference"
+    ref_arm:
+      label: "Reference treatment arm"
+      type: select
+      choices: $TRT01A
+    ci_level:
+      label: "Confidence level"
+      type: numeric
+      default: 0.90
+    .group_label_2: "Grouping"
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      default: ["TRT01A"]
+    .group_label_3: "Columns"
+    param_var:
+      label: "Parameter variable"
+      type: select
+      choices: .colnames
+      default: ["PARAM"]
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+      default: ["AVAL"]
 
 
 
@@ -197,6 +537,69 @@ l_pkcl01_tad:
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl01.html
   fun: l_pkcl01_tad
   condition: null
+  options:
+    # NOTE: `displaying_vars` is intentionally not exposed — l_pkcl01_tad hardcodes it as
+    # c("NRRLT", "ARRLT", "AVAL") when forwarding to l_pkcl01 (that TAD column choice is the
+    # whole point of this variant), so a user-supplied value would be a duplicate argument.
+    .group_label_1: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    .group_label_2: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC", "ROUTE"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "USUBJID", "ATPTREF"]
+    .group_label_3: "Formatting"
+    formatting_vars_table:
+      label: "Variables formatting"
+      type: table
+      cols:
+        var_name:
+          type: select
+          choices: .colnames
+          label: "Variable name"
+        Label:
+          type: text
+          label: Label
+        na_str:
+          type: text
+          label: "NA string"
+        zero_str:
+          type: text
+          label: "0 string"
+        align:
+          type: select
+          choices: ["", "left", "center", "right"]
+          label: "Align"
+        format_fun:
+          type: select
+          choices: ["", "round", "signif"]
+          label: "Formatting function"
+        digits:
+          type: select
+          label: "Digits"
+          choices: ["", "0", "1", "2", "3", "4"]
+      default_rows:
+        - ["USUBJID", "Unique Subject Identifier",                     "NA", "0", "center", "$NA",   "$NA"]
+        - ["ATPTREF", "Analysis Timepoint Reference",                  "NA", "0", "center", "$NA",   "$NA"]
+        - ["TRT01A",  "Actual Treatment for Period 01",                "NA", "0", "center", "$NA",   "$NA"]
+        - ["ARRLT",   "Act. Rel. Time from Most Recent Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
+        - ["NRRLT",   "Nom. Rel. Time from Most Recent Dose ($RRLTU)", "NA", "0", "center", "round", "3"]
 
 ####### LISTINGS - Urine
 l_pkcl02_uri:
@@ -209,6 +612,73 @@ l_pkcl02_uri:
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkcl02.html
   fun: l_pkcl02_uri
   condition: "URINE"
+  options:
+    # NOTE: `title` is intentionally not exposed — l_pkcl02_uri hardcodes it when
+    # forwarding to l_pkcl01, so a user-supplied title would be a duplicate arg.
+    .group_label_1: "Labs"
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    .group_label_2: "Filtering"
+    # Urine-only listing: choices are restricted to urine-looking PCSPEC values and all
+    # are selected by default, so the filter reflects what the listing actually shows.
+    urine_specs:
+      label: "Specimen Material Type"
+      type: select
+      choices: .urinespecs
+      default: .all
+      multiple: true
+    .group_label_3: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "PCSPEC"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "USUBJID", "ATPTREF"]
+    displaying_vars:
+      label: "Displayed variables"
+      type: select
+      choices: .colnames
+      multiple: true
+    .group_label_4: "Formatting"
+    formatting_vars_table:
+      label: "Variables formatting"
+      type: table
+      cols:
+        var_name:
+          type: select
+          choices: .colnames
+          label: "Variable name"
+        Label:
+          type: text
+          label: Label
+        na_str:
+          type: text
+          label: "NA string"
+        zero_str:
+          type: text
+          label: "0 string"
+        align:
+          type: select
+          choices: ["", "left", "center", "right"]
+          label: "Align"
+        format_fun:
+          type: select
+          choices: ["", "round", "signif"]
+          label: "Formatting function"
+        digits:
+          type: select
+          label: "Digits"
+          choices: ["", "0", "1", "2", "3", "4"]
 
 ####### LISTINGS - PK parameters
 l_pkpl01:
@@ -221,6 +691,43 @@ l_pkpl01:
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
   fun: l_pkpl01
   condition: null
+  options:
+    .group_label_1: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    .group_label_2: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT", "PPSPEC"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "USUBJID"]
+    .group_label_3: "Columns"
+    param_var:
+      label: "Parameter variable"
+      type: select
+      choices: .colnames
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+    unit_var:
+      label: "Unit variable"
+      type: select
+      choices: .colnames
 
 l_pkpl01_mp:
   is_default: false
@@ -232,6 +739,43 @@ l_pkpl01_mp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
   fun: l_pkpl01_mp
   condition: null
+  options:
+    .group_label_1: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    .group_label_2: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT", "PPSPEC"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "USUBJID"]
+    .group_label_3: "Columns"
+    param_var:
+      label: "Parameter variable"
+      type: select
+      choices: .colnames
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+    unit_var:
+      label: "Unit variable"
+      type: select
+      choices: .colnames
 
 l_pkpl04_mp:
   is_default: false
@@ -243,6 +787,43 @@ l_pkpl04_mp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl04.html
   fun: l_pkpl04_mp
   condition: null
+  options:
+    .group_label_1: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+    .group_label_2: "Grouping"
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT", "PPSPEC"]
+    grouping_vars:
+      label: "Listing grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PARAM", "TRT01A", "USUBJID"]
+    .group_label_3: "Columns"
+    param_var:
+      label: "Parameter variable"
+      type: select
+      choices: .colnames
+    value_var:
+      label: "Value variable"
+      type: select
+      choices: .colnames
+    unit_var:
+      label: "Unit variable"
+      type: select
+      choices: .colnames
 
 
 
@@ -350,8 +931,8 @@ g_pkcg01_sbs:
         - ROUTE
         - PCSPEC
         - PARAM
-        - TRT01A
-        
+        - USUBJID
+
 ####### GRAPHS - By treatment
 g_pkcg02_lin:
   template: g_pkcg01_lin
@@ -364,6 +945,21 @@ g_pkcg02_lin:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_lin
   condition: null
+  options:
+    # Combined plots overlay subjects, so the default is the study's PKNCA grouping variables
+    # (which exclude the subject column); grouping by USUBJID would produce one plot per
+    # subject, i.e. an individual (pkcg01) plot. USUBJID stays available as an explicit choice.
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .pknca_groups
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+        - USUBJID
 
 g_pkcg02_log:
   template: g_pkcg01_lin
@@ -376,7 +972,19 @@ g_pkcg02_log:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
   fun: g_pkcg02_log
   condition: null
-  
+  options:
+    plotgroup_vars:
+      type: select
+      label: "Grouping variables"
+      default: .pknca_groups
+      multiple: true
+      choices:
+        - ROUTE
+        - PCSPEC
+        - PARAM
+        - TRT01A
+        - USUBJID
+
 g_pkcg02_sbs:
   template: g_pkcg01_lin
   is_default: false
@@ -386,19 +994,20 @@ g_pkcg02_sbs:
   label: "pkcg02 - Combined Side-by-Side"
   description: "Side-by-Side Linear and Log scale plots of concentration vs. time (over laid by cohort/TRT/dose/patient/subject)"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg02.html
-  fun: g_pkcg02_log
+  fun: g_pkcg02_sbs
   condition: null
   options:
     plotgroup_vars:
       type: select
       label: "Grouping variables"
-      default: .all
+      default: .pknca_groups
       multiple: true
       choices:
         - ROUTE
         - PCSPEC
         - PARAM
         - TRT01A
+        - USUBJID
 
 ####### GRAPHS - Mean
 g_pkcg03_lin:
@@ -433,7 +1042,7 @@ g_pkcg03_lin:
     summary_method:
       type: select
       label: "Summary Statistic"
-      default: "mean_sdi"
+      default: "Mean_sdi"
       multiple: false
       choices:
         - Mean_ci
@@ -517,6 +1126,17 @@ p_pkcg03_lin_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_lin_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkcg03_log_dose:
   is_default: false
@@ -528,6 +1148,17 @@ p_pkcg03_log_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_log_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkcg03_sbs_dose:
   is_default: false
@@ -539,6 +1170,17 @@ p_pkcg03_sbs_dose:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkcg03.html
   fun: p_pkcg03_sbs_dose
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - Urine
 p_pkpg01_cum:
@@ -551,6 +1193,17 @@ p_pkpg01_cum:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
   fun: p_pkpg01_cum
   condition: "URINE"
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg01_per:
   is_default: false
@@ -562,6 +1215,17 @@ p_pkpg01_per:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg01.html
   fun: p_pkpg01_per
   condition: "URINE"
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - Dose Proportionality
 p_pkpg02_doseprop:
@@ -574,6 +1238,17 @@ p_pkpg02_doseprop:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg02.html
   fun: p_pkpg02_doseprop
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 ####### GRAPHS - PK Parameters - Boxplots
 p_pkpg03_boxp:
@@ -586,6 +1261,17 @@ p_pkpg03_boxp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg03.html
   fun: p_pkpg03_boxp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg04_boxp:
   is_default: false
@@ -597,6 +1283,17 @@ p_pkpg04_boxp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg04.html
   fun: p_pkpg04_boxp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
 
 p_pkpg06_mp:
   is_default: false
@@ -608,3 +1305,14 @@ p_pkpg06_mp:
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
   fun: p_pkpg06_mp
   condition: null
+  options:
+    .group_label_labs: "Labs"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote

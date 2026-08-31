@@ -5,10 +5,8 @@
 #'
 #' @param res_nca            A PKNCA results object containing the results and concentration data.
 #' @param parameter           A string specifying the parameter to be plotted.
-# TODO(mateusz): I have added the following three parameters as they were missing, this needs to
-#                be checked over.
-#' @param xvars               Variables for the x axis.
-#' @param colorvars           Variables for the color aesthetic.
+#' @param xvars               Character vector of column names for the x-axis grouping.
+#' @param colorvars           Character vector of column names for the color aesthetic.
 #' @param varvalstofilter     Character vector specifying which variable and value to pre-filter
 #'                            as `colname: value`. By default is NULL (no pre-filtering)
 #' @param tooltip_vars        A character vector indicating the column names from result_data that
@@ -21,8 +19,11 @@
 #'                            or ggplot otherwise (FALSE)
 #' @param seed                An integer value to set the seed for reproducibility of jittering.
 #' Default (NULL) will use the current R seed.
+#' @param show_excluded       Logical. If `TRUE`, excluded records (those with a populated
+#'                            `exclude` column) are overlaid as cross-shaped points. They are
+#'                            never included in box/violin statistics. Default is `FALSE`.
 #'
-#' @return A plotly object representing the violin or box plot.
+#' @returns A plotly object representing the violin or box plot.
 #' @import dplyr
 #' @import ggplot2
 #' @export
@@ -35,56 +36,29 @@ flexible_violinboxplot <- function(res_nca,
                                    labels_df = metadata_nca_variables,
                                    box = TRUE,
                                    plotly = TRUE,
-                                   seed = NULL) {
+                                   seed = NULL,
+                                   show_excluded = FALSE) {
 
-  group_columns <- group_vars(res_nca$data$conc)
-  boxplotdata <- left_join(
-    res_nca$result,
-    res_nca$data$conc$data %>%
-      distinct(across(all_of(group_columns)), .keep_all = TRUE),
-    by = group_columns,
-    keep = FALSE,
-    suffix = c("", ".concdata")
-  ) %>%
-    # Rename manual interval parameters to include the range suffix
-    mutate(
-      PPTESTCD = ifelse(
-        type_interval == "manual",
-        paste0(PPTESTCD, "_", start, "-", end),
-        PPTESTCD
-      )
-    )
+  prepared <- .prepare_boxplot_data(res_nca, parameter, varvalstofilter)
 
-  # Create filter expression
-  filter_expr <- .create_filter_expr(boxplotdata, varvalstofilter)
-
-  # Filter data
-  box_data <- boxplotdata %>%
-    filter(
-      !!filter_expr,
-      PPTESTCD == parameter
-    )
-
-  # Check boxplot data validity; return a plot with an error message if invalid
-  error_boxplot <- .check_boxplot_data(box_data, parameter)
+  error_boxplot <- .check_boxplot_data(prepared$included, parameter)
   if (!is.null(error_boxplot)) return(error_boxplot)
 
-  # --- Tooltip Construction ---
-  box_data <- .handle_tooltips(box_data, tooltip_vars, labels_df)
-
-  # ylabel of violin/boxplot
-  ylabel <- {
-    if (box_data$PPSTRESU[1] == "unitless" ||
-          box_data$PPSTRESU[1] == "" ||
-          is.na(box_data$PPSTRESU[1]) ||
-          is.null(box_data$PPSTRESU)) {
-      parameter
-    } else {
-      paste(parameter, " [", box_data$PPSTRESU[1], "]")
-    }
+  box_data <- .handle_tooltips(prepared$included, tooltip_vars, labels_df)
+  excluded_data <- if (show_excluded && nrow(prepared$excluded) > 0) {
+    .handle_tooltips(prepared$excluded, tooltip_vars, labels_df)
+  } else {
+    prepared$excluded
   }
 
-  # Make the plot
+  ylabel <- .build_ylabel(parameter, box_data$PPSTRESU[1])
+
+  shared_aes <- aes(
+    x = interaction(!!!syms(xvars), sep = "\n"),
+    y = PPSTRES,
+    color = interaction(!!!syms(colorvars))
+  )
+
   p <- ggplot(
     data = box_data %>% arrange(!!!syms(colorvars)),
     aes(
@@ -93,34 +67,10 @@ flexible_violinboxplot <- function(res_nca,
       color = interaction(!!!syms(colorvars)),
       text = tooltip_text
     )
-  )
-
-  #  Make boxplot or violin
-  if (box) {
-    p <- p + geom_boxplot(
-      aes(
-        x = interaction(!!!syms(xvars), sep = "\n"),
-        y = PPSTRES,
-        color = interaction(!!!syms(colorvars))
-      ),
-      inherit.aes = FALSE
-    )
-  } else {
-
-    p <- p + geom_violin(
-      aes(
-        x = interaction(!!!syms(xvars), sep = "\n"),
-        y = PPSTRES,
-        color = interaction(!!!syms(colorvars))
-      ),
-      inherit.aes = FALSE,
-      drop = FALSE
-    )
-  }
-
-  # Include points, labels and theme
-  p <- p +
+  ) +
+    .geom_distribution(box, shared_aes) +
     geom_point(position = position_jitterdodge(seed = seed)) +
+    .geom_excluded(excluded_data, show_excluded, colorvars, xvars, seed) +
     labs(
       x = paste(xvars, collapse = ", "),
       y = ylabel,
@@ -132,14 +82,112 @@ flexible_violinboxplot <- function(res_nca,
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
 
-  # Make plotly with hover features
-  if (plotly) {
-    ggplotly(p, tooltip = "text")
+  if (plotly) ggplotly(p, tooltip = "text") else p
+}
+
+
+#' Prepare and split data for boxplot/violin
+#'
+#' Joins results with concentration data, filters by parameter, and splits
+#' into included and excluded records.
+#'
+#' @param res_nca PKNCA results object.
+#' @param parameter Parameter to filter on.
+#' @param varvalstofilter Filter values (passed to `.create_filter_expr`).
+#' @returns List with `included` and `excluded` data frames.
+#' @noRd
+.prepare_boxplot_data <- function(res_nca, parameter, varvalstofilter) {
+  group_columns <- group_vars(res_nca$data$conc)
+  boxplotdata <- left_join(
+    res_nca$result,
+    res_nca$data$conc$data %>%
+      distinct(across(all_of(group_columns)), .keep_all = TRUE),
+    by = group_columns,
+    keep = FALSE,
+    suffix = c("", ".concdata")
+  ) %>%
+    # Rename manual interval parameters to include the range suffix
+    rename_interval_params()
+
+  filter_expr <- .create_filter_expr(boxplotdata, varvalstofilter)
+  filtered <- boxplotdata %>%
+    filter(!!filter_expr, PPTESTCD == parameter)
+
+  # Rows excluded by PKNCA flag rules (populated exclude column)
+  is_excluded <- !is.na(filtered[["exclude"]]) & filtered[["exclude"]] != ""
+  # Rows excluded manually via parameter exclusions (.pp_excl marker)
+  if (".pp_excl" %in% names(filtered)) {
+    pp_excl <- filtered[[".pp_excl"]]
+    is_excluded <- is_excluded | (!is.na(pp_excl) & pp_excl)
+  }
+  list(
+    included = filtered[!is_excluded, , drop = FALSE],
+    excluded = filtered[is_excluded, , drop = FALSE]
+  )
+}
+
+#' Add boxplot or violin geometry
+#' @param box Logical. TRUE for boxplot, FALSE for violin.
+#' @param shared_aes Shared aesthetic mapping for x, y, color.
+#' @returns A ggplot2 geom layer.
+#' @noRd
+.geom_distribution <- function(box, shared_aes) {
+  if (box) {
+    geom_boxplot(mapping = shared_aes, inherit.aes = FALSE)
   } else {
-    p
+    geom_violin(mapping = shared_aes, inherit.aes = FALSE, drop = FALSE)
   }
 }
 
+#' Overlay excluded records as cross-shaped points
+#' @param excluded_data Data frame of excluded records (with tooltip_text).
+#' @param show_excluded Logical toggle.
+#' @param colorvars Character vector of color variables.
+#' @param xvars Character vector of x-axis variables.
+#' @param seed Jitter seed.
+#' @returns A geom_point layer or NULL.
+#' @noRd
+.geom_excluded <- function(excluded_data, show_excluded, colorvars, xvars, seed) {
+  if (!show_excluded || nrow(excluded_data) == 0) return(NULL)
+  geom_point(
+    data = excluded_data %>% arrange(!!!syms(colorvars)),
+    aes(
+      x = interaction(!!!syms(xvars), sep = "\n"),
+      y = PPSTRES,
+      color = interaction(!!!syms(colorvars)),
+      text = tooltip_text
+    ),
+    shape = 4, size = 3,
+    position = position_jitterdodge(seed = seed),
+    inherit.aes = FALSE
+  )
+}
+
+#' Build y-axis label from parameter name and unit
+#' @param parameter Parameter name string.
+#' @param unit Unit string (may be NA, NULL, empty, or "unitless").
+#' @returns Formatted y-axis label.
+#' @noRd
+.build_ylabel <- function(parameter, unit) {
+  # Resolve interval parameter label (e.g. AUCINT_0-24 -> "AUC from 0 to 24")
+  parsed <- parse_interval_parameter(parameter)
+  if (parsed$is_interval) {
+    label <- metadata_nca_parameters$PPTEST[
+      match(parsed$base, metadata_nca_parameters$PPTESTCD)
+    ]
+    if (!is.na(label)) {
+      label <- gsub("T1", as.character(parsed$start), label)
+      label <- gsub("T2", as.character(parsed$end), label)
+      parameter <- label
+    }
+  }
+
+  if (is.null(unit) || is.na(unit) || unit == "" || unit == "unitless") {
+    parameter
+  } else {
+    paste(parameter, " [", unit, "]")
+  }
+}
 
 #' Helper function create text used to filter data frame
 #' @param boxplotdata Data frame to be filtered
@@ -181,7 +229,7 @@ flexible_violinboxplot <- function(res_nca,
 #'
 #' @param box_data Data frame to check.
 #' @param parameter Parameter name for error message context.
-#' @return NULL if valid, or a ggplot error plot if invalid.
+#' @returns NULL if valid, or a ggplot error plot if invalid.
 #' @noRd
 .check_boxplot_data <- function(box_data, parameter) {
   # Check for empty data

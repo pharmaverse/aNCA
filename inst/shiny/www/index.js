@@ -14,7 +14,7 @@ $(document).ready(() => {
  * be extended appropriately.
  * 
  * @param {String} selector    Selector for the button to disable.
- * @param {Number} debounce    Time in miliseconds that the button should be disabled for.
+ * @param {Number} debounce    Time in milliseconds that the button should be disabled for.
  * @param {String} placeholder HTML string to show when button is disabled.
  * @param {String} ready       HTML string to show when button is ready.
  */

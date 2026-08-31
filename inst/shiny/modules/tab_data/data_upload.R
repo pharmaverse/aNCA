@@ -52,6 +52,39 @@ data_upload_server <- function(id) {
 
     datapath <- getOption("aNCA.datapath", NULL)
 
+    # Pre-load settings from run_app(settings = ...) if provided
+    settings_path <- getOption("aNCA.settings", NULL)
+    if (!is.null(settings_path)) {
+      settings_ver <- getOption("aNCA.settings_version", 1L)
+      tryCatch({
+        content <- read_settings(settings_path, version = settings_ver)
+        settings_override(content)
+        versioned_attr <- attr(content, "versioned")
+        if (!is.null(versioned_attr)) {
+          chosen <- aNCA:::.select_version(versioned_attr$versions, settings_ver)
+          comment_label <- if (nzchar(chosen$comment)) {
+            chosen$comment
+          } else {
+            chosen$datetime
+          }
+          log_success("Settings restored from version: ", comment_label)
+          showNotification(
+            paste0("Settings restored (", comment_label, ")."),
+            type = "message"
+          )
+        } else {
+          log_success("Settings successfully loaded from: ", settings_path)
+          showNotification("Settings successfully loaded.", type = "message")
+        }
+      }, error = function(e) {
+        log_error("Failed to load settings: ", e$message)
+        showNotification(
+          paste("Failed to load settings file:", e$message),
+          type = "error"
+        )
+      })
+    }
+
     raw_data <- (
       reactive({
         file_loading_error(NULL)
@@ -225,7 +258,7 @@ data_upload_server <- function(id) {
 
   chosen <- versioned$versions[[selected_idx]]
   content <- tryCatch(
-    .process_settings_payload(chosen[setdiff(names(chosen), VERSION_META_KEYS)]),
+    aNCA:::.process_settings_payload(chosen[setdiff(names(chosen), VERSION_META_KEYS)]),
     error = function(e) {
       showNotification(conditionMessage(e), type = "error")
       NULL
@@ -233,6 +266,7 @@ data_upload_server <- function(id) {
   )
   if (is.null(content)) return()
 
+  content$tab <- chosen$tab %||% ""
   settings_override(content)
 
   session$userData$settings_versions(versioned$versions)
@@ -333,13 +367,14 @@ data_upload_server <- function(id) {
     } else if (!is.null(versioned_attr) && length(versioned_attr$versions) == 1) {
       v <- versioned_attr$versions[[1]]
       content <- tryCatch(
-        .process_settings_payload(v[setdiff(names(v), VERSION_META_KEYS)]),
+        aNCA:::.process_settings_payload(v[setdiff(names(v), VERSION_META_KEYS)]),
         error = function(e) {
           errors <<- append(errors, conditionMessage(e))
           NULL
         }
       )
       if (!is.null(content)) {
+        content$tab <- v$tab %||% ""
         settings_override(content)
         session$userData$settings_versions(versioned_attr$versions)
         log_success("Settings successfully loaded from ", latest$name)

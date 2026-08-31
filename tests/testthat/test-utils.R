@@ -1,3 +1,29 @@
+describe("rename_interval_params", {
+  it("renames manual interval parameters with dose-relative range suffix", {
+    df <- data.frame(
+      PPTESTCD = c("CMAX", "AUCINT", "AUCINT", "CAVGINT"),
+      type_interval = c("main", "manual", "manual", "manual"),
+      start_dose = c(0, 0, 12, 0),
+      end_dose = c(24, 12, 24, 24),
+      stringsAsFactors = FALSE
+    )
+    result <- rename_interval_params(df)
+    expect_equal(result$PPTESTCD, c("CMAX", "AUCINT_0-12", "AUCINT_12-24", "CAVGINT_0-24"))
+  })
+
+  it("leaves data unchanged when no manual intervals exist", {
+    df <- data.frame(
+      PPTESTCD = c("CMAX", "AUCLST"),
+      type_interval = c("main", "main"),
+      start_dose = c(0, 0),
+      end_dose = c(24, 24),
+      stringsAsFactors = FALSE
+    )
+    result <- rename_interval_params(df)
+    expect_equal(result$PPTESTCD, c("CMAX", "AUCLST"))
+  })
+})
+
 describe(".eval_range", {
   it("should generate simple range correctly", {
     expect_equal(.eval_range("1:5"), c(1, 2, 3, 4, 5))

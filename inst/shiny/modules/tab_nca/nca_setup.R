@@ -20,7 +20,7 @@ nca_setup_ui <- function(id) {
   navset_pill_list(
     widths = c(2, 10),
     nav_panel(
-      "Settings",
+      "NCA Settings",
       fluidRow(
         actionButton(
           ns("open_save_settings_modal"),
@@ -29,19 +29,19 @@ nca_setup_ui <- function(id) {
           class = "btn-primary"
         )
       ),
-      fluidRow(units_table_ui(ns("units_table"))),
-      settings_ui(ns("nca_settings")),
-      accordion(
-        accordion_panel(
-          title = "Ratio Calculations",
-          ratios_table_ui(ns("ratio_calculations_table"))
-        ),
-        open = c("General Settings", "Parameter Selection")
+      settings_ui(ns("nca_settings"))
+    ),
+    nav_panel(
+      "Parameter Selection",
+      parameter_selection_ui(
+        ns("nca_setup_parameter"),
+        units_ui = units_table_ui(ns("units_table")),
+        intervals_ui = partial_intervals_ui(ns("nca_settings")),
+        ratios_ui = ratios_table_ui(ns("ratio_calculations_table"))
       )
     ),
-    nav_panel("Parameter Selection", parameter_selection_ui(ns("nca_setup_parameter"))),
     nav_panel("Slope Selector", slope_selector_ui(ns("slope_selector"))),
-    nav_panel("General Exclusions", general_exclusions_ui(ns("general_exclusions")))
+    nav_panel("ADNCA Exclusions", general_exclusions_ui(ns("general_exclusions")))
   )
 }
 
@@ -71,14 +71,22 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     )
 
     # Lightweight filtered data for parameter selection — only depends on
-    # analyte/pcspec, not on method, slopes, flags, or exclusions.
+    # analyte/pcspec/profile, not on method, slopes, flags, or exclusions.
     # Filters conc$data directly instead of building a full PKNCA data object.
     param_selection_data <- reactive({
       req(adnca_data(), settings_output$analyte(), settings_output$pcspec())
       log_trace("Updating parameter selection data.")
 
       pknca_data <- adnca_data()
+
+      # Preserve max DOSNOA per dose group before filtering by profile,
+      # so detect_study_types still identifies multi-dose studies correctly
+      # even when TRTRINT is NA.
+      dose_groups <- group_vars(pknca_data$dose)
       pknca_data$conc$data <- pknca_data$conc$data %>%
+        dplyr::group_by(dplyr::across(dplyr::all_of(dose_groups))) %>%
+        dplyr::mutate(DOSNOA = max(DOSNOA, na.rm = TRUE)) %>%
+        dplyr::ungroup() %>%
         dplyr::filter(
           PARAM %in% settings_output$analyte(),
           PCSPEC %in% settings_output$pcspec(),
@@ -129,14 +137,11 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
       )
 
-      # Show bioavailability widget if it is possible to calculate
-      if (final_data$dose$data$std_route %>% unique() %>% length() == 2) {
-        shinyjs::show(selector = ".bioavailability-picker")
-      } else {
-        shinyjs::hide(selector = ".bioavailability-picker")
-      }
+      # Wait for study types to settle during reactive transitions
+      req(nrow(parameters_output$types_df()) > 0)
 
-      if (nrow(final_data$intervals) == 0) {
+      if (nrow(final_data$intervals) == 0 &&
+            !isTRUE(session$userData$auto_replay_active)) {
         showNotification(
           "All intervals were filtered. Please revise your settings",
           type = "warning",
@@ -148,11 +153,13 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     })
 
     # Keep the post processing ratio calculations requested by the user
+    int_parameters <- reactive(settings()$int_parameters)
     ratio_table <- ratios_table_server(
       id = "ratio_calculations_table",
       adnca_data = processed_pknca_data,
       extra_group_vars = extra_group_vars,
-      imported_ratios = imported_ratios
+      imported_ratios = imported_ratios,
+      int_parameters = int_parameters
     )
 
     # Automatically update the units table when settings are uploaded.
@@ -235,7 +242,9 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           settings = export_settings,
           mapping = session$userData$mapping,
           slope_rules = slope_rules(),
-          filters = session$userData$applied_filters
+          filters = session$userData$applied_filters,
+          time_duplicate_keys = session$userData$time_duplicate_keys,
+          nca_ran = isTRUE(session$userData$nca_ran)
         )
 
         dataset_name <- session$userData$dataset_filename %||% ""

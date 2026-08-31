@@ -6,10 +6,11 @@
 #' variables. It also defines the output area for the interactive plot.
 #'
 #' @param id A character string giving the namespace for the module.
+#' @param extra_ui Optional UI elements appended at the bottom of the sidebar.
 #'
 #' @returns A UI element representing the QC plot tab.
 
-pk_dose_qc_plot_ui <- function(id) {
+pk_dose_qc_plot_ui <- function(id, extra_ui = NULL) {
   ns <- NS(id)
 
   # The nav_panel function creates the tab
@@ -25,6 +26,7 @@ pk_dose_qc_plot_ui <- function(id) {
         class = "btn btn-primary btn-sm",
         width = "100%"
       ),
+      extra_ui,
       uiOutput(ns("groupvar_ui_wrapper")
       ),
       uiOutput(ns("colourvar_ui_wrapper")
@@ -52,6 +54,13 @@ pk_dose_qc_plot_ui <- function(id) {
         selected = NULL,
         multiple = TRUE,
         options = list(`actions-box` = TRUE)
+      ),
+      actionButton(
+        ns("copy_plot_code"),
+        label = "Show Code",
+        icon = icon("code"),
+        class = "btn btn-primary btn-sm",
+        width = "100%"
       )
     ),
     plotlyOutput(ns("pk_dose_qc_plot"), height = "100%"),
@@ -100,7 +109,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = param_choices_colour[1],
                      selector_ui_wrapper = "colourvar_ui_wrapper",
                      id = "colour_var",
-                     label = "Choose the variables to colour by:",
+                     label = "Select the variables to color by:",
                      metadata_type = "variable",
                      multiple = FALSE)
 
@@ -114,7 +123,7 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = variable_choices_group[1],
                      selector_ui_wrapper = "groupvar_ui_wrapper",
                      id = "group_var",
-                     label = "Choose the variables to group by:",
+                     label = "Select the variables to group by:",
                      metadata_type = "variable")
 
       param_choices_samples_doses <- c("PK Samples", "Doses")
@@ -199,10 +208,21 @@ pk_dose_qc_plot_server <- function(id, pknca_data, grouping_vars) {
         )
     })
 
-    # Return the add_to_exports button click and the current plot
+    # Return the add_to_exports button click, the current plot, and inputs
     list(
       add_to_exports = reactive(input$add_to_exports),
-      current_plot = qc_ggplot
+      copy_plot_code = reactive(input$copy_plot_code),
+      current_plot = qc_ggplot,
+      qc_inputs = reactive(list(
+        colour_var = input$colour_var,
+        group_var = input$group_var,
+        usubjid = input$usubjid,
+        pcspec = input$pcspec,
+        show_samples_doses = input$show_samples_doses,
+        pcspec_col = "PCSPEC",
+        shape_var = "PCSPEC",
+        other_tooltip_vars = c("NFRLT", "DOSETRT")
+      ))
     )
   })
 }

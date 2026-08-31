@@ -1,6 +1,5 @@
 # Source:
 # https://github.com/pharmaverse/admiralci/blob/main/.github/workflows/lintr.yml
-# Modified to install system dependencies.
 
 name: Lint
 
@@ -37,54 +36,39 @@ concurrency:
   group: lint-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    container:
-      image: "ghcr.io/pharmaverse/admiralci-${{ inputs.r-version }}:latest"
     if: >
       !contains(github.event.commits[0].message, '[skip lint]')
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      ##################### BEGIN boilerplate steps #####################
-      - name: Get branch names
-        id: branch-name
-        uses: tj-actions/branch-names@v8
-
-      - name: Checkout repo (PR) 🛎
-        uses: actions/checkout@v4.2.2
-        if: github.event_name == 'pull_request'
-        with:
-          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-        if: github.event_name != 'pull_request'
-        with:
-          ref: ${{ steps.branch-name.outputs.head_ref_branch }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup R
-        uses: r-lib/actions/setup-r@v2
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
+          r-version: ${{ inputs.r-version }}
           use-public-rspm: true
 
       - name: Install R Dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
+        uses: r-lib/actions/setup-r-dependencies@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
-          needs: Suggests
           extra-packages: |
-                  local::.
-                  cran::lintr
-                  any::cyclocomp
-
-      ##################### END boilerplate steps #####################
+            local::.
+            any::lintr
+            any::cyclocomp
 
       - name: Changed files
         id: files
-        uses: Ana06/get-changed-files@v2.2.0
+        uses: Ana06/get-changed-files@e0c398b7065a8d84700c471b6afc4116d1ba4e96 # v2.2.0
         with:
           format: "json"
           filter: "*"
