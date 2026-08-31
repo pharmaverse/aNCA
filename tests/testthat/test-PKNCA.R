@@ -568,7 +568,13 @@ describe("PKNCA_update_data_object", {
       selected_profile = dosnos,
       selected_pcspec = pcspecs,
       start_impute = TRUE,
-      keep_interval_cols = "ROUTE"
+      keep_interval_cols = "ROUTE",
+      # Parameters must be selected so pk.nca() computes result rows; otherwise
+      # the result is empty and PKNCA_calculate_nca() never reaches the route
+      # handling this test targets.
+      parameter_selections = list(
+        `Single IV Infusion` = c("cmax", "tmax", "auclast")
+      )
     )
 
     expect_true("ROUTE" %in% names(updated_data$intervals))
