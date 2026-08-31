@@ -121,6 +121,7 @@
 * CMAX auto-selected in box plots if available (#890)
 
 ### Data & Mapping
+* Mapping section assertion error now reports the count and offending `mapping_section` values for easier debugging (#1367)
 * ADNCA now includes `PKSUM1RS` column storing the general exclusion reason when `PKSUMXF = "Y"` (#1331)
 * Upload multiple input files, bound into a single ADNCA dataset (#821)
 * Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (#745)
