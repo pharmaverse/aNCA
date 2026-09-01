@@ -171,6 +171,7 @@ devtools
 df
 dm
 doi
+dplyr
 dropdown
 dropdowns
 extravascular
@@ -213,6 +214,7 @@ plotly
 pptest
 pre
 pred
+predose
 px
 qmd
 renderable

@@ -44,7 +44,8 @@ pknca_obj <- adnca_data %>%
     min_hl_points = settings_list$settings$min_hl_points %||% 3,
     parameter_selections = parameters_selected_per_study,
     int_parameters = int_parameters,
-    custom_units_table = units_table
+    custom_units_table = units_table,
+    blq_imputation_rule = settings_list$settings$data_imputation$blq_imputation_rule
   )
 
 ## Run NCA calculations ########################################

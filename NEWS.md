@@ -1,10 +1,17 @@
 # aNCA (development version)
 
+## Maintenance
+
+* Refresh stale in-code TODO comments whose referenced issues have since closed: the slope-selector `na.omit` guard is now documented as a defensive safety net (#641 reworked the reactivity), and the BLQ dropped-record workaround points to the current imputation-consistency issues (#1057, #1442, #1443) instead of the closed #139. Clarified why meta-mapping keys are excluded in `apply_mapping()`. Part of the TODO inventory in #1447
+
 ## Bug Fixes
 
 * The metabolite/parent TLG entries now show actual M/P ratios. `t_pkpt03_MP_col`, `l_pkpl01_mp` and `p_pkpg06_mp` summarized, listed or plotted raw metabolite rows under a heading that promised a ratio. They now consume the ratio rows **Parameter Selection > Ratios** computes during the NCA run, identified by the comparison `calculate_ratios()` writes into `PPANMETH` rather than by a parameter-code prefix, and split by `"<metabolite> / <parent>"` and specimen so the denominator is named. `l_pkpl04_mp` takes the complement. When no ratios of the relevant kind are set up the output explains how to add them instead of rendering misleading numbers (#1429)
 * The M/P summary table no longer pools every treatment arm into a single row: its default row stratification resolved to `STUDYID` plus the parameter name, because ADPP renames two of the PKNCA grouping variables it was derived from (#1429)
 * PK parameter listings, summary tables and box plots no longer disagree about which row they show for a subject. Where several rows collapse to one — a multi-dose ADPP with one row per dose profile — the listing and the summary table took the leading row even when its value was missing, while the plots skipped missing values first. A subject could therefore be shown with a value in one output, blank in a second and absent from a third's `n`. All three now prefer a row that has a value (#1429)
+* Running NCA with "Impute Start Concentration" turned off no longer errors with `PKNCA_impute_method_FALSE not found`. When start imputation was off, the per-interval `impute` column was absent, so the BLQ step read the `impute` function argument instead of the column and built the method string `"blq, FALSE"`. The column is now always present, the reference is pinned to it, and the `update_main_intervals()` argument was renamed `impute` -> `start_impute` so it can no longer collide with the column (#1121, #1266)
+* With "Impute Start Concentration" turned off, the first interval now starts at C1 (the first sample at or after the dose) instead of the predose time. The sample feeding the start time was picked by an unordered `slice(1)`, so it could be the predose record whose negative `ARRLT` pulled the interval start before the dose (#1121)
+* The generated R-script (session code) now passes `blq_imputation_rule` to `PKNCA_update_data_object()`, matching the app. The template only applied the BLQ rule at calculation time (`PKNCA_calculate_nca()`) and omitted it during interval setup, so exported scripts did not reproduce the app's BLQ handling (#1445)
 * Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
 * The "X ticks" option on the linear and logarithmic concentration plots now takes effect. `plotly` was regenerating the axis itself, so the chosen column was ignored; the side-by-side variants were already unaffected (#1356)
 * Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
@@ -67,6 +74,8 @@
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
 
 ### Exploration
+* Faceted individual and mean exploration plots can now use a shared y-axis range across panels, with the selected setting preserved in generated plot code and saved exports (#1424)
+* Faceted exploration plots now align differing units automatically: compatible units (within or across panels) are rescaled to a common unit, and incompatible units are shown per facet (comma-separated in the strip label) with a notification suggesting which grouping variables (e.g. PARAM, PCSPEC) to add to 'facet by' (#1424)
 * "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup
@@ -115,6 +124,7 @@
 * CMAX auto-selected in box plots if available (#890)
 
 ### Data & Mapping
+* Mapping section assertion error now reports the count and offending `mapping_section` values for easier debugging (#1367)
 * ADNCA now includes `PKSUM1RS` column storing the general exclusion reason when `PKSUMXF = "Y"` (#1331)
 * Upload multiple input files, bound into a single ADNCA dataset (#821)
 * Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (#745)
