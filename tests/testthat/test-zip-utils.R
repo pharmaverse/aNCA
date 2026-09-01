@@ -346,25 +346,35 @@ describe(".clean_export_dir: TLG outputs", {
   })
 })
 
-# Rendered TLGs get their own format control rather than sharing the dataset ones, whose
+# Rendered TLGs get their own format controls rather than sharing the dataset ones, whose
 # defaults were wrong in both directions for TLGs: "html" was on (hundreds of MB of widgets
 # nobody asked for) and "xlsx" was not (tables could only ever be CSV) -- see #1344.
 describe("TLG export formats", {
   it("defaults to PDF for graphs and XLSX for tables", {
     # PDF is written as one multi-page document per TLG, so the default keeps a full order
-    # to a handful of files rather than one image per plot.
-    expect_setequal(TLG_FORMATS_DEFAULT, c("pdf", "xlsx"))
+    # to a handful of files rather than one image per plot.  XLSX keeps the table default
+    # machine-readable; PDF is the filing format and is opt-in.
+    expect_equal(TLG_GRAPH_FORMATS_DEFAULT, "pdf")
+    expect_equal(TLG_TABLE_FORMATS_DEFAULT, "xlsx")
     expect_true(all(c("png", "pdf") %in% TLG_GRAPH_FORMATS))
-    expect_false("html" %in% TLG_FORMATS_DEFAULT)
-    expect_true("xlsx" %in% TLG_TABLE_FORMATS)
+    expect_false("html" %in% TLG_GRAPH_FORMATS_DEFAULT)
+    expect_false("pdf" %in% TLG_TABLE_FORMATS_DEFAULT)
+  })
+
+  it("offers pdf for tables and listings as well as graphs", {
+    # Asked for as a filing format.  It is in both lists, which is why the two cannot share
+    # one selectize: options are keyed by value, so a repeat is dropped from the second.
+    expect_true("pdf" %in% TLG_TABLE_FORMATS)
+    expect_true("pdf" %in% TLG_GRAPH_FORMATS)
   })
 
   it("keeps TLG nodes out of the dataset format checks", {
-    # They have their own control now, so a TLG selection must not demand a dataset format.
+    # They have their own controls now, so a TLG selection must not demand a dataset format.
     expect_length(
       .check_format_selections(
         tree = "tlg_graphs", plot_formats = character(), table_formats = character(),
-        slide_formats = character(), tlg_formats = "png"
+        slide_formats = character(),
+        tlg_graph_formats = "png", tlg_table_formats = character()
       ),
       0
     )
@@ -374,41 +384,48 @@ describe("TLG export formats", {
     expect_length(
       .check_format_selections(
         tree = TLG_NODES, plot_formats = "png", table_formats = "csv",
-        slide_formats = "qmd", tlg_formats = TLG_FORMATS_DEFAULT
+        slide_formats = "qmd",
+        tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+        tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT
       ),
       0
     )
   })
 
-  it("complains when TLGs are selected with no format at all", {
-    msgs <- .check_format_selections(
-      tree = "tlg_tables", plot_formats = "png", table_formats = "csv",
-      slide_formats = "qmd", tlg_formats = character()
-    )
-    expect_match(paste(msgs, collapse = " "), "no TLG format is chosen")
-  })
-
-  it("names which half is missing when the selection covers only the other", {
-    # Graphs and tables draw from disjoint halves, so a non-empty selection can still
-    # leave one of them with nothing to write.
+  it("names the control that was emptied rather than reporting both", {
     graphs_only <- .check_format_selections(
       tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
-      slide_formats = "qmd", tlg_formats = "png"
+      slide_formats = "qmd", tlg_graph_formats = "png", tlg_table_formats = character()
     )
     expect_match(paste(graphs_only, collapse = " "), "no table format is chosen")
+    expect_no_match(paste(graphs_only, collapse = " "), "no graph format is chosen")
 
     tables_only <- .check_format_selections(
       tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
-      slide_formats = "qmd", tlg_formats = "xlsx"
+      slide_formats = "qmd", tlg_graph_formats = character(), tlg_table_formats = "xlsx"
     )
-    expect_match(paste(tables_only, collapse = " "), "no image format is chosen")
+    expect_match(paste(tables_only, collapse = " "), "no graph format is chosen")
+    expect_no_match(paste(tables_only, collapse = " "), "no table format is chosen")
+  })
+
+  it("does not demand a graph format for a tables-only selection", {
+    # The two controls are independent: an order with no graphs in it must still export.
+    expect_length(
+      .check_format_selections(
+        tree = c("tlg_tables", "tlg_listings"), plot_formats = "png",
+        table_formats = "csv", slide_formats = "qmd",
+        tlg_graph_formats = character(), tlg_table_formats = "xlsx"
+      ),
+      0
+    )
   })
 
   it("says nothing about TLGs when none are selected", {
     expect_length(
       .check_format_selections(
         tree = "adnca", plot_formats = "png", table_formats = "csv",
-        slide_formats = "qmd", tlg_formats = character()
+        slide_formats = "qmd",
+        tlg_graph_formats = character(), tlg_table_formats = character()
       ),
       0
     )

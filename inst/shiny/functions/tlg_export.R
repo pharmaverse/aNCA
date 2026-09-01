@@ -225,9 +225,11 @@ write_tlg_exports <- function(entries,
   stem  <- .tlg_export_basename(g_id, NULL)
   leaf  <- .tlg_leaf_names(.tlg_export_basenames(g_id, items), stem)
 
-  # PDF is written as one multi-page document per TLG rather than a file per plot: paging
-  # through pkcg01_lin.pdf beats opening twenty-odd separate files, and it is smaller.
-  per_file <- setdiff(ggplot_formats, "pdf")
+  # PDF and HTML are written as one document per TLG rather than a file per plot: paging
+  # through pkcg01_lin.pdf beats opening twenty-odd separate files, and it is smaller.  For
+  # HTML the saving is dramatic, because each file otherwise inlines its own copy of the
+  # plotly bundle -- see .save_html_selfcontained().
+  per_file <- setdiff(ggplot_formats, c("pdf", "html"))
 
   rows <- lapply(seq_along(items), function(i) {
     # Emitted once per output, not once per format: a TLG that failed to render did so
@@ -248,15 +250,37 @@ write_tlg_exports <- function(entries,
   })
   rows <- unlist(rows, recursive = FALSE)
 
-  if ("pdf" %in% ggplot_formats) {
-    renderable <- Filter(function(x) !is.null(x) && !is.character(x), items)
-    if (length(renderable) > 0) {
+  drawable <- .tlg_renderable_items(items, leaf)
+  if (length(drawable$items) > 0) {
+    if ("pdf" %in% ggplot_formats) {
       rows <- c(rows, list(
-        .tlg_write_graph_pdf(renderable, stem, sub_dir, target_dir, g_id, entry)
+        .tlg_write_graph_pdf(drawable$items, stem, sub_dir, target_dir, g_id, entry)
+      ))
+    }
+    if ("html" %in% ggplot_formats) {
+      rows <- c(rows, list(
+        .tlg_write_graph_html(drawable$items, drawable$leaf, stem, sub_dir,
+                              target_dir, g_id, entry)
       ))
     }
   }
   rows
+}
+
+#' Drop the outputs that cannot be drawn, keeping their names aligned.
+#'
+#' A TLG that failed to render arrives as an explanatory string rather than an object.  Both
+#' combined-document writers need the survivors *and* their leaf names -- the PDF to count
+#' pages, the HTML to head each section -- so filter the two together rather than letting
+#' them drift apart.
+#'
+#' @param items The TLG's output list.
+#' @param leaf  Its leaf names, one per item.
+#' @returns `list(items =, leaf =)`, both subset to the renderable outputs.
+#' @noRd
+.tlg_renderable_items <- function(items, leaf) {
+  keep <- !vapply(items, function(x) is.null(x) || is.character(x), logical(1))
+  list(items = items[keep], leaf = leaf[keep])
 }
 
 #' Write one TLG's graphs as a single multi-page PDF.
@@ -300,6 +324,71 @@ write_tlg_exports <- function(entries,
   .tlg_manifest_row(g_id, entry, rel, status, note)
 }
 
+#' Write one TLG's graphs as a single interactive HTML document.
+#'
+#' One file per output rather than per plot, matching the PDF.  Beyond being easier to hand
+#' round, it is the difference between a usable archive and an unusable one: every widget
+#' written on its own inlines the whole plotly bundle, so a twenty-plot output costs ~74 MB
+#' where the combined document costs ~3.7 MB (#1344).
+#'
+#' Each plot gets a heading so the split key stays visible when scrolling a long document.
+#'
+#' @param plots The TLG's renderable outputs (no error strings).
+#' @param leaf  Their leaf names, used as section headings.
+#' @param stem,sub_dir,target_dir,g_id,entry As for `.tlg_write_graph_pdf()`.
+#' @returns A single manifest row for the document.
+#' @noRd
+.tlg_write_graph_html <- function(plots, leaf, stem, sub_dir, target_dir, g_id, entry) {
+  rel_dir <- file.path(sub_dir, "html")
+  dir.create(file.path(target_dir, rel_dir), showWarnings = FALSE, recursive = TRUE)
+  rel <- file.path(rel_dir, paste0(stem, ".html"))
+
+  status <- "ok"
+  note   <- paste(length(plots), if (length(plots) == 1) "plot" else "plots")
+  tryCatch({
+    sections <- unlist(
+      lapply(seq_along(plots), function(i) {
+        list(htmltools::tags$h2(leaf[i]), .tlg_as_widget(plots[[i]]))
+      }),
+      recursive = FALSE
+    )
+    page <- htmltools::tagList(
+      htmltools::tags$h1(.tlg_document_title(g_id, entry)),
+      sections
+    )
+    extra <- .save_html_selfcontained(page, file.path(target_dir, rel))
+    if (nzchar(extra)) note <- paste0(note, "; ", extra)
+  }, error = function(e) {
+    status <<- "error"
+    note   <<- conditionMessage(e)
+  })
+  .tlg_manifest_row(g_id, entry, rel, status, note)
+}
+
+#' Heading for a combined document, shared by the graph HTML and the table PDF.
+#'
+#' The catalog label is what the user sees on the tab; fall back to the file stem for a TLG
+#' whose definition carries no label.
+#' @noRd
+.tlg_document_title <- function(g_id, entry) {
+  label <- entry$def$label
+  if (is.null(label) || !nzchar(as.character(label)[1])) {
+    .tlg_export_basename(g_id, NULL)
+  } else {
+    as.character(label)[1]
+  }
+}
+
+#' Coerce one graph output to something `save_html()` can embed.
+#'
+#' The concentration plots are already plotly widgets, carrying the title, subtitle and
+#' footnote as layout annotations.  The `p_pkpg*` builders return plain ggplots, which have
+#' to be converted -- the same thing `save_ggplot_format()` does for its HTML branch.
+#' @noRd
+.tlg_as_widget <- function(x) {
+  if (inherits(x, "plotly")) x else plotly::ggplotly(x)
+}
+
 #' Write one TLG's tables or listings, in each requested format.
 #'
 #' CSV and XLSX go to their own subdirectories so neither listing is cluttered by the
@@ -336,6 +425,12 @@ write_tlg_exports <- function(entries,
 
   if ("xlsx" %in% table_formats && any(usable)) {
     rows <- c(rows, list(.tlg_write_workbook(
+      prepared[usable], names(items)[usable], bases[usable],
+      stem, sub_dir, target_dir, g_id, entry
+    )))
+  }
+  if ("pdf" %in% table_formats && any(usable)) {
+    rows <- c(rows, list(.tlg_write_table_pdf(
       prepared[usable], names(items)[usable], bases[usable],
       stem, sub_dir, target_dir, g_id, entry
     )))
@@ -393,6 +488,76 @@ write_tlg_exports <- function(entries,
     }
   )
   .tlg_manifest_row(g_id, entry, rel, status, note)
+}
+
+#' Write one TLG's splits as a single paginated PDF.
+#'
+#' Asked for as a filing format: unlike CSV or XLSX this is a fixed rendering that can be
+#' read the same way by everyone, so it is one document per TLG with the splits as
+#' successive sections, matching the workbook and the graph PDF (#1344).
+#'
+#' `formatters` does the work.  It is already a hard dependency, it is the pharmaverse
+#' exporter for this exact job, and it paginates in both directions -- a wide summary table
+#' is broken across pages by column rather than being clipped at the margin.
+#'
+#' The prepared frames are used rather than the raw outputs so that PDF, CSV and XLSX all
+#' carry identical content: the flattened "Compare in columns" headers and, for a listing,
+#' only the displayed columns.
+#'
+#' @param frames Prepared data frames.
+#' @param keys   Their split keys (may be `NULL` for an unnamed list).
+#' @param bases  Their unique base names, used when there is no split key.
+#' @returns A single manifest row for the document.
+#' @noRd
+.tlg_write_table_pdf <- function(frames, keys, bases, stem, sub_dir, target_dir, g_id, entry) {
+  rel_dir <- file.path(sub_dir, "pdf")
+  dir.create(file.path(target_dir, rel_dir), showWarnings = FALSE, recursive = TRUE)
+  rel <- file.path(rel_dir, paste0(stem, ".pdf"))
+
+  title    <- .tlg_document_title(g_id, entry)
+  captions <- .tlg_pdf_captions(keys, bases, stem)
+
+  status <- "ok"
+  note   <- ""
+  tryCatch({
+    mpfs <- lapply(seq_along(frames), function(i) {
+      # ignore_rownames: a TLG frame identifies its rows through its own columns, so the
+      # data frame's 1..n row names would only add a meaningless leading column.
+      mpf <- formatters::basic_matrix_form(
+        as.data.frame(frames[[i]]), ignore_rownames = TRUE
+      )
+      formatters::main_title(mpf) <- title
+      if (nzchar(captions[i])) formatters::subtitles(mpf) <- captions[i]
+      mpf
+    })
+    # Landscape: TLG summary tables are wide, and a portrait page splits them over roughly
+    # a third more columns' worth of pages for no benefit.
+    res  <- formatters::export_as_pdf(
+      mpfs, file = file.path(target_dir, rel), landscape = TRUE
+    )
+    note <- paste(res$npages, if (res$npages == 1) "page" else "pages")
+    # export_as_pdf() shrinks nothing -- it reports overflow and carries on -- so say so
+    # here rather than letting a clipped table look like a clean export.
+    if (any(res$exceeds_width) || any(res$exceeds_height)) {
+      note <- paste0(note, "; content exceeds the page on ",
+                     sum(res$exceeds_width | res$exceeds_height), " of them")
+    }
+  }, error = function(e) {
+    status <<- "error"
+    note   <<- conditionMessage(e)
+  })
+  .tlg_manifest_row(g_id, entry, rel, status, note)
+}
+
+#' Section captions for the splits of a table PDF.
+#'
+#' Unlike the Excel sheet names these are free text, so the split key goes in verbatim.  An
+#' unsplit TLG gets no caption at all: repeating the title under itself is noise.
+#' @noRd
+.tlg_pdf_captions <- function(keys, bases, stem) {
+  raw <- if (is.null(keys)) bases else ifelse(is.na(keys) | !nzchar(keys), bases, keys)
+  # "all" is split_and_apply()'s un-split sentinel, not a group.
+  ifelse(raw == "all" | raw == stem, "", raw)
 }
 
 #' Excel-safe, unique sheet names for a TLG's splits.

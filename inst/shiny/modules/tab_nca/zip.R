@@ -239,7 +239,8 @@ zip_ui <- function(id) {
 
 # Check that each selected output type has a corresponding format chosen
 .check_format_selections <- function(tree, plot_formats, table_formats, slide_formats,
-                                     tlg_formats = TLG_FORMATS_DEFAULT) {
+                                     tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+                                     tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT) {
   msgs <- character(0)
   if (any(PLOT_NODES %in% tree) && length(plot_formats) == 0) {
     msgs <- c(msgs, "Exploration graphics are selected but no format is chosen.")
@@ -250,39 +251,35 @@ zip_ui <- function(id) {
   if (any(SLIDE_NODES %in% tree) && length(slide_formats) == 0) {
     msgs <- c(msgs, "Result slides are selected but no slide format is chosen.")
   }
-  c(msgs, .check_tlg_format_selection(tree, tlg_formats))
+  c(msgs, .check_tlg_format_selection(tree, tlg_graph_formats, tlg_table_formats))
 }
 
-# Graphs and tables draw from disjoint halves of the one TLG control, so a selection can be
-# non-empty and still leave one of them with nothing to write.  Say which half is missing.
-.check_tlg_format_selection <- function(tree, tlg_formats) {
+# Graphs and tables have a control each, so one can be emptied while the other is still set.
+# Name the one that is missing rather than reporting "no TLG format".
+.check_tlg_format_selection <- function(tree, tlg_graph_formats, tlg_table_formats) {
   tlg_sel <- intersect(tree, TLG_NODES)
   if (length(tlg_sel) == 0) return(character(0))
-  if (length(tlg_formats) == 0) {
-    return("TLGs are selected but no TLG format is chosen.")
+  msgs <- character(0)
+  if ("tlg_graphs" %in% tlg_sel && length(tlg_graph_formats) == 0) {
+    msgs <- c(msgs, "TLG graphs are selected but no graph format is chosen.")
   }
-  missing_half <- function(nodes, allowed, msg) {
-    if (any(nodes %in% tlg_sel) && length(intersect(tlg_formats, allowed)) == 0) {
-      paste0(msg, " (", paste(allowed, collapse = ", "), ").")
-    }
+  if (any(c("tlg_tables", "tlg_listings") %in% tlg_sel) && length(tlg_table_formats) == 0) {
+    msgs <- c(msgs, "TLG tables or listings are selected but no table format is chosen.")
   }
-  c(
-    missing_half("tlg_graphs", TLG_GRAPH_FORMATS,
-                 "TLG graphs are selected but no image format is chosen"),
-    missing_half(c("tlg_tables", "tlg_listings"), TLG_TABLE_FORMATS,
-                 "TLG tables or listings are selected but no table format is chosen")
-  )
+  msgs
 }
 
 # Validate export form inputs — returns character(0) if valid, else a vector of messages
 .validate_export_inputs <- function(modal_shown_val, tree, plot_formats,
                                     table_formats, slide_formats,
-                                    tlg_formats = TLG_FORMATS_DEFAULT) {
+                                    tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+                                    tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT) {
   if (!modal_shown_val) return(character(0))
   if (is.null(tree) || length(tree) == 0) {
     return("Select at least one result to export.")
   }
-  .check_format_selections(tree, plot_formats, table_formats, slide_formats, tlg_formats)
+  .check_format_selections(tree, plot_formats, table_formats, slide_formats,
+                           tlg_graph_formats, tlg_table_formats)
 }
 
 # Helper: check that params are non-empty when a named section is selected
@@ -391,7 +388,8 @@ zip_ui <- function(id) {
 .show_export_modal <- function(ns, TREE_UI, selected_tree,
                                plot_formats, slide_formats, table_formats,
                                settings_selected = TRUE,
-                               tlg_formats = TLG_FORMATS_DEFAULT) {
+                               tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+                               tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT) {
   slide_choices <- if (
     requireNamespace("officer", quietly = TRUE) &&
       requireNamespace("flextable", quietly = TRUE)
@@ -458,18 +456,31 @@ zip_ui <- function(id) {
             ),
             div(
               selectizeInput(
-                ns("tlg_formats"),
-                "Rendered TLGs:",
-                choices = list(
-                  Graphs = as.list(TLG_GRAPH_FORMATS),
-                  `Tables and listings` = as.list(TLG_TABLE_FORMATS)
-                ),
-                selected = tlg_formats,
+                ns("tlg_graph_formats"),
+                "Rendered TLG graphs:",
+                choices = TLG_GRAPH_FORMATS,
+                selected = tlg_graph_formats,
                 multiple = TRUE
               ),
-              tags$small(
-                class = "text-muted",
-                "HTML keeps the plots interactive but is far larger than PNG."
+              # form-text rather than a bare <small>: Bootstrap's hint class is block-level,
+              # so the note sits under the control instead of flowing around it.
+              div(
+                class = "form-text",
+                "PDF and HTML are one document per output; PNG is one file per plot."
+              ),
+              style = "margin-bottom: 1em;"
+            ),
+            div(
+              selectizeInput(
+                ns("tlg_table_formats"),
+                "Rendered TLG tables and listings:",
+                choices = TLG_TABLE_FORMATS,
+                selected = tlg_table_formats,
+                multiple = TRUE
+              ),
+              div(
+                class = "form-text",
+                "PDF is fixed & paginated. CSV and XLSX are editable."
               ),
               style = "margin-bottom: 1em;"
             ),
@@ -531,7 +542,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         plot_formats    = input$plot_formats,
         table_formats   = input$table_formats,
         slide_formats   = input$slide_formats,
-        tlg_formats     = input$tlg_formats
+        tlg_graph_formats = input$tlg_graph_formats,
+        tlg_table_formats = input$tlg_table_formats
       )
     })
 
@@ -604,7 +616,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       TREE_UI <- create_tree_from_list_names(tree_items)
       .show_export_modal(ns, TREE_UI, get_tree_leaf_ids(TREE_UI),
                          c("png", "html"), c("pptx", "qmd"), c("rds", "xpt", "csv"),
-                         tlg_formats = TLG_FORMATS_DEFAULT)
+                         tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+                         tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT)
     })
 
     slide_types_rv       <- reactiveVal(list())
@@ -617,7 +630,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       plot_formats   = c("png", "html"),
       slide_formats  = c("pptx", "qmd"),
       table_formats  = c("rds", "xpt", "csv"),
-      tlg_formats    = TLG_FORMATS_DEFAULT
+      tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+      tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT
     )
 
     observeEvent(input$confirm_export, {
@@ -634,7 +648,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
       export_state$plot_formats  <- input$plot_formats
       export_state$slide_formats <- input$slide_formats
       export_state$table_formats <- input$table_formats
-      export_state$tlg_formats   <- input$tlg_formats
+      export_state$tlg_graph_formats <- input$tlg_graph_formats
+      export_state$tlg_table_formats <- input$tlg_table_formats
 
       slides_selected <- "results_slides" %in% input$res_tree &&
         length(input$slide_formats) > 0
@@ -717,7 +732,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
                          export_state$table_formats,
                          settings_selected = "settings_file" %in%
                            export_state$res_tree_texts,
-                         tlg_formats = export_state$tlg_formats)
+                         tlg_graph_formats = export_state$tlg_graph_formats,
+                         tlg_table_formats = export_state$tlg_table_formats)
     })
 
     .run_export <- function(fname, slide_config = NULL) {
@@ -726,7 +742,8 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         plot_formats  = export_state$plot_formats,
         slide_formats = export_state$slide_formats,
         table_formats = export_state$table_formats,
-        tlg_formats   = export_state$tlg_formats
+        tlg_graph_formats = export_state$tlg_graph_formats,
+        tlg_table_formats = export_state$tlg_table_formats
       )
       tryCatch(
         {
@@ -890,11 +907,17 @@ SLIDE_NODES <- "results_slides"
 # "xlsx" was not, so the tables could only ever come out as CSV unless the user went
 # looking.  `rds`/`xpt` are meaningful for a CDISC dataset and meaningless for a formatted
 # summary table, so one control could not serve both.
+# Graphs and tables get a control each rather than sharing one.  `pdf` is valid for both,
+# and selectize keys its options by value, so a value repeated across two optgroups is
+# dropped from the second and never renders.
 TLG_NODES   <- c("tlg_tables", "tlg_listings", "tlg_graphs")
 TLG_GRAPH_FORMATS <- c("png", "pdf", "html")
-TLG_TABLE_FORMATS <- c("csv", "xlsx")
+TLG_TABLE_FORMATS <- c("csv", "xlsx", "pdf")
 # PDF rather than PNG for graphs: it is written as one multi-page document per TLG, so a
 # per-subject output is a single file to page through instead of twenty-odd images, and it
 # is vector rather than raster.  PNG stays a click away for anyone who wants images to drop
 # into slides.
-TLG_FORMATS_DEFAULT <- c("pdf", "xlsx")
+TLG_GRAPH_FORMATS_DEFAULT <- "pdf"
+# XLSX rather than PDF for tables: the default should stay machine-readable.  PDF is the
+# filing format and is one tick away.
+TLG_TABLE_FORMATS_DEFAULT <- "xlsx"

@@ -155,8 +155,7 @@ describe("write_tlg_exports", {
     expect_setequal(list.files(file.path(d, "Graphs")), c("png", "html"))
     expect_setequal(list.files(file.path(d, "Graphs", "png", "pkcg01_lin")),
                     c("S1.png", "S2.png"))
-    expect_setequal(list.files(file.path(d, "Graphs", "html", "pkcg01_lin")),
-                    c("S1.html", "S2.html"))
+    expect_equal(list.files(file.path(d, "Graphs", "html")), "pkcg01_lin.html")
   })
 
   it("names split csv outputs after the split key, grouped by TLG", {
@@ -212,7 +211,7 @@ describe("write_tlg_exports", {
                            ggplot_formats = c("png", "html"))
     expect_setequal(
       m$file[m$status == "ok"],
-      c("Graphs/png/pkcg01_lin/S1.png", "Graphs/html/pkcg01_lin/S1.html")
+      c("Graphs/png/pkcg01_lin/S1.png", "Graphs/html/pkcg01_lin.html")
     )
   })
 
@@ -345,5 +344,158 @@ describe("write_tlg_exports: PDF output", {
                            ggplot_formats = "pdf")
     expect_equal(m$status, "skipped")
     expect_match(m$note, "none of the plots could be rendered")
+  })
+})
+
+describe("write_tlg_exports: combined HTML output", {
+  it("writes one document per TLG rather than a file per plot", {
+    # Each widget written separately inlines its own copy of the plotly bundle, so a
+    # twenty-plot output costs ~74 MB against ~3.7 MB combined (#1344).
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly(), stashed_plotly()),
+                      c("S1", "S2", "S3"))
+    m <- write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d,
+                           ggplot_formats = "html")
+    expect_equal(list.files(file.path(d, "Graphs", "html")), "pkcg01_lin.html")
+    expect_match(m$note[m$status == "ok"], "3 plots")
+  })
+
+  it("heads each plot with its split key so a long document stays navigable", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly()), c("S1", "S2"))
+    write_tlg_exports(list(g_pkcg01_lin = entry("graph", items, label = "Lin conc")), d,
+                      ggplot_formats = "html")
+    html <- paste(
+      readLines(file.path(d, "Graphs", "html", "pkcg01_lin.html"), warn = FALSE),
+      collapse = "\n"
+    )
+    expect_match(html, "<h1>Lin conc</h1>", fixed = TRUE)
+    expect_match(html, "<h2>S1</h2>", fixed = TRUE)
+    expect_match(html, "<h2>S2</h2>", fixed = TRUE)
+  })
+
+  it("leaves no dependency folder beside the document", {
+    # save_html() stages a lib/ directory; it belongs in tempdir(), not in the archive.
+    skip_if_not(rmarkdown::pandoc_available(), "pandoc needed to self-contain the HTML")
+    d <- withr::local_tempdir()
+    write_tlg_exports(list(g_pkcg02_lin = entry("graph", list(all = stashed_plotly()))), d,
+                      ggplot_formats = "html")
+    expect_equal(list.files(file.path(d, "Graphs", "html")), "pkcg02_lin.html")
+  })
+
+  it("converts a plain ggplot, which is what the pkpg builders return", {
+    d <- withr::local_tempdir()
+    gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+    m <- write_tlg_exports(list(p_pkpg03_boxp = entry("graph", list(all = gg))), d,
+                           ggplot_formats = "html")
+    expect_equal(m$status, "ok")
+    expect_true(file.exists(file.path(d, "Graphs", "html", "pkpg03_boxp.html")))
+  })
+
+  it("still writes the per-plot formats alongside it", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly()), c("S1", "S2"))
+    write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d,
+                      ggplot_formats = c("png", "html"))
+    expect_length(list.files(file.path(d, "Graphs", "png", "pkcg01_lin")), 2)
+    expect_equal(list.files(file.path(d, "Graphs", "html")), "pkcg01_lin.html")
+  })
+
+  it("reports a failed output once, not once per requested format", {
+    d <- withr::local_tempdir()
+    m <- write_tlg_exports(list(g_broken = entry("graph", list(all = "Error: nope"))), d,
+                           ggplot_formats = c("png", "html"))
+    expect_equal(nrow(m), 1)
+    expect_equal(m$status, "skipped")
+  })
+
+  it("skips the document entirely when every plot failed", {
+    d <- withr::local_tempdir()
+    items <- setNames(list("Error: a", "Error: b"), c("S1", "S2"))
+    m <- write_tlg_exports(list(g_broken = entry("graph", items)), d,
+                           ggplot_formats = "html")
+    expect_equal(unique(m$status), "skipped")
+    expect_false(dir.exists(file.path(d, "Graphs")))
+  })
+})
+
+describe("write_tlg_exports: table and listing PDF output", {
+  it("writes one document per TLG with the splits as sections", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(head(mtcars), head(mtcars)), c("PARAM: DrugA", "PARAM: DrugB"))
+    m <- write_tlg_exports(list(t_pkct01 = entry("table", items)), d,
+                           table_formats = "pdf")
+    expect_equal(list.files(file.path(d, "Tables", "pdf")), "pkct01.pdf")
+    expect_equal(m$status, "ok")
+    expect_match(m$note, "pages?$")
+  })
+
+  it("puts a listing under Listings/pdf rather than beside the tables", {
+    d <- withr::local_tempdir()
+    write_tlg_exports(list(l_pkcl01 = entry("listing", list(all = head(mtcars)))), d,
+                      table_formats = "pdf")
+    expect_equal(list.files(file.path(d, "Listings", "pdf")), "pkcl01.pdf")
+  })
+
+  it("keeps pdf out of the csv and xlsx folders", {
+    d <- withr::local_tempdir()
+    write_tlg_exports(list(t_pkct01 = entry("table", list(all = head(mtcars)))), d,
+                      table_formats = c("csv", "xlsx", "pdf"))
+    expect_setequal(basename(list.dirs(file.path(d, "Tables"), recursive = FALSE)),
+                    c("csv", "xlsx", "pdf"))
+  })
+
+  it("is not written unless it is asked for", {
+    d <- withr::local_tempdir()
+    write_tlg_exports(list(t_pkct01 = entry("table", list(all = head(mtcars)))), d,
+                      table_formats = "xlsx")
+    expect_false(dir.exists(file.path(d, "Tables", "pdf")))
+  })
+
+  it("records a write failure as an error and keeps the other formats", {
+    d <- withr::local_tempdir()
+    m <- with_mocked_bindings(
+      write_tlg_exports(list(t_pkct01 = entry("table", list(all = head(mtcars)))), d,
+                        table_formats = c("csv", "pdf")),
+      export_as_pdf = function(...) stop("device is busy"),
+      .package = "formatters"
+    )
+    pdf_row <- m[grepl("pdf", m$file), ]
+    expect_equal(pdf_row$status, "error")
+    expect_match(pdf_row$note, "device is busy")
+    expect_true(file.exists(file.path(d, "Tables", "csv", "pkct01", "pkct01.csv")))
+  })
+
+  it("paginates a wide table by column instead of clipping it at the margin", {
+    # A summary table with a column per statistic per group runs well past one page width;
+    # formatters splits it, which is the reason for using it over a plain table grob.
+    d <- withr::local_tempdir()
+    wide <- as.data.frame(matrix(1, nrow = 3, ncol = 40))
+    names(wide) <- paste0("LongStatisticName_", seq_len(40))
+    m <- write_tlg_exports(list(t_pkct01 = entry("table", list(all = wide))), d,
+                           table_formats = "pdf")
+    expect_equal(m$status, "ok")
+    expect_false(grepl("exceeds the page", m$note))
+    expect_gt(as.integer(sub(" .*", "", m$note)), 1)
+  })
+})
+
+describe(".tlg_pdf_captions", {
+  it("uses the split key verbatim, unlike the Excel-safe sheet names", {
+    expect_equal(
+      .tlg_pdf_captions(c("PARAM: DrugA / PCSPEC: SERUM", "PARAM: DrugB"),
+                        c("a", "b"), "pkct01"),
+      c("PARAM: DrugA / PCSPEC: SERUM", "PARAM: DrugB")
+    )
+  })
+
+  it("leaves an unsplit output uncaptioned rather than repeating the title", {
+    expect_equal(.tlg_pdf_captions("all", "pkct01", "pkct01"), "")
+    expect_equal(.tlg_pdf_captions(NULL, "pkct01", "pkct01"), "")
+  })
+
+  it("falls back to the base name when a split key is missing", {
+    expect_equal(.tlg_pdf_captions(c("", NA), c("pkct01_1", "pkct01_2"), "pkct01"),
+                 c("pkct01_1", "pkct01_2"))
   })
 })

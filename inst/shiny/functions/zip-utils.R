@@ -29,6 +29,41 @@ save_ggplot_format <- function(x, file_name, formats) {
   unlink(paste0(file_name, "_files"), recursive = TRUE)
 }
 
+# Write an arbitrary tag list -- several widgets plus their headings -- as one HTML file.
+#
+# `saveWidget()` only takes a single widget, so a document holding every plot of a TLG has to
+# go through `save_html()`, which writes the dependencies to a `lib/` directory rather than
+# inlining them.  Staging that in tempdir() and then self-containing keeps the export tree to
+# one file per output with nothing beside it, the same guarantee `saveWidget()` gives.
+#
+# Combining is close to free: the plotly bundle dominates the file and is shared, so a
+# two-plot document measures 3696 KB against 3692 KB for a single plot (#1344).
+#
+# Returns "" on success, or a note for the manifest when the file had to be left
+# non-self-contained.
+.save_html_selfcontained <- function(tags, path) {
+  staging <- tempfile("tlg_html_")
+  dir.create(staging, recursive = TRUE, showWarnings = FALSE)
+  on.exit(unlink(staging, recursive = TRUE), add = TRUE)
+
+  # libdir is resolved relative to the file, so it lands inside the staging directory.
+  staged <- file.path(staging, "index.html")
+  htmltools::save_html(tags, file = staged, libdir = "lib")
+
+  pandoc_ok <- requireNamespace("rmarkdown", quietly = TRUE) &&
+    rmarkdown::pandoc_available()
+  if (pandoc_ok) {
+    rmarkdown::pandoc_self_contained_html(staged, path)
+    return("")
+  }
+
+  # No pandoc: still one file per output, but it needs the neighbouring lib/ to render.
+  # Better than erroring the output out of the archive entirely.
+  file.copy(staged, path, overwrite = TRUE)
+  file.copy(file.path(staging, "lib"), dirname(path), recursive = TRUE)
+  "not self-contained (pandoc unavailable); needs the lib/ folder alongside"
+}
+
 # Helper for saving data.frame objects (multiple formats)
 save_table_format <- function(x, file_name, formats) {
   if ("csv" %in% formats) {
@@ -477,11 +512,13 @@ prepare_export_files <- function(target_dir,
     write_tlg_exports(
       entries        = session$userData$tlg_outputs(tlg_types),
       target_dir     = file.path(target_dir, "TLGs"),
-      # Rendered TLGs have their own format control, so that the dataset formats (rds/xpt)
-      # and the TLG ones (png/xlsx) can each default to what suits them (#1344).  Older
-      # saved settings predate the control; fall back rather than exporting nothing.
-      ggplot_formats = intersect(input$tlg_formats %||% "png", c("png", "pdf", "html")),
-      table_formats  = intersect(input$tlg_formats %||% "xlsx", c("csv", "xlsx"))
+      # Rendered TLGs have their own format controls, so that the dataset formats (rds/xpt)
+      # and the TLG ones can each default to what suits them (#1344).  Graphs and tables get
+      # one control each rather than sharing: "pdf" is now valid for both, and a single
+      # selectize keys its options by value, so the duplicate would never render.
+      # A frozen input from before the split falls back rather than exporting nothing.
+      ggplot_formats = intersect(input$tlg_graph_formats %||% "pdf", TLG_GRAPH_FORMATS),
+      table_formats  = intersect(input$tlg_table_formats %||% "xlsx", TLG_TABLE_FORMATS)
     )
   }
 
