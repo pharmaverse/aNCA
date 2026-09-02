@@ -12,12 +12,21 @@ pkpg_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-pkpg_metab_data <- pkpg_data
-pkpg_metab_data$PPCAT <- ifelse(
-  pkpg_metab_data$TRT01A == "50mg", "Metab-DrugA Plasma", "DrugA Plasma"
-)
-pkpg_metab_data$METABFL <- ifelse(
-  pkpg_metab_data$TRT01A == "50mg", "Y", NA_character_
+# The parent rows plus the M/P ratio rows that Parameter Selection > Ratios
+# appends during the NCA run.
+pkpg_ratio_data <- rbind(
+  transform(pkpg_data, PPANMETH = NA_character_),
+  transform(
+    pkpg_data,
+    PPCAT    = "Metab-DrugA Plasma",
+    PARAM    = paste("Ratio", pkpg_data$PARAM),
+    PARAMCD  = paste0("RA", pkpg_data$PARAMCD),
+    AVAL     = pkpg_data$AVAL / 2,
+    AVALU    = "fraction",
+    PPANMETH = paste0(
+      pkpg_data$PARAMCD, " TO ", pkpg_data$PARAMCD, " [PARAM: DrugA Plasma]"
+    )
+  )
 )
 
 describe("p_pkpg03_boxp", {
@@ -97,40 +106,36 @@ describe("p_pkpg04_boxp", {
 })
 
 describe("p_pkpg06_mp", {
-  it("filters to metabolite rows using METABFL (preferred path)", {
-    result <- p_pkpg06_mp(pkpg_metab_data)
-    # Only metabolite arm rows reach the plot — check it returns a ggplot
-    expect_s3_class(result[[1]], "ggplot")
-    # Plot data should only contain metabolite arm (50mg)
+  it("plots the ratio values, not the metabolite's raw values", {
+    result <- p_pkpg06_mp(pkpg_ratio_data)
     plot_df <- result[[1]]$data
-    expect_true(all(plot_df$TRT01A == "50mg"))
+    expect_s3_class(result[[1]], "ggplot")
+    expect_setequal(plot_df$AVAL, pkpg_data$AVAL / 2)
+    expect_true(all(grepl("^Ratio ", plot_df$PARAM)))
   })
 
-  it("falls back to PPCAT grep when METABFL absent", {
-    data_ppcat <- pkpg_data
-    data_ppcat$PPCAT <- ifelse(
-      data_ppcat$TRT01A == "50mg", "Metab-DrugA", "DrugA"
+  it("names the parent in the plot key so the ratio is self-explanatory", {
+    result <- p_pkpg06_mp(pkpg_ratio_data)
+    expect_equal(
+      names(result),
+      "RATIO: Metab-DrugA Plasma / DrugA Plasma / PPSPEC: SERUM"
     )
-    data_ppcat <- data_ppcat[, setdiff(names(data_ppcat), "METABFL")]
-    result <- p_pkpg06_mp(data_ppcat)
-    expect_type(result, "list")
-    purrr::walk(result, ~ expect_s3_class(.x, "ggplot"))
   })
 
-  it("falls back to PARAM grep when METABFL and PPCAT absent", {
-    data_param <- pkpg_data
-    data_param$PARAM <- ifelse(data_param$TRT01A == "50mg",
-                               paste0("Metab-", data_param$PARAM),
-                               data_param$PARAM)
-    data_param <- data_param[, setdiff(names(data_param), c("METABFL", "PPCAT"))]  # nolint
-    result <- p_pkpg06_mp(data_param)
-    expect_type(result, "list")
-    purrr::walk(result, ~ expect_s3_class(.x, "ggplot"))
+  it("errors instead of plotting raw rows when no ratios were configured", {
+    expect_error(
+      p_pkpg06_mp(transform(pkpg_data, PPANMETH = NA_character_)),
+      "p_pkpg06_mp: no ratio parameters found"
+    )
   })
 
-  it("stops with informative error when no metabolite data found", {
-    data_no_metab <- pkpg_data[, setdiff(names(pkpg_data), "METABFL")]
-    expect_error(p_pkpg06_mp(data_no_metab), "no metabolite data found")
+  it("does not treat mean-residence-time parameters as ratios", {
+    mrt <- transform(
+      pkpg_data,
+      PARAMCD = rep(c("MRTLST", "MRTIFO"), 6),
+      PPANMETH = NA_character_
+    )
+    expect_error(p_pkpg06_mp(mrt), "no ratio parameters found")
   })
 })
 

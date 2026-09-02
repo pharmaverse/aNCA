@@ -6,6 +6,9 @@
 
 ## Bug Fixes
 
+* The metabolite/parent TLG entries now show actual M/P ratios. `t_pkpt03_MP_col`, `l_pkpl01_mp` and `p_pkpg06_mp` summarized, listed or plotted raw metabolite rows under a heading that promised a ratio. They now consume the ratio rows **Parameter Selection > Ratios** computes during the NCA run, identified by the comparison `calculate_ratios()` writes into `PPANMETH` rather than by a parameter-code prefix, and split by `"<metabolite> / <parent>"` and specimen so the denominator is named. `l_pkpl04_mp` takes the complement. When no ratios of the relevant kind are set up the output explains how to add them instead of rendering misleading numbers (#1429)
+* The M/P summary table no longer pools every treatment arm into a single row: its default row stratification resolved to `STUDYID` plus the parameter name, because ADPP renames two of the PKNCA grouping variables it was derived from (#1429)
+* PK parameter listings, summary tables and box plots no longer disagree about which row they show for a subject. Where several rows collapse to one — a multi-dose ADPP with one row per dose profile — the listing and the summary table took the leading row even when its value was missing, while the plots skipped missing values first. A subject could therefore be shown with a value in one output, blank in a second and absent from a third's `n`. All three now prefer a row that has a value (#1429)
 * Running NCA with "Impute Start Concentration" turned off no longer errors with `PKNCA_impute_method_FALSE not found`. When start imputation was off, the per-interval `impute` column was absent, so the BLQ step read the `impute` function argument instead of the column and built the method string `"blq, FALSE"`. The column is now always present, the reference is pinned to it, and the `update_main_intervals()` argument was renamed `impute` -> `start_impute` so it can no longer collide with the column (#1121, #1266)
 * With "Impute Start Concentration" turned off, the first interval now starts at C1 (the first sample at or after the dose) instead of the predose time. The sample feeding the start time was picked by an unordered `slice(1)`, so it could be the predose record whose negative `ARRLT` pulled the interval start before the dose (#1121)
 * The generated R-script (session code) now passes `blq_imputation_rule` to `PKNCA_update_data_object()`, matching the app. The template only applied the BLQ rule at calculation time (`PKNCA_calculate_nca()`) and omitted it during interval setup, so exported scripts did not reproduce the app's BLQ handling (#1445)
@@ -29,7 +32,7 @@
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
-  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent filtered)
+  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent ratios)
   - `t_pkpt07_norm` — dose-normalized PK parameter summary table
   - `t_pkpt08_uri` — urine cumulative amount and % dose recovered summary table (n, Mean, SD, CV%, Median, Min, Max)
   - `t_pkpt11_gmr` — geometric mean ratio table with 90% CIs
@@ -37,8 +40,8 @@
   - `p_pkpg06_mp` — boxplot of metabolite/parent PK parameter ratios
   - `p_pkpg01_cum` / `p_pkpg01_per` — mean cumulative urine amount and % dose recovered line plots
   - `p_pkpg02_doseprop` — dose-proportionality scatter plot with power-model regression on log-log scale
-  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite-filtered)
-  - `l_pkpl04_mp` — individual PK parameter listing organised for treatment comparison
+  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite/parent ratios)
+  - `l_pkpl04_mp` — individual treatment ratio listing
   - `l_pkcl02_uri` — urine concentration and volume listing
 * ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMXF = "Y"`, consistent with ADNCA exclusion via `PKSUMXF` (#1343)
 * Summary tables are easier to read: split tables (e.g. by analyte/specimen) now show the group as a header, `t_pkct01` rows are grouped by treatment arm with timepoints in numeric order, statistic columns use readable headers (e.g. "Geometric Mean", "CV%"), and urine specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively (#1343)

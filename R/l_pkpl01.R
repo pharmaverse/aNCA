@@ -94,8 +94,13 @@ l_pkpl01 <- function(
         names_from  = dplyr::all_of(param_var),
         values_from = ".val_fmt",
         # When a subject has multiple rows for the same PARAM (e.g. multi-
-        # interval ADPP), take the first value rather than creating list-columns.
-        values_fn   = dplyr::first,
+        # interval ADPP), take one value rather than creating list-columns --
+        # the first that is actually present.  `dplyr::first` returned a leading
+        # NA even when a later dose profile had a value, so the listing showed a
+        # blank cell for a subject the summary table counted and averaged.  That
+        # is routine for ratios: a ratio is missing for any profile where either
+        # side could not be computed, and the first profile is often one of them.
+        values_fn   = .first_present,
         values_fill = NA_real_
       )
 
@@ -130,29 +135,41 @@ l_pkpl01 <- function(
   split_and_apply(data, listgroup_vars, .make_wide_listing)
 }
 
-#' @describeIn l_pkpl01 Listing filtered to metabolite rows (pkpl01 M/P).
-#'   Uses the same METABFL -> PPCAT -> PARAM fallback as [t_pkpt03_MP_col()].
+#' @describeIn l_pkpl01 Listing of metabolite-to-parent ratios (pkpl01 M/P).
+#'   Lists the M/P ratio rows computed by **Parameter Selection > Ratios** during the
+#'   NCA run -- the ones whose `PPANMETH` reference group is another analyte -- with
+#'   one listing per `"<metabolite> / <parent>"` pair, so the denominator is named
+#'   rather than left for the reader to infer. See [t_pkpt03_MP_col()].
+#' @param listgroup_vars Columns used to split the output into separate listings.
+#'   Defaults to the derived `RATIO` label and `PPSPEC`.
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
 #' @export
-l_pkpl01_mp <- function(data, ...) {
-  l_pkpl01(filter_metabolite_rows(data, "l_pkpl01_mp"), ...)
+l_pkpl01_mp <- function(data, listgroup_vars = c("RATIO", "PPSPEC"), ...) {
+  l_pkpl01(
+    filter_ratio_rows(data, "l_pkpl01_mp", ref_type = "analyte"),
+    listgroup_vars = listgroup_vars,
+    ...
+  )
 }
 
-#' Individual Treatment Comparison Listing (pkpl04)
+#' Individual Treatment Ratio Listing (pkpl04)
 #'
-#' Produces a per-subject listing of individual PK parameter values organised
-#' for treatment comparison. Each listing page covers one PPCAT/PPSPEC
-#' combination. PK parameters become display columns (one column per PARAM value)
-#' and the rows are keyed by `TRT01A` and `USUBJID`.
+#' Produces a per-subject listing of the treatment ratios computed by
+#' **Parameter Selection > Ratios** during the NCA run. PK parameters become
+#' display columns (one column per PARAM value) and the rows are keyed by
+#' `TRT01A` and `USUBJID`.
 #'
 #' @details
-#' This listing shows the raw individual `AVAL` values from ADPP, not
-#' pre-computed ratios. If your ADPP contains NCA ratio parameters (e.g.
-#' metabolite-to-parent AUC ratios added via the aNCA ratio-calculation
-#' module), those parameters are displayed here just like any other PARAM row.
-#' The `_mp` suffix in the function name reflects its typical use with
-#' metabolite/parent ratio parameters, but no metabolite filtering is applied --
-#' all PARAM values in the data are included.
+#' Ratio rows are selected on the `" TO "` that `calculate_ratios()` writes into
+#' `PPANMETH`, and narrowed to those whose reference group is *not* the analyte
+#' column: treatment, dose profile, route or specimen references. Analyte
+#' references are metabolite/parent ratios and belong to [l_pkpl01_mp()], which
+#' selects the complement of this set from the same mechanism.
+#'
+#' Ratios are computed as part of the NCA run, so a ratio added afterwards does
+#' not appear until the run is repeated. When the data holds no treatment ratios
+#' the listing errors with that instruction rather than silently listing raw
+#' parameter values, which are not ratios.
 #'
 #' Note: `PARAM` is listed in `grouping_vars` so that it participates in the
 #' `pivot_wider` step (each unique PARAM value becomes a column header). After
@@ -160,6 +177,12 @@ l_pkpl01_mp <- function(data, ...) {
 #' are `TRT01A` and `USUBJID`.
 #'
 #' @inheritParams l_pkpl01
+#' @param listgroup_vars Columns used to split the output into separate listings.
+#'   Defaults to the derived `RATIO` label, `PPCAT` and `PPSPEC`. Unlike a
+#'   metabolite/parent ratio, a treatment ratio compares one group against another
+#'   *within* an analyte, so its `RATIO` label ("DOSE 2 / DOSE 1") does not name
+#'   the analyte. `PPCAT` has to split the listings as well, or the parent's and
+#'   the metabolite's ratios share a column and `pivot_wider` keeps one of them.
 #' @param grouping_vars Columns used to identify row keys before pivoting.
 #'   `PARAM` must be included so it is spread into display columns.
 #'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
@@ -177,9 +200,16 @@ l_pkpl01_mp <- function(data, ...) {
 #' @export
 l_pkpl04_mp <- function(
   data,
+  listgroup_vars = c("RATIO", "PPCAT", "PPSPEC"),
   grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
-  title         = "Listing of Individual PK Parameter Values by Treatment",
+  title         = "Listing of Individual Treatment Ratios",
   ...
 ) {
-  l_pkpl01(data, grouping_vars = grouping_vars, title = title, ...)
+  l_pkpl01(
+    filter_ratio_rows(data, "l_pkpl04_mp", ref_type = "other"),
+    listgroup_vars = listgroup_vars,
+    grouping_vars = grouping_vars,
+    title = title,
+    ...
+  )
 }

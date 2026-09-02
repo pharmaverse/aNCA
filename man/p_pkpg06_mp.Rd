@@ -4,10 +4,13 @@
 \alias{p_pkpg06_mp}
 \title{Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)}
 \usage{
-p_pkpg06_mp(data, ...)
+p_pkpg06_mp(data, list_vars = c("RATIO", "PPSPEC"), ...)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
+
+\item{list_vars}{Columns to split plots by. Defaults to the derived \code{RATIO}
+label and \code{PPSPEC}.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.}
 }
@@ -15,9 +18,18 @@ p_pkpg06_mp(data, ...)
 A named list of ggplot objects (same format as \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}).
 }
 \description{
-Filters ADPP to metabolite rows using the same fallback logic as
-\code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}} (METABFL preferred, then PPCAT/PARAM grep for "metab"),
-then delegates to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.
+Plots the M/P ratio rows computed by \strong{Parameter Selection > Ratios} during the
+NCA run, then delegates to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}. Ratio rows are selected on the
+\code{" TO "} that \code{calculate_ratios()} writes into \code{PPANMETH} and narrowed to those
+whose reference group is the analyte column, which is what makes a ratio a
+metabolite/parent one. One plot is produced per \code{"<metabolite> / <parent>"} pair
+so the denominator is named on the plot.
+}
+\details{
+Ratios are computed as part of the NCA run, so a ratio added afterwards does not
+appear until the run is repeated. When the data holds no M/P ratios the plot
+errors with that instruction rather than drawing boxplots of raw metabolite
+values, which are not ratios. See \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
 }
 \examples{
 \dontrun{
