@@ -352,6 +352,123 @@ describe("update_main_intervals", {
     expect_equal(new_interval_check$end, 2)
   })
 
+  it("carries a custom interval name onto manual intervals (#1463)", {
+    int_parameters <- data.frame(
+      parameter = "AUCINT",
+      start_auc = 0,
+      end_auc = 24,
+      custom_name = "Early exposure",
+      stringsAsFactors = FALSE
+    )
+    result <- update_main_intervals(
+      data, parameters, int_parameters, start_impute = FALSE
+    )
+
+    # interval_name column exists everywhere so it can be kept by pk.nca()
+    expect_true("interval_name" %in% names(result$intervals))
+
+    manual <- result$intervals %>% filter(type_interval == "manual")
+    main <- result$intervals %>% filter(type_interval == "main")
+    expect_true(all(manual$interval_name == "Early exposure"))
+    # Main (non-manual) intervals never carry a custom name
+    expect_true(all(is.na(main$interval_name)))
+  })
+
+  it("leaves interval_name NA when no custom name is given (#1463)", {
+    int_parameters <- data.frame(
+      parameter = "AUCINT", start_auc = 0, end_auc = 24
+    )
+    result <- update_main_intervals(
+      data, parameters, int_parameters, start_impute = FALSE
+    )
+    expect_true("interval_name" %in% names(result$intervals))
+    expect_true(all(is.na(result$intervals$interval_name)))
+  })
+
+  it("restricts a partial interval to a single study type (#1463)", {
+    # USUBJID 1 is 'Single Extravascular'; USUBJID 3 is 'Multiple IV Bolus'.
+    int_parameters <- data.frame(
+      parameter = "AUCINT",
+      start_auc = 0,
+      end_auc = 24,
+      study_type = "Single Extravascular",
+      stringsAsFactors = FALSE
+    )
+    result <- update_main_intervals(
+      data, parameters, int_parameters, start_impute = FALSE
+    )
+
+    manual <- result$intervals %>% filter(type_interval == "manual")
+    manual_subjects <- unique(manual$USUBJID)
+
+    # Only Single Extravascular subjects get the manual interval
+    expect_true(1 %in% manual_subjects)
+    expect_false(3 %in% manual_subjects)
+  })
+
+  it("treats study_type 'All'/NA as applying to every study type (#1463)", {
+    int_all <- data.frame(
+      parameter = "AUCINT", start_auc = 0, end_auc = 24,
+      study_type = "All", stringsAsFactors = FALSE
+    )
+    int_na <- data.frame(
+      parameter = "AUCINT", start_auc = 0, end_auc = 24,
+      study_type = NA_character_, stringsAsFactors = FALSE
+    )
+
+    manual_all <- update_main_intervals(
+      data, parameters, int_all, start_impute = FALSE
+    )$intervals %>% filter(type_interval == "manual")
+    manual_na <- update_main_intervals(
+      data, parameters, int_na, start_impute = FALSE
+    )$intervals %>% filter(type_interval == "manual")
+
+    # Both cover the same set of subjects as the (multi-type) main intervals
+    all_subjects <- unique(data$intervals$USUBJID)
+    expect_setequal(unique(manual_all$USUBJID), all_subjects)
+    expect_setequal(unique(manual_na$USUBJID), all_subjects)
+  })
+
+  it("accepts int_parameters without the new optional columns (#1463)", {
+    # Backward compatibility: legacy int_parameters lacking custom_name/study_type
+    legacy <- data.frame(
+      parameter = "AUCINT", start_auc = 0, end_auc = 24
+    )
+    expect_no_error(
+      update_main_intervals(data, parameters, legacy, start_impute = FALSE)
+    )
+  })
+
+  it("keeps partials for every study-type label the UI can offer (#1463)", {
+    # Regression: the settings dropdown offers study-type labels and
+    # update_main_intervals() restricts each partial with `type == study_type`.
+    # Both sides must derive labels the same way. `.derive_study_types()` (used
+    # at calculation time, and now by the dropdown) blanks METABFL, so it never
+    # produces metabolite-/NA-suffixed labels like "Multiple IV Infusion NA".
+    # Previously the dropdown called detect_study_types() with the real METABFL
+    # and produced such labels, which matched nothing here -> the partial was
+    # silently dropped from the results and PP output.
+    offered_types <- unique(aNCA:::.derive_study_types(data)$type)
+    expect_true(length(offered_types) > 0)
+
+    for (stype in offered_types) {
+      int_parameters <- data.frame(
+        parameter = "AUCINT", start_auc = 0, end_auc = 24,
+        custom_name = NA_character_, study_type = stype,
+        stringsAsFactors = FALSE
+      )
+      manual <- update_main_intervals(
+        data, parameters, int_parameters, start_impute = FALSE
+      )$intervals %>%
+        filter(type_interval == "manual")
+
+      # Each offered label must match at least one interval, otherwise the
+      # partial interval would never be calculated.
+      expect_gt(nrow(manual), 0)
+      expect_true(all(manual$aucint.last == TRUE))
+    }
+  })
+
   it("does not impute C0 when not requested", {
     result <- update_main_intervals(
       data,

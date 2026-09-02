@@ -6,6 +6,7 @@
 
 ## Bug Fixes
 
+* Restricting a partial interval to a specific study type no longer silently drops the interval from the results and PP/ADPP output. The "Study Type" dropdown derived its labels with metabolite information (e.g. `Multiple IV Infusion (Metabolite)`), but the interval calculation matches against labels derived with metabolite information blanked, so the selected label never matched and the interval was never calculated. The dropdown now reuses the same derivation as calculation time, so every offered label matches (#1463)
 * Running NCA with "Impute Start Concentration" turned off no longer errors with `PKNCA_impute_method_FALSE not found`. When start imputation was off, the per-interval `impute` column was absent, so the BLQ step read the `impute` function argument instead of the column and built the method string `"blq, FALSE"`. The column is now always present, the reference is pinned to it, and the `update_main_intervals()` argument was renamed `impute` -> `start_impute` so it can no longer collide with the column (#1121, #1266)
 * With "Impute Start Concentration" turned off, the first interval now starts at C1 (the first sample at or after the dose) instead of the predose time. The sample feeding the start time was picked by an unordered `slice(1)`, so it could be the predose record whose negative `ARRLT` pulled the interval start before the dose (#1121)
 * The generated R-script (session code) now passes `blq_imputation_rule` to `PKNCA_update_data_object()`, matching the app. The template only applied the BLQ rule at calculation time (`PKNCA_calculate_nca()`) and omitted it during interval setup, so exported scripts did not reproduce the app's BLQ handling (#1445)
@@ -25,6 +26,10 @@
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
 
 ## Features
+
+### Partial Interval Calculations
+* Partial interval parameters can now be given a custom name. When set, the custom name replaces the standard `PPTESTCD_<start>-<end>` label (e.g. `AUCINT_0-24`) in the results table, plots and ratio-parameter options; the underlying PKNCA parameter and CDISC `PPTESTCD` are unchanged. Leaving the name blank keeps the standard label (#1463)
+* Each partial interval parameter can now be restricted to a single study type detected in the data (e.g. only `Excretion Data`), via a new "Study Type" column. The default "All" keeps the previous behaviour of calculating the interval for every study type. Both fields round-trip through the settings file and the exported R script (#1463)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
