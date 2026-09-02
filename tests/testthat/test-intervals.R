@@ -439,6 +439,36 @@ describe("update_main_intervals", {
     )
   })
 
+  it("keeps partials for every study-type label the UI can offer (#1463)", {
+    # Regression: the settings dropdown offers study-type labels and
+    # update_main_intervals() restricts each partial with `type == study_type`.
+    # Both sides must derive labels the same way. `.derive_study_types()` (used
+    # at calculation time, and now by the dropdown) blanks METABFL, so it never
+    # produces metabolite-/NA-suffixed labels like "Multiple IV Infusion NA".
+    # Previously the dropdown called detect_study_types() with the real METABFL
+    # and produced such labels, which matched nothing here -> the partial was
+    # silently dropped from the results and PP output.
+    offered_types <- unique(aNCA:::.derive_study_types(data)$type)
+    expect_true(length(offered_types) > 0)
+
+    for (stype in offered_types) {
+      int_parameters <- data.frame(
+        parameter = "AUCINT", start_auc = 0, end_auc = 24,
+        custom_name = NA_character_, study_type = stype,
+        stringsAsFactors = FALSE
+      )
+      manual <- update_main_intervals(
+        data, parameters, int_parameters, start_impute = FALSE
+      )$intervals %>%
+        filter(type_interval == "manual")
+
+      # Each offered label must match at least one interval, otherwise the
+      # partial interval would never be calculated.
+      expect_gt(nrow(manual), 0)
+      expect_true(all(manual$aucint.last == TRUE))
+    }
+  })
+
   it("does not impute C0 when not requested", {
     result <- update_main_intervals(
       data,

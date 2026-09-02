@@ -390,29 +390,22 @@ settings_server <- function(id, data, adnca_data, settings_override) {
 
     # Study types detected in the loaded data, offered as choices for restricting
     # a partial interval to a single type. "All" (the default) applies to every
-    # study type. Mirrors the detection used by the parameter-selection matrix.
+    # study type.
+    #
+    # These labels must be byte-identical to the ones produced at calculation
+    # time, because `update_main_intervals()` restricts each partial interval
+    # with `filter(type == study_type)`. Calculation time uses
+    # `.derive_study_types()`, which blanks `METABFL` (so metabolite-specific
+    # types are never assigned per interval). Reuse that exact derivation here;
+    # calling `detect_study_types()` directly with the real `METABFL` produced
+    # labels like "Multiple IV Infusion (Metabolite)" that never matched, so the
+    # partial interval was silently dropped from the results and PP output.
     study_type_choices <- reactive({
       pknca_data <- adnca_data()
       if (is.null(pknca_data)) return("All")
 
-      conc_group_columns <- group_vars(pknca_data$conc)
-      dose_group_columns <- group_vars(pknca_data$dose)
-      group_columns <- unique(c(conc_group_columns, dose_group_columns))
-
-      groups <- group_columns %>%
-        purrr::keep(\(col) {
-          !is.null(col) &&
-            length(unique(pknca_data$conc$data[[col]])) > 1
-        })
-
       detected <- tryCatch(
-        detect_study_types(
-          pknca_data$conc$data,
-          groups,
-          metabfl_column = "METABFL",
-          route_column = pknca_data$dose$columns$route,
-          volume_column = pknca_data$conc$columns$volume
-        )$type,
+        aNCA:::.derive_study_types(pknca_data)$type,
         error = function(e) character()
       )
 
