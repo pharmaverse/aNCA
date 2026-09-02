@@ -58,35 +58,34 @@ single pass.
 
 ### 2. Consult `.lintr` for the expected standard
 
-Before editing, read the repo's `.lintr` to know exactly what is expected — the
-project customises several linters, so the default lintr behaviour is not the
-source of truth. Current configuration to be aware of:
+**Always read the repo's `.lintr` — it is the source of truth.** The project
+customises several linters, so lintr's defaults do not apply, and any thresholds
+(line length, cyclomatic complexity, etc.) must be taken from `.lintr` at the
+time you run, not assumed. Map each failing `linter` name to its configured rule
+there.
 
-- `line_length_linter(100)` — max line length is **100** characters.
-- `object_name_linter(styles = c("snake_case", "SNAKE_CASE"))` — names must be
-  snake_case or SNAKE_CASE.
-- `pipe_consistency_linter("%>%")` — use the magrittr `%>%` pipe, not `|>`.
-- `assignment_linter(operator = c("<-", "<<-"))` — assign with `<-`/`<<-`, not `=`.
-- `return_linter(return_style = "implicit")` — do not use an explicit final
-  `return(...)`; let the last expression be the value.
-- `seq_linter()` — use `seq_len()` / `seq_along()` instead of `1:n`.
-- `cyclocomp_linter(complexity_limit = 15)` — function cyclomatic complexity
-  must be <= 15.
-- `object_usage_linter = NULL` — this linter is disabled; do not chase it.
-- `exclusions` — some paths are excluded from linting entirely; do not "fix"
+Some facts about this config are non-obvious from a lint message and easy to get
+wrong, so keep them in mind (but still confirm against `.lintr`):
+
+- The pipe style is enforced — use the magrittr `%>%` pipe, not `|>`.
+- Assignment style is enforced — assign with `<-`/`<<-`, not `=`.
+- Return style is implicit — do not add an explicit final `return(...)`.
+- Object names must follow the configured case styles (snake_case / SNAKE_CASE).
+- `object_usage_linter` is **disabled** — do not chase usage lints.
+- `exclusions` lists paths excluded from linting entirely — do **not** "fix"
   lints in excluded files.
 
-Always re-read `.lintr` in case these values change; treat the file as the
-authority for the standard, and map each failing `linter` name to its rule
-there.
+For any rule with a numeric threshold (e.g. line length, cyclocomp), read the
+exact value from `.lintr` rather than relying on memory — these are the most
+likely to change.
 
 ### 3. Fix the affected code to satisfy the linter
 
 For each lint, edit the named file at the named line so it conforms to the
 standard from step 2, keeping behaviour identical. Typical fixes:
 
-- **`line_length_linter`** — break the line under 100 chars (wrap arguments, a
-  pipe step, or a long string) without changing logic.
+- **`line_length_linter`** — break the line under the configured limit (wrap
+  arguments, a pipe step, or a long string) without changing logic.
 - **`pipe_continuation_linter`** — put each pipe step on its own line with a
   newline after `%>%` when the pipeline spans multiple lines, e.g.
   `bind_rows(...) %>%` then `  select(-VOL)` on the next line.
@@ -98,9 +97,10 @@ standard from step 2, keeping behaviour identical. Typical fixes:
   expression as the last line.
 - **`seq_linter`** — replace `1:length(x)` with `seq_along(x)` and `1:n` with
   `seq_len(n)`.
-- **`cyclocomp_linter`** — reduce branching by extracting a helper function or
-  simplifying control flow; this is a real refactor, so keep it behaviour-
-  preserving and add/adjust tests if logic moves.
+- **`cyclocomp_linter`** — the function exceeds the configured complexity limit;
+  reduce branching by extracting a helper or simplifying control flow. This is a
+  real refactor, so keep it behaviour-preserving and add/adjust tests if logic
+  moves.
 
 Fix the code, not the config: do not raise limits, disable linters, or add
 paths to `exclusions` to make a genuine lint pass. Changing `.lintr` also has a
@@ -117,13 +117,13 @@ verification is the re-run of the lint job in CI. Before handing off:
 - Re-check each reported `file:line` now conforms to the rule from `.lintr`.
 - For renames, confirm every reference was updated.
 - Watch for fixes that introduce a *new* lint (e.g. a rewrap that pushes another
-  line over 100 chars).
+  line over the length limit).
 
 Then report per lint: file:line, the linter, and the fix applied. Example:
 
 ```
 - test-detect_study_types.R:179 pipe_continuation_linter -> put select(-VOL) on its own line after %>%
-- R/foo.R:42 line_length_linter -> wrapped the call arguments to stay under 100 chars
+- R/foo.R:42 line_length_linter -> wrapped the call arguments to stay under the limit
 ```
 
 ## Notes and limits
