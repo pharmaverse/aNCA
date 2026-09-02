@@ -535,3 +535,31 @@ describe("rm_impute_obs_params", {
     expect_equal(result$intervals, intervals_before)
   })
 })
+
+describe(".derive_study_types", {
+  it("never emits metabolite/NA-suffixed study-type labels (#1471)", {
+    # The Parameter Selection matrix and the partial-interval Study Type dropdown
+    # both label study types with this function, while update_main_intervals()
+    # matches selections against these same labels. If any UI-facing code instead
+    # derives labels from the raw METABFL column, it produces labels such as
+    # "... (Metabolite)" or "...NA" that never match here, so the selection is
+    # silently dropped. Lock in that this function blanks METABFL and therefore
+    # only ever returns plain study-type labels.
+    data <- FIXTURE_PKNCA_DATA
+    expect_true("METABFL" %in% names(data$conc$data))
+    expect_true(any(data$conc$data$METABFL == "Y"))
+
+    types <- unique(aNCA:::.derive_study_types(data)$type)
+
+    expect_true(length(types) > 0)
+    expect_false(any(grepl("Metabolite", types, fixed = TRUE)))
+    expect_false(any(grepl("NA$", types)))
+  })
+
+  it("returns a USUBJID column so callers can count subjects per type", {
+    data <- FIXTURE_PKNCA_DATA
+    result <- aNCA:::.derive_study_types(data)
+    expect_true("USUBJID" %in% names(result))
+    expect_true("type" %in% names(result))
+  })
+})
