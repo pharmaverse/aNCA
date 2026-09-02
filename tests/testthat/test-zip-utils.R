@@ -173,3 +173,261 @@ describe("get_dose_esc_results", {
     expect_equal(length(res), n_result_groups)
   })
 })
+
+# Format handling added for the bulk TLG export (issue #1344): PDF for ggplots, XLSX for
+# tables, and raster output for plotly objects that carry their source ggplot.
+
+describe("save_ggplot_format", {
+  gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+
+  it("writes a PDF when asked", {
+    d <- withr::local_tempdir()
+    save_ggplot_format(gg, file.path(d, "p"), "pdf")
+    expect_true(file.exists(file.path(d, "p.pdf")))
+  })
+})
+
+describe("save_table_format", {
+  it("writes an XLSX when asked", {
+    d <- withr::local_tempdir()
+    save_table_format(head(mtcars), file.path(d, "t"), "xlsx")
+    expect_true(file.exists(file.path(d, "t.xlsx")))
+  })
+
+  it("writes an XLSX from an rlistings listing_df, which is not a plain data.frame", {
+    skip_if_not_installed("rlistings")
+    d <- withr::local_tempdir()
+    lst <- rlistings::as_listing(data.frame(a = 1:3, b = letters[1:3]), key_cols = "a")
+    expect_no_error(save_table_format(lst, file.path(d, "l"), "xlsx"))
+    expect_true(file.exists(file.path(d, "l.xlsx")))
+  })
+})
+
+describe("save_plotly_format", {
+  gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+
+  it("renders PNG from the stashed source ggplot", {
+    d <- withr::local_tempdir()
+    save_plotly_format(aNCA:::.with_ggplot(plotly::ggplotly(gg), gg), file.path(d, "p"), "png")
+    expect_true(file.exists(file.path(d, "p.png")))
+    # Only what was asked for -- HTML drags in a multi-MB dependency folder per plot.
+    expect_false(file.exists(file.path(d, "p.html")))
+  })
+
+  it("falls back to HTML when there is no stashed ggplot to rasterise", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "png")
+    expect_false(file.exists(file.path(d, "p.png")))
+    # Never silently produce nothing: HTML is the only thing a bare plotly can yield.
+    expect_true(file.exists(file.path(d, "p.html")))
+  })
+
+  # saveWidget() inlines every dependency but does not reliably delete the library
+  # directory it staged them in, so the archive carried a full copy of plotly and jQuery
+  # per graph that no HTML file even referenced (#1344).
+  it("leaves no orphaned _files directory next to the HTML", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "html")
+    expect_true(file.exists(file.path(d, "p.html")))
+    expect_false(dir.exists(file.path(d, "p_files")))
+  })
+
+  it("writes a self-contained HTML, so dropping _files loses nothing", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "html")
+    html <- paste(readLines(file.path(d, "p.html"), warn = FALSE), collapse = "\n")
+    expect_false(grepl("<script[^>]+src=\"p_files/", html))
+  })
+})
+
+describe("save_ggplot_format: html", {
+  it("cleans up the widget library directory for ggplot input too", {
+    d <- withr::local_tempdir()
+    gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+    save_ggplot_format(gg, file.path(d, "g"), "html")
+    expect_true(file.exists(file.path(d, "g.html")))
+    expect_false(dir.exists(file.path(d, "g_files")))
+  })
+})
+
+# .make_zip_filename gained a `suffix` argument so the TLG bulk download can reuse the
+# project/study naming instead of duplicating it (issue #1344).
+local({
+  library(shiny)
+  source(
+    file.path(system.file("shiny", package = "aNCA"), "modules", "tab_nca", "zip.R"),
+    local = TRUE
+  )
+},
+envir = parent.env(environment()))
+
+describe(".make_zip_filename", {
+  fake_session <- function(project = "", label = "") {
+    list(userData = list(
+      project_name    = function() project,
+      study_ids_label = function() label
+    ))
+  }
+
+  it("defaults to the project name with a .zip extension", {
+    expect_equal(.make_zip_filename(fake_session("MyProject")), "MyProject.zip")
+  })
+
+  it("honours a custom suffix so exports are distinguishable", {
+    expect_equal(
+      .make_zip_filename(fake_session("MyProject"), "_TLGs.zip"), "MyProject_TLGs.zip"
+    )
+  })
+
+  it("falls back to the study label, then to a bare NCA name", {
+    expect_equal(.make_zip_filename(fake_session("", "S123"), "_TLGs.zip"),
+                 "NCA_S123_TLGs.zip")
+    expect_equal(.make_zip_filename(fake_session("", ""), "_TLGs.zip"), "NCA_TLGs.zip")
+  })
+
+  it("replaces characters that are not safe in a file name", {
+    expect_equal(.make_zip_filename(fake_session("My Project/v2")), "My_Project_v2.zip")
+  })
+})
+
+# Rendered TLGs are exported through the app-wide "Export as ZIP" button rather than a
+# second control on the TLG tab (issue #1344).
+local({
+  library(shiny)
+  source(
+    file.path(system.file("shiny", package = "aNCA"), "modules", "tab_nca", "zip.R"),
+    local = TRUE
+  )
+},
+envir = parent.env(environment()))
+
+describe(".available_tlg_types", {
+  it("reports nothing before the TLG module has published anything", {
+    expect_length(.available_tlg_types(list(userData = list())), 0)
+  })
+
+  it("reports only the types that actually rendered", {
+    rendered <- list(a = list(type = "table"), b = list(type = "graph"))
+    sess <- list(userData = list(tlg_outputs = function(types = c("table", "listing", "graph")) {
+      Filter(function(e) e$type %in% types, rendered)
+    }))
+    expect_setequal(.available_tlg_types(sess), c("table", "graph"))
+  })
+})
+
+describe(".available_tree_items: TLG branch", {
+  it("omits the branch when no TLGs have rendered", {
+    expect_null(.available_tree_items(TRUE, character(), NULL, character())$TLGs)
+  })
+
+  it("offers only the nodes matching the rendered types", {
+    items <- .available_tree_items(TRUE, character(), NULL, c("table", "graph"))
+    expect_named(items$TLGs, c("tlg_tables", "tlg_graphs"))
+  })
+})
+
+describe(".clean_export_dir: TLG outputs", {
+  it("keeps TLG files, whose names come from the catalog and not from tree nodes", {
+    d <- withr::local_tempdir()
+    dir.create(file.path(d, "TLGs", "Tables", "xlsx"), recursive = TRUE)
+    writeLines("x", file.path(d, "TLGs", "Tables", "xlsx", "pkct01.xlsx"))
+    writeLines("x", file.path(d, "TLGs", "manifest.csv"))
+    writeLines("x", file.path(d, "junk.txt"))
+
+    .clean_export_dir(
+      d,
+      list(res_tree = "tlg_tables", table_formats = "xlsx",
+           plot_formats = "png", slide_formats = NULL),
+      NULL
+    )
+    expect_true(file.exists(file.path(d, "TLGs", "Tables", "xlsx", "pkct01.xlsx")))
+    expect_true(file.exists(file.path(d, "TLGs", "manifest.csv")))
+    expect_false(file.exists(file.path(d, "junk.txt")))
+  })
+})
+
+# Rendered TLGs get their own format controls rather than sharing the dataset ones, whose
+# defaults were wrong in both directions for TLGs: "html" was on (hundreds of MB of widgets
+# nobody asked for) and "xlsx" was not (tables could only ever be CSV) -- see #1344.
+describe("TLG export formats", {
+  it("defaults to PDF for graphs and XLSX for tables", {
+    # PDF is written as one multi-page document per TLG, so the default keeps a full order
+    # to a handful of files rather than one image per plot.  XLSX keeps the table default
+    # machine-readable; PDF is the filing format and is opt-in.
+    expect_equal(TLG_GRAPH_FORMATS_DEFAULT, "pdf")
+    expect_equal(TLG_TABLE_FORMATS_DEFAULT, "xlsx")
+    expect_true(all(c("png", "pdf") %in% TLG_GRAPH_FORMATS))
+    expect_false("html" %in% TLG_GRAPH_FORMATS_DEFAULT)
+    expect_false("pdf" %in% TLG_TABLE_FORMATS_DEFAULT)
+  })
+
+  it("offers pdf for tables and listings as well as graphs", {
+    # Asked for as a filing format.  It is in both lists, which is why the two cannot share
+    # one selectize: options are keyed by value, so a repeat is dropped from the second.
+    expect_true("pdf" %in% TLG_TABLE_FORMATS)
+    expect_true("pdf" %in% TLG_GRAPH_FORMATS)
+  })
+
+  it("keeps TLG nodes out of the dataset format checks", {
+    # They have their own controls now, so a TLG selection must not demand a dataset format.
+    expect_length(
+      .check_format_selections(
+        tree = "tlg_graphs", plot_formats = character(), table_formats = character(),
+        slide_formats = character(),
+        tlg_graph_formats = "png", tlg_table_formats = character()
+      ),
+      0
+    )
+  })
+
+  it("accepts the defaults for any TLG selection", {
+    expect_length(
+      .check_format_selections(
+        tree = TLG_NODES, plot_formats = "png", table_formats = "csv",
+        slide_formats = "qmd",
+        tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+        tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT
+      ),
+      0
+    )
+  })
+
+  it("names the control that was emptied rather than reporting both", {
+    graphs_only <- .check_format_selections(
+      tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
+      slide_formats = "qmd", tlg_graph_formats = "png", tlg_table_formats = character()
+    )
+    expect_match(paste(graphs_only, collapse = " "), "no table format is chosen")
+    expect_no_match(paste(graphs_only, collapse = " "), "no graph format is chosen")
+
+    tables_only <- .check_format_selections(
+      tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
+      slide_formats = "qmd", tlg_graph_formats = character(), tlg_table_formats = "xlsx"
+    )
+    expect_match(paste(tables_only, collapse = " "), "no graph format is chosen")
+    expect_no_match(paste(tables_only, collapse = " "), "no table format is chosen")
+  })
+
+  it("does not demand a graph format for a tables-only selection", {
+    # The two controls are independent: an order with no graphs in it must still export.
+    expect_length(
+      .check_format_selections(
+        tree = c("tlg_tables", "tlg_listings"), plot_formats = "png",
+        table_formats = "csv", slide_formats = "qmd",
+        tlg_graph_formats = character(), tlg_table_formats = "xlsx"
+      ),
+      0
+    )
+  })
+
+  it("says nothing about TLGs when none are selected", {
+    expect_length(
+      .check_format_selections(
+        tree = "adnca", plot_formats = "png", table_formats = "csv",
+        slide_formats = "qmd",
+        tlg_graph_formats = character(), tlg_table_formats = character()
+      ),
+      0
+    )
+  })
+})
