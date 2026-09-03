@@ -169,4 +169,20 @@ describe("detect_study_types", {
     )
     expect_setequal(result$type, expected_types)
   })
+  it("treats a NULL volume_column the same as an omitted one", {
+    # PKNCA >= 0.12.1.9000 only records a volume column on a PKNCAconc object
+    # when one was supplied, so data$conc$columns$volume is NULL for
+    # non-excretion data and reaches detect_study_types() as an explicit NULL.
+    combined_data <- bind_rows(
+      base_data %>% mutate(USUBJID = "SUBJ01"),
+      base_data %>% mutate(USUBJID = "SUBJ02", ROUTE = "extravascular")
+    ) %>% select(-VOL)
+
+    expect_no_error(
+      res_null <- detect_study_types(combined_data, groups, "METABFL", "ROUTE", NULL)
+    )
+    res_omitted <- detect_study_types(combined_data, groups, "METABFL", "ROUTE")
+    expect_equal(res_null, res_omitted)
+    expect_false("Excretion Data" %in% res_null$type)
+  })
 })
