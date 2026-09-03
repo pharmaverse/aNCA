@@ -216,7 +216,9 @@ describe("format_pkncadata_intervals", {
       DOSEA = 10,
       ROUTE = "extravascular",
       ADOSEDUR = 0,
-      AVAL = c(0, 5, 3, 1)
+      AVAL = c(0, 5, 3, 1),
+      exclude_half.life = FALSE,
+      include_half.life = NA
     )
 
     df_conc_pd <- format_pkncaconc_data(
