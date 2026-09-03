@@ -362,3 +362,7 @@ ADPP,193,PPSUMXF,PP Summary Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALS
 ADPP,194,PPSUMRSN,PP Summary Exclusion Reason,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,229,ATPTREF,Analysis Timepoint Reference,text,Timing,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,88,ROUTE,Route of Administration,text,Topic,Perm,FALSE,FALSE,40,C66729,FALSE,,FALSE,,,,NA,FALSE
+ADPP,11,DOSEA,Actual Treatment Dose,float,Topic,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,12,DOSEU,Actual Treatment Dose Units,text,Topic,Perm,FALSE,FALSE,40,C71620,FALSE,,FALSE,,,,NA,FALSE
+ADPP,207,CRIT1,Analysis Criterion 1,text,Result Qualifier,Perm,TRUE,FALSE,70,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,195,CRIT1FL,Criterion 1 Evaluation Result Flag,text,Record Qualifier,Cond,TRUE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
