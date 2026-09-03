@@ -358,7 +358,7 @@ ADNCA,172,VISITNUM,Visit Number,integer,Grouping Qualifier,Req,FALSE,FALSE,12,,F
 ADNCA,160,WBCBL,WBC Count at Baseline,float,Synonym Qualifier,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,161,WBCBLU,WBC Count at baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,266,PKSUM1RS,PK Summary Exclusion Reason 1,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
-ADPP,193,PPSUMXF,PP Summary Exclusion Flag,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
-ADPP,194,PPSUMRSN,PP Summary Exclusion Reason,text,Record Qualifier,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,193,ANL01FL,Analysis Flag 01,text,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
+ADPP,194,ANL01FN,Analysis Flag 01 (N),integer,Record Qualifier,Perm,FALSE,FALSE,1,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,229,ATPTREF,Analysis Timepoint Reference,text,Timing,Perm,FALSE,FALSE,200,,FALSE,,FALSE,,,,NA,FALSE
 ADPP,88,ROUTE,Route of Administration,text,Topic,Perm,FALSE,FALSE,40,C66729,FALSE,,FALSE,,,,NA,FALSE

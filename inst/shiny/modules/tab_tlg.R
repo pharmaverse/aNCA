@@ -277,7 +277,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       bindEvent(c(input$submit_tlg_order))
 
     # Raw TLG inputs.  Individual listings must display rows excluded from
-    # summaries (PKSUMXF/PPSUMXF == "Y"), so they consume these unfiltered
+    # summaries (PKSUMXF == "Y" / ANL01FL != "Y"), so they consume these unfiltered
     # sources -- see tlg_data_key().
     # apply_labels() restores column `label` attributes (stripped by the
     # PKNCA/dplyr pipeline and by row-subsetting) so the `!COLUMN` label-reference
@@ -309,16 +309,16 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     })
 
     # Summary-filtered variants for tables and mean plots: rows flagged
-    # PKSUMXF (ADNCA) / PPSUMXF (ADPP) == "Y" are removed from summary
+    # PKSUMXF (ADNCA) == "Y" or ANL01FL (ADPP) != "Y" are removed from summary
     # statistics and mean plots, but NOT from individual listings.  Each dataset
     # is filtered by its own flag only -- a record excluded from the
-    # PK-parameter summary (PPSUMXF) must still be able to appear in the
+    # PK-parameter summary (ANL01FL) must still be able to appear in the
     # concentration representations, and vice-versa.
     conc_data <- reactive(
       apply_labels(filter_tlg_excluded(conc_data_all(), "PKSUMXF"), type = "ADNCA")
     )
     adpp_data <- reactive(
-      apply_labels(filter_tlg_excluded(adpp_data_all(), "PPSUMXF"), type = "ADPP")
+      apply_labels(filter_tlg_excluded(adpp_data_all(), "ANL01FL"), type = "ADPP")
     )
 
     # (dataset, type) -> data reactive.  Listings resolve to the "*_all"

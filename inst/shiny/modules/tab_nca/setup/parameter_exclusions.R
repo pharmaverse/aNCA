@@ -2,7 +2,7 @@
 #'
 #' UI and server logic for excluding PK parameter rows from summary outputs.
 #' Users select rows from the NCA results table and mark them for exclusion.
-#' Excluded rows are flagged via PPSUMXF = "Y" in ADPP.
+#' Included rows are flagged via ANL01FL = "Y" in ADPP.
 #'
 #' - Yellow: Excluded parameter rows (auto from flag rules + manual)
 
@@ -41,10 +41,10 @@ parameter_exclusions_ui <- function(id) {
             ),
             tags$ul(
               tags$li("Select rows in the table below and provide a reason."),
-              tags$li(tags$b("Yellow"), ": excluded (PPSUMXF = \"Y\" in ADPP)"),
+              tags$li(tags$b("Yellow"), ": excluded from ADPP summaries"),
               tags$li(
-                "Rows excluded by flag rules are shown with PPSUMXF/PPSUMRSN",
-                "and excluded from summary statistics and applicable plots."
+                "Rows excluded by flag rules have blank ANL01FL/ANL01FN",
+                "and are excluded from summary statistics and applicable plots."
               ),
               tags$li(
                 "Manually added exclusions are filtered from",
@@ -80,7 +80,7 @@ parameter_exclusions_ui <- function(id) {
 }
 
 # Build the display data frame for the parameter exclusions table.
-# Derives PPSUMXF/PPSUMRSN from the PKNCA exclude column, then layers
+# Derives ANL01FL/ANL01FN from the PKNCA exclude column, then layers
 # manual exclusions on top.
 .build_param_display <- function(result_df, group_cols, manual_exclusions) {
   display_cols <- c(
@@ -108,9 +108,9 @@ parameter_exclusions_ui <- function(id) {
     }
   }
 
-  ppsum <- aNCA:::.derive_ppsum_flags(exclude_vals)
-  df$PPSUMXF <- ppsum$PPSUMXF
-  df$PPSUMRSN <- ppsum$PPSUMRSN
+  anl01 <- aNCA:::.derive_anl01_flags(exclude_vals)
+  df$ANL01FL <- anl01$ANL01FL
+  df$ANL01FN <- anl01$ANL01FN
 
   apply_labels(df, type = "ADPP")
 }
@@ -146,8 +146,8 @@ parameter_exclusions_server <- function(id, res_nca) {
       .build_param_display(res_nca()$result, group_cols, exclusion_list())
     })
 
-    # Render the reactable with row coloring for excluded rows (PPSUMXF == "Y").
-    # PPSUMXF = "Y" means excluded from summaries; empty means included.
+    # Render the reactable with row coloring for excluded rows (ANL01FL != "Y").
+    # ANL01FL = "Y" means included in summaries; empty means excluded.
     param_table_state <- reactable_server(
       "param_table",
       param_data,
@@ -155,9 +155,9 @@ parameter_exclusions_server <- function(id, res_nca) {
       onClick = "select",
       borderless = TRUE,
       rowStyle = function(x) {
-        ppsumxf <- x$PPSUMXF
+        anl01fl <- x$ANL01FL
         function(index) {
-          if (ppsumxf[index] == "Y") {
+          if (is.na(anl01fl[index]) || anl01fl[index] != "Y") {
             return(list(background = EXCL_COLOR_PARAM))
           }
           NULL
