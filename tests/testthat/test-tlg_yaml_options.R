@@ -126,3 +126,106 @@ describe("tlg.yaml select defaults", {
     }
   }
 })
+
+# Issue #1430: every catalog entry must offer Title, Subtitle and Footnote in the sidebar,
+# and the reference wording from the TLG catalog must be pre-filled where a static default
+# is meaningful.  Counted after the template merge, since `g_pkcg02_*` and the `_log`/`_sbs`
+# variants inherit their whole Labs block from `g_pkcg01_lin` / `g_pkcg03_lin`.
+
+LAB_OPTIONS <- c("title", "subtitle", "footnote")
+
+# The three pkcg families build title and subtitle per render (scale wording, cohort, and a
+# "N=" subject count that `parse_annotation` has no token for), so a static default would be
+# a regression rather than an improvement.  They are exempt from the pre-filled-title check.
+DYNAMIC_TITLE_ENTRIES <- c(
+  "g_pkcg01_lin", "g_pkcg01_log", "g_pkcg01_sbs",
+  "g_pkcg02_lin", "g_pkcg02_log", "g_pkcg02_sbs",
+  "g_pkcg03_lin", "g_pkcg03_log", "g_pkcg03_sbs",
+  "p_pkcg03_lin_dose", "p_pkcg03_log_dose", "p_pkcg03_sbs_dose"
+)
+
+lab_default <- function(entry, key) entry$options[[key]]$default
+
+# Entry ids whose `key` label carries no pre-filled default.
+entries_without_default <- function(resolved, key, exclude = character()) {
+  Filter(
+    function(id) is.null(lab_default(resolved[[id]], key)),
+    setdiff(names(resolved), exclude)
+  )
+}
+
+# Column tokens other than $STUDYID found in any label default, reported as
+# "<entry>.<option>: <tokens>".
+disallowed_default_tokens <- function(resolved) {
+  found <- lapply(names(resolved), function(id) {
+    unlist(lapply(LAB_OPTIONS, function(key) {
+      value <- lab_default(resolved[[id]], key)
+      if (is.null(value)) return(NULL)
+      tokens <- setdiff(unlist(regmatches(value, gregexpr("\\$\\w+", value))), "$STUDYID")
+      if (length(tokens) == 0) return(NULL)
+      paste0(id, ".", key, ": ", paste(tokens, collapse = ", "))
+    }))
+  })
+  unlist(found)
+}
+
+# Listing entries whose title default spans more than one line.
+multiline_listing_titles <- function(resolved) {
+  listings <- Filter(function(e) identical(e$type, "Listing"), resolved)
+  Filter(function(id) {
+    value <- lab_default(listings[[id]], "title")
+    !is.null(value) && grepl("\n", value, fixed = TRUE)
+  }, names(listings))
+}
+
+describe("tlg.yaml label options", {
+  resolved <- resolve_tlg_templates(
+    yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
+  )
+
+  for (id in names(resolved)) {
+    opts <- resolved[[id]]$options
+
+    it(paste0("`", id, "` exposes all three label options as text widgets"), {
+      expect_equal(
+        setdiff(LAB_OPTIONS, names(opts)), character(0),
+        info = paste0(
+          "'", id, "' is missing a label option, so the user cannot set it in the sidebar."
+        )
+      )
+      for (key in LAB_OPTIONS) expect_identical(opts[[key]]$type, "text")
+    })
+  }
+
+  it("every entry outside the pkcg families pre-fills a catalog title", {
+    expect_equal(
+      entries_without_default(resolved, "title", DYNAMIC_TITLE_ENTRIES), character(0)
+    )
+  })
+
+  it("every entry pre-fills a footnote", {
+    expect_equal(entries_without_default(resolved, "footnote"), character(0))
+  })
+
+  it("the pkcg families deliberately leave title and subtitle unset", {
+    unset <- intersect(
+      entries_without_default(resolved, "title"),
+      entries_without_default(resolved, "subtitle")
+    )
+    expect_setequal(intersect(unset, DYNAMIC_TITLE_ENTRIES), DYNAMIC_TITLE_ENTRIES)
+  })
+
+  # `$COL` expands to `unique(data[[COL]])`, so a token naming a column that varies within
+  # a split returns a vector and the label renders blank.  `$STUDYID` is the only column
+  # guaranteed single-valued across a study, so it is the only token allowed in a default.
+  it("defaults interpolate no column token other than $STUDYID", {
+    expect_equal(disallowed_default_tokens(resolved), NULL)
+  })
+
+  # Listing titles are run through parse_annotation, which rewrites newlines to "<br>", and
+  # unlike the subtitle the result is not converted back, so a newline would print a literal
+  # "<br>" in the rendered listing.
+  it("listing titles are single-line", {
+    expect_equal(multiline_listing_titles(resolved), character(0))
+  })
+})

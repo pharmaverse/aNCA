@@ -285,6 +285,26 @@ h5 {
   margin: 0;
 }
 
+/* title / subtitle / footnote rendered around a table TLG (issue #1430) */
+.tlg-module .tlg-table-title {
+  font-size: 1.15rem;
+  font-weight: bold;
+  margin-bottom: 0.15em;
+}
+
+.tlg-module .tlg-table-subtitle {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 0.5em;
+}
+
+.tlg-module .tlg-table-footnote {
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 0.5em;
+  margin-bottom: 1.5em;
+}
+
 .modal-dialog:has(.tlg-option-table) {
   max-width: none;
   margin-left: 1em;
