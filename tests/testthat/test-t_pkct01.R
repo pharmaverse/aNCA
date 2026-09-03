@@ -61,6 +61,26 @@ describe("t_pkct01", {
     expect_error(t_pkct01(bad), "missing required column")
   })
 
+  it("drops PKSUMXF == 'Y' rows from the summary (#1438)", {
+    # Flag both records of the 10mg / NFRLT==1 group for summary exclusion.
+    # Every row of that cell is removed, so the group has no data left and the
+    # row drops out of the table entirely (empty groups are not emitted). The
+    # unflagged comparison run keeps the cell with n == 2.
+    flagged <- pkct01_data
+    flagged$PKSUMXF <- ""
+    flagged$PKSUMXF[flagged$PARAM == "Drug A" &
+                      flagged$TRT01A == "10mg" &
+                      flagged$NFRLT == 1] <- "Y"
+
+    excl <- t_pkct01(flagged)[[1]]
+    row_excl <- excl[excl$TRT01A == "10mg" & excl$NFRLT == 1, ]
+    expect_equal(nrow(row_excl), 0)
+
+    kept <- t_pkct01(pkct01_data)[[1]]
+    row_kept <- kept[kept$TRT01A == "10mg" & kept$NFRLT == 1, ]
+    expect_equal(row_kept$n, 2)
+  })
+
   it("returns single list entry when list_vars not present in data", {
     data_no_pcspec <- pkct01_data[, setdiff(names(pkct01_data), "PCSPEC")]
     result <- t_pkct01(data_no_pcspec, list_vars = c("PARAM", "PCSPEC"))

@@ -318,7 +318,7 @@ pkcg01 <- function(
     }
   })
   plots %>%
-    setNames(unique(adnca[["id_plot"]]))
+    setNames(unique(adnca_grouped[["id_plot"]]))
 }
 
 # Helper Function for Title Generation
@@ -698,7 +698,7 @@ pkcg02 <- function(
     }
   })
   plots %>%
-    setNames(unique(adnca[["id_plot"]]))
+    setNames(unique(adnca_grouped[["id_plot"]]))
 
 }
 
@@ -844,6 +844,10 @@ pkcg03 <- function(
   summary_method = "Mean_sdi",
   whiskers_lwr_upr = c("Both", "Upper", "Lower")[1]
 ) {
+  # Mean plot: drop rows flagged for summary exclusion (individual pkcg01/pkcg02
+  # keep them). No-op when the flag column is absent.
+  adnca <- filter_summary_excluded(adnca)
+
   xmin <- as.numeric(xmin)
   xmax <- as.numeric(xmax)
   ymin <- as.numeric(ymin)

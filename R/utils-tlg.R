@@ -66,6 +66,32 @@ split_and_apply <- function(data, list_vars, fn) {
   setNames(results, levels(split_keys))
 }
 
+#' Drop rows excluded from PK summary outputs.
+#'
+#' Summary tables and mean plots exclude records flagged for summary exclusion
+#' (`PKSUMXF == "Y"` in ADNCA, `PPSUMXF == "Y"` in ADPP), while individual and
+#' combined plots and listings keep them.  Only summary/mean TLG functions call
+#' this helper; every other output receives the raw data.
+#'
+#' The relevant flag is auto-detected from the columns present, so the same call
+#' works for both datasets.  Each dataset carries only its own flag (ADNCA ->
+#' `PKSUMXF`, ADPP -> `PPSUMXF`), so this never cross-filters one dataset by the
+#' other's flag.  When no flag column is present the data is returned unchanged.
+#'
+#' `dplyr::filter()` is used rather than base `[` so column `label` attributes
+#' survive the row subset; the `!COLUMN` annotation syntax in TLG titles/axes
+#' depends on them.
+#'
+#' @param data A data frame (ADNCA or ADPP).
+#' @return `data` with summary-excluded rows removed.
+#' @noRd
+filter_summary_excluded <- function(data) {
+  for (flag in intersect(c("PKSUMXF", "PPSUMXF"), names(data))) {
+    data <- dplyr::filter(data, is.na(.data[[flag]]) | .data[[flag]] != "Y")
+  }
+  data
+}
+
 #' Filter ADPP rows to metabolite records
 #'
 #' Applies a three-tier fallback to identify metabolite rows in ADPP:

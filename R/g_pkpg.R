@@ -52,6 +52,8 @@ p_pkpg03_boxp <- function(
     stop("p_pkpg03_boxp: missing required columns: ", paste(missing_cols, collapse = ", "))
   }
 
+  data <- filter_summary_excluded(data)
+
   data <- data[!is.na(data[[value_var]]), , drop = FALSE]
   if (nrow(data) == 0) return(list())
 
@@ -237,6 +239,8 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   xlab           = NULL,
   ylab           = NULL
 ) {
+  data <- filter_summary_excluded(data)
+
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
     data <- dplyr::filter(data, toupper(.data$PPSPEC) %in% toupper(urine_specs))
@@ -448,6 +452,8 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
     stop("p_pkpg02_doseprop: missing required columns: ",
          paste(missing_cols, collapse = ", "))
   }
+
+  data <- filter_summary_excluded(data)
 
   data <- data[
     !is.na(data[[value_var]]) & !is.na(data[[dose_var]]) &

@@ -136,6 +136,32 @@ describe("g_pkcg01_log", {
   })
 })
 
+describe("summary-exclusion scoping (#1438)", {
+  # Flag every record of one subject for summary exclusion.
+  flagged <- adnca
+  flagged$PKSUMXF <- ""
+  excluded_subj <- unique(flagged$USUBJID)[1]
+  flagged$PKSUMXF[flagged$USUBJID == excluded_subj] <- "Y"
+
+  it("individual plots (g_pkcg01) keep summary-excluded subjects", {
+    baseline <- g_pkcg01_lin(adnca, plotly = FALSE)
+    with_flag <- g_pkcg01_lin(flagged, plotly = FALSE)
+    # One plot per subject; flagging must not drop the subject's plot (the bug
+    # this fixes removed it). id_plot names end in ".<USUBJID>".
+    expect_equal(length(with_flag), length(baseline))
+    expect_true(any(grepl(paste0("\\.", excluded_subj, "$"), names(with_flag))))
+  })
+
+  it("mean plots (g_pkcg03) drop summary-excluded records", {
+    # DOSNOP/DOSEA grouping: with only one subject flagged the mean plot still
+    # renders, but the flagged subject's rows must not reach the summary. Assert
+    # via the underlying filter so the check is independent of plot internals.
+    kept <- filter_summary_excluded(flagged)
+    expect_false(any(kept$USUBJID == excluded_subj))
+    expect_true(all(adnca$USUBJID %in% unique(c(kept$USUBJID, excluded_subj))))
+  })
+})
+
 describe("pkcg02", {
   it("generates valid ggplots with LIN scale", {
     combined_plots_lin <- pkcg02(
