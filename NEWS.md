@@ -76,6 +76,8 @@
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
 
 ### Exploration
+* Faceted individual and mean exploration plots can now use a shared y-axis range across panels, with the selected setting preserved in generated plot code and saved exports (#1424)
+* Faceted exploration plots now align differing units automatically: compatible units (within or across panels) are rescaled to a common unit, and incompatible units are shown per facet (comma-separated in the strip label) with a notification suggesting which grouping variables (e.g. PARAM, PCSPEC) to add to 'facet by' (#1424)
 * "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup
@@ -124,6 +126,7 @@
 * CMAX auto-selected in box plots if available (#890)
 
 ### Data & Mapping
+* Mapping section assertion error now reports the count and offending `mapping_section` values for easier debugging (#1367)
 * ADNCA now includes `PKSUM1RS` column storing the general exclusion reason when `PKSUMXF = "Y"` (#1331)
 * Upload multiple input files, bound into a single ADNCA dataset (#821)
 * Optional mapping of AEFRLT for excretion rate parameters (ERTLST, ERTMAX) (#745)

@@ -18,6 +18,7 @@ g_lineplot(
   x_limits = NULL,
   y_limits = NULL,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   threshold_value = NULL,
   palette = "default",
   tooltip_vars = NULL,
@@ -62,6 +63,9 @@ Default is \code{NULL} (no limits).}
 
 \item{ylog_scale}{A logical value (\code{TRUE} or \code{FALSE}) indicating whether to use
 a logarithmic scale for the y-axis.}
+
+\item{lock_y_axis}{Logical; if \code{TRUE}, faceted plots use one shared
+y-axis range while x-axis scales remain free. Default is \code{FALSE}.}
 
 \item{threshold_value}{A numeric value for the y-intercept of the threshold line.
 Only used if \code{show_threshold} is \code{TRUE}.}
