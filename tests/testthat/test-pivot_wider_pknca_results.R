@@ -222,6 +222,17 @@ describe("pivot_wider_pknca_results", {
     # parameters so this still passes on both CRAN and dev PKNCA.
     golden <- c(
       `CMAX[ng/mL]` = "Max Conc",
+      `TMAX[hr]` = "Time of CMAX Observation",
+      `TLST[hr]` = "Time of Last Nonzero Conc",
+      `CLST[ng/mL]` = "Last Nonzero Conc",
+      `LAMZ[1/hr]` = "Lambda z",
+      `R2` = "R Squared",
+      `R2ADJ` = "R Squared Adjusted",
+      `CORRXY` = "Correlation Between TimeX and Log ConcY",
+      `LAMZLL[hr]` = "Lambda z Lower Limit",
+      `LAMZUL[hr]` = "Lambda z Upper Limit",
+      `LAMZNPT[count]` = "Number of Points for Lambda z",
+      `CLSTP[ng/mL]` = "Clast pred",
       `LAMZHL[hr]` = "Half-Life Lambda z",
       `AUCINT_0-2[hr*ng/mL]` = "AUC from 0 to 2",
       LAMZIX = NA_character_
