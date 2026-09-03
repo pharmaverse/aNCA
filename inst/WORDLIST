@@ -25,6 +25,7 @@ BLQ
 Bioavailability
 Buckeridge
 CDISC
+CFR
 CMAX
 CRITy
 CRITyFL
@@ -218,6 +219,7 @@ predose
 px
 qmd
 recognised
+recursed
 renderable
 reproducibility
 resizable
