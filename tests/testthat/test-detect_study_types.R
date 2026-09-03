@@ -176,7 +176,8 @@ describe("detect_study_types", {
     combined_data <- bind_rows(
       base_data %>% mutate(USUBJID = "SUBJ01"),
       base_data %>% mutate(USUBJID = "SUBJ02", ROUTE = "extravascular")
-    ) %>% select(-VOL)
+    ) %>%
+      select(-VOL)
 
     expect_no_error(
       res_null <- detect_study_types(combined_data, groups, "METABFL", "ROUTE", NULL)

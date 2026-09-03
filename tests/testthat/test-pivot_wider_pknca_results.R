@@ -228,7 +228,6 @@ describe("pivot_wider_pknca_results", {
       `LAMZ[1/hr]` = "Lambda z",
       `R2` = "R Squared",
       `R2ADJ` = "R Squared Adjusted",
-      `CORRXY` = "Correlation Between TimeX and Log ConcY",
       `LAMZLL[hr]` = "Lambda z Lower Limit",
       `LAMZUL[hr]` = "Lambda z Upper Limit",
       `LAMZNPT[count]` = "Number of Points for Lambda z",
