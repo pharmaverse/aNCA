@@ -9,6 +9,8 @@ l_pkcl02_uri(
   urine_specs = c("URINE"),
   listgroup_vars = c("PARAM", "PCSPEC"),
   displaying_vars = NULL,
+  title = paste0("Listing of Urine PK Concentration and Volume ",
+    "by Treatment Group, Subject and Nominal Time, PK Population"),
   ...
 )
 }
@@ -25,6 +27,11 @@ absent from \code{data}, it is silently removed from this vector.}
 \item{displaying_vars}{Character vector of columns to display. When \code{NULL}
 (default), uses \code{c("NFRLT", "AFRLT", "AVAL")} plus \code{VOLUME}/\code{VOLUMEU}
 if those columns exist in the data.}
+
+\item{title}{Main listing title. Bound as a named parameter rather than left
+to \code{...} so the sidebar can expose it: forwarding a user-supplied \code{title}
+through \code{...} while the wrapper also sets one is a duplicate-argument error
+at render time.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=l_pkcl01]{l_pkcl01()}}.}
 }
