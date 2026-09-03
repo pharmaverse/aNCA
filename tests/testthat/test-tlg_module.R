@@ -16,6 +16,10 @@ local({
     file.path(shiny_dir, "modules", "tab_tlg", "tlg_option_select.R"),
     local = TRUE
   )
+  source(
+    file.path(shiny_dir, "modules", "tab_tlg", "tlg_option_text.R"),
+    local = TRUE
+  )
 },
 envir = parent.env(environment()))
 
@@ -566,5 +570,142 @@ describe("tlg_module_server: Shiny control-flow conditions", {
     shiny::testServer(tlg_module_server, args = args, {
       expect_match(tlg_list(), "^Error: a genuine failure")
     })
+  })
+})
+
+# Issue #1430: re-submitting the order re-runs the option renderer, which used to push the
+# yaml default back to the client and wipe whatever the user had typed.
+
+describe(".carry_forward_text_values", {
+  options <- list(
+    .group_label_1 = "Labs",
+    title = list(type = "text", label = "Title", default = "Catalog Title"),
+    xmin  = list(type = "numeric", label = "X min", default = 0),
+    strat = list(type = "select", label = "Stratify", default = ".pknca_groups")
+  )
+
+  it("replaces a text default with the value the widget currently holds", {
+    out <- .carry_forward_text_values(options, list(title = "User Edit"))
+    expect_equal(out$title$default, "User Edit")
+  })
+
+  it("keeps the declared default when the widget has not reported a value", {
+    out <- .carry_forward_text_values(options, list())
+    expect_equal(out$title$default, "Catalog Title")
+  })
+
+  it("carries an emptied box forward so the function default applies again", {
+    out <- .carry_forward_text_values(options, list(title = ""))
+    expect_equal(out$title$default, "")
+  })
+
+  it("leaves select and numeric options alone", {
+    # A select default may be an unresolved runtime token, and the table widget keeps its
+    # rows in `default_rows`; neither round-trips through `default`.
+    out <- .carry_forward_text_values(options, list(strat = c("A", "B"), xmin = 5))
+    expect_equal(out$strat$default, ".pknca_groups")
+    expect_equal(out$xmin$default, 0)
+  })
+
+  it("passes .group_label_* section headers through untouched", {
+    out <- .carry_forward_text_values(options, list(title = "x"))
+    expect_equal(out$.group_label_1, "Labs")
+  })
+})
+
+describe("tlg_option_text_server reset", {
+  # `shinyjs::reset()` restores the value the element was *created* with, which after the
+  # carry-forward above is the user's own text -- making it a no-op.  The observer must
+  # therefore write the declared default explicitly, so these assert on the update message
+  # actually sent to the client rather than on the returned reactive (which only ever
+  # echoes `input$text` and would stay green with no observer at all).
+  # `shiny::MockShinySession` records no input messages, so the update is captured by
+  # mocking `updateTextInput` itself.  Asserting on the returned reactive would not do:
+  # it only ever echoes `input$text`, and stays green even with the observer deleted.
+  capture_reset <- function(default) {
+    captured <- NULL
+    testthat::local_mocked_bindings(
+      # Name imposed by shiny's API, so it cannot be snake_case.
+      updateTextInput = function(session, input_id, ...) { # nolint: object_name_linter.
+        captured <<- list(input_id = input_id, value = list(...)$value)
+      },
+      .package = "shiny"
+    )
+    trigger <- reactiveVal(0L)
+    shiny::testServer(
+      tlg_option_text_server,
+      args = list(
+        opt_def = list(type = "text", label = "Title", default = default),
+        data = reactive(data.frame(AVAL = 1)),
+        reset_trigger = trigger
+      ),
+      {
+        session$setInputs(text = "User Edit")
+        expect_equal(session$returned(), "User Edit")
+        trigger(trigger() + 1L)
+        session$flushReact()
+      }
+    )
+    captured
+  }
+
+  it("sends the declared default to the widget when reset fires", {
+    captured <- capture_reset("Catalog Title")
+    expect_equal(captured$input_id, "text")
+    expect_equal(captured$value, "Catalog Title")
+  })
+
+  it("clears the box when the option declares no default", {
+    # updateTextInput(value = NULL) is a no-op, so an absent default must become "".
+    captured <- capture_reset(NULL)
+    expect_equal(captured$input_id, "text")
+    expect_equal(captured$value, "")
+  })
+})
+
+# Issue #1430: table labels are rendered around the reactable from the attributes the TLG
+# function attached.  parse_annotation turns newlines into "<br>", so the renderer has to
+# split on that tag rather than trusting the string as markup.
+
+describe(".tlg_lab_tag", {
+  it("returns NULL for an absent or empty label so no empty tag is emitted", {
+    expect_null(.tlg_lab_tag(NULL, tags$h3, "c"))
+    expect_null(.tlg_lab_tag("", tags$h3, "c"))
+  })
+
+  it("wraps a single-line label in the requested tag and class", {
+    out <- as.character(.tlg_lab_tag("A Title", tags$h3, "tlg-table-title"))
+    expect_true(grepl("<h3", out, fixed = TRUE))
+    expect_true(grepl('class="tlg-table-title"', out, fixed = TRUE))
+    expect_true(grepl("A Title", out, fixed = TRUE))
+  })
+
+  it("splits a multi-line label into real line breaks", {
+    out <- as.character(.tlg_lab_tag("line one<br>line two", tags$p, "c"))
+    expect_true(grepl("line one", out, fixed = TRUE))
+    expect_true(grepl("line two", out, fixed = TRUE))
+    expect_equal(lengths(regmatches(out, gregexpr("<br/>", out, fixed = TRUE))), 1L)
+  })
+
+  it("escapes markup in the label rather than rendering it", {
+    # Labels interpolate data values (analyte names, treatment arms); they must never be
+    # treated as HTML.
+    out <- as.character(.tlg_lab_tag("<script>x</script>", tags$p, "c"))
+    expect_false(grepl("<script>", out, fixed = TRUE))
+    expect_true(grepl("&lt;script&gt;", out, fixed = TRUE))
+  })
+})
+
+describe(".interleave_breaks", {
+  it("returns a single line unchanged", {
+    expect_equal(.interleave_breaks("only"), list("only"))
+  })
+
+  it("puts one break between each pair of lines", {
+    out <- .interleave_breaks(c("a", "b", "c"))
+    expect_length(out, 5L)
+    expect_equal(out[[1]], "a")
+    expect_equal(out[[3]], "b")
+    expect_equal(out[[5]], "c")
   })
 })
