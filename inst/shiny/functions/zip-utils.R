@@ -379,34 +379,30 @@ get_tree_ids_for_texts <- function(tree, texts) {
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
-# Validate selected CDISC datasets before export. Writes the QC report and
-# stops the save when error-severity findings are present. No-op when no CDISC
-# dataset is selected or none is available in the session.
-.validate_cdisc_before_export <- function(target_dir, selected_cdisc, session,
-                                          progress) {
-  if (length(selected_cdisc) == 0 || is.null(session$userData$results$CDISC)) {
-    return(invisible(NULL))
-  }
+# Validate every output that will be written before any file is created. Runs
+# object-class checks on all selected outputs and value-level data-type checks
+# on the selected CDISC datasets, and stops the save when error-severity
+# findings are present. No-op when nothing conforming is being exported.
+.validate_outputs_before_export <- function(export_list, obj_names, progress) {
   progress$set(message = "Creating exports...",
-               detail = "Validating CDISC data types...")
-  dir.create(target_dir, showWarnings = FALSE, recursive = TRUE)
-  validation <- write_cdisc_validation_report(
-    cdisc_data = session$userData$results$CDISC,
-    target_dir = target_dir,
-    project = tryCatch(session$userData$project_name(), error = function(e) NULL)
-  )
-  if (!validation$blocks_save) return(invisible(NULL))
+               detail = "Validating outputs...")
+  findings <- validate_export_outputs(export_list, obj_names = obj_names)
+  if (!export_validation_blocks_save(findings)) return(invisible(NULL))
 
-  n_err <- sum(validation$findings$Severity == "error")
+  errors <- findings[findings$Severity == "error", , drop = FALSE]
   showNotification(
     sprintf(
-      "Save blocked: %d CDISC data-type error(s). See cdisc_validation_report.html.",
-      n_err
+      "Save blocked: %d output(s) failed data-type validation (%s).",
+      nrow(errors),
+      paste(utils::head(unique(errors$Output), 3), collapse = ", ")
     ),
     type = "error",
     duration = NULL
   )
-  stop(sprintf("CDISC validation failed with %d error(s).", n_err))
+  stop(sprintf(
+    "Export validation failed with %d error(s): %s",
+    nrow(errors), paste(unique(errors$Output), collapse = ", ")
+  ))
 }
 
 prepare_export_files <- function(target_dir,
@@ -418,11 +414,7 @@ prepare_export_files <- function(target_dir,
                                  progress,
                                  slide_config = NULL) {
 
-  # Validate CDISC datasets against metadata-declared data types before any
-  # files are written. Writes a QC report as an export artifact and aborts the
-  # save when error-severity findings exist.
   selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
-  .validate_cdisc_before_export(target_dir, selected_cdisc, session, progress)
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
@@ -458,6 +450,12 @@ prepare_export_files <- function(target_dir,
       export_list[[key]] <- results[[key]]
     }
   }
+
+  # Validate every output that will be written before any file is created:
+  # object-class checks on all selected outputs and value-level data-type
+  # checks on the selected CDISC datasets. Aborts the save on error-severity
+  # findings so non-conforming data is never written (cf. 21 CFR 11.10(a)).
+  .validate_outputs_before_export(export_list, obj_names, progress)
 
   save_output(
     output = export_list,
@@ -770,12 +768,9 @@ prepare_export_files <- function(target_dir,
     files_req <- c(files_req, grep("results_slides_outputs\\.rda$", all_files, value = TRUE))
   }
 
-  # Preserve pre-specs and the validation QC report only when at least one
-  # CDISC dataset is selected
+  # Preserve pre-specs only when at least one CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
-                                   value = TRUE))
-    files_req <- c(files_req, grep("cdisc_validation_report\\.html$", all_files,
                                    value = TRUE))
   }
   if ("session_info" %in% fnames) {
