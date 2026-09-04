@@ -204,5 +204,8 @@
       "zero_str"
     )
   )
+}
+
+.onAttach <- function(libname, pkgname) {
   register_anca_pknca_extra_parameters()
 }
