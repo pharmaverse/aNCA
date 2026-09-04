@@ -178,6 +178,13 @@ parameter_exclusions_ui <- function(id) {
 # .build_exclusion_reasons and .render_exclusion_table are defined in
 # inst/shiny/functions/utils-exclusions.R and shared with general_exclusions.
 
+# Sort the ADPP exclusions display by parameter while preserving the stable
+# `.row_id` used to connect plot clicks back to result rows.
+.sort_param_display <- function(df) {
+  if (!"PPTESTCD" %in% names(df)) return(df)
+  df[order(df$PPTESTCD, seq_len(nrow(df)), na.last = TRUE), , drop = FALSE]
+}
+
 .adpp_excl_log <- function(...) {
   message("[ADPP exclusions] ", paste(..., collapse = ""))
 }
@@ -374,6 +381,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       if (!is.null(sel) && length(sel) > 0 && "PPTESTCD" %in% names(df)) {
         df <- df[df$PPTESTCD %in% sel, , drop = FALSE]
       }
+      df <- .sort_param_display(df)
       df$.plot_clicked <- df$.row_id %in% selected_plot_row_id()
       df
     })
@@ -390,6 +398,8 @@ parameter_exclusions_server <- function(id, res_nca) {
       selection = "multiple",
       onClick = "select",
       borderless = TRUE,
+      defaultPageSize = 50,
+      pageSizeOptions = function(data) unique(c(25, 50, 100, nrow(data))),
       # Keep internal columns in the data (needed for coloring) but hide them.
       columns = function(data) {
         defs <- define_cols(data)

@@ -162,3 +162,28 @@ describe(".clicked_display_row", {
     expect_true(is.na(.clicked_display_row(list(key = "x"), display_df)))
   })
 })
+
+describe(".sort_param_display", {
+  it("sorts by PPTESTCD while preserving row ids", {
+    df <- data.frame(
+      PPTESTCD = c("TMAX", "CMAX", "AUCIFO", "CMAX"),
+      .row_id = c(1, 2, 3, 4),
+      stringsAsFactors = FALSE
+    )
+
+    result <- .sort_param_display(df)
+
+    expect_equal(result$PPTESTCD, c("AUCIFO", "CMAX", "CMAX", "TMAX"))
+    expect_equal(result$.row_id, c(3, 2, 4, 1))
+  })
+
+  it("leaves data unchanged when PPTESTCD is unavailable", {
+    df <- data.frame(
+      PARAM = c("TMAX", "CMAX"),
+      .row_id = c(1, 2),
+      stringsAsFactors = FALSE
+    )
+
+    expect_equal(.sort_param_display(df), df)
+  })
+})
