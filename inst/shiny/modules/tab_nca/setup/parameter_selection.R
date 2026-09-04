@@ -185,26 +185,19 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
       mutate(sort_order = row_number())
 
     # Retrieve study types
+    #
+    # These labels must be byte-identical to the ones produced at calculation
+    # time, because `update_main_intervals()` applies each per-study-type
+    # parameter selection with `type == study_type`. Calculation time uses
+    # `.derive_study_types()`, which blanks `METABFL` (so metabolite-specific
+    # types are never assigned per interval). Reuse that exact derivation here;
+    # calling `detect_study_types()` directly with the real `METABFL` produced
+    # labels like "Multiple IV Infusion (Metabolite)" that never matched, so
+    # parameters selected for those study types were silently ignored (#1471).
     study_types_df <- reactive({
       req(processed_pknca_data())
 
-      conc_group_columns <- group_vars(processed_pknca_data()$conc)
-      dose_group_columns <- group_vars(processed_pknca_data()$dose)
-      group_columns <- unique(c(conc_group_columns, dose_group_columns))
-
-      groups <- group_columns %>%
-        purrr::keep(\(col) {
-          !is.null(col) &&
-            length(unique(processed_pknca_data()$conc$data[[col]])) > 1
-        })
-
-      detect_study_types(
-        processed_pknca_data()$conc$data,
-        groups,
-        metabfl_column = "METABFL",
-        route_column = processed_pknca_data()$dose$columns$route,
-        volume_column = processed_pknca_data()$conc$columns$volume
-      )
+      aNCA:::.derive_study_types(processed_pknca_data())
     })
 
     # Create summary of study types
