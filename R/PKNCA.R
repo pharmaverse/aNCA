@@ -341,16 +341,31 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     pknca_dose = data$dose,
     start_from_last_dose = start_impute,
     keep_interval_cols = keep_interval_cols
-  ) %>%
-    # Join route information
-    # TODO (Gerardo): Add ROUTE to keep_interval_cols
-    left_join(
-      select(
-        adnca_data$dose$data,
-        any_of(c(group_vars(adnca_data$dose), adnca_data$dose$columns$route, "ROUTE"))
-      ) %>% unique(),
-      by = group_vars(adnca_data$dose)
-    )
+  )
+
+  # Join route information from the dose data. Only bring in route columns that
+  # are not already present in the intervals: when a route column (e.g. ROUTE)
+  # is also selected as a grouping variable it is already kept by
+  # format_pkncadata_intervals(), and re-joining it here would produce
+  # suffixed ROUTE.x / ROUTE.y columns, dropping the plain ROUTE that
+  # keep_interval_cols expects and crashing pk.nca().
+  dose_group_vars <- group_vars(adnca_data$dose)
+  route_cols <- intersect(
+    c(adnca_data$dose$columns$route, "ROUTE"),
+    names(adnca_data$dose$data)
+  )
+  route_cols_to_add <- setdiff(route_cols, names(data$intervals))
+
+  if (length(route_cols_to_add) > 0) {
+    data$intervals <- data$intervals %>%
+      left_join(
+        select(
+          adnca_data$dose$data,
+          any_of(c(dose_group_vars, route_cols_to_add))
+        ) %>% unique(),
+        by = dose_group_vars
+      )
+  }
 
   # Apply filtering
   data$intervals <- data$intervals %>%
