@@ -318,7 +318,7 @@ pkcg01 <- function(
     }
   })
   plots %>%
-    setNames(unique(adnca[["id_plot"]]))
+    setNames(unique(adnca_grouped[["id_plot"]]))
 }
 
 # Helper Function for Title Generation
@@ -698,7 +698,7 @@ pkcg02 <- function(
     }
   })
   plots %>%
-    setNames(unique(adnca[["id_plot"]]))
+    setNames(unique(adnca_grouped[["id_plot"]]))
 
 }
 
