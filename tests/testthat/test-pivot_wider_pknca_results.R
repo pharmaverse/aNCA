@@ -186,6 +186,11 @@ describe("pivot_wider_pknca_results", {
   })
 
   it("adds appropriate labels to columns (CDISC PPTEST)", {
+    # The development version of PKNCA emits new parameters (e.g. lambda.z.corrxy)
+    # that aNCA's CDISC label/parameter mapping does not yet cover, which changes
+    # the expected label set. Skip on CRAN so an upcoming PKNCA release cannot
+    # block CRAN; the mismatch still surfaces in local/CI runs against PKNCA dev.
+    skip_on_cran()
     labels <- formatters::var_labels(pivoted_res)
     expected_labels <- c(
       PCSPEC = NA, USUBJID = NA, PARAM = NA, start = NA, end = NA, ATPTREF = NA,

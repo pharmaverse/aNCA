@@ -522,8 +522,8 @@ describe("PKNCA_update_data_object", {
     # t=3 should be flagged for exclusion with the specified reason
     expect_true(all(conc$exclude_half.life[at_t3]))
     expect_true(all(grepl("Outlier", conc$REASON[at_t3])))
-    # Other points should remain unflagged
-    expect_false(any(conc$exclude_half.life[!at_t3]))
+    # Other points should remain unflagged (NA, mirroring include_half.life)
+    expect_true(all(is.na(conc$exclude_half.life[!at_t3])))
   })
 
   it("flags include_half.life on matching points via hl_adj_rules Selection", {
