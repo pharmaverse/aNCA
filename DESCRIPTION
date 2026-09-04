@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.1.0.9193
+Version: 0.1.0.9194
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -31,6 +31,7 @@ Imports:
     formatters,
     ggplot2,
     glue,
+    grid,
     htmltools,
     htmlwidgets,
     logger,
