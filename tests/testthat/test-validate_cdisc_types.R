@@ -314,3 +314,181 @@ describe("cdisc_validation_blocks_save", {
     expect_false(cdisc_validation_blocks_save(warn_only))
   })
 })
+
+describe("describe_cdisc_variables", {
+  it("returns one row per column with pass status for conforming data", {
+    cdisc_data <- list(
+      adnca = data.frame(
+        STUDYID = "S001", AVAL = 1.2, USUBJID = "U1",
+        stringsAsFactors = FALSE
+      )
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    expect_s3_class(summary, "data.frame")
+    expect_equal(nrow(summary), 3)
+    expect_equal(names(summary), CDISC_SUMMARY_COLS)
+    expect_true(all(summary$Status == "pass"))
+    expect_true(all(c("STUDYID", "AVAL", "USUBJID") %in% summary$Variable))
+  })
+
+  it("includes the metadata label, expected and observed class", {
+    cdisc_data <- list(
+      adnca = data.frame(AVAL = 1.2, stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "AVAL", ]
+    expect_equal(row$Expected_Class, "numeric")
+    expect_equal(row$Observed_Class, "numeric")
+    expect_equal(row$Type, "float")
+  })
+
+  it("marks wrong-type columns as error with a detail message", {
+    cdisc_data <- list(
+      adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "STUDYID", ]
+    expect_equal(row$Status, "error")
+    expect_match(row$Detail, "Expected character")
+  })
+
+  it("marks over-length columns as error and reports the longest value", {
+    cdisc_data <- list(
+      adnca = data.frame(USUBJID = "SUBJECT-TOO-LONG", stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "USUBJID", ]
+    expect_equal(row$Status, "error")
+    expect_equal(row$Longest_Value, nchar("SUBJECT-TOO-LONG"))
+    expect_match(row$Detail, "exceeds declared length")
+  })
+
+  it("marks unknown columns as unknown status", {
+    cdisc_data <- list(
+      adnca = data.frame(NOTINMETA = "x", stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    row <- summary[summary$Variable == "NOTINMETA", ]
+    expect_equal(row$Status, "unknown")
+  })
+
+  it("resolves indexed variables to their template label and passes", {
+    indexed_meta <- data.frame(
+      Dataset = "ADNCA", Variable = "NCAwXRS",
+      Label = "Reason w for PK NCA Exclusion",
+      Type = "Character", Length = 200, stringsAsFactors = FALSE
+    )
+    cdisc_data <- list(
+      adnca = data.frame(NCA1XRS = "Late Sample", stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = indexed_meta)
+    row <- summary[summary$Variable == "NCA1XRS", ]
+    expect_equal(row$Status, "pass")
+    expect_equal(row$Label, "Reason w for PK NCA Exclusion")
+    expect_equal(row$Expected_Class, "character")
+  })
+
+  it("marks uninterpretable metadata types as skipped", {
+    meta <- data.frame(
+      Dataset = "ADNCA", Variable = "MYSTERY", Label = "Mystery",
+      Type = "weird", Length = NA, stringsAsFactors = FALSE
+    )
+    cdisc_data <- list(
+      adnca = data.frame(MYSTERY = 1, stringsAsFactors = FALSE)
+    )
+    summary <- describe_cdisc_variables(cdisc_data, metadata = meta)
+    expect_equal(summary$Status, "skipped")
+  })
+
+  it("returns empty summary for NULL or empty input", {
+    expect_equal(nrow(describe_cdisc_variables(NULL)), 0)
+    expect_equal(nrow(describe_cdisc_variables(list())), 0)
+    expect_equal(names(describe_cdisc_variables(NULL)), CDISC_SUMMARY_COLS)
+  })
+})
+
+describe("cdisc_validation_report", {
+  it("renders a PASS banner for conforming data", {
+    findings <- validate_cdisc_types(list())
+    html <- cdisc_validation_report(findings)
+    expect_type(html, "character")
+    expect_match(html, "PASS")
+    expect_match(html, "<!DOCTYPE html>")
+    expect_no_match(html, "FAIL -")
+  })
+
+  it("renders a FAIL banner and finding rows for errors", {
+    findings <- validate_cdisc_types(
+      list(adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)),
+      metadata = test_metadata
+    )
+    html <- cdisc_validation_report(findings, project = "MyProject")
+    expect_match(html, "FAIL")
+    expect_match(html, "MyProject")
+    expect_match(html, "STUDYID")
+  })
+
+  it("escapes HTML special characters in findings", {
+    findings <- validate_cdisc_types(
+      list(adnca = data.frame(`A<B` = "x", check.names = FALSE)),
+      metadata = test_metadata
+    )
+    html <- cdisc_validation_report(findings)
+    expect_match(html, "A&lt;B")
+  })
+
+  it("shows the Problems section before the Variable summary section", {
+    cdisc_data <- list(
+      adnca = data.frame(STUDYID = "S1", AVAL = 1.2, stringsAsFactors = FALSE)
+    )
+    findings <- validate_cdisc_types(cdisc_data, metadata = test_metadata)
+    summary <- describe_cdisc_variables(cdisc_data, metadata = test_metadata)
+    html <- cdisc_validation_report(findings, summary = summary)
+    expect_match(html, "<h2>Problems</h2>")
+    expect_match(html, "<h2>Variable summary</h2>")
+    expect_lt(
+      regexpr("<h2>Problems</h2>", html, fixed = TRUE),
+      regexpr("<h2>Variable summary</h2>", html, fixed = TRUE)
+    )
+    # The summary lists the variable and its declared class
+    expect_match(html, "STUDYID")
+    expect_match(html, "Conforms")
+  })
+
+  it("omits the Variable summary section when no summary is supplied", {
+    html <- cdisc_validation_report(validate_cdisc_types(list()))
+    expect_no_match(html, "<h2>Variable summary</h2>")
+  })
+})
+
+describe("write_cdisc_validation_report", {
+  it("writes the report and returns findings, path, and blocks flag", {
+    tmp <- file.path(tempdir(), paste0("cdisc_val_", as.integer(runif(1, 1, 1e6))))
+    cdisc_data <- list(
+      adnca = data.frame(STUDYID = "S001", AVAL = 1.2, stringsAsFactors = FALSE)
+    )
+    res <- write_cdisc_validation_report(
+      cdisc_data, target_dir = tmp, metadata = test_metadata
+    )
+    expect_true(file.exists(res$report_path))
+    expect_false(res$blocks_save)
+    expect_equal(nrow(res$findings), 0)
+    expect_s3_class(res$summary, "data.frame")
+    expect_equal(nrow(res$summary), 2)
+    expect_true(all(res$summary$Status == "pass"))
+    unlink(tmp, recursive = TRUE)
+  })
+
+  it("reports blocks_save = TRUE when data has type errors", {
+    tmp <- file.path(tempdir(), paste0("cdisc_val_", as.integer(runif(1, 1, 1e6))))
+    cdisc_data <- list(
+      adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)
+    )
+    res <- write_cdisc_validation_report(
+      cdisc_data, target_dir = tmp, metadata = test_metadata
+    )
+    expect_true(res$blocks_save)
+    expect_true(file.exists(res$report_path))
+    unlink(tmp, recursive = TRUE)
+  })
+})
