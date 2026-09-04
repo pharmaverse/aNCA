@@ -132,6 +132,12 @@ describe(".build_param_display", {
 })
 
 describe(".clicked_display_row", {
+  it("extracts clicked plotly keys as result row ids", {
+    expect_equal(.clicked_row_id(list(key = "7")), 7L)
+    expect_true(is.na(.clicked_row_id(list(y = 10))))
+    expect_true(is.na(.clicked_row_id(list(key = "x"))))
+  })
+
   it("matches clicked plotly keys to displayed rows by .row_id", {
     display_df <- data.frame(
       PPTESTCD = c("CMAX", "CMAX", "AUCIFO"),

@@ -210,14 +210,27 @@ parameter_exclusions_ui <- function(id) {
   match(row_id, display_df$.row_id)
 }
 
+# Return the stable result row id carried by a clicked Plotly point.
+.clicked_row_id <- function(ev) {
+  if (is.null(ev) || is.null(ev$key)) return(NA_integer_)
+  suppressWarnings(as.integer(ev$key[[1]]))
+}
+
 # Highlight the table row matching a clicked boxplot point.
-.highlight_clicked_row <- function(ev, display_df, session, ns) {
+.highlight_clicked_row <- function(ev, display_df, selected_plot_row_id,
+                                   session, ns) {
+  row_id <- .clicked_row_id(ev)
   row <- .clicked_display_row(ev, display_df)
   .adpp_excl_log(
+    "clicked row_id=", row_id,
+    "; ",
     "resolved clicked key to visible row=", row,
     "; displayed rows=", nrow(display_df)
   )
   if (is.na(row)) return(invisible())
+
+  selected_plot_row_id(row_id)
+  .adpp_excl_log("stored plot-selected row_id=", row_id)
 
   updateReactable(ns("param_table-table"), selected = row)
   .adpp_excl_log(
@@ -234,6 +247,7 @@ parameter_exclusions_server <- function(id, res_nca) {
     exclusion_list <- reactiveVal(list())
     xbtn_counter <- reactiveVal(0)
     prev_fingerprint <- reactiveVal(NULL)
+    selected_plot_row_id <- reactiveVal(NA_integer_)
 
     # Clear exclusions only when result structure changes (row count or columns),
     # not on every recomputation (e.g. unit changes that preserve row identity).
@@ -243,6 +257,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       if (!identical(fp, prev_fingerprint())) {
         exclusion_list(list())
         xbtn_counter(0)
+        selected_plot_row_id(NA_integer_)
         prev_fingerprint(fp)
       }
     })
@@ -359,6 +374,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       if (!is.null(sel) && length(sel) > 0 && "PPTESTCD" %in% names(df)) {
         df <- df[df$PPTESTCD %in% sel, , drop = FALSE]
       }
+      df$.plot_clicked <- df$.row_id %in% selected_plot_row_id()
       df
     })
 
@@ -379,15 +395,29 @@ parameter_exclusions_server <- function(id, res_nca) {
         defs <- define_cols(data)
         defs[[".row_id"]] <- reactable::colDef(show = FALSE)
         defs[[".excl_type"]] <- reactable::colDef(show = FALSE)
+        defs[[".plot_clicked"]] <- reactable::colDef(show = FALSE)
         defs
       },
-      # Colour rows red (flag) / yellow (manual) / orange (both).
+      # Colour exclusion rows, and strongly outline the point clicked in
+      # the plot. The outline is server-side state, so it remains visible
+      # even when reactable's client-side selected style is unavailable.
       rowStyle = function(x) {
         types <- x$.excl_type
+        clicked <- x$.plot_clicked
         function(index) {
+          style <- list()
           color <- aNCA:::.exclusion_type_color(types[index])
-          if (!is.na(color)) return(list(background = color))
-          NULL
+          if (!is.na(color)) {
+            style$background <- color
+          }
+          if (isTRUE(clicked[index])) {
+            style$background <- if (!is.na(color)) color else "#D8ECFF"
+            style$boxShadow <- "inset 4px 0 0 #0072B2"
+            style$outline <- "2px solid #0072B2"
+            style$outlineOffset <- "-2px"
+            style$fontWeight <- "600"
+          }
+          if (length(style) > 0) style else NULL
         }
       }
     )
@@ -397,20 +427,29 @@ parameter_exclusions_server <- function(id, res_nca) {
     observeEvent(input$add_exclusion, {
       rows_sel <- param_table_state()$selected
       reason <- input$exclusion_reason
-      if (length(rows_sel) > 0 && nzchar(reason)) {
+      if (nzchar(reason)) {
         row_ids <- displayed_row_ids()[rows_sel]
         row_ids <- row_ids[!is.na(row_ids)]
-        if (length(row_ids) > 0) {
-          current <- exclusion_list()
-          xbtn_id <- paste0("remove_param_excl_", xbtn_counter() + 1)
-          xbtn_counter(xbtn_counter() + 1)
-          new_entry <- list(list(
-            reason = reason, rows = row_ids, xbtn_id = xbtn_id
-          ))
-          exclusion_list(append(current, new_entry))
-          updateTextInput(session, "exclusion_reason", value = "")
-          updateReactable(ns("param_table-table"), selected = NA)
+
+        plot_row_id <- selected_plot_row_id()
+        if (length(row_ids) == 0 &&
+            !is.na(plot_row_id) &&
+            plot_row_id %in% displayed_row_ids()) {
+          row_ids <- plot_row_id
         }
+
+        if (length(row_ids) == 0) return(invisible())
+
+        current <- exclusion_list()
+        xbtn_id <- paste0("remove_param_excl_", xbtn_counter() + 1)
+        xbtn_counter(xbtn_counter() + 1)
+        new_entry <- list(list(
+          reason = reason, rows = row_ids, xbtn_id = xbtn_id
+        ))
+        exclusion_list(append(current, new_entry))
+        selected_plot_row_id(NA_integer_)
+        updateTextInput(session, "exclusion_reason", value = "")
+        updateReactable(ns("param_table-table"), selected = NA)
       }
     })
 
@@ -534,7 +573,9 @@ parameter_exclusions_server <- function(id, res_nca) {
                 "; ", .adpp_excl_event_summary(ev)
               )
               req(ev)
-              .highlight_clicked_row(ev, param_data(), session, ns)
+              .highlight_clicked_row(
+                ev, param_data(), selected_plot_row_id, session, ns
+              )
             },
             ignoreInit = TRUE
           )
