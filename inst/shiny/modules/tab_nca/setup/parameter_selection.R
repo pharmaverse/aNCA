@@ -17,6 +17,22 @@
 #'     `list("Study Type A" = c("p1", "p2"))`.}
 #'   \item{types_df}{A `reactive` data frame containing the study type detection results.}
 
+#' Log the number of selected parameters per study type
+#'
+#' Extracted from the server to keep `parameter_selection_server` within the
+#' cyclomatic complexity budget.
+#'
+#' @param state Named list of logical selection vectors keyed by study type.
+#' @param study_types Character vector of study types to report.
+#' @keywords internal
+#' @noRd
+.log_param_selection <- function(state, study_types) {
+  for (st in study_types) {
+    n_params <- sum(state[[st]], na.rm = TRUE)
+    log_info("Parameter selection for '", st, "': ", n_params, " parameters selected.")
+  }
+}
+
 parameter_selection_ui <- function(id,
                                    units_ui = NULL,
                                    intervals_ui = NULL,
@@ -317,6 +333,14 @@ parameter_selection_server <- function(id, processed_pknca_data, parameter_overr
         session, default_state, unique(study_types_df()$type)
       )
     })
+
+    # Log parameter selection changes (debounced to avoid noise from rapid clicks)
+    selections_debounced <- debounce(selections_state, 2000)
+    observeEvent(selections_debounced(), {
+      state <- selections_debounced()
+      req(state)
+      .log_param_selection(state, study_types_list())
+    }, ignoreInit = TRUE)
 
     observeEvent(input$clear_all, {
       state <- selections_state()
