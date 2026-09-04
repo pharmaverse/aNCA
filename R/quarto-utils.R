@@ -180,10 +180,10 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @keywords internal
 #' @noRd
-.add_qmd_analyte_comparison_slide <- function(quarto_path, res_dose_slides, i,
-                                              in_sections, use_plotly) {
+.add_qmd_analyte_comp_slide <- function(quarto_path, res_dose_slides, i,
+                                        in_sections, use_plotly) {
   if (in_sections("analyte_comparison") &&
-      !is.null(res_dose_slides[[i]]$analyte_comparison)) {
+        !is.null(res_dose_slides[[i]]$analyte_comparison)) {
     add_qmd_sl_plot(quarto_path = quarto_path,
                     plot = paste0("res_dose_slides[[", i, "]]$analyte_comparison"),
                     use_plotly = use_plotly)
@@ -209,7 +209,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
       use_plotly = use_plotly
     )
   }
-  .add_qmd_analyte_comparison_slide(quarto_path, res_dose_slides, i, in_sections, use_plotly)
+  .add_qmd_analyte_comp_slide(quarto_path, res_dose_slides, i, in_sections, use_plotly)
   if (in_sections("linplot")) {
     add_qmd_sl_plot(quarto_path = quarto_path,
                     plot = paste0("res_dose_slides[[", i, "]]$linplot"),
