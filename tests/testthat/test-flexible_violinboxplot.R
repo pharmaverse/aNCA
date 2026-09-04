@@ -217,6 +217,23 @@ describe("flexible_violinboxplot", {
     expect_s3_class(simple_plotly, "plotly")
   })
 
+  it("passes a custom source to plotly for Shiny click events", {
+    simple_plotly <- flexible_violinboxplot(
+      res_nca = boxplotdata,
+      parameter = "CMAX",
+      xvars = "DOSEA",
+      colorvars = "ATPTREF",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2"),
+      tooltip_vars = c("DOSEA", "USUBJID"),
+      box = TRUE,
+      plotly = TRUE,
+      seed = 123,
+      plotly_source = "box_src_cmax"
+    )
+
+    expect_equal(simple_plotly$x$source, "box_src_cmax")
+  })
+
   it("creates a violin plotly object correctly", {
     simple_plotly <- flexible_violinboxplot(
       res_nca = boxplotdata,

@@ -22,6 +22,8 @@
 #' @param show_excluded       Logical. If `TRUE`, excluded records (those with a populated
 #'                            `exclude` column) are overlaid as cross-shaped points. They are
 #'                            never included in box/violin statistics. Default is `FALSE`.
+#' @param plotly_source       Optional Plotly source id used by Shiny click
+#'                            events. Ignored when `plotly = FALSE`.
 #'
 #' @returns A plotly object representing the violin or box plot.
 #' @import dplyr
@@ -37,7 +39,8 @@ flexible_violinboxplot <- function(res_nca,
                                    box = TRUE,
                                    plotly = TRUE,
                                    seed = NULL,
-                                   show_excluded = FALSE) {
+                                   show_excluded = FALSE,
+                                   plotly_source = NULL) {
 
   prepared <- .prepare_boxplot_data(res_nca, parameter, varvalstofilter)
 
@@ -83,7 +86,12 @@ flexible_violinboxplot <- function(res_nca,
           panel.spacing = unit(3, "lines"),
           strip.text = element_text(size = 10))
 
-  if (plotly) ggplotly(p, tooltip = "text") else p
+  if (plotly) {
+    source <- if (is.null(plotly_source)) "A" else plotly_source
+    ggplotly(p, tooltip = "text", source = source)
+  } else {
+    p
+  }
 }
 
 

@@ -433,11 +433,11 @@ parameter_exclusions_server <- function(id, res_nca) {
               varvalstofilter = NULL,
               tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
               box = input$violinplot_toggle_switch,
-              show_excluded = TRUE
+              show_excluded = TRUE,
+              plotly_source = slot_source(slot)
             )
             if (inherits(p, "plotly")) {
               p <- plotly::event_register(p, "plotly_click")
-              p$x$source <- slot_source(slot)
             }
             p
           })
