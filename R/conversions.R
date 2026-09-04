@@ -89,6 +89,29 @@ apply_unit_defaults <- function(default_units, data_units) {
   list(units = merged, failed = failed)
 }
 
+#' Keep only units that differ from their data-derived default
+#'
+#' Change detection is value-based: a row is considered "changed" when its
+#' target unit (`PPSTRESU`) differs from the original unit (`PPORRESU`). This
+#' replaces the previous `default` flag, which only tracked edits made through
+#' the Units modal and missed automatic changes such as volume simplification.
+#'
+#' @param units A units table with `PPORRESU` and `PPSTRESU` columns.
+#'
+#' @returns The subset of rows where `PPSTRESU` differs from `PPORRESU`.
+#'   Rows where either unit is `NA` are excluded to avoid emitting
+#'   `NA`-based entries downstream.
+#' @export
+changed_units <- function(units) {
+  if (is.null(units) || nrow(units) == 0) {
+    return(units)
+  }
+  keep <- !is.na(units$PPSTRESU) &
+    !is.na(units$PPORRESU) &
+    units$PPSTRESU != units$PPORRESU
+  units[keep, , drop = FALSE]
+}
+
 
 #' Convert Numeric Value and Unit to ISO 8601 Duration
 #'
