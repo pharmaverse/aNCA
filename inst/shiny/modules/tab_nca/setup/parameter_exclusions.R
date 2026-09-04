@@ -178,6 +178,25 @@ parameter_exclusions_ui <- function(id) {
 # .build_exclusion_reasons and .render_exclusion_table are defined in
 # inst/shiny/functions/utils-exclusions.R and shared with general_exclusions.
 
+.adpp_excl_log <- function(...) {
+  message("[ADPP exclusions] ", paste(..., collapse = ""))
+}
+
+.adpp_excl_event_summary <- function(ev) {
+  if (is.null(ev)) return("<NULL>")
+
+  fields <- paste(names(ev), collapse = ",")
+  key <- if (is.null(ev$key)) "<NULL>" else paste(ev$key, collapse = "|")
+  curve <- if (is.null(ev$curveNumber)) "<NULL>" else paste(ev$curveNumber, collapse = "|")
+  point <- if (is.null(ev$pointNumber)) "<NULL>" else paste(ev$pointNumber, collapse = "|")
+
+  paste0(
+    "fields={", fields, "}; key=", key,
+    "; curveNumber=", curve,
+    "; pointNumber=", point
+  )
+}
+
 # Return the visible table row corresponding to a clicked Plotly point.
 # Plot points carry `.row_id` as their Plotly key, so duplicate/similar
 # PPSTRESN values can still resolve to the exact ADPP row.
@@ -194,9 +213,17 @@ parameter_exclusions_ui <- function(id) {
 # Highlight the table row matching a clicked boxplot point.
 .highlight_clicked_row <- function(ev, display_df, session, ns) {
   row <- .clicked_display_row(ev, display_df)
+  .adpp_excl_log(
+    "resolved clicked key to visible row=", row,
+    "; displayed rows=", nrow(display_df)
+  )
   if (is.na(row)) return(invisible())
 
   updateReactable(ns("param_table-table"), selected = row)
+  .adpp_excl_log(
+    "called updateReactable for outputId=", ns("param_table-table"),
+    "; selected=", row
+  )
   invisible()
 }
 
@@ -425,6 +452,12 @@ parameter_exclusions_server <- function(id, res_nca) {
           local_param <- param
           slot <- safe_slot(local_param)
           output[[paste0(slot, "_plot")]] <- renderPlotly({
+            source <- slot_source(slot)
+            .adpp_excl_log(
+              "rendering plot parameter=", local_param,
+              "; slot=", slot,
+              "; source=", source
+            )
             p <- flexible_violinboxplot(
               res_nca = res_nca_tagged(),
               parameter = local_param,
@@ -434,10 +467,37 @@ parameter_exclusions_server <- function(id, res_nca) {
               tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
               box = input$violinplot_toggle_switch,
               show_excluded = TRUE,
-              plotly_source = slot_source(slot)
+              plotly_source = source
             )
             if (inherits(p, "plotly")) {
               p <- plotly::event_register(p, "plotly_click")
+              p <- htmlwidgets::onRender(p, "
+                function(el, x) {
+                  console.log('[ADPP exclusions] plotly rendered', {
+                    id: el.id,
+                    source: x.source
+                  });
+                  if (el.__adppExclClickLoggerAttached) return;
+                  el.__adppExclClickLoggerAttached = true;
+                  el.on('plotly_click', function(data) {
+                    var points = (data && data.points) || [];
+                    console.log('[ADPP exclusions] browser plotly_click', {
+                      id: el.id,
+                      source: x.source,
+                      point_count: points.length,
+                      keys: points.map(function(pt) { return pt.key; }),
+                      curve_numbers: points.map(function(pt) { return pt.curveNumber; }),
+                      point_numbers: points.map(function(pt) { return pt.pointNumber; })
+                    });
+                  });
+                }
+              ")
+              .adpp_excl_log(
+                "registered plotly_click for source=", source,
+                "; widget source=", p$x$source
+              )
+            } else {
+              .adpp_excl_log("plot output is not plotly for parameter=", local_param)
             }
             p
           })
@@ -452,14 +512,26 @@ parameter_exclusions_server <- function(id, res_nca) {
       map <- slot_map()
       already <- registered_click_slots()
       new_slots <- setdiff(names(map), already)
+      .adpp_excl_log(
+        "slot map updated; active sources=",
+        paste(vapply(names(map), slot_source, character(1)), collapse = ","),
+        "; new slots=", paste(new_slots, collapse = ",")
+      )
       for (slot in new_slots) {
         local({
           local_slot <- slot
+          source <- slot_source(local_slot)
+          .adpp_excl_log(
+            "registering server click observer for slot=", local_slot,
+            "; source=", source
+          )
           observeEvent(
-            plotly::event_data("plotly_click", source = slot_source(local_slot)),
+            plotly::event_data("plotly_click", source = source),
             {
-              ev <- plotly::event_data(
-                "plotly_click", source = slot_source(local_slot)
+              ev <- plotly::event_data("plotly_click", source = source)
+              .adpp_excl_log(
+                "server plotly_click source=", source,
+                "; ", .adpp_excl_event_summary(ev)
               )
               req(ev)
               .highlight_clicked_row(ev, param_data(), session, ns)
