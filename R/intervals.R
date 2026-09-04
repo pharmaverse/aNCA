@@ -337,12 +337,24 @@ update_main_intervals <- function(
 #' Apply Imputation for PKNCA Data
 #'
 #' Applies imputation rules to a PKNCAdata object, imputing start values and then
-#' selectively removing imputation for parameters that are not dependent on AUC.
+#' selectively removing imputation for observational parameters.
 #'
 #' @param data A PKNCAdata object.
 #' @param metadata_nca_parameters A data frame mapping PKNCA parameters (`PKNCA`)
 #' and information on their parameter dependencies ('Depends').
 #' @returns A PKNCAdata object with imputation rules applied.
+#'
+#' @details
+#' Imputation is removed from purely observational parameters (e.g. `tmax`,
+#' `cmax`, `tlast`, `clast.obs`) so aNCA reports their non-imputed values. Two
+#' families are kept imputed instead:
+#'   - AUC/AUMC parameters and anything depending on them.
+#'   - The terminal-slope (half-life) family: `half.life`/`lambda.z` and the
+#'     parameters depending on them (`R2`, `R2ADJ`, `LAMZLL`, `LAMZUL`,
+#'     `LAMZNPT`, `LAMZSPN`, `CLSTP`). This family is derived from the `Depends`
+#'     graph rather than the `CAT` label so it tracks metadata changes. Keeping
+#'     it imputed ensures the reported slope matches the AUCinf/clearance results
+#'     that are computed from that same imputed slope on the same interval row.
 #' @import dplyr
 #'
 rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_parameters) {
@@ -351,10 +363,25 @@ rm_impute_obs_params <- function(data, metadata_nca_parameters = metadata_nca_pa
     filter(grepl("auc|aumc", PKNCA) | grepl("auc", Depends)) %>%
     pull(PKNCA)
 
+  # Terminal-slope (half-life) family: the slope fit itself plus its diagnostics
+  # (LAMZ, LAMZHL, R2, R2ADJ, LAMZLL, LAMZUL, LAMZNPT, LAMZSPN, CLSTP). Derived
+  # from dependencies -- the seed `half.life`/`lambda.z` plus anything that
+  # depends on them -- rather than the `CAT` label, so it stays in sync with the
+  # metadata. This family must KEEP imputation: AUCinf and clearance parameters
+  # are calculated from the same imputed slope on the same interval row, so a
+  # separately reported non-imputed slope would not reconcile with them (#1443).
+  slope_family <- metadata_nca_parameters %>%
+    filter(
+      PKNCA %in% c("half.life", "lambda.z") |
+        grepl("half\\.life|lambda\\.z", Depends)
+    ) %>%
+    pull(PKNCA)
+
   params_not_to_impute <- metadata_nca_parameters %>%
     filter(
       !grepl("auc|aumc", PKNCA),
-      !grepl(paste0(params_auc_dep, collapse = "|"), Depends)
+      !grepl(paste0(params_auc_dep, collapse = "|"), Depends),
+      !PKNCA %in% slope_family
     ) %>%
     pull(PKNCA) %>%
     intersect(names(PKNCA::get.interval.cols()))

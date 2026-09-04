@@ -534,4 +534,70 @@ describe("rm_impute_obs_params", {
     result <- rm_impute_obs_params(data, metadata_nca_parameters)
     expect_equal(result$intervals, intervals_before)
   })
+
+  it("keeps the terminal-slope family imputed alongside the AUCinf it feeds (#1443)", {
+    # One imputed interval carrying observational params (cmax/tmax/tlast), the
+    # terminal-slope family (half.life/lambda.z/r.squared/clast.pred) and an
+    # AUCinf that consumes the slope. After processing, the slope family must
+    # remain on the imputed row with AUCinf (so they reconcile), while the
+    # observational params are split off onto a non-imputed row.
+    intervals <- data.frame(
+      start = 0,
+      end = Inf,
+      cmax = TRUE,
+      tmax = TRUE,
+      tlast = TRUE,
+      half.life = TRUE,
+      lambda.z = TRUE,
+      r.squared = TRUE,
+      clast.pred = TRUE,
+      aucinf.obs = TRUE,
+      impute = "start_conc0",
+      stringsAsFactors = FALSE
+    )
+    result <- rm_impute_obs_params(list(intervals = intervals), metadata_nca_parameters)
+    res <- result$intervals
+
+    imputed <- res[!is.na(res$impute) & res$impute == "start_conc0", ]
+    observational <- res[is.na(res$impute), ]
+
+    # Slope family + AUCinf stay on the imputed row.
+    for (p in c("half.life", "lambda.z", "r.squared", "clast.pred", "aucinf.obs")) {
+      expect_true(any(imputed[[p]]), info = p)
+    }
+    # Observational params are removed from the imputed row...
+    for (p in c("cmax", "tmax", "tlast")) {
+      expect_false(any(imputed[[p]]), info = p)
+    }
+    # ...and reported on a separate non-imputed row.
+    expect_equal(nrow(observational), 1)
+    for (p in c("cmax", "tmax", "tlast")) {
+      expect_true(observational[[p]], info = p)
+    }
+    # The slope family never leaks onto the non-imputed row.
+    for (p in c("half.life", "lambda.z", "r.squared", "clast.pred")) {
+      expect_false(observational[[p]], info = p)
+    }
+  })
+
+  it("still strips imputation from standalone observational params (no slope requested)", {
+    # When only observational params are requested, the whole imputed row is
+    # rewritten to non-imputed -- the slope-family carve-out must not keep it.
+    intervals <- data.frame(
+      start = 0,
+      end = Inf,
+      cmax = TRUE,
+      tmax = TRUE,
+      clast.obs = TRUE,
+      impute = "start_conc0",
+      stringsAsFactors = FALSE
+    )
+    result <- rm_impute_obs_params(list(intervals = intervals), metadata_nca_parameters)
+    res <- result$intervals
+
+    expect_true(all(is.na(res$impute)))
+    expect_true(any(res$cmax))
+    expect_true(any(res$tmax))
+    expect_true(any(res$clast.obs))
+  })
 })
