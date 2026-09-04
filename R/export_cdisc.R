@@ -10,13 +10,12 @@
 #'
 #' @param res_nca Object with results of the NCA analysis. If
 #'   `res_nca$result` contains a `.pp_excl` column (logical), excluded rows
-#'   are merged into the `exclude` column so they appear in `PPSUMXF`/`PPSUMRSN`.
-#'   If `.pp_excl_reason` (character) is also present, it populates `PPSUMRSN`.
+#'   are merged into the `exclude` column so they are omitted from `ANL01FL`.
 #' @param grouping_vars Character vector of non-standard grouping variable names to include
 #'   as additional columns in ADNCA, ADPP, and PP outputs. Defaults to `character(0)`.
 #' @param flag_rules Character vector of flag rule exclusion messages applied during NCA
 #'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). Each entry generates a CRITy/CRITyFL
-#'   column pair in ADPP, plus PPSUMXF and PPSUMRSN columns. Defaults to `NULL` (no flags).
+#'   column pair in ADPP, plus ANL01FL and ANL01FN columns. Defaults to `NULL` (no flags).
 #'
 #' @returns A list with two data frames:
 #' \describe{
@@ -242,9 +241,9 @@ export_cdisc <- function(res_nca, grouping_vars = character(0), flag_rules = NUL
       )
     ) %>%
     # Merge manual exclusions (.pp_excl) into the exclude column
-    # so .add_crit_flags() picks them up for PPSUMXF/PPSUMRSN
+    # so .add_crit_flags() picks them up for ANL01FL/ANL01FN
     .merge_manual_exclusions() %>%
-    # Add CRITy/CRITyFL flags and PPSUMXF/PPSUMRSN based on flag rules
+    # Add CRITy/CRITyFL flags and ANL01FL/ANL01FN based on flag rules
     .add_crit_flags(flag_rules) %>%
     select(-any_of(c("exclude", ".pp_excl", ".pp_excl_reason"))) %>%
     # Apply labels to columns added by .add_crit_flags()
@@ -608,18 +607,18 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
   msg
 }
 
-#' Add CRITy/CRITyFL and PPSUMXF/PPSUMRSN columns to ADPP
+#' Add CRITy/CRITyFL and ANL01FL/ANL01FN columns to ADPP
 #'
 #' For each flag rule message, creates a CRITy column (acceptance criterion
 #' with inverted operator) and CRITyFL column ("Y" if criterion satisfied,
-#' "" if violated) by grepping the `exclude` column. PPSUMXF is "Y" when the
-#' record is excluded from summaries, empty when included.
+#' "" if violated) by grepping the `exclude` column. ANL01FL is "Y" when the
+#' record is included in summaries, empty when excluded.
 #'
 #' @param data A data.frame with an `exclude` column from PKNCA results.
 #' @param flag_rules Character vector of exclusion messages applied during NCA
 #'   (e.g., `c("R2ADJ < 0.8", "AUCPEO > 20")`). If `NULL` or empty, returns
 #'   data unchanged.
-#' @returns The input data with CRITy, CRITyFL, PPSUMXF, and PPSUMRSN columns added.
+#' @returns The input data with CRITy, CRITyFL, ANL01FL, and ANL01FN columns added.
 #' @noRd
 #' @keywords internal
 .add_crit_flags <- function(data, flag_rules) {
@@ -648,40 +647,33 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
     }
   }
 
-  # PPSUMXF/PPSUMRSN: derived from whether exclude is populated
+  # ANL01FL/ANL01FN: derived from whether exclude is empty
   # (covers both flag-rule and manual exclusions)
-  ppsum <- .derive_ppsum_flags(exclude_vals)
-  data[["PPSUMXF"]] <- ppsum$PPSUMXF
-  data[["PPSUMRSN"]] <- ppsum$PPSUMRSN
+  anl01 <- .derive_anl01_flags(exclude_vals)
+  data[["ANL01FL"]] <- anl01$ANL01FL
+  data[["ANL01FN"]] <- anl01$ANL01FN
+  attr(data[["ANL01FL"]], "label") <- "Analysis Flag 01"
+  attr(data[["ANL01FN"]], "label") <- "Analysis Flag 01 (N)"
 
   data
 }
 
-#' Derive PPSUMXF and PPSUMRSN from an exclude-values vector
+#' Derive ANL01FL and ANL01FN from an exclude-values vector
 #'
-#' Single source of truth for the PPSUMXF/PPSUMRSN derivation used by both
+#' Single source of truth for the ANL01FL/ANL01FN derivation used by both
 #' the CDISC export pipeline and the parameter exclusions UI preview.
 #'
 #' @param exclude_vals Character vector where non-empty entries indicate exclusion.
 #'   NA values are treated as no exclusion.
-#' @param max_reason_len Maximum character length for PPSUMRSN. Values exceeding
-#'   this are truncated with a trailing ellipsis. Default 200 (from ADPP metadata).
-#' @returns A list with `PPSUMXF` (character) and `PPSUMRSN` (character).
+#' @returns A list with `ANL01FL` (character) and `ANL01FN` (integer).
 #' @noRd
 #' @keywords internal
-.derive_ppsum_flags <- function(exclude_vals, max_reason_len = 200L) {
+.derive_anl01_flags <- function(exclude_vals) {
   exclude_vals[is.na(exclude_vals)] <- ""
-  has_exclusions <- exclude_vals != ""
-  # Truncate long reasons to respect ADPP field length
-  too_long <- nchar(exclude_vals) > max_reason_len
-  if (any(too_long)) {
-    exclude_vals[too_long] <- paste0(
-      substr(exclude_vals[too_long], 1, max_reason_len - 3), "..."
-    )
-  }
+  is_included <- exclude_vals == ""
   list(
-    PPSUMXF = ifelse(has_exclusions, "Y", ""),
-    PPSUMRSN = exclude_vals
+    ANL01FL = ifelse(is_included, "Y", ""),
+    ANL01FN = ifelse(is_included, 1L, NA_integer_)
   )
 }
 
@@ -689,7 +681,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 #'
 #' If `.pp_excl` (logical) and `.pp_excl_reason` (character) columns are present,
 #' appends the manual exclusion reason to the `exclude` column so that
-#' `.add_crit_flags()` picks them up for PPSUMXF/PPSUMRSN.
+#' `.add_crit_flags()` picks them up for ANL01FL/ANL01FN.
 #'
 #' @param data A data.frame with optional `.pp_excl` and `.pp_excl_reason` columns.
 #' @returns The input data with manual exclusions merged into `exclude`.

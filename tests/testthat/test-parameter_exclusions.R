@@ -56,7 +56,7 @@ describe(".build_exclusion_reasons", {
 })
 
 describe(".build_param_display", {
-  it("derives PPSUMXF and PPSUMRSN from exclude column", {
+  it("derives ANL01FL and ANL01FN from exclude column", {
     df <- data.frame(
       PPTESTCD = c("cmax", "tmax", "auclast"),
       PPTEST = c("Cmax", "Tmax", "AUClast"),
@@ -65,10 +65,10 @@ describe(".build_param_display", {
       stringsAsFactors = FALSE
     )
     result <- .build_param_display(df, group_cols = character(0), manual_exclusions = list())
-    expect_true("PPSUMXF" %in% names(result))
-    expect_true("PPSUMRSN" %in% names(result))
-    expect_equal(result$PPSUMXF, c("Y", "", ""), ignore_attr = TRUE)
-    expect_equal(result$PPSUMRSN, c("R2ADJ < 0.8", "", ""), ignore_attr = TRUE)
+    expect_true("ANL01FL" %in% names(result))
+    expect_true("ANL01FN" %in% names(result))
+    expect_equal(result$ANL01FL, c("", "Y", "Y"), ignore_attr = TRUE)
+    expect_equal(result$ANL01FN, c(NA_integer_, 1L, 1L), ignore_attr = TRUE)
   })
 
   it("layers manual exclusions on top of auto-populated values", {
@@ -81,9 +81,8 @@ describe(".build_param_display", {
     )
     manual <- list(list(rows = c(1, 3), reason = "Manual reason"))
     result <- .build_param_display(df, group_cols = character(0), manual_exclusions = manual)
-    expect_equal(result$PPSUMXF, c("Y", "", "Y"), ignore_attr = TRUE)
-    expect_equal(result$PPSUMRSN[1], "R2ADJ < 0.8; Manual reason")
-    expect_equal(result$PPSUMRSN[3], "Manual reason")
+    expect_equal(result$ANL01FL, c("", "Y", ""), ignore_attr = TRUE)
+    expect_equal(result$ANL01FN, c(NA_integer_, 1L, NA_integer_), ignore_attr = TRUE)
   })
 
   it("handles missing exclude column", {
@@ -93,8 +92,8 @@ describe(".build_param_display", {
       stringsAsFactors = FALSE
     )
     result <- .build_param_display(df, group_cols = character(0), manual_exclusions = list())
-    expect_equal(result$PPSUMXF, c("", ""), ignore_attr = TRUE)
-    expect_equal(result$PPSUMRSN, c("", ""), ignore_attr = TRUE)
+    expect_equal(result$ANL01FL, c("Y", "Y"), ignore_attr = TRUE)
+    expect_equal(result$ANL01FN, c(1L, 1L), ignore_attr = TRUE)
   })
 
   it("selects only display columns plus group columns", {
