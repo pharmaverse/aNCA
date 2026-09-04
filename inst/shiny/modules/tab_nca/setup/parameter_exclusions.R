@@ -129,8 +129,8 @@ parameter_exclusions_ui <- function(id) {
   }
 
   display_cols <- c(
-    group_cols, "ATPTREF",
-    "PPTESTCD", "PPTEST", "PPORRES", "PPORRESU",
+    "PPTESTCD", group_cols, "ATPTREF",
+    "PPTEST", "PPORRES", "PPORRESU",
     "PPSTRESN", "PPSTRESU"
   )
   available_cols <- intersect(display_cols, names(result_df))

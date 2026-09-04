@@ -110,6 +110,7 @@ describe(".build_param_display", {
     result <- .build_param_display(df, group_cols = "USUBJID", manual_exclusions = list())
     expect_true("USUBJID" %in% names(result))
     expect_true("PPTESTCD" %in% names(result))
+    expect_equal(names(result)[1], "PPTESTCD")
     expect_false("some_internal_col" %in% names(result))
     expect_false("exclude" %in% names(result))
   })
