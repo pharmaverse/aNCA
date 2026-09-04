@@ -17,12 +17,13 @@
 #' @param session Shiny session.
 #' @param data_step ReactiveVal for current step.
 #' @param trigger_mapping_submit ReactiveVal to trigger mapping.
+#' @param mapping_busy ReactiveVal for manual mapping work in progress.
 #' @param steps Character vector of step IDs.
 #' @param step_labels Character vector of step display labels.
 #' @keywords internal
 #' @noRd
 .setup_step_navigation <- function(input, session, data_step,
-                                   trigger_mapping_submit,
+                                   trigger_mapping_submit, mapping_busy,
                                    steps, step_labels) {
   observe({
     current <- data_step()
@@ -39,7 +40,6 @@
   })
 
   observeEvent(input$next_step, {
-    shinyjs::disable("next_step")
     current_step <- isolate(data_step())
     if (current_step %in% c("upload", "filtering")) {
       idx <- match(current_step, steps)
@@ -48,7 +48,20 @@
         session, "data_navset", selected = step_labels[idx + 1]
       )
     } else if (current_step == "mapping") {
-      trigger_mapping_submit(trigger_mapping_submit() + 1)
+      mapping_busy(TRUE)
+      loading_popup("Processing data mapping...")
+      # Defer the submit to a later flush so the loading modal is sent to the
+      # browser and painted first. The mapping pipeline is synchronous, so if
+      # we incremented the trigger in this same observer it would run to
+      # completion within the same flush cycle -- including the removeModal()
+      # in on_mapping_complete(). Shiny batches all queued messages until the
+      # end of the flush, so the browser would then receive showModal and
+      # removeModal together; hiding a Bootstrap modal mid fade-in drops the
+      # hide and the spinner stays on screen forever. Deferring puts the submit
+      # (and its removeModal) in a subsequent flush where the hide applies.
+      shinyjs::delay(100, {
+        trigger_mapping_submit(trigger_mapping_submit() + 1)
+      })
     } else if (current_step == "preview") {
       shinyjs::runjs(
         "document.querySelector(`a[data-value='exploration']`).click();"
@@ -58,12 +71,11 @@
 
   observe({
     data_step()
-
-    # Re-enable after each mapping submission is processed
-    # "Next" button is never permanently disabled
-    trigger_mapping_submit()
-
-    shinyjs::enable("next_step")
+    if (isTRUE(mapping_busy())) {
+      shinyjs::disable("next_step")
+    } else {
+      shinyjs::enable("next_step")
+    }
   })
 
   observeEvent(input$prev_step, {
@@ -324,11 +336,13 @@ tab_data_server <- function(id) {
     steps <- c("upload", "mapping", "filtering", "preview")
     step_labels <- c("Upload", "Mapping", "Filtering", "Preview")
     data_step <- reactiveVal("upload")
+    mapping_busy <- reactiveVal(FALSE)
 
     auto_replay <- reactiveVal(FALSE)
 
     .setup_step_navigation(
-      input, session, data_step, trigger_mapping_submit, steps, step_labels
+      input, session, data_step, trigger_mapping_submit, mapping_busy,
+      steps, step_labels
     )
     #' Load raw ADNCA data
     uploaded_data <- data_upload_server("raw_data")
@@ -351,11 +365,19 @@ tab_data_server <- function(id) {
         time_duplicate_keys = override$time_duplicate_keys
       )
     })
+    finish_manual_mapping <- function() {
+      if (isTRUE(mapping_busy())) {
+        shiny::removeModal()
+        mapping_busy(FALSE)
+      }
+    }
     column_mapping <- data_mapping_server(
       id = "column_mapping",
       adnca_data = uploaded_data$adnca_raw,
       imported_mapping = imported_mapping,
-      trigger = trigger_mapping_submit
+      trigger = trigger_mapping_submit,
+      on_mapping_complete = finish_manual_mapping,
+      on_duplicate_cancel = finish_manual_mapping
     )
     #' Reactive value for the processed dataset
     adnca_mapped <- column_mapping$processed_data
