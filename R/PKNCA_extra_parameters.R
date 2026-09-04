@@ -104,22 +104,6 @@ pk.calc.ertlst <- function(conc, volume, time, duration.conc, check = TRUE) {
   ret
 }
 
-register_interval_col_if_absent("ertlst", function() {
-  PKNCA::add.interval.col(
-    "ertlst",
-    FUN = "pk.calc.ertlst",
-    unit_type = "time",
-    pretty_name = "Tlast excretion rate",
-    desc = "Midpoint time of last excretion rate"
-  )
-  PKNCA::PKNCA.set.summary(
-    name = "ertlst",
-    description = "median and range",
-    point = PKNCA::business.median,
-    spread = PKNCA::business.range
-  )
-})
-
 #' Calculate the maximum excretion rate
 #'
 #' @param conc The concentration in the excreta (e.g., urine or feces)
@@ -193,22 +177,6 @@ pk.calc.ertmax <- function( #nolint
   ret
 }
 
-register_interval_col_if_absent("ertmax", function() {
-  PKNCA::add.interval.col(
-    "ertmax",
-    FUN = "pk.calc.ertmax",
-    unit_type = "time",
-    pretty_name = "Tmax excretion rate",
-    desc = "Midpoint time of max excretion rate"
-  )
-  PKNCA::PKNCA.set.summary(
-    name = "ertmax",
-    description = "median and range",
-    point = PKNCA::business.median,
-    spread = PKNCA::business.range
-  )
-})
-
 #' Calculate the total urine volume
 #'
 #' @param volume The volume (or mass) of the sample
@@ -219,33 +187,69 @@ pk.calc.volpk <- function(volume) { #nolint
   sum(volume)
 }
 
-register_interval_col_if_absent("volpk", function() {
-  PKNCA::add.interval.col(
-    "volpk",
-    FUN = "pk.calc.volpk",
-    values = c(FALSE, TRUE),
-    unit_type = "volume",
-    pretty_name = "Total Urine Volume",
-    desc = "Sum of urine volumes for the interval"
-  )
-  PKNCA::PKNCA.set.summary(
-    name = "volpk",
-    description = "geometric mean and geometric coefficient of variation",
-    point = PKNCA::business.geomean,
-    spread = PKNCA::business.geocv
-  )
-})
+register_anca_pknca_extra_parameters <- function() {
+  register_interval_col_if_absent("ertlst", function() {
+    PKNCA::add.interval.col(
+      "ertlst",
+      FUN = "pk.calc.ertlst",
+      unit_type = "time",
+      pretty_name = "Tlast excretion rate",
+      desc = "Midpoint time of last excretion rate"
+    )
+    PKNCA::PKNCA.set.summary(
+      name = "ertlst",
+      description = "median and range",
+      point = PKNCA::business.median,
+      spread = PKNCA::business.range
+    )
+  })
 
-# Fraction excreted (aNCA: #669, PKNCA: #473). PKNCA supplies `pk.calc.fe`; this
-# only registers the interval column when PKNCA has not already done so.
-register_interval_col_if_absent("fe", function() {
-  PKNCA::add.interval.col(
-    "fe",
-    FUN = "pk.calc.fe",
-    unit_type = "amount_dose",
-    pretty_name = "Fraction excreted",
-    values = c(FALSE, TRUE),
-    depends = "ae",
-    desc = "The fraction of the dose excreted"
-  )
-})
+  register_interval_col_if_absent("ertmax", function() {
+    PKNCA::add.interval.col(
+      "ertmax",
+      FUN = "pk.calc.ertmax",
+      unit_type = "time",
+      pretty_name = "Tmax excretion rate",
+      desc = "Midpoint time of max excretion rate"
+    )
+    PKNCA::PKNCA.set.summary(
+      name = "ertmax",
+      description = "median and range",
+      point = PKNCA::business.median,
+      spread = PKNCA::business.range
+    )
+  })
+
+  register_interval_col_if_absent("volpk", function() {
+    PKNCA::add.interval.col(
+      "volpk",
+      FUN = "pk.calc.volpk",
+      values = c(FALSE, TRUE),
+      unit_type = "volume",
+      pretty_name = "Total Urine Volume",
+      desc = "Sum of urine volumes for the interval"
+    )
+    PKNCA::PKNCA.set.summary(
+      name = "volpk",
+      description = "geometric mean and geometric coefficient of variation",
+      point = PKNCA::business.geomean,
+      spread = PKNCA::business.geocv
+    )
+  })
+
+  # Fraction excreted (aNCA: #669, PKNCA: #473). PKNCA supplies `pk.calc.fe`;
+  # this only registers the interval column when PKNCA has not already done so.
+  register_interval_col_if_absent("fe", function() {
+    PKNCA::add.interval.col(
+      "fe",
+      FUN = "pk.calc.fe",
+      unit_type = "amount_dose",
+      pretty_name = "Fraction excreted",
+      values = c(FALSE, TRUE),
+      depends = "ae",
+      desc = "The fraction of the dose excreted"
+    )
+  })
+
+  invisible(NULL)
+}

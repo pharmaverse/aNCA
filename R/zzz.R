@@ -204,4 +204,5 @@
       "zero_str"
     )
   )
+  register_anca_pknca_extra_parameters()
 }
