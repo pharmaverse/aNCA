@@ -398,7 +398,7 @@ parameter_exclusions_server <- function(id, res_nca) {
       selection = "multiple",
       onClick = "select",
       borderless = TRUE,
-      defaultPageSize = 50,
+      defaultPageSize = 25,
       pageSizeOptions = function(data) unique(c(25, 50, 100, nrow(data))),
       # Keep internal columns in the data (needed for coloring) but hide them.
       columns = function(data) {
