@@ -83,6 +83,7 @@
 * Partial interval parameters section supports calculations beyond `AUCINT`: `RCAMINT`, `AUCINTD`, `CAVGINT`, and others. Table starts empty by default with a Remove Row button (#524, #1249)
 * "Min. Points for Half-life" setting added (range 2–10, default 3) (#1155)
 * BLQ imputation rules via `NCA Setup > Data Imputation` (#139)
+* NA imputation options can be applied to the NCA via `NCA Setup > Data Imputation`, using PKNCA's `clean.conc.na()` and applied only to non-observational parameters (#541)
 * General Exclusions section for in-app NCA exclusions, with "Excl. TLG" checkbox per entry (#851, #1018)
 * Parameter Exclusions tab: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMXF/PPSUMRSN flags (#1040)
 * NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are excluded from NCA (#752)
