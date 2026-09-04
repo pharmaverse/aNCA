@@ -208,7 +208,7 @@ get_dose_esc_results <- function(
     # TODO: Filter out excluded records (where `exclude` is populated) before
     # calculating summary statistics, consistent with descriptive_statistics.R
     all_stats_i <- calculate_summary_stats(
-      data = merge(o_res_i, d_conc_i[, c(group_vars(o_nca), facet_vars)]),
+      data = merge(o_res_i, d_conc_i[, c(group_vars(PKNCA::as_PKNCAconc(o_nca)), facet_vars)]),
       input_groups = facet_vars
     ) %>%
       filter(Statistic %in% statistics)
@@ -504,9 +504,10 @@ prepare_export_files <- function(target_dir,
   )
   if (length(dose_norm_parameters) == 0) dose_norm_parameters <- c("CMAXD", "AUCLSTD", "AUCIFOD")
 
+  conc_nca <- PKNCA::as_PKNCAconc(res_nca)
   res_dose_slides <- get_dose_esc_results(
     o_nca = res_nca,
-    group_by_vars = setdiff(group_vars(res_nca), res_nca$data$conc$columns$subject),
+    group_by_vars = setdiff(group_vars(conc_nca), conc_nca$columns$subject),
     facet_vars = "DOSEA",
     statistics = "Mean",
     stats_parameters         = union(ind_stats_parameters, summary_stats_parameters),
