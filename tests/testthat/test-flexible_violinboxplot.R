@@ -21,6 +21,8 @@ describe("flexible_violinboxplot", {
     expect_true(grepl("CMAX", simple_plot$labels$y))
     expect_true(any("ggplot" %in% class(simple_plot)))
     expect_equal(c(1, 2, 6), unique(simple_plot$data$USUBJID))
+    expect_true(".row_id" %in% names(simple_plot$data))
+    expect_false(is.null(simple_plot$mapping$key))
   })
 
   it("creates a plot with additional xvars", {
@@ -398,6 +400,11 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
     used_colours <- unlist(lapply(point_layers, function(l) l$aes_params$colour))
     expect_true(aNCA:::EXCL_TYPE_POINT_COLORS[["flag"]] %in% used_colours)
     expect_true(aNCA:::EXCL_TYPE_POINT_COLORS[["manual"]] %in% used_colours)
+    expect_true(all(vapply(
+      point_layers,
+      function(l) !is.null(l$mapping$key),
+      logical(1)
+    )))
   })
 
   it("handles aucint parameter mutation logic", {

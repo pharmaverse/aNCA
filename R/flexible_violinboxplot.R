@@ -65,7 +65,8 @@ flexible_violinboxplot <- function(res_nca,
       x = interaction(!!!syms(xvars), sep = "\n"),
       y = PPSTRES,
       color = interaction(!!!syms(colorvars)),
-      text = tooltip_text
+      text = tooltip_text,
+      key = .row_id
     )
   ) +
     .geom_distribution(box, shared_aes) +
@@ -181,7 +182,8 @@ flexible_violinboxplot <- function(res_nca,
       aes(
         x = interaction(!!!syms(xvars), sep = "\n"),
         y = PPSTRES,
-        text = tooltip_text
+        text = tooltip_text,
+        key = .row_id
       ),
       shape = 4, size = 3, stroke = 1.1,
       colour = EXCL_TYPE_POINT_COLORS[[type]],

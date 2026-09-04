@@ -178,22 +178,25 @@ parameter_exclusions_ui <- function(id) {
 # .build_exclusion_reasons and .render_exclusion_table are defined in
 # inst/shiny/functions/utils-exclusions.R and shared with general_exclusions.
 
+# Return the visible table row corresponding to a clicked Plotly point.
+# Plot points carry `.row_id` as their Plotly key, so duplicate/similar
+# PPSTRESN values can still resolve to the exact ADPP row.
+.clicked_display_row <- function(ev, display_df) {
+  if (is.null(ev) || is.null(ev$key)) return(NA_integer_)
+  if (!".row_id" %in% names(display_df)) return(NA_integer_)
+
+  row_id <- suppressWarnings(as.integer(ev$key[[1]]))
+  if (is.na(row_id)) return(NA_integer_)
+
+  match(row_id, display_df$.row_id)
+}
+
 # Highlight the table row matching a clicked boxplot point.
-# Matches on parameter + nearest y-value (PPSTRES) among the displayed rows,
-# then sets the reactable selection to that row.
-.highlight_clicked_row <- function(ev, param, display_df, session, ns) {
-  if (is.null(ev) || is.null(ev$y)) return(invisible())
-  if (!all(c("PPTESTCD", "PPSTRESN") %in% names(display_df))) return(invisible())
+.highlight_clicked_row <- function(ev, display_df, session, ns) {
+  row <- .clicked_display_row(ev, display_df)
+  if (is.na(row)) return(invisible())
 
-  rows <- which(display_df$PPTESTCD == param)
-  if (length(rows) == 0) return(invisible())
-
-  yvals <- suppressWarnings(as.numeric(display_df$PPSTRESN[rows]))
-  clicked <- suppressWarnings(as.numeric(ev$y))
-  if (is.na(clicked) || all(is.na(yvals))) return(invisible())
-
-  best <- rows[which.min(abs(yvals - clicked))]
-  updateReactable(ns("param_table-table"), selected = best)
+  updateReactable(ns("param_table-table"), selected = row)
   invisible()
 }
 
@@ -459,9 +462,7 @@ parameter_exclusions_server <- function(id, res_nca) {
                 "plotly_click", source = slot_source(local_slot)
               )
               req(ev)
-              param <- slot_map()[[local_slot]]
-              req(param)
-              .highlight_clicked_row(ev, param, param_data(), session, ns)
+              .highlight_clicked_row(ev, param_data(), session, ns)
             },
             ignoreInit = TRUE
           )

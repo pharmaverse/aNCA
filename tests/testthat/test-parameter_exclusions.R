@@ -130,3 +130,28 @@ describe(".build_param_display", {
     expect_equal(result$.excl_type, c("flag", "none", "manual", "both"))
   })
 })
+
+describe(".clicked_display_row", {
+  it("matches clicked plotly keys to displayed rows by .row_id", {
+    display_df <- data.frame(
+      PPTESTCD = c("CMAX", "CMAX", "AUCIFO"),
+      PPSTRESN = c(10, 10, 50),
+      .row_id = c(4, 7, 9),
+      stringsAsFactors = FALSE
+    )
+
+    expect_equal(.clicked_display_row(list(key = "7"), display_df), 2)
+  })
+
+  it("returns NA when the clicked key is absent or invalid", {
+    display_df <- data.frame(
+      PPTESTCD = c("CMAX", "AUCIFO"),
+      .row_id = c(4, 9),
+      stringsAsFactors = FALSE
+    )
+
+    expect_true(is.na(.clicked_display_row(list(key = "10"), display_df)))
+    expect_true(is.na(.clicked_display_row(list(y = 10), display_df)))
+    expect_true(is.na(.clicked_display_row(list(key = "x"), display_df)))
+  })
+})
