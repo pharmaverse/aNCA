@@ -106,6 +106,7 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+* Summary of Contents slide added to PPT exports with hyperlinks to major sections (Summary Results, Extra Figures, Additional Analysis); QMD exports use revealjs built-in TOC at depth 1 (#1055)
 * PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
