@@ -23,6 +23,39 @@ std_dtc_to_rdate <- function(dtc) {
   )
 }
 
+.parse_iso8601_component <- function(x, unit, scale = 1, allow_negative = FALSE) {
+  sign <- if (allow_negative) "-?" else ""
+  match <- regmatches(x, regexpr(paste0(sign, "[0-9.]+(?=", unit, ")"), x, perl = TRUE))
+  if (length(match) == 1) {
+    as.numeric(match) * scale
+  } else {
+    0
+  }
+}
+
+.parse_iso8601_duration_value <- function(val) {
+  if (is.na(val) || !nzchar(trimws(val)) || !grepl("^P", val)) {
+    return(NA_real_)
+  }
+
+  w_match <- regmatches(val, regexpr("[0-9.]+(?=W)", val, perl = TRUE))
+  if (length(w_match) == 1) {
+    return(as.numeric(w_match) * 7 * 24)
+  }
+
+  date_part <- sub("T.*", "", sub("^P", "", val))
+  time_part <- if (grepl("T", val)) sub(".*T", "", val) else ""
+
+  sum(
+    .parse_iso8601_component(date_part, "Y", 365.25 * 24),
+    .parse_iso8601_component(date_part, "M", 30.4375 * 24),
+    .parse_iso8601_component(date_part, "D", 24),
+    .parse_iso8601_component(time_part, "H", allow_negative = TRUE),
+    .parse_iso8601_component(time_part, "M", 1 / 60, allow_negative = TRUE),
+    .parse_iso8601_component(time_part, "S", 1 / 3600, allow_negative = TRUE)
+  )
+}
+
 #' Parse an ISO 8601 duration string to numeric hours
 #'
 #' Supports the full CDISC-compliant ISO 8601 duration format:
@@ -35,42 +68,7 @@ std_dtc_to_rdate <- function(dtc) {
 #' @returns Numeric vector of durations in hours
 #' @keywords internal
 parse_iso8601_duration <- function(x) {
-  vapply(x, function(val) {
-    if (is.na(val) || !nzchar(trimws(val)) || !grepl("^P", val)) {
-      return(NA_real_)
-    }
-    hours <- 0
-
-    # Week format: PnW (cannot be mixed with other components per ISO 8601)
-    w_match <- regmatches(val, regexpr("[0-9.]+(?=W)", val, perl = TRUE))
-    if (length(w_match) == 1) return(as.numeric(w_match) * 7 * 24)
-
-    # Date components (before T): years, months, days
-    date_part <- sub("T.*", "", sub("^P", "", val))
-    y_match <- regmatches(date_part, regexpr("[0-9.]+(?=Y)", date_part,
-                                             perl = TRUE))
-    if (length(y_match) == 1) hours <- hours + as.numeric(y_match) * 365.25 * 24
-    mo_match <- regmatches(date_part, regexpr("[0-9.]+(?=M)", date_part,
-                                              perl = TRUE))
-    if (length(mo_match) == 1) hours <- hours + as.numeric(mo_match) * 30.4375 * 24
-    d_match <- regmatches(date_part, regexpr("[0-9.]+(?=D)", date_part,
-                                             perl = TRUE))
-    if (length(d_match) == 1) hours <- hours + as.numeric(d_match) * 24
-
-    # Time components (after T): hours, minutes, seconds
-    time_part <- if (grepl("T", val)) sub(".*T", "", val) else ""
-    h_match <- regmatches(time_part, regexpr("-?[0-9.]+(?=H)", time_part,
-                                             perl = TRUE))
-    if (length(h_match) == 1) hours <- hours + as.numeric(h_match)
-    m_match <- regmatches(time_part, regexpr("-?[0-9.]+(?=M)", time_part,
-                                             perl = TRUE))
-    if (length(m_match) == 1) hours <- hours + as.numeric(m_match) / 60
-    s_match <- regmatches(time_part, regexpr("-?[0-9.]+(?=S)", time_part,
-                                             perl = TRUE))
-    if (length(s_match) == 1) hours <- hours + as.numeric(s_match) / 3600
-
-    hours
-  }, numeric(1), USE.NAMES = FALSE)
+  vapply(x, .parse_iso8601_duration_value, numeric(1), USE.NAMES = FALSE)
 }
 
 #' Map CDISC route of administration to PKNCA route
