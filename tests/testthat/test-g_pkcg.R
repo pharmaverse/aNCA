@@ -11,6 +11,8 @@ describe("pkcg01", {
   it("generates valid ggplots with LIN scale", {
     plots_lin <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
     expect_equal(length(plots_lin), 3)
+    expect_length(names(plots_lin), length(plots_lin))
+    expect_true(all(nzchar(names(plots_lin))))
     vdiffr::expect_doppelganger("lin_plot1", plots_lin[[1]])
     vdiffr::expect_doppelganger("lin_plot2", plots_lin[[2]])
     vdiffr::expect_doppelganger("lin_plot3", plots_lin[[3]])
@@ -146,6 +148,8 @@ describe("pkcg02", {
       color_var_label =  attr(adnca$USUBJID, "label")
     )
     expect_equal(length(combined_plots_lin), 2)
+    expect_length(names(combined_plots_lin), length(combined_plots_lin))
+    expect_true(all(nzchar(names(combined_plots_lin))))
     vdiffr::expect_doppelganger("combined_lin_plot1", combined_plots_lin[[1]])
     vdiffr::expect_doppelganger("combined_lin_plot2", combined_plots_lin[[2]])
   })
