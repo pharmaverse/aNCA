@@ -8,6 +8,7 @@
       ".facet_n",
       ".facet_unit",
       ".iqr",
+      ".is_last_main",
       ".pp_excl",
       ".pp_excl_reason",
       ".q1",

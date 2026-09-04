@@ -38,6 +38,7 @@ pknca_obj <- adnca_data %>%
     selected_profile = settings_list$settings$profile,
     selected_pcspec = settings_list$settings$pcspec,
     start_impute = settings_list$settings$data_imputation$impute_c0,
+    drop_end_conc = settings_list$settings$data_imputation$drop_end_conc %||% FALSE,
     exclusion_list = settings_list$settings$general_exclusions,
     hl_adj_rules = slope_rules,
     keep_interval_cols = setdiff(extra_vars_to_keep, c("DOSEA", "ATPTREF", "ROUTE")),
