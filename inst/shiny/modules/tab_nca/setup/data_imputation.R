@@ -180,148 +180,19 @@ data_imputation_ui <- function(id) {
 
 data_imputation_server <- function(id, settings_override) {
   moduleServer(id, function(input, output, session) {
-    ns <- session$ns
-
-    # Restore widgets when settings are uploaded
     observeEvent(settings_override(), {
       settings <- settings_override()
       req(settings)
-
-      imputation <- settings$data_imputation
-      req(imputation)
-
-      # Restore impute_c0 switch
-      if (!is.null(imputation$impute_c0)) {
-        update_switch("should_impute_c0", value = imputation$impute_c0)
-      }
-
-      # Restore NA imputation dropdown
-      if (!is.null(imputation$na_imputation_rule)) {
-        val <- as.character(imputation$na_imputation_rule)
-        updateSelectizeInput(
-          session,
-          inputId = "na_imputation",
-          choices = unique(c("drop", "0", val)),
-          selected = val
-        )
-      }
-
-      # Restore BLQ strategy dropdown
-      valid_strategies <- c(
-        "Tmax based imputation",
-        "Positional BLQ imputation",
-        "Set value for all BLQ",
-        "No BLQ handling"
-      )
-
-      if (!is.null(imputation$blq_strategy)) {
-        if (!imputation$blq_strategy %in% valid_strategies) {
-          showNotification(
-            paste0(
-              "BLQ strategy '", imputation$blq_strategy,
-              "' from settings not recognized. Reverting to default."
-            ),
-            type = "warning",
-            duration = 8
-          )
-        } else {
-          updateSelectInput(
-            session,
-            inputId = "select_blq_strategy",
-            selected = imputation$blq_strategy
-          )
-
-          # Restore strategy-specific values
-          rule <- imputation$blq_imputation_rule
-          if (!is.null(rule)) {
-            switch(imputation$blq_strategy,
-              "Tmax based imputation" = {
-                .update_blq_selectize(session, "before_tmax", rule$before.tmax)
-                .update_blq_selectize(session, "after_tmax", rule$after.tmax)
-              },
-              "Positional BLQ imputation" = {
-                .update_blq_selectize(session, "before_first_non_blq", rule$first)
-                .update_blq_selectize(session, "in_between_non_blqs", rule$middle)
-                .update_blq_selectize(session, "after_last_non_blq", rule$last)
-              },
-              "Set value for all BLQ" = {
-                .update_blq_selectize(session, "blq_value", rule$first)
-              }
-            )
-          }
-        }
-      }
+      .restore_imp_settings(session, settings$data_imputation)
     })
 
     blq_imputation_rule <- reactive({
       req(input$select_blq_strategy)
-      rule_list <- switch(input$select_blq_strategy,
-        "Tmax based imputation" = list(
-          before.tmax = input$before_tmax,
-          after.tmax = input$after_tmax
-        ),
-        "Positional BLQ imputation" = list(
-          first = input$before_first_non_blq,
-          middle = input$in_between_non_blqs,
-          last = input$after_last_non_blq
-        ),
-        "Set value for all BLQ" = list(
-          first = input$blq_value,
-          middle = input$blq_value,
-          last = input$blq_value
-        ),
-        "No BLQ handling" = list(
-          first = "keep",
-          middle = "keep",
-          last = "keep"
-        ),
-        NULL
-      )
-
-      # Transform text numbers in the list to numeric
-      rule_list <- lapply(rule_list, function(x) {
-        if (x %in% c("drop", "keep")) {
-          x
-        } else if (grepl("^[0-9]+(\\.[0-9]+)?$", x)) {
-          as.numeric(x)
-        } else {
-          NA
-        }
-      })
-      are_invalid_inputs <- is.na(unlist(rule_list))
-      if (any(are_invalid_inputs)) {
-        showNotification(
-          paste0(
-            "BLQ imputation values must be numeric, 'drop' or 'keep'. ",
-            "Otherwise, no BLQ imputation will be applied."
-          ),
-          type = "warning",
-          duration = 8
-        )
-        return(NULL)
-      }
-
-      rule_list
+      .blq_imputation_rule(input)
     })
 
     na_imputation_rule <- reactive({
-      val <- input$na_imputation
-      if (is.null(val)) return(NULL)
-      if (val %in% c("drop", "0")) {
-        if (val == "0") return(0)
-        return(val)
-      }
-      # Check if numeric
-      if (grepl("^[0-9]+(\\.[0-9]+)?$", val)) {
-        return(as.numeric(val))
-      } else {
-        showNotification(
-          "NA imputation value must be numeric, 'drop', or '0'.",
-          type = "warning",
-          duration = 8
-        )
-        return(NULL)
-      }
+      .na_imputation_rule(input$na_imputation)
     })
 
     list(
@@ -331,6 +202,154 @@ data_imputation_server <- function(id, settings_override) {
       blq_imputation_rule = blq_imputation_rule
     )
   })
+}
+
+.restore_imp_settings <- function(session, imputation) {
+  req(imputation)
+
+  if (!is.null(imputation$impute_c0)) {
+    update_switch("should_impute_c0", value = imputation$impute_c0)
+  }
+
+  if (!is.null(imputation$na_imputation_rule)) {
+    val <- as.character(imputation$na_imputation_rule)
+    updateSelectizeInput(
+      session,
+      inputId = "na_imputation",
+      choices = unique(c("drop", "0", val)),
+      selected = val
+    )
+  }
+
+  .restore_blq_strategy(session, imputation)
+}
+
+.restore_blq_strategy <- function(session, imputation) {
+  if (is.null(imputation$blq_strategy)) {
+    return()
+  }
+  if (!imputation$blq_strategy %in% .valid_blq_strategies()) {
+    showNotification(
+      paste0(
+        "BLQ strategy '", imputation$blq_strategy,
+        "' from settings not recognized. Reverting to default."
+      ),
+      type = "warning",
+      duration = 8
+    )
+    return()
+  }
+
+  updateSelectInput(
+    session,
+    inputId = "select_blq_strategy",
+    selected = imputation$blq_strategy
+  )
+  .restore_blq_rule(session, imputation$blq_strategy, imputation$blq_imputation_rule)
+}
+
+.valid_blq_strategies <- function() {
+  c(
+    "Tmax based imputation",
+    "Positional BLQ imputation",
+    "Set value for all BLQ",
+    "No BLQ handling"
+  )
+}
+
+.restore_blq_rule <- function(session, strategy, rule) {
+  if (is.null(rule)) {
+    return()
+  }
+  switch(strategy,
+    "Tmax based imputation" = {
+      .update_blq_selectize(session, "before_tmax", rule$before.tmax)
+      .update_blq_selectize(session, "after_tmax", rule$after.tmax)
+    },
+    "Positional BLQ imputation" = {
+      .update_blq_selectize(session, "before_first_non_blq", rule$first)
+      .update_blq_selectize(session, "in_between_non_blqs", rule$middle)
+      .update_blq_selectize(session, "after_last_non_blq", rule$last)
+    },
+    "Set value for all BLQ" = {
+      .update_blq_selectize(session, "blq_value", rule$first)
+    }
+  )
+}
+
+.blq_imputation_rule <- function(input) {
+  rule_list <- switch(input$select_blq_strategy,
+    "Tmax based imputation" = list(
+      before.tmax = input$before_tmax,
+      after.tmax = input$after_tmax
+    ),
+    "Positional BLQ imputation" = list(
+      first = input$before_first_non_blq,
+      middle = input$in_between_non_blqs,
+      last = input$after_last_non_blq
+    ),
+    "Set value for all BLQ" = list(
+      first = input$blq_value,
+      middle = input$blq_value,
+      last = input$blq_value
+    ),
+    "No BLQ handling" = list(
+      first = "keep",
+      middle = "keep",
+      last = "keep"
+    ),
+    NULL
+  )
+
+  rule_list <- lapply(rule_list, .imputation_choice_value)
+  if (any(is.na(unlist(rule_list)))) {
+    showNotification(
+      paste0(
+        "BLQ imputation values must be numeric, 'drop' or 'keep'. ",
+        "Otherwise, no BLQ imputation will be applied."
+      ),
+      type = "warning",
+      duration = 8
+    )
+    return(NULL)
+  }
+
+  rule_list
+}
+
+.imputation_choice_value <- function(x) {
+  if (is.null(x) || length(x) != 1) {
+    return(NA)
+  }
+  if (x %in% c("drop", "keep")) {
+    return(x)
+  }
+  if (grepl("^[0-9]+(\\.[0-9]+)?$", x)) {
+    return(as.numeric(x))
+  }
+  NA
+}
+
+.na_imputation_rule <- function(val) {
+  if (is.null(val)) {
+    return(NULL)
+  }
+  if (val == "0") {
+    return(0)
+  }
+  if (val == "drop") {
+    return(val)
+  }
+  if (grepl("^[0-9]+(\\.[0-9]+)?$", val)) {
+    return(as.numeric(val))
+  }
+
+  showNotification(
+    "NA imputation value must be numeric, 'drop', or '0'.",
+    type = "warning",
+    duration = 8
+  )
+  NULL
 }
 
 # Helper to update a blq_selectize input, adding custom numeric values to choices
