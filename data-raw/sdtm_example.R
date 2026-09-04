@@ -57,7 +57,7 @@ pc_example <- data.frame(
                     "%Y-%m-%dT%H:%M:%S"),
   PCRFTDTC = format(subject_origin_pc + dose_time_from_first * 3600,
                     "%Y-%m-%dT%H:%M:%S"),
-  PCELTM   = sprintf("PT%gH", adnca_example$NFRLT),
+  PCELTM   = sprintf("PT%gH", adnca_example$NRRLT),
   VOLUME   = adnca_example$VOLUME,
   VOLUMEU  = adnca_example$VOLUMEU,
   stringsAsFactors = FALSE
@@ -99,3 +99,9 @@ ex_example <- adnca_example %>%
 usethis::use_data(dm_example, overwrite = TRUE)
 usethis::use_data(pc_example, overwrite = TRUE)
 usethis::use_data(ex_example, overwrite = TRUE)
+
+# --- Export CSVs for tests ----------------------------------------------------
+
+write.csv(pc_example, "tests/testthat/data/test-pc-example.csv", row.names = FALSE)
+write.csv(ex_example, "tests/testthat/data/test-ex-example.csv", row.names = FALSE)
+write.csv(dm_example, "tests/testthat/data/test-dm-example.csv", row.names = FALSE)

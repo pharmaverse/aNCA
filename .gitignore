@@ -13,6 +13,7 @@ inst/shiny/log/*
 .Rprofile
 /page
 .DS_Store
+.devcontainer/
 # {shinytest2}: Ignore new debug snapshots for `$expect_values()`
 *_.new.png
 desktop.ini

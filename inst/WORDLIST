@@ -1,3 +1,4 @@
+ACTARM
 ADNCA
 ADOSEDUR
 ADPP
@@ -5,6 +6,7 @@ ADaM
 ADaMIG
 AEFRLT
 AFRLT
+AGEU
 ARRLT
 ATPTREF
 AUCINT
@@ -46,8 +48,15 @@ ERTLST
 ERTMAX
 EV
 EVID
+EXDOSE
+EXDOSU
+EXDUR
+EXELTM
+EXENDTC
+EXROUTE
 EXSTDTC
 EXTRAVASCULAR
+EXTRT
 Extravascular
 FABS
 FREL
@@ -74,7 +83,13 @@ Num
 PARAM
 PARAMCD
 PARAMCDs
+PCDTC
+PCELTM
+PCRFTDTC
 PCSPEC
+PCSTRESN
+PCSTRESU
+PCTEST
 PKNCA
 PKNCA's
 PKNCAconc
@@ -84,6 +99,7 @@ PKNCAresult
 PKNCAresults
 PKSUM
 PKSUMXF
+POSIXct
 PPANMETH
 PPCAT
 PPORRES
@@ -174,6 +190,7 @@ doi
 dplyr
 dropdown
 dropdowns
+durations
 extravascular
 frac
 ggplot
@@ -211,6 +228,7 @@ pkpg
 pkpl
 pkpt
 plotly
+posix
 pptest
 pre
 pred
@@ -227,6 +245,7 @@ runnable
 selectable
 signif
 src
+standardised
 standardizations
 synthesised
 th

@@ -12,4 +12,4 @@ linters:
         assignment_linter = assignment_linter(operator = c("<-", "<<-"))
   )
 encoding: "UTF-8"
-exclusions: list("R/PKNCA_extra_parameters.R", "tests/testthat/test-PKNCA_extra_parameters.R", "inst/www/templates/script_template.R")
+exclusions: list("R/PKNCA_extra_parameters.R", "tests/testthat/test-PKNCA_extra_parameters.R", "inst/www/templates/script_template.R", "inst/www/templates/script_template_sdtm.R")
