@@ -110,7 +110,80 @@ describe(".build_param_display", {
     result <- .build_param_display(df, group_cols = "USUBJID", manual_exclusions = list())
     expect_true("USUBJID" %in% names(result))
     expect_true("PPTESTCD" %in% names(result))
+    expect_equal(names(result)[1], "PPTESTCD")
     expect_false("some_internal_col" %in% names(result))
     expect_false("exclude" %in% names(result))
+  })
+
+  it("adds .row_id and .excl_type classifying flag/manual/both/none", {
+    df <- data.frame(
+      PPTESTCD = c("cmax", "tmax", "auclast", "clast"),
+      PPTEST = c("Cmax", "Tmax", "AUClast", "Clast"),
+      PPORRES = c("10", "2", "50", "5"),
+      # row1: flag only, row2: none, row3: manual only, row4: flag + manual
+      exclude = c("R2ADJ < 0.8", NA, "", "AUCPEO > 20"),
+      stringsAsFactors = FALSE
+    )
+    manual <- list(list(rows = c(3, 4), reason = "Manual reason"))
+    result <- .build_param_display(df, group_cols = character(0),
+                                  manual_exclusions = manual)
+    expect_equal(result$.row_id, 1:4)
+    expect_equal(result$.excl_type, c("flag", "none", "manual", "both"))
+  })
+})
+
+describe(".clicked_display_row", {
+  it("extracts clicked plotly keys as result row ids", {
+    expect_equal(.clicked_row_id(list(key = "7")), 7L)
+    expect_true(is.na(.clicked_row_id(list(y = 10))))
+    expect_true(is.na(.clicked_row_id(list(key = "x"))))
+  })
+
+  it("matches clicked plotly keys to displayed rows by .row_id", {
+    display_df <- data.frame(
+      PPTESTCD = c("CMAX", "CMAX", "AUCIFO"),
+      PPSTRESN = c(10, 10, 50),
+      .row_id = c(4, 7, 9),
+      stringsAsFactors = FALSE
+    )
+
+    expect_equal(.clicked_display_row(list(key = "7"), display_df), 2)
+  })
+
+  it("returns NA when the clicked key is absent or invalid", {
+    display_df <- data.frame(
+      PPTESTCD = c("CMAX", "AUCIFO"),
+      .row_id = c(4, 9),
+      stringsAsFactors = FALSE
+    )
+
+    expect_true(is.na(.clicked_display_row(list(key = "10"), display_df)))
+    expect_true(is.na(.clicked_display_row(list(y = 10), display_df)))
+    expect_true(is.na(.clicked_display_row(list(key = "x"), display_df)))
+  })
+})
+
+describe(".sort_param_display", {
+  it("sorts by PPTESTCD while preserving row ids", {
+    df <- data.frame(
+      PPTESTCD = c("TMAX", "CMAX", "AUCIFO", "CMAX"),
+      .row_id = c(1, 2, 3, 4),
+      stringsAsFactors = FALSE
+    )
+
+    result <- .sort_param_display(df)
+
+    expect_equal(result$PPTESTCD, c("AUCIFO", "CMAX", "CMAX", "TMAX"))
+    expect_equal(result$.row_id, c(3, 2, 4, 1))
+  })
+
+  it("leaves data unchanged when PPTESTCD is unavailable", {
+    df <- data.frame(
+      PARAM = c("TMAX", "CMAX"),
+      .row_id = c(1, 2),
+      stringsAsFactors = FALSE
+    )
+
+    expect_equal(.sort_param_display(df), df)
   })
 })

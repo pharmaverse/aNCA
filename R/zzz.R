@@ -3,6 +3,7 @@
     c(
       ".",
       ".dose_time",
+      ".excl_type",
       ".facet_key",
       ".facet_label_values",
       ".facet_n",
@@ -12,6 +13,7 @@
       ".pp_excl_reason",
       ".q1",
       ".q3",
+      ".row_id",
       ".ROWID",
       ":=",
       "adj.r.squared",

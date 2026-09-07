@@ -21,6 +21,8 @@ describe("flexible_violinboxplot", {
     expect_true(grepl("CMAX", simple_plot$labels$y))
     expect_true(any("ggplot" %in% class(simple_plot)))
     expect_equal(c(1, 2, 6), unique(simple_plot$data$USUBJID))
+    expect_true(".row_id" %in% names(simple_plot$data))
+    expect_false(is.null(simple_plot$mapping$key))
   })
 
   it("creates a plot with additional xvars", {
@@ -215,6 +217,23 @@ describe("flexible_violinboxplot", {
     expect_s3_class(simple_plotly, "plotly")
   })
 
+  it("passes a custom source to plotly for Shiny click events", {
+    simple_plotly <- flexible_violinboxplot(
+      res_nca = boxplotdata,
+      parameter = "CMAX",
+      xvars = "DOSEA",
+      colorvars = "ATPTREF",
+      varvalstofilter = c("USUBJID: 1", "USUBJID: 2"),
+      tooltip_vars = c("DOSEA", "USUBJID"),
+      box = TRUE,
+      plotly = TRUE,
+      seed = 123,
+      plotly_source = "box_src_cmax"
+    )
+
+    expect_equal(simple_plotly$x$source, "box_src_cmax")
+  })
+
   it("creates a violin plotly object correctly", {
     simple_plotly <- flexible_violinboxplot(
       res_nca = boxplotdata,
@@ -366,6 +385,43 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
     # Verify inherit.aes is FALSE and no text mapping
     expect_false(violin_layer$inherit.aes)
     expect_null(violin_layer$mapping$text)
+  })
+
+  it("colours excluded crosses by exclusion type", {
+    # Flag-exclude one record and manually exclude another for CMAX
+    res_excl <- boxplotdata
+    cmax_rows <- which(res_excl$result$PPTESTCD == "CMAX")
+    res_excl$result$exclude <- ""
+    res_excl$result$exclude[cmax_rows[1]] <- "R2ADJ < 0.8"
+    res_excl$result$.pp_excl <- FALSE
+    res_excl$result$.pp_excl[cmax_rows[2]] <- TRUE
+
+    p <- flexible_violinboxplot(
+      res_nca = res_excl,
+      parameter = "CMAX",
+      xvars = "DOSEA",
+      colorvars = "ATPTREF",
+      tooltip_vars = c("USUBJID"),
+      box = TRUE,
+      plotly = FALSE,
+      show_excluded = TRUE,
+      seed = 123
+    )
+
+    # Collect the fixed colours used by the excluded-cross point layers
+    point_layers <- Filter(
+      function(l) inherits(l$geom, "GeomPoint") &&
+        !is.null(l$aes_params$colour),
+      p$layers
+    )
+    used_colours <- unlist(lapply(point_layers, function(l) l$aes_params$colour))
+    expect_true(aNCA:::EXCL_TYPE_POINT_COLORS[["flag"]] %in% used_colours)
+    expect_true(aNCA:::EXCL_TYPE_POINT_COLORS[["manual"]] %in% used_colours)
+    expect_true(all(vapply(
+      point_layers,
+      function(l) !is.null(l$mapping$key),
+      logical(1)
+    )))
   })
 
   it("handles aucint parameter mutation logic", {

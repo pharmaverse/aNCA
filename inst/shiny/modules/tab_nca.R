@@ -61,14 +61,14 @@ tab_nca_ui <- function(id) {
               )
             ),
             nav_panel(
+              "ADPP Exclusions",
+              parameter_exclusions_ui(ns("parameter_exclusions"))
+            ),
+            nav_panel(
               "Descriptive Statistics", descriptive_statistics_ui(ns("descriptive_stats"))
             ),
             nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
-            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots"))),
-            nav_panel(
-              "ADPP Exclusions",
-              parameter_exclusions_ui(ns("parameter_exclusions"))
-            )
+            nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots")))
           )
         )
       )
@@ -333,16 +333,21 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
       "nca_results", processed_pknca_data, res_nca, settings, ratio_table, extra_group_vars
     )
 
-    #' Descriptive statistics module (uses filtered results)
-    descriptive_statistics_server("descriptive_stats", res_nca_filtered, extra_group_vars)
-
-    #' Additional analysis module
-    additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
-
-    #' Parameter datasets module
+    #' Parameter datasets module (produces PP/ADPP/ADNCA)
+    #' Defined before descriptive statistics because that module now consumes
+    #' ADPP as its single grouping/exclusion source.
     cdisc <- parameter_datasets_server(
       "parameter_datasets", res_nca_tagged, extra_group_vars, settings
     )
+    adpp <- reactive(cdisc()$adpp)
+
+    #' Descriptive statistics module (consumes ADPP)
+    descriptive_statistics_server(
+      "descriptive_stats", res_nca_filtered, extra_group_vars, adpp
+    )
+
+    #' Additional analysis module
+    additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter plots module
     #' res_nca: base results for picker initialization (stable across exclusion changes)
@@ -353,7 +358,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     list(
       res_nca = res_nca,
       processed_pknca_data = processed_pknca_data,
-      adpp = reactive(cdisc()$adpp)
+      adpp = adpp
     )
   })
 }
