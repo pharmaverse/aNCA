@@ -6,7 +6,7 @@
 #' @param labels_df A data frame containing at least the columns "Variable", "Label", and "Dataset".
 #' @param type The type variable in labels_df for which the labels are to be applied.
 #'
-#' @return The same dataset with label attributes applied to all columns.
+#' @returns The same dataset with label attributes applied to all columns.
 #' If a column is not present in the labels list, it will be assigned the name of the col.
 #' If label already exists in the original data, it will be preserved.
 #'
@@ -83,7 +83,7 @@ resolve_param_labels <- function(data) {
 #' @param type The type of the dataset for which the label is to be retrieved.
 #' @param labels_df A data frame containing at least the columns "Variable", "Label", and "Dataset".
 #'
-#' @return The label of the heading if it exists in the labels file,
+#' @returns The label of the heading if it exists in the labels file,
 #' otherwise the variable name.
 #'
 #' @examples
@@ -122,7 +122,7 @@ get_label <- function(variable, type = "ADNCA", labels_df = metadata_nca_variabl
 #' @param tooltip_vars A character vector of column names to include in the tooltip.
 #' @param type A character string specifying the label type for `get_label()`.
 #'
-#' @return A character vector of formatted HTML tooltip strings.
+#' @returns A character vector of formatted HTML tooltip strings.
 #'
 #' @examples
 #' # Sample data

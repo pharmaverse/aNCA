@@ -551,7 +551,7 @@ add_derived_pp_vars <- function(df, conc_group_sp_cols, conc_timeu_col, dose_tim
 ##' @param data A data.frame containing the exclusion column.
 ##' @param nca_excl_colname Character name of the column in `data` that holds
 ##'   semicolon-separated exclusion reasons.
-##' @return The input `data` with new `NCA<n>XRS`, `NCA<n>XRSN`, `NCAXFL`, and
+##' @returns The input `data` with new `NCA<n>XRS`, `NCA<n>XRSN`, `NCAXFL`, and
 ##'   `NCAXFN` columns added; the original exclusion column is removed.
 ##' @noRd
 ##' @keywords internal

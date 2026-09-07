@@ -23,7 +23,7 @@
 #'                            `exclude` column) are overlaid as cross-shaped points. They are
 #'                            never included in box/violin statistics. Default is `FALSE`.
 #'
-#' @return A plotly object representing the violin or box plot.
+#' @returns A plotly object representing the violin or box plot.
 #' @import dplyr
 #' @import ggplot2
 #' @export
@@ -229,7 +229,7 @@ flexible_violinboxplot <- function(res_nca,
 #'
 #' @param box_data Data frame to check.
 #' @param parameter Parameter name for error message context.
-#' @return NULL if valid, or a ggplot error plot if invalid.
+#' @returns NULL if valid, or a ggplot error plot if invalid.
 #' @noRd
 .check_boxplot_data <- function(box_data, parameter) {
   # Check for empty data

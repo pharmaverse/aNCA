@@ -41,7 +41,7 @@
 #'
 #' @param msg Character string. The error message to display in the plot.
 #'
-#' @return A ggplot object with the error message displayed.
+#' @returns A ggplot object with the error message displayed.
 #' @keywords internal
 error_plot <- function(msg) {
   ggplot() +

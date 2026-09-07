@@ -102,7 +102,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 .column_mapping_section <- function(ns, mapping_df) {
   section_title <- unique(mapping_df$mapping_section)
   if (length(section_title) != 1) {
-    stop("mapping_df must contain exactly one unique mapping_section value.")
+    stop(
+      "mapping_df must contain exactly one unique mapping_section value, but found ",
+      length(section_title), ": ", paste(section_title, collapse = ", ")
+    )
   }
   tags$section(
     h5(section_title),
