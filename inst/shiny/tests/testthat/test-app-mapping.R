@@ -42,13 +42,13 @@ describe("Test for mapping interface", {
     duplicate_data <- testthat::test_path(
       "../../../../tests/testthat/data/test-duplicate-ADNCA.csv"
     )
-    
+
     app$upload_file(`data-raw_data-data_upload` = duplicate_data)
     app$click("data-next_step")
     app$wait_for_idle()
     app$click("data-next_step")
     app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
-    
+
     app$click("data-column_mapping-cancel_duplicate_modal")
     app$wait_for_js("document.querySelector('.modal-duplicates') === null")
     app$click("data-next_step")
