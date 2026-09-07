@@ -156,7 +156,7 @@ describe("summary-exclusion scoping (#1438)", {
     # DOSNOP/DOSEA grouping: with only one subject flagged the mean plot still
     # renders, but the flagged subject's rows must not reach the summary. Assert
     # via the underlying filter so the check is independent of plot internals.
-    kept <- filter_summary_excluded(flagged)
+    kept <- filter_summary_excluded(flagged, flag = "PKSUMXF")
     expect_false(any(kept$USUBJID == excluded_subj))
     expect_true(all(adnca$USUBJID %in% unique(c(kept$USUBJID, excluded_subj))))
   })

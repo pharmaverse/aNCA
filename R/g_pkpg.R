@@ -52,7 +52,7 @@ p_pkpg03_boxp <- function(
     stop("p_pkpg03_boxp: missing required columns: ", paste(missing_cols, collapse = ", "))
   }
 
-  data <- filter_summary_excluded(data)
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   data <- data[!is.na(data[[value_var]]), , drop = FALSE]
   if (nrow(data) == 0) return(list())
@@ -239,7 +239,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   xlab           = NULL,
   ylab           = NULL
 ) {
-  data <- filter_summary_excluded(data)
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
@@ -453,7 +453,7 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
          paste(missing_cols, collapse = ", "))
   }
 
-  data <- filter_summary_excluded(data)
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   data <- data[
     !is.na(data[[value_var]]) & !is.na(data[[dose_var]]) &

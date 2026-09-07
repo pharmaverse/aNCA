@@ -7,7 +7,7 @@ describe("filter_summary_excluded", {
       PKSUMXF = c("", "Y", "", "Y", NA_character_),
       stringsAsFactors = FALSE
     )
-    result <- filter_summary_excluded(df)
+    result <- filter_summary_excluded(df, flag = "PKSUMXF")
     expect_equal(result$x, c(1L, 3L, 5L))
   })
 
@@ -17,24 +17,33 @@ describe("filter_summary_excluded", {
       PPSUMXF = c("", "Y", "", "Y"),
       stringsAsFactors = FALSE
     )
-    result <- filter_summary_excluded(df)
+    result <- filter_summary_excluded(df, flag = "PPSUMXF")
     expect_equal(result$x, c(1L, 3L))
   })
 
   it("is a no-op when no exclusion-flag column is present", {
     df <- data.frame(x = 1:3)
-    expect_equal(filter_summary_excluded(df)$x, 1:3)
+    expect_equal(filter_summary_excluded(df, flag = "PKSUMXF")$x, 1:3)
   })
 
-  it("applies both flags when both columns are present", {
+  it("uses only PPSUMXF for ADPP summaries when both flags are present", {
     df <- data.frame(
       x = 1:4,
       PKSUMXF = c("Y", "",  "",  ""),
       PPSUMXF = c("",  "Y", "",  ""),
       stringsAsFactors = FALSE
     )
-    # A record excluded by either dataset's flag is dropped from summaries.
-    expect_equal(filter_summary_excluded(df)$x, c(3L, 4L))
+    expect_equal(filter_summary_excluded(df, flag = "PPSUMXF")$x, c(1L, 3L, 4L))
+  })
+
+  it("uses only PKSUMXF for ADNCA summaries when both flags are present", {
+    df <- data.frame(
+      x = 1:4,
+      PKSUMXF = c("Y", "",  "",  ""),
+      PPSUMXF = c("",  "Y", "",  ""),
+      stringsAsFactors = FALSE
+    )
+    expect_equal(filter_summary_excluded(df, flag = "PKSUMXF")$x, c(2L, 3L, 4L))
   })
 
   it("preserves column label attributes across the row filter", {
@@ -44,7 +53,7 @@ describe("filter_summary_excluded", {
       stringsAsFactors = FALSE
     )
     attr(df$AVAL, "label") <- "Analysis Value"
-    result <- filter_summary_excluded(df)
+    result <- filter_summary_excluded(df, flag = "PKSUMXF")
     expect_equal(attr(result$AVAL, "label"), "Analysis Value")
     expect_equal(nrow(result), 2)
   })

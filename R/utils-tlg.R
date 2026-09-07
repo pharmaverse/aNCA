@@ -73,23 +73,31 @@ split_and_apply <- function(data, list_vars, fn) {
 #' combined plots and listings keep them.  Only summary/mean TLG functions call
 #' this helper; every other output receives the raw data.
 #'
-#' The relevant flag is auto-detected from the columns present, so the same call
-#' works for both datasets.  Each dataset carries only its own flag (ADNCA ->
-#' `PKSUMXF`, ADPP -> `PPSUMXF`), so this never cross-filters one dataset by the
-#' other's flag.  When no flag column is present the data is returned unchanged.
+#' The relevant flag must be supplied explicitly by the caller so a retained or
+#' supplemental flag from another dataset cannot cross-filter the current
+#' summary.  When the requested flag column is absent the data is returned
+#' unchanged.
 #'
 #' `dplyr::filter()` is used rather than base `[` so column `label` attributes
 #' survive the row subset; the `!COLUMN` annotation syntax in TLG titles/axes
 #' depends on them.
 #'
 #' @param data A data frame (ADNCA or ADPP).
+#' @param flag Summary-exclusion flag column to apply. Use `"PKSUMXF"` for
+#'   ADNCA and `"PPSUMXF"` for ADPP.
 #' @return `data` with summary-excluded rows removed.
 #' @noRd
-filter_summary_excluded <- function(data) {
-  for (flag in intersect(c("PKSUMXF", "PPSUMXF"), names(data))) {
-    data <- dplyr::filter(data, is.na(.data[[flag]]) | .data[[flag]] != "Y")
+filter_summary_excluded <- function(data, flag) {
+  if (missing(flag) || length(flag) != 1 || is.na(flag)) {
+    stop("filter_summary_excluded: `flag` must be a single column name.")
   }
-  data
+  if (!flag %in% c("PKSUMXF", "PPSUMXF")) {
+    stop("filter_summary_excluded: `flag` must be 'PKSUMXF' or 'PPSUMXF'.")
+  }
+  if (!flag %in% names(data)) {
+    return(data)
+  }
+  dplyr::filter(data, is.na(.data[[flag]]) | .data[[flag]] != "Y")
 }
 
 #' Filter ADPP rows to metabolite records
