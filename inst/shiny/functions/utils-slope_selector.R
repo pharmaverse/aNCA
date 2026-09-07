@@ -236,13 +236,22 @@ parse_plot_names_to_df <- function(named_list) {
     kv <- kv[vapply(kv, length, integer(1)) == 3L]
     keys <- vapply(kv, `[[`, character(1), 2L)
     vals <- vapply(kv, `[[`, character(1), 3L)
-    as.data.frame(
-      as.list(setNames(vals, keys)),
+    valid_keys <- !is.na(keys) & nzchar(keys)
+    df <- as.data.frame(
+      c(
+        as.list(setNames(vals[valid_keys], keys[valid_keys])),
+        list(.plot_row = TRUE)
+      ),
       stringsAsFactors = FALSE,
       check.names = FALSE
     )
+    df
   })
-  bind_rows(parsed) %>%
+  plot_df <- bind_rows(parsed)
+  valid_names <- !is.na(names(plot_df)) & nzchar(names(plot_df)) &
+    names(plot_df) != ".plot_row"
+  plot_df <- plot_df[, valid_names, drop = FALSE]
+  plot_df %>%
     mutate(PLOTID = plot_names)
 }
 

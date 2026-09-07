@@ -138,6 +138,16 @@ describe("parse_plot_names_to_df", {
     expect_equal(df$USUBJID, "x_1")
     expect_equal(df$PARAM, "Drug_A")
   })
+
+  it("keeps trailing underscores in group values", {
+    plots <- setNames(list(1), "STUDYID=study__USUBJID=subject__PARAM=Drug_A_start=0_end=Inf")
+    df <- parse_plot_names_to_df(plots)
+    expect_false(any(is.na(names(df))))
+    expect_false(any(names(df) == ""))
+    expect_equal(df$STUDYID, "study_")
+    expect_equal(df$USUBJID, "subject_")
+    expect_equal(df$PARAM, "Drug_A")
+  })
 })
 
 describe("arrange_plots_by_groups", {
@@ -164,6 +174,16 @@ describe("arrange_plots_by_groups", {
     expect_silent(res <- arrange_plots_by_groups(plots, "STUDYID"))
     # "divergent" sorts before "same_or_similar"
     expect_equal(names(res)[1], "STUDYID=divergent_USUBJID=11233_PARAM=Drug B_start=0_end=Inf")
+    expect_length(res, 2)
+  })
+
+  it("does not error when group values end with underscores", {
+    plots <- setNames(list("a", "b"), c(
+      "STUDYID=study__USUBJID=2_PARAM=Drug A_start=0_end=Inf",
+      "STUDYID=control__USUBJID=1_PARAM=Drug B_start=0_end=Inf"
+    ))
+    expect_silent(res <- arrange_plots_by_groups(plots, "STUDYID"))
+    expect_equal(names(res)[1], "STUDYID=control__USUBJID=1_PARAM=Drug B_start=0_end=Inf")
     expect_length(res, 2)
   })
 
