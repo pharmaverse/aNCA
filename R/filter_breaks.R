@@ -6,7 +6,7 @@
 #' @param plot            A ggplot object used to extract plot dimensions and scales.
 #' @param min_cm_distance A numeric of the minimum distance between breaks.
 #' @param axis            Axis to filter on, either "x" or "y".
-#' @return A numeric vector of filtered x-axis breaks.
+#' @returns A numeric vector of filtered x-axis breaks.
 #' @importFrom ggplot2 ggplot_build ggplot_gtable
 #' @importFrom grid convertUnit
 #' @importFrom stats na.omit

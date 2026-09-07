@@ -195,6 +195,18 @@ describe("exploration_individualplot:", {
     expect_s3_class(p$facet, "FacetWrap")
   })
 
+  it("can lock y-axis scale across facets", {
+    p <- exploration_individualplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      facet_by = "USUBJID",
+      lock_y_axis = TRUE,
+      labels_df = metadata_nca_variables
+    )
+    expect_true(p$facet$params$free$x)
+    expect_false(p$facet$params$free$y)
+  })
+
   it("applies log10 scale to y-axis when ylog_scale is TRUE", {
     p <- exploration_individualplot(
       pknca_data = pknca_data,
@@ -353,6 +365,18 @@ describe("exploration_meanplot:", {
     )
     plot_build <- ggplot_build(p)
     expect_equal(plot_build$layout$panel_scales_y[[1]]$trans$name, "log-10")
+  })
+
+  it("can lock y-axis scale across facets", {
+    p <- exploration_meanplot(
+      pknca_data = pknca_data,
+      color_by = "PARAM",
+      facet_by = "PARAM",
+      lock_y_axis = TRUE,
+      labels_df = metadata_nca_variables
+    )
+    expect_true(p$facet$params$free$x)
+    expect_false(p$facet$params$free$y)
   })
 
   it("shows SD error bars (min, max, and both)", {

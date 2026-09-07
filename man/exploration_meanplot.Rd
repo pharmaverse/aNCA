@@ -10,6 +10,7 @@ exploration_meanplot(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   show_legend = TRUE,
   threshold_value = NULL,
   show_dose = FALSE,
@@ -38,6 +39,9 @@ Default is \code{NULL} (no faceting).}
 Default is \code{FALSE}.}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
+
+\item{lock_y_axis}{Logical; if \code{TRUE}, faceted plots use one shared
+y-axis range while x-axis scales remain free. Default is \code{FALSE}.}
 
 \item{show_legend}{Logical; whether to display the plot legend. Default is \code{TRUE}.}
 

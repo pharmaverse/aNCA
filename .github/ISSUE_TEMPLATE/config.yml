@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Help (Q&A)
+    url: https://github.com/pharmaverse/aNCA/discussions/new?category=q-a
+    about: Ask usage questions here — the community will help.
+  - name: Feature ideas & discussion
+    url: https://github.com/pharmaverse/aNCA/discussions/new?category=ideas
+    about: Propose and discuss new ideas before opening an enhancement issue.
