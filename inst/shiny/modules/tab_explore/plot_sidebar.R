@@ -73,6 +73,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
     conditionalPanel(
       condition = "input.facetby && input.facetby.length > 0",
       checkboxInput(ns("show_facet_n"), "Show number of subjects", value = FALSE),
+      checkboxInput(ns("lock_y_axis"), "Use same Y-axis range", value = TRUE),
       ns = ns
     ),
     selectInput(
@@ -279,6 +280,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
           color_by = input$colorby,
           facet_by = input$facetby,
           show_facet_n = input$show_facet_n,
+          lock_y_axis = isTRUE(input$lock_y_axis) &&
+            !is.null(input$facetby) && length(input$facetby) > 0,
           ylog_scale = input$log,
           show_legend = input$show_legend,
           threshold_value = input$threshold_value,

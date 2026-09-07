@@ -3,8 +3,10 @@
     c(
       ".",
       ".dose_time",
+      ".facet_key",
       ".facet_label_values",
       ".facet_n",
+      ".facet_unit",
       ".iqr",
       ".pp_excl",
       ".pp_excl_reason",
@@ -79,7 +81,6 @@
       "is_extravascular",
       "is_halflife_used",
       "is_metabolite",
-      "is_missing",
       "is_one_dose",
       "is_requested",
       "IX",

@@ -9,6 +9,8 @@
 #' @param show_facet_n Logical; if `TRUE`, shows the number of subjects in each facet.
 #' Default is `FALSE`.
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
+#' @param lock_y_axis Logical; if `TRUE`, faceted plots use one shared
+#' y-axis range while x-axis scales remain free. Default is `FALSE`.
 #' @param show_legend Logical; whether to display the plot legend. Default is `TRUE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
@@ -38,6 +40,7 @@ exploration_individualplot <- function(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
@@ -85,6 +88,7 @@ exploration_individualplot <- function(
     x_limits = x_limits,
     y_limits = y_limits,
     ylog_scale = ylog_scale,
+    lock_y_axis = lock_y_axis,
     threshold_value = threshold_value,
     palette = palette,
     tooltip_vars = tooltip_vars,
@@ -119,6 +123,7 @@ exploration_meanplot <- function(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   show_legend = TRUE,
   threshold_value = NULL,
   show_dose = FALSE,
@@ -175,6 +180,7 @@ exploration_meanplot <- function(
     x_limits = x_limits,
     y_limits = y_limits,
     ylog_scale = ylog_scale,
+    lock_y_axis = lock_y_axis,
     threshold_value = threshold_value,
     palette = palette,
     tooltip_vars = tooltip_vars,
