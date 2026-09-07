@@ -56,4 +56,18 @@ describe("Test for mapping interface", {
 
     expect_false(app$get_js("Boolean(document.querySelector('#loading-title'))"))
   })
+  it("dismisses the loading modal when mapping errors", {
+    app <- AppDriver$new(name = "app_mapping_error")
+
+    app$click("data-next_step")
+    app$wait_for_idle()
+    app$set_inputs(`data-column_mapping-select_USUBJID` = "")
+    app$click("data-next_step")
+
+    app$wait_for_js(
+      "document.querySelector('.shiny-notification-error') !== null"
+    )
+    app$wait_for_js("document.querySelector('#loading-title') === null")
+    expect_equal(app$get_value(input = "data-data_navset"), "Mapping")
+  })
 })

@@ -245,6 +245,17 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   skipped
 }
 
+.remove_manual_mapping_modal_after_flush <- function(session) {
+  if (isTRUE(session$userData$auto_replay_active)) {
+    return(invisible(NULL))
+  }
+
+  session$onFlushed(function() {
+    shiny::removeModal(session = session)
+  }, once = TRUE)
+  invisible(NULL)
+}
+
 #' Column Mapping Module
 #' This module provides implementation for mapping columns from a dataset to specific
 #' roles required for analysis. It allows users to select columns for various categories such as
@@ -418,9 +429,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
         ),
         error = function(e) {
           log_error(conditionMessage(e))
-          if (!isTRUE(session$userData$auto_replay_active)) {
-            removeModal()
-          }
+          .remove_manual_mapping_modal_after_flush(session)
           showNotification(conditionMessage(e), type = "error", duration = NULL)
           NULL
         }
