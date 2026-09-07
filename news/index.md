@@ -21,6 +21,10 @@
 
 ### Bug Fixes
 
+- NCA Results now derive the `Missing` flag at the subject/profile
+  level, so parameter-level metadata from active flag parameters can no
+  longer duplicate rows in the pivoted results table
+  ([\#1479](https://github.com/pharmaverse/aNCA/issues/1479))
 - Running NCA with “Impute Start Concentration” turned off no longer
   errors with `PKNCA_impute_method_FALSE not found`. When start
   imputation was off, the per-interval `impute` column was absent, so
