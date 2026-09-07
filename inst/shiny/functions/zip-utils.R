@@ -383,7 +383,7 @@ get_tree_ids_for_texts <- function(tree, texts) {
 # object-class checks on all selected outputs and value-level data-type checks
 # on the selected CDISC datasets, and stops the save when error-severity
 # findings are present. No-op when nothing conforming is being exported.
-.validate_outputs_before_export <- function(export_list, obj_names, progress) {
+.validate_outputs_pre_export <- function(export_list, obj_names, progress) {
   progress$set(message = "Creating exports...",
                detail = "Validating outputs...")
   findings <- validate_export_outputs(export_list, obj_names = obj_names)
@@ -455,7 +455,7 @@ prepare_export_files <- function(target_dir,
   # object-class checks on all selected outputs and value-level data-type
   # checks on the selected CDISC datasets. Aborts the save on error-severity
   # findings so non-conforming data is never written (cf. 21 CFR 11.10(a)).
-  .validate_outputs_before_export(export_list, obj_names, progress)
+  .validate_outputs_pre_export(export_list, obj_names, progress)
 
   save_output(
     output = export_list,

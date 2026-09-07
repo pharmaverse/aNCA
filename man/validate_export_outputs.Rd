@@ -12,7 +12,7 @@ validate_export_outputs(
 }
 \arguments{
 \item{output}{The export list as assembled for the Save flow: a named,
-possibly nested list of outputs (plots, tables, and \code{*_code} strings),
+possibly nested list of outputs (plots, tables, and \verb{*_code} strings),
 with the CDISC datasets under a \code{CDISC} element keyed \code{pp}/\code{adpp}/\code{adnca}.}
 
 \item{obj_names}{Optional character vector of leaf names that will be
@@ -34,7 +34,7 @@ refused before any file is created. It combines two levels of checking:
 \details{
 \itemize{
 \item \strong{Object class} for all outputs: plot nodes must be a ggplot or plotly,
-table nodes must be a data frame, and \code{*_code} nodes must be a length-1
+table nodes must be a data frame, and \verb{*_code} nodes must be a length-1
 character string. Anything the export writer cannot serialise is reported
 as an error.
 \item \strong{Value level} for the CDISC datasets: the \code{pp}/\code{adpp}/\code{adnca} entries
