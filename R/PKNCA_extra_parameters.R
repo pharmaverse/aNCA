@@ -14,6 +14,7 @@
 #'   `add.interval.col()` and `PKNCA.set.summary()` registration for `name`.
 #' @returns Invisibly `TRUE` if registration ran, `FALSE` if skipped because
 #'   PKNCA already defines the column. Called for its side effects.
+#' @importFrom utils getS3method
 #' @keywords internal
 #' @noRd
 register_interval_col_if_absent <- function(name, register) {
