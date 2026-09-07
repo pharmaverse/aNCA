@@ -225,7 +225,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   wide_output$result <- wide_output$result %>%
     filter(
       PPTESTCD %in% c("lambda.z.time.first", "lambda.z.time.last",
-                      "lambda.z", "adj.r.squared", "span.ratio", "tlast")
+                      "lambda.z", "adj.r.squared", "r.squared",
+                      "span.ratio", "tlast")
     ) %>%
     select(-any_of(c("PPORRESU", "PPSTRESU", "PPSTRES"))) %>%
     mutate(exclude = paste0(na.omit(unique(exclude)), collapse = ". "))
@@ -243,7 +244,8 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
         mutate(
           start = numeric(0), end = numeric(0),
           lambda.z = numeric(0), adj.r.squared = numeric(0),
-          span.ratio = numeric(0), lambda.z.time.first = numeric(0),
+          r.squared = numeric(0), span.ratio = numeric(0),
+          lambda.z.time.first = numeric(0),
           lambda.z.time.last = numeric(0), tlast = numeric(0),
           exclude = character(0)
         )
