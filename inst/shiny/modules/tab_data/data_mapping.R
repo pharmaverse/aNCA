@@ -532,6 +532,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     })
 
     observeEvent(input$cancel_duplicate_modal, {
+      df_duplicates(NULL)
       removeModal()
       shinyjs::enable(selector = "#data-next_step")
     })
