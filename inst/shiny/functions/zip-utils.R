@@ -574,11 +574,9 @@ prepare_export_files <- function(target_dir,
 .export_settings <- function(target_dir, session) {
   settings_list <- session$userData$settings()
 
-  if (!is.null(settings_list$units)) {
-    settings_list$units <- settings_list$units %>%
-      dplyr::filter(!default) %>%
-      dplyr::select(-default)
-  }
+  # Units are decoupled from settings(); read directly from the session store
+  # and export only the rows that differ from their data-derived default.
+  settings_list$units <- changed_units(session$userData$units_table())
 
   settings_list$ratio_table <- session$userData$ratio_table()
 

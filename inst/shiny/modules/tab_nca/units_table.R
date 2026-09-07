@@ -31,13 +31,12 @@ units_table_server <- function(id, mydata) {
 
     modal_units_table <- reactiveVal(NULL)
     observeEvent(input$open_units_table, {
-      default_units <- mydata()$units %>%
-        dplyr::mutate(default = TRUE)
+      default_units <- mydata()$units
 
       if (!is.null(session$userData$units_table())) {
-        custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
+        custom_units <- session$userData$units_table()
         by_cols <- intersect(names(default_units), names(custom_units))
-        by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
+        by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
         dplyr::rows_update(
           default_units,
           custom_units,
@@ -111,8 +110,7 @@ units_table_server <- function(id, mydata) {
           PPORRESU = colDef(name = "Default Unit"),
           PPSTRESU = colDef(name = "Custom Unit"),
           conversion_factor = colDef(name = "Conversion Factor"),
-          is_hidden = colDef(show = FALSE),
-          default = colDef(show = FALSE)
+          is_hidden = colDef(show = FALSE)
         )
         dynamic_cols <- setdiff(names(data), names(fixed_cols))
         group_cols <- lapply(
@@ -173,7 +171,6 @@ units_table_server <- function(id, mydata) {
           )
         }
 
-        modal_units_table[info$row, "default"] <- FALSE
         modal_units_table[info$row, "conversion_factor"] <- conversion_factor_value
       }
 
@@ -209,9 +206,10 @@ units_table_server <- function(id, mydata) {
       }
 
       log_trace("Applying custom units specification.")
-      modal_units_table() %>%
-        dplyr::filter(!default) %>%
-        session$userData$units_table()
+      # Store the full table internally; export paths filter to changed rows.
+      # modal_units_table() holds raw PKNCA PPTESTCD codes (display translation
+      # happens only in the reactable), so it can be persisted as-is.
+      session$userData$units_table(modal_units_table())
 
       # Close the modal message window for the user
       removeModal()
@@ -219,12 +217,11 @@ units_table_server <- function(id, mydata) {
 
     #' Update local `modal_units_table()` if the global value changes.
     observeEvent(session$userData$units_table(), {
-      default_units <- mydata()$units %>%
-        dplyr::mutate(default = TRUE)
+      default_units <- mydata()$units
 
-      custom_units <- dplyr::mutate(session$userData$units_table(), default = FALSE)
+      custom_units <- session$userData$units_table()
       by_cols <- intersect(names(default_units), names(custom_units))
-      by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor", "default"))
+      by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
       dplyr::rows_update(
         default_units,
         custom_units,

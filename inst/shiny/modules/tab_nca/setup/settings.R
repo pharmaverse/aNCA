@@ -485,8 +485,11 @@ settings_server <- function(id, data, adnca_data, settings_override) {
             is.checked = input$LAMZSPN_rule,
             threshold = input$LAMZSPN_threshold
           )
-        ),
-        units = session$userData$units_table()
+        )
+        # NOTE: units are intentionally NOT part of settings(). Including them
+        # created a reactive dependency (settings -> settings_debounced ->
+        # processed_pknca_data -> ...) that stalled auto-replay. Export paths
+        # read session$userData$units_table() directly and filter to changes.
       )
     })
 
