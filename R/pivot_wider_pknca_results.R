@@ -283,7 +283,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
 
   missing_data %>%
     summarise(
-      Missing = .extract_profile_missing_values(PPTESTCD, is.na(PPSTRES)),
+      Missing = .extract_profile_missing(PPTESTCD, is.na(PPSTRES)),
       .groups = "drop"
     )
 }
@@ -296,7 +296,7 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   setdiff(intersect(names(data), names(pknca_res)), result_cols)
 }
 
-.extract_profile_missing_values <- function(params, is_missing) {
+.extract_profile_missing <- function(params, is_missing) {
   missing_names <- unique(params[!is.na(is_missing) & is_missing])
   if (length(missing_names) == 0) return(NA_character_)
   paste0(missing_names, " is NA", collapse = "; ")
