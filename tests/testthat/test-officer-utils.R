@@ -35,7 +35,18 @@ describe("create_pptx_dose_slides", {
     out <- tempfile(fileext = ".pptx")
     create_pptx_dose_slides(base_slides, out, "NCA", template)
     pptx <- officer::read_pptx(out)
-    expect_gte(length(pptx), 8)
+    # 1 title + 1 TOC + summary slides + extra figures + individual slides
+    expect_gte(length(pptx), 9)
+  })
+
+  it("inserts a Summary of Contents slide at position 2", {
+    out <- tempfile(fileext = ".pptx")
+    create_pptx_dose_slides(base_slides, out, "NCA", template)
+    pptx <- officer::read_pptx(out)
+    # Slide 2 should be the TOC slide using "Title Only" layout
+    slide_layouts <- officer::pptx_summary(pptx)
+    toc_layout <- slide_layouts[slide_layouts$slide_index == 2, "layout"]
+    expect_equal(unique(toc_layout), "Title Only")
   })
 
   it("adds additional analysis slides generically for any non-empty data frame", {
