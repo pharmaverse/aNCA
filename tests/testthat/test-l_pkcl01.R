@@ -225,14 +225,14 @@ describe("l_pkcl01", {
     expect_equal(attr(listings$`A.Plasma.Oral`, "subtitles"),
                  "Analyte: A\nSpecimen: Plasma\nAdministration: Oral")
     expect_equal(attr(listings$`A.Plasma.Oral`, "main_footer"),
-                 "*: Subjects excluded from the summary table and mean plots")
+                 character())
     expect_equal(attr(listings$`B.Plasma.IV`, "main_title"),
                  paste0("Listing of PK Concentration by Treatment Group,",
                         "Subject and Nominal Time, PK Population"))
     expect_equal(attr(listings$`B.Plasma.IV`, "subtitles"),
                  "Analyte: B\nSpecimen: Plasma\nAdministration: IV")
     expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"),
-                 "*: Subjects excluded from the summary table and mean plots")
+                 character())
 
     # Check the attributes of the columns
     expect_equal(attr(listings$`A.Plasma.Oral`$TRT01A, "label"), "Treatment")
@@ -292,6 +292,27 @@ describe("l_pkcl01", {
                displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
                formatting_vars_table = no_label_table)
     )
+  })
+
+  it("marks PKSUMXF records and explains the marker in the footer", {
+    flagged_adnca <- adnca
+    flagged_adnca$PKSUMXF <- c("", "Y", "", "")
+
+    listings <- l_pkcl01(flagged_adnca,
+                         listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         footnote = "Existing footnote")
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20.12*"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "*: Record excluded from summary tables and plots (PKSUMXF = \"Y\")."
+      )
+    )
+    expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
   })
 })
 

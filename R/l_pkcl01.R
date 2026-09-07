@@ -83,7 +83,7 @@ l_pkcl01 <- function(
   title = paste0("Listing of PK Concentration by Treatment Group,",
                  "Subject and Nominal Time, PK Population"),
   subtitle = NULL,
-  footnote = "*: Subjects excluded from the summary table and mean plots"
+  footnote = NULL
 ) {
 
   if (!requireNamespace("rlistings", quietly = TRUE)) {
@@ -202,6 +202,18 @@ l_pkcl01 <- function(
         ifelse(. == 0, format_zero[cur_column()], as.character(.))
     ))
 
+  marker_col <- intersect(c("AVALC", "AVAL"), displaying_vars)
+  marker_col <- marker_col[marker_col %in% names(data_grouped)][1]
+  if (!is.na(marker_col) && .has_summary_excluded_records(data_grouped, "PKSUMXF")) {
+    is_summary_excluded <- !is.na(data_grouped$PKSUMXF) & data_grouped$PKSUMXF == "Y"
+    is_summary_excluded <- is_summary_excluded & !is.na(data_grouped[[marker_col]])
+    data_grouped[[marker_col]] <- as.character(data_grouped[[marker_col]])
+    data_grouped[[marker_col]][is_summary_excluded] <- paste0(
+      data_grouped[[marker_col]][is_summary_excluded],
+      .SUMMARY_EXCLUSION_MARKER
+    )
+  }
+
   # Make sure the data stays labelled
   var_labels(data_grouped) <- c(var_labels(data), id_list = "id")
   var_labels(data_grouped) <- ifelse(is.na(var_labels(data_grouped)),
@@ -234,6 +246,11 @@ l_pkcl01 <- function(
     list_titles <- gsub("<br>", "\n", parse_annotation(data = list_data,
                                                        text = subtitle))
     footnote <- parse_annotation(data = list_data, text = footnote)
+    footnote <- .append_summary_exclusion_footnote(
+      footnote,
+      list_data,
+      "PKSUMXF"
+    )
 
 
     # Build the listing object

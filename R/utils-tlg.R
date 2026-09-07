@@ -11,6 +11,50 @@
   warning(warningCondition(paste0(...), class = "tlg_warning"))
 }
 
+#' Summary-exclusion marker used in TLG listings.
+#' @noRd
+.SUMMARY_EXCLUSION_MARKER <- "*"
+
+#' Check whether a data frame contains summary-excluded records.
+#' @param data A data frame.
+#' @param flag_var Summary-exclusion flag column.
+#' @return Logical scalar.
+#' @noRd
+.has_summary_excluded_records <- function(data, flag_var) {
+  flag_var %in% names(data) &&
+    any(!is.na(data[[flag_var]]) & data[[flag_var]] == "Y")
+}
+
+#' Build the summary-exclusion listing footnote.
+#' @param flag_var Summary-exclusion flag column.
+#' @return Character scalar.
+#' @noRd
+.summary_exclusion_footnote <- function(flag_var) {
+  paste0(
+    .SUMMARY_EXCLUSION_MARKER,
+    ": Record excluded from summary tables and plots (",
+    flag_var,
+    " = \"Y\")."
+  )
+}
+
+#' Add the summary-exclusion listing footnote when flagged records are present.
+#' @param footnote Existing parsed footnote.
+#' @param data A data frame.
+#' @param flag_var Summary-exclusion flag column.
+#' @return Footnote vector with summary-exclusion note appended when needed.
+#' @noRd
+.append_summary_exclusion_footnote <- function(footnote, data, flag_var) {
+  if (!.has_summary_excluded_records(data, flag_var)) return(footnote)
+
+  note <- .summary_exclusion_footnote(flag_var)
+  if (is.null(footnote) || length(footnote) == 0) return(note)
+  if (all(is.na(footnote) | !nzchar(footnote))) return(note)
+  if (note %in% footnote) return(footnote)
+
+  c(footnote, note)
+}
+
 #' Split a data frame by grouping variables and apply a function to each subset
 #'
 #' Common pattern used by all TLG functions that return one output object per

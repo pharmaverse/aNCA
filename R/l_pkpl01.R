@@ -71,6 +71,7 @@ l_pkpl01 <- function(
 
   .make_wide_listing <- function(df) {
     has_unit <- unit_var %in% names(df)
+    has_summary_exclusions <- .has_summary_excluded_records(df, "PPSUMXF")
 
     col_labels <- if (has_unit) {
       vapply(sort(unique(df[[param_var]])), function(p) {
@@ -82,10 +83,18 @@ l_pkpl01 <- function(
       sort(unique(df[[param_var]]))
     }
 
+    df$.val_fmt <- round(as.numeric(df[[value_var]]), 3)
+    if (has_summary_exclusions) {
+      is_summary_excluded <- !is.na(df$PPSUMXF) & df$PPSUMXF == "Y"
+      is_summary_excluded <- is_summary_excluded & !is.na(df$.val_fmt)
+      df$.val_fmt <- as.character(df$.val_fmt)
+      df$.val_fmt[is_summary_excluded] <- paste0(
+        df$.val_fmt[is_summary_excluded],
+        .SUMMARY_EXCLUSION_MARKER
+      )
+    }
+
     wide <- df %>%
-      dplyr::mutate(
-        .val_fmt = round(as.numeric(.data[[value_var]]), 3)
-      ) %>%
       dplyr::select(dplyr::all_of(c(
         intersect(listgroup_vars, names(df)),
         grouping_vars, param_var, ".val_fmt"
@@ -96,7 +105,7 @@ l_pkpl01 <- function(
         # When a subject has multiple rows for the same PARAM (e.g. multi-
         # interval ADPP), take the first value rather than creating list-columns.
         values_fn   = dplyr::first,
-        values_fill = NA_real_
+        values_fill = if (has_summary_exclusions) NA_character_ else NA_real_
       )
 
     param_cols <- sort(unique(df[[param_var]]))
@@ -123,7 +132,11 @@ l_pkpl01 <- function(
       main_title  = parse_annotation(data = df, text = title),
       subtitles   = gsub("<br>", "\n",
                          parse_annotation(data = df, text = subtitle)),
-      main_footer = parse_annotation(data = df, text = footnote)
+      main_footer = .append_summary_exclusion_footnote(
+        parse_annotation(data = df, text = footnote),
+        df,
+        "PPSUMXF"
+      )
     )
   }
 
