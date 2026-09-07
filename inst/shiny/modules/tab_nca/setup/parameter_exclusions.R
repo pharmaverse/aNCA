@@ -247,6 +247,265 @@ parameter_exclusions_ui <- function(id) {
   invisible()
 }
 
+.reset_excl_state <- function(res, prev_fingerprint, exclusion_list,
+                              xbtn_counter, selected_plot_row_id) {
+  fp <- paste(nrow(res$result), paste(names(res$result), collapse = ","))
+  if (identical(fp, prev_fingerprint())) return(invisible())
+
+  exclusion_list(list())
+  xbtn_counter(0)
+  selected_plot_row_id(NA_integer_)
+  prev_fingerprint(fp)
+  invisible()
+}
+
+.res_nca_tagged <- function(res, exclusion_list) {
+  excl_info <- .build_exclusion_reasons(exclusion_list())
+  .apply_param_exclusions(res, excl_info)$tagged
+}
+
+.param_group_cols <- function(res) {
+  unique(unlist(unname(res$data$conc$columns$groups)))
+}
+
+.make_pp_choices <- function(res, tagged_res, filter_pps, xvars, colorvars) {
+  result_data <- res$result
+  if (all(c("type_interval", "start_dose", "end_dose") %in%
+          names(result_data))) {
+    result_data <- aNCA:::rename_interval_params(result_data)
+  }
+  all_params <- unique(result_data$PPTESTCD)
+
+  switch(filter_pps %||% "all",
+    flagged = {
+      excl <- result_data[["exclude"]]
+      has_flag <- !is.na(excl) & excl != ""
+      intersect(all_params, unique(result_data$PPTESTCD[has_flag]))
+    },
+    outlier = params_with_outliers(
+      tagged_res,
+      group_cols = unique(c(xvars, colorvars))
+    ),
+    all_params
+  )
+}
+
+.render_group_selectors <- function(input, output, session, res) {
+  conc_dose_cols <- unique(c(
+    names(res$data$conc$data),
+    names(res$data$dose$data)
+  ))
+  default_group <- c(
+    res$data$dose$columns$dose,
+    res$data$conc$columns$groups$group_analyte
+  )
+
+  selector_label(
+    input = input, output = output, session = session,
+    choices = conc_dose_cols, initial_selection = default_group,
+    selector_ui_wrapper = "group_xvars_ui_wrapper",
+    id = "selected_xvars_boxplot",
+    label = "Select X grouping variables:",
+    metadata_type = "variable"
+  )
+  selector_label(
+    input = input, output = output, session = session,
+    choices = conc_dose_cols, initial_selection = default_group,
+    selector_ui_wrapper = "select_colorvars_ui_wrapper",
+    id = "selected_colorvars_boxplot",
+    label = "Select coloring variables:",
+    metadata_type = "variable"
+  )
+}
+
+.default_pp_sel <- function(current, choices) {
+  keep <- intersect(current, choices)
+  if (length(keep) > 0) return(keep)
+  if ("CMAX" %in% choices) return("CMAX")
+  if (length(choices) > 0) return(choices[1])
+  character(0)
+}
+
+.render_pp_selector <- function(input, output, session, choices) {
+  selector_label(
+    input = input, output = output, session = session,
+    choices = choices,
+    initial_selection = .default_pp_sel(input$selected_pps_boxplot, choices),
+    selector_ui_wrapper = "select_pps_ui_wrapper",
+    id = "selected_pps_boxplot",
+    label = "Select PPs:",
+    metadata_type = "parameter",
+    multiple = TRUE
+  )
+}
+
+.filter_param_data <- function(df, selected_pps, selected_plot_row_id) {
+  if (!is.null(selected_pps) &&
+      length(selected_pps) > 0 &&
+      "PPTESTCD" %in% names(df)) {
+    df <- df[df$PPTESTCD %in% selected_pps, , drop = FALSE]
+  }
+  df <- .sort_param_display(df)
+  df$.plot_clicked <- df$.row_id %in% selected_plot_row_id()
+  df
+}
+
+.param_table_cols <- function(data) {
+  defs <- define_cols(data)
+  defs[[".row_id"]] <- reactable::colDef(show = FALSE)
+  defs[[".excl_type"]] <- reactable::colDef(show = FALSE)
+  defs[[".plot_clicked"]] <- reactable::colDef(show = FALSE)
+  defs
+}
+
+.param_row_style <- function(x) {
+  types <- x$.excl_type
+  clicked <- x$.plot_clicked
+  function(index) {
+    style <- list()
+    color <- aNCA:::.exclusion_type_color(types[index])
+    if (!is.na(color)) {
+      style$background <- color
+    }
+    if (isTRUE(clicked[index])) {
+      style$background <- if (!is.na(color)) color else "#D8ECFF"
+      style$boxShadow <- "inset 4px 0 0 #0072B2"
+      style$outline <- "2px solid #0072B2"
+      style$outlineOffset <- "-2px"
+      style$fontWeight <- "600"
+    }
+    if (length(style) > 0) style else NULL
+  }
+}
+
+.selected_row_ids <- function(rows_sel, row_ids, plot_row_id) {
+  selected <- row_ids[rows_sel]
+  selected <- selected[!is.na(selected)]
+  if (length(selected) == 0 &&
+      !is.na(plot_row_id) &&
+      plot_row_id %in% row_ids) {
+    selected <- plot_row_id
+  }
+  selected
+}
+
+.add_param_excl <- function(reason, row_ids, exclusion_list, xbtn_counter,
+                            selected_plot_row_id, session, ns) {
+  if (!nzchar(reason) || length(row_ids) == 0) return(invisible())
+
+  xbtn_id <- paste0("remove_param_excl_", xbtn_counter() + 1)
+  xbtn_counter(xbtn_counter() + 1)
+  new_entry <- list(list(
+    reason = reason, rows = row_ids, xbtn_id = xbtn_id
+  ))
+  exclusion_list(append(exclusion_list(), new_entry))
+  selected_plot_row_id(NA_integer_)
+  updateTextInput(session, "exclusion_reason", value = "")
+  updateReactable(ns("param_table-table"), selected = NA)
+  invisible()
+}
+
+.safe_plot_slot <- function(param) {
+  paste0("box_", gsub("[^A-Za-z0-9]", "_", param))
+}
+
+.plot_slot_source <- function(slot) {
+  paste0("box_src_", slot)
+}
+
+.plot_output_ui <- function(selected_pps, ns) {
+  if (is.null(selected_pps) || length(selected_pps) == 0) {
+    return(p("Select one or more PK parameters to display boxplots."))
+  }
+  tagList(lapply(selected_pps, function(param) {
+    plotlyOutput(ns(paste0(.safe_plot_slot(param), "_plot")), height = "350px")
+  }))
+}
+
+.render_excl_plot <- function(res_tagged, res, param, xvars, colorvars,
+                              box, source) {
+  .adpp_excl_log(
+    "rendering plot parameter=", param,
+    "; source=", source
+  )
+  p <- flexible_violinboxplot(
+    res_nca = res_tagged,
+    parameter = param,
+    xvars = xvars,
+    colorvars = colorvars,
+    varvalstofilter = NULL,
+    tooltip_vars = unname(unlist(res$data$conc$columns$groups)),
+    box = box,
+    show_excluded = TRUE,
+    plotly_source = source
+  )
+  if (!inherits(p, "plotly")) {
+    .adpp_excl_log("plot output is not plotly for parameter=", param)
+    return(p)
+  }
+
+  p <- plotly::event_register(p, "plotly_click")
+  htmlwidgets::onRender(p, "
+    function(el, x) {
+      console.log('[ADPP exclusions] plotly rendered', {
+        id: el.id,
+        source: x.source
+      });
+      if (el.__adppExclClickLoggerAttached) return;
+      el.__adppExclClickLoggerAttached = true;
+      el.on('plotly_click', function(data) {
+        var points = (data && data.points) || [];
+        console.log('[ADPP exclusions] browser plotly_click', {
+          id: el.id,
+          source: x.source,
+          point_count: points.length,
+          keys: points.map(function(pt) { return pt.key; }),
+          curve_numbers: points.map(function(pt) { return pt.curveNumber; }),
+          point_numbers: points.map(function(pt) { return pt.pointNumber; })
+        });
+      });
+    }
+  ")
+}
+
+.register_clicks <- function(slot_map, registered_click_slots,
+                             param_data, selected_plot_row_id, session, ns) {
+  already <- registered_click_slots()
+  new_slots <- setdiff(names(slot_map), already)
+  .adpp_excl_log(
+    "slot map updated; active sources=",
+    paste(vapply(names(slot_map), .plot_slot_source, character(1)), collapse = ","),
+    "; new slots=", paste(new_slots, collapse = ",")
+  )
+  for (slot in new_slots) {
+    local({
+      source <- .plot_slot_source(slot)
+      .adpp_excl_log(
+        "registering server click observer for slot=", slot,
+        "; source=", source
+      )
+      observeEvent(
+        plotly::event_data("plotly_click", source = source),
+        {
+          ev <- plotly::event_data("plotly_click", source = source)
+          .adpp_excl_log(
+            "server plotly_click source=", source,
+            "; ", .adpp_excl_event_summary(ev)
+          )
+          req(ev)
+          .highlight_clicked_row(
+            ev, param_data(), selected_plot_row_id, session, ns
+          )
+        },
+        ignoreInit = TRUE
+      )
+    })
+  }
+  if (length(new_slots) > 0) {
+    registered_click_slots(union(already, new_slots))
+  }
+}
+
 parameter_exclusions_server <- function(id, res_nca) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -259,31 +518,25 @@ parameter_exclusions_server <- function(id, res_nca) {
     # Clear exclusions only when result structure changes (row count or columns),
     # not on every recomputation (e.g. unit changes that preserve row identity).
     observeEvent(res_nca(), {
-      res <- res_nca()$result
-      fp <- paste(nrow(res), paste(names(res), collapse = ","))
-      if (!identical(fp, prev_fingerprint())) {
-        exclusion_list(list())
-        xbtn_counter(0)
-        selected_plot_row_id(NA_integer_)
-        prev_fingerprint(fp)
-      }
+      .reset_excl_state(
+        res_nca(), prev_fingerprint, exclusion_list, xbtn_counter,
+        selected_plot_row_id
+      )
     })
 
     # res_nca tagged with this module's manual exclusions (.pp_excl markers),
     # so the embedded boxplots show manual exclusions as yellow crosses.
     res_nca_tagged <- reactive({
       req(res_nca())
-      excl_info <- .build_exclusion_reasons(exclusion_list())
-      .apply_param_exclusions(res_nca(), excl_info)$tagged
+      .res_nca_tagged(res_nca(), exclusion_list)
     })
 
     # Full display table (all parameters). Carries hidden .row_id / .excl_type.
     param_data_full <- reactive({
       req(res_nca())
-      group_cols <- unique(unlist(unname(
-        res_nca()$data$conc$columns$groups
-      )))
-      .build_param_display(res_nca()$result, group_cols, exclusion_list())
+      .build_param_display(
+        res_nca()$result, .param_group_cols(res_nca()), exclusion_list()
+      )
     })
 
     # -- Boxplot / PP selector inputs ------------------------------------------
@@ -291,83 +544,21 @@ parameter_exclusions_server <- function(id, res_nca) {
     # Choices available in "Select PPs", narrowed by the "Filter PPs" control.
     pp_choices <- reactive({
       req(res_nca())
-      result_data <- res_nca()$result
-      if (all(c("type_interval", "start_dose", "end_dose") %in%
-                names(result_data))) {
-        result_data <- aNCA:::rename_interval_params(result_data)
-      }
-      all_params <- unique(result_data$PPTESTCD)
-
-      switch(input$filter_pps %||% "all",
-        flagged = {
-          excl <- result_data[["exclude"]]
-          has_flag <- !is.na(excl) & excl != ""
-          intersect(all_params, unique(result_data$PPTESTCD[has_flag]))
-        },
-        outlier = params_with_outliers(
-          res_nca_tagged(),
-          group_cols = unique(c(
-            input$selected_xvars_boxplot, input$selected_colorvars_boxplot
-          ))
-        ),
-        all_params
+      .make_pp_choices(
+        res_nca(), res_nca_tagged(), input$filter_pps,
+        input$selected_xvars_boxplot, input$selected_colorvars_boxplot
       )
     })
 
     # Render selectors when results change (populate X/color grouping choices).
     observeEvent(res_nca(), {
-      conc_dose_cols <- unique(c(
-        names(res_nca()$data$conc$data),
-        names(res_nca()$data$dose$data)
-      ))
-      default_group <- c(
-        res_nca()$data$dose$columns$dose,
-        res_nca()$data$conc$columns$groups$group_analyte
-      )
-
-      selector_label(
-        input = input, output = output, session = session,
-        choices = conc_dose_cols, initial_selection = default_group,
-        selector_ui_wrapper = "group_xvars_ui_wrapper",
-        id = "selected_xvars_boxplot",
-        label = "Select X grouping variables:",
-        metadata_type = "variable"
-      )
-      selector_label(
-        input = input, output = output, session = session,
-        choices = conc_dose_cols, initial_selection = default_group,
-        selector_ui_wrapper = "select_colorvars_ui_wrapper",
-        id = "selected_colorvars_boxplot",
-        label = "Select coloring variables:",
-        metadata_type = "variable"
-      )
+      .render_group_selectors(input, output, session, res_nca())
     })
 
     # Render/refresh the "Select PPs" multi-select as the filtered choices
     # change. Preserve the user's current selection where still valid.
     observeEvent(pp_choices(), {
-      choices <- pp_choices()
-      current <- input$selected_pps_boxplot
-      keep <- intersect(current, choices)
-      default_sel <- if (length(keep) > 0) {
-        keep
-      } else if ("CMAX" %in% choices) {
-        "CMAX"
-      } else if (length(choices) > 0) {
-        choices[1]
-      } else {
-        character(0)
-      }
-
-      selector_label(
-        input = input, output = output, session = session,
-        choices = choices, initial_selection = default_sel,
-        selector_ui_wrapper = "select_pps_ui_wrapper",
-        id = "selected_pps_boxplot",
-        label = "Select PPs:",
-        metadata_type = "parameter",
-        multiple = TRUE
-      )
+      .render_pp_selector(input, output, session, pp_choices())
     }, ignoreNULL = FALSE)
 
     # -- Exclusion table (filtered by selected PPs) ----------------------------
@@ -376,14 +567,9 @@ parameter_exclusions_server <- function(id, res_nca) {
     # back to the full result so selection still records correct indices.
     param_data <- reactive({
       req(param_data_full())
-      sel <- input$selected_pps_boxplot
-      df <- param_data_full()
-      if (!is.null(sel) && length(sel) > 0 && "PPTESTCD" %in% names(df)) {
-        df <- df[df$PPTESTCD %in% sel, , drop = FALSE]
-      }
-      df <- .sort_param_display(df)
-      df$.plot_clicked <- df$.row_id %in% selected_plot_row_id()
-      df
+      .filter_param_data(
+        param_data_full(), input$selected_pps_boxplot, selected_plot_row_id
+      )
     })
 
     # Row id (into the full result) for each displayed row, in display order.
@@ -401,90 +587,37 @@ parameter_exclusions_server <- function(id, res_nca) {
       defaultPageSize = 25,
       pageSizeOptions = function(data) unique(c(25, 50, 100, nrow(data))),
       # Keep internal columns in the data (needed for coloring) but hide them.
-      columns = function(data) {
-        defs <- define_cols(data)
-        defs[[".row_id"]] <- reactable::colDef(show = FALSE)
-        defs[[".excl_type"]] <- reactable::colDef(show = FALSE)
-        defs[[".plot_clicked"]] <- reactable::colDef(show = FALSE)
-        defs
-      },
+      columns = .param_table_cols,
       # Colour exclusion rows, and strongly outline the point clicked in
       # the plot. The outline is server-side state, so it remains visible
       # even when reactable's client-side selected style is unavailable.
-      rowStyle = function(x) {
-        types <- x$.excl_type
-        clicked <- x$.plot_clicked
-        function(index) {
-          style <- list()
-          color <- aNCA:::.exclusion_type_color(types[index])
-          if (!is.na(color)) {
-            style$background <- color
-          }
-          if (isTRUE(clicked[index])) {
-            style$background <- if (!is.na(color)) color else "#D8ECFF"
-            style$boxShadow <- "inset 4px 0 0 #0072B2"
-            style$outline <- "2px solid #0072B2"
-            style$outlineOffset <- "-2px"
-            style$fontWeight <- "600"
-          }
-          if (length(style) > 0) style else NULL
-        }
-      }
+      rowStyle = .param_row_style
     )
 
     # Add exclusion when button is pressed. Table selection indices are
     # translated to full-result row ids via displayed_row_ids().
     observeEvent(input$add_exclusion, {
-      rows_sel <- param_table_state()$selected
-      reason <- input$exclusion_reason
-      if (nzchar(reason)) {
-        row_ids <- displayed_row_ids()[rows_sel]
-        row_ids <- row_ids[!is.na(row_ids)]
-
-        plot_row_id <- selected_plot_row_id()
-        if (length(row_ids) == 0 &&
-            !is.na(plot_row_id) &&
-            plot_row_id %in% displayed_row_ids()) {
-          row_ids <- plot_row_id
-        }
-
-        if (length(row_ids) == 0) return(invisible())
-
-        current <- exclusion_list()
-        xbtn_id <- paste0("remove_param_excl_", xbtn_counter() + 1)
-        xbtn_counter(xbtn_counter() + 1)
-        new_entry <- list(list(
-          reason = reason, rows = row_ids, xbtn_id = xbtn_id
-        ))
-        exclusion_list(append(current, new_entry))
-        selected_plot_row_id(NA_integer_)
-        updateTextInput(session, "exclusion_reason", value = "")
-        updateReactable(ns("param_table-table"), selected = NA)
-      }
+      row_ids <- .selected_row_ids(
+        param_table_state()$selected, displayed_row_ids(),
+        selected_plot_row_id()
+      )
+      .add_param_excl(
+        input$exclusion_reason, row_ids, exclusion_list, xbtn_counter,
+        selected_plot_row_id, session, ns
+      )
     })
 
     # -- Boxplots (one per selected PP) ----------------------------------------
-
-    # Parameter names can contain characters invalid in Shiny IDs (e.g. the
-    # interval suffix in "AUCINT_0-12"). Map each parameter to a safe slot id.
-    safe_slot <- function(param) paste0("box_", gsub("[^A-Za-z0-9]", "_", param))
-    slot_source <- function(slot) paste0("box_src_", slot)
 
     # Maintain a stable slot -> parameter mapping for the current selection.
     slot_map <- reactive({
       sel <- input$selected_pps_boxplot
       if (is.null(sel)) sel <- character(0)
-      setNames(as.list(sel), vapply(sel, safe_slot, character(1)))
+      setNames(as.list(sel), vapply(sel, .safe_plot_slot, character(1)))
     })
 
     output$boxplots_ui <- renderUI({
-      sel <- input$selected_pps_boxplot
-      if (is.null(sel) || length(sel) == 0) {
-        return(p("Select one or more PK parameters to display boxplots."))
-      }
-      tagList(lapply(sel, function(param) {
-        plotlyOutput(ns(paste0(safe_slot(param), "_plot")), height = "350px")
-      }))
+      .plot_output_ui(input$selected_pps_boxplot, ns)
     })
 
     # Render a boxplot output for every selected parameter. Each plot's plotly
@@ -499,56 +632,13 @@ parameter_exclusions_server <- function(id, res_nca) {
       for (param in sel) {
         local({
           local_param <- param
-          slot <- safe_slot(local_param)
+          slot <- .safe_plot_slot(local_param)
           output[[paste0(slot, "_plot")]] <- renderPlotly({
-            source <- slot_source(slot)
-            .adpp_excl_log(
-              "rendering plot parameter=", local_param,
-              "; slot=", slot,
-              "; source=", source
+            .render_excl_plot(
+              res_nca_tagged(), res_nca(), local_param,
+              input$selected_xvars_boxplot, input$selected_colorvars_boxplot,
+              input$violinplot_toggle_switch, .plot_slot_source(slot)
             )
-            p <- flexible_violinboxplot(
-              res_nca = res_nca_tagged(),
-              parameter = local_param,
-              xvars = input$selected_xvars_boxplot,
-              colorvars = input$selected_colorvars_boxplot,
-              varvalstofilter = NULL,
-              tooltip_vars = unname(unlist(res_nca()$data$conc$columns$groups)),
-              box = input$violinplot_toggle_switch,
-              show_excluded = TRUE,
-              plotly_source = source
-            )
-            if (inherits(p, "plotly")) {
-              p <- plotly::event_register(p, "plotly_click")
-              p <- htmlwidgets::onRender(p, "
-                function(el, x) {
-                  console.log('[ADPP exclusions] plotly rendered', {
-                    id: el.id,
-                    source: x.source
-                  });
-                  if (el.__adppExclClickLoggerAttached) return;
-                  el.__adppExclClickLoggerAttached = true;
-                  el.on('plotly_click', function(data) {
-                    var points = (data && data.points) || [];
-                    console.log('[ADPP exclusions] browser plotly_click', {
-                      id: el.id,
-                      source: x.source,
-                      point_count: points.length,
-                      keys: points.map(function(pt) { return pt.key; }),
-                      curve_numbers: points.map(function(pt) { return pt.curveNumber; }),
-                      point_numbers: points.map(function(pt) { return pt.pointNumber; })
-                    });
-                  });
-                }
-              ")
-              .adpp_excl_log(
-                "registered plotly_click for source=", source,
-                "; widget source=", p$x$source
-              )
-            } else {
-              .adpp_excl_log("plot output is not plotly for parameter=", local_param)
-            }
-            p
           })
         })
       }
@@ -558,42 +648,10 @@ parameter_exclusions_server <- function(id, res_nca) {
     # against duplicate registration when the selection changes.
     registered_click_slots <- reactiveVal(character(0))
     observe({
-      map <- slot_map()
-      already <- registered_click_slots()
-      new_slots <- setdiff(names(map), already)
-      .adpp_excl_log(
-        "slot map updated; active sources=",
-        paste(vapply(names(map), slot_source, character(1)), collapse = ","),
-        "; new slots=", paste(new_slots, collapse = ",")
+      .register_clicks(
+        slot_map(), registered_click_slots, param_data,
+        selected_plot_row_id, session, ns
       )
-      for (slot in new_slots) {
-        local({
-          local_slot <- slot
-          source <- slot_source(local_slot)
-          .adpp_excl_log(
-            "registering server click observer for slot=", local_slot,
-            "; source=", source
-          )
-          observeEvent(
-            plotly::event_data("plotly_click", source = source),
-            {
-              ev <- plotly::event_data("plotly_click", source = source)
-              .adpp_excl_log(
-                "server plotly_click source=", source,
-                "; ", .adpp_excl_event_summary(ev)
-              )
-              req(ev)
-              .highlight_clicked_row(
-                ev, param_data(), selected_plot_row_id, session, ns
-              )
-            },
-            ignoreInit = TRUE
-          )
-        })
-      }
-      if (length(new_slots) > 0) {
-        registered_click_slots(union(already, new_slots))
-      }
     })
 
     # Track which remove buttons already have observers to avoid duplicates

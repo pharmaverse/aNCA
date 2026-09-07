@@ -40,9 +40,9 @@ EXCL_TYPE_COLORS <- c(
 # Stronger, saturated variants for plot point crosses (backgrounds above are
 # too light to read as small markers on a plot).
 EXCL_TYPE_POINT_COLORS <- c(
-  flag   = "#D62728", # red
-  manual = "#E8B800", # amber/yellow
-  both   = "#FF7F0E"  # orange
+  flag   = "#D62728",
+  manual = "#E8B800",
+  both   = "#FF7F0E"
 )
 
 #' Map exclusion categories to colours.

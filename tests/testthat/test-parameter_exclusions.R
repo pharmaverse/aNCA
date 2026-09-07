@@ -126,7 +126,7 @@ describe(".build_param_display", {
     )
     manual <- list(list(rows = c(3, 4), reason = "Manual reason"))
     result <- .build_param_display(df, group_cols = character(0),
-                                  manual_exclusions = manual)
+                                   manual_exclusions = manual)
     expect_equal(result$.row_id, 1:4)
     expect_equal(result$.excl_type, c("flag", "none", "manual", "both"))
   })

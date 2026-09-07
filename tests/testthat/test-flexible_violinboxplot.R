@@ -410,8 +410,10 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
 
     # Collect the fixed colours used by the excluded-cross point layers
     point_layers <- Filter(
-      function(l) inherits(l$geom, "GeomPoint") &&
-        !is.null(l$aes_params$colour),
+      function(l) {
+        inherits(l$geom, "GeomPoint") &&
+          !is.null(l$aes_params$colour)
+      },
       p$layers
     )
     used_colours <- unlist(lapply(point_layers, function(l) l$aes_params$colour))

@@ -7,7 +7,7 @@
 params_with_outliers(res_nca, group_cols = character(0), value_col = "PPSTRES")
 }
 \arguments{
-\item{res_nca}{A PKNCA results object (with \code{$result} data frame).}
+\item{res_nca}{A PKNCA results object (with \verb{$result} data frame).}
 
 \item{group_cols}{Character vector of columns defining comparison groups
 (typically the boxplot X and colour variables). Columns not present in the
