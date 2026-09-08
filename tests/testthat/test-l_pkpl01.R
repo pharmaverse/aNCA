@@ -98,7 +98,7 @@ describe("l_pkpl01", {
       attr(result, "main_footer"),
       c(
         "Existing footnote",
-        "*: Record excluded from summary tables and plots (PPSUMXF = \"Y\")."
+        "* Record excluded from summary tables and plots (PPSUMXF = \"Y\")."
       )
     )
   })
