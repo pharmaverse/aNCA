@@ -188,6 +188,41 @@ describe("filter_breaks", {
     expect_equal(short, breaks)
     expect_lt(length(wide), length(short))
   })
+
+  ## Breaks outside the plotted range
+  it("should never return a break that falls outside the plotted range", {
+    mockery::stub(filter_breaks, ".panel_size_cm", 10)
+    kept <- filter_breaks(breaks = 0:40, plot = base_plot, min_cm_distance = 0.1)
+
+    x_range <- ggplot_build(base_plot)$layout$panel_params[[1]]$x.range
+    expect_true(all(kept >= x_range[1] & kept <= x_range[2]))
+  })
+
+  it("should pick the visible breaks without regard to off-screen ones", {
+    # The window starts at 51 but the candidates run from 0. The greedy pass used to begin
+    # at the first candidate and carry its phase across the window, so the first visible
+    # break came out one step late, 52 rather than 51 (#1441).
+    breaks <- 0:100
+    zoomed <- ggplot(data.frame(x = breaks, y = breaks), aes(x, y)) +
+      geom_blank() +
+      coord_cartesian(xlim = c(51, 100)) +
+      theme_test()
+
+    mockery::stub(filter_breaks, ".panel_size_cm", 10)
+
+    x_range <- ggplot_build(zoomed)$layout$panel_params[[1]]$x.range
+    visible <- breaks[breaks >= x_range[1] & breaks <= x_range[2]]
+
+    kept <- filter_breaks(breaks = breaks, plot = zoomed, min_cm_distance = 0.1)
+
+    # Handing in only the visible candidates must make no difference
+    expect_equal(
+      kept,
+      filter_breaks(breaks = visible, plot = zoomed, min_cm_distance = 0.1)
+    )
+    # and the axis starts where the window does, not a step later
+    expect_equal(min(kept), min(visible))
+  })
 })
 
 describe(".panel_size_cm", {
