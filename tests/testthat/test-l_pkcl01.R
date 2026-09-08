@@ -225,14 +225,14 @@ describe("l_pkcl01", {
     expect_equal(attr(listings$`A.Plasma.Oral`, "subtitles"),
                  "Analyte: A\nSpecimen: Plasma\nAdministration: Oral")
     expect_equal(attr(listings$`A.Plasma.Oral`, "main_footer"),
-                 "*: Subjects excluded from the summary table and mean plots")
+                 character())
     expect_equal(attr(listings$`B.Plasma.IV`, "main_title"),
                  paste0("Listing of PK Concentration by Treatment Group,",
                         "Subject and Nominal Time, PK Population"))
     expect_equal(attr(listings$`B.Plasma.IV`, "subtitles"),
                  "Analyte: B\nSpecimen: Plasma\nAdministration: IV")
     expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"),
-                 "*: Subjects excluded from the summary table and mean plots")
+                 character())
 
     # Check the attributes of the columns
     expect_equal(attr(listings$`A.Plasma.Oral`$TRT01A, "label"), "Treatment")
@@ -293,6 +293,91 @@ describe("l_pkcl01", {
                formatting_vars_table = no_label_table)
     )
   })
+
+  it("marks PKSUMXF records and explains the marker in the footer", {
+    flagged_adnca <- adnca
+    flagged_adnca$PKSUMXF <- c("", "Y", "", "")
+
+    listings <- l_pkcl01(flagged_adnca,
+                         listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         footnote = "Existing footnote")
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20.12*"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "* Record excluded from summary tables and plots (PKSUMXF = \"Y\")."
+      )
+    )
+    expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
+  })
+
+  it("marks NCAXFL records and explains the marker in the footer", {
+    flagged_adnca <- adnca
+    flagged_adnca$NCAXFL <- c("", "Y", "", "")
+
+    listings <- l_pkcl01(flagged_adnca,
+                         listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         footnote = "Existing footnote")
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20.12#"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)."
+      )
+    )
+    expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
+  })
+
+  it("marks raw PKNCA exclude records and explains the marker in the footer", {
+    flagged_adnca <- adnca
+    flagged_adnca$exclude <- c("", "Manual NCA exclusion", "", NA_character_)
+
+    listings <- l_pkcl01(flagged_adnca,
+                         listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         footnote = "Existing footnote")
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20.12#"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)."
+      )
+    )
+    expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
+  })
+
+  it("marks records excluded from both summaries and NCA calculations", {
+    flagged_adnca <- adnca
+    flagged_adnca$PKSUMXF <- c("", "Y", "", "")
+    flagged_adnca$NCAXFL <- c("", "Y", "", "")
+
+    listings <- l_pkcl01(flagged_adnca,
+                         listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         footnote = "Existing footnote")
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20.12*#"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "* Record excluded from summary tables and plots (PKSUMXF = \"Y\").",
+        "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)."
+      )
+    )
+  })
 })
 
 # --- l_pkcl02_uri -----------------------------------------------------------
@@ -339,6 +424,8 @@ describe("l_pkcl02_uri", {
   it("includes VOLUME and VOLUMEU in displaying_vars by default", {
     result <- l_pkcl02_uri(uri_data)[[1]]
     expect_true("VOLUME" %in% names(result))
+    disp_cols <- attr(result, "listing_dispcols")
+    expect_true(match("VOLUMEU", disp_cols) < match("AVAL", disp_cols))
   })
 
   it("does not include VOLUME when column is absent from data", {
@@ -356,6 +443,19 @@ describe("l_pkcl02_uri", {
     result <- l_pkcl02_uri(uri_data, displaying_vars = c("NFRLT", "AVAL"))
     expect_type(result, "list")
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  })
+
+  it("marks urine records excluded from NCA calculations", {
+    flagged_data <- uri_data
+    flagged_data$NCAXFL <- c("", "Y", "", "")
+
+    result <- l_pkcl02_uri(flagged_data)[[1]]
+
+    expect_equal(as.vector(result$AVAL), c("1.2", "3.4#"))
+    expect_true(
+      "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)." %in%
+        attr(result, "main_footer")
+    )
   })
 
   it("passes through ... to l_pkcl01 (e.g. custom footnote)", {

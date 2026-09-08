@@ -82,6 +82,26 @@ describe("l_pkpl01", {
     })
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
+
+  it("marks PPSUMXF parameter values and explains the marker in the footer", {
+    flagged_data <- pkpl_data
+    flagged_data$PPSUMXF <- ""
+    flagged_data$PPSUMXF[flagged_data$USUBJID == "S1" &
+                           flagged_data$PARAM == "AUClast"] <- "Y"
+
+    result <- l_pkpl01(flagged_data, footnote = "Existing footnote")[[1]]
+    s1_row <- as.vector(result$USUBJID) == "S1"
+
+    expect_equal(as.vector(result$AUClast)[s1_row], "20*")
+    expect_equal(as.vector(result$Cmax)[s1_row], "5")
+    expect_equal(
+      attr(result, "main_footer"),
+      c(
+        "Existing footnote",
+        "* Record excluded from summary tables and plots (PPSUMXF = \"Y\")."
+      )
+    )
+  })
 })
 
 describe("l_pkpl01_mp", {
