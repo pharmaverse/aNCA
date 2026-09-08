@@ -6,6 +6,10 @@
 
 ## Bug Fixes
 
+* Ratio parameter `PPANMETH` now keeps the existing `TO` wording while naming
+  the reference group explicitly, adding the ratio multiplier when it is not 1,
+  and showing `mean(<parameter>)` when the reference is summarized across
+  subjects (#1484)
 * Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
 * Restored settings now ignore incomplete partial interval rows with missing or invalid start/end values before they reach the NCA setup state, preventing spurious interval parameters from uploaded settings (#1347)
 * NCA Results now derive the `Missing` flag at the subject/profile level, so parameter-level metadata from active flag parameters can no longer duplicate rows in the pivoted results table (#1479)
