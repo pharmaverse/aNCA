@@ -202,11 +202,9 @@ l_pkcl01 <- function(
         ifelse(. == 0, format_zero[cur_column()], as.character(.))
     ))
 
-  data_grouped <- .mark_sum_excl_vals(
-    data_grouped,
-    "PKSUMXF",
-    intersect(c("AVALC", "AVAL"), displaying_vars)
-  )
+  value_vars <- intersect(c("AVALC", "AVAL"), displaying_vars)
+  data_grouped <- .mark_sum_excl_vals(data_grouped, "PKSUMXF", value_vars)
+  data_grouped <- .mark_nca_excl_vals(data_grouped, "NCAXFL", value_vars)
 
   # Make sure the data stays labelled
   var_labels(data_grouped) <- c(var_labels(data), id_list = "id")
@@ -244,6 +242,11 @@ l_pkcl01 <- function(
       footnote,
       list_data,
       "PKSUMXF"
+    )
+    footnote <- .add_nca_excl_footnote(
+      footnote,
+      list_data,
+      "NCAXFL"
     )
 
 

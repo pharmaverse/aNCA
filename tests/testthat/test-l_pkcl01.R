@@ -314,6 +314,49 @@ describe("l_pkcl01", {
     )
     expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
   })
+
+  it("marks NCAXFL records and explains the marker in the footer", {
+    flagged_adnca <- adnca
+    flagged_adnca$NCAXFL <- c("", "Y", "", "")
+
+    listings <- l_pkcl01(flagged_adnca,
+                         listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         footnote = "Existing footnote")
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20.12#"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "#: Record excluded from NCA calculations (NCAXFL = \"Y\")."
+      )
+    )
+    expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
+  })
+
+  it("marks records excluded from both summaries and NCA calculations", {
+    flagged_adnca <- adnca
+    flagged_adnca$PKSUMXF <- c("", "Y", "", "")
+    flagged_adnca$NCAXFL <- c("", "Y", "", "")
+
+    listings <- l_pkcl01(flagged_adnca,
+                         listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+                         grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+                         displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                         footnote = "Existing footnote")
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ", "20.12*#"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "*: Record excluded from summary tables and plots (PKSUMXF = \"Y\").",
+        "#: Record excluded from NCA calculations (NCAXFL = \"Y\")."
+      )
+    )
+  })
 })
 
 # --- l_pkcl02_uri -----------------------------------------------------------
@@ -377,6 +420,19 @@ describe("l_pkcl02_uri", {
     result <- l_pkcl02_uri(uri_data, displaying_vars = c("NFRLT", "AVAL"))
     expect_type(result, "list")
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  })
+
+  it("marks urine records excluded from NCA calculations", {
+    flagged_data <- uri_data
+    flagged_data$NCAXFL <- c("", "Y", "", "")
+
+    result <- l_pkcl02_uri(flagged_data)[[1]]
+
+    expect_equal(as.vector(result$AVAL), c("1.2", "3.4#"))
+    expect_true(
+      "#: Record excluded from NCA calculations (NCAXFL = \"Y\")." %in%
+        attr(result, "main_footer")
+    )
   })
 
   it("passes through ... to l_pkcl01 (e.g. custom footnote)", {
