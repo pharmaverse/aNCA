@@ -34,6 +34,10 @@ labels colliding. A break is kept when its distance from the last kept break is 
 \code{min_cm_distance} \emph{and} at least the space the two labels occupy along the axis, so a wide
 label such as \code{119.917} thins the axis further than a short one such as \code{12} does.
 }
+\details{
+Candidates outside the plotted range are dropped before any of that, so a break that is
+never drawn cannot decide which of the visible ones survive.
+}
 \author{
 Gerardo Rodriguez
 }

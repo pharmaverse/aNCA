@@ -5,6 +5,9 @@
 #' `min_cm_distance` *and* at least the space the two labels occupy along the axis, so a wide
 #' label such as `119.917` thins the axis further than a short one such as `12` does.
 #'
+#' Candidates outside the plotted range are dropped before any of that, so a break that is
+#' never drawn cannot decide which of the visible ones survive.
+#'
 #' @param breaks          A numeric vector of x-axis breaks.
 #' @param plot            A ggplot object used to extract plot dimensions and scales.
 #' @param min_cm_distance A numeric of the minimum distance between breaks.
@@ -63,6 +66,16 @@ filter_breaks <- function(breaks = NA,
   } else {
     stop("Error: Invalid axis specified. Use 'x' or 'y'.")
   }
+  # Only breaks inside the panel are drawn, so an off-screen candidate must not reach the
+  # greedy pass below. It would seed the run and set the phase of every break kept after
+  # it, which pushes the first visible one a step past the limit the user asked for: with
+  # candidates `0:100` and `xlim = c(51, 100)` the axis started at 52 rather than 51
+  breaks <- breaks[breaks >= scale_range[1] & breaks <= scale_range[2]]
+
+  # Trimming can leave a single break, or none, and the loop below counts from 2
+  if (length(breaks) <= 1) {
+    return(breaks)
+  }
   panel_size_cm <- .panel_size_cm(plot_table, axis)
 
   # Room each label needs along the axis, so wide labels are not allowed to collide even
@@ -77,7 +90,27 @@ filter_breaks <- function(breaks = NA,
   }
   label_sizes_cm <- .label_extents_cm(rendered, plot, axis)
 
-  # Filter only breaks that satisfy the minimum distance
+  .thin_breaks(breaks, label_sizes_cm, min_cm_distance, scale_range, panel_size_cm)
+}
+
+#' Keep the breaks that clear both the minimum gap and their neighbors' labels
+#'
+#' A single greedy pass from the leftmost break: each candidate is measured against the last
+#' one kept, and kept itself only if the gap covers both `min_cm_distance` and the room the
+#' two labels either side of it need.
+#'
+#' @param breaks          A sorted numeric vector of candidate breaks, already trimmed to the
+#'                        plotted range.
+#' @param label_sizes_cm  Room each label needs along the axis, one per break.
+#' @param min_cm_distance A numeric of the minimum distance between breaks.
+#' @param scale_range     The panel's range along the axis, used to convert break positions
+#'                        into centimeters.
+#' @param panel_size_cm   The size of the panel along the axis, in centimeters.
+#'
+#' @returns A numeric vector of the breaks that survive.
+#' @keywords internal
+.thin_breaks <- function(breaks, label_sizes_cm, min_cm_distance, scale_range, panel_size_cm) {
+
   filt_breaks <- breaks[1]
   last_kept <- 1
 
