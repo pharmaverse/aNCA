@@ -233,6 +233,7 @@ h5 {
   margin-top: 1em;
   /* Well containing tabs for each tlg */
   /* tlg tab */
+  /* title / subtitle / footnote rendered around a table TLG (issue #1430) */
 }
 
 .tlg-module div.well {
@@ -285,7 +286,6 @@ h5 {
   margin: 0;
 }
 
-/* title / subtitle / footnote rendered around a table TLG (issue #1430) */
 .tlg-module .tlg-table-title {
   font-size: 1.15rem;
   font-weight: bold;
