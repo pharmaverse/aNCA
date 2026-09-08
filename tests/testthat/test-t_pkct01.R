@@ -272,3 +272,50 @@ describe("t_pkct01: stats selection", {
     expect_equal(names(result), c("DOSEA", "ATPTREF", "NFRLT", "n", "Mean"))
   })
 })
+
+# Issue #1430: catalog title, subtitle and footnote attached to each rendered table.
+
+describe("t_pkct01 labels", {
+  labelled <- pkct01_data
+  labelled$SEX <- rep(c("F", "M"), 12)
+  attr(labelled$PARAM, "label") <- "Parameter"
+
+  it("attaches the supplied title and footnote to every split", {
+    out <- t_pkct01(labelled, title = "My Title", footnote = "My Footnote")
+    for (tbl in out) {
+      expect_equal(attr(tbl, "tlg_title"), "My Title")
+      expect_equal(attr(tbl, "tlg_footnote"), "My Footnote")
+    }
+  })
+
+  it("derives the subtitle from the split variables when none is supplied", {
+    out <- t_pkct01(labelled, list_vars = "PARAM")
+    expect_equal(attr(out[[1]], "tlg_subtitle"),
+                 paste0("Parameter: ", unique(labelled$PARAM)[1]))
+  })
+
+  it("follows list_vars rather than hardcoding the analyte", {
+    # A static "Analyte: $PARAM" default would resolve to a vector -- and so render blank --
+    # once PARAM stops being a split variable.
+    out <- t_pkct01(labelled, list_vars = "PCSPEC")
+    expect_equal(attr(out[[1]], "tlg_subtitle"),
+                 paste0("PCSPEC: ", unique(labelled$PCSPEC)[1]))
+  })
+
+  it("lets a user-supplied subtitle override the derived one", {
+    out <- t_pkct01(labelled, subtitle = "Overridden")
+    expect_equal(attr(out[[1]], "tlg_subtitle"), "Overridden")
+  })
+
+  it("leaves labels unset when nothing is supplied", {
+    out <- t_pkct01(labelled, list_vars = character(0))
+    expect_null(attr(out[[1]], "tlg_title"))
+    expect_null(attr(out[[1]], "tlg_footnote"))
+  })
+
+  it("keeps the col_groups attribute alongside the labels", {
+    out <- t_pkct01(labelled, col_group_var = "SEX", title = "T")
+    expect_equal(attr(out[[1]], "tlg_title"), "T")
+    expect_false(is.null(attr(out[[1]], "col_groups")))
+  })
+})

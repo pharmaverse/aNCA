@@ -123,12 +123,42 @@ render_graph_outputs <- function(output, session, current_page_items) {
   })
 }
 
+#' Render one table label attribute as a tag, or nothing when it is unset.
+#'
+#' `parse_annotation()` turns newlines into `<br>`, so the text is split on that
+#' tag and rejoined with `<br/>` elements rather than passed through `HTML()` --
+#' the strings carry user-supplied data values (analyte names, treatment arms)
+#' and must not be interpreted as markup.
+#'
+#' @param text  Character scalar from a `tlg_*` attribute, or `NULL`.
+#' @param tag   Tag function to wrap the text in (e.g. `tags$h3`).
+#' @param class CSS class for the tag.
+#' @returns A tag, or `NULL` when there is no text to show.
+#' @noRd
+.tlg_lab_tag <- function(text, tag, class) {
+  if (is.null(text) || !nzchar(text)) return(NULL)
+  lines <- strsplit(text, "<br>", fixed = TRUE)[[1]]
+  do.call(tag, c(list(class = class), .interleave_breaks(lines)))
+}
+
+#' Interleave `<br/>` tags between character lines.
+#' @noRd
+.interleave_breaks <- function(lines) {
+  if (length(lines) <= 1) return(as.list(lines))
+  Reduce(function(acc, ln) c(acc, list(tags$br(), ln)), lines[-1], list(lines[[1]]))
+}
+
 #' Wire up the table output for a table TLG module.
 #'
 #' Renders each page item as a `reactable`, prefixed by an `<h4>` group header
 #' when the item carries a split key (e.g. `"Drug A / PLASMA"`) so stacked
 #' analyte/specimen tables are distinguishable.  `"all"` is the sentinel used by
 #' `split_and_apply()` for un-split single tables and gets no header.
+#'
+#' Tables are plain data frames, so `reactable` has nowhere to put a title.  The
+#' title/subtitle/footnote resolved by the TLG function ride along as
+#' `tlg_title` / `tlg_subtitle` / `tlg_footnote` attributes (see
+#' `.attach_table_labs()`) and are rendered around the table here.
 #'
 #' @param output             Module `output` object.
 #' @param current_page_items Reactive returning the (named) items shown on the
@@ -145,10 +175,15 @@ render_table_outputs <- function(output, current_page_items) {
       } else if (ncol(df) == 0) {
         tags$p("No data available for this table.")
       } else {
-        reactable::reactable(
-          df,
-          columns = define_cols(df, header_from_label = TRUE),
-          columnGroups = define_col_groups(df)
+        tagList(
+          .tlg_lab_tag(attr(df, "tlg_title"), tags$h3, "tlg-table-title"),
+          .tlg_lab_tag(attr(df, "tlg_subtitle"), tags$p, "tlg-table-subtitle"),
+          reactable::reactable(
+            df,
+            columns = define_cols(df, header_from_label = TRUE),
+            columnGroups = define_col_groups(df)
+          ),
+          .tlg_lab_tag(attr(df, "tlg_footnote"), tags$p, "tlg-table-footnote")
         )
       }
       .with_group_header(nms[i], body)
@@ -407,11 +442,44 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       do.call(reactiveValues, .)
 
     #' creates widgets responsible for custimizing the plots
+    #'
+    #' `isolate()` keeps the value read one-way: taking a reactive dependency on the option
+    #' values would re-render the whole sidebar on every keystroke.
     output$options <- renderUI({
-      purrr::imap(options, function(def, id) {
+      current <- isolate(purrr::map(reactiveValuesToList(options_values), function(v) v()))
+      purrr::imap(.carry_forward_text_values(options, current), function(def, id) {
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
       })
     })
+  })
+}
+
+#' Replace each text option's declared default with the value it currently holds.
+#'
+#' Re-submitting the order re-runs the `renderUI` in `tab_tlg` that builds a module's UI,
+#' which hands `uiOutput(ns("options"))` a fresh DOM node and re-executes the option
+#' renderer.  Emitting `def$default` again pushes the catalog default back to the client and
+#' silently discards whatever the user had typed (issue #1430).  Carrying the live value
+#' forward as the widget's value makes the edit survive.
+#'
+#' Only `text` options are carried forward: `select` defaults may be runtime tokens
+#' (`.all`, `.pknca_groups`) that must stay unresolved, and the `table` widget keeps its
+#' rows in `default_rows`, so neither round-trips through `default`.
+#'
+#' @param options Option definitions from `tlg.yaml`.  `.group_label_*` entries are plain
+#'   strings with no `type` and pass through untouched.
+#' @param current Named list of the value each option currently holds; a `NULL` entry means
+#'   the widget has not reported a value yet, so the declared default stands.
+#' @returns `options`, with text defaults replaced where a current value exists.
+#' @noRd
+.carry_forward_text_values <- function(options, current) {
+  purrr::imap(options, function(def, id) {
+    # `.group_label_*` headers are plain strings, and `$` on an atomic vector is an error,
+    # so the is.list() guard has to come first.
+    if (is.list(def) && identical(def$type, "text") && !is.null(current[[id]])) {
+      def$default <- current[[id]]
+    }
+    def
   })
 }
 

@@ -401,3 +401,71 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows") {
   lbl <- attr(data[[var]], "label")
   if (!is.null(lbl)) lbl else var
 }
+
+#' Resolve a title/subtitle/footnote string against one split of the data.
+#'
+#' Thin wrapper over [parse_annotation()] that makes the result safe to hand to a
+#' renderer.  `$COL` expands to `unique(data[[COL]])`, so a token naming a column
+#' that varies within the split -- `$TRT01A` is the usual offender, since a table
+#' split by analyte still spans every treatment arm -- makes `glue()` return one
+#' string per value.  A vector reaching `labs()` or `as_listing()` blanks the
+#' label outright rather than erroring, so collapse to a single string instead.
+#'
+#' @param data A data frame: the split the label is being rendered for.
+#' @param text Character annotation string, or `NULL`.
+#' @return A character scalar, or `NULL` when `text` is `NULL`/empty.
+#' @noRd
+.tlg_label <- function(data, text) {
+  if (is.null(text) || !any(nzchar(text))) return(NULL)
+  parsed <- as.character(parse_annotation(data, text))
+  if (length(parsed) > 1) parsed <- paste(parsed, collapse = ", ")
+  parsed
+}
+
+#' Default subtitle naming each table-split variable and its value.
+#'
+#' Mirrors the `listgroup_vars` subtitle that [l_pkcl01()] builds, so a table
+#' split into several outputs says which analyte/specimen each one covers.
+#' Derived from the split variables rather than hardcoded because the user can
+#' change them in the sidebar: a static `"Analyte: $PARAM"` would resolve to a
+#' vector -- and so render blank -- as soon as `PARAM` stopped being a split
+#' variable.
+#'
+#' The variable name half is resolved through [.get_var_label()] rather than
+#' emitted as a `!VAR` token: `parse_annotation()` yields the literal string
+#' `"ERR"` for a column with no `label` attribute, and ADNCA carries no label on
+#' `PARAM`/`PCSPEC`, which produced subtitles reading `"ERR: DrugA"`.
+#'
+#' @param data      The data frame being split, used to look up column labels.
+#' @param list_vars Character vector of table-split columns.
+#' @return A character scalar annotation template, or `NULL` when there are no
+#'   split variables.
+#' @noRd
+.split_subtitle <- function(data, list_vars) {
+  if (length(list_vars) == 0) return(NULL)
+  paste(
+    vapply(list_vars, function(v) .get_var_label(data, v), character(1)),
+    paste0("$", list_vars),
+    sep = ": ", collapse = "\n"
+  )
+}
+
+#' Attach resolved title/subtitle/footnote to a rendered table.
+#'
+#' Table TLGs return plain data frames that the Shiny layer hands to `reactable`,
+#' which has nowhere to put a title.  The resolved strings ride along as
+#' attributes -- the same mechanism `col_groups` already uses -- and
+#' `render_table_outputs()` renders them around the table.
+#'
+#' @param df       The rendered table.
+#' @param data     The split of the source data `df` was built from, used to
+#'   resolve `$COL` / `!COL` tokens.
+#' @param title,subtitle,footnote Annotation strings, or `NULL`.
+#' @return `df` with `tlg_title` / `tlg_subtitle` / `tlg_footnote` attributes.
+#' @noRd
+.attach_table_labs <- function(df, data, title, subtitle, footnote) {
+  attr(df, "tlg_title")    <- .tlg_label(data, title)
+  attr(df, "tlg_subtitle") <- .tlg_label(data, subtitle)
+  attr(df, "tlg_footnote") <- .tlg_label(data, footnote)
+  df
+}

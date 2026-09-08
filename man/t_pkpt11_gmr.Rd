@@ -11,7 +11,10 @@ t_pkpt11_gmr(
   list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
-  value_var = "AVAL"
+  value_var = "AVAL",
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 }
 \arguments{
@@ -37,6 +40,15 @@ summary tables, this must be a single column.}
 Default: \code{"PARAM"}.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
+
+\item{title}{Table title. Supports \verb{$VAR} / \code{!VAR} annotation syntax (see
+\code{\link[=parse_annotation]{parse_annotation()}}). Attached to each returned table as a \code{tlg_title}
+attribute.}
+
+\item{subtitle}{Per-table subtitle. \code{NULL} (default) names each \code{list_vars}
+split variable and its value.}
+
+\item{footnote}{Table footnote, attached as a \code{tlg_footnote} attribute.}
 }
 \value{
 Named list of data frames, one per combination of \code{list_vars}.
