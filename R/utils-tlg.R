@@ -45,7 +45,7 @@
 .summary_exclusion_footnote <- function(flag_var) {
   paste0(
     .SUMMARY_EXCLUSION_MARKER,
-    ": Record excluded from summary tables and plots (",
+    " Record excluded from summary tables and plots (",
     flag_var,
     " = \"Y\")."
   )
@@ -58,10 +58,39 @@
 .nca_exclusion_footnote <- function(flag_var) {
   paste0(
     .NCA_EXCLUSION_MARKER,
-    ": Record excluded from NCA calculations (",
+    " Record excluded from NCA calculations (",
     flag_var,
-    " = \"Y\")."
+    " = \"Y\" or NCA exclude reason present)."
   )
+}
+
+#' Identify rows excluded from NCA calculations.
+#' @param data A data frame.
+#' @param flag_var NCA-exclusion flag column.
+#' @param reason_var Raw PKNCA exclusion-reason column.
+#' @return Logical vector.
+#' @noRd
+.nca_excl_rows <- function(data, flag_var, reason_var = "exclude") {
+  excluded <- rep(FALSE, nrow(data))
+
+  if (flag_var %in% names(data)) {
+    excluded <- excluded | (!is.na(data[[flag_var]]) & data[[flag_var]] == "Y")
+  }
+  if (reason_var %in% names(data)) {
+    reason <- as.character(data[[reason_var]])
+    excluded <- excluded | (!is.na(reason) & nzchar(reason))
+  }
+
+  excluded
+}
+
+#' Check whether a data frame contains NCA-excluded records.
+#' @param data A data frame.
+#' @param flag_var NCA-exclusion flag column.
+#' @return Logical scalar.
+#' @noRd
+.has_nca_excl_records <- function(data, flag_var) {
+  any(.nca_excl_rows(data, flag_var))
 }
 
 #' Add a listing footnote when flagged records are present.
@@ -103,12 +132,13 @@
 #' @return Footnote vector with NCA-exclusion note appended when needed.
 #' @noRd
 .add_nca_excl_footnote <- function(footnote, data, flag_var) {
-  .add_excl_footnote(
-    footnote,
-    data,
-    flag_var,
-    .nca_exclusion_footnote(flag_var)
-  )
+  note <- .nca_exclusion_footnote(flag_var)
+  if (!.has_nca_excl_records(data, flag_var)) return(footnote)
+  if (is.null(footnote) || length(footnote) == 0) return(note)
+  if (all(is.na(footnote) | !nzchar(footnote))) return(note)
+  if (note %in% footnote) return(footnote)
+
+  c(footnote, note)
 }
 
 #' Mark displayed values for flagged records.
@@ -152,7 +182,18 @@
 #' @return The input data with the marker appended to the first value column.
 #' @noRd
 .mark_nca_excl_vals <- function(data, flag_var, value_vars) {
-  .mark_excl_vals(data, flag_var, value_vars, .NCA_EXCLUSION_MARKER)
+  value_col <- intersect(value_vars, names(data))[1]
+  excluded <- .nca_excl_rows(data, flag_var)
+  if (is.na(value_col) || !any(excluded)) return(data)
+
+  excluded <- excluded & !is.na(data[[value_col]])
+  data[[value_col]] <- as.character(data[[value_col]])
+  data[[value_col]][excluded] <- paste0(
+    data[[value_col]][excluded],
+    .NCA_EXCLUSION_MARKER
+  )
+
+  data
 }
 
 #' Split a data frame by grouping variables and apply a function to each subset

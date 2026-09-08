@@ -335,7 +335,7 @@ l_pkcl02_uri <- function(
 
   if (is.null(displaying_vars)) {
     vol_vars        <- intersect(c("VOLUME", "VOLUMEU"), names(data))
-    displaying_vars <- c("NFRLT", "AFRLT", "AVAL", vol_vars)
+    displaying_vars <- c("NFRLT", "AFRLT", vol_vars, "AVAL")
   }
 
   l_pkcl01(
