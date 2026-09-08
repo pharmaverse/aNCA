@@ -44,7 +44,7 @@
 #' @param flag_var Summary-exclusion flag column.
 #' @return Footnote vector with summary-exclusion note appended when needed.
 #' @noRd
-.append_summary_exclusion_footnote <- function(footnote, data, flag_var) {
+.add_sum_excl_footnote <- function(footnote, data, flag_var) {
   if (!.has_summary_excluded_records(data, flag_var)) return(footnote)
 
   note <- .summary_exclusion_footnote(flag_var)
@@ -53,6 +53,29 @@
   if (note %in% footnote) return(footnote)
 
   c(footnote, note)
+}
+
+#' Mark displayed values excluded from summaries.
+#' @param data A data frame.
+#' @param flag_var Summary-exclusion flag column.
+#' @param value_vars Candidate value columns, in display priority order.
+#' @return The input data with the marker appended to the first value column.
+#' @noRd
+.mark_sum_excl_vals <- function(data, flag_var, value_vars) {
+  value_col <- intersect(value_vars, names(data))[1]
+  if (is.na(value_col) || !.has_summary_excluded_records(data, flag_var)) {
+    return(data)
+  }
+
+  excluded <- !is.na(data[[flag_var]]) & data[[flag_var]] == "Y"
+  excluded <- excluded & !is.na(data[[value_col]])
+  data[[value_col]] <- as.character(data[[value_col]])
+  data[[value_col]][excluded] <- paste0(
+    data[[value_col]][excluded],
+    .SUMMARY_EXCLUSION_MARKER
+  )
+
+  data
 }
 
 #' Split a data frame by grouping variables and apply a function to each subset

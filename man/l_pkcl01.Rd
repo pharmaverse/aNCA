@@ -13,7 +13,7 @@ l_pkcl01(
   title = paste0("Listing of PK Concentration by Treatment Group,",
     "Subject and Nominal Time, PK Population"),
   subtitle = NULL,
-  footnote = "*: Subjects excluded from the summary table and mean plots"
+  footnote = NULL
 )
 }
 \arguments{

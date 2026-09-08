@@ -84,15 +84,7 @@ l_pkpl01 <- function(
     }
 
     df$.val_fmt <- round(as.numeric(df[[value_var]]), 3)
-    if (has_summary_exclusions) {
-      is_summary_excluded <- !is.na(df$PPSUMXF) & df$PPSUMXF == "Y"
-      is_summary_excluded <- is_summary_excluded & !is.na(df$.val_fmt)
-      df$.val_fmt <- as.character(df$.val_fmt)
-      df$.val_fmt[is_summary_excluded] <- paste0(
-        df$.val_fmt[is_summary_excluded],
-        .SUMMARY_EXCLUSION_MARKER
-      )
-    }
+    df <- .mark_sum_excl_vals(df, "PPSUMXF", ".val_fmt")
 
     wide <- df %>%
       dplyr::select(dplyr::all_of(c(
@@ -132,7 +124,7 @@ l_pkpl01 <- function(
       main_title  = parse_annotation(data = df, text = title),
       subtitles   = gsub("<br>", "\n",
                          parse_annotation(data = df, text = subtitle)),
-      main_footer = .append_summary_exclusion_footnote(
+      main_footer = .add_sum_excl_footnote(
         parse_annotation(data = df, text = footnote),
         df,
         "PPSUMXF"
