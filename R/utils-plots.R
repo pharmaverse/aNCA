@@ -34,6 +34,48 @@
   data
 }
 
+#' Format numeric axis breaks for display
+#'
+#' Renders whole numbers without a decimal part, so a break at `12` is labeled `12` rather
+#' than `12.0`, and leaves fractional breaks such as `-0.083` untouched. Used both as the
+#' `labels` argument of the concentration plot scales and as the default of
+#' [filter_breaks()], so the breaks are filtered against the labels that actually get drawn.
+#'
+#' @param x A numeric vector of break positions.
+#'
+#' @returns A character vector of labels, one per element of `x`.
+#' @keywords internal
+format_axis_labels <- function(x) {
+  ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
+}
+
+#' Replace a concentration plot's x scale with filtered breaks
+#'
+#' Applies [filter_breaks()] to `break_values` and puts the surviving breaks on the plot's x
+#' scale. Must be added after any faceting, because a faceted plot splits the panel and so
+#' has room for fewer labels than the same plot drawn as a single panel.
+#'
+#' @param plot            A ggplot object, complete apart from its x scale.
+#' @param break_values    A numeric vector of candidate breaks.
+#' @param min_cm_distance A numeric of the minimum distance between breaks.
+#'
+#' @returns The plot with its x scale replaced.
+#' @keywords internal
+add_filtered_x_scale <- function(plot, break_values, min_cm_distance) {
+  suppressMessages(
+    plot +
+      scale_x_continuous(
+        guide = guide_axis(n.dodge = 1),
+        breaks = filter_breaks(
+          break_values,
+          min_cm_distance = min_cm_distance,
+          plot = plot
+        ),
+        labels = format_axis_labels
+      )
+  )
+}
+
 #' Create a simple error plot with a message
 #'
 #' This internal function generates a minimal ggplot2 plot displaying a given error message.
