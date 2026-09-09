@@ -324,6 +324,16 @@ describe(".available_tree_items: TLG branch", {
     items <- .available_tree_items(TRUE, character(), NULL, c("table", "graph"))
     expect_named(items$TLGs, c("tlg_tables", "tlg_graphs"))
   })
+
+  it("offers the branch before NCA has run, without unlocking the NCA-only branches", {
+    # Concentration TLGs render off mapped ADNCA alone, so gating the branch on NCA left
+    # them on screen but impossible to tick in the dialog (#1344).
+    items <- .available_tree_items(FALSE, character(), NULL, c("graph", "listing"))
+    expect_named(items$TLGs, c("tlg_listings", "tlg_graphs"), ignore.order = TRUE)
+    expect_null(items$nca_results)
+    expect_null(items$CDISC)
+    expect_named(items$extras, c("settings_file", "session_info"))
+  })
 })
 
 describe(".clean_export_dir: TLG outputs", {

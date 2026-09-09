@@ -560,6 +560,38 @@ write_tlg_exports <- function(entries,
   ifelse(raw == "all" | raw == stem, "", raw)
 }
 
+#' Make names unique without breaching a length cap.
+#'
+#' `make.unique()` appends its suffix after the fact, so on already-capped input it returns
+#' a name one or two characters too long; trimming back to the cap then removes the very
+#' suffix that made the name unique.  Two split labels that differ only after character 31
+#' therefore collapse onto one sheet name again, and `writexl` renames them itself with a
+#' "Deduplicating sheet names" warning -- so the workbook ends up with names the export did
+#' not choose (#1344).
+#'
+#' The suffix is reserved *inside* the cap instead: the stem is shortened by exactly as much
+#' as the suffix needs.  Comparison is case-insensitive because Excel treats `DrugA` and
+#' `druga` as the same sheet.
+#'
+#' @param nm        Character vector of candidate names, already capped at `max_chars`.
+#' @param max_chars Hard limit the result must respect.
+#' @returns `nm`, made unique, with every element still at most `max_chars` long.
+#' @noRd
+.tlg_unique_within <- function(nm, max_chars) {
+  taken <- character(0)
+  vapply(nm, function(x) {
+    cand <- x
+    i <- 0L
+    while (tolower(cand) %in% taken) {
+      i <- i + 1L
+      sfx  <- paste0("_", i)
+      cand <- paste0(substr(x, 1, max(0, max_chars - nchar(sfx))), sfx)
+    }
+    taken <<- c(taken, tolower(cand))
+    cand
+  }, character(1), USE.NAMES = FALSE)
+}
+
 #' Excel-safe, unique sheet names for a TLG's splits.
 #'
 #' Excel rejects `[]:*?/\` and caps names at 31 characters, so the split key cannot be used
@@ -576,8 +608,7 @@ write_tlg_exports <- function(entries,
   nm  <- gsub("^[ -]+|[ -]+$", "", nm)
   nm  <- substr(nm, 1, 31)
   nm  <- ifelse(nzchar(nm), nm, "Sheet")
-  # make.unique can push past 31 again, so trim once more from the left of the suffix.
-  substr(make.unique(nm, sep = "_"), 1, 31)
+  .tlg_unique_within(nm, 31)
 }
 
 #' One manifest row. Called with no arguments it yields the empty prototype.

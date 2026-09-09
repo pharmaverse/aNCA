@@ -830,6 +830,14 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
     items$exploration <- TREE_LIST$exploration[avail_plots]
   }
 
+  # TLG branch as soon as an order has been submitted and something rendered, which does not
+  # require NCA: the concentration TLGs run off mapped ADNCA alone.  Gating this on
+  # `nca_available` left those outputs on screen but impossible to tick in the dialog
+  # (#1344).
+  tlg_nodes <- c(table = "tlg_tables", listing = "tlg_listings", graph = "tlg_graphs")
+  avail_tlg <- unname(tlg_nodes[intersect(names(tlg_nodes), tlg_types)])
+  if (length(avail_tlg) > 0) items$TLGs <- TREE_LIST$TLGs[avail_tlg]
+
   if (nca_available) {
     items$nca_results       <- TREE_LIST$nca_results
     items$CDISC             <- TREE_LIST$CDISC
@@ -842,11 +850,6 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         intersect(avail_additional, names(TREE_LIST$additional_analysis))
       ]
     }
-    # TLG branch only once an order has been submitted and something rendered (#1344).
-    tlg_nodes <- c(table = "tlg_tables", listing = "tlg_listings", graph = "tlg_graphs")
-    avail_tlg <- unname(tlg_nodes[intersect(names(tlg_nodes), tlg_types)])
-    if (length(avail_tlg) > 0) items$TLGs <- TREE_LIST$TLGs[avail_tlg]
-
     items$extras            <- TREE_LIST$extras
   } else {
     items$extras <- TREE_LIST$extras[c("settings_file", "session_info")]

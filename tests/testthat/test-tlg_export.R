@@ -499,3 +499,43 @@ describe(".tlg_pdf_captions", {
                  c("pkct01_1", "pkct01_2"))
   })
 })
+
+describe(".tlg_sheet_names", {
+  it("replaces the characters Excel rejects and keeps names within 31 characters", {
+    expect_equal(.tlg_sheet_names("PARAM: AUC[last]/dose", NULL, "pkct01"),
+                 "PARAM- AUC-last-dose")
+    expect_lte(nchar(.tlg_sheet_names(strrep("a", 80), NULL, "pkct01")), 31)
+  })
+
+  it("treats the split_and_apply 'all' sentinel as the output itself", {
+    expect_equal(.tlg_sheet_names("all", NULL, "pkct01"), "pkct01")
+  })
+
+  it("falls back to the base name when a split key is missing", {
+    expect_equal(.tlg_sheet_names(c("", NA), c("pkct01_1", "pkct01_2"), "pkct01"),
+                 c("pkct01_1", "pkct01_2"))
+  })
+
+  it("keeps labels that differ only after character 31 distinct", {
+    # Regression: the suffix used to be appended after the 31-character cap and then
+    # trimmed straight back off, handing writexl two identical sheet names to rename.
+    keys <- c("ROUTE-INTRAVENOUS DRIP.SPEC-SERUM.ANALYTE-DrugA",
+              "ROUTE-INTRAVENOUS DRIP.SPEC-SERUM.ANALYTE-DrugB",
+              "ROUTE-INTRAVENOUS DRIP.SPEC-SERUM.ANALYTE-DrugC")
+    out <- .tlg_sheet_names(keys, NULL, "pkct01")
+    expect_equal(anyDuplicated(out), 0L)
+    expect_true(all(nchar(out) <= 31))
+  })
+
+  it("deduplicates case-insensitively, the way Excel compares sheet names", {
+    expect_equal(anyDuplicated(tolower(.tlg_sheet_names(c("DrugA", "druga"), NULL, "x"))), 0L)
+  })
+
+  it("hands writexl names it does not have to rename", {
+    keys <- c(paste0(strrep("Analyte ", 4), "DrugA"), paste0(strrep("Analyte ", 4), "DrugB"))
+    frames <- setNames(list(data.frame(x = 1), data.frame(x = 2)),
+                       .tlg_sheet_names(keys, NULL, "pkct01"))
+    path <- withr::local_tempfile(fileext = ".xlsx")
+    expect_no_warning(writexl::write_xlsx(frames, path))
+  })
+})
