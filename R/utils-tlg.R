@@ -11,6 +11,67 @@
   warning(warningCondition(paste0(...), class = "tlg_warning"))
 }
 
+#' Keep the source ggplot alongside its plotly conversion.
+#'
+#' `ggplotly()` produces an htmlwidget that can only be written to HTML -- rendering it to
+#' PNG or PDF needs a headless browser (kaleido/webshot2), which aNCA does not depend on.
+#' Stashing the pre-conversion ggplot on the returned object lets the export layer write
+#' raster formats with plain `ggsave()` while still serving HTML from the plotly (#1344).
+#'
+#' Call this **last**, after any `layout()` chain: `layout()` rebuilds the object and
+#' silently drops attributes set before it.
+#'
+#' @param p  A plotly object returned by `ggplotly()` (and possibly `layout()`).
+#' @param gg The ggplot `p` was built from.
+#' @returns `p`, with `gg` attached as the `"ggplot"` attribute.
+#' @noRd
+.with_ggplot <- function(p, gg) {
+  attr(p, "ggplot") <- gg
+  p
+}
+
+#' Carry the widget's title, subtitle and footnote onto the ggplot behind it.
+#'
+#' On the plotly path these are set with `layout()` on the widget, not with `labs()`, so the
+#' ggplot stashed by [.with_ggplot()] -- the one the PNG and PDF export actually renders --
+#' would come out with no titles at all while the on-screen plot has them.  Applying them
+#' here keeps the downloaded image the same as what the user saw, which is the same reason
+#' the log scale is re-applied to the stashed ggplot rather than left to `layout()` (#1344).
+#'
+#' Plotly's line break is `<br>`; ggplot wants a newline, and would otherwise draw the tag
+#' literally.
+#'
+#' The plot margin is reset at the same time.  `pkcg01`/`pkcg02` widen it before calling
+#' `ggplotly()` to clear room for plotly's title and footnote, which are drawn outside the
+#' ggplot's own layout -- carried into the export that becomes a band of empty space above a
+#' title ggplot has already made room for.  `pkcg03` stashes its plot before any margin is
+#' applied, so resetting here also makes the three consistent.
+#'
+#' @param gg       The ggplot to label.
+#' @param title    Plot title, or `NULL`.
+#' @param subtitle Plot subtitle, or `NULL`.
+#' @param footnote Footnote text, rendered as the caption.  `""` when there is none.
+#' @returns `gg` with title, subtitle and caption set, and a margin suited to print.
+#' @noRd
+.label_stashed_ggplot <- function(gg, title = NULL, subtitle = NULL, footnote = NULL) {
+  as_label <- function(x) {
+    if (is.null(x) || length(x) == 0) return(NULL)
+    x <- gsub("<br\\s*/?>", "\n", as.character(x)[1])
+    if (nzchar(trimws(x))) x else NULL
+  }
+  gg +
+    ggplot2::labs(
+      title    = as_label(title),
+      subtitle = as_label(subtitle),
+      caption  = as_label(footnote)
+    ) +
+    ggplot2::theme(
+      plot.margin = ggplot2::margin(5.5, 5.5, 5.5, 5.5, "pt"),
+      # plotly anchors the footnote at x = 0; ggplot right-aligns captions by default.
+      plot.caption = ggplot2::element_text(hjust = 0)
+    )
+}
+
 #' Split a data frame by grouping variables and apply a function to each subset
 #'
 #' Common pattern used by all TLG functions that return one output object per

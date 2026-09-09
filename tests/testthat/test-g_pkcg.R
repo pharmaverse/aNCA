@@ -491,3 +491,126 @@ describe("g_pkcg03_log", {
   })
 
 })
+
+# The bulk TLG export writes graphs as PNG (issue #1344).  A plotly widget cannot be
+# rasterised without a headless browser, so the concentration plot builders stash the
+# ggplot they were built from on the returned object.  `layout()` rebuilds a plotly object
+# and drops attributes set before it, so this also guards the ordering of that attachment.
+
+describe("plotly outputs carry their source ggplot for export", {
+  it("attaches the ggplot for every pkcg01 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      p <- pkcg01(adnca, scale = sc, plotly = TRUE)[[1]]
+      expect_s3_class(attr(p, "ggplot"), "ggplot")
+    }
+  })
+
+  it("attaches the ggplot for every pkcg02 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      p <- pkcg02(adnca, scale = sc, plotly = TRUE)[[1]]
+      expect_s3_class(attr(p, "ggplot"), "ggplot")
+    }
+  })
+
+  it("attaches the ggplot for every pkcg03 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      p <- pkcg03(adpc1, scale = sc, plotly = TRUE)[[1]]
+      expect_s3_class(attr(p, "ggplot"), "ggplot")
+    }
+  })
+
+  it("log-scales the stashed ggplot, which the plotly path applies via layout()", {
+    # On the plotly path the log axis comes from layout(), leaving the ggplot linear; it is
+    # scaled explicitly so the exported PNG matches the widget.  LIN has no y scale added.
+    has_y_scale <- function(gg) {
+      any(vapply(gg$scales$scales, function(s) "y" %in% s$aesthetics, logical(1)))
+    }
+    expect_true(has_y_scale(attr(pkcg01(adnca, scale = "LOG", plotly = TRUE)[[1]], "ggplot")))
+    expect_false(has_y_scale(attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")))
+  })
+
+  it("leaves non-plotly output as a bare ggplot with no attribute", {
+    p <- pkcg01(adnca, scale = "LIN", plotly = FALSE)[[1]]
+    expect_s3_class(p, "ggplot")
+    expect_null(attr(p, "ggplot"))
+  })
+})
+
+# The plot lists were named from `adnca`, but `id_plot` is only created on the grouped
+# copy, so setNames() received NULL and silently dropped every name.  The TLG export then
+# had no split key to work with and numbered the files 1..n (#1344).
+describe("pkcg plot list names", {
+  it("names pkcg01 output by plot group, not by position", {
+    plots <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
+    expect_false(is.null(names(plots)))
+    expect_equal(length(names(plots)), length(plots))
+    expect_true(all(nzchar(names(plots))))
+    expect_false(any(grepl("^[0-9]+$", names(plots))))
+  })
+
+  it("names pkcg02 output by plot group, not by position", {
+    plots <- pkcg02(adnca, scale = "LIN", plotly = FALSE)
+    expect_false(is.null(names(plots)))
+    expect_true(all(nzchar(names(plots))))
+    expect_false(any(grepl("^[0-9]+$", names(plots))))
+  })
+
+  it("names carry the grouping values, so exported files are distinguishable", {
+    plots <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
+    # Names are interaction() levels over the plot grouping vars, e.g.
+    # "extravascular.SERUM.A.1" -- the subject is the trailing component.
+    expect_equal(length(unique(names(plots))), length(plots))
+    subjects <- unique(as.character(adnca$USUBJID))
+    expect_true(all(vapply(
+      names(plots),
+      function(nm) any(vapply(subjects, function(s) endsWith(nm, paste0(".", s)), logical(1))),
+      logical(1)
+    )))
+  })
+})
+
+# The plotly path sets title/subtitle/footnote with layout() on the widget, so the ggplot
+# stashed for PNG/PDF export had none of them and the downloaded image did not match what
+# the user saw on screen (#1344).
+describe("stashed ggplot labelling", {
+  it("carries the title and subtitle onto the ggplot the export renders", {
+    gg <- attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")
+    expect_match(gg$labels$title, "PK Concentration-Time Profile")
+    expect_match(gg$labels$subtitle, "Treatment Group:")
+    expect_match(gg$labels$subtitle, "Subject ID:")
+  })
+
+  it("carries the footnote across as the caption", {
+    p <- pkcg01(adnca, scale = "LIN", plotly = TRUE, footnote = "BLQ set to zero")[[1]]
+    expect_equal(attr(p, "ggplot")$labels$caption, "BLQ set to zero")
+  })
+
+  it("converts plotly line breaks so the tag is not drawn literally", {
+    gg <- attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")
+    expect_false(grepl("<br", gg$labels$subtitle, fixed = TRUE))
+    expect_match(gg$labels$subtitle, "\n")
+  })
+
+  it("labels pkcg02 and pkcg03 the same way", {
+    # pkcg03 groups by DOSEA, which only the adpc1 fixture carries.
+    for (p in list(pkcg02(adnca, scale = "LIN", plotly = TRUE)[[1]],
+                   pkcg03(adpc1, scale = "LIN", plotly = TRUE)[[1]])) {
+      gg <- attr(p, "ggplot")
+      expect_s3_class(gg, "ggplot")
+      expect_true(nzchar(gg$labels$title))
+    }
+  })
+
+  it("drops the plotly-only margin so the export has no empty band above the title", {
+    # pkcg01/02 widen the margin to clear room for plotly's overlaid title; ggplot lays out
+    # its own, so carrying that margin into the PNG just adds whitespace.
+    gg <- attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")
+    expect_equal(as.numeric(gg$theme$plot.margin), rep(5.5, 4))
+  })
+
+  it("leaves the non-plotly path alone", {
+    p <- pkcg01(adnca, scale = "LIN", plotly = FALSE)[[1]]
+    expect_match(p$labels$title, "PK Concentration-Time Profile")
+    expect_null(attr(p, "ggplot"))
+  })
+})

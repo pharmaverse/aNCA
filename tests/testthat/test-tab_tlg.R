@@ -12,11 +12,23 @@ local({
   library(logger)
   library(reactable)
   library(reactable.extras)
+  # tlg_module_ui() builds a bslib layout_sidebar with a shinyWidgets dropdown; without
+  # these the panel builder cannot run and no modules get registered.
+  library(bslib)
+  library(shinyWidgets)
   shiny_dir <- system.file("shiny", package = "aNCA")
   for (f in list(
     c("functions", "tlg_add_picker.R"),
+    c("functions", "zip-utils.R"),
+    c("functions", "tlg_export.R"),
     c("modules", "tab_tlg", "tlg_module.R"),
+    # All four option types: tlg_module_server() resolves the per-option server by name
+    # (`tlg_option_<type>_server`), so a missing one aborts module init partway and leaves
+    # its `tlg_list` unusable.
     c("modules", "tab_tlg", "tlg_option_select.R"),
+    c("modules", "tab_tlg", "tlg_option_text.R"),
+    c("modules", "tab_tlg", "tlg_option_numeric.R"),
+    c("modules", "tab_tlg", "tlg_option_table.R"),
     c("modules", "common", "reactable.R"),
     c("modules", "tab_tlg.R")
   )) {
@@ -146,5 +158,107 @@ describe("tab_tlg_server: data boundary", {
         expect_equal(nrow(adpp_data_all()), 2)
       }
     )
+  })
+})
+
+# Bulk export of the rendered TLGs (issue #1344).  Each module hands its `tlg_list`
+# reactive back to tab_tlg_server, which keeps them in `.tlg_registry`; the download
+# handler resolves that registry and zips the result.
+
+#' Touch the three panel outputs so their renderUI runs and registers the modules.
+#'
+#' The ADPP-backed panels `validate()` out when NCA has not run (this fixture passes no
+#' `adpp`), which `testServer` re-raises on output access.  In the app that is a gated
+#' panel, not a failure, so it is swallowed here -- the point is only to trigger
+#' registration.
+render_tlg_panels <- function(output) {
+  try(output$tables, silent = TRUE)
+  try(output$listings, silent = TRUE)
+  try(output$graphs, silent = TRUE)
+  invisible(NULL)
+}
+
+describe("tab_tlg_server: TLG export registry", {
+  it("registers an entry for every rendered TLG", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      # tlg_order_filtered() is bindEvent(submit_tlg_order), so nothing renders until the
+      # order is submitted -- the same sequence a user goes through.
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      ids <- ls(envir = .tlg_registry)
+      expect_gt(length(ids), 0)
+      # Ids are the catalog keys, and every entry carries its definition and type.
+      entry <- get(ids[1], envir = .tlg_registry)
+      expect_setequal(names(entry), c("def", "type", "items"))
+      expect_true(entry$type %in% c("table", "listing", "graph"))
+      expect_true(is.function(entry$items))
+    })
+  })
+
+  it("exports only the currently selected TLGs, not everything ever rendered", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+      expect_gt(length(.collect_tlg_outputs()), 1)
+
+      # Narrow the order to a single TLG and re-submit.  Modules stay registered on
+      # purpose (removing them would re-create their observers on re-add), so the registry
+      # keeps growing -- but the download must follow the order as it stands now.
+      keep <- tlg_order()$id[tlg_order()$Selection][1]
+      o <- tlg_order()
+      o$Selection <- o$id == keep
+      tlg_order(o)
+      session$setInputs(submit_tlg_order = 2)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      expect_gt(length(ls(envir = .tlg_registry)), 1)  # registry is still append-only
+      collected <- .collect_tlg_outputs()
+      expect_length(collected, 1)
+      expect_equal(names(collected), names(.TLG_DEFINITIONS)[keep])
+    })
+  })
+
+  it("collects outputs without raising when a TLG is still gated or failing", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      # The fixture is deliberately minimal, so most TLGs cannot render.  Collection must
+      # still succeed -- a req()-gated module is "not ready", not a failure.
+      entries <- expect_no_error(.collect_tlg_outputs())
+      expect_gt(length(entries), 0)
+      expect_true(all(vapply(entries, function(e) "items" %in% names(e), logical(1))))
+    })
+  })
+})
+
+
+describe("tab_tlg_server: publishes outputs for the app-wide export", {
+  it("exposes a collector on session$userData that zip.R can call", {
+    # The download lives in the global "Export as ZIP" button, so this module only has to
+    # publish; zip.R reads it through session$userData (#1344).
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      collect <- session$userData$tlg_outputs
+      expect_true(is.function(collect))
+      expect_gt(length(collect()), 0)
+      # Callable with a type filter, which is how the tree selection is applied.
+      tables_only <- collect("table")
+      expect_true(all(vapply(tables_only, function(e) e$type == "table", logical(1))))
+      expect_lt(length(tables_only), length(collect()))
+    })
   })
 })
