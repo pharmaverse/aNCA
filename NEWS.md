@@ -6,6 +6,9 @@
 
 ## Bug Fixes
 
+* Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
+* Restored settings now ignore incomplete partial interval rows with missing or invalid start/end values before they reach the NCA setup state, preventing spurious interval parameters from uploaded settings (#1347)
+* NCA Results now derive the `Missing` flag at the subject/profile level, so parameter-level metadata from active flag parameters can no longer duplicate rows in the pivoted results table (#1479)
 * Exported concentration plot images now carry the same title, subtitle and footnote as the plot on screen. On the interactive path those are set on the `plotly` widget rather than on the underlying `ggplot`, and it is the `ggplot` that PNG and PDF are rendered from, so the downloaded images came out with no labels at all. The extra top margin that only exists to clear room for the overlaid title on the widget is dropped from the exported image (#1344)
 * HTML plot exports no longer ship a redundant `<name>_files/` dependency folder. The widgets are written self-contained, with every dependency embedded in the file itself, but the library directory staged alongside them was left behind, so each plot carried a duplicate copy of the same JavaScript that nothing referenced. A 114-graph export shrank by roughly half (#1344)
 * Individual (`pkcg01`) and combined (`pkcg02`) concentration plots return a named list again. The names were taken from the ungrouped input, where the internal `id_plot` grouping column does not exist, so `setNames()` silently received `NULL` and dropped them. Exported files for these plots were numbered `1..n` instead of being named after the plot group (#1344)
