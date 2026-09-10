@@ -15,7 +15,8 @@ NON_STD_MAPPING_INFO <- data.frame(
   mapping_alternatives = c(
     paste0(
       "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, DOSFRM, ",
-      "STRAIN, DOSFRM, NOMDOSE, DOSEP, COHORT, PART, PERIOD, FEDSTATE"
+      "GENDER, SPECIES, STRAIN, DOSFRM, NOMDOSE, DOSEP, COHORT, PART, ",
+      "PERIOD, FEDSTATE"
     ),
     ""
   ),

@@ -32,6 +32,20 @@ var_labels(test_df) <- rep(NA_character_, ncol(test_df))
 mapping <- as.list(setNames(names(test_df), names(expected_df)))
 
 describe("apply_mapping", {
+  it("suggests GENDER and SPECIES for additional grouping variables", {
+    shiny_dir <- system.file("shiny", package = "aNCA")
+    source(file.path(shiny_dir, "modules", "tab_data", "data_mapping.R"),
+           local = TRUE)
+
+    alternatives <- MAPPING_INFO$mapping_alternatives[
+      MAPPING_INFO$Variable == "Grouping_Variables"
+    ]
+    alternatives <- trimws(strsplit(alternatives, ",")[[1]])
+
+    expect_true(all(c("GENDER", "SPECIES") %in% alternatives))
+    expect_equal(length(alternatives), length(unique(alternatives)))
+  })
+
   it("renames columns correctly", {
     result_df <- apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order)
     expect_equal(result_df, expected_df)
