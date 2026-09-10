@@ -12,6 +12,8 @@
 * Running NCA with "Impute Start Concentration" turned off no longer errors with `PKNCA_impute_method_FALSE not found`. When start imputation was off, the per-interval `impute` column was absent, so the BLQ step read the `impute` function argument instead of the column and built the method string `"blq, FALSE"`. The column is now always present, the reference is pinned to it, and the `update_main_intervals()` argument was renamed `impute` -> `start_impute` so it can no longer collide with the column (#1121, #1266)
 * With "Impute Start Concentration" turned off, the first interval now starts at C1 (the first sample at or after the dose) instead of the predose time. The sample feeding the start time was picked by an unordered `slice(1)`, so it could be the predose record whose negative `ARRLT` pulled the interval start before the dose (#1121)
 * The generated R-script (session code) now passes `blq_imputation_rule` to `PKNCA_update_data_object()`, matching the app. The template only applied the BLQ rule at calculation time (`PKNCA_calculate_nca()`) and omitted it during interval setup, so exported scripts did not reproduce the app's BLQ handling (#1445)
+* XPT export writer failures now block the ZIP export and notify the user
+  instead of being logged only to the R console (#1452)
 * Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
 * The "X ticks" option on the linear and logarithmic concentration plots now takes effect. `plotly` was regenerating the axis itself, so the chosen column was ignored; the side-by-side variants were already unaffected (#1356)
 * Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
@@ -28,6 +30,8 @@
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
 
 ## Features
+
+* Exporting results now validates every output before anything is written and blocks the save when a problem is found (a data-integrity control; cf. 21 CFR 11.10(a)). Each output is checked for the correct object class (plots must be plots, tables must be tables, code must be a script string), and the CDISC datasets (ADNCA, ADPP, PP) are additionally checked value by value against the data types and lengths declared in the package metadata. Indexed CDISC variable families (e.g. `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are recognised so they are no longer wrongly reported as undeclared, and `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP (#1451)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):

@@ -4,6 +4,30 @@ source(
   local = TRUE
 )
 
+test_export_progress <- list(
+  set = function(...) NULL,
+  inc = function(...) NULL
+)
+
+test_export_session <- function(results, send_notification = function(...) NULL) {
+  list(
+    userData = list(
+      results = results,
+      exploration_custom_names = function() character(0)
+    ),
+    sendNotification = send_notification
+  )
+}
+
+test_export_input <- function(res_tree, table_formats = "csv") {
+  list(
+    res_tree = res_tree,
+    plot_formats = character(0),
+    table_formats = table_formats,
+    slide_formats = character(0)
+  )
+}
+
 describe(".build_exploration_allowlist", {
   it("returns defaults when no custom names exist", {
     result <- .build_exploration_allowlist(
@@ -43,6 +67,79 @@ describe(".build_exploration_allowlist", {
       custom_names = custom
     )
     expect_equal(result, character(0))
+  })
+})
+
+describe("prepare_export_files validation gate", {
+  it("blocks selected CDISC exports with invalid data before writing files", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+    notifications <- character(0)
+
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)),
+      exploration = list()
+    ), send_notification = function(type, payload) {
+      notifications <<- c(notifications, as.character(payload$html))
+    })
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("adnca"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    expect_true(any(grepl("Save blocked", notifications)))
+    unlink(target_dir, recursive = TRUE)
+  })
+
+  it("blocks selected outputs with the wrong object kind before writing files", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+
+    session <- test_export_session(list(
+      nca_results = list(nca_pkparam = ggplot2::ggplot()),
+      exploration = list()
+    ))
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("nca_pkparam"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    unlink(target_dir, recursive = TRUE)
+  })
+})
+
+describe("save_table_format", {
+  it("propagates XPT writer failures so export cannot silently continue", {
+    mockery::stub(
+      save_table_format,
+      "haven::write_xpt",
+      function(...) stop("xpt failed", call. = FALSE)
+    )
+
+    expect_error(
+      save_table_format(data.frame(x = 1), tempfile("table-"), formats = "xpt"),
+      "xpt failed"
+    )
   })
 })
 

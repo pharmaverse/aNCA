@@ -709,6 +709,13 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         },
         error = function(e) {
           message("Download Error: ", e$message)
+          if (!inherits(e, "export_validation_error")) {
+            showNotification(
+              paste("Export failed:", e$message),
+              type = "error",
+              duration = NULL
+            )
+          }
           stop(e)
         }
       )

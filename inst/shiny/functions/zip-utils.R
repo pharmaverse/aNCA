@@ -25,12 +25,7 @@ save_table_format <- function(x, file_name, formats) {
     saveRDS(x, file = paste0(file_name, ".rds"))
   }
   if ("xpt" %in% formats) {
-    tryCatch(
-      haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt")),
-      error = function(e) {
-        message("Error writing XPT file for ", file_name, ": ", e$message)
-      }
-    )
+    haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt"))
   }
 }
 
@@ -379,6 +374,36 @@ get_tree_ids_for_texts <- function(tree, texts) {
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
+# Validate every output that will be written before any file is created. Runs
+# object-class checks on all selected outputs and value-level data-type checks
+# on the selected CDISC datasets, and stops the save when error-severity
+# findings are present. No-op when nothing conforming is being exported.
+.validate_outputs_pre_export <- function(export_list, obj_names, progress, session) {
+  progress$set(message = "Creating exports...",
+               detail = "Validating outputs...")
+  findings <- validate_export_outputs(export_list, obj_names = obj_names)
+  if (!export_validation_blocks_save(findings)) return(invisible(NULL))
+
+  errors <- findings[findings$Severity == "error", , drop = FALSE]
+  showNotification(
+    sprintf(
+      "Save blocked: %d output(s) failed data-type validation (%s).",
+      nrow(errors),
+      paste(utils::head(unique(errors$Output), 3), collapse = ", ")
+    ),
+    type = "error",
+    duration = NULL,
+    session = session
+  )
+  stop(errorCondition(
+    sprintf(
+      "Export validation failed with %d error(s): %s",
+      nrow(errors), paste(unique(errors$Output), collapse = ", ")
+    ),
+    class = "export_validation_error"
+  ))
+}
+
 prepare_export_files <- function(target_dir,
                                  res_nca,
                                  settings,
@@ -387,6 +412,8 @@ prepare_export_files <- function(target_dir,
                                  session,
                                  progress,
                                  slide_config = NULL) {
+
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
@@ -423,6 +450,12 @@ prepare_export_files <- function(target_dir,
     }
   }
 
+  # Validate every output that will be written before any file is created:
+  # object-class checks on all selected outputs and value-level data-type
+  # checks on the selected CDISC datasets. Aborts the save on error-severity
+  # findings so non-conforming data is never written (cf. 21 CFR 11.10(a)).
+  .validate_outputs_pre_export(export_list, obj_names, progress, session)
+
   save_output(
     output = export_list,
     output_path = target_dir,
@@ -443,7 +476,6 @@ prepare_export_files <- function(target_dir,
     progress$inc(0.4)
 
     # Export pre-specification files for selected CDISC datasets
-    selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
     if (length(selected_cdisc) > 0) {
       progress$set(message = "Creating exports...",
                    detail = "Saving CDISC pre-specifications...")
