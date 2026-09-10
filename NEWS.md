@@ -29,6 +29,9 @@
 
 ## Features
 
+* Additional grouping variable auto-mapping now suggests `GENDER` and
+  `SPECIES` in addition to the existing grouping candidates (#1486)
+
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
