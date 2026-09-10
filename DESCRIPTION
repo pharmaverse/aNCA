@@ -86,6 +86,6 @@ Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
 BugReports: https://github.com/pharmaverse/aNCA/issues
 Depends: 
-    R (>= 4.1),
+    R (>= 4.4),
     utils
 LazyData: true
