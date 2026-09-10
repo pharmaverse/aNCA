@@ -405,6 +405,25 @@ get_tree_ids_for_texts <- function(tree, texts) {
   ))
 }
 
+# Write the CDISC data-type QC report as an export artifact. Save-blocking is
+# already handled upstream by .validate_outputs_before_export(); this only
+# produces the human-readable HTML report for the selected CDISC datasets.
+.write_cdisc_report_artifact <- function(target_dir, selected_cdisc, session,
+                                         progress) {
+  cdisc_data <- session$userData$results$CDISC
+  if (length(selected_cdisc) == 0 || is.null(cdisc_data)) {
+    return(invisible(NULL))
+  }
+  progress$set(message = "Creating exports...",
+               detail = "Writing CDISC validation report...")
+  write_cdisc_validation_report(
+    cdisc_data = cdisc_data[selected_cdisc],
+    target_dir = target_dir,
+    project = tryCatch(session$userData$project_name(), error = function(e) NULL)
+  )
+  invisible(NULL)
+}
+
 prepare_export_files <- function(target_dir,
                                  res_nca,
                                  settings,
@@ -482,6 +501,7 @@ prepare_export_files <- function(target_dir,
                    detail = "Saving CDISC pre-specifications...")
       .export_pre_specs(target_dir, selected_cdisc,
                         cdisc_data = session$userData$results$CDISC)
+      .write_cdisc_report_artifact(target_dir, selected_cdisc, session, progress)
     }
 
     if ("r_script" %in% input$res_tree) {
@@ -768,9 +788,12 @@ prepare_export_files <- function(target_dir,
     files_req <- c(files_req, grep("results_slides_outputs\\.rda$", all_files, value = TRUE))
   }
 
-  # Preserve pre-specs only when at least one CDISC dataset is selected
+  # Preserve pre-specs and the validation QC report only when at least one
+  # CDISC dataset is selected
   if (any(c("pp", "adpp", "adnca") %in% fnames)) {
     files_req <- c(files_req, grep("CDISC/Pre_Specs\\.xlsx$", all_files,
+                                   value = TRUE))
+    files_req <- c(files_req, grep("cdisc_validation_report\\.html$", all_files,
                                    value = TRUE))
   }
   if ("session_info" %in% fnames) {
