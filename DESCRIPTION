@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.1.0.9195
+Version: 0.1.0.9196
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -49,7 +49,6 @@ Imports:
     stats,
     tidyr,
     units,
-    utils,
     writexl,
     yaml,
     zip
@@ -87,5 +86,6 @@ Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA
 BugReports: https://github.com/pharmaverse/aNCA/issues
 Depends: 
-    R (>= 4.1)
+    R (>= 4.4),
+    utils
 LazyData: true
