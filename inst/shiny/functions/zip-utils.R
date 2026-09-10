@@ -25,12 +25,7 @@ save_table_format <- function(x, file_name, formats) {
     saveRDS(x, file = paste0(file_name, ".rds"))
   }
   if ("xpt" %in% formats) {
-    tryCatch(
-      haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt")),
-      error = function(e) {
-        message("Error writing XPT file for ", file_name, ": ", e$message)
-      }
-    )
+    haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt"))
   }
 }
 
@@ -399,9 +394,12 @@ get_tree_ids_for_texts <- function(tree, texts) {
     type = "error",
     duration = NULL
   )
-  stop(sprintf(
-    "Export validation failed with %d error(s): %s",
-    nrow(errors), paste(unique(errors$Output), collapse = ", ")
+  stop(errorCondition(
+    sprintf(
+      "Export validation failed with %d error(s): %s",
+      nrow(errors), paste(unique(errors$Output), collapse = ", ")
+    ),
+    class = "export_validation_error"
   ))
 }
 
