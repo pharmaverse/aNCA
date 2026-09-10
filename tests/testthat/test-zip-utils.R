@@ -75,7 +75,7 @@ describe("prepare_export_files validation gate", {
     dir.create(target_dir)
     notifications <- character(0)
     mockery::stub(
-      .validate_outputs_before_export,
+      .validate_outputs_pre_export,
       "showNotification",
       function(ui, ...) notifications <<- c(notifications, as.character(ui))
     )
@@ -106,6 +106,11 @@ describe("prepare_export_files validation gate", {
   it("blocks selected outputs with the wrong object kind before writing files", {
     target_dir <- tempfile("anca-export-")
     dir.create(target_dir)
+    mockery::stub(
+      .validate_outputs_pre_export,
+      "showNotification",
+      function(...) NULL
+    )
 
     session <- test_export_session(list(
       nca_results = list(nca_pkparam = ggplot2::ggplot()),
