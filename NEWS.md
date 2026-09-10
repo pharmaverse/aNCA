@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Improvements
+
+* Standardise the treatment-formulation variable on the CDISC-style name `FRMUL` in the column-mapping alternatives and dose-escalation info columns, while keeping the legacy `DOSFRM` as an auto-map alternative so datasets uploaded with a `DOSFRM` column still map correctly. Also removes a duplicate `DOSFRM` entry in the grouping-variable alternatives (#1453)
+
 ## Maintenance
 
 * Refresh stale in-code TODO comments whose referenced issues have since closed: the slope-selector `na.omit` guard is now documented as a defensive safety net (#641 reworked the reactivity), and the BLQ dropped-record workaround points to the current imputation-consistency issues (#1057, #1442, #1443) instead of the closed #139. Clarified why meta-mapping keys are excluded in `apply_mapping()`. Part of the TODO inventory in #1447

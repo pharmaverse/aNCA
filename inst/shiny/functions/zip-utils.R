@@ -145,7 +145,7 @@ get_dose_esc_results <- function(
   ind_stats_parameters     = stats_parameters,
   summary_stats_parameters = stats_parameters,
   boxplot_parameters = c("AUCIFO"),
-  info_vars = c("SEX", "STRAIN", "RACE", "DOSFRM"),
+  info_vars = c("SEX", "STRAIN", "RACE", "FRMUL", "DOSFRM"),
   dose_norm_parameters = c("CMAXD", "AUCLSTD", "AUCIFOD"),
   labels_df = metadata_nca_variables
 ) {
