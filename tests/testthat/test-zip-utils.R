@@ -9,12 +9,13 @@ test_export_progress <- list(
   inc = function(...) NULL
 )
 
-test_export_session <- function(results) {
+test_export_session <- function(results, send_notification = function(...) NULL) {
   list(
     userData = list(
       results = results,
       exploration_custom_names = function() character(0)
-    )
+    ),
+    sendNotification = send_notification
   )
 }
 
@@ -74,16 +75,13 @@ describe("prepare_export_files validation gate", {
     target_dir <- tempfile("anca-export-")
     dir.create(target_dir)
     notifications <- character(0)
-    mockery::stub(
-      .validate_outputs_pre_export,
-      "showNotification",
-      function(ui, ...) notifications <<- c(notifications, as.character(ui))
-    )
 
     session <- test_export_session(list(
       CDISC = list(adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)),
       exploration = list()
-    ))
+    ), send_notification = function(type, payload) {
+      notifications <<- c(notifications, as.character(payload$html))
+    })
 
     expect_error(
       prepare_export_files(
@@ -106,11 +104,6 @@ describe("prepare_export_files validation gate", {
   it("blocks selected outputs with the wrong object kind before writing files", {
     target_dir <- tempfile("anca-export-")
     dir.create(target_dir)
-    mockery::stub(
-      .validate_outputs_pre_export,
-      "showNotification",
-      function(...) NULL
-    )
 
     session <- test_export_session(list(
       nca_results = list(nca_pkparam = ggplot2::ggplot()),
