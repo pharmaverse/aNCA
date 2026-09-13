@@ -246,6 +246,11 @@ add_pptx_sl_plot <- function(pptx, plot) {
                             subtitle = paste(group_data$group)) %>%
     officer::ph_slidelink(ph_label = "Footer Placeholder 3", slide_index = (lst_group_slide + 1))
   pptx <- .add_pptx_main_summary_slide(pptx, group_data, i, in_sections)
+  # Analyte comparison slide (mean plot faceted by DOSETRT × PARAM)
+  has_analyte_cmp <- in_sections("analyte_comparison") && !is.null(group_data$analyte_comparison)
+  if (has_analyte_cmp) {
+    pptx <- add_pptx_sl_plot(pptx, group_data$analyte_comparison)
+  }
   pptx <- pptx %>% {
     if (in_sections("linplot")) add_pptx_sl_plot(., group_data$linplot) else .
   }
@@ -254,8 +259,8 @@ add_pptx_sl_plot <- function(pptx, plot) {
   dn_result <- .add_pptx_dose_norm_slide(pptx, group_data, in_sections)
   pptx <- dn_result$pptx
   n_main_slides <- as.integer(in_sections("meanplot") || in_sections("statistics"))
-  n_summary_slides <- 1L + n_main_slides + as.integer(in_sections("linplot")) +
-    bp_result$n_slides + dn_result$n_slides
+  n_summary_slides <- 1L + n_main_slides + as.integer(has_analyte_cmp) +
+    as.integer(in_sections("linplot")) + bp_result$n_slides + dn_result$n_slides
   list(pptx = pptx, n_summary_slides = n_summary_slides)
 }
 
@@ -265,7 +270,7 @@ add_pptx_sl_plot <- function(pptx, plot) {
 #' @keywords internal
 #' @noRd
 .has_summary_sections <- function(in_sections) {
-  sections <- c("meanplot", "statistics", "linplot", "boxplot",
+  sections <- c("meanplot", "statistics", "analyte_comparison", "linplot", "boxplot",
                 "dose_norm_plot", "dose_norm_statistics")
   any(vapply(sections, in_sections, logical(1)))
 }
