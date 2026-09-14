@@ -130,9 +130,8 @@ This role focuses on validating calculations, outputs, and the
 scientific correctness of NCA results.
 
 - Copy the branch associated with the Pull Request (PR), pull it
-  locally, and run
-  [`devtools::load_all(); aNCA::run_app()`](https://devtools.r-lib.org/reference/load_all.html)
-  to test the changes in the App.
+  locally, and run `devtools::load_all(); aNCA::run_app()` to test the
+  changes in the App.
 - Make sure all `Definition of Done` items in the Pull Request (PR) are
   met for the Application.
 - If there are any calculations or outputs, inspect them for full
@@ -157,9 +156,8 @@ This role is responsible for reviewing PRs, enforcing quality, and
 approving merges.
 
 - Copy the branch associated with the Pull Request (PR), pull it
-  locally, and run
-  [`devtools::load_all(); aNCA::run_app()`](https://devtools.r-lib.org/reference/load_all.html)
-  to test the changes in the App.
+  locally, and run `devtools::load_all(); aNCA::run_app()` to test the
+  changes in the App.
 - Focus reviews on code quality, correctness, and maintainability.
   Ensure new code included in `\R` has logical unit tests.
 - Use the PR template and the Developers checklist before approving;
