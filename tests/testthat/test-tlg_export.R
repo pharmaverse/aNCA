@@ -61,6 +61,17 @@ describe(".tlg_export_basename", {
   })
 })
 
+describe(".tlg_export_basenames", {
+  it("reserves suffix space for long split keys with case-insensitive collisions", {
+    keys <- c(strrep("A", 60), strrep("a", 60), paste0(strrep("A", 58), "_1"))
+    items <- setNames(rep(list(data.frame(value = 1)), length(keys)), keys)
+    bases <- .tlg_export_basenames("t_pkct01", items)
+    expect_equal(anyDuplicated(tolower(bases)), 0L)
+    expect_true(all(nchar(bases) <= nchar("pkct01_") + 60))
+    expect_equal(names(items), keys)
+  })
+})
+
 describe(".prepare_export_frame", {
   it("flattens the two-level 'Compare in columns' header into readable names", {
     # Grouped summary tables prefix each statistic with "<level><.GROUP_SEP>"; a flat file
@@ -202,6 +213,32 @@ describe("write_tlg_exports", {
     items <- setNames(list(head(mtcars), head(mtcars)), c("DrugA / SERUM", "DrugA - SERUM"))
     write_tlg_exports(list(t_pkct01 = entry("table", items)), d, table_formats = "csv")
     expect_length(list.files(file.path(d, "Tables", "csv", "pkct01")), 2)
+  })
+
+  it("preserves every CSV split when labels differ only by case", {
+    keys <- c("PARAM: DrugA", "PARAM: druga", "PARAM: DRUGA_1")
+    items <- setNames(lapply(1:3, function(x) data.frame(value = x)), keys)
+    for (type in c("table", "listing")) {
+      d <- withr::local_tempdir()
+      m <- write_tlg_exports(list(t_pkct01 = entry(type, items)), d, table_formats = "csv")
+      expect_equal(m$status, rep("ok", 3))
+      expect_equal(anyDuplicated(tolower(m$file)), 0L)
+      expect_length(list.files(d, pattern = "\\.csv$", recursive = TRUE), 4)
+      values <- vapply(file.path(d, m$file), function(path) read.csv(path)$value, integer(1))
+      expect_equal(unname(values), 1:3)
+      expect_equal(names(items), keys)
+    }
+  })
+
+  it("keeps case-only graph splits as separate PNG files", {
+    d <- withr::local_tempdir()
+    items <- setNames(list(stashed_plotly(), stashed_plotly()), c("DrugA", "druga"))
+    m <- write_tlg_exports(list(g_pkcg01_lin = entry("graph", items)), d,
+                           ggplot_formats = "png")
+    expect_equal(m$status, c("ok", "ok"))
+    expect_equal(anyDuplicated(tolower(m$file)), 0L)
+    expect_length(list.files(d, pattern = "\\.png$", recursive = TRUE), 2)
+    expect_true(all(file.info(file.path(d, m$file))$size > 0))
   })
 
   it("records the written format in the manifest file column", {

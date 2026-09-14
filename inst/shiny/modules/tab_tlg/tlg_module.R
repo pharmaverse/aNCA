@@ -96,7 +96,9 @@ render_graph_outputs <- function(output, session, current_page_items) {
         height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
         plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
       }
-      .with_group_header(nms[i], body)
+      # pkcg01/02 already identify their groups in the plot's own annotations. Keep their
+      # list names for export, without repeating the raw interaction key above the widget.
+      if (isFALSE(attr(item, "tlg_group_header"))) body else .with_group_header(nms[i], body)
     }))
   })
 

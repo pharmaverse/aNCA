@@ -166,9 +166,9 @@ write_tlg_exports <- function(entries,
     # a combined output.
     if (length(items) > 1 && identical(b, unsplit)) paste0(b, "_", i) else b
   }, character(1))
-  # Guards two split keys that slug down to the same string (e.g. "DrugA / SERUM" and
-  # "DrugA - SERUM"), which would otherwise overwrite each other.
-  make.unique(bases, sep = "_")
+  # Guard both slug collisions and case-only differences on Windows/macOS file systems.
+  # Keep suffixes within the stem + separator + 60-character split-key limit.
+  .tlg_unique_within(bases, nchar(unsplit) + 1L + 60L)
 }
 
 #' Write a single TLG's outputs and return its manifest rows.
@@ -570,8 +570,8 @@ write_tlg_exports <- function(entries,
 #' not choose (#1344).
 #'
 #' The suffix is reserved *inside* the cap instead: the stem is shortened by exactly as much
-#' as the suffix needs.  Comparison is case-insensitive because Excel treats `DrugA` and
-#' `druga` as the same sheet.
+#' as the suffix needs. Comparison is case-insensitive because Excel and common Windows/macOS
+#' file systems treat `DrugA` and `druga` as the same name.
 #'
 #' @param nm        Character vector of candidate names, already capped at `max_chars`.
 #' @param max_chars Hard limit the result must respect.

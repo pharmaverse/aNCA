@@ -522,15 +522,21 @@ describe("g_pkcg03_log", {
 describe("plotly outputs carry their source ggplot for export", {
   it("attaches the ggplot for every pkcg01 scale", {
     for (sc in c("LIN", "LOG", "SBS")) {
-      p <- pkcg01(adnca, scale = sc, plotly = TRUE)[[1]]
-      expect_s3_class(attr(p, "ggplot"), "ggplot")
+      plots <- pkcg01(adnca, scale = sc, plotly = TRUE)
+      expect_s3_class(attr(plots[[1]], "ggplot"), "ggplot")
+      expect_true(all(vapply(plots, function(p) isFALSE(attr(p, "tlg_group_header")), logical(1))))
+      expect_true(all(nzchar(names(plots))))
+      expect_length(names(plots), length(plots))
     }
   })
 
   it("attaches the ggplot for every pkcg02 scale", {
     for (sc in c("LIN", "LOG", "SBS")) {
-      p <- pkcg02(adnca, scale = sc, plotly = TRUE)[[1]]
-      expect_s3_class(attr(p, "ggplot"), "ggplot")
+      plots <- pkcg02(adnca, scale = sc, plotly = TRUE)
+      expect_s3_class(attr(plots[[1]], "ggplot"), "ggplot")
+      expect_true(all(vapply(plots, function(p) isFALSE(attr(p, "tlg_group_header")), logical(1))))
+      expect_true(all(nzchar(names(plots))))
+      expect_length(names(plots), length(plots))
     }
   })
 
@@ -538,6 +544,7 @@ describe("plotly outputs carry their source ggplot for export", {
     for (sc in c("LIN", "LOG", "SBS")) {
       p <- pkcg03(adpc1, scale = sc, plotly = TRUE)[[1]]
       expect_s3_class(attr(p, "ggplot"), "ggplot")
+      expect_null(attr(p, "tlg_group_header"))
     }
   })
 

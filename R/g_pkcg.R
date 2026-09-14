@@ -310,10 +310,11 @@ pkcg01 <- function(
         )
       }
 
-      # Attached last: layout() rebuilds the object and would drop it.
-      .with_ggplot(
-        plotly_plot,
-        .label_stashed_ggplot(gg_plot, title, subtitle, footnote)
+      # Attached last: layout() rebuilds the object and would drop these attributes.
+      # The plot's annotations replace the Shiny split-key heading, not its export name.
+      structure(
+        .with_ggplot(plotly_plot, .label_stashed_ggplot(gg_plot, title, subtitle, footnote)),
+        tlg_group_header = FALSE
       )
     } else {
       plot +
@@ -699,10 +700,10 @@ pkcg02 <- function(
           )
         }
 
-        # Attached last: layout() rebuilds the object and would drop it.
-        .with_ggplot(
-          plotly_plot,
-          .label_stashed_ggplot(gg_plot, title, subtitle, footnote)
+        # See pkcg01: preserve export names but omit the redundant Shiny group heading.
+        structure(
+          .with_ggplot(plotly_plot, .label_stashed_ggplot(gg_plot, title, subtitle, footnote)),
+          tlg_group_header = FALSE
         )
       })
     } else {
