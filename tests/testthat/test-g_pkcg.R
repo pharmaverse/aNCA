@@ -7,6 +7,11 @@ adnca <- FIXTURE_CONC_DATA %>%
 attr(adnca$USUBJID, "label") <- "Subject ID"
 attr(adnca$AVAL, "label") <- "Analysis value"
 
+get_x_breaks <- function(plot) {
+  breaks <- ggplot2::ggplot_build(plot)$layout$panel_params[[1]]$x$get_breaks()
+  breaks[!is.na(breaks)]
+}
+
 describe("pkcg01", {
   it("generates valid ggplots with LIN scale", {
     plots_lin <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
@@ -20,6 +25,23 @@ describe("pkcg01", {
     plotlys_lin <- pkcg01(adnca, scale = "LIN", plotly = TRUE)
     expect_equal(length(plotlys_lin), 3)
     expect_true(inherits(plotlys_lin[[1]], "plotly"))
+  })
+
+  it("keeps fewer x-axis breaks when the time labels are long", {
+    # A dense hourly profile, then the same profile shifted to a later dose so its labels
+    # grow from "23" to "142.917". The spacing and the range are identical, so any
+    # difference in the breaks kept is down to how wide the labels render.
+    times <- 0:47
+    dense <- adnca %>%
+      slice(rep(1, length(times))) %>%
+      mutate(NFRLT = times, AFRLT = times, AVAL = seq_along(times))
+    late <- dense %>%
+      mutate(NFRLT = NFRLT + 119.917, AFRLT = AFRLT + 119.917)
+
+    short_breaks <- get_x_breaks(pkcg01(dense, scale = "LIN", plotly = FALSE)[[1]])
+    long_breaks <- get_x_breaks(pkcg01(late, scale = "LIN", plotly = FALSE)[[1]])
+
+    expect_lt(length(long_breaks), length(short_breaks))
   })
 
   it("generates valid ggplots with LOG scale", {
