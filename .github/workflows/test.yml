@@ -68,3 +68,33 @@ jobs:
         run: |
           devtools::load_all(".")
           testthat::test_local(stop_on_failure = TRUE)
+
+      # Boot the Shiny app from a real R CMD INSTALL (no load_all) to catch
+      # failures that only appear against an installed package, e.g. bare-name
+      # references to internal functions or lazy-loaded datasets. Uses plain
+      # shiny::runApp with a timeout: if the app is still alive after the window
+      # it booted cleanly (exit 124); an early exit means it crashed on startup.
+      - name: Smoke test installed app
+        shell: bash
+        run: |
+          set -uo pipefail
+          R CMD build --no-build-vignettes --no-manual .
+          R CMD INSTALL aNCA_*.tar.gz
+          cd "$(mktemp -d)"
+          # Disable errexit: `timeout` returns non-zero even on the healthy path
+          # (124 = it killed a still-running app), and we interpret the code below.
+          set +e
+          timeout 30 Rscript -e 'library(aNCA); shiny::runApp(system.file("shiny", package = "aNCA"), port = 3838, launch.browser = FALSE)' > app.log 2>&1
+          code=$?
+          set -e
+          echo "--- app startup log ---"
+          cat app.log
+          if [ "$code" -ne 124 ]; then
+            echo "::error::App exited early (code $code) — likely crashed on startup"
+            exit 1
+          fi
+          if grep -Eqi "could not find function|object '[^']+' not found|Execution halted" app.log; then
+            echo "::error::Error detected in app startup log"
+            exit 1
+          fi
+          echo "App booted successfully"
