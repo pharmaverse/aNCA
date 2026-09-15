@@ -223,9 +223,9 @@ t_pkpt03_col <- function(
 #'   identifiers are retained as split columns to avoid collapsing profiles.
 #'   `value_var` must be `"AVAL"`, which holds the calculated ratios; other
 #'   value columns retain the original input values and are not supported.
-#' @param parent,metabolite Single analyte names from ADPP's `PPCAT` column.
-#'   In the app these are identified automatically from ADNCA's `PARAM`, `METABFL`
-#'   and `DOSETRT`. In standalone calls supply both names explicitly.
+#' @param parent,metabolite Single analyte names from the `PPCAT` column in ADPP.
+#'   In the app these are identified automatically using the `PARAM`, `METABFL`
+#'   and `DOSETRT` columns in ADNCA. In standalone calls supply both names explicitly.
 #' @param ... Additional arguments forwarded to [t_pkpt03_col()].
 #' @export
 t_pkpt03_MP_col <- function( # nolint: object_name_linter

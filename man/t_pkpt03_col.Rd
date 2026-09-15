@@ -54,9 +54,9 @@ statistic block is repeated once per level, nested under a group header.
 \code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this
 table are ignored.}
 
-\item{parent, metabolite}{Single analyte names from ADPP's \code{PPCAT} column.
-In the app these are identified automatically from ADNCA's \code{PARAM}, \code{METABFL}
-and \code{DOSETRT}. In standalone calls supply both names explicitly.}
+\item{parent, metabolite}{Single analyte names from the \code{PPCAT} column in ADPP.
+In the app these are identified automatically using the \code{PARAM}, \code{METABFL}
+and \code{DOSETRT} columns in ADNCA. In standalone calls supply both names explicitly.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.}
 }

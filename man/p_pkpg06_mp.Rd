@@ -22,9 +22,9 @@ p_pkpg06_mp(
 \item{list_vars}{Columns to split plots by. Defaults to the derived \code{RATIO}
 label and \code{PPSPEC}; varying profile identifiers are retained as well.}
 
-\item{parent, metabolite}{Single analyte names from ADPP's \code{PPCAT} column.
-In the app these are identified automatically from ADNCA's \code{PARAM}, \code{METABFL}
-and \code{DOSETRT}. In standalone calls supply both names explicitly.}
+\item{parent, metabolite}{Single analyte names from the \code{PPCAT} column in ADPP.
+In the app these are identified automatically using the \code{PARAM}, \code{METABFL}
+and \code{DOSETRT} columns in ADNCA. In standalone calls supply both names explicitly.}
 
 \item{title}{Optional plot title string.}
 

@@ -53,9 +53,9 @@ syntax. Defaults to the unique values of \code{listgroup_vars}.}
 
 \item{footnote}{Footnote string.}
 
-\item{parent, metabolite}{Single analyte names from ADPP's \code{PPCAT} column.
-In the app these are identified automatically from ADNCA's \code{PARAM}, \code{METABFL}
-and \code{DOSETRT}. In standalone calls supply both names explicitly.}
+\item{parent, metabolite}{Single analyte names from the \code{PPCAT} column in ADPP.
+In the app these are identified automatically using the \code{PARAM}, \code{METABFL}
+and \code{DOSETRT} columns in ADNCA. In standalone calls supply both names explicitly.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }
