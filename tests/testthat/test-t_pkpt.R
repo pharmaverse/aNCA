@@ -15,9 +15,16 @@ pkpt_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Metabolite variant: mark some rows as metabolite
-pkpt_metab_data <- pkpt_data
-pkpt_metab_data$METABFL[pkpt_metab_data$TRT01A == "50mg"] <- "Y"
+# Ordinary parent and metabolite parameters, with no configured ratios.
+pkpt_ratio_data <- rbind(
+  transform(pkpt_data, PPANMETH = NA_character_),
+  transform(
+    pkpt_data,
+    PPCAT    = "Metab-Drug A Plasma",
+    AVAL     = pkpt_data$AVAL / 2,
+    PPANMETH = NA_character_
+  )
+)
 
 describe("t_pkpt03_col", {
   it("returns a named list of data frames", {
@@ -149,38 +156,71 @@ describe("t_pkpt03_col: multi-variable stratification and filtering (#1356)", {
 })
 
 describe("t_pkpt03_MP_col", {
-  it("filters to metabolite rows before summarizing (METABFL path)", {
-    result <- t_pkpt03_MP_col(pkpt_metab_data)[[1]]
-    # Only 50mg arm has METABFL set — only that arm should appear
-    expect_true(all(result$TRT01A == "50mg"))
+  tables <- function(data = pkpt_ratio_data, ...) {
+    t_pkpt03_MP_col(data, parent = "Drug A Plasma", metabolite = "Metab-Drug A Plasma", ...)
+  }
+
+  it("summarizes individual ratios rather than raw metabolite values", {
+    result <- tables()[[1]]
+    is_cmax <- pkpt_data$PARAM == "Cmax"
+    for (trt in unique(pkpt_data$TRT01A)) {
+      parent <- pkpt_data$AVAL[is_cmax & pkpt_data$TRT01A == trt]
+      row <- result[result$PARAM == "Cmax" & result$TRT01A == trt, ]
+      expect_equal(row$Mean, 0.5)
+      expect_false(isTRUE(all.equal(row$Mean, round(mean(parent), 3))))
+    }
   })
 
-  it("falls back to PPCAT when METABFL absent and PPCAT contains 'metab'", {
-    # Simulate ADPP without METABFL: PPCAT identifies metabolite rows
-    data_ppcat <- pkpt_data
-    data_ppcat$PPCAT <- ifelse(data_ppcat$TRT01A == "50mg", "Metab-DrugA Plasma", "DrugA Plasma")
-    data_ppcat <- data_ppcat[, setdiff(names(data_ppcat), "METABFL")]
-    result <- t_pkpt03_MP_col(data_ppcat)[[1]]
-    expect_true(all(result$TRT01A == "50mg"))
+  it("splits the table by metabolite / parent so the denominator is named", {
+    result <- tables()
+    expect_equal(
+      names(result),
+      "RATIO: Metab-Drug A Plasma / Drug A Plasma / PPSPEC: Plasma"
+    )
   })
 
-  it("falls back to PARAM when METABFL and PPCAT both absent but PARAM contains 'metab'", {
-    data_param <- pkpt_data
-    data_param$PARAM <- ifelse(data_param$TRT01A == "50mg",
-                               paste0("Metab-", data_param$PARAM),
-                               data_param$PARAM)
-    data_param <- data_param[, setdiff(names(data_param), c("METABFL", "PPCAT"))]
-    result <- t_pkpt03_MP_col(data_param)[[1]]
-    expect_true(all(result$TRT01A == "50mg"))
+  it("keeps specimens apart -- the same analyte pair gets the same RATIO label", {
+    two_specs <- rbind(
+      pkpt_ratio_data,
+      transform(pkpt_ratio_data, PPSPEC = "Urine", AVAL = pkpt_ratio_data$AVAL * 10)
+    )
+    result <- tables(two_specs)
+    expect_equal(length(result), 2)
+    expect_setequal(
+      names(result),
+      c(
+        "RATIO: Metab-Drug A Plasma / Drug A Plasma / PPSPEC: Plasma",
+        "RATIO: Metab-Drug A Plasma / Drug A Plasma / PPSPEC: Urine"
+      )
+    )
   })
 
-  it("stops when METABFL absent and no 'metab' in PPCAT or PARAM", {
-    data_no_metabfl <- pkpt_data[, setdiff(names(pkpt_data), "METABFL")]
-    expect_error(t_pkpt03_MP_col(data_no_metabfl), "no metabolite data found")
+  it("keeps original parameter names for filtering without manual ratio configuration", {
+    result <- tables(param_filter = "Cmax")[[1]]
+    expect_equal(unique(result$PARAM), "Cmax")
+    expect_true(all(result$Mean == 0.5))
   })
 
-  it("stops with informative error when METABFL is all missing", {
-    expect_error(t_pkpt03_MP_col(pkpt_data), "no metabolite data found")
+  it("errors when the metabolite has no usable values", {
+    expect_error(
+      tables(transform(pkpt_data, PPANMETH = NA_character_)),
+      "t_pkpt03_MP_col: no usable"
+    )
+  })
+
+  it("does not treat mean-residence-time parameters as ratios", {
+    mrt <- transform(
+      pkpt_data,
+      PARAMCD = rep(c("MRTLST", "MRTIFO", "MRTIBLST"), 6),
+      PARAM = rep(c("MRT to Last", "MRT Infinity Obs", "MRT Intravasc"), 6),
+      PPANMETH = NA_character_
+    )
+    expect_error(tables(mrt), "no usable")
+  })
+
+  it("still honours an explicit list_vars from the sidebar", {
+    result <- tables(list_vars = "PPSPEC")
+    expect_equal(names(result), "PPSPEC: Plasma")
   })
 })
 

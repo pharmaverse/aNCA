@@ -148,3 +148,87 @@ describe("tab_tlg_server: data boundary", {
     )
   })
 })
+
+describe("M/P rendering adapter", {
+  it("routes all three M/P modules through unfiltered data and current ADNCA metadata", {
+    registered <- new.env(parent = emptyenv())
+    server <- tab_tlg_server
+    environment(server) <- list2env(list(
+      tlg_module_server = function(id, data, type, render_list, ...) {
+        registered[[id]] <- list(data = data, render = render_list)
+      },
+      tlg_module_ui = function(...) NULL,
+      nav_panel = function(...) list(...)
+    ), parent = environment(tab_tlg_server))
+    adpp_df <- mp_adpp_fixture()
+    adpp_df$PPSUMXF[1] <- "Y"
+    metadata <- reactiveVal(mp_adnca_fixture())
+    testServer(server, args = list(
+      data = reactive(list(conc = list(data = metadata()))), adpp = reactive(adpp_df)
+    ), {
+      functions <- c("t_pkpt03_MP_col", "l_pkpl01_mp", "p_pkpg06_mp")
+      types <- c("table", "listing", "graph")
+      for (i in seq_along(functions)) {
+        .build_tlg_panels(match(functions[i], names(.TLG_DEFINITIONS)), types[i], "_mp_test")
+      }
+      run <- function(fun) {
+        module <- registered[[paste0(match(fun, names(.TLG_DEFINITIONS)), "_mp_test")]]
+        expect_equal(nrow(module$data()), nrow(adpp_df))
+        module$render(module$data())
+      }
+      table <- run("t_pkpt03_MP_col")[[1]]
+      expect_equal(table$Mean[table$PARAM == "Cmax"], 0.3)
+      listing <- run("l_pkpl01_mp")[[1]]
+      expect_equal(as.numeric(listing$Cmax), c(0.5, 0.3))
+      plot <- run("p_pkpg06_mp")[[1]]
+      expect_equal(plot$data$AVAL[plot$data$PARAMCD == "CMAX"], 0.3)
+      metadata(transform(metadata(), METABFL = c("Y", "")))
+      table <- run("t_pkpt03_MP_col")[[1]]
+      expect_equal(table$Mean[table$PARAM == "Cmax"], round(10 / 3, 3))
+    })
+  })
+
+  it("derives pairing from ADNCA and renders without preconfigured ratios", {
+    result <- .render_mp_tlg(mp_adpp_fixture(), mp_adnca_fixture(), t_pkpt03_MP_col)
+    expect_length(result, 2)
+    expect_equal(result[[1]]$Mean[result[[1]]$PARAM == "Cmax"], 0.4)
+  })
+
+  it("uses updated metadata rather than caching a pair from another session", {
+    data <- mp_adpp_fixture()
+    adnca <- mp_adnca_fixture()
+    adnca$METABFL <- c("Y", "")
+    out <- .render_mp_tlg(data, adnca, p_pkpg06_mp)
+    expect_match(names(out)[1], "RATIO: DrugA / Metab-DrugA", fixed = TRUE)
+    expect_equal(out[[1]]$data$AVAL[out[[1]]$data$PARAMCD == "CMAX"], c(2, 10 / 3))
+  })
+
+  it("does not mix studies sharing the same drug and analyte names", {
+    data <- mp_adpp_fixture()
+    other <- transform(data, STUDYID = "STUDY2")
+    other$AVAL[other$PPCAT == "Metab-DrugA"] <- other$AVAL[other$PPCAT == "Metab-DrugA"] * 2
+    adnca <- rbind(mp_adnca_fixture(), transform(mp_adnca_fixture(), STUDYID = "STUDY2"))
+    out <- .render_mp_tlg(rbind(data, other), adnca, t_pkpt03_MP_col)
+    expect_length(out, 4)
+    expect_false(anyDuplicated(names(out)) > 0)
+    result <- out[[which(grepl("STUDY2.*DOSE 1", names(out)))]]
+    expect_equal(result$Mean[result$PARAM == "Cmax"], 0.8)
+  })
+
+  it("offers ordinary PK parameters instead of requiring existing ratio parameters", {
+    data <- mp_adpp_fixture()
+    expect_setequal(.resolve_option_choices(".rawpkparams", data), c("Cmax", "AUClast"))
+    data$PPANMETH <- NA_character_
+    extra <- transform(data, PARAM = "Custom ratio", PPANMETH = "CMAX TO CMAX [PARAM: DrugA]")
+    expect_setequal(
+      .resolve_option_choices(".rawpkparams", rbind(data, extra)), c("Cmax", "AUClast")
+    )
+  })
+
+  it("only offers the calculated ratio value and unit in M/P output options", {
+    defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
+    expect_equal(unlist(defs$t_pkpt03_MP_col$options$value_var$choices), "AVAL")
+    expect_equal(unlist(defs$l_pkpl01_mp$options$value_var$choices), "AVAL")
+    expect_equal(unlist(defs$l_pkpl01_mp$options$unit_var$choices), "AVALU")
+  })
+})

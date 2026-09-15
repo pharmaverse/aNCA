@@ -47,6 +47,15 @@
       c("USUBJID", strat_vars, "AVISIT", col_group_var, "PPCAT", "PARAM"),
       names(df)
     )
+    # Rows that carry a value come first, so the survivor of the dedup is one the
+    # listings and plots would also have picked -- they skip missing values when
+    # they collapse the same rows.  Taking the leading row regardless dropped a
+    # subject from the table that the listing showed a value for, so the outputs
+    # contradicted each other on the same data.  `order()` is stable, so among
+    # rows that all have a value the first still wins.
+    if (value_var %in% names(df)) {
+      df <- df[order(is.na(df[[value_var]]), method = "radix"), , drop = FALSE]
+    }
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
   }
 
@@ -205,14 +214,32 @@ t_pkpt03_col <- function(
 }
 
 #' @describeIn t_pkpt03_col Summary of metabolite-to-parent ratios (stats in columns).
-#'   Filters to metabolite rows using `METABFL` (preferred) or, when absent from ADPP,
-#'   falls back to rows where `PPCAT` or `PARAM` contains "metab" (case-insensitive).
-#'   `METABFL` is present in ADPP only when it was included as a grouping variable in
-#'   the NCA run.
+#'   Computes metabolite divided by parent for matched individual ADPP parameter
+#'   values, then summarizes these ratios by treatment. No configured ratio rows
+#'   are required. Both input values must be finite, the parent must be non-zero,
+#'   and their units must be compatible. A pair is omitted from the summary if
+#'   either input has `PPSUMXF == "Y"`. Defaults to splitting by the derived
+#'   `RATIO` label and `PPSPEC`; varying study, dose, visit, route and interval
+#'   identifiers are retained as split columns to avoid collapsing profiles.
+#'   `value_var` must be `"AVAL"`, which holds the calculated ratios; other
+#'   value columns retain the original input values and are not supported.
+#' @param parent,metabolite Single analyte names from the `PPCAT` column in ADPP.
+#'   In the app these are identified automatically using the `PARAM`, `METABFL`
+#'   and `DOSETRT` columns in ADNCA. In standalone calls supply both names explicitly.
 #' @param ... Additional arguments forwarded to [t_pkpt03_col()].
 #' @export
-t_pkpt03_MP_col <- function(data, ...) { # nolint: object_name_linter
-  t_pkpt03_col(filter_metabolite_rows(data, "t_pkpt03_MP_col"), ...)
+t_pkpt03_MP_col <- function( # nolint: object_name_linter
+  data, list_vars = c("RATIO", "PPSPEC"), parent = NULL, metabolite = NULL,
+  value_var = "AVAL", ...
+) {
+  .mp_check_columns(value_var)
+  data <- .mp_ratio_data(data, parent, metabolite, "t_pkpt03_MP_col", summary = TRUE)
+  t_pkpt03_col(
+    data,
+    list_vars = union(list_vars, .mp_profile_vars(data)),
+    value_var = value_var,
+    ...
+  )
 }
 
 #' Mean Dose-Normalized PK Parameters Table (pkpt07)

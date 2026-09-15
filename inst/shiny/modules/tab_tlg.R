@@ -39,6 +39,40 @@
     setNames(names(defs))
 }
 
+#' Render M/P outputs using the pairing from mapped, unfiltered ADNCA.
+#' Only the M/P functions use this adapter; other TLGs keep their existing inputs.
+#' @param data ADPP values, including summary-excluded records.
+#' @param adnca Unfiltered mapped concentration data.
+#' @param render_list One of the three M/P TLG functions.
+#' @param ... User-selected TLG options.
+.render_mp_tlg <- function(data, adnca, render_list, ...) {
+  pairs <- aNCA:::.mp_analyte_pairs(adnca)
+  keys <- intersect(c("STUDYID", "DOSETRT"), names(pairs))
+  if (!"STUDYID" %in% names(data) && length(unique(pairs$STUDYID)) > 1L) {
+    stop("M/P ratios: ADPP needs STUDYID to distinguish the analyte pairs.")
+  }
+  keys <- intersect(keys, names(data))
+  pairs <- unique(pairs[c(keys, "parent", "metabolite")])
+  if (anyDuplicated(pairs[c(keys, "metabolite")])) {
+    stop("M/P ratios: ambiguous pairing without the drug/study identifiers in ADPP.")
+  }
+  outputs <- lapply(seq_len(nrow(pairs)), function(i) {
+    pair <- pairs[i, , drop = FALSE]
+    keep <- data$PPCAT %in% c(pair$parent, pair$metabolite)
+    for (key in keys) keep <- keep & !is.na(data[[key]]) & data[[key]] == pair[[key]]
+    if (!any(keep)) return(list())
+    result <- render_list(
+      data[keep, , drop = FALSE], parent = pair$parent, metabolite = pair$metabolite, ...
+    )
+    if (nrow(pairs) > 1L && length(keys)) {
+      prefix <- paste(paste(keys, pair[1, keys], sep = ": "), collapse = " / ")
+      names(result) <- paste(prefix, names(result), sep = " / ")
+    }
+    result
+  })
+  do.call(c, outputs)
+}
+
 js_close_button <- tags$button(
   type = "button",
   onclick = "$(this).closest('.modal').modal('hide');",
@@ -371,11 +405,21 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
         tlg_data  <- tlg_data_sources[[tlg_data_key(type, g_def$dataset)]]
 
         panel_ui <- if (exists(g_def$fun)) {
+          render_list <- get(g_def$fun)
+          if (g_def$fun %in% c("t_pkpt03_MP_col", "l_pkpl01_mp", "p_pkpg06_mp")) {
+            # The shared ratio calculation needs both sides' exclusion flags.
+            # Summary M/P functions exclude either-side flags; listings retain them.
+            tlg_data <- adpp_data_all
+            mp_fun <- render_list
+            render_list <- function(data, ...) {
+              .render_mp_tlg(data, conc_data_all(), mp_fun, ...)
+            }
+          }
           # Only register the Shiny module once per session to avoid accumulating
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
             tlg_module_server(
-              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
+              module_id, tlg_data, type, render_list, g_def$options, grouping_vars
             )
             assign(module_id, TRUE, envir = .registered_modules)
           }

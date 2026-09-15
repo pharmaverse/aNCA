@@ -156,11 +156,20 @@ p_pkpg04_boxp <- function(data, ...) {
 
 #' Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)
 #'
-#' Filters ADPP to metabolite rows using the same fallback logic as
-#' [t_pkpt03_MP_col()] (METABFL preferred, then PPCAT/PARAM grep for "metab"),
-#' then delegates to [p_pkpg03_boxp()].
+#' Calculates individual metabolite divided by parent ratios from matched ADPP
+#' values, then plots them by treatment using [p_pkpg03_boxp()]. No manual ratio
+#' configuration is required. Pairs with invalid values, zero denominators or
+#' incompatible units are omitted. If either input is summary-excluded
+#' (`PPSUMXF == "Y"`), its ratio is excluded from the boxplot as well.
 #'
 #' @inheritParams p_pkpg03_boxp
+#' @inheritParams t_pkpt03_MP_col
+#' @param list_vars Columns to split plots by. Defaults to the derived `RATIO`
+#'   label and `PPSPEC`; varying profile identifiers are retained as well.
+#' @param subtitle Optional plot subtitle; defaults to the analyte pair and profile identifiers.
+#' @param ylab Y-axis label. Defaults to `"Metabolite / Parent Ratio"`.
+#' @param value_var Numeric ratio column. Must be `"AVAL"`, which holds the
+#'   calculated ratios; other value columns retain the original input values.
 #' @param ... Additional arguments forwarded to [p_pkpg03_boxp()].
 #'
 #' @return A named list of ggplot objects (same format as [p_pkpg03_boxp()]).
@@ -168,13 +177,29 @@ p_pkpg04_boxp <- function(data, ...) {
 #' @examples
 #' \dontrun{
 #' adpp <- export_cdisc(res_nca)$adpp
-#' plots <- p_pkpg06_mp(adpp)
+#' plots <- p_pkpg06_mp(adpp, parent = "DrugA", metabolite = "Metab-DrugA")
 #' plots[[1]]
 #' }
 #'
 #' @export
-p_pkpg06_mp <- function(data, ...) {
-  p_pkpg03_boxp(filter_metabolite_rows(data, "p_pkpg06_mp"), ...)
+p_pkpg06_mp <- function(
+  data, list_vars = c("RATIO", "PPSPEC"), parent = NULL, metabolite = NULL,
+  title = "Boxplot of Metabolite/Parent Ratios by Treatment", subtitle = NULL,
+  ylab = "Metabolite / Parent Ratio", value_var = "AVAL", ...
+) {
+  .mp_check_columns(value_var)
+  data <- .mp_ratio_data(data, parent, metabolite, "p_pkpg06_mp", summary = TRUE)
+  plots <- p_pkpg03_boxp(
+    data,
+    list_vars = union(list_vars, .mp_profile_vars(data)),
+    title = title, subtitle = subtitle, ylab = ylab,
+    value_var = value_var,
+    ...
+  )
+  if (is.null(subtitle)) {
+    for (i in seq_along(plots)) plots[[i]] <- plots[[i]] + labs(subtitle = names(plots)[i])
+  }
+  plots
 }
 
 #' Mean Urine PK Parameter Profile Plot (pkpg01)
