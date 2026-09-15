@@ -1342,6 +1342,8 @@ p_pkpg01_cum:
   options:
     # The p_pkpg* functions do not run these strings through parse_annotation(), so
     # `$VAR` / `!VAR` tokens stay literal here -- keep these defaults plain text.
+    # All six p_pkpg* entries generate the subtitle from each plot's analyte,
+    # specimen, visit and parameter/unit pairs when this text box is empty.
     .group_label_labs: "Labs"
     title:
       type: text

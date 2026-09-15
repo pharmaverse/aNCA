@@ -15,7 +15,9 @@
 #' @param all_points Logical. When `TRUE`, individual data points are overlaid
 #'   on the boxes (pkpg04 style). Default: `FALSE`.
 #' @param title Optional plot title string.
-#' @param subtitle Optional plot subtitle string.
+#' @param subtitle Optional plot subtitle string. When `NULL`, generated from
+#'   each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
+#'   Use `""` to suppress the subtitle.
 #' @param footnote Optional footnote string.
 #' @param ylab Y-axis label. Defaults to the label attribute of `value_var`.
 #'
@@ -90,7 +92,7 @@ p_pkpg03_boxp <- function(
                           scales = "free_y") +
       ggplot2::labs(
         title    = title,
-        subtitle = subtitle,
+        subtitle = if (is.null(subtitle)) .pk_parameter_subtitle(df, param_var) else subtitle,
         caption  = footnote,
         x        = NULL,
         y        = y_label,
@@ -202,7 +204,7 @@ p_pkpg06_mp <- function(data, ...) {
 #' @param list_vars Columns used to split output into separate plots.
 #'   Default: `c("PPCAT")`.
 #' @param title Optional plot title.
-#' @param subtitle Optional plot subtitle.
+#' @inheritParams p_pkpg03_boxp
 #' @param footnote Optional footnote / caption.
 #' @param xlab X-axis label. Default: `"Collection Interval"`.
 #' @param ylab Y-axis label. Defaults to the label attribute of `value_var`.
@@ -349,7 +351,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
       ) +
       ggplot2::labs(
         title    = page_title,
-        subtitle = subtitle,
+        subtitle = if (is.null(subtitle)) .pk_parameter_subtitle(df, param_var) else subtitle,
         caption  = footnote,
         x        = x_axis_label,
         y        = y_label,
@@ -407,7 +409,7 @@ p_pkpg01_per <- function(
 #' @param ci_level  Confidence level for the slope CI. Default: `0.90`.
 #' @param log_scale Logical. When `TRUE` (default), both axes are log10-scaled.
 #' @param title    Optional plot title.
-#' @param subtitle Optional plot subtitle.
+#' @inheritParams p_pkpg03_boxp
 #' @param footnote Optional footnote / caption.
 #' @param xlab     X-axis label. Defaults to `dose_var` label + unit.
 #' @param ylab     Y-axis label. Defaults to the label attribute of `value_var`.
@@ -519,7 +521,7 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
       ggplot2::facet_wrap(stats::as.formula(paste("~", param_var)), scales = "free") +
       ggplot2::labs(
         title    = title,
-        subtitle = subtitle,
+        subtitle = if (is.null(subtitle)) .pk_parameter_subtitle(df, param_var) else subtitle,
         caption  = footnote,
         x        = x_label,
         y        = y_label,
@@ -622,4 +624,38 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
   }
 
   split_and_apply(data, list_vars, .make_dp_plot)
+}
+
+#' Generate a PK parameter plot subtitle from one data split.
+#'
+#' Pair parameters with units before removing duplicates so faceted plots retain
+#' the unit belonging to each parameter. Missing optional metadata is omitted.
+#'
+#' @param data The filtered data for one plot.
+#' @param param_var Column containing parameter names.
+#' @returns A subtitle string, or `NULL` when no label information is available.
+#' @noRd
+.pk_parameter_subtitle <- function(data, param_var) {
+  context_labels <- c(PPCAT = "Analyte", PPSPEC = "Specimen", AVISIT = "Visit")
+  context <- vapply(intersect(names(context_labels), names(data)), function(var) {
+    values <- unique(as.character(data[[var]]))
+    values <- values[!is.na(values) & nzchar(trimws(values))]
+    if (length(values) == 0) return("")
+    paste0(context_labels[[var]], ": ", paste(values, collapse = ", "))
+  }, character(1))
+  lines <- unname(context[nzchar(context)])
+
+  params <- as.character(data[[param_var]])
+  has_param <- !is.na(params) & nzchar(trimws(params))
+  if ("AVALU" %in% names(data)) {
+    units <- as.character(data$AVALU)
+    has_unit <- has_param & !is.na(units) & nzchar(trimws(units))
+    params[has_unit] <- paste0(params[has_unit], " (", units[has_unit], ")")
+  }
+  params <- unique(params[has_param])
+  if (length(params) > 0) {
+    lines <- c(lines, paste0("PK Parameter: ", paste(params, collapse = ", ")))
+  }
+  if (length(lines) == 0) return(NULL)
+  paste(unlist(lapply(lines, strwrap, width = 80)), collapse = "\n")
 }

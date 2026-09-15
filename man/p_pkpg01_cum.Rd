@@ -56,7 +56,9 @@ Default: \code{c("PPCAT")}.}
 
 \item{title}{Optional plot title.}
 
-\item{subtitle}{Optional plot subtitle.}
+\item{subtitle}{Optional plot subtitle string. When \code{NULL}, generated from
+each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
+Use \code{""} to suppress the subtitle.}
 
 \item{footnote}{Optional footnote / caption.}
 
