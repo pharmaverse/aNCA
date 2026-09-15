@@ -4,6 +4,8 @@
 
 ### Maintenance
 
+- Document the return value for the NCA Parameter Units table UI module
+  ([\#1374](https://github.com/pharmaverse/aNCA/issues/1374))
 - Refresh stale in-code TODO comments whose referenced issues have since
   closed: the slope-selector `na.omit` guard is now documented as a
   defensive safety net
@@ -21,6 +23,12 @@
 
 ### Bug Fixes
 
+- [`pkcg01()`](https://pharmaverse.github.io/aNCA/reference/pkcg01.md)
+  and
+  [`pkcg02()`](https://pharmaverse.github.io/aNCA/reference/pkcg02.md)
+  now return named plot lists by reading `id_plot` from the grouped
+  plotting data instead of the raw input data
+  ([\#1448](https://github.com/pharmaverse/aNCA/issues/1448))
 - Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer
   draw their tick labels on top of each other.
   [`filter_breaks()`](https://pharmaverse.github.io/aNCA/reference/filter_breaks.md)
