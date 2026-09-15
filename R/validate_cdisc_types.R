@@ -37,9 +37,11 @@ CDISC_FINDING_COLS <- c(
 }
 
 # Does the observed column satisfy the expected class?
-.cdisc_class_ok <- function(col, expected) {
+.cdisc_class_ok <- function(col, expected, variable = NULL) {
   if (all(is.na(col))) return(TRUE)
-  if (expected == "numeric") return(is.numeric(col))
+  is_datetime <- length(variable) == 1 && !is.na(variable) &&
+    endsWith(variable, "DTM") && inherits(col, "POSIXt")
+  if (expected == "numeric") return(is.numeric(col) || is_datetime)
   # character: accept character or factor
   is.character(col) || is.factor(col)
 }
@@ -165,7 +167,7 @@ CDISC_FINDING_COLS <- c(
   expected_class <- .cdisc_expected_class(specs$Type)
   if (is.na(expected_class)) return(NULL)
 
-  if (!.cdisc_class_ok(col, expected_class)) {
+  if (!.cdisc_class_ok(col, expected_class, variable = var)) {
     return(.cdisc_finding_class(ds_name, var, col, expected_class))
   }
 

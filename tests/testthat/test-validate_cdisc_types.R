@@ -111,6 +111,46 @@ describe("validate_cdisc_types: wrong type detection", {
     findings <- validate_cdisc_types(cdisc_data, metadata = test_metadata)
     expect_equal(nrow(findings), 0)
   })
+
+  it("accepts POSIXct columns for numeric-backed DTM variables", {
+    metadata <- data.frame(
+      Dataset = "ADNCA",
+      Variable = "PCRFTDTM",
+      Type = "integer",
+      Length = 12,
+      stringsAsFactors = FALSE
+    )
+    cdisc_data <- list(
+      adnca = data.frame(
+        PCRFTDTM = as.POSIXct("2023-01-01 00:00", tz = "UTC")
+      )
+    )
+
+    findings <- validate_cdisc_types(cdisc_data, metadata = metadata)
+
+    expect_equal(nrow(findings), 0)
+  })
+
+  it("does not accept POSIXct for ordinary numeric variables", {
+    metadata <- data.frame(
+      Dataset = "ADNCA",
+      Variable = "DOSNO",
+      Type = "integer",
+      Length = 12,
+      stringsAsFactors = FALSE
+    )
+    cdisc_data <- list(
+      adnca = data.frame(
+        DOSNO = as.POSIXct("2023-01-01 00:00", tz = "UTC")
+      )
+    )
+
+    findings <- validate_cdisc_types(cdisc_data, metadata = metadata)
+
+    expect_equal(nrow(findings), 1)
+    expect_equal(findings$Variable, "DOSNO")
+    expect_equal(findings$Check, "class")
+  })
 })
 
 describe("validate_cdisc_types: length checks", {
