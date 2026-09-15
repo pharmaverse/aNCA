@@ -83,7 +83,7 @@ l_pkcl01 <- function(
   title = paste0("Listing of PK Concentration by Treatment Group,",
                  "Subject and Nominal Time, PK Population"),
   subtitle = NULL,
-  footnote = "*: Subjects excluded from the summary table and mean plots"
+  footnote = NULL
 ) {
 
   if (!requireNamespace("rlistings", quietly = TRUE)) {
@@ -202,6 +202,10 @@ l_pkcl01 <- function(
         ifelse(. == 0, format_zero[cur_column()], as.character(.))
     ))
 
+  value_vars <- intersect(c("AVALC", "AVAL"), displaying_vars)
+  data_grouped <- .mark_sum_excl_vals(data_grouped, "PKSUMXF", value_vars)
+  data_grouped <- .mark_nca_excl_vals(data_grouped, "NCAXFL", value_vars)
+
   # Make sure the data stays labelled
   var_labels(data_grouped) <- c(var_labels(data), id_list = "id")
   var_labels(data_grouped) <- ifelse(is.na(var_labels(data_grouped)),
@@ -234,6 +238,16 @@ l_pkcl01 <- function(
     list_titles <- gsub("<br>", "\n", parse_annotation(data = list_data,
                                                        text = subtitle))
     footnote <- parse_annotation(data = list_data, text = footnote)
+    footnote <- .add_sum_excl_footnote(
+      footnote,
+      list_data,
+      "PKSUMXF"
+    )
+    footnote <- .add_nca_excl_footnote(
+      footnote,
+      list_data,
+      "NCAXFL"
+    )
 
 
     # Build the listing object
@@ -321,7 +335,7 @@ l_pkcl02_uri <- function(
 
   if (is.null(displaying_vars)) {
     vol_vars        <- intersect(c("VOLUME", "VOLUMEU"), names(data))
-    displaying_vars <- c("NFRLT", "AFRLT", "AVAL", vol_vars)
+    displaying_vars <- c("NFRLT", "AFRLT", vol_vars, "AVAL")
   }
 
   l_pkcl01(
