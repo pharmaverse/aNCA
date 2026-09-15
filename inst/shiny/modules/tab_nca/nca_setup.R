@@ -134,7 +134,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         min_hl_points = settings()$min_hl_points,
         parameter_selections = parameters_output$selections(),
         int_parameters = settings()$int_parameters,
-        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule
+        blq_imputation_rule = settings()$data_imputation$blq_imputation_rule,
+        drop_end_conc = settings()$data_imputation$drop_end_conc
       )
 
       # Wait for study types to settle during reactive transitions

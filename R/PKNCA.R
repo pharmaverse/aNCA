@@ -283,6 +283,9 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #' (forwarded to [update_main_intervals()]).
 #' @param blq_imputation_rule Optional list defining the BLQ imputation rule
 #' (forwarded to [update_main_intervals()]).
+#' @param drop_end_conc Logical indicating whether to drop the concentration at
+#' the end of each main interval for regular parameters (forwarded to
+#' [update_main_intervals()]). Default `FALSE`.
 #' @param custom_units_table Optional data frame with PPSTRESU overrides.
 #' When provided, applied via [dplyr::rows_update()] on the PKNCAdata units table.
 #'
@@ -308,6 +311,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
   parameter_selections = NULL,
   int_parameters = NULL,
   blq_imputation_rule = NULL,
+  drop_end_conc = FALSE,
   custom_units_table = NULL) {
 
   data <- adnca_data
@@ -371,7 +375,8 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     parameter_selections = parameter_selections,
     int_parameters = int_parameters,
     start_impute = start_impute,
-    blq_imputation_rule = blq_imputation_rule
+    blq_imputation_rule = blq_imputation_rule,
+    drop_end_conc = drop_end_conc
   )
 
   # Apply custom units table
@@ -580,6 +585,45 @@ PKNCA_impute_method_start_c1 <- function(conc, time, start, end, ..., options = 
       d_conc_time <- rbind(d_conc_time, data.frame(time = start, conc = c1))
       d_conc_time <- d_conc_time[order(d_conc_time$time), ]
     }
+  }
+  d_conc_time
+}
+
+#' Drop the concentration measured exactly at the end of the interval
+#'
+#' Removes a concentration sitting exactly at `time == end` for an interval, if
+#' one is present (no-op otherwise). This is typically used with multiple-dose
+#' data where the boundary point belongs to the next dose (e.g. an imputed C0),
+#' so it should not contribute to parameters on the current interval.
+#'
+#' @param conc Numeric vector of concentrations.
+#' @param time Numeric vector of times corresponding to the concentrations.
+#' @param end Numeric value (or vector) indicating the end time of the interval.
+#' @param ... Additional arguments (currently not used).
+#' @param options List of options (currently not used).
+#'
+#' @returns A data frame of `conc`/`time` with any end-boundary point removed.
+#' @details
+#' This function adheres to the structure required by the `PKNCA` package to work
+#' with its imputation functionality. For more information, see the
+#' [PKNCA Data Imputation Vignette](https://CRAN.R-project.org/package=PKNCA).
+#'
+#' TODO(end_conc_drop): remove this local copy once humanpred/pknca#572 is merged
+#' and aNCA depends on a PKNCA release that exports
+#' `PKNCA_impute_method_end_conc_drop()`. At that point drop this definition and
+#' the corresponding `@export`/NAMESPACE entry and rely on the PKNCA-native method.
+#' @export
+#'
+#' @examples
+#' conc <- c(10, 5, 1)
+#' time <- c(0, 12, 24)
+#' end <- 24
+#' PKNCA_impute_method_end_conc_drop(conc, time, end)
+PKNCA_impute_method_end_conc_drop <- function(conc, time, end, ..., options = list()) { # nolint
+  d_conc_time <- data.frame(conc = conc, time = time)
+  mask_end <- time %in% end
+  if (any(mask_end)) {
+    d_conc_time <- d_conc_time[!mask_end, , drop = FALSE]
   }
   d_conc_time
 }
