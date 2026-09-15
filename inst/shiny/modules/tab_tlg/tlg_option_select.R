@@ -24,8 +24,8 @@
 
 #' Column choices for the ratio TLG entries.
 #'
-#' `filter_ratio_rows()` derives `RATIO` and `RATIOREF` inside the TLG function, so
-#' they are not columns of ADPP and the `.colnames` token cannot offer them.  The
+#' Ratio helpers derive `RATIO` and `RATIOREF` inside the TLG functions, so
+#' they are not columns of ADPP and the `.colnames` token cannot offer them. The
 #' four ratio entries default to splitting on `RATIO`; without this token (used via
 #' `.ratiocols`) a user who touched the split dropdown lost the derived label with
 #' no way to select it back.
@@ -39,24 +39,25 @@
   unique(c(aNCA:::.RATIO_DERIVED_COLS, names(df)))
 }
 
-#' Parameter values that belong to a ratio of one family.
+#' Parameter values used by one family of ratio outputs.
 #'
-#' Restricts the parameter filter on the ratio TLG entries (via the `.ratioparams`
-#' choices token) to parameters that can actually appear.  The entries drop every
-#' non-ratio row before summarizing, so offering the full `PARAM` list let a user
-#' pick a value that could only ever produce an empty output.  The family matters
-#' for the same reason: a parameter that only ever carries a treatment ratio is
-#' just as empty on a metabolite/parent entry as a non-ratio one.  Rows are
-#' classified exactly as `filter_ratio_rows()` classifies them.
+#' The automatic M/P outputs use ordinary PK parameters (`.rawpkparams`), while
+#' `.ratioparams` selects existing configured analyte ratios. Classification uses
+#' the same PPANMETH parser as the calculation helpers.
 #'
 #' @param df A data frame.
 #' @param ref_type Ratio family to keep, as in `aNCA:::filter_ratio_rows()`.
-#'   Defaults to `"analyte"`, the family the `.ratioparams` entries render.
-#' @return Character vector of ratio parameter names, sorted; empty if none.
+#'   Use `"raw"` for ordinary PK parameters used to calculate M/P ratios.
+#' @return Character vector of parameter names, sorted; empty if none.
 .ratio_param_values <- function(df, ref_type = "analyte") {
-  if (!all(c("PARAM", "PPANMETH") %in% names(df))) return(character(0))
-  is_ratio <- aNCA:::.ratio_row_type(df$PPANMETH) %in% ref_type
-  values <- unique(as.character(df$PARAM[is_ratio]))
+  if (!"PARAM" %in% names(df)) return(character(0))
+  row_type <- if ("PPANMETH" %in% names(df)) {
+    aNCA:::.ratio_row_type(df$PPANMETH)
+  } else {
+    rep(NA_character_, nrow(df))
+  }
+  keep <- if (ref_type == "raw") is.na(row_type) else row_type %in% ref_type
+  values <- unique(as.character(df$PARAM[keep]))
   sort(values[!is.na(values)])
 }
 
@@ -94,6 +95,7 @@
     .colnames    = function() names(conc_df),
     .ratiocols   = function() .ratio_col_names(conc_df),
     .ratioparams = function() .ratio_param_values(conc_df),
+    .rawpkparams = function() .ratio_param_values(conc_df, ref_type = "raw"),
     .groupcols   = function() .sensible_group_cols(conc_df),
     .urinespecs  = function() .urine_spec_values(conc_df),
     # Named vector: names are the readable labels shown in the dropdown, values
