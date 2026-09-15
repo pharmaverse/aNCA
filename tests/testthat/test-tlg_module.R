@@ -742,3 +742,144 @@ describe(".interleave_breaks", {
     expect_equal(out[[5]], "c")
   })
 })
+
+describe("TLG ggplot labels in Plotly", {
+  plot_fixture <- function(subtitle = "Subtitle first\nSubtitle second", caption = "Footnote") {
+    ggplot2::ggplot(
+      data.frame(x = 1:4, y = c(1, 3, 2, 4), parameter = rep(c("Cmax", "AUC"), each = 2)),
+      ggplot2::aes(x, y)
+    ) +
+      ggplot2::geom_point() +
+      ggplot2::facet_wrap(~parameter) +
+      ggplot2::labs(title = "PK parameters", subtitle = subtitle, caption = caption)
+  }
+  json_layout <- function(widget) {
+    jsonlite::fromJSON(
+      plotly::plotly_json(widget, jsonedit = FALSE, pretty = FALSE),
+      simplifyVector = FALSE
+    )$layout
+  }
+  annotation_text <- function(layout) {
+    vapply(layout$annotations, function(annotation) annotation$text, character(1))
+  }
+
+  it("keeps existing Plotly widgets unchanged", {
+    widget <- plotly::plot_ly(x = 1:2, y = c(2, 1), type = "scatter", mode = "lines")
+    expect_identical(.tlg_ggplotly(widget), widget)
+  })
+
+  it("preserves the plotted traces and the original ggplot labels", {
+    plot <- plot_fixture()
+    converted <- plotly::plotly_build(.tlg_ggplotly(plot))
+    baseline <- plotly::plotly_build(plotly::ggplotly(plot))
+    expect_equal(converted$x$data, baseline$x$data)
+    expect_equal(plot$labels$title, "PK parameters")
+    expect_equal(plot$labels$subtitle, "Subtitle first\nSubtitle second")
+    expect_equal(plot$labels$caption, "Footnote")
+  })
+
+  it("preserves multiline subtitles, captions and facet labels through Plotly JSON", {
+    layout <- json_layout(.tlg_ggplotly(plot_fixture(caption = "Note first\nNote second")))
+    text <- annotation_text(layout)
+    expect_true("PK parameters" %in% text)
+    expect_true(all(c("Cmax", "AUC") %in% text))
+    expect_match(paste(text, collapse = "|"), "Subtitle first<br ?/?>Subtitle second")
+    expect_match(paste(text, collapse = "|"), "Note first<br ?/?>Note second")
+  })
+
+  it("renders literal markup in user labels as text", {
+    plot <- plot_fixture(subtitle = "Drug <b>A</b> & B", caption = "Use <i>these</i> values") +
+      ggplot2::labs(title = "<b>Custom title</b>")
+    layout <- json_layout(.tlg_ggplotly(plot))
+    text <- annotation_text(layout)
+    expect_true("&lt;b&gt;Custom title&lt;/b&gt;" %in% text)
+    expect_true("Drug &lt;b&gt;A&lt;/b&gt; &amp; B" %in% text)
+    expect_true("Use &lt;i&gt;these&lt;/i&gt; values" %in% text)
+  })
+
+  it("adds space for long subtitles and captions without shrinking the plot area", {
+    short <- .tlg_ggplotly(plot_fixture(subtitle = "Analyte: DrugA", caption = "Note"))
+    long <- .tlg_ggplotly(plot_fixture(
+      subtitle = paste(paste("PK Parameter", seq_len(12)), collapse = "\n"),
+      caption = paste(paste("Footnote", seq_len(5)), collapse = "\n")
+    ))
+    short_layout <- json_layout(short)
+    long_layout <- json_layout(long)
+    expect_gt(long$height, short$height)
+    expect_gt(long_layout$margin$t, short_layout$margin$t)
+    expect_gt(long_layout$margin$b, short_layout$margin$b)
+    expect_equal(
+      long$height - long_layout$margin$t - long_layout$margin$b,
+      short$height - short_layout$margin$t - short_layout$margin$b,
+      tolerance = 1e-8
+    )
+  })
+
+  it("places captions below rotated tick labels and a bottom legend", {
+    base_plot <- plot_fixture() +
+      ggplot2::aes(color = parameter) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60), legend.position = "bottom")
+    plot <- base_plot +
+      ggplot2::scale_x_continuous(
+        breaks = 1:4, labels = paste("Long treatment group label", 1:4)
+      )
+    with_caption <- .tlg_ggplotly(plot)
+    without_caption <- .tlg_ggplotly(plot + ggplot2::labs(caption = NULL))
+    layout <- json_layout(with_caption)
+    no_caption_layout <- json_layout(without_caption)
+    plain_layout <- json_layout(.tlg_ggplotly(base_plot))
+    plain_no_caption_layout <- json_layout(.tlg_ggplotly(base_plot + ggplot2::labs(caption = NULL)))
+    caption <- layout$annotations[[which(annotation_text(layout) == "Footnote")]]
+    plain_caption <- plain_layout$annotations[[which(annotation_text(plain_layout) == "Footnote")]]
+    expect_gt(with_caption$height, without_caption$height)
+    expect_gt(layout$margin$b, no_caption_layout$margin$b)
+    expect_gt(layout$margin$b, plain_layout$margin$b)
+    expect_gt(
+      layout$margin$b - no_caption_layout$margin$b,
+      plain_layout$margin$b - plain_no_caption_layout$margin$b
+    )
+    expect_lt(caption$yshift, -no_caption_layout$margin$b)
+    expect_lt(caption$yshift, plain_caption$yshift)
+    expect_equal(
+      plotly::plotly_build(with_caption)$x$data,
+      plotly::plotly_build(without_caption)$x$data
+    )
+    expect_true(all(c("PK parameters", "Cmax", "AUC", "Footnote") %in% annotation_text(layout)))
+  })
+
+  it("wraps a long title in Plotly while preserving its text and source label", {
+    title <- paste(rep("Long PK parameter title with important study context", 3), collapse = " ")
+    plot <- plot_fixture() + ggplot2::labs(title = title)
+    widget <- .tlg_ggplotly(plot)
+    text <- annotation_text(json_layout(widget))
+    rendered_title <- text[startsWith(text, "Long PK parameter title")]
+    expect_length(rendered_title, 1L)
+    expect_match(rendered_title, "<br>", fixed = TRUE)
+    expect_equal(gsub("<br>", " ", rendered_title, fixed = TRUE), title)
+    expect_true(all(nchar(strsplit(rendered_title, "<br>", fixed = TRUE)[[1]]) <= 60L))
+    expect_gt(widget$height, .tlg_ggplotly(plot_fixture())$height)
+    expect_equal(plot$labels$title, title)
+  })
+
+  it("uses the label-preserving conversion and matching height in the graph module", {
+    graph_mod <- function(id, item) {
+      shiny::moduleServer(id, function(input, output, session) {
+        render_graph_outputs(output, session, shiny::reactive(list(item)))
+      })
+    }
+    plot <- plot_fixture(
+      subtitle = paste(paste("Subtitle line", seq_len(8)), collapse = "\n"),
+      caption = "Module footnote"
+    )
+    expected_height <- .tlg_ggplotly(plot)$height
+    shiny::testServer(graph_mod, args = list(item = plot), {
+      session$flushReact()
+      rendered <- jsonlite::fromJSON(output$plot_1, simplifyVector = FALSE)
+      text <- annotation_text(rendered$x$layout)
+      expect_true("Module footnote" %in% text)
+      expect_match(paste(text, collapse = "|"), "Subtitle line 1<br ?/?>Subtitle line 2")
+      expect_true(all(c("Cmax", "AUC") %in% text))
+      expect_match(output$tlg_output$html, paste0("height:", expected_height, "px"), fixed = TRUE)
+    })
+  })
+})
