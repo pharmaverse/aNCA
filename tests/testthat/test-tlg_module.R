@@ -542,6 +542,18 @@ describe("render_graph_outputs: output IDs", {
       expect_true(grepl("PPCAT: DrugA", html, fixed = TRUE))
     })
   })
+
+  it("omits a redundant graph heading without changing the plot's split name", {
+    key <- "INTRAVENOUS DRIP.SERUM.DrugA.S1-01"
+    items <- setNames(list(structure(fake_plot(), tlg_group_header = FALSE)), key)
+    shiny::testServer(graph_mod, args = list(items = items), {
+      html <- as.character(output$tlg_output$html)
+      expect_false(grepl("<h4", html, fixed = TRUE))
+      expect_false(grepl(key, html, fixed = TRUE))
+      expect_match(html, "plot_1")
+      expect_equal(names(items), key)
+    })
+  })
 })
 
 # req()/validate() raise conditions that inherit from `error`.  The render tryCatch must let
