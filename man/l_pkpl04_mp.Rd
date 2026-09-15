@@ -43,8 +43,8 @@ display columns (one column per PARAM value) and the rows are keyed by
 Ratio rows are selected on the \code{" TO "} that \code{calculate_ratios()} writes into
 \code{PPANMETH}, and narrowed to those whose reference group is \emph{not} the analyte
 column: treatment, dose profile, route or specimen references. Analyte
-references are metabolite/parent ratios and belong to \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}}, which
-selects the complement of this set from the same mechanism.
+references are omitted here. \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}} instead calculates M/P ratios
+directly from paired parent/metabolite values.
 
 Ratios are computed as part of the NCA run, so a ratio added afterwards does
 not appear until the run is repeated. When the data holds no treatment ratios

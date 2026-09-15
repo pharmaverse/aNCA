@@ -156,28 +156,27 @@ describe("l_pkpl01", {
 })
 
 describe("l_pkpl01_mp", {
+  listings <- function(data = mp_adpp_fixture(), ...) {
+    l_pkpl01_mp(data, parent = "DrugA", metabolite = "Metab-DrugA", ...)
+  }
+
   it("lists the M/P ratio rows and names the parent in the listing key", {
-    result <- l_pkpl01_mp(pkpl_ratio_data)
-    expect_equal(
-      names(result),
-      "RATIO: Metab-DrugA Plasma / DrugA Plasma / PPSPEC: SERUM"
-    )
+    result <- listings()
+    expect_length(result, 2)
+    expect_true(all(grepl("RATIO: Metab-DrugA / DrugA / PPSPEC: PLASMA", names(result))))
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("excludes treatment ratios and raw parameter rows", {
-    # Only the analyte-referenced family belongs here; TRatio rows reference
-    # TRT01A and the un-prefixed rows are not ratios at all.
-    cols <- names(l_pkpl01_mp(pkpl_ratio_data)[[1]])
-    expect_true(any(grepl("MRatio", cols)))
-    expect_false(any(grepl("TRatio", cols)))
-    expect_false(any(grepl("^Cmax|^AUClast", cols)))
+  it("shows calculated values under explicit M/P column headers", {
+    listing <- listings()[[1]]
+    expect_equal(as.numeric(listing$Cmax), c(0.5, 0.3))
+    expect_match(formatters::var_labels(listing)[["Cmax"]], "Metabolite/Parent Ratio", fixed = TRUE)
   })
 
-  it("errors instead of listing raw rows when no ratios were configured", {
+  it("errors instead of listing unmatched parent values", {
     expect_error(
-      l_pkpl01_mp(transform(pkpl_data, PPANMETH = NA_character_)),
-      "l_pkpl01_mp: no ratio parameters found"
+      listings(subset(mp_adpp_fixture(), PPCAT == "DrugA")),
+      "l_pkpl01_mp: no usable"
     )
   })
 
@@ -187,7 +186,7 @@ describe("l_pkpl01_mp", {
       PARAMCD = rep(c("MRTLST", "MRTIFO"), 4),
       PPANMETH = NA_character_
     )
-    expect_error(l_pkpl01_mp(mrt), "no ratio parameters found")
+    expect_error(listings(mrt), "no usable")
   })
 })
 

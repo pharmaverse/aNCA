@@ -15,20 +15,14 @@ pkpt_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Ratio variant: the parent rows plus the M/P ratio rows that
-# Parameter Selection > Ratios appends during the NCA run.
+# Ordinary parent and metabolite parameters, with no configured ratios.
 pkpt_ratio_data <- rbind(
   transform(pkpt_data, PPANMETH = NA_character_),
   transform(
     pkpt_data,
     PPCAT    = "Metab-Drug A Plasma",
-    PARAM    = paste("Ratio", pkpt_data$PARAM),
-    PARAMCD  = paste0("RA", pkpt_data$PARAMCD),
     AVAL     = pkpt_data$AVAL / 2,
-    AVALU    = "fraction",
-    PPANMETH = paste0(
-      pkpt_data$PARAMCD, " TO ", pkpt_data$PARAMCD, " [PARAM: Drug A Plasma]"
-    )
+    PPANMETH = NA_character_
   )
 )
 
@@ -162,21 +156,23 @@ describe("t_pkpt03_col: multi-variable stratification and filtering (#1356)", {
 })
 
 describe("t_pkpt03_MP_col", {
-  it("summarizes the ratio rows, not the metabolite's raw values", {
-    # The bug this replaces: the table showed the metabolite's own values under a
-    # heading promising a ratio.  Ratio AVALs are half the parent's in the fixture.
-    result <- t_pkpt03_MP_col(pkpt_ratio_data)[[1]]
+  tables <- function(data = pkpt_ratio_data, ...) {
+    t_pkpt03_MP_col(data, parent = "Drug A Plasma", metabolite = "Metab-Drug A Plasma", ...)
+  }
+
+  it("summarizes individual ratios rather than raw metabolite values", {
+    result <- tables()[[1]]
     is_cmax <- pkpt_data$PARAM == "Cmax"
     for (trt in unique(pkpt_data$TRT01A)) {
       parent <- pkpt_data$AVAL[is_cmax & pkpt_data$TRT01A == trt]
-      row <- result[result$PARAM == "Ratio Cmax" & result$TRT01A == trt, ]
-      expect_equal(row$Mean, round(mean(parent / 2), 3))
+      row <- result[result$PARAM == "Cmax" & result$TRT01A == trt, ]
+      expect_equal(row$Mean, 0.5)
       expect_false(isTRUE(all.equal(row$Mean, round(mean(parent), 3))))
     }
   })
 
   it("splits the table by metabolite / parent so the denominator is named", {
-    result <- t_pkpt03_MP_col(pkpt_ratio_data)
+    result <- tables()
     expect_equal(
       names(result),
       "RATIO: Metab-Drug A Plasma / Drug A Plasma / PPSPEC: Plasma"
@@ -188,7 +184,7 @@ describe("t_pkpt03_MP_col", {
       pkpt_ratio_data,
       transform(pkpt_ratio_data, PPSPEC = "Urine", AVAL = pkpt_ratio_data$AVAL * 10)
     )
-    result <- t_pkpt03_MP_col(two_specs)
+    result <- tables(two_specs)
     expect_equal(length(result), 2)
     expect_setequal(
       names(result),
@@ -199,15 +195,16 @@ describe("t_pkpt03_MP_col", {
     )
   })
 
-  it("keeps only ratio parameters", {
-    result <- t_pkpt03_MP_col(pkpt_ratio_data)[[1]]
-    expect_true(all(grepl("^Ratio ", result$PARAM)))
+  it("keeps original parameter names for filtering without manual ratio configuration", {
+    result <- tables(param_filter = "Cmax")[[1]]
+    expect_equal(unique(result$PARAM), "Cmax")
+    expect_true(all(result$Mean == 0.5))
   })
 
-  it("errors instead of summarizing raw rows when no ratios were configured", {
+  it("errors when the metabolite has no usable values", {
     expect_error(
-      t_pkpt03_MP_col(transform(pkpt_data, PPANMETH = NA_character_)),
-      "t_pkpt03_MP_col: no ratio parameters found"
+      tables(transform(pkpt_data, PPANMETH = NA_character_)),
+      "t_pkpt03_MP_col: no usable"
     )
   })
 
@@ -218,11 +215,11 @@ describe("t_pkpt03_MP_col", {
       PARAM = rep(c("MRT to Last", "MRT Infinity Obs", "MRT Intravasc"), 6),
       PPANMETH = NA_character_
     )
-    expect_error(t_pkpt03_MP_col(mrt), "no ratio parameters found")
+    expect_error(tables(mrt), "no usable")
   })
 
   it("still honours an explicit list_vars from the sidebar", {
-    result <- t_pkpt03_MP_col(pkpt_ratio_data, list_vars = "PPSPEC")
+    result <- tables(list_vars = "PPSPEC")
     expect_equal(names(result), "PPSPEC: Plasma")
   })
 })

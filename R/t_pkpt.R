@@ -214,21 +214,30 @@ t_pkpt03_col <- function(
 }
 
 #' @describeIn t_pkpt03_col Summary of metabolite-to-parent ratios (stats in columns).
-#'   Summarizes the M/P ratio rows computed by **Parameter Selection > Ratios** during
-#'   the NCA run -- the ones whose `PPANMETH` reference group is another analyte -- and
-#'   splits the table by `"<metabolite> / <parent>"` so the denominator is explicit.
-#'   Errors when no such ratios are present rather than falling back to raw metabolite
-#'   values, which would show numbers that are not ratios under a ratio heading.
-#' @param list_vars Columns to split tables by. Defaults to the derived `RATIO`
-#'   label and `PPSPEC`, so each table covers one metabolite/parent pair in one
-#'   specimen -- the same analyte pair measured in serum and in urine gives the
-#'   same `RATIO` label, and pooling the two would summarize unlike ratios together.
+#'   Computes metabolite divided by parent for matched individual ADPP parameter
+#'   values, then summarizes these ratios by treatment. No configured ratio rows
+#'   are required. Both input values must be finite, the parent must be non-zero,
+#'   and their units must be compatible. A pair is omitted from the summary if
+#'   either input has `PPSUMXF == "Y"`. Defaults to splitting by the derived
+#'   `RATIO` label and `PPSPEC`; varying study, dose, visit, route and interval
+#'   identifiers are retained as split columns to avoid collapsing profiles.
+#'   `value_var` must be `"AVAL"`, which holds the calculated ratios; other
+#'   value columns retain the original input values and are not supported.
+#' @param parent,metabolite Single analyte names from ADPP's `PPCAT` column.
+#'   In the app these are identified automatically from ADNCA's `PARAM`, `METABFL`
+#'   and `DOSETRT`. In standalone calls supply both names explicitly.
 #' @param ... Additional arguments forwarded to [t_pkpt03_col()].
 #' @export
-t_pkpt03_MP_col <- function(data, list_vars = c("RATIO", "PPSPEC"), ...) { # nolint: object_name_linter
+t_pkpt03_MP_col <- function( # nolint: object_name_linter
+  data, list_vars = c("RATIO", "PPSPEC"), parent = NULL, metabolite = NULL,
+  value_var = "AVAL", ...
+) {
+  .mp_check_columns(value_var)
+  data <- .mp_ratio_data(data, parent, metabolite, "t_pkpt03_MP_col", summary = TRUE)
   t_pkpt03_col(
-    filter_ratio_rows(data, "t_pkpt03_MP_col", ref_type = "analyte"),
-    list_vars = list_vars,
+    data,
+    list_vars = union(list_vars, .mp_profile_vars(data)),
+    value_var = value_var,
     ...
   )
 }

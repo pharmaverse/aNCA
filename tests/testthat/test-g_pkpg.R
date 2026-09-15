@@ -12,20 +12,14 @@ pkpg_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# The parent rows plus the M/P ratio rows that Parameter Selection > Ratios
-# appends during the NCA run.
+# Ordinary matched NCA values; ratios must be calculated by the TLG.
 pkpg_ratio_data <- rbind(
   transform(pkpg_data, PPANMETH = NA_character_),
   transform(
     pkpg_data,
     PPCAT    = "Metab-DrugA Plasma",
-    PARAM    = paste("Ratio", pkpg_data$PARAM),
-    PARAMCD  = paste0("RA", pkpg_data$PARAMCD),
     AVAL     = pkpg_data$AVAL / 2,
-    AVALU    = "fraction",
-    PPANMETH = paste0(
-      pkpg_data$PARAMCD, " TO ", pkpg_data$PARAMCD, " [PARAM: DrugA Plasma]"
-    )
+    PPANMETH = NA_character_
   )
 )
 
@@ -106,26 +100,39 @@ describe("p_pkpg04_boxp", {
 })
 
 describe("p_pkpg06_mp", {
+  plots <- function(data = pkpg_ratio_data, ...) {
+    p_pkpg06_mp(data, parent = "DrugA Plasma", metabolite = "Metab-DrugA Plasma", ...)
+  }
+
   it("plots the ratio values, not the metabolite's raw values", {
-    result <- p_pkpg06_mp(pkpg_ratio_data)
+    result <- plots()
     plot_df <- result[[1]]$data
     expect_s3_class(result[[1]], "ggplot")
-    expect_setequal(plot_df$AVAL, pkpg_data$AVAL / 2)
-    expect_true(all(grepl("^Ratio ", plot_df$PARAM)))
+    expect_true(all(plot_df$AVAL == 0.5))
+    expect_setequal(plot_df$PARAM, pkpg_data$PARAM)
+    expect_equal(result[[1]]$labels$y, "Metabolite / Parent Ratio")
   })
 
   it("names the parent in the plot key so the ratio is self-explanatory", {
-    result <- p_pkpg06_mp(pkpg_ratio_data)
+    result <- plots()
     expect_equal(
       names(result),
       "RATIO: Metab-DrugA Plasma / DrugA Plasma / PPSPEC: SERUM"
     )
+    expect_identical(result[[1]]$labels$subtitle, names(result)[1])
   })
 
-  it("errors instead of plotting raw rows when no ratios were configured", {
+  it("preserves user-specified titles and axis labels", {
+    plot <- plots(title = "Custom title", subtitle = "Custom subtitle", ylab = "M/P")[[1]]
+    expect_equal(plot$labels$title, "Custom title")
+    expect_equal(plot$labels$subtitle, "Custom subtitle")
+    expect_equal(plot$labels$y, "M/P")
+  })
+
+  it("errors when there is no usable metabolite/parent pair", {
     expect_error(
-      p_pkpg06_mp(transform(pkpg_data, PPANMETH = NA_character_)),
-      "p_pkpg06_mp: no ratio parameters found"
+      plots(transform(pkpg_data, PPANMETH = NA_character_)),
+      "p_pkpg06_mp: no usable"
     )
   })
 
@@ -135,7 +142,7 @@ describe("p_pkpg06_mp", {
       PARAMCD = rep(c("MRTLST", "MRTIFO"), 6),
       PPANMETH = NA_character_
     )
-    expect_error(p_pkpg06_mp(mrt), "no ratio parameters found")
+    expect_error(plots(mrt), "no usable")
   })
 })
 

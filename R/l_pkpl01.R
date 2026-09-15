@@ -136,20 +136,35 @@ l_pkpl01 <- function(
 }
 
 #' @describeIn l_pkpl01 Listing of metabolite-to-parent ratios (pkpl01 M/P).
-#'   Lists the M/P ratio rows computed by **Parameter Selection > Ratios** during the
-#'   NCA run -- the ones whose `PPANMETH` reference group is another analyte -- with
-#'   one listing per `"<metabolite> / <parent>"` pair, so the denominator is named
-#'   rather than left for the reader to infer. See [t_pkpt03_MP_col()].
-#' @param listgroup_vars Columns used to split the output into separate listings.
-#'   Defaults to the derived `RATIO` label and `PPSPEC`.
+#'   Computes individual metabolite divided by parent values without requiring
+#'   configured ratios. Summary-excluded records remain in the listing; invalid
+#'   or unpaired values are omitted with a diagnostic. Defaults to splitting by
+#'   `RATIO` and `PPSPEC`; varying profile identifiers are retained too.
+#'   `value_var` must be `"AVAL"` and `unit_var` must be `"AVALU"`: only these
+#'   columns contain the calculated ratios and their dimensionless units.
+#'   See [t_pkpt03_MP_col()].
+#' @inheritParams t_pkpt03_MP_col
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
 #' @export
-l_pkpl01_mp <- function(data, listgroup_vars = c("RATIO", "PPSPEC"), ...) {
-  l_pkpl01(
-    filter_ratio_rows(data, "l_pkpl01_mp", ref_type = "analyte"),
-    listgroup_vars = listgroup_vars,
+l_pkpl01_mp <- function(
+  data, listgroup_vars = c("RATIO", "PPSPEC"), parent = NULL, metabolite = NULL,
+  param_var = "PARAM", title = "Listing of Individual Metabolite/Parent Ratios",
+  value_var = "AVAL", unit_var = "AVALU", ...
+) {
+  .mp_check_columns(value_var, unit_var)
+  data <- .mp_ratio_data(data, parent, metabolite, "l_pkpl01_mp")
+  listings <- l_pkpl01(
+    data,
+    listgroup_vars = union(listgroup_vars, .mp_profile_vars(data)),
+    param_var = param_var, title = title,
+    value_var = value_var, unit_var = unit_var,
     ...
   )
+  lapply(listings, function(listing) {
+    cols <- intersect(as.character(unique(data[[param_var]])), names(listing))
+    var_labels(listing)[cols] <- paste0(var_labels(listing)[cols], " - Metabolite/Parent Ratio")
+    listing
+  })
 }
 
 #' Individual Treatment Ratio Listing (pkpl04)
@@ -163,8 +178,8 @@ l_pkpl01_mp <- function(data, listgroup_vars = c("RATIO", "PPSPEC"), ...) {
 #' Ratio rows are selected on the `" TO "` that `calculate_ratios()` writes into
 #' `PPANMETH`, and narrowed to those whose reference group is *not* the analyte
 #' column: treatment, dose profile, route or specimen references. Analyte
-#' references are metabolite/parent ratios and belong to [l_pkpl01_mp()], which
-#' selects the complement of this set from the same mechanism.
+#' references are omitted here. [l_pkpl01_mp()] instead calculates M/P ratios
+#' directly from paired parent/metabolite values.
 #'
 #' Ratios are computed as part of the NCA run, so a ratio added afterwards does
 #' not appear until the run is repeated. When the data holds no treatment ratios

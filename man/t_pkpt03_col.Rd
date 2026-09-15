@@ -15,15 +15,23 @@ t_pkpt03_col(
   stats = NULL
 )
 
-t_pkpt03_MP_col(data, list_vars = c("RATIO", "PPSPEC"), ...)
+t_pkpt03_MP_col(
+  data,
+  list_vars = c("RATIO", "PPSPEC"),
+  parent = NULL,
+  metabolite = NULL,
+  value_var = "AVAL",
+  ...
+)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
 
-\item{list_vars}{Columns to split tables by. Defaults to the derived \code{RATIO}
-label and \code{PPSPEC}, so each table covers one metabolite/parent pair in one
-specimen -- the same analyte pair measured in serum and in urine gives the
-same \code{RATIO} label, and pooling the two would summarize unlike ratios together.}
+\item{list_vars}{Character vector of columns used to split output into
+separate tables. Default: \code{c("PPCAT")}.  \code{AVISIT} is a conditional ADPP
+column that is typically absent from \code{export_cdisc()$adpp}; it is silently
+skipped when not present so there is no need to remove it manually, but
+adding it only helps when your ADPP actually contains visit information.}
 
 \item{strat_var}{One or more columns whose combination defines the table rows
 (stratification). Default: \code{c("TRT01A", "PARAM")} -- statistics are
@@ -46,6 +54,10 @@ statistic block is repeated once per level, nested under a group header.
 \code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this
 table are ignored.}
 
+\item{parent, metabolite}{Single analyte names from ADPP's \code{PPCAT} column.
+In the app these are identified automatically from ADNCA's \code{PARAM}, \code{METABFL}
+and \code{DOSETRT}. In standalone calls supply both names explicitly.}
+
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.}
 }
 \value{
@@ -63,11 +75,15 @@ statistics as columns.
 \section{Functions}{
 \itemize{
 \item \code{t_pkpt03_MP_col()}: Summary of metabolite-to-parent ratios (stats in columns).
-Summarizes the M/P ratio rows computed by \strong{Parameter Selection > Ratios} during
-the NCA run -- the ones whose \code{PPANMETH} reference group is another analyte -- and
-splits the table by \code{"<metabolite> / <parent>"} so the denominator is explicit.
-Errors when no such ratios are present rather than falling back to raw metabolite
-values, which would show numbers that are not ratios under a ratio heading.
+Computes metabolite divided by parent for matched individual ADPP parameter
+values, then summarizes these ratios by treatment. No configured ratio rows
+are required. Both input values must be finite, the parent must be non-zero,
+and their units must be compatible. A pair is omitted from the summary if
+either input has \code{PPSUMXF == "Y"}. Defaults to splitting by the derived
+\code{RATIO} label and \code{PPSPEC}; varying study, dose, visit, route and interval
+identifiers are retained as split columns to avoid collapsing profiles.
+\code{value_var} must be \code{"AVAL"}, which holds the calculated ratios; other
+value columns retain the original input values and are not supported.
 
 }}
 \examples{
