@@ -152,19 +152,6 @@ pkcg01 <- function(
     ) +
     coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
-  # Replace default x scale from tern::g_ipp with custom breaks
-  suppressMessages(
-    plot <- plot +
-      scale_x_continuous(
-        guide = guide_axis(n.dodge = 1),
-        breaks = filter_breaks(
-          plot_data[[xbreaks_var]],
-          min_cm_distance = xbreaks_mindist,
-          plot = plot
-        ),
-        labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
-      )
-  )
 
   # Add color when specified
   if (!is.null(color_var)) {
@@ -226,7 +213,6 @@ pkcg01 <- function(
         )
       )
 
-    plot$data <- plot_data
     plot <- plot +
       facet_wrap(~ view, scales = "free_y") +
       ggh4x::scale_y_facet(
@@ -235,6 +221,13 @@ pkcg01 <- function(
         labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
       )
   }
+
+  # Replace the default x scale with custom breaks. This comes after the side-by-side
+  # faceting so the breaks are filtered against the panel that actually gets drawn, which
+  # means the template data has to be refreshed first: that branch adds a `view` column
+  plot_data <- adnca_grouped %>% dplyr::filter(id_plot == id_plot[1])
+  plot$data <- plot_data
+  plot <- add_filtered_x_scale(plot, plot_data[[xbreaks_var]], xbreaks_mindist)
 
   # Create the list of plots for each unique group
   plots <- lapply(unique(adnca_grouped[["id_plot"]]), function(id_val) {
@@ -536,18 +529,6 @@ pkcg02 <- function(
     ggplot2::coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
 
-  # Replace default x scale from tern::g_ipp with custom breaks
-  suppressMessages(
-    plot <- plot + ggplot2::scale_x_continuous(
-      guide = ggplot2::guide_axis(n.dodge = 1),
-      breaks = filter_breaks(
-        plot_data[[xbreaks_var]],
-        min_cm_distance = xbreaks_mindist,
-        plot = plot
-      ),
-      labels = function(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
-    )
-  )
 
   # Add color when specified
   if (!is.null(color_var)) {
@@ -605,7 +586,6 @@ pkcg02 <- function(
         )
       )
 
-    plot$data <- plot_data
     plot <- plot +
       facet_wrap(~ view, scales = "free_y") +
       ggh4x::scale_y_facet(
@@ -614,6 +594,13 @@ pkcg02 <- function(
         labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
       )
   }
+
+  # Replace the default x scale with custom breaks. This comes after the side-by-side
+  # faceting so the breaks are filtered against the panel that actually gets drawn, which
+  # means the template data has to be refreshed first: that branch adds a `view` column
+  plot_data <- adnca_grouped %>% dplyr::filter(id_plot == id_plot[1])
+  plot$data <- plot_data
+  plot <- add_filtered_x_scale(plot, plot_data[[xbreaks_var]], xbreaks_mindist)
 
   # Create the list of plots for each unique group
   plots <- lapply(unique(adnca_grouped[["id_plot"]]), function(id_val) {
@@ -991,21 +978,6 @@ pkcg03 <- function(
       ) +
       coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
-    # Replace default x scale from tern::g_lineplot with custom breaks
-    suppressMessages(
-      plot <- plot +
-        scale_x_continuous(
-          guide = guide_axis(n.dodge = 1),
-          breaks = filter_breaks(
-            plot_data[[xbreaks_var]],
-            min_cm_distance = xbreaks_mindist,
-            plot = plot
-          ),
-          labels = \(x) ifelse(x %% 1 == 0, as.character(as.integer(x)), as.character(x))
-        )
-    )
-
-
     aval_stat <- mid_value
     if (scale == "LOG") {
 
@@ -1049,6 +1021,10 @@ pkcg03 <- function(
           labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
         )
     }
+
+    # Replace the default x scale with custom breaks. This comes after the side-by-side
+    # faceting so the breaks are filtered against the panel that actually gets drawn
+    plot <- add_filtered_x_scale(plot, plot_data[[xbreaks_var]], xbreaks_mindist)
 
     if (plotly) {
       # suppress warning `plotly.js does not (yet) support horizontal legend items`
