@@ -39,7 +39,9 @@ on the boxes (pkpg04 style). Default: \code{FALSE}.}
 
 \item{title}{Optional plot title string.}
 
-\item{subtitle}{Optional plot subtitle string.}
+\item{subtitle}{Optional plot subtitle string. When \code{NULL}, generated from
+each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
+Use \code{""} to suppress the subtitle.}
 
 \item{footnote}{Optional footnote string.}
 
