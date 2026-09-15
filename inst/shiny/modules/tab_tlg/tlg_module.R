@@ -289,9 +289,11 @@ tlg_module_ui <- function(id, type, options) {
 #' @param options     list of options to customize input parameters
 #' @param grouping_vars reactive returning the PKNCA grouping variables (minus the
 #'   subject column); used to resolve the `.pknca_groups` default of select options
+#' @param refresh_trigger Reactive invalidated when the parent rebuilds the module UI.
 #'
 tlg_module_server <- function(id, data, type, render_list, options = NULL, # nolint: cyclocomp_linter
-                              grouping_vars = reactive(character())) {
+                              grouping_vars = reactive(character()),
+                              refresh_trigger = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     current_page <- reactiveVal(1)
 
@@ -446,6 +448,8 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
     #' `isolate()` keeps the value read one-way: taking a reactive dependency on the option
     #' values would re-render the whole sidebar on every keystroke.
     output$options <- renderUI({
+      # Rebuilding the parent UI otherwise replays this output's cached initial markup.
+      refresh_trigger()
       current <- isolate(purrr::map(reactiveValuesToList(options_values), function(v) v()))
       purrr::imap(.carry_forward_text_values(options, current), function(def, id) {
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)

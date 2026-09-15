@@ -613,6 +613,39 @@ describe(".carry_forward_text_values", {
   })
 })
 
+describe("tlg_module_server: label values on UI refresh", {
+  it("refreshes cached markup on re-submit without rebuilding it on each edit", {
+    refresh <- reactiveVal(0L)
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data = reactive(data.frame(AVAL = 1)),
+        type = "table",
+        render_list = function(data, ...) list(data),
+        options = list(title = list(type = "text", default = "Catalog Title")),
+        refresh_trigger = refresh
+      ),
+      {
+        session$setInputs(`title-text` = "Catalog Title")
+        initial <- output$options$html
+        expect_match(initial, 'value="Catalog Title"', fixed = TRUE)
+
+        session$setInputs(`title-text` = "User Edit")
+        # Typing must not recreate the widget and disturb focus/cursor position.
+        expect_identical(output$options$html, initial)
+        refresh(1L)
+        session$flushReact()
+        expect_match(output$options$html, 'value="User Edit"', fixed = TRUE)
+
+        session$setInputs(`title-text` = "")
+        refresh(2L)
+        session$flushReact()
+        expect_match(output$options$html, 'value=""', fixed = TRUE)
+      }
+    )
+  })
+})
+
 describe("tlg_option_text_server reset", {
   # `shinyjs::reset()` restores the value the element was *created* with, which after the
   # carry-forward above is the user's own text -- making it a no-op.  The observer must
