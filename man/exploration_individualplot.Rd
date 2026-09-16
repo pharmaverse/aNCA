@@ -10,6 +10,7 @@ exploration_individualplot(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
@@ -35,6 +36,9 @@ Default is \code{NULL} (no faceting).}
 Default is \code{FALSE}.}
 
 \item{ylog_scale}{Logical; whether to use a logarithmic scale for the y-axis. Default is \code{FALSE}.}
+
+\item{lock_y_axis}{Logical; if \code{TRUE}, faceted plots use one shared
+y-axis range while x-axis scales remain free. Default is \code{FALSE}.}
 
 \item{threshold_value}{Numeric; y-intercept for a horizontal threshold line.
 Default is \code{NULL} (no threshold).}
