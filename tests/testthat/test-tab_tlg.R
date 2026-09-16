@@ -1,8 +1,8 @@
 # Server-side tests for tab_tlg_server:
 #  - add-picker selection, removal, and the Order Details edit write-back (issue #1335)
-#  - data boundary: the TLG modules receive an already-exclusion-filtered,
-#    label-restored plain data frame; the filtering and label restoration happen
-#    here, not inside tlg_module_server (issue #1336 / #1356).
+#  - data boundary: the TLG modules receive an unfiltered, label-restored plain
+#    data frame; summary-exclusion filtering happens inside the summary/mean TLG
+#    functions (filter_summary_excluded), not at this boundary (issue #1438).
 
 # Source the tab_tlg module and its server-side dependencies.
 local({
@@ -109,9 +109,9 @@ describe("tab_tlg_server: data boundary", {
   )
 
   it("restores column labels on every data source (issue 1336)", {
-    # PKNCA/dplyr processing (and row-subsetting) strips label attributes; the
-    # boundary re-applies them so parse_annotation() can resolve `!COLUMN`
-    # references in title/subtitle/footnote/axis inputs downstream.
+    # PKNCA/dplyr processing strips label attributes; the boundary re-applies
+    # them so parse_annotation() can resolve `!COLUMN` references in
+    # title/subtitle/footnote/axis inputs downstream.
     expect_null(attr(adnca_df$AVAL, "label"))
     shiny::testServer(
       tab_tlg_server,
@@ -120,17 +120,16 @@ describe("tab_tlg_server: data boundary", {
         adpp = shiny::reactive(adpp_df)
       ),
       {
-        expect_equal(attr(conc_data_all()$AVAL, "label"), "Analysis Value")
         expect_equal(attr(conc_data()$AVAL, "label"), "Analysis Value")
-        expect_equal(attr(adpp_data_all()$AVAL, "label"), "Analysis Value")
         expect_equal(attr(adpp_data()$AVAL, "label"), "Analysis Value")
       }
     )
   })
 
-  it("scopes each exclusion flag to its own dataset", {
-    # A record flagged PPSUMXF (drop from PK-param summary) must still survive in
-    # the concentration source, and vice-versa (issue 1356 / Gero review).
+  it("passes unfiltered data to the modules (exclusion happens in the TLG funcs)", {
+    # Individual plots and listings must see summary-excluded rows; the boundary
+    # therefore keeps every record and leaves filtering to the summary/mean
+    # functions (filter_summary_excluded) (#1438).
     shiny::testServer(
       tab_tlg_server,
       args = list(
@@ -138,12 +137,8 @@ describe("tab_tlg_server: data boundary", {
         adpp = shiny::reactive(adpp_df)
       ),
       {
-        # Filtered sources drop the flagged row from their OWN dataset only.
-        expect_equal(nrow(conc_data()), 1)
-        expect_equal(nrow(adpp_data()), 1)
-        # Unfiltered "all" sources keep every row (used by individual listings).
-        expect_equal(nrow(conc_data_all()), 2)
-        expect_equal(nrow(adpp_data_all()), 2)
+        expect_equal(nrow(conc_data()), 2)
+        expect_equal(nrow(adpp_data()), 2)
       }
     )
   })
