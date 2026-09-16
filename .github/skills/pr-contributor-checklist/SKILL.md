@@ -36,6 +36,7 @@ Read:
 
 - the PR description and `Contributor checklist`;
 - the latest workflow run linked to the PR page;
+- the PR mergeability/conflict status;
 - the changed files in the PR;
 - relevant repo instructions in `AGENTS.md`.
 
@@ -74,6 +75,35 @@ CI-backed items:
 
 Spellcheck is not always listed in the template, but it is a required CI check
 for aNCA. If it fails, use the `ci-spellcheck-triage` workflow.
+
+## Merge Conflicts
+
+The Contributor checklist does not name merge conflicts directly, but a PR is
+not ready while GitHub reports it cannot be merged cleanly. Include mergeability
+in the audit when the PR page, branch status, or CI indicates conflicts.
+
+When conflicts exist:
+
+1. Identify the conflicting files and the base branch involved.
+2. Check the origin of both sides before editing: compare the PR diff, current
+   `origin/main`, nearby commit history, and related issue/PR descriptions when
+   they explain the intended behavior.
+3. Resolve by integrating both features where possible. Do not blindly choose
+   one side with `ours`/`theirs` unless the surrounding code and issue context
+   make that choice clearly correct.
+4. After resolving, inspect the final file for semantic consistency, not just
+   removal of conflict markers. Update tests, docs, NEWS, or generated artifacts
+   when the integrated behavior requires it.
+5. If both sides implement incompatible behavior, remove information needed to
+   decide, or would require product/domain judgment, stop and ask the person
+   what to do. Only proceed without asking when the intended result is obvious
+   from the code, PR description, linked issue, or existing tests.
+
+Report merge-conflict status separately from CI status:
+
+- `complete` when the branch is mergeable or conflicts were resolved and pushed;
+- `failing` when conflicts remain and the reason is understood;
+- `needs human decision` when the conflict is semantically ambiguous.
 
 ## Remote CI Workflow
 
