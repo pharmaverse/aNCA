@@ -150,7 +150,7 @@ ADNCA,238,FANLETM,First End Time of Dose for Analyte,integer,Timing,Perm,FALSE,F
 ADNCA,239,FANLTM,First Time of Dose for Analyte,integer,Timing,Perm,FALSE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,189,FEDSTATE,Fasted / Fed Status,text,Record Qualifier,Perm,TRUE,FALSE,10,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,129,FRLTU,Rel. Time from First Dose Unit,text,Synonym Qualifier,Perm,FALSE,FALSE,8,,FALSE,,FALSE,,,,NA,FALSE
-ADNCA,41,FRMUL,Treatment Formulation,text,Topic,Perm,TRUE,FALSE,20,,FALSE,,FALSE,,,,NA,FALSE
+ADNCA,41,FRMUL,Treatment Formulation,text,Topic,Perm,TRUE,FALSE,20,,FALSE,,FALSE,,,DOSFRM,NA,FALSE
 ADNCA,42,GGTBL,GGT at Baseline,float,Topic,Perm,TRUE,FALSE,12,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,130,GGTBLU,GGT at Baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA,FALSE
 ADNCA,131,GLUBLU,Glucose at Baseline (Unit),text,Synonym Qualifier,Perm,TRUE,FALSE,40,,FALSE,,FALSE,,,,NA,FALSE
