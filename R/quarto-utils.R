@@ -172,6 +172,24 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @param use_plotly Logical, whether to convert plots to plotly.
 #' @keywords internal
 #' @noRd
+#' Append the analyte-comparison slide for one dose group to a qmd file
+#' @param quarto_path Path to the Quarto (.qmd) file to append to.
+#' @param res_dose_slides List of results for each dose group.
+#' @param i Integer index of the dose group.
+#' @param in_sections Function(id) returning TRUE when the section id is selected.
+#' @param use_plotly Logical, whether to convert plots to plotly.
+#' @keywords internal
+#' @noRd
+.add_qmd_analyte_comp_slide <- function(quarto_path, res_dose_slides, i,
+                                        in_sections, use_plotly) {
+  if (in_sections("analyte_comparison") &&
+        !is.null(res_dose_slides[[i]]$analyte_comparison)) {
+    add_qmd_sl_plot(quarto_path = quarto_path,
+                    plot = paste0("res_dose_slides[[", i, "]]$analyte_comparison"),
+                    use_plotly = use_plotly)
+  }
+}
+
 .add_qmd_summary_group <- function(quarto_path, res_dose_slides, i, in_sections, use_plotly) {
   .add_qmd_group_section_header(quarto_path, res_dose_slides, i, paste0("Group ", i))
   if (in_sections("meanplot") || in_sections("statistics")) {
@@ -191,6 +209,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
       use_plotly = use_plotly
     )
   }
+  .add_qmd_analyte_comp_slide(quarto_path, res_dose_slides, i, in_sections, use_plotly)
   if (in_sections("linplot")) {
     add_qmd_sl_plot(quarto_path = quarto_path,
                     plot = paste0("res_dose_slides[[", i, "]]$linplot"),
@@ -286,7 +305,7 @@ add_qmd_sl_plot <- function(quarto_path, plot, use_plotly = FALSE) {
 #' @keywords internal
 #' @noRd
 .qmd_active_groups <- function(in_sections) {
-  summary_ids    <- c("meanplot", "statistics", "linplot", "boxplot",
+  summary_ids    <- c("meanplot", "statistics", "analyte_comparison", "linplot", "boxplot",
                       "dose_norm_plot", "dose_norm_statistics")
   individual_ids <- c("ind_plots", "ind_params")
   list(
