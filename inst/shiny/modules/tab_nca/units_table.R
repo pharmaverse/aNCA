@@ -11,6 +11,8 @@
 #'
 #' @param id Module namespace ID.
 #'
+#' @returns A Shiny UI tag list containing the parameter units button.
+#'
 units_table_ui <- function(id) {
   ns <- NS(id)
   # Button to open a module message with the parameter units table #
