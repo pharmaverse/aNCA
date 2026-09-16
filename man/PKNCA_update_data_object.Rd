@@ -18,6 +18,7 @@ PKNCA_update_data_object(
   parameter_selections = NULL,
   int_parameters = NULL,
   blq_imputation_rule = NULL,
+  drop_end_conc = FALSE,
   custom_units_table = NULL
 )
 }
@@ -60,6 +61,10 @@ by study type (forwarded to \code{\link[=update_main_intervals]{update_main_inte
 
 \item{blq_imputation_rule}{Optional list defining the BLQ imputation rule
 (forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}}).}
+
+\item{drop_end_conc}{Logical indicating whether to drop the concentration at
+the end of each main interval for regular parameters (forwarded to
+\code{\link[=update_main_intervals]{update_main_intervals()}}). Default \code{FALSE}.}
 
 \item{custom_units_table}{Optional data frame with PPSTRESU overrides.
 When provided, applied via \code{\link[dplyr:rows]{dplyr::rows_update()}} on the PKNCAdata units table.}
