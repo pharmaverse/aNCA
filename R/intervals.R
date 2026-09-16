@@ -209,6 +209,9 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' @param start_impute Logical indicating whether to impute start values for
 #' parameters. Named `start_impute` (not `impute`) to avoid colliding with the
 #' per-interval `impute` column referenced under dplyr data-masking below.
+#' @param na_imputation_rule A rule passed to `PKNCA::clean.conc.na()` defining how
+#' NA concentrations are imputed, applied only to non-observational parameters.
+#' Default is NULL, which applies no NA imputation.
 #' @param blq_imputation_rule A list defining the Below Limit of Quantification (BLQ)
 #' imputation rule using PKNCA format. The list should either contain three elements named:
 #' `first`, `middle`, and `last` or two elements named `before.tmax` and `after.tmax`.
@@ -227,6 +230,7 @@ update_main_intervals <- function(
   parameter_selections = NULL,
   int_parameters = NULL,
   start_impute = TRUE,
+  na_imputation_rule = NULL,
   blq_imputation_rule = NULL
 ) {
 
@@ -308,6 +312,32 @@ update_main_intervals <- function(
   # nonsense like "blq, FALSE" and an unregistered `PKNCA_impute_method_FALSE`.
   if (!"impute" %in% names(data$intervals)) {
     data$intervals$impute <- NA_character_
+  }
+
+  ############################################
+  # Define a NA imputation method for PKNCA
+  # and apply it only for non-observational parameters
+  if (!is.null(na_imputation_rule)) {
+    assign(
+      "PKNCA_impute_method_na", # nolint
+      function(conc.group, time.group, ...) { # nolint
+        PKNCA::clean.conc.na(
+          conc = conc.group,
+          time = time.group,
+          conc.na = na_imputation_rule
+        )
+      },
+      envir = as.environment("package:aNCA")
+    )
+
+    data$intervals <- data$intervals %>%
+      mutate(
+        impute = ifelse(
+          is.na(.data$impute) | .data$impute == "",
+          "na",
+          paste0("na, ", .data$impute)
+        )
+      )
   }
 
   ############################################
