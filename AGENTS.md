@@ -60,8 +60,12 @@ Before writing new code, check all files in both `R/` and
   [`require()`](https://rdrr.io/r/base/library.html) in package code
 - All exported functions must have roxygen2 docs (`@param`, `@returns`,
   `@export`)
-- Run `devtools::document()` after modifying roxygen comments
-- Run `devtools::test()` before committing
+- Run
+  [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
+  after modifying roxygen comments
+- Run
+  [`devtools::test()`](https://devtools.r-lib.org/reference/test.html)
+  before committing
 
 ### File naming
 
@@ -88,7 +92,9 @@ Before writing new code, check all files in both `R/` and
 When adding or changing `@importFrom` tags, agents must also manually
 update `NAMESPACE` (add/remove the corresponding `importFrom()`
 directive) and verify the package is listed in `DESCRIPTION` Imports.
-Developers can run `devtools::document()` to do this automatically.
+Developers can run
+[`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
+to do this automatically.
 
 ### Documentation (roxygen2)
 
@@ -235,11 +241,15 @@ Settings upload works with the new implementation (if applicable)
 
 ## Working with Code
 
-Before committing: - `devtools::document()` — regenerate man pages and
-NAMESPACE -
+Before committing: -
+[`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
+— regenerate man pages and NAMESPACE -
 [`lintr::lint_package()`](https://lintr.r-lib.org/reference/lint.html) —
-check code style - `devtools::test()` — run tests - `devtools::check()`
-— full package check
+check code style -
+[`devtools::test()`](https://devtools.r-lib.org/reference/test.html) —
+run tests -
+[`devtools::check()`](https://devtools.r-lib.org/reference/check.html) —
+full package check
 
 ## Issues
 
@@ -271,7 +281,9 @@ for requesting new features
   always use separate commits instead of amending and force-pushing
 - Do not edit `man/` or `NAMESPACE` files manually
 - Do not add unused globalVariables to `R/zzz.R`
-- Do not push without running `devtools::document()` first
+- Do not push without running
+  [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
+  first
 - Do not skip tests or lintr checks
 - Do not assume R is available in dev container (it may not be)
 - Do not edit `main.css` without updating the corresponding `.scss`
