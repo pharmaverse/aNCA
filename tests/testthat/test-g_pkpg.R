@@ -361,3 +361,144 @@ describe("p_pkpg02_doseprop", {
     expect_equal(length(result), 2)
   })
 })
+
+describe("PK parameter plot subtitles", {
+  labelled <- pkpg_data
+  labelled$AVALU <- rep(c("ng/mL", "h*ng/mL"), 6)
+  dose_labelled <- pkpg02_data
+  dose_labelled$AVALU <- labelled$AVALU
+  metabolite_labelled <- pkpg_metab_data
+  metabolite_labelled$AVALU <- labelled$AVALU
+  percent_labelled <- pkpg01_per_data
+  percent_labelled$AVALU <- "%"
+  cases <- list(
+    p_pkpg01_cum = pkpg01_data,
+    p_pkpg01_per = percent_labelled,
+    p_pkpg02_doseprop = dose_labelled,
+    p_pkpg03_boxp = labelled,
+    p_pkpg04_boxp = labelled,
+    p_pkpg06_mp = metabolite_labelled
+  )
+  expected <- c(
+    p_pkpg01_cum = paste0(
+      "Analyte: DrugA\nSpecimen: URINE\n",
+      "PK Parameter: Ae 0-2h (mg), Ae 0-4h (mg), Ae 0-8h (mg)"
+    ),
+    p_pkpg01_per = paste0(
+      "Analyte: DrugA\nSpecimen: URINE\n",
+      "PK Parameter: Fe 0-2h (%), Fe 0-4h (%), Fe 0-8h (%)"
+    ),
+    p_pkpg02_doseprop = paste0(
+      "Analyte: DrugA Plasma\nSpecimen: SERUM\n",
+      "PK Parameter: Cmax (ng/mL), AUClast (h*ng/mL)"
+    ),
+    p_pkpg03_boxp = paste0(
+      "Analyte: DrugA Plasma\nSpecimen: SERUM\n",
+      "PK Parameter: Cmax (ng/mL), AUClast (h*ng/mL)"
+    ),
+    p_pkpg04_boxp = paste0(
+      "Analyte: DrugA Plasma\nSpecimen: SERUM\n",
+      "PK Parameter: Cmax (ng/mL), AUClast (h*ng/mL)"
+    ),
+    p_pkpg06_mp = paste0(
+      "Analyte: Metab-DrugA Plasma\nSpecimen: SERUM\n",
+      "PK Parameter: Cmax (ng/mL), AUClast (h*ng/mL)"
+    )
+  )
+
+  it("derives context and parameter-unit pairs for all six catalog entries", {
+    catalog <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
+    for (id in names(cases)) {
+      options <- catalog[[id]]$options[c("title", "subtitle", "footnote")]
+      labels <- lapply(options, function(option) option$default)
+      result <- do.call(get(id), c(list(data = cases[[id]]), labels))[[1]]
+      expect_equal(result$labels$subtitle, unname(expected[id]), info = id)
+      expect_equal(result$labels$title, labels$title, info = id)
+      expect_equal(result$labels$caption, labels$footnote, info = id)
+    }
+  })
+
+  it("derives each page's analyte, specimen, visit and matching parameter units", {
+    first <- transform(labelled, AVISIT = "Day 1")
+    second <- transform(
+      labelled, PPCAT = "DrugB", PPSPEC = "PLASMA", AVISIT = "Day 2",
+      AVALU = ifelse(PARAM == "Cmax", "ug/mL", "h*ug/mL")
+    )
+    result <- p_pkpg03_boxp(rbind(first, second), list_vars = c("PPCAT", "AVISIT"))
+    expect_equal(length(result), 2L)
+    expect_equal(result[[1]]$labels$subtitle, paste0(
+      "Analyte: DrugA Plasma\nSpecimen: SERUM\nVisit: Day 1\n",
+      "PK Parameter: Cmax (ng/mL), AUClast (h*ng/mL)"
+    ))
+    expect_equal(result[[2]]$labels$subtitle, paste0(
+      "Analyte: DrugB\nSpecimen: PLASMA\nVisit: Day 2\n",
+      "PK Parameter: Cmax (ug/mL), AUClast (h*ug/mL)"
+    ))
+  })
+
+  it("builds urine labels after specimen and parameter filters", {
+    mixed <- rbind(
+      pkpg01_data, percent_labelled,
+      transform(pkpg01_data, PPCAT = "Other drug", PPSPEC = "SERUM", AVALU = "ng/mL")
+    )
+    expect_equal(p_pkpg01_cum(mixed)[[1]]$labels$subtitle, unname(expected["p_pkpg01_cum"]))
+    expect_equal(p_pkpg01_per(mixed)[[1]]$labels$subtitle, unname(expected["p_pkpg01_per"]))
+    expect_equal(p_pkpg01_per(pkpg01_per_data)[[1]]$labels$subtitle, paste0(
+      "Analyte: DrugA\nSpecimen: URINE\n",
+      "PK Parameter: Fe 0-2h (fraction), Fe 0-4h (fraction), Fe 0-8h (fraction)"
+    ))
+  })
+
+  it("uses a custom parameter column without pairing units from PARAM", {
+    renamed <- labelled
+    renamed$PARAM <- "Unused parameter"
+    renamed$PKPARAM <- rep(c("Peak", "Exposure"), 6)
+    result <- p_pkpg03_boxp(renamed, param_var = "PKPARAM")[[1]]
+    expect_equal(result$labels$subtitle, paste0(
+      "Analyte: DrugA Plasma\nSpecimen: SERUM\n",
+      "PK Parameter: Peak (ng/mL), Exposure (h*ng/mL)"
+    ))
+  })
+
+  it("omits missing or blank metadata and unit parentheses", {
+    bare <- labelled[, setdiff(names(labelled), c("PPCAT", "PPSPEC", "AVALU"))]
+    expect_equal(p_pkpg03_boxp(bare)[[1]]$labels$subtitle, "PK Parameter: Cmax, AUClast")
+    partial <- transform(
+      labelled, PPCAT = NA_character_, PPSPEC = " ", AVISIT = "",
+      AVALU = ifelse(PARAM == "Cmax", NA_character_, "")
+    )
+    expect_equal(
+      p_pkpg03_boxp(partial, list_vars = character())[[1]]$labels$subtitle,
+      "PK Parameter: Cmax, AUClast"
+    )
+  })
+
+  it("wraps long generated subtitles without losing parameter-unit pairs", {
+    many_params <- do.call(rbind, lapply(seq_len(12), function(i) {
+      transform(
+        labelled[labelled$PARAM == "Cmax", ],
+        PARAM = paste("Parameter", i), AVALU = paste0("unit", i)
+      )
+    }))
+    subtitle <- p_pkpg03_boxp(many_params)[[1]]$labels$subtitle
+    expected_text <- paste(
+      "Analyte: DrugA Plasma Specimen: SERUM PK Parameter:",
+      paste(paste0("Parameter ", seq_len(12), " (unit", seq_len(12), ")"), collapse = ", ")
+    )
+    expect_equal(gsub("[[:space:]]+", " ", subtitle), expected_text)
+    expect_true(all(nchar(strsplit(subtitle, "\n", fixed = TRUE)[[1]]) <= 80L))
+
+    custom <- paste(rep("Keep this user subtitle exactly as entered.", 6), collapse = " ")
+    expect_gt(nchar(custom), 80L)
+    expect_equal(p_pkpg03_boxp(many_params, subtitle = custom)[[1]]$labels$subtitle, custom)
+  })
+
+  it("preserves custom and deliberately empty subtitles across all six entries", {
+    for (id in names(cases)) {
+      for (subtitle in c("User subtitle\nSecond line", "")) {
+        result <- do.call(get(id), list(data = cases[[id]], subtitle = subtitle))[[1]]
+        expect_equal(result$labels$subtitle, subtitle, info = id)
+      }
+    }
+  })
+})

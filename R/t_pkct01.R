@@ -34,6 +34,13 @@
 #' @param stats Optional character vector of statistics to display, chosen from
 #'   `c("n", "n_blq", "Mean", "SD", "CV_pct", "Median", "GeoMean", "GeoCV_pct",
 #'   "Min", "Max")`. `NULL` (default) shows all of them.
+#' @param title Table title. Supports `$VAR` / `!VAR` annotation syntax (see
+#'   [parse_annotation()]). Attached to each returned table as a `tlg_title`
+#'   attribute.
+#' @param subtitle Per-table subtitle. `NULL` (default) names each `list_vars`
+#'   split variable and its value, so a table split by analyte and specimen says
+#'   which combination it covers.
+#' @param footnote Table footnote, attached as a `tlg_footnote` attribute.
 #'
 #' @return A named list of data frames, one per unique combination of
 #'   `list_vars`.  Each data frame has one column per `strat_var` followed by the
@@ -66,7 +73,10 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
   time_var  = "NFRLT",
   time_filter = NULL,
   col_group_var = NULL,
-  stats     = NULL
+  stats     = NULL,
+  title     = NULL,
+  subtitle  = NULL,
+  footnote  = NULL
 ) {
   if (!value_var %in% names(data)) {
     stop("t_pkct01: missing required column: ", value_var)
@@ -209,7 +219,15 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
     .select_stats(result, stats)
   }
 
-  split_and_apply(data, list_vars, make_table)
+  # Derived here rather than in the signature: the default has to follow whatever
+  # the user picked as split variables, and a default argument cannot see them.
+  if (is.null(subtitle)) subtitle <- .split_subtitle(data, intersect(list_vars, names(data)))
+
+  # Attached outside make_table() so every one of its return paths (including the
+  # empty-table one) carries the labels.
+  split_and_apply(data, list_vars, function(df) {
+    .attach_table_labs(make_table(df), df, title, subtitle, footnote)
+  })
 }
 
 #' @describeIn t_pkct01 Stratify by dose instead of treatment arm (first dose).

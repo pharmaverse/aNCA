@@ -25,8 +25,19 @@ tlg_option_text_ui <- function(id, opt_def, data) {
 #' @returns a reactive with the input value
 tlg_option_text_server <- function(id, opt_def, data, reset_trigger) {
   moduleServer(id, function(input, output, session) {
-    #' Reset the input to default value upon reset_trigger
-    observeEvent(reset_trigger(), shinyjs::reset("text"))
+    #' Reset the input to the declared default upon reset_trigger.
+    #'
+    #' Set explicitly rather than via `shinyjs::reset()`, which restores the value the
+    #' element was *created* with.  Since tlg_module_server() re-renders text widgets
+    #' carrying the user's current value forward (so edits survive re-submitting the
+    #' order), that creation-time value is the user's own text and resetting to it would
+    #' be a no-op.
+    observeEvent(reset_trigger(), {
+      updateTextInput(
+        session, "text",
+        value = if (is.null(opt_def$default)) "" else opt_def$default
+      )
+    })
 
     reactive({
       input$text

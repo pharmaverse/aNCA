@@ -495,3 +495,44 @@ describe(".build_pkpp_table: dedup key", {
     expect_equal(res$n[1], 1)
   })
 })
+
+# Issue #1430: catalog title, subtitle and footnote attached to each rendered table.
+
+describe("t_pkpt label attributes", {
+  labelled <- pkpt_data
+  attr(labelled$PPCAT, "label") <- "Parameter Category"
+
+  it("t_pkpt03_col attaches title, derived subtitle and footnote", {
+    out <- t_pkpt03_col(labelled, title = "T", footnote = "F")
+    expect_equal(attr(out[[1]], "tlg_title"), "T")
+    expect_equal(attr(out[[1]], "tlg_subtitle"), "Parameter Category: Drug A Plasma")
+    expect_equal(attr(out[[1]], "tlg_footnote"), "F")
+  })
+
+  it("t_pkpt07_norm forwards the labels through to t_pkpt03_col", {
+    norm <- labelled
+    norm$PARAMCD <- rep(c("CMAXD", "AUCLSTD", "TMAX"), 6)
+    out <- t_pkpt07_norm(norm, title = "Norm T", footnote = "Norm F")
+    expect_equal(attr(out[[1]], "tlg_title"), "Norm T")
+    expect_equal(attr(out[[1]], "tlg_footnote"), "Norm F")
+  })
+
+  it("t_pkpt08_uri attaches labels", {
+    uri <- labelled
+    uri$PPSPEC <- "URINE"
+    out <- t_pkpt08_uri(uri, title = "Uri T", footnote = "Uri F")
+    expect_equal(attr(out[[1]], "tlg_title"), "Uri T")
+    expect_equal(attr(out[[1]], "tlg_footnote"), "Uri F")
+  })
+
+  it("t_pkpt11_gmr attaches labels", {
+    out <- t_pkpt11_gmr(labelled, ref_arm = "10mg", title = "GMR T", footnote = "GMR F")
+    expect_equal(attr(out[[1]], "tlg_title"), "GMR T")
+    expect_equal(attr(out[[1]], "tlg_footnote"), "GMR F")
+  })
+
+  it("a user subtitle overrides the derived one", {
+    out <- t_pkpt03_col(labelled, subtitle = "Mine")
+    expect_equal(attr(out[[1]], "tlg_subtitle"), "Mine")
+  })
+})

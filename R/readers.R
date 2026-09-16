@@ -11,7 +11,6 @@
 #' path <- system.file("shiny/tests/testthat/dummy_simplified.csv", package = "aNCA")
 #' df <- read_pk(path)
 #'
-#' @importFrom tools file_ext
 #' @importFrom utils read.csv
 #' @export
 read_pk <- function(path) {

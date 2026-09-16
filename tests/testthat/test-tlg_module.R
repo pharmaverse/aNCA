@@ -16,6 +16,10 @@ local({
     file.path(shiny_dir, "modules", "tab_tlg", "tlg_option_select.R"),
     local = TRUE
   )
+  source(
+    file.path(shiny_dir, "modules", "tab_tlg", "tlg_option_text.R"),
+    local = TRUE
+  )
 },
 envir = parent.env(environment()))
 
@@ -565,6 +569,317 @@ describe("tlg_module_server: Shiny control-flow conditions", {
     args <- base_args(function(data, ...) stop("a genuine failure"))
     shiny::testServer(tlg_module_server, args = args, {
       expect_match(tlg_list(), "^Error: a genuine failure")
+    })
+  })
+})
+
+# Issue #1430: re-submitting the order re-runs the option renderer, which used to push the
+# yaml default back to the client and wipe whatever the user had typed.
+
+describe(".carry_forward_text_values", {
+  options <- list(
+    .group_label_1 = "Labs",
+    title = list(type = "text", label = "Title", default = "Catalog Title"),
+    xmin  = list(type = "numeric", label = "X min", default = 0),
+    strat = list(type = "select", label = "Stratify", default = ".pknca_groups")
+  )
+
+  it("replaces a text default with the value the widget currently holds", {
+    out <- .carry_forward_text_values(options, list(title = "User Edit"))
+    expect_equal(out$title$default, "User Edit")
+  })
+
+  it("keeps the declared default when the widget has not reported a value", {
+    out <- .carry_forward_text_values(options, list())
+    expect_equal(out$title$default, "Catalog Title")
+  })
+
+  it("carries an emptied box forward so the function default applies again", {
+    out <- .carry_forward_text_values(options, list(title = ""))
+    expect_equal(out$title$default, "")
+  })
+
+  it("leaves select and numeric options alone", {
+    # A select default may be an unresolved runtime token, and the table widget keeps its
+    # rows in `default_rows`; neither round-trips through `default`.
+    out <- .carry_forward_text_values(options, list(strat = c("A", "B"), xmin = 5))
+    expect_equal(out$strat$default, ".pknca_groups")
+    expect_equal(out$xmin$default, 0)
+  })
+
+  it("passes .group_label_* section headers through untouched", {
+    out <- .carry_forward_text_values(options, list(title = "x"))
+    expect_equal(out$.group_label_1, "Labs")
+  })
+})
+
+describe("tlg_module_server: label values on UI refresh", {
+  it("refreshes cached markup on re-submit without rebuilding it on each edit", {
+    refresh <- reactiveVal(0L)
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data = reactive(data.frame(AVAL = 1)),
+        type = "table",
+        render_list = function(data, ...) list(data),
+        options = list(title = list(type = "text", default = "Catalog Title")),
+        refresh_trigger = refresh
+      ),
+      {
+        session$setInputs(`title-text` = "Catalog Title")
+        initial <- output$options$html
+        expect_match(initial, 'value="Catalog Title"', fixed = TRUE)
+
+        session$setInputs(`title-text` = "User Edit")
+        # Typing must not recreate the widget and disturb focus/cursor position.
+        expect_identical(output$options$html, initial)
+        refresh(1L)
+        session$flushReact()
+        expect_match(output$options$html, 'value="User Edit"', fixed = TRUE)
+
+        session$setInputs(`title-text` = "")
+        refresh(2L)
+        session$flushReact()
+        expect_match(output$options$html, 'value=""', fixed = TRUE)
+      }
+    )
+  })
+})
+
+describe("tlg_option_text_server reset", {
+  # `shinyjs::reset()` restores the value the element was *created* with, which after the
+  # carry-forward above is the user's own text -- making it a no-op.  The observer must
+  # therefore write the declared default explicitly, so these assert on the update message
+  # actually sent to the client rather than on the returned reactive (which only ever
+  # echoes `input$text` and would stay green with no observer at all).
+  # `shiny::MockShinySession` records no input messages, so the update is captured by
+  # mocking `updateTextInput` itself.  Asserting on the returned reactive would not do:
+  # it only ever echoes `input$text`, and stays green even with the observer deleted.
+  capture_reset <- function(default) {
+    captured <- NULL
+    testthat::local_mocked_bindings(
+      # Name imposed by shiny's API, so it cannot be snake_case.
+      updateTextInput = function(session, input_id, ...) { # nolint: object_name_linter.
+        captured <<- list(input_id = input_id, value = list(...)$value)
+      },
+      .package = "shiny"
+    )
+    trigger <- reactiveVal(0L)
+    shiny::testServer(
+      tlg_option_text_server,
+      args = list(
+        opt_def = list(type = "text", label = "Title", default = default),
+        data = reactive(data.frame(AVAL = 1)),
+        reset_trigger = trigger
+      ),
+      {
+        session$setInputs(text = "User Edit")
+        expect_equal(session$returned(), "User Edit")
+        trigger(trigger() + 1L)
+        session$flushReact()
+      }
+    )
+    captured
+  }
+
+  it("sends the declared default to the widget when reset fires", {
+    captured <- capture_reset("Catalog Title")
+    expect_equal(captured$input_id, "text")
+    expect_equal(captured$value, "Catalog Title")
+  })
+
+  it("clears the box when the option declares no default", {
+    # updateTextInput(value = NULL) is a no-op, so an absent default must become "".
+    captured <- capture_reset(NULL)
+    expect_equal(captured$input_id, "text")
+    expect_equal(captured$value, "")
+  })
+})
+
+# Issue #1430: table labels are rendered around the reactable from the attributes the TLG
+# function attached.  parse_annotation turns newlines into "<br>", so the renderer has to
+# split on that tag rather than trusting the string as markup.
+
+describe(".tlg_lab_tag", {
+  it("returns NULL for an absent or empty label so no empty tag is emitted", {
+    expect_null(.tlg_lab_tag(NULL, tags$h3, "c"))
+    expect_null(.tlg_lab_tag("", tags$h3, "c"))
+  })
+
+  it("wraps a single-line label in the requested tag and class", {
+    out <- as.character(.tlg_lab_tag("A Title", tags$h3, "tlg-table-title"))
+    expect_true(grepl("<h3", out, fixed = TRUE))
+    expect_true(grepl('class="tlg-table-title"', out, fixed = TRUE))
+    expect_true(grepl("A Title", out, fixed = TRUE))
+  })
+
+  it("splits a multi-line label into real line breaks", {
+    out <- as.character(.tlg_lab_tag("line one<br>line two", tags$p, "c"))
+    expect_true(grepl("line one", out, fixed = TRUE))
+    expect_true(grepl("line two", out, fixed = TRUE))
+    expect_equal(lengths(regmatches(out, gregexpr("<br/>", out, fixed = TRUE))), 1L)
+  })
+
+  it("escapes markup in the label rather than rendering it", {
+    # Labels interpolate data values (analyte names, treatment arms); they must never be
+    # treated as HTML.
+    out <- as.character(.tlg_lab_tag("<script>x</script>", tags$p, "c"))
+    expect_false(grepl("<script>", out, fixed = TRUE))
+    expect_true(grepl("&lt;script&gt;", out, fixed = TRUE))
+  })
+})
+
+describe(".interleave_breaks", {
+  it("returns a single line unchanged", {
+    expect_equal(.interleave_breaks("only"), list("only"))
+  })
+
+  it("puts one break between each pair of lines", {
+    out <- .interleave_breaks(c("a", "b", "c"))
+    expect_length(out, 5L)
+    expect_equal(out[[1]], "a")
+    expect_equal(out[[3]], "b")
+    expect_equal(out[[5]], "c")
+  })
+})
+
+describe("TLG ggplot labels in Plotly", {
+  plot_fixture <- function(subtitle = "Subtitle first\nSubtitle second", caption = "Footnote") {
+    ggplot2::ggplot(
+      data.frame(x = 1:4, y = c(1, 3, 2, 4), parameter = rep(c("Cmax", "AUC"), each = 2)),
+      ggplot2::aes(x, y)
+    ) +
+      ggplot2::geom_point() +
+      ggplot2::facet_wrap(~parameter) +
+      ggplot2::labs(title = "PK parameters", subtitle = subtitle, caption = caption)
+  }
+  json_layout <- function(widget) {
+    jsonlite::fromJSON(
+      plotly::plotly_json(widget, jsonedit = FALSE, pretty = FALSE),
+      simplifyVector = FALSE
+    )$layout
+  }
+  annotation_text <- function(layout) {
+    vapply(layout$annotations, function(annotation) annotation$text, character(1))
+  }
+
+  it("keeps existing Plotly widgets unchanged", {
+    widget <- plotly::plot_ly(x = 1:2, y = c(2, 1), type = "scatter", mode = "lines")
+    expect_identical(.tlg_ggplotly(widget), widget)
+  })
+
+  it("preserves the plotted traces and the original ggplot labels", {
+    plot <- plot_fixture()
+    converted <- plotly::plotly_build(.tlg_ggplotly(plot))
+    baseline <- plotly::plotly_build(plotly::ggplotly(plot))
+    expect_equal(converted$x$data, baseline$x$data)
+    expect_equal(plot$labels$title, "PK parameters")
+    expect_equal(plot$labels$subtitle, "Subtitle first\nSubtitle second")
+    expect_equal(plot$labels$caption, "Footnote")
+  })
+
+  it("preserves multiline subtitles, captions and facet labels through Plotly JSON", {
+    layout <- json_layout(.tlg_ggplotly(plot_fixture(caption = "Note first\nNote second")))
+    text <- annotation_text(layout)
+    expect_true("PK parameters" %in% text)
+    expect_true(all(c("Cmax", "AUC") %in% text))
+    expect_match(paste(text, collapse = "|"), "Subtitle first<br ?/?>Subtitle second")
+    expect_match(paste(text, collapse = "|"), "Note first<br ?/?>Note second")
+  })
+
+  it("renders literal markup in user labels as text", {
+    plot <- plot_fixture(subtitle = "Drug <b>A</b> & B", caption = "Use <i>these</i> values") +
+      ggplot2::labs(title = "<b>Custom title</b>")
+    layout <- json_layout(.tlg_ggplotly(plot))
+    text <- annotation_text(layout)
+    expect_true("&lt;b&gt;Custom title&lt;/b&gt;" %in% text)
+    expect_true("Drug &lt;b&gt;A&lt;/b&gt; &amp; B" %in% text)
+    expect_true("Use &lt;i&gt;these&lt;/i&gt; values" %in% text)
+  })
+
+  it("adds space for long subtitles and captions without shrinking the plot area", {
+    short <- .tlg_ggplotly(plot_fixture(subtitle = "Analyte: DrugA", caption = "Note"))
+    long <- .tlg_ggplotly(plot_fixture(
+      subtitle = paste(paste("PK Parameter", seq_len(12)), collapse = "\n"),
+      caption = paste(paste("Footnote", seq_len(5)), collapse = "\n")
+    ))
+    short_layout <- json_layout(short)
+    long_layout <- json_layout(long)
+    expect_gt(long$height, short$height)
+    expect_gt(long_layout$margin$t, short_layout$margin$t)
+    expect_gt(long_layout$margin$b, short_layout$margin$b)
+    expect_equal(
+      long$height - long_layout$margin$t - long_layout$margin$b,
+      short$height - short_layout$margin$t - short_layout$margin$b,
+      tolerance = 1e-8
+    )
+  })
+
+  it("places captions below rotated tick labels and a bottom legend", {
+    base_plot <- plot_fixture() +
+      ggplot2::aes(color = parameter) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60), legend.position = "bottom")
+    plot <- base_plot +
+      ggplot2::scale_x_continuous(
+        breaks = 1:4, labels = paste("Long treatment group label", 1:4)
+      )
+    with_caption <- .tlg_ggplotly(plot)
+    without_caption <- .tlg_ggplotly(plot + ggplot2::labs(caption = NULL))
+    layout <- json_layout(with_caption)
+    no_caption_layout <- json_layout(without_caption)
+    plain_layout <- json_layout(.tlg_ggplotly(base_plot))
+    plain_no_caption_layout <- json_layout(.tlg_ggplotly(base_plot + ggplot2::labs(caption = NULL)))
+    caption <- layout$annotations[[which(annotation_text(layout) == "Footnote")]]
+    plain_caption <- plain_layout$annotations[[which(annotation_text(plain_layout) == "Footnote")]]
+    expect_gt(with_caption$height, without_caption$height)
+    expect_gt(layout$margin$b, no_caption_layout$margin$b)
+    expect_gt(layout$margin$b, plain_layout$margin$b)
+    expect_gt(
+      layout$margin$b - no_caption_layout$margin$b,
+      plain_layout$margin$b - plain_no_caption_layout$margin$b
+    )
+    expect_lt(caption$yshift, -no_caption_layout$margin$b)
+    expect_lt(caption$yshift, plain_caption$yshift)
+    expect_equal(
+      plotly::plotly_build(with_caption)$x$data,
+      plotly::plotly_build(without_caption)$x$data
+    )
+    expect_true(all(c("PK parameters", "Cmax", "AUC", "Footnote") %in% annotation_text(layout)))
+  })
+
+  it("wraps a long title in Plotly while preserving its text and source label", {
+    title <- paste(rep("Long PK parameter title with important study context", 3), collapse = " ")
+    plot <- plot_fixture() + ggplot2::labs(title = title)
+    widget <- .tlg_ggplotly(plot)
+    text <- annotation_text(json_layout(widget))
+    rendered_title <- text[startsWith(text, "Long PK parameter title")]
+    expect_length(rendered_title, 1L)
+    expect_match(rendered_title, "<br>", fixed = TRUE)
+    expect_equal(gsub("<br>", " ", rendered_title, fixed = TRUE), title)
+    expect_true(all(nchar(strsplit(rendered_title, "<br>", fixed = TRUE)[[1]]) <= 60L))
+    expect_gt(widget$height, .tlg_ggplotly(plot_fixture())$height)
+    expect_equal(plot$labels$title, title)
+  })
+
+  it("uses the label-preserving conversion and matching height in the graph module", {
+    graph_mod <- function(id, item) {
+      shiny::moduleServer(id, function(input, output, session) {
+        render_graph_outputs(output, session, shiny::reactive(list(item)))
+      })
+    }
+    plot <- plot_fixture(
+      subtitle = paste(paste("Subtitle line", seq_len(8)), collapse = "\n"),
+      caption = "Module footnote"
+    )
+    expected_height <- .tlg_ggplotly(plot)$height
+    shiny::testServer(graph_mod, args = list(item = plot), {
+      session$flushReact()
+      rendered <- jsonlite::fromJSON(output$plot_1, simplifyVector = FALSE)
+      text <- annotation_text(rendered$x$layout)
+      expect_true("Module footnote" %in% text)
+      expect_match(paste(text, collapse = "|"), "Subtitle line 1<br ?/?>Subtitle line 2")
+      expect_true(all(c("Cmax", "AUC") %in% text))
+      expect_match(output$tlg_output$html, paste0("height:", expected_height, "px"), fixed = TRUE)
     })
   })
 })
