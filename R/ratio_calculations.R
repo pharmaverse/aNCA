@@ -193,21 +193,27 @@ calculate_ratios.data.frame <- function(
     rowwise() %>%
     mutate(
       ppanmeth_test_groups = paste0(
-        paste(paste(ref_cols, c_across(all_of(ref_cols)), sep = ": "), collapse = ", ")
+        paste(paste(ref_cols, c_across(all_of(ref_cols)), sep = "="), collapse = ", ")
       ),
       ppanmeth_ref_groups = paste0(
         paste(
-          paste(paste0(ref_cols), c_across(all_of(paste0(ref_cols, "_ref"))), sep = ": "),
+          paste(paste0(ref_cols), c_across(all_of(paste0(ref_cols, "_ref"))), sep = "="),
           collapse = ", "
         )
       )
     ) %>%
     ungroup() %>%
     mutate(
-      PPANMETH = ifelse(
-        ppanmeth_test_groups == ppanmeth_ref_groups,
-        paste0(PPTESTCD, " TO ", PPTESTCD_ref),
-        paste0(PPTESTCD, " TO ", PPTESTCD_ref, " [", ppanmeth_ref_groups, "]")
+      PPANMETH = .ratio_ppanmeth(
+        test_param = PPTESTCD,
+        ref_param = PPTESTCD_ref,
+        ref_text = ifelse(
+          ppanmeth_test_groups == ppanmeth_ref_groups,
+          "",
+          ppanmeth_ref_groups
+        ),
+        n_ref = n,
+        multiplier = adjusting_factor
       ),
       PPTESTCD = if (!is.null(custom_pptestcd)) {
         custom_pptestcd
@@ -228,6 +234,29 @@ calculate_ratios.data.frame <- function(
     # Keep same format as the input (PKNCAresults)
     select(any_of(c(names(df_test), "PPANMETH"))) %>%
     unique()
+}
+
+.ratio_ppanmeth <- function(test_param, ref_param, ref_text, n_ref, multiplier) {
+  multiplier <- rep_len(multiplier, length(test_param))
+
+  vapply(seq_along(test_param), function(i) {
+    ref <- if (n_ref[[i]] > 1) {
+      paste0("mean(", ref_param[[i]], ")")
+    } else {
+      ref_param[[i]]
+    }
+    method <- paste0(test_param[[i]], " TO ", ref)
+
+    details <- c(
+      if (nzchar(ref_text[[i]])) paste0("reference: ", ref_text[[i]]),
+      if (!isTRUE(all.equal(multiplier[[i]], 1))) {
+        paste0("multiplier: ", format(multiplier[[i]], trim = TRUE, scientific = FALSE))
+      }
+    )
+    if (length(details) == 0) return(method)
+
+    paste0(method, " [", paste(details, collapse = "; "), "]")
+  }, character(1))
 }
 
 #' @export
