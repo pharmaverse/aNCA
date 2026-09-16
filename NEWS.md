@@ -7,6 +7,7 @@
 
 ## Bug Fixes
 
+* Restricting a partial interval to a specific study type no longer silently drops the interval from the results and PP/ADPP output. The "Study Type" dropdown derived its labels with metabolite information (e.g. `Multiple IV Infusion (Metabolite)`), but the interval calculation matches against labels derived with metabolite information blanked, so the selected label never matched and the interval was never calculated. The dropdown now reuses the same derivation as calculation time, so every offered label matches (#1463)
 * `pkcg01()` and `pkcg02()` now return named plot lists by reading `id_plot` from the grouped plotting data instead of the raw input data (#1448)
 * Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer draw their tick labels on top of each other. `filter_breaks()` kept a break whenever it sat at least `min_cm_distance` (0.5 cm) from the last one and never looked at how wide the label rendered, so a dense profile with labels such as `119.917` kept 24 breaks where about 16 fit. A gap must now also clear the room the two labels either side of it need, measured with the plot's own `axis.text` styling and padded by a space so they do not run together. Two further problems fed the same bug: the width to fit them into was taken from the panel border grob, whose width is the whole device rather than the panel, and the side-by-side views filtered their breaks before faceting split that panel in two. The width now comes from the plot's own layout, the x scale is applied after faceting, and a y axis is thinned by label height. Candidates outside the plotted range are dropped before any thinning, so a break that is never drawn can no longer shift the first visible one a step past a manual `xmin` (#1441)
 * Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
@@ -31,6 +32,10 @@
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
 
 ## Features
+
+### Partial Interval Calculations
+* Partial interval parameters can now be given a custom name. When set, the custom name replaces the standard `PPTESTCD_<start>-<end>` label (e.g. `AUCINT_0-24`) in the results table, plots and ratio-parameter options; the underlying PKNCA parameter and CDISC `PPTESTCD` are unchanged. Leaving the name blank keeps the standard label (#1463)
+* Each partial interval parameter can now be restricted to a single study type detected in the data (e.g. only `Excretion Data`), via a new "Study Type" column. The default "All" keeps the previous behaviour of calculating the interval for every study type. Both fields round-trip through the settings file and the exported R script (#1463)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):

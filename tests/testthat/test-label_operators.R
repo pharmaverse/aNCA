@@ -168,6 +168,27 @@ describe("add_label_attribute", {
     expect_true("RCAMINT_0-20" %in% names(df_result))
   })
 
+  it("maps the label to a custom-named interval column (#1463)", {
+    myres_custom <- myres_base
+    myres_custom$result <- myres_custom$result %>%
+      mutate(interval_name = ifelse(
+        type_interval == "manual" & PPTESTCD == "AUCINT" & start == 0,
+        "Early exposure",
+        NA_character_
+      ))
+
+    df_input <- data.frame(x = 1)
+    names(df_input) <- "Early exposure[hr*ng/mL]"
+
+    df_result <- add_label_attribute(df_input, myres_custom)
+
+    # The custom-named column still resolves to the AUC label
+    expect_equal(
+      attr(df_result[["Early exposure[hr*ng/mL]"]], "label"),
+      "AUC from 0 to 2"
+    )
+  })
+
   it("validates specific expected labels list", {
     expected_labels_map <- c(
       `CMAX[ng/mL]` = "Max Conc",
