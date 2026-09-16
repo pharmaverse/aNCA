@@ -82,6 +82,10 @@ The Contributor checklist does not name merge conflicts directly, but a PR is
 not ready while GitHub reports it cannot be merged cleanly. Include mergeability
 in the audit when the PR page, branch status, or CI indicates conflicts.
 
+When merge conflicts are present, use the `merge-conflict-resolution` skill for
+the detailed resolution workflow. The checklist audit should still track and
+report mergeability status alongside CI status.
+
 When conflicts exist:
 
 1. Identify the conflicting files and the base branch involved.
