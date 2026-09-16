@@ -37,6 +37,32 @@ describe("Test for mapping interface", {
     # mapping inputs are not null after clicking
     expect_false(any(purrr::map_lgl(mapping_inputs_set, is.null)))
   })
+
+  it("dismisses the loading modal and advances past mapping (#1420)", {
+    # With the default data (no duplicates) and unchanged mappings, submitting
+    # the mapping must dismiss the "Processing data mapping..." loading modal
+    # and advance to the Filtering step. Previously the modal hung forever: the
+    # submit was triggered in the same flush as showModal(), so the pipeline's
+    # removeModal() was batched with the show and dropped mid Bootstrap
+    # fade-in. Deferring the submit lets the show paint first so the later hide
+    # applies.
+    app <- AppDriver$new(name = "app_mapping_advance")
+
+    app$click("data-next_step") # advance from upload to mapping
+    app$wait_for_idle()
+    app$click("data-next_step") # advance from mapping to submit (must reach filtering)
+    app$wait_for_idle()
+
+    # Navigation advanced ...
+    expect_equal(app$get_value(input = "data-data_navset"), "Filtering")
+
+    # ... and the loading modal is actually gone from the DOM. This is the part
+    # that would fail if removeModal() raced the fade-in: the spinner element
+    # would still be present even though processing finished.
+    modal_html <- app$get_html(".modal-content")
+    expect_null(modal_html)
+  })
+
   it("reopens the duplicate rows modal after canceling and retrying", {
     app <- AppDriver$new(name = "app_mapping_duplicate_retry")
     duplicate_data <- testthat::test_path(
@@ -51,6 +77,8 @@ describe("Test for mapping interface", {
 
     app$click("data-column_mapping-cancel_duplicate_modal")
     app$wait_for_js("document.querySelector('.modal-duplicates') === null")
+    expect_false(app$get_js("$('#data-next_step').prop('disabled')"))
+
     app$click("data-next_step")
     app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
 
