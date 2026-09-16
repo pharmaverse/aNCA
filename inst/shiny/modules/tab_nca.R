@@ -202,19 +202,23 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
 
         # Update units table
         processed_pknca_data <- processed_pknca_data()
-        if (!is.null(session$userData$units_table())) {
-          custom_units <- select(
-            session$userData$units_table(), -any_of("default")
-          )
-          by_cols <- intersect(names(processed_pknca_data$units), names(custom_units))
-          by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
-          processed_pknca_data$units <- rows_update(
-            processed_pknca_data$units,
-            custom_units,
-            by = by_cols,
-            unmatched = "ignore"
-          )
+        # Seed the session units table from the (already simplified) data-derived
+        # units the first time NCA runs, so automatic changes such as volume unit
+        # simplification are captured for export/R-script even when the user never
+        # opens the Units modal. isolate() avoids creating a reactive dependency
+        # (res_nca both reads and writes units_table).
+        if (is.null(isolate(session$userData$units_table()))) {
+          isolate(session$userData$units_table(processed_pknca_data$units))
         }
+        custom_units <- isolate(session$userData$units_table())
+        by_cols <- intersect(names(processed_pknca_data$units), names(custom_units))
+        by_cols <- setdiff(by_cols, c("PPSTRESU", "conversion_factor"))
+        processed_pknca_data$units <- rows_update(
+          processed_pknca_data$units,
+          custom_units,
+          by = by_cols,
+          unmatched = "ignore"
+        )
 
         #' Calculate results
         res <- withCallingHandlers({
