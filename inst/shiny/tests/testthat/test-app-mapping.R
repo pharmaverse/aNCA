@@ -62,4 +62,22 @@ describe("Test for mapping interface", {
     modal_html <- app$get_html(".modal-content")
     expect_null(modal_html)
   })
+
+  it("shows duplicate modal after mapping and re-enables Next on cancel", {
+    app <- AppDriver$new(name = "app_mapping_duplicate_cancel")
+    duplicate_data <- testthat::test_path(
+      "../../../../tests/testthat/data/test-duplicate-ADNCA.csv"
+    )
+
+    app$upload_file(`data-raw_data-data_upload` = duplicate_data)
+    app$click("data-next_step")
+    app$wait_for_idle()
+    app$click("data-next_step")
+    app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
+
+    app$click("data-column_mapping-cancel_duplicates_btn")
+    app$wait_for_js("document.querySelector('.modal-duplicates') === null")
+
+    expect_false(app$get_js("$('#data-next_step').prop('disabled')"))
+  })
 })
