@@ -112,6 +112,21 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+
+* Download generated tables, listings, and graphs through "Export as ZIP", using the current
+  TLG order and sidebar settings. Available concentration TLGs can be exported before running
+  NCA, without opening each output's tab (#1428, closes #1344).
+
+  - Graphs: PDF (default) or self-contained interactive HTML as one document per TLG, or PNG
+    as one file per plot, retaining plot titles, subtitles, footnotes, and axis scales.
+  - Tables and listings: XLSX (default) as one workbook per TLG with a sheet per split, CSV
+    as one file per split, or PDF paginated across rows and columns. Exports use displayed
+    listing columns and readable summary-table headers.
+  - Files are organised under `TLGs/Graphs/`, `TLGs/Tables/`, and `TLGs/Listings/` by format,
+    with descriptive filenames and unique, Excel-safe worksheet names for split outputs.
+  - A `manifest.csv` records output paths and statuses, including unavailable or failed TLGs,
+    so one output's failure does not prevent the remaining outputs from being downloaded.
+
 * PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
