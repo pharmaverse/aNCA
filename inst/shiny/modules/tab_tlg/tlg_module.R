@@ -13,33 +13,37 @@
 #' Removes rows flagged for exclusion from summary tables using the flag that
 #' belongs to that dataset only:
 #' - ADNCA data: filter by `PKSUMXF` (`"Y"` == excluded).
-#' - ADPP data: filter by `PPSUMXF` (`"Y"` == excluded).
+#' - ADPP data: filter by `ANL01FL` (`"Y"` == included).
 #'
 #' Only the flag named by `flag` is applied; the other dataset's flag is
 #' intentionally ignored even when both columns are present. A record may be
-#' excluded from the PK-parameter summary (`PPSUMXF == "Y"`) while still being
+#' excluded from the PK-parameter summary (`ANL01FL != "Y"`) while still being
 #' wanted in the concentration representations, and vice-versa, so scoping each
 #' flag to its own dataset avoids dropping such records from the other TLGs.
 #'
 #' @param data A data frame (ADNCA or ADPP).
 #' @param flag Name of the exclusion-flag column to apply
-#'   (`"PKSUMXF"` for ADNCA, `"PPSUMXF"` for ADPP). Absent columns are a no-op.
+#'   (`"PKSUMXF"` for ADNCA, `"ANL01FL"` for ADPP). Absent columns are a no-op.
 #' @return The filtered data frame.
 #' @noRd
 filter_tlg_excluded <- function(data, flag) {
   if (flag %in% names(data)) {
-    data <- data[
-      is.na(data[[flag]]) | data[[flag]] != "Y",
-      ,
-      drop = FALSE
-    ]
+    if (identical(flag, "ANL01FL")) {
+      data <- data[!is.na(data[[flag]]) & data[[flag]] == "Y", , drop = FALSE]
+    } else {
+      data <- data[
+        is.na(data[[flag]]) | data[[flag]] != "Y",
+        ,
+        drop = FALSE
+      ]
+    }
   }
   data
 }
 
 #' Data-source key for a TLG module.
 #'
-#' `PKSUMXF` / `PPSUMXF == "Y"` flag rows excluded from *summary tables and mean
+#' `PKSUMXF == "Y"` / `ANL01FL != "Y"` flag rows excluded from *summary tables and mean
 #' plots* — not from individual listings.  Listings therefore consume the raw,
 #' unfiltered `"<dataset>_all"` source, while tables and graphs use the
 #' summary-filtered source keyed by dataset name.

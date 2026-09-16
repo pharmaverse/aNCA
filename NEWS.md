@@ -7,6 +7,7 @@
 
 ## Bug Fixes
 
+* ADPP summary-use flags now use `ANL01FL`/`ANL01FN` with inclusion semantics (`Y`/`1` = used in summary) instead of `PPSUMXF`/`PPSUMRSN` exclusion variables; `CRITy`/`CRITyFL` columns are unchanged (#1395)
 * `pkcg01()` and `pkcg02()` now return named plot lists by reading `id_plot` from the grouped plotting data instead of the raw input data (#1448)
 * Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer draw their tick labels on top of each other. `filter_breaks()` kept a break whenever it sat at least `min_cm_distance` (0.5 cm) from the last one and never looked at how wide the label rendered, so a dense profile with labels such as `119.917` kept 24 breaks where about 16 fit. A gap must now also clear the room the two labels either side of it need, measured with the plot's own `axis.text` styling and padded by a space so they do not run together. Two further problems fed the same bug: the width to fit them into was taken from the panel border grob, whose width is the whole device rather than the panel, and the side-by-side views filtered their breaks before faceting split that panel in two. The width now comes from the plot's own layout, the x scale is applied after faceting, and a y axis is thinned by label height. Candidates outside the plotted range are dropped before any thinning, so a break that is never drawn can no longer shift the first visible one a step past a manual `xmin` (#1441)
 * Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
@@ -46,10 +47,10 @@
   - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite-filtered)
   - `l_pkpl04_mp` — individual PK parameter listing organised for treatment comparison
   - `l_pkcl02_uri` — urine concentration and volume listing
-* ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMXF = "Y"`, consistent with ADNCA exclusion via `PKSUMXF` (#1343)
+* ADPP-based TLG outputs now correctly exclude rows without `ANL01FL = "Y"`, consistent with ADNCA exclusion via `PKSUMXF` (#1343)
 * Summary tables are easier to read: split tables (e.g. by analyte/specimen) now show the group as a header, `t_pkct01` rows are grouped by treatment arm with timepoints in numeric order, statistic columns use readable headers (e.g. "Geometric Mean", "CV%"), and urine specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively (#1343)
 * The new TLG tables and listings expose right-sidebar customization options (grouping/stratification variables, displayed columns, titles, and filters) matching the original `l_pkcl01` listing; stratification variables are selectable so summary tables can be grouped by covariates such as `SEX` or `RACE` (#1356)
-* Summary-exclusion flags are scoped both to summary outputs and to their own dataset: ADNCA (concentration) outputs filter on `PKSUMXF` and ADPP (PK parameter) outputs on `PPSUMXF`, so a record excluded from one summary is not dropped from the other's TLGs, and individual listings show all records (matching their "subjects excluded from the summary table" footnote) (#1356)
+* Summary-exclusion flags are scoped both to summary outputs and to their own dataset: ADNCA (concentration) outputs filter on `PKSUMXF` and ADPP (PK parameter) outputs on `ANL01FL`, so a record excluded from one summary is not dropped from the other's TLGs, and individual listings show all records (matching their "subjects excluded from the summary table" footnote) (#1356)
 * Summary tables can compare covariate groups side by side: a new "Compare in columns" option on the `pkct01` and `pkpt03/07/08` tables repeats the statistic block per level of a chosen variable (e.g. `SEX`, `RACE`), rendered as a two-level Group × Statistic column header (#1356)
 * Summary tables let you choose which statistics to display: a new "Statistics to show" option on the `pkct01` and `pkpt03/07/08` tables filters the columns (e.g. `n`, `Number BLQ`, `Mean`, `SD`, `CV%`); leaving it empty shows all statistics as before (#1356)
 * Summary-table sidebar inputs share one layout: every summary table (`pkct01` variants and `pkpt03/07/08`) exposes the same option groups — Filtering, Grouping (Split / Stratify), Value, Compare, and Statistics — with `PARAM` and the time/visit columns selected within "Stratify by (rows)" rather than through separate inputs. "Stratify by (rows)" is a multi-select on all of them; on the `pkpt` tables it defaults to every PKNCA grouping variable except the subject (`USUBJID`) so statistics separate by treatment, parameter, and specimen out of the box. The `pkpt11` GMR table keeps its comparison-specific inputs as a documented exception (#1356)
@@ -82,7 +83,7 @@
 * "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup
-* Summary exclusions now use dataset-specific flags (`PKSUMXF` for ADNCA and `PPSUMXF` for ADPP). The exclusion tabs and accessible row-color tooltips now describe NCA calculation and summary effects explicitly (#1436)
+* Summary exclusions now use dataset-specific flags (`PKSUMXF` for ADNCA and `ANL01FL` for ADPP). The exclusion tabs and accessible row-color tooltips now describe NCA calculation and summary effects explicitly (#1436)
 * Renamed "Aggregate Subject" label to "Mean across subjects" in ratio calculations for clarity; updated help text to explain matching mechanics (#1297)
 * Parameter Selection tab now contains Partial Intervals, Ratio Calculations, and Units alongside the parameter matrix. The former Settings tab is renamed to General Settings (#1239)
 * Parameter selection UI replaced with an interactive checkbox matrix (study types × parameters) with Select All, Defaults, and Clear All buttons (#795)
@@ -90,7 +91,7 @@
 * "Min. Points for Half-life" setting added (range 2–10, default 3) (#1155)
 * BLQ imputation rules via `NCA Setup > Data Imputation` (#139)
 * General Exclusions section for in-app NCA exclusions, with "Excl. TLG" checkbox per entry (#851, #1018)
-* Parameter Exclusions tab: exclude individual PK parameter rows from descriptive statistics and ADPP export via PPSUMXF/PPSUMRSN flags (#1040)
+* Parameter Exclusions tab: exclude individual PK parameter rows from descriptive statistics and ADPP export via ANL01FL/ANL01FN flags (#1040)
 * NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are excluded from NCA (#752)
 * New flagging rule for lambda-z based on R² (#834)
 * Filter pickers reordered to Analyte → Specimen → NCA Profile with bidirectional cascading (#1114)
@@ -117,7 +118,7 @@
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
 * Export modal allows selecting which slide sections to include in PPTX/HTML exports (#972)
 * CDISC ZIP includes `Pre_Specs.xlsx` with variable-level metadata and session info (#998, #829)
-* ADPP includes CRITy/CRITyFL columns for flag rules and PPSUMXF/PPSUMRSN for summary exclusion status (#1141)
+* ADPP includes CRITy/CRITyFL columns for flag rules and ANL01FL/ANL01FN for summary inclusion status (#1141)
 * Non-standard grouping variables included in ADPP and ADNCA outputs (#1077)
 * R script exported in ZIP to replicate app outputs (#789)
 * Save button enabled after data mapping with progressive content (#1136)

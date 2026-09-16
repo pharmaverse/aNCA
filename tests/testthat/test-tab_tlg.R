@@ -105,7 +105,7 @@ describe("tab_tlg_server: data boundary", {
   )
   adpp_df <- data.frame(
     USUBJID = c("S1", "S2"), AVAL = c(3, 4),
-    PPSUMXF = c("Y", NA_character_), stringsAsFactors = FALSE
+    ANL01FL = c("", "Y"), stringsAsFactors = FALSE
   )
 
   it("restores column labels on every data source (issue 1336)", {
@@ -129,7 +129,7 @@ describe("tab_tlg_server: data boundary", {
   })
 
   it("scopes each exclusion flag to its own dataset", {
-    # A record flagged PPSUMXF (drop from PK-param summary) must still survive in
+    # A record without ANL01FL (drop from PK-param summary) must still survive in
     # the concentration source, and vice-versa (issue 1356 / Gero review).
     shiny::testServer(
       tab_tlg_server,
