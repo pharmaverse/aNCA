@@ -101,8 +101,11 @@ detect_study_types <- function(data, groups, metabfl_column,
 
   has_tau <- "TRTRINT" %in% names(data)
 
-  # If volume column is not provided, create volume_column and set to NA
-  if (missing(volume_column)) {
+  # If volume column is not provided, fall back to a default column set to NA.
+  # PKNCA >= 0.12.1.9000 leaves columns$volume as NULL (rather than the literal
+  # default name) for non-excretion data, so guard against an explicit NULL too.
+  if (missing(volume_column) || is.null(volume_column)) {
+    volume_column <- "volume"
     data[[volume_column]] <- NA
   }
 

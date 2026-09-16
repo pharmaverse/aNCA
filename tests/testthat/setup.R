@@ -146,6 +146,7 @@ base::local({
     is.excluded.hl = FALSE,
     is.included.hl = FALSE,
     exclude_half.life = FALSE,
+    include_half.life = NA,
     # Units
     AVALU = c(
       rep("ng/mL", 5 * 7),     # 1.1 - 5.1 (A)

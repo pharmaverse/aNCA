@@ -129,9 +129,10 @@ describe("get_dose_esc_results", {
     # This mirrors the real app call in prepare_export_files() using the analyte
     # grouping column. Previously, groups were derived from intervals (which lacks
     # the analyte column), causing empty ind_params for metabolite groups.
+    conc_nca <- PKNCA::as_PKNCAconc(FIXTURE_PKNCA_RES)
     group_by_vars <- setdiff(
-      dplyr::group_vars(FIXTURE_PKNCA_RES),
-      FIXTURE_PKNCA_RES$data$conc$columns$subject
+      dplyr::group_vars(conc_nca),
+      conc_nca$columns$subject
     )
     res <- get_dose_esc_results(
       o_nca              = FIXTURE_PKNCA_RES,
@@ -158,9 +159,10 @@ describe("get_dose_esc_results", {
     urine_rows$PCSPEC <- "URINE"
     fixture_extra$data$conc$data <- rbind(FIXTURE_PKNCA_RES$data$conc$data, urine_rows)
 
+    conc_nca <- PKNCA::as_PKNCAconc(FIXTURE_PKNCA_RES)
     group_by_vars <- setdiff(
-      dplyr::group_vars(FIXTURE_PKNCA_RES),
-      FIXTURE_PKNCA_RES$data$conc$columns$subject
+      dplyr::group_vars(conc_nca),
+      conc_nca$columns$subject
     )
     n_result_groups <- nrow(unique(FIXTURE_PKNCA_RES$result[, c(group_by_vars, "ATPTREF")]))
 
