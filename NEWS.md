@@ -2,11 +2,17 @@
 
 ## Maintenance
 
+* Document the return value for the NCA Parameter Units table UI module (#1374)
 * Refresh stale in-code TODO comments whose referenced issues have since closed: the slope-selector `na.omit` guard is now documented as a defensive safety net (#641 reworked the reactivity), and the BLQ dropped-record workaround points to the current imputation-consistency issues (#1057, #1442, #1443) instead of the closed #139. Clarified why meta-mapping keys are excluded in `apply_mapping()`. Part of the TODO inventory in #1447
 
 ## Bug Fixes
 
 * Fix the "Processing data mapping..." spinner hanging forever when advancing through mapping (e.g. the default data with no duplicates). The mapping submit ran synchronously in the same flush cycle as the loading modal's `showModal()`, so the pipeline's `removeModal()` was batched with the show and dropped mid Bootstrap fade-in. The submit is now deferred to a later flush so the spinner paints first and the later hide applies; the completion reactive also keys on the submit trigger so it re-runs (and dismisses the modal) even when the mapping is unchanged. Duplicate-row data is also published after the loading modal cleanup flushes, so the duplicate dialog appears reliably and Cancel re-enables the Next button (#1420)
+* `pkcg01()` and `pkcg02()` now return named plot lists by reading `id_plot` from the grouped plotting data instead of the raw input data (#1448)
+* Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer draw their tick labels on top of each other. `filter_breaks()` kept a break whenever it sat at least `min_cm_distance` (0.5 cm) from the last one and never looked at how wide the label rendered, so a dense profile with labels such as `119.917` kept 24 breaks where about 16 fit. A gap must now also clear the room the two labels either side of it need, measured with the plot's own `axis.text` styling and padded by a space so they do not run together. Two further problems fed the same bug: the width to fit them into was taken from the panel border grob, whose width is the whole device rather than the panel, and the side-by-side views filtered their breaks before faceting split that panel in two. The width now comes from the plot's own layout, the x scale is applied after faceting, and a y axis is thinned by label height. Candidates outside the plotted range are dropped before any thinning, so a break that is never drawn can no longer shift the first visible one a step past a manual `xmin` (#1441)
+* Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
+* Restored settings now ignore incomplete partial interval rows with missing or invalid start/end values before they reach the NCA setup state, preventing spurious interval parameters from uploaded settings (#1347)
+* NCA Results now derive the `Missing` flag at the subject/profile level, so parameter-level metadata from active flag parameters can no longer duplicate rows in the pivoted results table (#1479)
 * Running NCA with "Impute Start Concentration" turned off no longer errors with `PKNCA_impute_method_FALSE not found`. When start imputation was off, the per-interval `impute` column was absent, so the BLQ step read the `impute` function argument instead of the column and built the method string `"blq, FALSE"`. The column is now always present, the reference is pinned to it, and the `update_main_intervals()` argument was renamed `impute` -> `start_impute` so it can no longer collide with the column (#1121, #1266)
 * With "Impute Start Concentration" turned off, the first interval now starts at C1 (the first sample at or after the dose) instead of the predose time. The sample feeding the start time was picked by an unordered `slice(1)`, so it could be the predose record whose negative `ARRLT` pulled the interval start before the dose (#1121)
 * The generated R-script (session code) now passes `blq_imputation_rule` to `PKNCA_update_data_object()`, matching the app. The template only applied the BLQ rule at calculation time (`PKNCA_calculate_nca()`) and omitted it during interval setup, so exported scripts did not reproduce the app's BLQ handling (#1445)
@@ -72,6 +78,8 @@
 * Settings upload is flexible — non-data-specific template settings can be uploaded (#993)
 
 ### Exploration
+* Faceted individual and mean exploration plots can now use a shared y-axis range across panels, with the selected setting preserved in generated plot code and saved exports (#1424)
+* Faceted exploration plots now align differing units automatically: compatible units (within or across panels) are rescaled to a common unit, and incompatible units are shown per facet (comma-separated in the strip label) with a notification suggesting which grouping variables (e.g. PARAM, PCSPEC) to add to 'facet by' (#1424)
 * "Copy Plot Code" button in the right sidebar opens a modal with a self-contained R script for the current plot, including data loading, mapping, filtering, and PNG/HTML export (#1327)
 
 ### NCA Setup

@@ -49,7 +49,9 @@
       )
     } else if (current_step == "mapping") {
       mapping_busy(TRUE)
-      loading_popup("Processing data mapping...")
+      if (!isTRUE(session$userData$auto_replay_active)) {
+        loading_popup("Applying mapping...")
+      }
       # Defer the submit to a later flush so the loading modal is sent to the
       # browser and painted first. The mapping pipeline is synchronous, so if
       # we incremented the trigger in this same observer it would run to
@@ -403,6 +405,9 @@ tab_data_server <- function(id) {
           updateTabsetPanel(session, "data_navset", selected = "Mapping")
           return()
         }
+      }
+      if (!auto_replay()) {
+        shiny::removeModal()
       }
       data_step("filtering")
       updateTabsetPanel(session, "data_navset", selected = "Filtering")

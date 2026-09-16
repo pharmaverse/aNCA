@@ -423,6 +423,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
         ),
         error = function(e) {
           log_error(conditionMessage(e))
+          if (!isTRUE(session$userData$auto_replay_active)) {
+            removeModal()
+          }
           showNotification(conditionMessage(e), type = "error", duration = NULL)
           on_mapping_complete()
           NULL
@@ -529,6 +532,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
 
     observeEvent(df_duplicates(), {
       req(df_duplicates())
+      removeModal()
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -547,11 +551,17 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
             actionButton(
               ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"
             ),
-            actionButton(ns("cancel_duplicates_btn"), "Cancel")
+            actionButton(ns("cancel_duplicate_modal"), "Cancel")
           ),
           size = "l"
         )
       )
+    })
+
+    observeEvent(input$cancel_duplicate_modal, {
+      df_duplicates(NULL)
+      removeModal()
+      on_duplicate_cancel()
     })
 
     output$duplicate_modal_table <- renderReactable({

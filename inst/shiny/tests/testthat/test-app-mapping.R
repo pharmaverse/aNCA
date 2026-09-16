@@ -63,8 +63,8 @@ describe("Test for mapping interface", {
     expect_null(modal_html)
   })
 
-  it("shows duplicate modal after mapping and re-enables Next on cancel", {
-    app <- AppDriver$new(name = "app_mapping_duplicate_cancel")
+  it("reopens the duplicate rows modal after canceling and retrying", {
+    app <- AppDriver$new(name = "app_mapping_duplicate_retry")
     duplicate_data <- testthat::test_path(
       "../../../../tests/testthat/data/test-duplicate-ADNCA.csv"
     )
@@ -75,9 +75,13 @@ describe("Test for mapping interface", {
     app$click("data-next_step")
     app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
 
-    app$click("data-column_mapping-cancel_duplicates_btn")
+    app$click("data-column_mapping-cancel_duplicate_modal")
     app$wait_for_js("document.querySelector('.modal-duplicates') === null")
-
     expect_false(app$get_js("$('#data-next_step').prop('disabled')"))
+
+    app$click("data-next_step")
+    app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
+
+    expect_false(app$get_js("Boolean(document.querySelector('#loading-title'))"))
   })
 })
