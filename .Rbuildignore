@@ -15,6 +15,7 @@
 _\.new\.png$
 inst/shiny/tests/testthat/_snaps
 ^cran-comments\.md$
+^CITATION\.cff$
 ^NEWS\.md$
 ^data-raw$
 ^vignettes/

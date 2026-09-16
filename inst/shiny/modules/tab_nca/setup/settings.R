@@ -463,7 +463,10 @@ settings_server <- function(id, data, adnca_data, settings_override) {
           blq_strategy = data_imputation$blq_strategy(),
           blq_imputation_rule = data_imputation$blq_imputation_rule()
         ),
-        int_parameters = if (nrow(int_parameters()) > 0) int_parameters() else NULL,
+        int_parameters = {
+          valid_int_parameters <- .filter_valid_int_parameters(int_parameters())
+          if (nrow(valid_int_parameters) > 0) valid_int_parameters else NULL
+        },
         flags = list(
           R2ADJ = list(
             is.checked = input$R2ADJ_rule,
@@ -587,7 +590,7 @@ settings_server <- function(id, data, adnca_data, settings_override) {
   # Data imputation is restored by data_imputation_server via settings_override
 
   if (!is.null(settings$int_parameters)) {
-    int_parameters(settings$int_parameters)
+    int_parameters(.filter_valid_int_parameters(settings$int_parameters))
     refresh_reactable(refresh_reactable() + 1)
   }
 
@@ -598,6 +601,33 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       settings$flags[[flag]]$threshold
     )
   }
+}
+
+#' Keep only complete, valid partial interval rows.
+#'
+#' Rows with missing or invalid bounds are ignored so restored settings cannot
+#' create unintended subject-specific interval ranges.
+#'
+#' @param int_parameters Data frame of partial interval settings.
+#' @returns A filtered data frame with valid interval rows.
+#' @keywords internal
+#' @noRd
+.filter_valid_int_parameters <- function(int_parameters) {
+  if (is.null(int_parameters) || nrow(int_parameters) == 0) {
+    return(int_parameters)
+  }
+
+  int_parameters %>%
+    mutate(
+      start_auc = as.numeric(start_auc),
+      end_auc = as.numeric(end_auc)
+    ) %>%
+    filter(
+      !is.na(start_auc),
+      !is.na(end_auc),
+      start_auc >= 0,
+      end_auc > start_auc
+    )
 }
 
 #' Generates rule input widget with a checkbox and conditional numeric input for the value.

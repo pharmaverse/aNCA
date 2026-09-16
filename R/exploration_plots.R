@@ -9,6 +9,8 @@
 #' @param show_facet_n Logical; if `TRUE`, shows the number of subjects in each facet.
 #' Default is `FALSE`.
 #' @param ylog_scale Logical; whether to use a logarithmic scale for the y-axis. Default is `FALSE`.
+#' @param lock_y_axis Logical; if `TRUE`, faceted plots use one shared
+#' y-axis range while x-axis scales remain free. Default is `FALSE`.
 #' @param show_legend Logical; whether to display the plot legend. Default is `TRUE`.
 #' @param threshold_value Numeric; y-intercept for a horizontal threshold line.
 #' Default is `NULL` (no threshold).
@@ -30,7 +32,7 @@
 #' @param line_type Character; "default" (default), "dose-normalized" to specify lines to
 #' be normalized by dose amount or "both" to include both normalized and non-normalized lines.
 #'
-#' @return A `ggplot` object representing the individual PK line plot.
+#' @returns A `ggplot` object representing the individual PK line plot.
 #' @export
 exploration_individualplot <- function(
   pknca_data,
@@ -38,6 +40,7 @@ exploration_individualplot <- function(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   threshold_value = NULL,
   x_limits = NULL,
   y_limits = NULL,
@@ -85,6 +88,7 @@ exploration_individualplot <- function(
     x_limits = x_limits,
     y_limits = y_limits,
     ylog_scale = ylog_scale,
+    lock_y_axis = lock_y_axis,
     threshold_value = threshold_value,
     palette = palette,
     tooltip_vars = tooltip_vars,
@@ -110,7 +114,7 @@ exploration_individualplot <- function(
 #' Default is `NULL` (no limits).
 #' @param y_limits Numeric vector of length 2 for y-axis limits (min, max).
 #' Default is `NULL` (no limits).
-#' @return A `ggplot` object representing the mean PK line plot,
+#' @returns A `ggplot` object representing the mean PK line plot,
 #' with error bars and/or confidence intervals if requested.
 #' @export
 exploration_meanplot <- function(
@@ -119,6 +123,7 @@ exploration_meanplot <- function(
   facet_by = NULL,
   show_facet_n = FALSE,
   ylog_scale = FALSE,
+  lock_y_axis = FALSE,
   show_legend = TRUE,
   threshold_value = NULL,
   show_dose = FALSE,
@@ -175,6 +180,7 @@ exploration_meanplot <- function(
     x_limits = x_limits,
     y_limits = y_limits,
     ylog_scale = ylog_scale,
+    lock_y_axis = lock_y_axis,
     threshold_value = threshold_value,
     palette = palette,
     tooltip_vars = tooltip_vars,
@@ -215,7 +221,7 @@ exploration_meanplot <- function(
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
 #' Default is `FALSE` (time since first dose).
 #'
-#' @return Data frame filtered and ready for individual spaghetti plots,
+#' @returns Data frame filtered and ready for individual spaghetti plots,
 #' with optional TIME_DOSE column.
 #' @importFrom dplyr filter mutate
 #' @importFrom rlang sym
@@ -294,7 +300,7 @@ process_data_individual <- function(pknca_data,
 #' @param use_time_since_last_dose Logical; if `TRUE`, x-axis represents time since last dose.
 #' Default is `FALSE` (time since first dose).
 #'
-#' @return Data frame summarised by group, with columns for Mean, SD, N, SE, SD_min, SD_max,
+#' @returns Data frame summarised by group, with columns for Mean, SD, N, SE, SD_min, SD_max,
 #' CI_lower, CI_upper, and optional TIME_DOSE.
 #' @importFrom dplyr group_by summarise filter mutate n n_distinct distinct left_join select
 #' @importFrom rlang sym syms
@@ -447,7 +453,7 @@ process_data_mean <- function(pknca_data,
 #' @param filtering_list A named list where each name is a column and each value is a vector
 #' of allowed values.
 #'
-#' @return Filtered data frame.
+#' @returns Filtered data frame.
 #' @keywords internal
 #' @noRd
 filter_by_list <- function(data, filtering_list) {
@@ -471,7 +477,7 @@ filter_by_list <- function(data, filtering_list) {
 #' @param y_var Name of the y variable.
 #' @param x_var Name of the x variable.
 #'
-#' @return Finalized ggplot object for mean PK plot.
+#' @returns Finalized ggplot object for mean PK plot.
 #' @keywords internal
 #' @noRd
 finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) {
@@ -511,7 +517,7 @@ finalize_meanplot <- function(plot, sd_min, sd_max, ci, color_by, y_var, x_var) 
 #' @param conc_time_col Name of the time column in concentration data.
 #' Default is pknca_data$conc$columns$time.
 #'
-#' @return Data frame with TIME_DOSE column added, representing the last dose time for each sample.
+#' @returns Data frame with TIME_DOSE column added, representing the last dose time for each sample.
 #' @importFrom dplyr left_join mutate select any_of filter group_by arrange slice_tail ungroup
 #' @importFrom rlang sym syms
 #' @keywords internal

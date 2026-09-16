@@ -31,7 +31,7 @@
 #'   `plotly` object.
 #' @param height Numeric. Desired height for the plot.
 #'
-#' @return A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
+#' @returns A `ggplot` object or, if `as_plotly = TRUE`, a `plotly` object.
 #'
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_point facet_wrap scale_shape_manual
@@ -218,7 +218,7 @@ pk_dose_qc_plot <- function(data_conc,
 #' @param plot_conc_data Logical flag derived from `show_pk_samples` and `data_conc`.
 #' @param plot_dose_data Logical flag derived from `show_doses` and `data_dose`.
 #'
-#' @return A `list` containing `data` (the processed tibble), `shape_levels`,
+#' @returns A `list` containing `data` (the processed tibble), `shape_levels`,
 #'   and `colour_levels`.
 prepare_plot_data <- function(data_conc,
                               data_dose,
@@ -288,7 +288,7 @@ prepare_plot_data <- function(data_conc,
 #' Formats a unit string if a unique unit exists
 #' @param data The data frame to check.
 #' @param unit_var The column name of the unit variable.
-#' @return A formatted string like " (hr)" or an empty string "".
+#' @returns A formatted string like " (hr)" or an empty string "".
 format_unit_string <- function(data, unit_var) {
   # Return "" if the unit variable is not specified or doesn't exist
   if (is.null(unit_var) || !all(unit_var %in% names(data))) {

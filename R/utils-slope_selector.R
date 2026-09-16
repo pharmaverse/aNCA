@@ -3,7 +3,7 @@
 #' Iterates over the given rules and updates the PKNCA object setting inclusion/exclusion flags.
 #' @param data PKNCA data object
 #' @param slopes Data frame of slope rules (TYPE, RANGE, REASON, group columns)
-#' @return Modified data object with updated flags
+#' @returns Modified data object with updated flags
 update_pknca_with_rules <- function(data, slopes) {
   slope_groups <- intersect(group_vars(data), names(slopes))
   time_col <- data$conc$columns$time
