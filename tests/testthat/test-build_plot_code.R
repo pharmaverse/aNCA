@@ -100,7 +100,8 @@ describe(".build_individual_call", {
   it("generates exploration_individualplot call", {
     inputs <- list(
       color_by = "USUBJID", facet_by = NULL, show_facet_n = FALSE,
-      ylog_scale = FALSE, show_legend = TRUE, show_dose = FALSE,
+      ylog_scale = FALSE, lock_y_axis = FALSE,
+      show_legend = TRUE, show_dose = FALSE,
       threshold_value = NULL, x_limits = NULL, y_limits = NULL,
       use_time_since_last_dose = FALSE, palette = "default",
       y_axis_values = "lines"
@@ -108,6 +109,7 @@ describe(".build_individual_call", {
     result <- .build_individual_call(inputs)
     expect_true(grepl("aNCA::exploration_individualplot", result$call))
     expect_true(grepl("color_by = \"USUBJID\"", result$call))
+    expect_true(grepl("lock_y_axis = FALSE", result$call))
     expect_null(result$filter_override)
   })
 })
@@ -116,7 +118,8 @@ describe(".build_mean_call", {
   it("generates exploration_meanplot call", {
     inputs <- list(
       color_by = "TRT01A", facet_by = "DOSEA", show_facet_n = TRUE,
-      ylog_scale = TRUE, show_legend = TRUE, show_dose = FALSE,
+      ylog_scale = TRUE, lock_y_axis = TRUE,
+      show_legend = TRUE, show_dose = FALSE,
       threshold_value = 10, x_limits = c(0, 24), y_limits = NULL,
       sd_min = TRUE, sd_max = TRUE, ci = FALSE,
       use_time_since_last_dose = FALSE, palette = "plasma",
@@ -126,6 +129,7 @@ describe(".build_mean_call", {
     expect_true(grepl("aNCA::exploration_meanplot", result$call))
     expect_true(grepl("sd_min = TRUE", result$call))
     expect_true(grepl("facet_by = \"DOSEA\"", result$call))
+    expect_true(grepl("lock_y_axis = TRUE", result$call))
     expect_null(result$filter_override)
   })
 })
@@ -179,7 +183,8 @@ describe("build_plot_code", {
   it("generates a complete individual plot script", {
     inputs <- list(
       color_by = "USUBJID", facet_by = NULL, show_facet_n = FALSE,
-      ylog_scale = FALSE, show_legend = TRUE, show_dose = FALSE,
+      ylog_scale = FALSE, lock_y_axis = FALSE,
+      show_legend = TRUE, show_dose = FALSE,
       threshold_value = NULL, x_limits = NULL, y_limits = NULL,
       filtering_list = NULL, use_time_since_last_dose = FALSE,
       palette = "default", y_axis_values = "lines"
@@ -196,7 +201,8 @@ describe("build_plot_code", {
   it("generates a complete mean plot script", {
     inputs <- list(
       color_by = "TRT01A", facet_by = NULL, show_facet_n = FALSE,
-      ylog_scale = FALSE, show_legend = TRUE, show_dose = FALSE,
+      ylog_scale = FALSE, lock_y_axis = FALSE,
+      show_legend = TRUE, show_dose = FALSE,
       threshold_value = NULL, x_limits = NULL, y_limits = NULL,
       sd_min = FALSE, sd_max = FALSE, ci = FALSE,
       filtering_list = NULL, use_time_since_last_dose = FALSE,
@@ -222,7 +228,8 @@ describe("build_plot_code", {
     session_no_file$userData$dataset_filename <- NULL
     inputs <- list(
       color_by = "USUBJID", facet_by = NULL, show_facet_n = FALSE,
-      ylog_scale = FALSE, show_legend = TRUE, show_dose = FALSE,
+      ylog_scale = FALSE, lock_y_axis = FALSE,
+      show_legend = TRUE, show_dose = FALSE,
       threshold_value = NULL, x_limits = NULL, y_limits = NULL,
       filtering_list = NULL, use_time_since_last_dose = FALSE,
       palette = "default", y_axis_values = "lines"
@@ -234,7 +241,8 @@ describe("build_plot_code", {
   it("includes filter code when filtering_list is provided", {
     inputs <- list(
       color_by = "USUBJID", facet_by = NULL, show_facet_n = FALSE,
-      ylog_scale = FALSE, show_legend = TRUE, show_dose = FALSE,
+      ylog_scale = FALSE, lock_y_axis = FALSE,
+      show_legend = TRUE, show_dose = FALSE,
       threshold_value = NULL, x_limits = NULL, y_limits = NULL,
       filtering_list = list(DOSEA = c("10", "20")),
       use_time_since_last_dose = FALSE,
