@@ -263,6 +263,29 @@ describe("export_cdisc", {
     expect_equal(unique(res_nothing$pp$PPRFTDTC), NA_character_)
   })
 
+  it("exports and validates a non-missing PCRFTDTM", {
+    datetime_res <- test_pknca_res
+    datetime_res$data$dose$data <- datetime_res$data$dose$data %>%
+      mutate(
+        PCRFTDTM = if_else(
+          ATPTREF == 1,
+          "01-01-2023 00:00",
+          "02-01-2023 00:00"
+        )
+      )
+
+    exported <- export_cdisc(datetime_res)
+    expect_s3_class(exported$adnca$PCRFTDTM, "POSIXct")
+    expect_true(any(!is.na(exported$adnca$PCRFTDTM)))
+
+    findings <- validate_export_outputs(list(
+      CDISC = list(adnca = exported$adnca["PCRFTDTM"])
+    ))
+
+    expect_false(any(findings$Variable == "PCRFTDTM"))
+    expect_false(export_validation_blocks_save(findings))
+  })
+
   it("derives PPGRPID correctly, using ATPTREF and/or PARAM, PCSPEC.", {
     test_no_atptref <- test_pknca_res
     test_no_param_pcspec <- test_pknca_res
