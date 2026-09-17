@@ -374,20 +374,155 @@ get_tree_ids_for_texts <- function(tree, texts) {
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
-# Validate every output that will be written before any file is created. Runs
-# object-class checks on all selected outputs and value-level data-type checks
-# on the selected CDISC datasets, and stops the save when error-severity
-# findings are present. No-op when nothing conforming is being exported.
-.validate_outputs_pre_export <- function(export_list, obj_names, progress, session) {
+# Build a standard validation finding for an export artifact outside results.
+.export_artifact_error <- function(artifact, check, expected, observed, message) {
+  .export_finding_row(
+    output = artifact,
+    variable = NA_character_,
+    check = check,
+    severity = "error",
+    expected = expected,
+    observed = observed,
+    message = message
+  )
+}
+
+# Check that a value can be serialised before its writer is reached.
+.export_value_is_serialisable <- function(value) {
+  tryCatch({
+    serialize(value, connection = NULL)
+    TRUE
+  }, error = function(e) FALSE)
+}
+
+# Build the settings payload written to the versioned settings YAML file.
+.settings_export_payload <- function(session) {
+  settings_list <- session$userData$settings()
+
+  if (!is.null(settings_list$units)) {
+    settings_list$units <- settings_list$units %>%
+      dplyr::filter(!default) %>%
+      dplyr::select(-default)
+  }
+
+  settings_list$ratio_table <- session$userData$ratio_table()
+
+  list(
+    settings = settings_list,
+    mapping = session$userData$mapping,
+    slope_rules = session$userData$slope_rules(),
+    filters = session$userData$applied_filters,
+    time_duplicate_keys = session$userData$time_duplicate_keys,
+    nca_ran = isTRUE(session$userData$nca_ran)
+  )
+}
+
+# Validate artifacts that are generated outside the standard results list.
+.validate_selected_export_artifacts <- function(input, session, res_nca) {
+  selected <- input$res_tree %||% character(0)
+  findings <- list()
+
+  if ("settings_file" %in% selected) {
+    payload <- tryCatch(.settings_export_payload(session), error = identity)
+    if (inherits(payload, "error") || !is.list(payload)) {
+      message <- if (inherits(payload, "error")) payload$message else "not a list"
+      findings <- c(findings, list(.export_artifact_error(
+        "settings.yaml", "settings_structure", "a serialisable settings list",
+        message, "Settings could not be prepared for export."
+      )))
+    } else {
+      yaml_ok <- tryCatch({
+        yaml::as.yaml(payload)
+        TRUE
+      }, error = function(e) FALSE)
+      if (!yaml_ok) {
+        findings <- c(findings, list(.export_artifact_error(
+          "settings.yaml", "settings_structure", "YAML-serialisable settings",
+          "not YAML-serialisable", "Settings cannot be serialised to YAML."
+        )))
+      }
+    }
+  }
+
+  if ("r_script" %in% selected) {
+    raw_data <- session$userData$raw_data
+    if (is.null(raw_data) || !.export_value_is_serialisable(raw_data)) {
+      findings <- c(findings, list(.export_artifact_error(
+        "input_data.rds", "serialisation", "serialisable input data",
+        if (is.null(raw_data)) "NULL" else .export_class_label(raw_data),
+        "Input data cannot be written to the RDS export."
+      )))
+    }
+    template <- system.file("www/templates/script_template.R", package = "aNCA")
+    if (!nzchar(template) || !file.exists(template)) {
+      findings <- c(findings, list(.export_artifact_error(
+        "session_code.R", "template", "an available R-script template",
+        "template not found", "The R-script export template is unavailable."
+      )))
+    }
+  }
+
+  if ("results_slides" %in% selected) {
+    if (is.null(res_nca)) {
+      findings <- c(findings, list(.export_artifact_error(
+        "presentations", "slide_input", "NCA results", "NULL",
+        "Slides require available NCA results."
+      )))
+    }
+    if (length(input$slide_formats %||% character(0)) == 0) {
+      findings <- c(findings, list(.export_artifact_error(
+        "presentations", "slide_format", "at least one slide format", "none",
+        "Slides were selected without an output format."
+      )))
+    }
+    if ("pptx" %in% (input$slide_formats %||% character(0)) &&
+        (!requireNamespace("officer", quietly = TRUE) ||
+         !requireNamespace("flextable", quietly = TRUE))) {
+      findings <- c(findings, list(.export_artifact_error(
+        "presentations/results_slides.pptx", "dependency",
+        "officer and flextable", "required package unavailable",
+        "PowerPoint export requires the officer and flextable packages."
+      )))
+    }
+  }
+
+  if (length(findings) == 0) return(.export_empty_findings())
+  out <- do.call(rbind, findings)
+  rownames(out) <- NULL
+  out[EXPORT_FINDING_COLS]
+}
+
+# Validate every selected artifact before any export file is created. Runs
+# object and table-structure checks on standard results, metadata checks on
+# CDISC datasets, and basic checks on settings, script, raw-data, and slides.
+.validate_outputs_pre_export <- function(export_list, obj_names, input, res_nca,
+                                         progress, session) {
   progress$set(message = "Creating exports...",
                detail = "Validating outputs...")
-  findings <- validate_export_outputs(export_list, obj_names = obj_names)
-  if (!export_validation_blocks_save(findings)) return(invisible(NULL))
+  result_findings <- validate_export_outputs(export_list, obj_names = obj_names)
+  artifact_findings <- .validate_selected_export_artifacts(input, session, res_nca)
+  findings <- rbind(result_findings, artifact_findings)
+  rownames(findings) <- NULL
+
+  warnings <- findings[findings$Severity == "warning", , drop = FALSE]
+  if (nrow(warnings) > 0) {
+    showNotification(
+      sprintf(
+        "Export validation warning: %s.",
+        paste(utils::head(unique(warnings$Output), 3), collapse = ", ")
+      ),
+      type = "warning",
+      duration = NULL,
+      session = session
+    )
+  }
+
+  if (!export_validation_blocks_save(findings)) return(invisible(findings))
 
   errors <- findings[findings$Severity == "error", , drop = FALSE]
   showNotification(
     sprintf(
-      "Save blocked: %d output(s) failed data-type validation (%s).",
+      "Save blocked: %d export artifact(s) failed validation (%s).",
       nrow(errors),
       paste(utils::head(unique(errors$Output), 3), collapse = ", ")
     ),
@@ -454,7 +589,9 @@ prepare_export_files <- function(target_dir,
   # object-class checks on all selected outputs and value-level data-type
   # checks on the selected CDISC datasets. Aborts the save on error-severity
   # findings so non-conforming data is never written (cf. 21 CFR 11.10(a)).
-  .validate_outputs_pre_export(export_list, obj_names, progress, session)
+  .validate_outputs_pre_export(
+    export_list, obj_names, input, res_nca, progress, session
+  )
 
   save_output(
     output = export_list,
@@ -604,24 +741,7 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_settings <- function(target_dir, session) {
-  settings_list <- session$userData$settings()
-
-  if (!is.null(settings_list$units)) {
-    settings_list$units <- settings_list$units %>%
-      dplyr::filter(!default) %>%
-      dplyr::select(-default)
-  }
-
-  settings_list$ratio_table <- session$userData$ratio_table()
-
-  payload <- list(
-    settings = settings_list,
-    mapping = session$userData$mapping,
-    slope_rules = session$userData$slope_rules(),
-    filters = session$userData$applied_filters,
-    time_duplicate_keys = session$userData$time_duplicate_keys,
-    nca_ran = isTRUE(session$userData$nca_ran)
-  )
+  payload <- .settings_export_payload(session)
 
   dataset_name <- session$userData$dataset_filename %||% ""
 

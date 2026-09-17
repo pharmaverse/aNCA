@@ -74,6 +74,33 @@ EXPORT_TABLE_NODES <- c(
   paste(class(x), collapse = ", ")
 }
 
+# Check the generic structure required of every exported table. Dataset-specific
+# schemas add stricter checks separately (for example, the CDISC validator).
+.export_validate_table_structure <- function(x, path) {
+  col_names <- names(x)
+  if (any(!nzchar(col_names)) || anyDuplicated(col_names)) {
+    return(.export_finding_row(
+      path, NA_character_, "table_structure", "error",
+      "unique, non-empty column names", "invalid column names",
+      sprintf("Table '%s' has empty or duplicate column names.", path)
+    ))
+  }
+
+  unsupported <- names(x)[!vapply(x, is.atomic, logical(1))]
+  if (length(unsupported) > 0) {
+    return(.export_finding_row(
+      path, paste(unsupported, collapse = ", "), "table_structure", "error",
+      "atomic columns", "non-atomic column(s)",
+      sprintf(
+        "Table '%s' has non-atomic column(s): %s.",
+        path, paste(unsupported, collapse = ", ")
+      )
+    ))
+  }
+
+  NULL
+}
+
 # Validate a single export leaf, returning a findings row or NULL when it is a
 # saveable object of the kind its node expects
 .validate_one_export_leaf <- function(x, name, path) {
@@ -100,6 +127,8 @@ EXPORT_TABLE_NODES <- c(
       )
     ))
   }
+
+  if (observed == "table") return(.export_validate_table_structure(x, path))
 
   NULL
 }

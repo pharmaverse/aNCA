@@ -126,6 +126,67 @@ describe("prepare_export_files validation gate", {
     expect_equal(list.files(target_dir, recursive = TRUE), character(0))
     unlink(target_dir, recursive = TRUE)
   })
+
+  it("shows warning-only CDISC findings and does not block the export", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+    notifications <- character(0)
+
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(NOTINMETA = "x", stringsAsFactors = FALSE)),
+      exploration = list()
+    ), send_notification = function(type, payload) {
+      notifications <<- c(notifications, as.character(payload$html))
+    })
+
+    expect_no_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("adnca"),
+        session = session,
+        progress = test_export_progress
+      )
+    )
+
+    expect_true(any(grepl("Export validation warning", notifications)))
+    unlink(target_dir, recursive = TRUE)
+  })
+})
+
+describe("selected export artifact validation", {
+  it("blocks an R-script export without serialisable raw data", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_selected_export_artifacts(
+      input = test_export_input("r_script"), session = session, res_nca = NULL
+    )
+    row <- findings[findings$Output == "input_data.rds", ]
+    expect_equal(row$Severity, "error")
+    expect_true(export_validation_blocks_save(findings))
+  })
+
+  it("blocks a settings export that cannot prepare its settings payload", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_selected_export_artifacts(
+      input = test_export_input("settings_file"), session = session, res_nca = NULL
+    )
+    row <- findings[findings$Output == "settings.yaml", ]
+    expect_equal(row$Check, "settings_structure")
+    expect_true(export_validation_blocks_save(findings))
+  })
+
+  it("blocks selected slides without NCA results or an output format", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_selected_export_artifacts(
+      input = test_export_input("results_slides", table_formats = character(0)),
+      session = session,
+      res_nca = NULL
+    )
+    expect_true(all(findings$Severity == "error"))
+    expect_true(all(c("slide_input", "slide_format") %in% findings$Check))
+  })
 })
 
 describe("save_table_format", {

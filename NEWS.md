@@ -31,7 +31,16 @@
 
 ## Features
 
-* Exporting results now validates every output before anything is written and blocks the save when a problem is found (a data-integrity control; cf. 21 CFR 11.10(a)). Each output is checked for the correct object class (plots must be plots, tables must be tables, code must be a script string), and the CDISC datasets (ADNCA, ADPP, PP) are additionally checked value by value against the data types and lengths declared in the package metadata. Indexed CDISC variable families (e.g. `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are recognised so they are no longer wrongly reported as undeclared, and `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP (#1451)
+* Exporting results now validates every selected artifact before anything is
+  written and blocks the save when a problem is found (a data-integrity control;
+  cf. 21 CFR 11.10(a)). Tables must have a valid basic structure, plots and code
+  must have the expected object type, and generated settings, scripts, raw-data,
+  and slide exports are preflighted. The CDISC datasets (ADNCA, ADPP, PP) are
+  additionally checked value by value against the data types and lengths declared
+  in the package metadata. Indexed CDISC variable families (e.g.
+  `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are
+  recognised so they are no longer wrongly reported as undeclared, and
+  `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP (#1451)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):

@@ -67,6 +67,19 @@ describe("validate_export_outputs: object-class checks", {
     expect_match(row$Observed, "lm")
   })
 
+  it("flags a table with a non-atomic column", {
+    output <- list(
+      nca_results = list(nca_pkparam = data.frame(
+        AVAL = 1,
+        DETAILS = I(list(c("not", "atomic")))
+      ))
+    )
+    findings <- validate_export_outputs(output)
+    row <- findings[findings$Output == "nca_results/nca_pkparam", ]
+    expect_equal(row$Check, "table_structure")
+    expect_equal(row$Severity, "error")
+  })
+
   it("flags a *_code node that is not a length-1 string", {
     output <- list(exploration = list(meanplot_code = c("a", "b")))
     findings <- validate_export_outputs(output)

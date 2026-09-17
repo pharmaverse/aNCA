@@ -679,8 +679,9 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
           progress$set(message = "Creating exports...")
           progress$inc(0.1)
 
-          output_tmpdir <- file.path(tempdir(), "output")
-          unlink(output_tmpdir, recursive = TRUE)
+          output_tmpdir <- tempfile("anca-export-", tmpdir = tempdir())
+          dir.create(output_tmpdir, recursive = TRUE)
+          on.exit(unlink(output_tmpdir, recursive = TRUE), add = TRUE)
 
           nca_result <- tryCatch(res_nca(), error = function(e) NULL)
 
@@ -709,11 +710,16 @@ zip_server <- function(id, res_nca, adnca_data, settings, grouping_vars) {
         },
         error = function(e) {
           message("Download Error: ", e$message)
+          if (file.exists(fname)) unlink(fname)
           if (!inherits(e, "export_validation_error")) {
             showNotification(
-              paste("Export failed:", e$message),
+              paste(
+                "Export failed. No ZIP was created.",
+                "Please retry or contact support if the problem persists."
+              ),
               type = "error",
-              duration = NULL
+              duration = NULL,
+              session = session
             )
           }
           stop(e)
