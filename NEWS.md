@@ -38,7 +38,7 @@
   written and blocks the save when a problem is found (a data-integrity control;
   cf. 21 CFR 11.10(a)). Tables must have a valid basic structure, plots and code
   must have the expected object type, and generated settings, scripts, raw-data,
-  and slide exports are preflighted. The CDISC datasets (ADNCA, ADPP, PP) are
+  and slide exports are checked before export. The CDISC datasets (ADNCA, ADPP, PP) are
   additionally checked value by value against the data types and lengths declared
   in the package metadata. Indexed CDISC variable families (e.g.
   `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are

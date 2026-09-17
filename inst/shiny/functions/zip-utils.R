@@ -417,75 +417,93 @@ get_tree_ids_for_texts <- function(tree, texts) {
   )
 }
 
+# Validate the settings payload without creating the settings file.
+.validate_settings_artifact <- function(session) {
+  payload <- tryCatch(.settings_export_payload(session), error = identity)
+  if (inherits(payload, "error") || !is.list(payload)) {
+    observed <- if (inherits(payload, "error")) payload$message else "not a list"
+    return(.export_artifact_error(
+      "settings.yaml", "settings_structure", "a serialisable settings list",
+      observed, "Settings could not be prepared for export."
+    ))
+  }
+
+  yaml_ok <- tryCatch({
+    yaml::as.yaml(payload)
+    TRUE
+  }, error = function(e) FALSE)
+  if (yaml_ok) return(NULL)
+
+  .export_artifact_error(
+    "settings.yaml", "settings_structure", "YAML-serialisable settings",
+    "not YAML-serialisable", "Settings cannot be serialised to YAML."
+  )
+}
+
+# Validate the raw-data and template prerequisites for an R-script export.
+.validate_script_artifacts <- function(session) {
+  findings <- list()
+  raw_data <- session$userData$raw_data
+  if (is.null(raw_data) || !.export_value_is_serialisable(raw_data)) {
+    findings <- c(findings, list(.export_artifact_error(
+      "input_data.rds", "serialisation", "serialisable input data",
+      if (is.null(raw_data)) "NULL" else .export_class_label(raw_data),
+      "Input data cannot be written to the RDS export."
+    )))
+  }
+
+  template <- system.file("www/templates/script_template.R", package = "aNCA")
+  if (!nzchar(template) || !file.exists(template)) {
+    findings <- c(findings, list(.export_artifact_error(
+      "session_code.R", "template", "an available R-script template",
+      "template not found", "The R-script export template is unavailable."
+    )))
+  }
+  findings
+}
+
+# Validate the inputs and dependencies required for a selected slide export.
+.validate_slide_artifacts <- function(input, res_nca) {
+  findings <- list()
+  formats <- input$slide_formats %||% character(0)
+  if (is.null(res_nca)) {
+    findings <- c(findings, list(.export_artifact_error(
+      "presentations", "slide_input", "NCA results", "NULL",
+      "Slides require available NCA results."
+    )))
+  }
+  if (length(formats) == 0) {
+    findings <- c(findings, list(.export_artifact_error(
+      "presentations", "slide_format", "at least one slide format", "none",
+      "Slides were selected without an output format."
+    )))
+  }
+  pptx_available <- requireNamespace("officer", quietly = TRUE) &&
+    requireNamespace("flextable", quietly = TRUE)
+  if ("pptx" %in% formats && !pptx_available) {
+    findings <- c(findings, list(.export_artifact_error(
+      "presentations/results_slides.pptx", "dependency",
+      "officer and flextable", "required package unavailable",
+      "PowerPoint export requires the officer and flextable packages."
+    )))
+  }
+  findings
+}
+
 # Validate artifacts that are generated outside the standard results list.
-.validate_selected_export_artifacts <- function(input, session, res_nca) {
+.validate_export_artifacts <- function(input, session, res_nca) {
   selected <- input$res_tree %||% character(0)
   findings <- list()
-
   if ("settings_file" %in% selected) {
-    payload <- tryCatch(.settings_export_payload(session), error = identity)
-    if (inherits(payload, "error") || !is.list(payload)) {
-      message <- if (inherits(payload, "error")) payload$message else "not a list"
-      findings <- c(findings, list(.export_artifact_error(
-        "settings.yaml", "settings_structure", "a serialisable settings list",
-        message, "Settings could not be prepared for export."
-      )))
-    } else {
-      yaml_ok <- tryCatch({
-        yaml::as.yaml(payload)
-        TRUE
-      }, error = function(e) FALSE)
-      if (!yaml_ok) {
-        findings <- c(findings, list(.export_artifact_error(
-          "settings.yaml", "settings_structure", "YAML-serialisable settings",
-          "not YAML-serialisable", "Settings cannot be serialised to YAML."
-        )))
-      }
-    }
+    findings <- c(findings, list(.validate_settings_artifact(session)))
   }
-
   if ("r_script" %in% selected) {
-    raw_data <- session$userData$raw_data
-    if (is.null(raw_data) || !.export_value_is_serialisable(raw_data)) {
-      findings <- c(findings, list(.export_artifact_error(
-        "input_data.rds", "serialisation", "serialisable input data",
-        if (is.null(raw_data)) "NULL" else .export_class_label(raw_data),
-        "Input data cannot be written to the RDS export."
-      )))
-    }
-    template <- system.file("www/templates/script_template.R", package = "aNCA")
-    if (!nzchar(template) || !file.exists(template)) {
-      findings <- c(findings, list(.export_artifact_error(
-        "session_code.R", "template", "an available R-script template",
-        "template not found", "The R-script export template is unavailable."
-      )))
-    }
+    findings <- c(findings, .validate_script_artifacts(session))
   }
-
   if ("results_slides" %in% selected) {
-    if (is.null(res_nca)) {
-      findings <- c(findings, list(.export_artifact_error(
-        "presentations", "slide_input", "NCA results", "NULL",
-        "Slides require available NCA results."
-      )))
-    }
-    if (length(input$slide_formats %||% character(0)) == 0) {
-      findings <- c(findings, list(.export_artifact_error(
-        "presentations", "slide_format", "at least one slide format", "none",
-        "Slides were selected without an output format."
-      )))
-    }
-    if ("pptx" %in% (input$slide_formats %||% character(0)) &&
-        (!requireNamespace("officer", quietly = TRUE) ||
-         !requireNamespace("flextable", quietly = TRUE))) {
-      findings <- c(findings, list(.export_artifact_error(
-        "presentations/results_slides.pptx", "dependency",
-        "officer and flextable", "required package unavailable",
-        "PowerPoint export requires the officer and flextable packages."
-      )))
-    }
+    findings <- c(findings, .validate_slide_artifacts(input, res_nca))
   }
-
+  findings <- Filter(Negate(is.null), findings)
   if (length(findings) == 0) return(.export_empty_findings())
   out <- do.call(rbind, findings)
   rownames(out) <- NULL
@@ -500,7 +518,7 @@ get_tree_ids_for_texts <- function(tree, texts) {
   progress$set(message = "Creating exports...",
                detail = "Validating outputs...")
   result_findings <- validate_export_outputs(export_list, obj_names = obj_names)
-  artifact_findings <- .validate_selected_export_artifacts(input, session, res_nca)
+  artifact_findings <- .validate_export_artifacts(input, session, res_nca)
   findings <- rbind(result_findings, artifact_findings)
   rownames(findings) <- NULL
 

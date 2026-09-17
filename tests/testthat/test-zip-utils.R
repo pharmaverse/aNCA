@@ -159,7 +159,7 @@ describe("prepare_export_files validation gate", {
 describe("selected export artifact validation", {
   it("blocks an R-script export without serialisable raw data", {
     session <- test_export_session(list(exploration = list()))
-    findings <- .validate_selected_export_artifacts(
+    findings <- .validate_export_artifacts(
       input = test_export_input("r_script"), session = session, res_nca = NULL
     )
     row <- findings[findings$Output == "input_data.rds", ]
@@ -169,7 +169,7 @@ describe("selected export artifact validation", {
 
   it("blocks a settings export that cannot prepare its settings payload", {
     session <- test_export_session(list(exploration = list()))
-    findings <- .validate_selected_export_artifacts(
+    findings <- .validate_export_artifacts(
       input = test_export_input("settings_file"), session = session, res_nca = NULL
     )
     row <- findings[findings$Output == "settings.yaml", ]
@@ -179,7 +179,7 @@ describe("selected export artifact validation", {
 
   it("blocks selected slides without NCA results or an output format", {
     session <- test_export_session(list(exploration = list()))
-    findings <- .validate_selected_export_artifacts(
+    findings <- .validate_export_artifacts(
       input = test_export_input("results_slides", table_formats = character(0)),
       session = session,
       res_nca = NULL

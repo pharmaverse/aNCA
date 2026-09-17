@@ -76,7 +76,7 @@ EXPORT_TABLE_NODES <- c(
 
 # Check the generic structure required of every exported table. Dataset-specific
 # schemas add stricter checks separately (for example, the CDISC validator).
-.export_validate_table_structure <- function(x, path) {
+.validate_table_structure <- function(x, path) {
   col_names <- names(x)
   if (any(!nzchar(col_names)) || anyDuplicated(col_names)) {
     return(.export_finding_row(
@@ -128,7 +128,7 @@ EXPORT_TABLE_NODES <- c(
     ))
   }
 
-  if (observed == "table") return(.export_validate_table_structure(x, path))
+  if (observed == "table") return(.validate_table_structure(x, path))
 
   NULL
 }
