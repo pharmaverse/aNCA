@@ -1,7 +1,7 @@
 describe("export validation traceability matrix", {
   it("covers every supported non-TLG export validator under 21 CFR 11.10(a)", {
     spec <- aNCA:::.read_export_validation_spec()
-    expect_equal(aNCA:::.validate_export_validation_spec(spec), character(0))
+    expect_equal(aNCA:::.validate_export_spec(spec), character(0))
     rules <- spec$requirements
     expect_setequal(
       vapply(rules, `[[`, "", "validator"),

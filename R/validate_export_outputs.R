@@ -259,7 +259,7 @@ validate_export_outputs <- function(output,
                                     obj_names = NULL,
                                     metadata = metadata_nca_variables) {
   spec <- .read_export_validation_spec()
-  spec_errors <- .validate_export_validation_spec(spec)
+  spec_errors <- .validate_export_spec(spec)
   spec_findings <- lapply(spec_errors, function(message) {
     .export_finding_row(
       "export-validation.yml", NA_character_, "validation_spec", "error",
@@ -273,10 +273,14 @@ validate_export_outputs <- function(output,
 
   class_findings <- if (.export_validator_enabled("standard_output_structure", spec)) {
     .walk_export_outputs(output, obj_names, path = "")
-  } else list()
+  } else {
+    list()
+  }
   cdisc_findings <- if (.export_validator_enabled("cdisc_schema", spec)) {
     .export_cdisc_findings(output, obj_names, metadata)
-  } else .export_empty_findings()
+  } else {
+    .export_empty_findings()
+  }
 
   parts <- c(spec_findings, class_findings, list(cdisc_findings))
   parts <- Filter(function(df) !is.null(df) && nrow(df) > 0, parts)

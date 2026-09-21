@@ -17,7 +17,7 @@ EXPORT_VALIDATOR_IDS <- c(
 
 # Return readable errors when the traceability matrix cannot safely drive the
 # export gate. The gate treats any returned error as a blocking finding.
-.validate_export_validation_spec <- function(spec = .read_export_validation_spec()) {
+.validate_export_spec <- function(spec = .read_export_validation_spec()) {
   if (inherits(spec, "export_validation_spec_missing")) {
     return("The export validation specification is unavailable.")
   }
@@ -32,14 +32,18 @@ EXPORT_VALIDATOR_IDS <- c(
   blocks <- vapply(rules, function(rule) isTRUE(rule$blocks_export), logical(1))
   tests <- vapply(rules, `[[`, "", "test")
   errors <- character(0)
-  if (any(!nzchar(ids)) || anyDuplicated(ids)) {
+  ids_are_valid <- all(nzchar(ids)) && !anyDuplicated(ids)
+  validators_are_valid <- setequal(ids, EXPORT_VALIDATOR_IDS) &&
+    setequal(validators, EXPORT_VALIDATOR_IDS)
+
+  if (!ids_are_valid) {
     errors <- c(errors, "Requirement IDs must be present and unique.")
   }
-  if (!setequal(ids, EXPORT_VALIDATOR_IDS) || !setequal(validators, EXPORT_VALIDATOR_IDS)) {
+  if (!validators_are_valid) {
     errors <- c(errors, "Requirements must declare each supported validator exactly once.")
   }
-  if (any(requirements != "21 CFR §11.10(a)")) {
-    errors <- c(errors, "Every requirement must cite 21 CFR §11.10(a).")
+  if (any(requirements != "21 CFR \u00a711.10(a)")) {
+    errors <- c(errors, "Every requirement must cite 21 CFR \u00a711.10(a).")
   }
   if (!all(blocks)) {
     errors <- c(errors, "Every requirement must block export when it fails.")
@@ -52,6 +56,6 @@ EXPORT_VALIDATOR_IDS <- c(
 
 # Is a named validation rule enabled by the controlled YAML specification?
 .export_validator_enabled <- function(id, spec = .read_export_validation_spec()) {
-  if (length(.validate_export_validation_spec(spec)) > 0) return(FALSE)
+  if (length(.validate_export_spec(spec)) > 0) return(FALSE)
   any(vapply(spec$requirements, function(rule) identical(rule$validator, id), logical(1)))
 }

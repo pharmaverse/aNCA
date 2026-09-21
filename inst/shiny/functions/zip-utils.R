@@ -544,7 +544,7 @@ get_tree_ids_for_texts <- function(tree, texts) {
 }
 
 # Validate that the selected session-information record is complete enough to write.
-.validate_session_info_artifact <- function() {
+.validate_session_artifact <- function() {
   lines <- .session_info_lines()
   if (is.character(lines) && length(lines) > 0 && any(grepl("R version:", lines, fixed = TRUE))) {
     return(NULL)
@@ -555,32 +555,52 @@ get_tree_ids_for_texts <- function(tree, texts) {
   )
 }
 
+# Add an artifact finding when its output is selected and its validator is enabled.
+.append_artifact_findings <- function(findings, check, spec) {
+  if (check$is_selected() && aNCA:::.export_validator_enabled(check$validator, spec)) {
+    findings <- c(findings, check$validate())
+  }
+  findings
+}
+
 # Validate artifacts that are generated outside the standard results list.
 .validate_export_artifacts <- function(input, session, res_nca) {
   selected <- input$res_tree %||% character(0)
   spec_findings <- validate_export_outputs(list())
   findings <- if (nrow(spec_findings) > 0) list(spec_findings) else list()
   spec <- aNCA:::.read_export_validation_spec()
-  if ("settings_file" %in% selected &&
-      aNCA:::.export_validator_enabled("settings_structure", spec)) {
-    findings <- c(findings, list(.validate_settings_artifact(session)))
-  }
-  if ("r_script" %in% selected && aNCA:::.export_validator_enabled("script_structure", spec)) {
-    findings <- c(findings, .validate_script_artifacts(session))
-  }
-  if ("results_slides" %in% selected &&
-      aNCA:::.export_validator_enabled("slides_structure", spec)) {
-    findings <- c(findings, .validate_slide_artifacts(input, res_nca))
-  }
   selected_cdisc <- intersect(c("pp", "adpp", "adnca"), selected)
-  if (length(selected_cdisc) > 0 && aNCA:::.export_validator_enabled("pre_specs_structure", spec)) {
-    findings <- c(findings, list(.validate_pre_specs_artifact(
-      selected_cdisc, session$userData$results$CDISC
-    )))
-  }
-  if ("session_info" %in% selected &&
-      aNCA:::.export_validator_enabled("session_info_structure", spec)) {
-    findings <- c(findings, list(.validate_session_info_artifact()))
+  checks <- list(
+    list(
+      validator = "settings_structure",
+      is_selected = function() "settings_file" %in% selected,
+      validate = function() list(.validate_settings_artifact(session))
+    ),
+    list(
+      validator = "script_structure",
+      is_selected = function() "r_script" %in% selected,
+      validate = function() .validate_script_artifacts(session)
+    ),
+    list(
+      validator = "slides_structure",
+      is_selected = function() "results_slides" %in% selected,
+      validate = function() .validate_slide_artifacts(input, res_nca)
+    ),
+    list(
+      validator = "pre_specs_structure",
+      is_selected = function() length(selected_cdisc) > 0,
+      validate = function() list(.validate_pre_specs_artifact(
+        selected_cdisc, session$userData$results$CDISC
+      ))
+    ),
+    list(
+      validator = "session_info_structure",
+      is_selected = function() "session_info" %in% selected,
+      validate = function() list(.validate_session_artifact())
+    )
+  )
+  for (check in checks) {
+    findings <- .append_artifact_findings(findings, check, spec)
   }
   findings <- Filter(Negate(is.null), findings)
   if (length(findings) == 0) return(.export_empty_findings())
