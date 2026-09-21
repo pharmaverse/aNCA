@@ -313,6 +313,56 @@ add_pptx_sl_plot <- function(pptx, plot) {
   list(pptx = pptx, lst_group_slide = lst_group_slide, group_slides = group_slides)
 }
 
+#' Add a Summary of Contents slide to a PowerPoint presentation
+#'
+#' Each TOC entry is placed as a text box with a hyperlink to the target slide.
+#' The slide is appended at the end and then moved to `insert_at`; all target
+#' indices are shifted by +1 to account for the inserted slide.
+#'
+#' @param pptx rpptx object
+#' @param toc_entries List of lists, each with `title` (character) and
+#'   `slide` (integer slide index before insertion).
+#' @param insert_at Slide position for the TOC slide (default: 2).
+#' @return rpptx object with TOC slide inserted.
+#' @keywords internal
+add_pptx_sl_toc <- function(pptx, toc_entries, insert_at = 2) {
+  if (length(toc_entries) == 0) return(pptx)
+
+  pptx <- officer::add_slide(pptx, layout = "Title Only", master = "Office Theme")
+  pptx <- officer::ph_with(
+    pptx,
+    value = "Summary of Contents",
+    location = officer::ph_location_type(type = "title")
+  )
+
+  line_height <- 0.55
+  top_start <- 1.8
+  for (i in seq_along(toc_entries)) {
+    entry <- toc_entries[[i]]
+    entry_label <- paste0("toc_entry_", i)
+    target_slide <- entry$slide + 1 # +1 because the TOC slide itself shifts indices
+
+    pptx <- officer::ph_with(
+      pptx,
+      value = officer::fpar(
+        officer::ftext(
+          entry$title,
+          prop = officer::fp_text(font.size = 16, color = "#0563C1", underlined = TRUE)
+        )
+      ),
+      location = officer::ph_location(
+        left = 1, top = top_start + (i - 1) * line_height,
+        width = 8, height = line_height,
+        newlabel = entry_label
+      )
+    )
+    pptx <- officer::ph_slidelink(pptx, ph_label = entry_label,
+                                  slide_index = target_slide)
+  }
+
+  officer::move_slide(pptx, index = length(pptx), to = insert_at)
+}
+
 #' Collect all unique PPTESTCDs used across dose group slide data
 #'
 #' Extracts PPTESTCDs from statistics tables (column names), individual
@@ -471,6 +521,7 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
 
   lst_group_slide <- 1 + n_glossary_slides
   group_slides <- numeric()
+
   for (i in seq_along(res_dose_slides)) {
     result <- .process_pptx_group_slides(pptx, res_dose_slides[[i]], i, in_sections,
                                          lst_group_slide, group_slides)
@@ -507,6 +558,54 @@ create_pptx_dose_slides <- function(res_dose_slides, path, title, template) {
     }
   }
 
+  toc_entries <- .build_toc_entries(
+    pptx, group_slides, non_empty, first_content_pos, in_sections
+  )
+  pptx <- add_pptx_sl_toc(pptx, toc_entries, insert_at = 2)
+
   print(pptx, target = path)
   invisible(TRUE)
+}
+
+#' Build Summary of Contents entries for a dose-slides presentation
+#'
+#' Computes the (pre-TOC-insertion) target slide index for each major section.
+#' Slide indices account for the title slide plus any glossary slides via
+#' `first_content_pos`; `add_pptx_sl_toc()` shifts targets by +1 for the
+#' inserted TOC slide.
+#'
+#' @param pptx rpptx object (used only to read its current length).
+#' @param group_slides Numeric vector of group summary slide indices.
+#' @param non_empty Named list of additional-analysis tables (may be empty).
+#' @param first_content_pos Integer position of the first content slide
+#'   (2 + number of glossary slides).
+#' @param in_sections Predicate returning TRUE when a section id is included.
+#' @returns A list of TOC entries, each a list with `title` and `slide`.
+#' @keywords internal
+#' @noRd
+.build_toc_entries <- function(pptx, group_slides, non_empty,
+                               first_content_pos, in_sections) {
+  toc_entries <- list()
+  if (length(group_slides) > 0) {
+    toc_entries <- c(toc_entries, list(list(
+      title = "Summary Results",
+      slide = as.integer(first_content_pos)
+    )))
+  }
+  has_individual <- in_sections("ind_plots") || in_sections("ind_params")
+  if (has_individual) {
+    toc_entries <- c(toc_entries, list(list(
+      title = "Extra Figures (Individual Results)",
+      slide = as.integer(length(group_slides) + first_content_pos)
+    )))
+  }
+  if (length(non_empty) > 0) {
+    # Additional analysis title slide is right after all group + extra slides
+    additional_start <- length(pptx) - length(non_empty)
+    toc_entries <- c(toc_entries, list(list(
+      title = "Additional Analysis Figures",
+      slide = as.integer(additional_start)
+    )))
+  }
+  toc_entries
 }
