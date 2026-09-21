@@ -141,14 +141,14 @@ describe("validate_export_outputs: CDISC value-level checks", {
     expect_equal(row$Severity, "error")
   })
 
-  it("surfaces unknown CDISC columns as non-blocking warnings", {
+  it("blocks unknown CDISC columns outside the approved schema", {
     output <- list(
       CDISC = list(adnca = data.frame(NOTINMETA = "x", stringsAsFactors = FALSE))
     )
     findings <- validate_export_outputs(output, metadata = export_test_metadata)
     row <- findings[findings$Output == "CDISC/adnca", ]
-    expect_equal(row$Severity, "warning")
-    expect_false(export_validation_blocks_save(findings))
+    expect_equal(row$Severity, "error")
+    expect_true(export_validation_blocks_save(findings))
   })
 
   it("only checks CDISC datasets present in obj_names", {
@@ -190,12 +190,12 @@ describe("export_validation_blocks_save", {
     expect_true(export_validation_blocks_save(findings))
   })
 
-  it("is FALSE for empty or warning-only findings", {
+  it("is FALSE only when there are no errors", {
     expect_false(export_validation_blocks_save(validate_export_outputs(list())))
-    warn_only <- validate_export_outputs(
+    invalid_schema <- validate_export_outputs(
       list(CDISC = list(adnca = data.frame(NOTINMETA = "x"))),
       metadata = export_test_metadata
     )
-    expect_false(export_validation_blocks_save(warn_only))
+    expect_true(export_validation_blocks_save(invalid_schema))
   })
 })

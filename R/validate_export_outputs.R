@@ -101,6 +101,23 @@ EXPORT_TABLE_NODES <- c(
   NULL
 }
 
+# Check that an exported ggplot can be built before any graphics device writes
+# it. Plotly widgets are validated by their class because their rendering is
+# browser-dependent.
+.validate_plot_structure <- function(x, path) {
+  if (!inherits(x, "ggplot")) return(NULL)
+  built <- tryCatch({
+    ggplot_build(x)
+    TRUE
+  }, error = identity)
+  if (isTRUE(built)) return(NULL)
+  .export_finding_row(
+    path, NA_character_, "plot_structure", "error", "a buildable ggplot",
+    "ggplot build failed",
+    sprintf("Plot '%s' cannot be built: %s", path, built$message)
+  )
+}
+
 # Validate a single export leaf, returning a findings row or NULL when it is a
 # saveable object of the kind its node expects
 .validate_one_export_leaf <- function(x, name, path) {
@@ -129,6 +146,7 @@ EXPORT_TABLE_NODES <- c(
   }
 
   if (observed == "table") return(.validate_table_structure(x, path))
+  if (observed == "plot") return(.validate_plot_structure(x, path))
 
   NULL
 }
@@ -240,14 +258,27 @@ EXPORT_TABLE_NODES <- c(
 validate_export_outputs <- function(output,
                                     obj_names = NULL,
                                     metadata = metadata_nca_variables) {
+  spec <- .read_export_validation_spec()
+  spec_errors <- .validate_export_validation_spec(spec)
+  spec_findings <- lapply(spec_errors, function(message) {
+    .export_finding_row(
+      "export-validation.yml", NA_character_, "validation_spec", "error",
+      "a complete controlled validation specification", "invalid specification", message
+    )
+  })
   if (is.null(output) || !is.list(output) || length(output) == 0) {
-    return(.export_empty_findings())
+    if (length(spec_findings) == 0) return(.export_empty_findings())
+    return(do.call(rbind, spec_findings))
   }
 
-  class_findings <- .walk_export_outputs(output, obj_names, path = "")
-  cdisc_findings <- .export_cdisc_findings(output, obj_names, metadata)
+  class_findings <- if (.export_validator_enabled("standard_output_structure", spec)) {
+    .walk_export_outputs(output, obj_names, path = "")
+  } else list()
+  cdisc_findings <- if (.export_validator_enabled("cdisc_schema", spec)) {
+    .export_cdisc_findings(output, obj_names, metadata)
+  } else .export_empty_findings()
 
-  parts <- c(class_findings, list(cdisc_findings))
+  parts <- c(spec_findings, class_findings, list(cdisc_findings))
   parts <- Filter(function(df) !is.null(df) && nrow(df) > 0, parts)
   if (length(parts) == 0) return(.export_empty_findings())
 

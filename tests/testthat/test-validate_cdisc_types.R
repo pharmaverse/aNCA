@@ -254,7 +254,7 @@ describe("validate_cdisc_types: indexed CDISC variable families", {
     expect_equal(findings$Expected, "numeric")
   })
 
-  it("keeps truly unknown non-indexed columns as warnings", {
+  it("flags truly unknown non-indexed columns as errors", {
     cdisc_data <- list(
       adnca = data.frame(DOSFRM = "TABLET", stringsAsFactors = FALSE)
     )
@@ -262,11 +262,12 @@ describe("validate_cdisc_types: indexed CDISC variable families", {
     unk <- findings[findings$Check == "unknown_variable", ]
     expect_equal(nrow(unk), 1)
     expect_equal(unk$Variable, "DOSFRM")
+    expect_equal(unk$Severity, "error")
   })
 })
 
 describe("validate_cdisc_types: unknown columns", {
-  it("surfaces unknown columns as non-blocking warnings", {
+  it("blocks unknown columns outside the approved metadata", {
     cdisc_data <- list(
       adnca = data.frame(
         STUDYID = "S001",
@@ -277,9 +278,9 @@ describe("validate_cdisc_types: unknown columns", {
     findings <- validate_cdisc_types(cdisc_data, metadata = test_metadata)
     unk <- findings[findings$Check == "unknown_variable", ]
     expect_equal(nrow(unk), 1)
-    expect_equal(unk$Severity, "warning")
+    expect_equal(unk$Severity, "error")
     expect_equal(unk$Variable, "NOTINMETA")
-    expect_false(cdisc_validation_blocks_save(findings))
+    expect_true(cdisc_validation_blocks_save(findings))
   })
 })
 
@@ -345,12 +346,12 @@ describe("cdisc_validation_blocks_save", {
     expect_true(cdisc_validation_blocks_save(findings))
   })
 
-  it("is FALSE for empty or warning-only findings", {
+  it("is FALSE only when there are no errors", {
     expect_false(cdisc_validation_blocks_save(validate_cdisc_types(list())))
-    warn_only <- validate_cdisc_types(
+    invalid_schema <- validate_cdisc_types(
       list(adnca = data.frame(NOTINMETA = "x", stringsAsFactors = FALSE)),
       metadata = test_metadata
     )
-    expect_false(cdisc_validation_blocks_save(warn_only))
+    expect_true(cdisc_validation_blocks_save(invalid_schema))
   })
 })

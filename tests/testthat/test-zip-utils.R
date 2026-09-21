@@ -127,7 +127,7 @@ describe("prepare_export_files validation gate", {
     unlink(target_dir, recursive = TRUE)
   })
 
-  it("shows warning-only CDISC findings and does not block the export", {
+  it("blocks CDISC exports with columns outside the approved schema", {
     target_dir <- tempfile("anca-export-")
     dir.create(target_dir)
     notifications <- character(0)
@@ -139,7 +139,7 @@ describe("prepare_export_files validation gate", {
       notifications <<- c(notifications, as.character(payload$html))
     })
 
-    expect_no_error(
+    expect_error(
       prepare_export_files(
         target_dir = target_dir,
         res_nca = NULL,
@@ -148,10 +148,11 @@ describe("prepare_export_files validation gate", {
         input = test_export_input("adnca"),
         session = session,
         progress = test_export_progress
-      )
+      ),
+      "Export validation failed"
     )
 
-    expect_true(any(grepl("Export validation warning", notifications)))
+    expect_true(any(grepl("Save blocked", notifications)))
     unlink(target_dir, recursive = TRUE)
   })
 })
@@ -186,6 +187,18 @@ describe("selected export artifact validation", {
     )
     expect_true(all(findings$Severity == "error"))
     expect_true(all(c("slide_input", "slide_format") %in% findings$Check))
+  })
+
+  it("validates selected pre-specifications and session information", {
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(STUDYID = "S1", stringsAsFactors = FALSE)),
+      exploration = list()
+    ))
+    findings <- .validate_export_artifacts(
+      input = test_export_input(c("adnca", "session_info")),
+      session = session, res_nca = NULL
+    )
+    expect_equal(nrow(findings), 0)
   })
 })
 

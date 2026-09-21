@@ -118,10 +118,10 @@ CDISC_FINDING_COLS <- c(
   !is.na(len) && is.numeric(len) && len > 0
 }
 
-# Unknown-variable finding for a column absent from the metadata
+# Unknown-variable finding for a column absent from the approved metadata.
 .cdisc_finding_unknown <- function(ds_name, var, n) {
   .cdisc_finding_row(
-    ds_name, var, "unknown_variable", "warning",
+    ds_name, var, "unknown_variable", "error",
     "declared in metadata", "not in metadata", n,
     sprintf("Column '%s' is not declared in the metadata for %s.", var, ds_name)
   )
@@ -264,8 +264,8 @@ validate_cdisc_types <- function(cdisc_data,
 #' Does a set of validation findings block saving?
 #'
 #' Predicate used by the export/Save flow to refuse a save when any
-#' `error`-severity finding is present. `warning`-severity findings (for
-#' example unknown columns) do not block saving.
+#' `error`-severity finding is present. Columns outside the approved metadata
+#' are errors and therefore block saving.
 #'
 #' @param findings A findings data frame as returned by
 #'   [validate_cdisc_types()].

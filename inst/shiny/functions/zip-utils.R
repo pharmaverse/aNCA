@@ -462,6 +462,30 @@ get_tree_ids_for_texts <- function(tree, texts) {
   findings
 }
 
+# Prepare the pre-specification workbook payload without writing a file.
+.pre_specs_export_payload <- function(selected, cdisc_data) {
+  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
+  datasets <- unname(rev_map[selected])
+  pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
+  Filter(function(df) is.data.frame(df) && nrow(df) > 0, pre_specs)
+}
+
+# Validate the selected pre-specification workbook payload.
+.validate_pre_specs_artifact <- function(selected, cdisc_data) {
+  pre_specs <- tryCatch(.pre_specs_export_payload(selected, cdisc_data), error = identity)
+  valid <- is.list(pre_specs) && all(vapply(pre_specs, is.data.frame, logical(1)))
+  if (valid) return(NULL)
+  observed <- if (inherits(pre_specs, "error")) {
+    pre_specs$message
+  } else {
+    "invalid pre-specification payload"
+  }
+  .export_artifact_error(
+    "CDISC/Pre_Specs.xlsx", "pre_specs_structure", "a list of data-frame sheets",
+    observed, "CDISC pre-specifications could not be prepared for export."
+  )
+}
+
 # Validate the inputs and dependencies required for a selected slide export.
 .validate_slide_artifacts <- function(input, res_nca) {
   findings <- list()
@@ -490,18 +514,73 @@ get_tree_ids_for_texts <- function(tree, texts) {
   findings
 }
 
+# Build a complete session-information record for export.
+.session_info_lines <- function() {
+  tryCatch({
+    si <- utils::sessionInfo()
+    hdr <- c(
+      paste("R version:", si$R.version$version.string),
+      paste("Platform: ", si$platform),
+      paste("Running under:", si$running), "",
+      "aNCA and attached packages:", ""
+    )
+    attached <- c(
+      vapply(si$otherPkgs, function(p) {
+        tryCatch(paste0("  ", p$Package, " ", p$Version),
+                 error = function(e) paste0("  ", p$Package))
+      }, ""),
+      vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
+    )
+    hdr <- c(hdr, sort(attached))
+    if (length(si$loadedOnly) > 0) {
+      loaded <- vapply(si$loadedOnly, function(p) {
+        tryCatch(paste0("  ", p$Package, " ", p$Version),
+                 error = function(e) paste0("  ", p$Package))
+      }, "")
+      hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
+    }
+    hdr
+  }, error = function(e) c("Session info unavailable:", e$message))
+}
+
+# Validate that the selected session-information record is complete enough to write.
+.validate_session_info_artifact <- function() {
+  lines <- .session_info_lines()
+  if (is.character(lines) && length(lines) > 0 && any(grepl("R version:", lines, fixed = TRUE))) {
+    return(NULL)
+  }
+  .export_artifact_error(
+    "session_info.txt", "session_info_structure", "a complete session-information record",
+    "session information unavailable", "Session information could not be prepared for export."
+  )
+}
+
 # Validate artifacts that are generated outside the standard results list.
 .validate_export_artifacts <- function(input, session, res_nca) {
   selected <- input$res_tree %||% character(0)
-  findings <- list()
-  if ("settings_file" %in% selected) {
+  spec_findings <- validate_export_outputs(list())
+  findings <- if (nrow(spec_findings) > 0) list(spec_findings) else list()
+  spec <- aNCA:::.read_export_validation_spec()
+  if ("settings_file" %in% selected &&
+      aNCA:::.export_validator_enabled("settings_structure", spec)) {
     findings <- c(findings, list(.validate_settings_artifact(session)))
   }
-  if ("r_script" %in% selected) {
+  if ("r_script" %in% selected && aNCA:::.export_validator_enabled("script_structure", spec)) {
     findings <- c(findings, .validate_script_artifacts(session))
   }
-  if ("results_slides" %in% selected) {
+  if ("results_slides" %in% selected &&
+      aNCA:::.export_validator_enabled("slides_structure", spec)) {
     findings <- c(findings, .validate_slide_artifacts(input, res_nca))
+  }
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), selected)
+  if (length(selected_cdisc) > 0 && aNCA:::.export_validator_enabled("pre_specs_structure", spec)) {
+    findings <- c(findings, list(.validate_pre_specs_artifact(
+      selected_cdisc, session$userData$results$CDISC
+    )))
+  }
+  if ("session_info" %in% selected &&
+      aNCA:::.export_validator_enabled("session_info_structure", spec)) {
+    findings <- c(findings, list(.validate_session_info_artifact()))
   }
   findings <- Filter(Negate(is.null), findings)
   if (length(findings) == 0) return(.export_empty_findings())
@@ -798,14 +877,7 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_pre_specs <- function(target_dir, selected, cdisc_data = NULL) {
-  # Reverse lookup: lowercase keys -> uppercase dataset names
-  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
-  datasets <- unname(rev_map[selected])
-
-  pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
-
-  # Keep only non-empty specs
-  pre_specs <- Filter(function(df) nrow(df) > 0, pre_specs)
+  pre_specs <- .pre_specs_export_payload(selected, cdisc_data)
 
   if (length(pre_specs) > 0) {
     cdisc_dir <- file.path(target_dir, "CDISC")
@@ -833,45 +905,7 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_session_info <- function(target_dir) {
-  lines <- tryCatch({
-    si <- utils::sessionInfo()
-    hdr <- c(
-      paste("R version:", si$R.version$version.string),
-      paste("Platform: ", si$platform),
-      paste("Running under:", si$running),
-      "",
-      "aNCA and attached packages:",
-      ""
-    )
-
-    # Collect attached packages (base + other) with versions, sorted alphabetically
-    attached <- c(
-      vapply(si$otherPkgs, function(p) {
-        tryCatch(
-          paste0("  ", p$Package, " ", p$Version),
-          error = function(e) paste0("  ", p$Package)
-        )
-      }, ""),
-      vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
-    )
-    hdr <- c(hdr, sort(attached))
-
-    # Loaded-only (namespace) packages
-    if (length(si$loadedOnly) > 0) {
-      loaded <- vapply(si$loadedOnly, function(p) {
-        tryCatch(
-          paste0("  ", p$Package, " ", p$Version),
-          error = function(e) paste0("  ", p$Package)
-        )
-      }, "")
-      hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
-    }
-    hdr
-  }, error = function(e) {
-    c("Session info unavailable:", e$message)
-  })
-
-  writeLines(lines, file.path(target_dir, "session_info.txt"))
+  writeLines(.session_info_lines(), file.path(target_dir, "session_info.txt"))
 }
 
 #' Clean Export Directory
