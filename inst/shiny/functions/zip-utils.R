@@ -589,9 +589,11 @@ get_tree_ids_for_texts <- function(tree, texts) {
     list(
       validator = "pre_specs_structure",
       is_selected = function() length(selected_cdisc) > 0,
-      validate = function() list(.validate_pre_specs_artifact(
-        selected_cdisc, session$userData$results$CDISC
-      ))
+      validate = function() {
+        list(.validate_pre_specs_artifact(
+          selected_cdisc, session$userData$results$CDISC
+        ))
+      }
     ),
     list(
       validator = "session_info_structure",
