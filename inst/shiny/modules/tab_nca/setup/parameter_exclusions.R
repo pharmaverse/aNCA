@@ -271,7 +271,7 @@ parameter_exclusions_ui <- function(id) {
 .make_pp_choices <- function(res, tagged_res, filter_pps, xvars, colorvars) {
   result_data <- res$result
   if (all(c("type_interval", "start_dose", "end_dose") %in%
-          names(result_data))) {
+            names(result_data))) {
     result_data <- aNCA:::rename_interval_params(result_data)
   }
   all_params <- unique(result_data$PPTESTCD)
@@ -341,8 +341,8 @@ parameter_exclusions_ui <- function(id) {
 
 .filter_param_data <- function(df, selected_pps, selected_plot_row_id) {
   if (!is.null(selected_pps) &&
-      length(selected_pps) > 0 &&
-      "PPTESTCD" %in% names(df)) {
+        length(selected_pps) > 0 &&
+        "PPTESTCD" %in% names(df)) {
     df <- df[df$PPTESTCD %in% selected_pps, , drop = FALSE]
   }
   df <- .sort_param_display(df)
@@ -382,8 +382,8 @@ parameter_exclusions_ui <- function(id) {
   selected <- row_ids[rows_sel]
   selected <- selected[!is.na(selected)]
   if (length(selected) == 0 &&
-      !is.na(plot_row_id) &&
-      plot_row_id %in% row_ids) {
+        !is.na(plot_row_id) &&
+        plot_row_id %in% row_ids) {
     selected <- plot_row_id
   }
   selected
