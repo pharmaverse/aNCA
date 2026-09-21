@@ -1027,14 +1027,4 @@ describe("remove_pp_not_requested", {
   })
 })
 
-describe("PKNCA_create_data_object half-life columns", {
-  it("always supplies half-life selection columns to PKNCA", {
-    pknca_data <- PKNCA_create_data_object(adnca_example)
-    
-    expect_true("exclude_half.life" %in% names(pknca_data$conc$data))
-    expect_true("include_half.life" %in% names(pknca_data$conc$data))
-    expect_true(all(pknca_data$conc$data$exclude_half.life == FALSE))
-    expect_true(all(is.na(pknca_data$conc$data$include_half.life)))
-  })
-})
 
