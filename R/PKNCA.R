@@ -180,6 +180,15 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 
   # ensure units are correct for excretion calculations
   df_conc <- convert_volume_units(df_conc)
+  # PKNCA >= 0.12.1 requires these columns to exist when their column names
+  # are supplied to PKNCAconc().
+  if (!"exclude_half.life" %in% names(df_conc)) {
+    df_conc$exclude_half.life <- FALSE
+  }
+  
+  if (!"include_half.life" %in% names(df_conc)) {
+    df_conc$include_half.life <- NA
+  }
 
   args_list <- list(
     data = df_conc,
