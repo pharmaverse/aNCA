@@ -264,8 +264,8 @@ validate_cdisc_types <- function(cdisc_data,
 #' Does a set of validation findings block saving?
 #'
 #' Predicate used by the export/Save flow to refuse a save when any
-#' `error`-severity finding is present. Columns outside the approved metadata
-#' are errors and therefore block saving.
+#' `error`-severity finding is present. `warning`-severity findings (for
+#' example unknown columns) do not block saving.
 #'
 #' @param findings A findings data frame as returned by
 #'   [validate_cdisc_types()].
