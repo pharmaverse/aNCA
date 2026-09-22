@@ -8,6 +8,15 @@
 #'
 #' @returns A reactive with raw adnca data as provided by the user (or dummy dataset).
 
+.upload_file_help_text <- function(readers = names(aNCA:::readers)) {
+  max_upload_size_mb <- getOption("shiny.maxRequestSize", 5 * 1024^2) / 1024^2
+  sprintf(
+    "Accepted: %s - Max %s MB",
+    paste(readers, collapse = ", "),
+    format(max_upload_size_mb, trim = TRUE, scientific = FALSE)
+  )
+}
+
 data_upload_ui <- function(id) {
   ns <- NS(id)
 
@@ -15,10 +24,14 @@ data_upload_ui <- function(id) {
     div(
       class = "upload-container",
       id = ns("upload_container"),
-      p("Upload your PK dataset and Settings file (optional).",
+      p(
+        "Upload your PK dataset and Settings file (optional).",
         tags$br(),
-        tags$small(style = "color: #6c757d; display: block; margin-top: 4px;",
-                   sprintf("Maximum upload size: %s MB", max_upload_size_mb))),
+        tags$small(
+          style = "color: #6c757d; display: block; margin-top: 4px;",
+          .upload_file_help_text()
+        )
+      ),
       fileInput(
         ns("data_upload"),
         width = "50%",
