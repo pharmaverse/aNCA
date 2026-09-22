@@ -414,38 +414,71 @@
 
 #### Export & Output
 
+- Download generated tables, listings, and graphs through “Export as
+  ZIP”, using the current TLG order and sidebar settings. Available
+  concentration TLGs can be exported before running NCA, without opening
+  each output’s tab
+  ([\#1428](https://github.com/pharmaverse/aNCA/issues/1428), closes
+  [\#1344](https://github.com/pharmaverse/aNCA/issues/1344)).
+
+  - Graphs: PDF (default) or self-contained interactive HTML as one
+    document per TLG, or PNG as one file per plot, retaining plot
+    titles, subtitles, footnotes, and axis scales.
+  - Tables and listings: XLSX (default) as one workbook per TLG with a
+    sheet per split, CSV as one file per split, or PDF paginated across
+    rows and columns. Exports use displayed listing columns and readable
+    summary-table headers.
+  - Files are organised under `TLGs/Graphs/`, `TLGs/Tables/`, and
+    `TLGs/Listings/` by format, with descriptive filenames and unique,
+    Excel-safe worksheet names for split outputs.
+  - A `manifest.csv` records output paths and statuses, including
+    unavailable or failed TLGs, so one output’s failure does not prevent
+    the remaining outputs from being downloaded.
+
 - PowerPoint export includes a PPTESTCD glossary slide after the title
   slide, listing all PK parameter codes and their full names
   ([\#1326](https://github.com/pharmaverse/aNCA/issues/1326))
+
 - General button at top of page to save all NCA results, settings, and
   draft slides as a ZIP file
   ([\#638](https://github.com/pharmaverse/aNCA/issues/638))
+
 - Dose-normalised summary slides added to PPT/QMD export, controlled via
   Customise Slides modal
   ([\#1054](https://github.com/pharmaverse/aNCA/issues/1054))
+
 - Export modal allows selecting which slide sections to include in
   PPTX/HTML exports
   ([\#972](https://github.com/pharmaverse/aNCA/issues/972))
+
 - CDISC ZIP includes `Pre_Specs.xlsx` with variable-level metadata and
   session info ([\#998](https://github.com/pharmaverse/aNCA/issues/998),
   [\#829](https://github.com/pharmaverse/aNCA/issues/829))
+
 - ADPP includes CRITy/CRITyFL columns for flag rules and
   PPSUMXF/PPSUMRSN for summary exclusion status
   ([\#1141](https://github.com/pharmaverse/aNCA/issues/1141))
+
 - Non-standard grouping variables included in ADPP and ADNCA outputs
   ([\#1077](https://github.com/pharmaverse/aNCA/issues/1077))
+
 - R script exported in ZIP to replicate app outputs
   ([\#789](https://github.com/pharmaverse/aNCA/issues/789))
+
 - Save button enabled after data mapping with progressive content
   ([\#1136](https://github.com/pharmaverse/aNCA/issues/1136))
+
 - Export filenames use STUDYID as fallback; project name auto-populated
   from STUDYID
   ([\#1000](https://github.com/pharmaverse/aNCA/issues/1000))
+
 - Slide outputs grouped by PKNCA groups, dose profile, and additional
   grouping variables
   ([\#791](https://github.com/pharmaverse/aNCA/issues/791))
+
 - Mean plots added to TLGs section with BLQ handling
   ([\#555](https://github.com/pharmaverse/aNCA/issues/555))
+
 - CMAX auto-selected in box plots if available
   ([\#890](https://github.com/pharmaverse/aNCA/issues/890))
 
