@@ -7,10 +7,17 @@ adnca <- FIXTURE_CONC_DATA %>%
 attr(adnca$USUBJID, "label") <- "Subject ID"
 attr(adnca$AVAL, "label") <- "Analysis value"
 
+get_x_breaks <- function(plot) {
+  breaks <- ggplot2::ggplot_build(plot)$layout$panel_params[[1]]$x$get_breaks()
+  breaks[!is.na(breaks)]
+}
+
 describe("pkcg01", {
   it("generates valid ggplots with LIN scale", {
     plots_lin <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
     expect_equal(length(plots_lin), 3)
+    expect_length(names(plots_lin), length(plots_lin))
+    expect_true(all(nzchar(names(plots_lin))))
     vdiffr::expect_doppelganger("lin_plot1", plots_lin[[1]])
     vdiffr::expect_doppelganger("lin_plot2", plots_lin[[2]])
     vdiffr::expect_doppelganger("lin_plot3", plots_lin[[3]])
@@ -20,6 +27,23 @@ describe("pkcg01", {
     plotlys_lin <- pkcg01(adnca, scale = "LIN", plotly = TRUE)
     expect_equal(length(plotlys_lin), 3)
     expect_true(inherits(plotlys_lin[[1]], "plotly"))
+  })
+
+  it("keeps fewer x-axis breaks when the time labels are long", {
+    # A dense hourly profile, then the same profile shifted to a later dose so its labels
+    # grow from "23" to "142.917". The spacing and the range are identical, so any
+    # difference in the breaks kept is down to how wide the labels render.
+    times <- 0:47
+    dense <- adnca %>%
+      slice(rep(1, length(times))) %>%
+      mutate(NFRLT = times, AFRLT = times, AVAL = seq_along(times))
+    late <- dense %>%
+      mutate(NFRLT = NFRLT + 119.917, AFRLT = AFRLT + 119.917)
+
+    short_breaks <- get_x_breaks(pkcg01(dense, scale = "LIN", plotly = FALSE)[[1]])
+    long_breaks <- get_x_breaks(pkcg01(late, scale = "LIN", plotly = FALSE)[[1]])
+
+    expect_lt(length(long_breaks), length(short_breaks))
   })
 
   it("generates valid ggplots with LOG scale", {
@@ -146,6 +170,8 @@ describe("pkcg02", {
       color_var_label =  attr(adnca$USUBJID, "label")
     )
     expect_equal(length(combined_plots_lin), 2)
+    expect_length(names(combined_plots_lin), length(combined_plots_lin))
+    expect_true(all(nzchar(names(combined_plots_lin))))
     vdiffr::expect_doppelganger("combined_lin_plot1", combined_plots_lin[[1]])
     vdiffr::expect_doppelganger("combined_lin_plot2", combined_plots_lin[[2]])
   })
@@ -419,21 +445,39 @@ describe("pkcg03", {
   })
 
   it("correctly selects whiskers for 'Upper' option", {
-    # Generate the plot
     plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Upper", plotly = FALSE)
     p <- plots[[1]]
 
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymin), "mean")
     expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_upr")
   })
 
   it("correctly selects whiskers for 'Lower' option", {
-    # Generate the plot
     plots <- pkcg03(adpc1, summary_method = "Mean_sdi", whiskers_lwr_upr = "Lower", plotly = FALSE)
     p <- plots[[1]]
 
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_lwr")
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymin), "mean_sdi_lwr")
+    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean")
+  })
+
+  it("renders visible one-sided error bars (ymin != ymax)", {
+    plots_upper <- pkcg03(adpc1, summary_method = "Mean_sdi",
+                          whiskers_lwr_upr = "Upper", plotly = FALSE)
+    plots_lower <- pkcg03(adpc1, summary_method = "Mean_sdi",
+                          whiskers_lwr_upr = "Lower", plotly = FALSE)
+
+    build_upper <- ggplot2::ggplot_build(plots_upper[[1]])
+    build_lower <- ggplot2::ggplot_build(plots_lower[[1]])
+
+    # Find the errorbar layer data
+    eb_upper <- Find(function(d) "ymin" %in% names(d), build_upper$data)
+    eb_lower <- Find(function(d) "ymin" %in% names(d), build_lower$data)
+
+    # Error bars must have non-zero height
+    expect_true(any(eb_upper$ymin != eb_upper$ymax))
+    expect_true(any(eb_lower$ymin != eb_lower$ymax))
   })
 
   it("returns error if missing scales package for SBS scale", {

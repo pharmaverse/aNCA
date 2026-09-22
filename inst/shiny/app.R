@@ -27,8 +27,6 @@ lapply(list.files("functions", pattern = "\\.R$", full.names = TRUE, recursive =
 
 assets <- system.file("shiny/www", package = "aNCA")
 
-shiny::addResourcePath("logos", system.file("man/figures", package = "aNCA"))
-
 setup_logger()
 
 ui <- function() {
@@ -38,7 +36,7 @@ ui <- function() {
       div(
         style = "display: flex; align-items: center; gap: 10px;",
         tags$img(
-          src = "logos/aNCA_logo.png", # Ensure file is in www/ or resource path
+          src = "images/aNCA_logo.png",
           alt = "aNCA logo",
           width = "40px" # Adjusted for sidebar header scale
         )
@@ -78,6 +76,7 @@ ui <- function() {
 
     includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
+    includeScript(file.path(assets, "tlg_add_picker.js")),
 
     sidebar = navset_pill_list(
       id = "page",
@@ -243,7 +242,11 @@ server <- function(input, output, session) {
   )
 
   # TLG
-  tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
+  tab_tlg_server(
+    "tlg",
+    tab_nca_outputs$processed_pknca_data,
+    adpp = tab_nca_outputs$adpp
+  )
 
   # ABOUT ----
   tab_about_server("about")

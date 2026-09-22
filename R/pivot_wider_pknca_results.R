@@ -207,36 +207,6 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   if (length(unique_values) == 0) NA_character_ else paste(unique_values, collapse = ", ")
 }
 
-#' Helper function to add "label" attribute to columns based on parameter names.
-#' @noRd
-#' @keywords internal
-add_label_attribute <- function(df, myres) {
-  mapping_vr <- myres$result %>%
-    mutate(
-      PPTESTCD_unit = case_when(
-        type_interval == "manual" ~ paste0(
-          PPTESTCD, "_", start, "-", end,
-          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        ),
-        !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
-        TRUE ~ PPTESTCD
-      ),
-      PPTESTCD_cdisc = translate_terms(PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST")
-    ) %>%
-    select(PPTESTCD_cdisc, PPTESTCD_unit) %>%
-    distinct() %>%
-    pull(PPTESTCD_cdisc, PPTESTCD_unit)
-
-  mapping_cols <- intersect(names(df), names(mapping_vr))
-  attrs <- unname(mapping_vr[mapping_cols])
-
-  df[, mapping_cols] <- as.data.frame(mapply(function(col, bw) {
-    attr(col, "label") <- bw
-    col
-  }, df[, mapping_cols], attrs, SIMPLIFY = FALSE))
-  df
-}
-
 #' Apply Flagging Logic to NCA Results
 #'
 #' @description
@@ -268,18 +238,7 @@ add_label_attribute <- function(df, myres) {
 
   if (length(flag_cols) > 0) {
 
-    missing_flags <- pknca_res %>%
-      filter(PPTESTCD %in% flag_params,
-             type_interval == "main") %>%
-      mutate(is_missing = is.na(PPSTRES)) %>%
-      select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -type_interval)  %>%
-      pivot_wider(
-        names_from = PPTESTCD,
-        values_from = is_missing,
-        names_prefix = "missing_"
-      ) %>%
-      mutate(Missing = pmap_chr(across(starts_with("missing_")), .extract_missing_values)) %>%
-      select(-starts_with("missing_"), -exclude, -start_dose, -end_dose)
+    missing_flags <- .build_profile_missing_flags(data, pknca_res, flag_params)
 
     data <- data %>%
       left_join(missing_flags,
@@ -302,18 +261,43 @@ add_label_attribute <- function(df, myres) {
   data
 }
 
-# Helper function to extract missing values
-#' @noRd
-.extract_missing_values <- function(...) {
-  # Get the values for the current row
-  vals <- c(...)
-  # Get the names associated with the TRUE values
-  missing_names <- names(vals)[which(vals == TRUE)]
+# Build one Missing value per pivoted profile row. The source data is still
+# the long PKNCA result, but it is explicitly collapsed by the profile keys
+# shared with the pivoted table before joining back.
+.build_profile_missing_flags <- function(data, pknca_res, flag_params) {
+  profile_cols <- .missing_profile_cols(data, pknca_res)
 
+  missing_data <- pknca_res %>%
+    filter(PPTESTCD %in% flag_params,
+           type_interval == "main")
+
+  if (nrow(missing_data) == 0) {
+    return(data[0, profile_cols, drop = FALSE] %>%
+             mutate(Missing = character(0)))
+  }
+
+  if (length(profile_cols) > 0) {
+    missing_data <- missing_data %>%
+      group_by(across(all_of(profile_cols)))
+  }
+
+  missing_data %>%
+    summarise(
+      Missing = .extract_profile_missing(PPTESTCD, is.na(PPSTRES)),
+      .groups = "drop"
+    )
+}
+
+.missing_profile_cols <- function(data, pknca_res) {
+  result_cols <- c(
+    "PPTESTCD", "PPTEST", "PPSTRES", "PPSTRESU", "PPORRES", "PPORRESU",
+    "exclude", "type_interval", "start_dose", "end_dose"
+  )
+  setdiff(intersect(names(data), names(pknca_res)), result_cols)
+}
+
+.extract_profile_missing <- function(params, is_missing) {
+  missing_names <- unique(params[!is.na(is_missing) & is_missing])
   if (length(missing_names) == 0) return(NA_character_)
-
-  missing_names %>%
-    sub("missing_", "", .) %>%
-    paste0(" is NA") %>%
-    paste(collapse = "; ")
+  paste0(missing_names, " is NA", collapse = "; ")
 }

@@ -39,7 +39,7 @@ nca_results_ui <- function(id) {
     ),
 
     # Download button
-    downloadButton(ns("local_download_NCAres"), "Download locally the NCA Data")
+    downloadButton(ns("local_download_NCAres"), "Download NCA Data")
   )
 }
 

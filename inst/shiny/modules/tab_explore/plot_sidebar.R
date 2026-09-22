@@ -62,7 +62,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
     ),
     pickerInput(
       inputId = ns("profiles"),
-      label = "Choose the profile(s):",
+      label = "Select the profile(s):",
       choices = NULL,
       selected = NULL,
       multiple = TRUE,
@@ -73,6 +73,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
     conditionalPanel(
       condition = "input.facetby && input.facetby.length > 0",
       checkboxInput(ns("show_facet_n"), "Show number of subjects", value = FALSE),
+      checkboxInput(ns("lock_y_axis"), "Use same Y-axis range", value = TRUE),
       ns = ns
     ),
     selectInput(
@@ -91,7 +92,7 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
     ),
     radioButtons(
       ns("timescale"),
-      "Choose the Timescale",
+      "Select the Timescale",
       choices = c("All Time", "By Dose Profile")
     ),
     checkboxInput(ns("show_threshold"), label = "Show Threshold"),
@@ -120,7 +121,14 @@ plot_sidebar_ui <- function(id, is_mean_plot = FALSE, extra_ui = NULL) {
         checkboxInput(ns("ci"), label = "Show 95% CI", value = FALSE),
         helpText("Mean values are not displayed if n < 3 for a time point.")
       )
-    }
+    },
+    actionButton(
+      ns("copy_plot_code"),
+      label = "Show Code",
+      icon = icon("code"),
+      class = "btn btn-primary btn-sm",
+      width = "100%"
+    )
   )
 }
 
@@ -228,7 +236,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = default_color,
                      selector_ui_wrapper = "colorby_ui_wrapper",
                      id = "colorby",
-                     label = "Choose the variables to color by:",
+                     label = "Select the variables to color by:",
                      metadata_type = "variable")
 
       # Rendering the facetby selector with labels
@@ -239,7 +247,7 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
                      initial_selection = default_facet,
                      selector_ui_wrapper = "facetby_ui_wrapper",
                      id = "facetby",
-                     label = "Choose the variables to facet by:",
+                     label = "Select the variables to facet by:",
                      metadata_type = "variable")
     })
 
@@ -272,6 +280,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
           color_by = input$colorby,
           facet_by = input$facetby,
           show_facet_n = input$show_facet_n,
+          lock_y_axis = isTRUE(input$lock_y_axis) &&
+            !is.null(input$facetby) && length(input$facetby) > 0,
           ylog_scale = input$log,
           show_legend = input$show_legend,
           threshold_value = input$threshold_value,
@@ -286,7 +296,8 @@ plot_sidebar_server <- function(id, pknca_data, grouping_vars) {
           y_axis_values = input$y_axis_values
         )
       }),
-      add_to_exports = reactive(input$add_to_exports)
+      add_to_exports = reactive(input$add_to_exports),
+      copy_plot_code = reactive(input$copy_plot_code)
     )
   })
 }

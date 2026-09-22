@@ -5,7 +5,7 @@
 #' @param time The starting time of the collection interval
 #' @param duration.conc The duration of the collection interval
 #' @param check Should the concentration and time data be checked?
-#' @return The midpoint collection time of the last measurable excretion rate, or NA/0 if not available
+#' @returns The midpoint collection time of the last measurable excretion rate, or NA/0 if not available
 #' @export
 pk.calc.ertlst <- function(conc, volume, time, duration.conc, check = TRUE) {
 
@@ -51,7 +51,7 @@ PKNCA::PKNCA.set.summary(
 #' @param time The starting time of the collection interval
 #' @param duration.conc The duration of the collection interval
 #' @param check Should the concentration data be checked?
-#' @return The maximum excretion rate, or NA if not available
+#' @returns The maximum excretion rate, or NA if not available
 #' @export
 pk.calc.ermax <- function(conc, volume, time, duration.conc, check = TRUE) {
   
@@ -83,7 +83,7 @@ pk.calc.ermax <- function(conc, volume, time, duration.conc, check = TRUE) {
 #' @param check Should the concentration and time data be checked?
 #' @param first.tmax If TRUE, return the first time of maximum excretion rate; otherwise, return the last
 #' @param options List of PKNCA global options set
-#' @return The midpoint collection time of the maximum excretion rate, or NA if not available
+#' @returns The midpoint collection time of the maximum excretion rate, or NA if not available
 #' @export
 pk.calc.ertmax <- function( #nolint
     conc, volume, time, duration.conc, check = TRUE, first.tmax = NULL, options = list() #nolint
@@ -189,7 +189,7 @@ generate_missing_messages <- function(a, b,
 #' Calculate the total urine volume
 #'
 #' @param volume The volume (or mass) of the sample
-#' @return The sum of urine volumes for the interval
+#' @returns The sum of urine volumes for the interval
 #' @export
 pk.calc.volpk <- function(volume) { #nolint
   if (length(volume) == 0) return(NA_real_)

@@ -57,8 +57,11 @@ apply_mapping <- function(
 
   new_dataset <- dataset
 
-  ####### TODO (Gerardo): This would be better to be explicit outside the function
-  # Grouping_Variables should not be renamed
+  # Drop meta-mapping keys that are not column renames: Grouping_Variables,
+  # Metabolites, and NCAwXRS select existing columns / drive downstream options
+  # rather than renaming a source column, so they must not flow into the rename
+  # step below. Ideally the caller would pass only true rename pairs so this
+  # filtering could live outside apply_mapping().
   mapping <- mapping[!names(mapping) %in% c("Grouping_Variables", "Metabolites", "NCAwXRS")]
 
   # Special case: If ADOSEDUR is not mapped, we assume is 0
@@ -85,7 +88,6 @@ apply_mapping <- function(
       )
     )
   }
-  ################################################################################
 
   # If a variable to map is not a column in the data, assume is the value to use for its creation
   mappings_not_in_data <- mapping[!unname(mapping) %in% names(dataset) & mapping != ""]

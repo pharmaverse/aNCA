@@ -271,7 +271,6 @@ describe("flexible_violinboxplot: Tooltips & Aesthetics", {
       labels_df = metadata_nca_variables,
       seed = 123
     )
-    print(p$data$tooltip_text)
     # Check that tooltip text contains rounded value (100.12)
     expect_true(any(grepl("100.12", p$data$tooltip_text)))
     # Ensure raw long decimal isn't there

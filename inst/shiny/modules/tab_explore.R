@@ -86,22 +86,30 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(pknca_data(), individual_inputs()$color_by)
       log_info("Rendering individual plots")
 
-      exploration_individualplot(
-        pknca_data = isolate(pknca_data()),
-        color_by = individual_inputs()$color_by,
-        facet_by = individual_inputs()$facet_by,
-        show_facet_n = individual_inputs()$show_facet_n,
-        filtering_list = individual_inputs()$filtering_list,
-        show_dose = individual_inputs()$show_dose,
-        ylog_scale = individual_inputs()$ylog_scale,
-        show_legend = individual_inputs()$show_legend,
-        x_limits = individual_inputs()$x_limits,
-        y_limits = individual_inputs()$y_limits,
-        threshold_value = individual_inputs()$threshold_value,
-        labels_df = metadata_nca_variables,
-        use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
-        palette = individual_inputs()$palette,
-        line_type = individual_inputs()$y_axis_values
+      withCallingHandlers(
+        exploration_individualplot(
+          pknca_data = isolate(pknca_data()),
+          color_by = individual_inputs()$color_by,
+          facet_by = individual_inputs()$facet_by,
+          show_facet_n = individual_inputs()$show_facet_n,
+          lock_y_axis = individual_inputs()$lock_y_axis,
+          filtering_list = individual_inputs()$filtering_list,
+          show_dose = individual_inputs()$show_dose,
+          ylog_scale = individual_inputs()$ylog_scale,
+          show_legend = individual_inputs()$show_legend,
+          x_limits = individual_inputs()$x_limits,
+          y_limits = individual_inputs()$y_limits,
+          threshold_value = individual_inputs()$threshold_value,
+          labels_df = metadata_nca_variables,
+          use_time_since_last_dose = individual_inputs()$use_time_since_last_dose,
+          palette = individual_inputs()$palette,
+          line_type = individual_inputs()$y_axis_values
+        ),
+        warning = function(w) {
+          log_warn(conditionMessage(w))
+          showNotification(conditionMessage(w), type = "warning", duration = 10)
+          invokeRestart("muffleWarning")
+        }
       )
     })
 
@@ -115,25 +123,33 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       req(pknca_data(), mean_inputs()$color_by)
       log_info("Computing meanplot ggplot object")
 
-      exploration_meanplot(
-        pknca_data = isolate(pknca_data()),
-        color_by = mean_inputs()$color_by,
-        facet_by = mean_inputs()$facet_by,
-        show_facet_n = mean_inputs()$show_facet_n,
-        filtering_list = mean_inputs()$filtering_list,
-        show_dose = mean_inputs()$show_dose,
-        palette = mean_inputs()$palette,
-        sd_min = mean_inputs()$sd_min,
-        sd_max = mean_inputs()$sd_max,
-        ci = mean_inputs()$ci,
-        ylog_scale = mean_inputs()$ylog_scale,
-        show_legend = mean_inputs()$show_legend,
-        x_limits = mean_inputs()$x_limits,
-        y_limits = mean_inputs()$y_limits,
-        threshold_value = mean_inputs()$threshold_value,
-        labels_df = metadata_nca_variables,
-        use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
-        line_type = mean_inputs()$y_axis_values
+      withCallingHandlers(
+        exploration_meanplot(
+          pknca_data = isolate(pknca_data()),
+          color_by = mean_inputs()$color_by,
+          facet_by = mean_inputs()$facet_by,
+          show_facet_n = mean_inputs()$show_facet_n,
+          lock_y_axis = mean_inputs()$lock_y_axis,
+          filtering_list = mean_inputs()$filtering_list,
+          show_dose = mean_inputs()$show_dose,
+          palette = mean_inputs()$palette,
+          sd_min = mean_inputs()$sd_min,
+          sd_max = mean_inputs()$sd_max,
+          ci = mean_inputs()$ci,
+          ylog_scale = mean_inputs()$ylog_scale,
+          show_legend = mean_inputs()$show_legend,
+          x_limits = mean_inputs()$x_limits,
+          y_limits = mean_inputs()$y_limits,
+          threshold_value = mean_inputs()$threshold_value,
+          labels_df = metadata_nca_variables,
+          use_time_since_last_dose = mean_inputs()$use_time_since_last_dose,
+          line_type = mean_inputs()$y_axis_values
+        ),
+        warning = function(w) {
+          log_warn(conditionMessage(w))
+          showNotification(conditionMessage(w), type = "warning", duration = 10)
+          invokeRestart("muffleWarning")
+        }
       )
     })
 
@@ -147,15 +163,19 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       qc_counter(0L)
     })
 
-    # Save each plot independently for the ZIP folder
+    # Save each plot independently for the ZIP folder, with code
     observe({
-      req(individualplot())
+      req(individualplot(), individual_inputs())
       session$userData$results$exploration$individualplot <- individualplot()
+      session$userData$results$exploration$individualplot_code <-
+        build_plot_code("individual", individual_inputs(), session)
     })
 
     observe({
-      req(meanplot())
+      req(meanplot(), mean_inputs())
       session$userData$results$exploration$meanplot <- meanplot()
+      session$userData$results$exploration$meanplot_code <-
+        build_plot_code("mean", mean_inputs(), session)
     })
 
     # Render the mean plot output in plotly
@@ -174,6 +194,91 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       session$userData$results$exploration$qcplot <- qc_plot_outputs$current_plot()
     })
 
+    # Save the default QC plot code for the ZIP folder
+    observe({
+      req(qc_plot_outputs$current_plot(), qc_plot_outputs$qc_inputs())
+      session$userData$results$exploration$qcplot_code <-
+        build_plot_code("qc", qc_plot_outputs$qc_inputs(), session)
+    })
+
+    # --- Copy Plot Code handlers ---
+
+    .show_code_modal <- function(code_text) {
+      # Hidden textarea holds the code for reliable clipboard copy
+      textarea_id <- ns("code_textarea")
+      showModal(modalDialog(
+        title = "Plot Code",
+        tags$pre(
+          style = paste(
+            "white-space: pre-wrap; word-wrap: break-word;",
+            "max-height: 60vh; overflow-y: auto; text-align: left;"
+          ),
+          code_text
+        ),
+        tags$textarea(
+          id = textarea_id,
+          style = "position:absolute;left:-9999px;",
+          code_text
+        ),
+        footer = tagList(
+          modalButton("Close"),
+          actionButton(ns("clipboard_copy"), "Copy to Clipboard",
+                       icon = icon("clipboard"),
+                       class = "btn btn-primary")
+        ),
+        size = "l",
+        easyClose = TRUE
+      ))
+    }
+
+    observeEvent(individual_sidebar$copy_plot_code(), {
+      req(pknca_data(), individual_inputs())
+      code <- build_plot_code("individual", individual_inputs(), session)
+      .show_code_modal(code)
+    })
+
+    observeEvent(mean_sidebar$copy_plot_code(), {
+      req(pknca_data(), mean_inputs())
+      code <- build_plot_code("mean", mean_inputs(), session)
+      .show_code_modal(code)
+    })
+
+    observeEvent(qc_plot_outputs$copy_plot_code(), {
+      req(pknca_data(), qc_plot_outputs$qc_inputs())
+      code <- build_plot_code("qc", qc_plot_outputs$qc_inputs(), session)
+      .show_code_modal(code)
+    })
+
+    # Copy code to clipboard using the modern Clipboard API with
+    # execCommand fallback for older browsers.
+    observeEvent(input$clipboard_copy, {
+      textarea_id <- ns("code_textarea")
+      done_id <- ns("clipboard_done")
+      shinyjs::runjs(paste0(
+        "var ta = document.getElementById('", textarea_id, "');",
+        "if (ta) {",
+        "  var text = ta.value;",
+        "  if (navigator.clipboard && navigator.clipboard.writeText) {",
+        "    navigator.clipboard.writeText(text).then(function() {",
+        "      Shiny.setInputValue('", done_id, "', Math.random());",
+        "    }).catch(function() {",
+        "      ta.select();",
+        "      document.execCommand('copy');",
+        "      Shiny.setInputValue('", done_id, "', Math.random());",
+        "    });",
+        "  } else {",
+        "    ta.select();",
+        "    document.execCommand('copy');",
+        "    Shiny.setInputValue('", done_id, "', Math.random());",
+        "  }",
+        "}"
+      ))
+    })
+
+    observeEvent(input$clipboard_done, {
+      showNotification("Code copied to clipboard", type = "message", duration = 3)
+    })
+
     # --- Saved Outputs gallery ---
 
     .get_plot_obj <- function(plot_name) {
@@ -182,6 +287,10 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
 
     .on_remove <- function(plot_name) {
       session$userData$results$exploration[[plot_name]] <- NULL
+      # Also remove auto-saved code file if it exists
+      code_name <- paste0(plot_name, "_code")
+      session$userData$results$exploration[[code_name]] <- NULL
+
       existing <- session$userData$exploration_custom_names()
       existing <- existing[names(existing) != plot_name]
       session$userData$exploration_custom_names(existing)
@@ -291,6 +400,19 @@ tab_explore_server <- function(id, pknca_data, extra_group_vars) {
       }
 
       session$userData$results$exploration[[plot_name]] <- plot_obj
+
+      # Auto-save plot code alongside the plot
+      inputs_list <- switch(type,
+        individual = individual_inputs(),
+        mean = mean_inputs(),
+        qc = qc_plot_outputs$qc_inputs()
+      )
+      if (!is.null(inputs_list)) {
+        code_name <- paste0(plot_name, "_code")
+        code <- build_plot_code(type, inputs_list, session)
+        session$userData$results$exploration[[code_name]] <- code
+      }
+
       existing <- session$userData$exploration_custom_names()
       existing[plot_name] <- type
       session$userData$exploration_custom_names(existing)

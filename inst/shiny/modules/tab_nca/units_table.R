@@ -11,6 +11,8 @@
 #'
 #' @param id Module namespace ID.
 #'
+#' @returns A Shiny UI tag list containing the parameter units button.
+#'
 units_table_ui <- function(id) {
   ns <- NS(id)
   # Button to open a module message with the parameter units table #
@@ -90,7 +92,9 @@ units_table_server <- function(id, mydata) {
         # Add a hidden flag to the data based on the indices to hide
         data <- modal_units_table() %>%
           mutate(
-            PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTEST")
+            PPTESTCD_short = PPTESTCD,
+            PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTEST"),
+            .before = PPORRESU
           )
         data$is_hidden <- FALSE
         rows_to_hide <- rows_to_hide_units_table()
@@ -102,14 +106,24 @@ units_table_server <- function(id, mydata) {
       wrap = TRUE,
       width = "775px", # fit to the modal width
       editable = c("PPSTRESU", "conversion_factor"),
-      columns = list(
-        PPTESTCD = colDef(name = "Parameter"),
-        PPORRESU = colDef(name = "Default Unit"),
-        PPSTRESU = colDef(name = "Custom Unit"),
-        conversion_factor = colDef(name = "Conversion Factor"),
-        is_hidden = colDef(show = FALSE),
-        default = colDef(show = FALSE)
-      ),
+      columns = function(data) {
+        fixed_cols <- list(
+          PPTESTCD = colDef(name = "Parameter"),
+          PPTESTCD_short = colDef(name = "Short Parameter"),
+          PPORRESU = colDef(name = "Default Unit"),
+          PPSTRESU = colDef(name = "Custom Unit"),
+          conversion_factor = colDef(name = "Conversion Factor"),
+          is_hidden = colDef(show = FALSE),
+          default = colDef(show = FALSE)
+        )
+        dynamic_cols <- setdiff(names(data), names(fixed_cols))
+        group_cols <- lapply(
+          dynamic_cols,
+          function(col) colDef(header = function(value) get_label(value))
+        )
+        names(group_cols) <- dynamic_cols
+        c(fixed_cols, group_cols)
+      },
       pagination = FALSE,
       filterable = TRUE,
       rowStyle = reactable::JS("function(rowInfo) {

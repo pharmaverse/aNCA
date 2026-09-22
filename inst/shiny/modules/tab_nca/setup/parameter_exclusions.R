@@ -1,8 +1,8 @@
-#' Parameter Exclusions Shiny Module
+#' ADPP Exclusions Shiny Module
 #'
-#' UI and server logic for excluding PK parameter rows from TLG summary tables.
+#' UI and server logic for excluding PK parameter rows from summary outputs.
 #' Users select rows from the NCA results table and mark them for exclusion.
-#' Excluded rows are flagged via PPSUMFL = "Y" in ADPP.
+#' Excluded rows are flagged via PPSUMXF = "Y" in ADPP.
 #'
 #' - Yellow: Excluded parameter rows (auto from flag rules + manual)
 
@@ -11,42 +11,53 @@
 parameter_exclusions_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    div(
-      style = "display: flex; gap: 8px; align-items: center; margin-bottom: 16px;",
-      textInput(
-        ns("exclusion_reason"),
-        label = NULL,
-        placeholder = "Enter exclusion reason"
-      ),
-      actionButton(
-        ns("add_exclusion"),
-        label = "Add",
-        class = "btn btn-primary btn-sm"
-      ),
-      dropdown(
+    fluidRow(
+      column(
+        width = 10,
         div(
-          style = "min-width:340px; max-width:480px;",
-          tags$h2("TLG Exclusion",
-                  style = "font-size:1.2em; margin-bottom:8px;"),
-          p("Exclude PK parameter rows from tables, listings, and graphs."),
-          tags$ul(
-            tags$li("Select rows in the table below and provide a reason."),
-            tags$li(tags$b("Yellow"), ": excluded (PPSUMFL = \"Y\" in ADPP)"),
-            tags$li(
-              "Rows excluded by flag rules are shown with PPSUMFL/PPSUMRSN",
-              "but remain in summary tables and plots."
-            ),
-            tags$li(
-              "Manually added exclusions are filtered from",
-              "summary tables and mean plots."
-            )
+          style = "display: flex; gap: 8px; align-items: center;",
+          textInput(
+            ns("exclusion_reason"),
+            label = NULL,
+            placeholder = "Enter exclusion reason"
           ),
-          p("Remove manual exclusions anytime by clicking the X button.")
-        ),
-        style = "unite",
-        right = TRUE,
-        icon = icon("question"),
-        status = "primary"
+          actionButton(
+            ns("add_exclusion"),
+            label = "Add",
+            class = "btn btn-primary btn-sm"
+          )
+        )
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            style = "min-width:340px; max-width:480px;",
+            tags$h2("ADPP Exclusions Help",
+                    style = "font-size:1.2em; margin-bottom:8px;"),
+            p(
+              "Exclude PK parameter rows from summary statistics and",
+              "applicable plots while retaining them in ADPP and listings."
+            ),
+            tags$ul(
+              tags$li("Select rows in the table below and provide a reason."),
+              tags$li(tags$b("Yellow"), ": excluded (PPSUMXF = \"Y\" in ADPP)"),
+              tags$li(
+                "Rows excluded by flag rules are shown with PPSUMXF/PPSUMRSN",
+                "and excluded from summary statistics and applicable plots."
+              ),
+              tags$li(
+                "Manually added exclusions are filtered from",
+                "summary tables and mean plots."
+              )
+            ),
+            p("Remove manual exclusions anytime by clicking the X button.")
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary"
+        )
       )
     ),
     uiOutput(ns("exclusion_list_ui")),
@@ -55,14 +66,21 @@ parameter_exclusions_ui <- function(id) {
       style = "display:flex; gap:12px; align-items:center; margin:8px 0;",
       div(style = "font-weight:600; font-size:0.95em; margin-right:8px;",
           "Row Colors:"),
-      .legend_swatch(EXCL_COLOR_PARAM, "TLG exclusion")
+      .legend_swatch(
+        EXCL_COLOR_PARAM,
+        "ADPP summary exclusion",
+        paste(
+          "Keeps the parameter record in ADPP but excludes it from summary",
+          "statistics and applicable plots."
+        )
+      )
     ),
     card(reactable_ui(ns("param_table")), class = "border-0 shadow-none")
   )
 }
 
 # Build the display data frame for the parameter exclusions table.
-# Derives PPSUMFL/PPSUMRSN from the PKNCA exclude column, then layers
+# Derives PPSUMXF/PPSUMRSN from the PKNCA exclude column, then layers
 # manual exclusions on top.
 .build_param_display <- function(result_df, group_cols, manual_exclusions) {
   display_cols <- c(
@@ -90,8 +108,8 @@ parameter_exclusions_ui <- function(id) {
     }
   }
 
-  ppsum <- .derive_ppsum_flags(exclude_vals)
-  df$PPSUMFL <- ppsum$PPSUMFL
+  ppsum <- aNCA:::.derive_ppsum_flags(exclude_vals)
+  df$PPSUMXF <- ppsum$PPSUMXF
   df$PPSUMRSN <- ppsum$PPSUMRSN
 
   apply_labels(df, type = "ADPP")
@@ -128,8 +146,8 @@ parameter_exclusions_server <- function(id, res_nca) {
       .build_param_display(res_nca()$result, group_cols, exclusion_list())
     })
 
-    # Render the reactable with row coloring for excluded rows (PPSUMFL == "Y").
-    # PPSUMFL = "Y" means excluded from summaries; empty means included.
+    # Render the reactable with row coloring for excluded rows (PPSUMXF == "Y").
+    # PPSUMXF = "Y" means excluded from summaries; empty means included.
     param_table_state <- reactable_server(
       "param_table",
       param_data,
@@ -137,9 +155,9 @@ parameter_exclusions_server <- function(id, res_nca) {
       onClick = "select",
       borderless = TRUE,
       rowStyle = function(x) {
-        ppsumfl <- x$PPSUMFL
+        ppsumxf <- x$PPSUMXF
         function(index) {
-          if (ppsumfl[index] == "Y") {
+          if (ppsumxf[index] == "Y") {
             return(list(background = EXCL_COLOR_PARAM))
           }
           NULL

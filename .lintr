@@ -8,7 +8,8 @@ linters:
     object_usage_linter = NULL,
     pipe_consistency_linter = pipe_consistency_linter("%>%"),
     return_linter = return_linter(return_style = "implicit"),
-    seq_linter = seq_linter()
+    seq_linter = seq_linter(),
+        assignment_linter = assignment_linter(operator = c("<-", "<<-"))
   )
 encoding: "UTF-8"
 exclusions: list("R/PKNCA_extra_parameters.R", "tests/testthat/test-PKNCA_extra_parameters.R", "inst/www/templates/script_template.R")

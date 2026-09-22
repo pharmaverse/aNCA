@@ -206,8 +206,8 @@ describe("pivot_wider_pknca_results", {
       `LAMZHL[hr]` = "Half-Life Lambda z",
       `LAMZSPN` = "Lambda z Span",
       `AUCIFO[hr*ng/mL]` = "AUC Infinity Obs",
-      `AUCINT_0-2[hr*ng/mL]` = "AUC from T1 to T2",
-      `AUCINT_2-4[hr*ng/mL]` = "AUC from T1 to T2",
+      `AUCINT_0-2[hr*ng/mL]` = "AUC from 0 to 2",
+      `AUCINT_2-4[hr*ng/mL]` = "AUC from 2 to 4",
       `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
     )
     expect_equal(labels, expected_labels)
@@ -291,6 +291,42 @@ describe("pivot_wider_pknca_results flagging integration", {
     status <- result %>% filter(USUBJID == 1, ATPTREF == 1) %>% pull(flagged)
     expect_equal(status[1], "MISSING")
     expect_true(grepl("LAMZSPN is NA", result$Missing[1]))
+  })
+
+  it("summarises Missing once per profile when parameter metadata differs", {
+    data <- data.frame(
+      USUBJID = "S1",
+      ATPTREF = "Dose 1",
+      LAMZSPN = NA_real_,
+      R2ADJ = 0.9,
+      Exclude = NA_character_,
+      stringsAsFactors = FALSE
+    )
+    attr(data$LAMZSPN, "label") <- "Lambda z Span"
+    attr(data$R2ADJ, "label") <- "R Squared Adjusted"
+
+    pknca_res <- data.frame(
+      USUBJID = c("S1", "S1"),
+      ATPTREF = c("Dose 1", "Dose 1"),
+      PPTESTCD = c("LAMZSPN", "R2ADJ"),
+      PPTEST = c("Lambda z Span", "R Squared Adjusted"),
+      type_interval = c("main", "main"),
+      PPSTRES = c(NA_real_, 0.9),
+      # Parameter-level metadata that used to create duplicate missing rows.
+      PARAM_META = c("lambda", "fit"),
+      stringsAsFactors = FALSE
+    )
+    flag_rules <- list(
+      LAMZSPN = list(is.checked = TRUE, threshold = 1),
+      R2ADJ = list(is.checked = TRUE, threshold = 0.8)
+    )
+
+    result <- .apply_results_flags(data, pknca_res, flag_rules)
+
+    expect_equal(nrow(result), 1)
+    expect_equal(result$Missing, "LAMZSPN is NA")
+    expect_equal(result$flagged, "MISSING")
+    expect_false("PARAM_META" %in% names(result))
   })
 
 

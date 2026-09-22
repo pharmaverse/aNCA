@@ -45,6 +45,8 @@ parameter_datasets_server <- function(id, res_nca, grouping_vars = reactive(char
     observeEvent(CDISC(), {
       session$userData$results$CDISC <- CDISC()[c("pp", "adpp", "adnca")]
     })
+
+    CDISC
   })
 }
 

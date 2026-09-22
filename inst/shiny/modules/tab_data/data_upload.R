@@ -8,6 +8,76 @@
 #'
 #' @returns A reactive with raw adnca data as provided by the user (or dummy dataset).
 
+.upload_file_help_text <- function(readers = names(aNCA:::readers)) {
+  max_upload_size_mb <- getOption("shiny.maxRequestSize", 5 * 1024^2) / 1024^2
+  sprintf(
+    "Accepted: %s - Max %s MB",
+    paste(readers, collapse = ", "),
+    format(max_upload_size_mb, trim = TRUE, scientific = FALSE)
+  )
+}
+
+.upload_size_error_message <- function(file_name,
+                                       max_size_mb = .upload_max_size_mb()) {
+  sprintf(
+    "%s was not loaded because it exceeded the maximum upload size (%s MB).",
+    file_name,
+    format(max_size_mb, trim = TRUE, scientific = FALSE)
+  )
+}
+
+.upload_max_size_bytes <- function() {
+  getOption("shiny.maxRequestSize", 5 * 1024^2)
+}
+
+.upload_max_size_mb <- function() {
+  .upload_max_size_bytes() / 1024^2
+}
+
+.oversized_uploads <- function(data_upload,
+                               max_size_bytes = .upload_max_size_bytes()) {
+  if (is.null(data_upload)) {
+    return(data.frame(name = character(), size = numeric()))
+  }
+  if (!"size" %in% names(data_upload)) {
+    return(data_upload[0, , drop = FALSE])
+  }
+
+  data_upload[!is.na(data_upload$size) & data_upload$size > max_size_bytes, , drop = FALSE]
+}
+
+.upload_size_guard_script <- function(input_id, notification_id,
+                                      max_size_bytes = .upload_max_size_bytes()) {
+  tags$script(HTML(sprintf(
+    paste(
+      "document.addEventListener('change', function(event) {",
+      "  if (!event.target || event.target.id !== '%s') return;",
+      "  var files = event.target.files || [];",
+      "  var maxSize = %s;",
+      "  for (var i = 0; i < files.length; i++) {",
+      "    if (files[i].size > maxSize) {",
+      "      event.preventDefault();",
+      "      event.stopImmediatePropagation();",
+      "      if (window.Shiny && Shiny.setInputValue) {",
+      "        Shiny.setInputValue('%s', {",
+      "          name: files[i].name,",
+      "          size: files[i].size,",
+      "          maxSize: maxSize,",
+      "          nonce: Math.random()",
+      "        }, {priority: 'event'});",
+      "      }",
+      "      event.target.value = '';",
+      "      return false;",
+      "    }",
+      "  }",
+      "}, true);"
+    ),
+    input_id,
+    format(max_size_bytes, scientific = FALSE, trim = TRUE),
+    notification_id
+  )))
+}
+
 data_upload_ui <- function(id) {
   ns <- NS(id)
 
@@ -15,7 +85,18 @@ data_upload_ui <- function(id) {
     div(
       class = "upload-container",
       id = ns("upload_container"),
-      p("Upload your PK dataset and Settings file (optional)."),
+      p(
+        "Upload your PK dataset and Settings file (optional).",
+        tags$br(),
+        tags$small(
+          style = "color: #6c757d; display: block; margin-top: 4px;",
+          .upload_file_help_text()
+        )
+      ),
+      .upload_size_guard_script(
+        ns("data_upload"),
+        ns("upload_size_exceeded")
+      ),
       fileInput(
         ns("data_upload"),
         width = "50%",
@@ -50,6 +131,13 @@ data_upload_server <- function(id) {
       }
     })
 
+    observeEvent(input$upload_size_exceeded, {
+      file_name <- input$upload_size_exceeded$name %||% "The selected file"
+      msg <- .upload_size_error_message(file_name)
+      file_loading_error(msg)
+      showNotification(msg, type = "error", duration = NULL)
+    }, ignoreInit = TRUE)
+
     datapath <- getOption("aNCA.datapath", NULL)
 
     # Pre-load settings from run_app(settings = ...) if provided
@@ -61,7 +149,7 @@ data_upload_server <- function(id) {
         settings_override(content)
         versioned_attr <- attr(content, "versioned")
         if (!is.null(versioned_attr)) {
-          chosen <- .select_version(versioned_attr$versions, settings_ver)
+          chosen <- aNCA:::.select_version(versioned_attr$versions, settings_ver)
           comment_label <- if (nzchar(chosen$comment)) {
             chosen$comment
           } else {
@@ -88,6 +176,16 @@ data_upload_server <- function(id) {
     raw_data <- (
       reactive({
         file_loading_error(NULL)
+
+        oversized_uploads <- .oversized_uploads(input$data_upload)
+        if (nrow(oversized_uploads) > 0) {
+          msg <- .upload_size_error_message(
+            paste(oversized_uploads$name, collapse = ", ")
+          )
+          file_loading_error(msg)
+          showNotification(msg, type = "error", duration = NULL)
+          return(DUMMY_DATA)
+        }
 
         upload_paths <- .resolve_upload_paths(
           input$data_upload, datapath, session
@@ -258,7 +356,7 @@ data_upload_server <- function(id) {
 
   chosen <- versioned$versions[[selected_idx]]
   content <- tryCatch(
-    .process_settings_payload(chosen[setdiff(names(chosen), VERSION_META_KEYS)]),
+    aNCA:::.process_settings_payload(chosen[setdiff(names(chosen), VERSION_META_KEYS)]),
     error = function(e) {
       showNotification(conditionMessage(e), type = "error")
       NULL
@@ -367,7 +465,7 @@ data_upload_server <- function(id) {
     } else if (!is.null(versioned_attr) && length(versioned_attr$versions) == 1) {
       v <- versioned_attr$versions[[1]]
       content <- tryCatch(
-        .process_settings_payload(v[setdiff(names(v), VERSION_META_KEYS)]),
+        aNCA:::.process_settings_payload(v[setdiff(names(v), VERSION_META_KEYS)]),
         error = function(e) {
           errors <<- append(errors, conditionMessage(e))
           NULL

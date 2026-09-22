@@ -21,6 +21,10 @@ concurrency:
 env:
   R_VERSION: "release"
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   get_r_version:
     name: Get R version

@@ -17,7 +17,7 @@ tab_about_ui <- function(id) {
         div(
           style = "display: flex; align-items: center; gap: 20px;",
           tags$img(
-            src = "logos/aNCA_logo.png",
+            src = "images/aNCA_logo.png",
             alt = "aNCA logo",
             width = "80px"
           ),
