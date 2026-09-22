@@ -20,20 +20,20 @@ local({
 envir = parent.env(environment()))
 
 describe("filter_tlg_excluded", {
-  it("removes rows where the named flag (PKSUM1F) is 'Y'", {
+  it("removes rows where the named flag (PKSUMXF) is 'Y'", {
     df <- data.frame(
       x = 1:5,
-      PKSUM1F = c("", "Y", "", "Y", ""),
+      PKSUMXF = c("", "Y", "", "Y", ""),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 3)
     expect_equal(result$x, c(1, 3, 5))
   })
 
   it("returns all rows when the named flag column is absent", {
     df <- data.frame(x = 1:3)
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 3)
     expect_equal(result$x, 1:3)
   })
@@ -41,48 +41,48 @@ describe("filter_tlg_excluded", {
   it("returns all rows when the named flag is all empty", {
     df <- data.frame(
       x = 1:3,
-      PKSUM1F = rep("", 3),
+      PKSUMXF = rep("", 3),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 3)
   })
 
   it("returns empty data frame when all rows are excluded", {
     df <- data.frame(
       x = 1:2,
-      PKSUM1F = c("Y", "Y"),
+      PKSUMXF = c("Y", "Y"),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PKSUM1F")
+    result <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(nrow(result), 0)
   })
 
-  it("removes rows where the named flag (PPSUMFL) is 'Y' (ADPP exclusion flag)", {
+  it("removes rows where the named flag (PPSUMXF) is 'Y' (ADPP exclusion flag)", {
     df <- data.frame(
       x       = 1:4,
-      PPSUMFL = c("", "Y", "", "Y"),
+      PPSUMXF = c("", "Y", "", "Y"),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PPSUMFL")
+    result <- filter_tlg_excluded(df, "PPSUMXF")
     expect_equal(nrow(result), 2)
     expect_equal(result$x, c(1L, 3L))
   })
 
   it("applies only the named flag and ignores the other dataset's flag", {
-    # A record excluded from the ADPP summary (PPSUMFL == "Y") but not the ADNCA
-    # summary must still survive ADNCA (PKSUM1F) filtering, and vice-versa.
+    # A record excluded from the ADPP summary (PPSUMXF == "Y") but not the ADNCA
+    # summary must still survive ADNCA (PKSUMXF) filtering, and vice-versa.
     df <- data.frame(
       x       = 1:4,
-      PKSUM1F = c("Y", "",  "",  ""),
-      PPSUMFL = c("",  "Y", "",  ""),
+      PKSUMXF = c("Y", "",  "",  ""),
+      PPSUMXF = c("",  "Y", "",  ""),
       stringsAsFactors = FALSE
     )
-    # Filtering as ADNCA drops only the PKSUM1F == "Y" row; the PPSUMFL row stays.
-    adnca <- filter_tlg_excluded(df, "PKSUM1F")
+    # Filtering as ADNCA drops only the PKSUMXF == "Y" row; the PPSUMXF row stays.
+    adnca <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(adnca$x, c(2L, 3L, 4L))
-    # Filtering as ADPP drops only the PPSUMFL == "Y" row; the PKSUM1F row stays.
-    adpp <- filter_tlg_excluded(df, "PPSUMFL")
+    # Filtering as ADPP drops only the PPSUMXF == "Y" row; the PKSUMXF row stays.
+    adpp <- filter_tlg_excluded(df, "PPSUMXF")
     expect_equal(adpp$x, c(1L, 3L, 4L))
   })
 })
@@ -432,6 +432,66 @@ describe("tlg_module_server", {
         expect_equal(current_page_items(), list("p3", "p4"))
       }
     )
+  })
+})
+
+# ---------------------------------------------------------------------------
+# tlg_module_server: render-warning surfacing (issue #1335)
+# ---------------------------------------------------------------------------
+
+describe("tlg_module_server: warning surfacing", {
+  test_data <- shiny::reactive(
+    list(conc = list(data = data.frame(
+      NFRLT = 1:3, AVAL = c(5, 4, 3), stringsAsFactors = FALSE
+    )))
+  )
+  # Only warnings raised through .tlg_warn() (class `tlg_warning`) are meant for the user.
+  # A urine TLG reporting that PCSPEC/PPSPEC is absent is one; it still returns a result.
+  render_list_warns <- function(data, ...) {
+    warning(warningCondition(
+      "PCSPEC/PPSPEC not found; specimen filtering skipped", class = "tlg_warning"
+    ))
+    list("plot_a")
+  }
+
+  # Incidental warnings from the plotting stack must NOT become UI noise.
+  render_list_warns_untyped <- function(data, ...) {
+    warning("Removed 3 rows containing missing values")
+    list("plot_a")
+  }
+
+  notes_from <- function(render_list) {
+    notes <- character(0)
+    mockery::stub(
+      tlg_module_server, "showNotification",
+      function(ui, ...) notes[[length(notes) + 1]] <<- ui
+    )
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data        = test_data,
+        type        = "graph",
+        render_list = render_list,
+        options     = list()
+      ),
+      {
+        session$setInputs(entries_per_page = "All")
+        session$elapse(800)  # clear the debounce(750)
+        # Muffled: rendering continued and produced the returned list.
+        expect_equal(tlg_list(), list("plot_a"))
+      }
+    )
+    notes
+  }
+
+  it("muffles tlg_warning conditions, notifies the user, and continues rendering", {
+    notes <- notes_from(render_list_warns)
+    expect_length(notes, 1)
+    expect_match(notes[[1]], "specimen filtering skipped")
+  })
+
+  it("leaves untyped warnings to the console rather than notifying", {
+    expect_length(notes_from(render_list_warns_untyped), 0)
   })
 })
 

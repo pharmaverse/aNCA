@@ -247,6 +247,19 @@ describe("get_settings_code: ", {
       expect_match(file_content, "ng/mL")
     })
 
+    it("passes blq_imputation_rule to PKNCA_update_data_object (#1445)", {
+      file_content <- readLines(output_file)
+      # The BLQ rule must also be applied at interval setup, matching the app, so
+      # the exported script reproduces the app's BLQ handling. The named argument
+      # `blq_imputation_rule =` is unique to that call (the calculation step uses
+      # `blq_rule =`), so a single occurrence confirms the fix.
+      update_line <- grep("blq_imputation_rule =", file_content, value = TRUE)
+      expect_length(update_line, 1)
+      # The rule from the YAML is substituted inline (deparsed as `list(...)`),
+      # not left as the `settings_list$...` placeholder.
+      expect_match(update_line, "blq_imputation_rule = list\\(")
+    })
+
     it("derives extra_vars_to_keep from YAML mapping", {
       file_content <- paste(readLines(output_file), collapse = "\n")
       # Custom grouping vars are COHORT, SEX (not TRT01A, RACE from default)

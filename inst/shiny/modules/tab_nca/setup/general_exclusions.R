@@ -1,13 +1,13 @@
-#' General Exclusions Shiny Module
+#' ADNCA Exclusions Shiny Module
 #'
-#' UI and server logic for managing and displaying NCA and TLG exclusions.
+#' UI and server logic for managing NCA calculation and summary exclusions.
 #' Allows users to select rows from a concentration table, choose exclusion
 #' type(s), provide a reason, and manage exclusions with color-coded feedback.
 #'
 #' Row color scheme:
 #' - Red:    NCA exclusion (from data or manual)
-#' - Yellow: TLG exclusion only
-#' - Orange: NCA + TLG exclusion
+#' - Yellow: Summary exclusion only
+#' - Orange: NCA + summary exclusion
 
 general_exclusions_ui <- function(id) {
   ns <- NS(id)
@@ -24,11 +24,11 @@ general_exclusions_ui <- function(id) {
               "gap: 0; margin-right: 4px; min-width: 170px;"
             ),
             checkboxInput(
-              ns("cb_manual_nca"), "Manual NCA exclusion",
+              ns("cb_manual_nca"), "NCA calculation exclusion",
               value = FALSE, width = "100%"
             ),
             checkboxInput(
-              ns("cb_tlg"), "TLG exclusion",
+              ns("cb_tlg"), "Summary exclusion",
               value = FALSE, width = "100%"
             )
           ),
@@ -50,22 +50,23 @@ general_exclusions_ui <- function(id) {
           div(
             style = "min-width:340px; max-width:480px;",
             tags$h2(
-              "NCA Exclusions Help",
+              "ADNCA Exclusions Help",
               style = "font-size:1.2em; margin-bottom:8px;"
             ),
             p(
               "Records excluded here can be removed from NCA PK",
-              "calculations, from mean plots and summary tables",
-              "(TLGs), or both."
+              "calculations, from summary statistics and applicable plots,",
+              "or both."
             ),
             tags$ul(
               tags$li(
-                tags$b("NCA exclusion"),
-                ": excluded from NCA PK calculations"
+                tags$b("NCA calculation exclusion"),
+                ": excluded from the complete NCA calculation"
               ),
               tags$li(
-                tags$b("TLG exclusion"),
-                ": excluded from mean plots and summary tables"
+                tags$b("Summary exclusion"),
+                ": excluded from summary statistics tables and graphs (i.e. mean calculation)",
+                "and applicable plots"
               )
             ),
             tags$h3(
@@ -73,9 +74,9 @@ general_exclusions_ui <- function(id) {
               style = "font-size:1.05em; margin:10px 0 4px;"
             ),
             tags$ul(
-              tags$li(tags$b("Red"), ": NCA exclusion"),
-              tags$li(tags$b("Yellow"), ": TLG exclusion only"),
-              tags$li(tags$b("Orange"), ": NCA + TLG exclusion")
+              tags$li(tags$b("Red"), ": NCA calculation exclusion"),
+              tags$li(tags$b("Yellow"), ": summary exclusion only"),
+              tags$li(tags$b("Orange"), ": NCA + summary exclusion")
             ),
             p(
               "Select rows and add a reason to exclude.",
@@ -102,9 +103,27 @@ general_exclusions_ui <- function(id) {
         style = "font-weight:600; font-size:0.95em; margin-right:8px;",
         "Row Colors:"
       ),
-      .legend_swatch(EXCL_COLOR_NCA, "NCA exclusion"),
-      .legend_swatch(EXCL_COLOR_TLG, "TLG exclusion"),
-      .legend_swatch(EXCL_COLOR_BOTH, "NCA + TLG exclusion")
+      .legend_swatch(
+        EXCL_COLOR_NCA,
+        "NCA calculation exclusion",
+        "Excludes the concentration record from the complete NCA calculation."
+      ),
+      .legend_swatch(
+        EXCL_COLOR_TLG,
+        "Summary exclusion",
+        paste(
+          "Excludes the concentration from summary statistics",
+          "and applicable plots."
+        )
+      ),
+      .legend_swatch(
+        EXCL_COLOR_BOTH,
+        "NCA + summary exclusion",
+        paste(
+          "Excludes the concentration record from both the NCA calculation",
+          "and summary outputs."
+        )
+      )
     ),
     # Main concentration data table with row selection and color coding
     card(reactable_ui(ns("conc_table")), class = "border-0 shadow-none")

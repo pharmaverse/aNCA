@@ -331,35 +331,6 @@ create_qmd_dose_slides <- function(res_dose_slides, quarto_path, title, use_plot
   .add_qmd_additional_analysis(quarto_path, additional_analysis, slide_sections)
 }
 
-#' Render dose escalation results to HTML via Quarto
-#'
-#' Used internally to create and render a .qmd file to HTML.
-#'
-#' @param res_dose_slides List of results for each dose group.
-#' @param path Path to the output HTML file.
-#' @param title Title for the presentation.
-#' @returns Invisibly returns TRUE if rendering succeeded.
-create_html_dose_slides <- function(res_dose_slides, path, title) {
-  output_format <- tools::file_ext(path)
-  quarto_path <- gsub(paste0("\\.", output_format), ".qmd", path)
-  use_plotly <- if (output_format == "html") TRUE else FALSE
-  output_format <- if (output_format == "html") "all" else output_format
-
-  create_qmd_dose_slides(
-    res_dose_slides,
-    quarto_path = quarto_path,
-    title = title,
-    use_plotly = use_plotly
-  )
-  if (!requireNamespace("quarto", quietly = TRUE)) {
-    stop(
-      "HTML slides draft requires `quarto` package, please install it with ",
-      "`install.packages('quarto')`"
-    )
-  }
-  quarto::quarto_render(input = quarto_path, output_format = output_format)
-}
-
 #' Helper to create a Quarto code chunk for a plot
 #'
 #' Used internally to format a plot chunk for Quarto documents.
