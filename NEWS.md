@@ -9,9 +9,9 @@
 
 * The upload UI now shows accepted file formats and the current maximum upload
   size, matching `shiny.maxRequestSize` when the app is launched through
-  `run_app()` and falling back to Shiny's default limit otherwise. Oversized
-  uploads also show an app notification explaining that the data was not loaded
-  because it exceeded the configured limit (#1365)
+  `run_app()` and falling back to the default Shiny limit otherwise. Files
+  above the limit also show an app notification explaining that the data was
+  not loaded because it exceeded the configured limit (#1365)
 * The Parameter Selection matrix no longer silently ignores parameters chosen for metabolite study types. The matrix labeled study types using metabolite information (e.g. `Multiple IV Infusion (Metabolite)`), but the calculation step matches selections against labels derived with metabolite information blanked, so those selections never matched and were dropped. The matrix now reuses the same derivation as calculation time, so every selectable study type is honored (#1471)
 * `pkcg01()` and `pkcg02()` now return named plot lists by reading `id_plot` from the grouped plotting data instead of the raw input data (#1448)
 * Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer draw their tick labels on top of each other. `filter_breaks()` kept a break whenever it sat at least `min_cm_distance` (0.5 cm) from the last one and never looked at how wide the label rendered, so a dense profile with labels such as `119.917` kept 24 breaks where about 16 fit. A gap must now also clear the room the two labels either side of it need, measured with the plot's own `axis.text` styling and padded by a space so they do not run together. Two further problems fed the same bug: the width to fit them into was taken from the panel border grob, whose width is the whole device rather than the panel, and the side-by-side views filtered their breaks before faceting split that panel in two. The width now comes from the plot's own layout, the x scale is applied after faceting, and a y axis is thinned by label height. Candidates outside the plotted range are dropped before any thinning, so a break that is never drawn can no longer shift the first visible one a step past a manual `xmin` (#1441)
