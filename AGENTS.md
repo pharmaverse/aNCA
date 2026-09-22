@@ -205,7 +205,7 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 
 - **Before creating a branch**: Always `git fetch origin main && git checkout origin/main` to ensure you branch from the latest remote main. Do not rely on the local `main` ref being up to date.
 - **Branch name**: `<issue-number>-<type>/<short-description>` (e.g., `123-bug/data-upload-fails`)
-- **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes
+- **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes. **Before adding or editing any NEWS.md entry, apply the `.github/skills/news-curation/SKILL.md` decision gate** — only user-observable changes belong in NEWS; drop internal-only or already-shipped invisible changes, and fold same-theme fixes into existing entries.
 - **PR template**: Use `.github/PULL_REQUEST_TEMPLATE.md`. Link issue with `Closes #<number>`, describe changes, complete the contributor checklist
 - **Reviewers**: Add at least 2 core team members (from DESCRIPTION)
 - **Merge**: Core team will merge once approved
@@ -230,3 +230,4 @@ This repository uses the following agent configuration:
 - `.github/instructions/` — Path-specific notes for Copilot.
 - `.github/agents/` — Role-specific agent profiles.
 - `.github/skills/` — Reusable agent workflows.
+  - `.github/skills/news-curation/SKILL.md` — Decide whether a change belongs in NEWS.md and how to phrase it. Apply whenever opening/updating a PR or editing NEWS.md.

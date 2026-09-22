@@ -7,6 +7,8 @@
 
 ## Bug Fixes
 
+* Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
+
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload

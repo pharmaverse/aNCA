@@ -8,50 +8,6 @@
 #' To read more check out documentation for each function of the module and the contributing
 #' guidelines.
 
-#' Filter out rows excluded from TLG summaries by a single dataset flag.
-#'
-#' Removes rows flagged for exclusion from summary tables using the flag that
-#' belongs to that dataset only:
-#' - ADNCA data: filter by `PKSUMXF` (`"Y"` == excluded).
-#' - ADPP data: filter by `PPSUMXF` (`"Y"` == excluded).
-#'
-#' Only the flag named by `flag` is applied; the other dataset's flag is
-#' intentionally ignored even when both columns are present. A record may be
-#' excluded from the PK-parameter summary (`PPSUMXF == "Y"`) while still being
-#' wanted in the concentration representations, and vice-versa, so scoping each
-#' flag to its own dataset avoids dropping such records from the other TLGs.
-#'
-#' @param data A data frame (ADNCA or ADPP).
-#' @param flag Name of the exclusion-flag column to apply
-#'   (`"PKSUMXF"` for ADNCA, `"PPSUMXF"` for ADPP). Absent columns are a no-op.
-#' @return The filtered data frame.
-#' @noRd
-filter_tlg_excluded <- function(data, flag) {
-  if (flag %in% names(data)) {
-    data <- data[
-      is.na(data[[flag]]) | data[[flag]] != "Y",
-      ,
-      drop = FALSE
-    ]
-  }
-  data
-}
-
-#' Data-source key for a TLG module.
-#'
-#' `PKSUMXF` / `PPSUMXF == "Y"` flag rows excluded from *summary tables and mean
-#' plots* — not from individual listings.  Listings therefore consume the raw,
-#' unfiltered `"<dataset>_all"` source, while tables and graphs use the
-#' summary-filtered source keyed by dataset name.
-#'
-#' @param type    TLG type: `"table"`, `"graph"`, or `"listing"`.
-#' @param dataset Source dataset name, `"ADNCA"` or `"ADPP"`.
-#' @return A character key naming the data reactive the module should use.
-#' @noRd
-tlg_data_key <- function(type, dataset) {
-  if (identical(type, "listing")) paste0(dataset, "_all") else dataset
-}
-
 #' Wire up per-plot plotly outputs for a graph TLG module.
 #'
 #' Renders each graph through its own `plotlyOutput`/`renderPlotly` pair rather
@@ -316,12 +272,14 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       list_options <- purrr::keep(list_options, function(value) all(!value %in% c("", NA)))
 
       rendered <- tryCatch({
-        # Data arrives already exclusion-filtered (per-dataset flag) and
-        # label-restored from the tab_tlg boundary (see tlg_data_sources), so
-        # it is passed straight through here.  Label restoration matters because
-        # the PKNCA/dplyr pipeline strips column `label` attributes, which breaks
-        # the `!COLUMN` label-reference syntax in title/subtitle/footnote/axis
-        # inputs (resolved via parse_annotation).
+        # Data arrives label-restored from the tab_tlg boundary (see
+        # tlg_data_sources) and unfiltered: summary tables and mean plots drop
+        # summary-excluded rows themselves (filter_summary_excluded), while
+        # individual/combined plots and listings keep every record (#1438).
+        # Label restoration matters because the PKNCA/dplyr pipeline strips
+        # column `label` attributes, which breaks the `!COLUMN` label-reference
+        # syntax in title/subtitle/footnote/axis inputs (resolved via
+        # parse_annotation).
         # Surface user-facing warnings (class `tlg_warning`, raised via .tlg_warn) as
         # notifications: a dropped stratification variable or a skipped filter otherwise
         # changes the output silently. Other warnings — ggplot2's "Removed N rows", say —
