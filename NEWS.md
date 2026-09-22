@@ -7,6 +7,8 @@
 
 ## Bug Fixes
 
+* R-devel package checks no longer fail because the base `tools` package was
+  imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
   size, matching `shiny.maxRequestSize` when the app is launched through
   `run_app()` and falling back to the default Shiny limit otherwise. Files
