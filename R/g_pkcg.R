@@ -252,7 +252,7 @@ pkcg01 <- function(
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
 
-      plotly_plot <- plot +
+      gg_plot <- plot +
         theme(
           # add margin to make space for subtitle and footnote #
           plot.margin = margin(
@@ -264,7 +264,7 @@ pkcg01 <- function(
           )
         )
 
-      plotly_plot <- plotly_plot %>%
+      plotly_plot <- gg_plot %>%
         # This because of no spec of parse annotation generates warning is.na()
         ggplotly(
           tooltip = c("x", "y"),
@@ -298,9 +298,24 @@ pkcg01 <- function(
             autorange = TRUE,
             tickformat = "~r"
           ))
+        # The ggplot is left unscaled on the plotly path (the log axis is applied by
+        # layout() above), so scale it here to keep the exported image faithful to the
+        # widget.  Same transform and floor labeller as the non-plotly branch.
+        suppressMessages(
+          gg_plot <- gg_plot +
+            scale_y_continuous(
+              transform = "log10",
+              labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+            )
+        )
       }
 
-      plotly_plot
+      # Attached last: layout() rebuilds the object and would drop these attributes.
+      # The plot's annotations replace the Shiny split-key heading, not its export name.
+      structure(
+        .with_ggplot(plotly_plot, .label_stashed_ggplot(gg_plot, title, subtitle, footnote)),
+        tlg_group_header = FALSE
+      )
     } else {
       plot +
         labs(
@@ -310,6 +325,9 @@ pkcg01 <- function(
         )
     }
   })
+  # `id_plot` is created on `adnca_grouped`, not on `adnca` -- naming from the latter
+  # returned NULL, which silently stripped the names and left the export numbering the
+  # files 1..n instead of using the group (#1344).
   plots %>%
     setNames(unique(adnca_grouped[["id_plot"]]))
 }
@@ -625,7 +643,7 @@ pkcg02 <- function(
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
       suppressWarnings({
-        plotly_plot <- plot +
+        gg_plot <- plot +
           theme(
             # add margin to make space for subtitle and footnote #
             plot.margin = margin(
@@ -639,7 +657,7 @@ pkcg02 <- function(
 
         # This because of no spec of parse annotation generates warning is.na()
         plotly_plot <- ggplotly(
-          plotly_plot,
+          gg_plot,
           tooltip = c("x", "y"),
           # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
           # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
@@ -671,9 +689,22 @@ pkcg02 <- function(
               autorange = TRUE,
               tickformat = "~r"
             ))
+          # See the pkcg01 branch: the ggplot is unscaled on the plotly path, so scale it
+          # here to keep the exported image faithful to the widget.
+          suppressMessages(
+            gg_plot <- gg_plot +
+              scale_y_continuous(
+                transform = "log10",
+                labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+              )
+          )
         }
 
-        plotly_plot
+        # See pkcg01: preserve export names but omit the redundant Shiny group heading.
+        structure(
+          .with_ggplot(plotly_plot, .label_stashed_ggplot(gg_plot, title, subtitle, footnote)),
+          tlg_group_header = FALSE
+        )
       })
     } else {
       plot +
@@ -684,6 +715,8 @@ pkcg02 <- function(
         )
     }
   })
+  # See the note in g_pkcg01(): the names come from `adnca_grouped`, which is where
+  # `id_plot` is created (#1344).
   plots %>%
     setNames(unique(adnca_grouped[["id_plot"]]))
 
@@ -1069,9 +1102,22 @@ pkcg03 <- function(
               autorange = TRUE,
               tickformat = "~r"
             ))
+          # See the pkcg01 branch: the ggplot is unscaled on the plotly path, so scale it
+          # here to keep the exported image faithful to the widget.
+          suppressMessages(
+            plot <- plot +
+              scale_y_continuous(
+                transform = "log10",
+                labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+              )
+          )
         }
 
-        plotly_plot
+        # Attached last: layout() rebuilds the object and would drop it.
+        .with_ggplot(
+          plotly_plot,
+          .label_stashed_ggplot(plot, title, subtitle, footnote)
+        )
       })
     } else {
       plot <- plot +
