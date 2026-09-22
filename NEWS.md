@@ -7,6 +7,23 @@
 
 ## Bug Fixes
 
+* Restored compatibility with the upcoming PKNCA release (0.12.2). `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
+
+* Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, "Correlation Between TimeX and Log ConcY"). PKNCA 0.12.1.9000 reports the parameter, and without a mapping it appeared unlabelled in `pivot_wider_pknca_results()` output (#481, #1102)
+* The dose-escalation report no longer errors with `undefined columns selected` or `Column \`start\` is not found`. `group_vars()` on a `PKNCAresults` object returns the interval bounds `start` and `end` alongside the grouping columns in PKNCA 0.12.1.9000, but both call sites in `zip-utils.R` wanted only the data's grouping columns and applied the result to concentration data, which has no such columns. They now read the grouping from `PKNCA::as_PKNCAconc()` instead (#1102)
+* The excretion parameters aNCA adds (`ertlst`, `ertmax`, `volpk`, `fe`) are
+  now registered only when the installed PKNCA does not already define them.
+  `PKNCA::add.interval.col()` silently overwrites an existing registration, so
+  newer PKNCA versions that ship these parameters natively (with CDISC codes
+  and dependency metadata) previously had their richer definitions replaced by
+  aNCA's minimal ones. aNCA now defers to PKNCA when it provides the parameter
+  and keeps its own definition only as a fallback for older PKNCA. `utils` is
+  attached to keep PKNCA 0.12.1 interval registration working during strict
+  package-load checks (#1102)
+* The Slope Selector now treats missing and `FALSE` half-life exclusion flags
+  as the same false-like state when detecting plot updates. This keeps PKNCA
+  development-version `NA` flags from suppressing affected plot refreshes
+  (#1102)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
