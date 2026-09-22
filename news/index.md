@@ -23,6 +23,14 @@
 
 ### Bug Fixes
 
+- The upload UI now shows accepted file formats and the current maximum
+  upload size, matching `shiny.maxRequestSize` when the app is launched
+  through
+  [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
+  and falling back to the default Shiny limit otherwise. Files above the
+  limit also show an app notification explaining that the data was not
+  loaded because it exceeded the configured limit
+  ([\#1365](https://github.com/pharmaverse/aNCA/issues/1365))
 - The Parameter Selection matrix no longer silently ignores parameters
   chosen for metabolite study types. The matrix labeled study types
   using metabolite information
