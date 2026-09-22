@@ -23,6 +23,15 @@
 
 ### Bug Fixes
 
+- The Parameter Selection matrix no longer silently ignores parameters
+  chosen for metabolite study types. The matrix labeled study types
+  using metabolite information
+  (e.g. `Multiple IV Infusion (Metabolite)`), but the calculation step
+  matches selections against labels derived with metabolite information
+  blanked, so those selections never matched and were dropped. The
+  matrix now reuses the same derivation as calculation time, so every
+  selectable study type is honored
+  ([\#1471](https://github.com/pharmaverse/aNCA/issues/1471))
 - [`pkcg01()`](https://pharmaverse.github.io/aNCA/reference/pkcg01.md)
   and
   [`pkcg02()`](https://pharmaverse.github.io/aNCA/reference/pkcg02.md)
