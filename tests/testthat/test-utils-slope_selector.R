@@ -102,6 +102,22 @@ describe("update_pknca_with_rules", {
   })
 })
 
+describe("hl_flag_change_indices", {
+  it("treats missing and false half-life flags as unchanged", {
+    expect_identical(
+      hl_flag_change_indices(c(NA, FALSE, TRUE), c(FALSE, NA, TRUE)),
+      integer(0)
+    )
+  })
+
+  it("detects changes when half-life flags become true", {
+    expect_identical(
+      hl_flag_change_indices(c(TRUE, NA), c(NA, TRUE)),
+      c(1L, 2L)
+    )
+  })
+})
+
 describe("parse_plot_names_to_df", {
   it("parses key=value plot names into columns plus PLOTID", {
     plots <- setNames(list(1, 2), c(
