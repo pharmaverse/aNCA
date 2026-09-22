@@ -13,7 +13,8 @@
 #' @param subtitle A character string to parse specifying the subtitle to use for each list.
 #' @param footnote A character string to parse specifying the footnote of the listing table.
 #'
-#' @return A list of listings, each corresponding to a unique combination of the grouping variables.
+#' @returns A list of listings, each corresponding to a unique combination of
+#'   the grouping variables.
 #'
 #' @details
 #' The function performs the following steps:
@@ -106,6 +107,13 @@ l_pkcl01 <- function(
                       collapse = "\n")
   }
 
+  # A sidebar table option with no rows configured arrives as an empty data frame rather than
+  # NULL, so treat it as "not supplied" instead of failing on the absent `Label` column.
+  if (!is.null(formatting_vars_table)) {
+    has_labels <- "Label" %in% names(formatting_vars_table)
+    if (nrow(formatting_vars_table) == 0 || !has_labels) formatting_vars_table <- NULL
+  }
+
   # If the formatting table was not user defined make one standard
   if (is.null(formatting_vars_table)) {
     formatting_vars_table <-  data.frame(
@@ -114,7 +122,10 @@ l_pkcl01 <- function(
       rowwise() %>%
       # Create a label column
       mutate(
-        Label = parse_annotation(data, paste0("!", var_name)),
+        # `!VAR` resolves to the column's `label` attribute, and parse_annotation yields the
+        # literal string "ERR" when there is none — which would surface as an "ERR" column
+        # header. Fall back to the column name, as .get_var_label() does elsewhere.
+        Label = .get_var_label(data, var_name),
         na_str = "NA",
         zero_str = ifelse(var_name == "AVAL", "BLQ", "0"),
         align = "center",
@@ -127,6 +138,8 @@ l_pkcl01 <- function(
           "AVALU" %in% names(data) & var_name == "AVAL" ~ paste0(Label, " ($AVALU)"),
           "RRLTU" %in% names(data) & var_name == "AFRLT" ~ paste0(Label, " ($RRLTU)"),
           "RRLTU" %in% names(data) & var_name == "NFRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(data) & var_name == "ARRLT" ~ paste0(Label, " ($RRLTU)"),
+          "RRLTU" %in% names(data) & var_name == "NRRLT" ~ paste0(Label, " ($RRLTU)"),
           .default = Label
         )
       ) %>%
@@ -209,11 +222,10 @@ l_pkcl01 <- function(
 
       # Check label is unique for the list
       if (length(label) != 1) {
-        # ToDo: Warning to display as notification in the App
-        warning(paste0("pkcl01, but not unique label in ", id_val, " for ",
-                       var_with_lab, ". Make sure when using $var that for each",
-                       " list group only 1 expression applies. Here there are many: ",
-                       paste(label, collapse = ", ")))
+        .tlg_warn("pkcl01, but not unique label in ", id_val, " for ",
+                  var_with_lab, ". Make sure when using $var that for each",
+                  " list group only 1 expression applies. Here there are many: ",
+                  paste(label, collapse = ", "))
       }
     }
 
@@ -238,4 +250,88 @@ l_pkcl01 <- function(
   })  %>%
 
     setNames(unique(data_grouped[["id_list"]]))
+}
+
+#' Wrapper around aNCA::l_pkcl01() for TAD-based concentration listings.
+#' @param data Data to be passed into the listing function.
+#' @param ...  Any other parameters to be passed into the listing function.
+#' @returns A named list of listing_df objects.
+#' @export
+l_pkcl01_tad <- function(data, ...) {
+  data <- apply_labels(data)
+  l_pkcl01(data, displaying_vars = c("NRRLT", "ARRLT", "AVAL"), ...)
+}
+
+#' Urine Concentration and Volume Listing (pkcl02)
+#'
+#' Filters ADNCA to urine specimen rows (where `PCSPEC %in% urine_specs`) then
+#' delegates to [l_pkcl01()] with VOLUME and VOLUMEU added to the displayed
+#' columns when those columns are present in the data.
+#'
+#' @param data A CDISC ADNCA data frame (from `export_cdisc()$adnca`).
+#' @param urine_specs Character vector of specimen type values to keep, matched
+#'   case-insensitively against `PCSPEC`. Default: `c("URINE")`.
+#' @param listgroup_vars Character vector of columns used to split output into
+#'   separate listings. Default: `c("PARAM", "PCSPEC")`. When `PCSPEC` is
+#'   absent from `data`, it is silently removed from this vector.
+#' @param displaying_vars Character vector of columns to display. When `NULL`
+#'   (default), uses `c("NFRLT", "AFRLT", "AVAL")` plus `VOLUME`/`VOLUMEU`
+#'   if those columns exist in the data.
+#' @param ... Additional arguments forwarded to [l_pkcl01()].
+#'
+#' @return A named list of `listing_df` objects.
+#'
+#' @examples
+#' \dontrun{
+#' adnca <- export_cdisc(res_nca)$adnca
+#' listings <- l_pkcl02_uri(adnca)
+#' print(listings[[1]])
+#' }
+#'
+#' @export
+l_pkcl02_uri <- function(
+  data,
+  urine_specs     = c("URINE"),
+  listgroup_vars  = c("PARAM", "PCSPEC"),
+  displaying_vars = NULL,
+  ...
+) {
+  if ("PCSPEC" %in% names(data)) {
+    # Case-insensitive match so "Urine"/"urine" are also kept (CDISC value is
+    # "URINE", but source data casing varies).
+    data <- dplyr::filter(data, toupper(.data$PCSPEC) %in% toupper(urine_specs))
+  } else {
+    .tlg_warn(
+      "l_pkcl02_uri: 'PCSPEC' column not found in data; the urine specimen ",
+      "filter was not applied. All rows are treated as urine. If your data ",
+      "contains non-urine records, the output will be incorrect. Ensure ",
+      "PCSPEC is present in the source concentration data."
+    )
+    # Drop PCSPEC from listgroup_vars so l_pkcl01's all_of() doesn't fail on an
+    # absent column — mirrors the intersect() guard used by split_and_apply().
+    listgroup_vars <- intersect(listgroup_vars, names(data))
+  }
+  if (nrow(data) == 0) {
+    stop(
+      "l_pkcl02_uri: no urine concentration data found. ",
+      "Ensure PCSPEC contains one of: ",
+      paste(urine_specs, collapse = ", ")
+    )
+  }
+
+  if (is.null(displaying_vars)) {
+    vol_vars        <- intersect(c("VOLUME", "VOLUMEU"), names(data))
+    displaying_vars <- c("NFRLT", "AFRLT", "AVAL", vol_vars)
+  }
+
+  l_pkcl01(
+    data,
+    listgroup_vars  = listgroup_vars,
+    displaying_vars = displaying_vars,
+    title = paste0(
+      "Listing of Urine PK Concentration and Volume ",
+      "by Treatment Group, Subject and Nominal Time, PK Population"
+    ),
+    ...
+  )
 }

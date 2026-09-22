@@ -102,7 +102,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 .column_mapping_section <- function(ns, mapping_df) {
   section_title <- unique(mapping_df$mapping_section)
   if (length(section_title) != 1) {
-    stop("mapping_df must contain exactly one unique mapping_section value.")
+    stop(
+      "mapping_df must contain exactly one unique mapping_section value, but found ",
+      length(section_title), ": ", paste(section_title, collapse = ", ")
+    )
   }
   tags$section(
     h5(section_title),
@@ -415,6 +418,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
         ),
         error = function(e) {
           log_error(conditionMessage(e))
+          if (!isTRUE(session$userData$auto_replay_active)) {
+            removeModal()
+          }
           showNotification(conditionMessage(e), type = "error", duration = NULL)
           NULL
         }
@@ -453,6 +459,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
+          if (!isTRUE(session$userData$auto_replay_active)) {
+            removeModal()
+          }
           df_duplicates(e$duplicate_data)
           NULL
         }
@@ -498,6 +507,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
     })
 
     observeEvent(df_duplicates(), {
+      removeModal()
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -514,11 +524,17 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
           easyClose = FALSE,
           footer = tagList(
             actionButton(ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"),
-            modalButton("Cancel")
+            actionButton(ns("cancel_duplicate_modal"), "Cancel")
           ),
           size = "l"
         )
       )
+    })
+
+    observeEvent(input$cancel_duplicate_modal, {
+      df_duplicates(NULL)
+      removeModal()
+      shinyjs::enable(selector = "#data-next_step")
     })
 
     output$duplicate_modal_table <- renderReactable({

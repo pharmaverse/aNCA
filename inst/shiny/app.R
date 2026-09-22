@@ -77,6 +77,7 @@ ui <- function() {
 
     includeCSS(file.path(assets, "main.css")),
     includeScript(file.path(assets, "index.js")),
+    includeScript(file.path(assets, "tlg_add_picker.js")),
 
     sidebar = navset_pill_list(
       id = "page",
@@ -242,7 +243,11 @@ server <- function(input, output, session) {
   )
 
   # TLG
-  tab_tlg_server("tlg", tab_nca_outputs$processed_pknca_data)
+  tab_tlg_server(
+    "tlg",
+    tab_nca_outputs$processed_pknca_data,
+    adpp = tab_nca_outputs$adpp
+  )
 
   # ABOUT ----
   tab_about_server("about")

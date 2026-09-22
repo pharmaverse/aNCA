@@ -48,6 +48,9 @@
         session, "data_navset", selected = step_labels[idx + 1]
       )
     } else if (current_step == "mapping") {
+      if (!isTRUE(session$userData$auto_replay_active)) {
+        loading_popup("Applying mapping...")
+      }
       trigger_mapping_submit(trigger_mapping_submit() + 1)
     } else if (current_step == "preview") {
       shinyjs::runjs(
@@ -58,6 +61,11 @@
 
   observe({
     data_step()
+
+    # Re-enable after each mapping submission is processed
+    # "Next" button is never permanently disabled
+    trigger_mapping_submit()
+
     shinyjs::enable("next_step")
   })
 
@@ -376,6 +384,9 @@ tab_data_server <- function(id) {
           updateTabsetPanel(session, "data_navset", selected = "Mapping")
           return()
         }
+      }
+      if (!auto_replay()) {
+        shiny::removeModal()
       }
       data_step("filtering")
       updateTabsetPanel(session, "data_navset", selected = "Filtering")

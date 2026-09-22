@@ -66,7 +66,7 @@ tab_nca_ui <- function(id) {
             nav_panel("Parameter Datasets", parameter_datasets_ui(ns("parameter_datasets"))),
             nav_panel("Parameter Plots", parameter_plots_ui(ns("parameter_plots"))),
             nav_panel(
-              "Parameter Exclusions",
+              "ADPP Exclusions",
               parameter_exclusions_ui(ns("parameter_exclusions"))
             )
           )
@@ -293,7 +293,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     })
 
     # Parameter exclusions: users can exclude individual PK parameter rows
-    # from summary tables and mean plots. Excluded rows get PPSUMFL = "Y" in ADPP.
+    # from summary tables and mean plots. Excluded rows get PPSUMXF = "Y" in ADPP.
     param_excl_rows <- parameter_exclusions_server(
       "parameter_exclusions", res_nca
     )
@@ -340,7 +340,9 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     additional_analysis_server("non_nca", processed_pknca_data, extra_group_vars)
 
     #' Parameter datasets module
-    parameter_datasets_server("parameter_datasets", res_nca_tagged, extra_group_vars, settings)
+    cdisc <- parameter_datasets_server(
+      "parameter_datasets", res_nca_tagged, extra_group_vars, settings
+    )
 
     #' Parameter plots module
     #' res_nca: base results for picker initialization (stable across exclusion changes)
@@ -348,7 +350,11 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
     parameter_plots_server("parameter_plots", res_nca, res_nca_tagged)
 
     # return results for use in other modules
-    list(res_nca = res_nca, processed_pknca_data = processed_pknca_data)
+    list(
+      res_nca = res_nca,
+      processed_pknca_data = processed_pknca_data,
+      adpp = reactive(cdisc()$adpp)
+    )
   })
 }
 

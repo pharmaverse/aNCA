@@ -252,4 +252,122 @@ describe("l_pkcl01", {
     expect_equal(attr(listings$`B.Plasma.IV`$AVALU, "label"), "AVALU")
 
   })
+
+  it("treats an empty formatting_vars_table as if none was supplied", {
+    # A `type: table` sidebar option with no configured rows reaches the function as a
+    # zero-row, zero-column data frame rather than NULL (see tlg_option_table_server).
+    empty_table <- dplyr::bind_rows()
+
+    expect_no_error(
+      listings <- l_pkcl01(adnca,
+                           listgroup_vars  = c("PARAM", "PCSPEC", "ROUTE"),
+                           grouping_vars   = c("TRT01A", "USUBJID", "ATPTREF"),
+                           displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+                           formatting_vars_table = empty_table)
+    )
+
+    # Falls back to the built-in defaults, i.e. identical to passing NULL
+    expect_equal(listings, l_pkcl01(adnca,
+                                    listgroup_vars  = c("PARAM", "PCSPEC", "ROUTE"),
+                                    grouping_vars   = c("TRT01A", "USUBJID", "ATPTREF"),
+                                    displaying_vars = c("NFRLT", "AFRLT", "AVAL")))
+    expect_equal(attr(listings$`A.Plasma.Oral`$AVAL, "label"), "Analysis value (mg/L)")
+  })
+
+  it("treats a formatting_vars_table without a Label column as if none was supplied", {
+    no_label_table <- data.frame(
+      var_name = c("TRT01A", "USUBJID"),
+      na_str = "NA",
+      zero_str = "0",
+      align = "center",
+      format_fun = NA,
+      digits = NA,
+      stringsAsFactors = FALSE
+    )
+
+    expect_no_error(
+      l_pkcl01(adnca,
+               listgroup_vars  = c("PARAM", "PCSPEC", "ROUTE"),
+               grouping_vars   = c("TRT01A", "USUBJID", "ATPTREF"),
+               displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+               formatting_vars_table = no_label_table)
+    )
+  })
+})
+
+# --- l_pkcl02_uri -----------------------------------------------------------
+
+uri_data <- data.frame(
+  PARAM   = rep("DrugA", 4),
+  PCSPEC  = rep(c("URINE", "SERUM"), each = 2),
+  TRT01A  = rep(c("10mg", "50mg"), 2),
+  USUBJID = c("S1", "S2", "S3", "S4"),
+  ATPTREF = "DOSE 1",
+  NFRLT   = c(0, 2, 0, 2),
+  AFRLT   = c(0.1, 2.1, 0.1, 2.1),
+  AVAL    = c(1.2, 3.4, 5.6, 7.8),
+  AVALU   = "mg/mL",
+  VOLUME  = c(100, 120, 110, 130),
+  VOLUMEU = "mL",
+  stringsAsFactors = FALSE
+)
+
+describe("l_pkcl02_uri", {
+  skip_if_not_installed("rlistings")
+
+  it("returns a named list of listing_df objects", {
+    result <- l_pkcl02_uri(uri_data)
+    expect_type(result, "list")
+    purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  })
+
+  it("filters to URINE rows only", {
+    result <- l_pkcl02_uri(uri_data)
+    listing_df <- result[[1]]
+    expect_equal(nrow(listing_df), 2)
+  })
+
+  it("matches urine specimens case-insensitively", {
+    # Lowercase 'urine' must still be kept even though the default spec is
+    # 'URINE' (CDISC); non-urine rows are dropped.
+    mixed <- uri_data
+    mixed$PCSPEC <- c("urine", "urine", "SERUM", "serum")
+    result <- l_pkcl02_uri(mixed)
+    expect_equal(sum(purrr::map_int(result, nrow)), 2L)
+  })
+
+  it("includes VOLUME and VOLUMEU in displaying_vars by default", {
+    result <- l_pkcl02_uri(uri_data)[[1]]
+    expect_true("VOLUME" %in% names(result))
+  })
+
+  it("does not include VOLUME when column is absent from data", {
+    data_no_vol <- uri_data[, setdiff(names(uri_data), c("VOLUME", "VOLUMEU"))]
+    result <- l_pkcl02_uri(data_no_vol)[[1]]
+    expect_false("VOLUME" %in% names(result))
+  })
+
+  it("stops with informative error when no urine rows found", {
+    data_serum <- uri_data[uri_data$PCSPEC == "SERUM", , drop = FALSE]
+    expect_error(l_pkcl02_uri(data_serum), "no urine concentration data found")
+  })
+
+  it("accepts custom displaying_vars", {
+    result <- l_pkcl02_uri(uri_data, displaying_vars = c("NFRLT", "AVAL"))
+    expect_type(result, "list")
+    purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
+  })
+
+  it("passes through ... to l_pkcl01 (e.g. custom footnote)", {
+    result <- l_pkcl02_uri(uri_data, footnote = "test footnote")
+    expect_type(result, "list")
+  })
+
+  it("warns when PCSPEC column is absent and skips the urine filter", {
+    data_no_pcspec <- uri_data[, setdiff(names(uri_data), "PCSPEC"), drop = FALSE]
+    expect_warning(
+      l_pkcl02_uri(data_no_pcspec),
+      "PCSPEC.*column not found"
+    )
+  })
 })

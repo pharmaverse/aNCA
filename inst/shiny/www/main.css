@@ -1187,3 +1187,200 @@ tbody tr:hover td.param-matrix-row-header {
 .ratio-adj-factor {
   flex-shrink: 0;
 }
+
+.tlg-add-modal {
+  --tlg-inset: 0.55em;
+}
+
+.tlg-add-modal .tlg-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  margin: 0 0 1.25em;
+  padding-left: var(--tlg-inset);
+}
+
+.tlg-add-modal .tlg-search-input {
+  width: 300px;
+  max-width: 100%;
+}
+
+.tlg-add-modal .tlg-toolbar-sep {
+  width: 1px;
+  align-self: stretch;
+  background: #e5e5e5;
+  margin: 0.1em 0.35em;
+}
+
+.tlg-add-modal .tlg-tabs {
+  display: flex;
+  gap: 0.25em;
+  margin: 0 0 1.25em;
+  padding-left: var(--tlg-inset);
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.tlg-tab {
+  background: none;
+  border: none;
+  padding: 0.5em 0.9em;
+  font-weight: 600;
+  color: #7b8794;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+
+.tlg-tab:hover {
+  color: #21201f;
+}
+
+.tlg-tab.active {
+  color: #007bc2;
+  border-bottom-color: #007bc2;
+}
+
+.tlg-tab-count {
+  color: #8a8f98;
+  font-weight: 600;
+  font-size: 0.8em;
+  margin-left: 0.35em;
+}
+
+.tlg-cols {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5em;
+}
+
+.tlg-cols .tlg-col {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.tlg-cols .tlg-col + .tlg-col {
+  border-left: 1px solid #eee;
+  padding-left: 1.5em;
+}
+
+.tlg-col-body {
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.tlg-col-empty {
+  color: #8a8f98;
+  font-style: italic;
+  font-size: 0.85em;
+  padding: 0.6em var(--tlg-inset);
+}
+
+.tlg-add-checklist .tlg-col-head {
+  display: flex;
+  align-items: baseline;
+  margin: 0 0 0.75em;
+  padding: 0 var(--tlg-inset) 0.4em;
+  border-bottom: 2px solid #007bc2;
+}
+
+.tlg-add-checklist .tlg-col-title {
+  flex: 1 1 auto;
+  font-size: 1em;
+  font-weight: 700;
+  color: #21201f;
+}
+
+.tlg-add-checklist .tlg-col-head svg,
+.tlg-add-checklist .tlg-col-head .fa {
+  color: #007bc2;
+  margin-right: 0.3em;
+}
+
+.tlg-add-checklist .tlg-col-count {
+  color: #8a8f98;
+  font-weight: 600;
+  font-size: 0.82em;
+  margin-left: 0.25em;
+}
+
+.tlg-add-checklist .tlg-ds {
+  margin-bottom: 0.5em;
+}
+
+.tlg-add-checklist .checkbox {
+  margin: 0;
+  padding: 0.4em var(--tlg-inset);
+  border-radius: 5px;
+  transition: background 0.1s;
+}
+
+.tlg-add-checklist .checkbox:hover {
+  background: #f2f6fb;
+}
+
+.tlg-add-checklist .checkbox:has(input:checked) {
+  background: #E7ECFA;
+}
+
+.tlg-add-checklist .checkbox label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55em;
+  text-align: left;
+  font-weight: normal;
+  line-height: 1.4;
+  padding-left: 0;
+  color: #21201f;
+  cursor: pointer;
+}
+
+.tlg-add-checklist .checkbox label > span {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+.tlg-add-checklist .checkbox input[type="checkbox"] {
+  position: static;
+  margin: 0.22em 0 0;
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  accent-color: #007bc2;
+  cursor: pointer;
+}
+
+.tlg-add-checklist .tlg-spec {
+  flex: 0 0 auto;
+  color: #b0b7bf;
+  margin-top: 0.1em;
+}
+
+.tlg-add-checklist .tlg-spec:hover {
+  color: #007bc2;
+}
+
+.tlg-col-selall {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: #007bc2;
+  font-size: 0.76em;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tlg-col-selall:hover {
+  text-decoration: underline;
+}
+
+.tlg-no-matches {
+  color: #8a8f98;
+  font-style: italic;
+  padding: 1em 0.5em;
+  padding-left: var(--tlg-inset);
+}

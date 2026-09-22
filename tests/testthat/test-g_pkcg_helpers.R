@@ -107,6 +107,64 @@ describe("generate_subtitle", {
     )
     expect_equal(subtitle, "My Subtitle")
   })
+
+  it("returns a single string when the plot group spans several treatments", {
+    # Interpolating a multi-value unique() vectorises the whole subtitle; plotly then
+    # receives an array for layout.title.text and renders no title at all.
+    multi_trt <- helper_data
+    multi_trt$TRT01A <- c("Treatment A", "Treatment B")[seq_len(nrow(multi_trt)) %% 2 + 1]
+
+    subtitle <- aNCA:::generate_subtitle(
+      multi_trt, subtitle = NULL,
+      trt_var        = "TRT01A",
+      plotgroup_vars  = plotgroup_vars,
+      plotgroup_names = plotgroup_names
+    )
+    expect_length(subtitle, 1)
+    expect_true(grepl("Treatment A", subtitle, fixed = TRUE))
+    expect_true(grepl("Treatment B", subtitle, fixed = TRUE))
+  })
+
+  it("labels a grouping variable missing from plotgroup_names with its own name", {
+    # Indexing plotgroup_names directly drops unknown variables, which used to shift the
+    # remaining labels onto the wrong values (e.g. a subject ID labelled "Route").
+    subtitle <- aNCA:::generate_subtitle(
+      helper_data, subtitle = NULL,
+      trt_var        = "TRT01A",
+      plotgroup_vars  = c("ROUTE", "USUBJID"),
+      plotgroup_names = plotgroup_names
+    )
+    # Before the fallback, USUBJID was dropped from the label vector, so "Route" was
+    # recycled across both values and the subject appeared labelled as a route.
+    expect_true(grepl("USUBJID: ", subtitle, fixed = TRUE))
+    n_route <- length(gregexpr("Route: ", subtitle, fixed = TRUE)[[1]])
+    expect_equal(n_route, 1)
+  })
+})
+
+# ---------------------------------------------------------------------------
+# .plotgroup_labels
+# ---------------------------------------------------------------------------
+
+describe(".plotgroup_labels", {
+  it("returns the configured label for known variables", {
+    expect_equal(
+      aNCA:::.plotgroup_labels(c("ROUTE", "PARAM"), list(ROUTE = "Route", PARAM = "Analyte")),
+      c("Route", "Analyte")
+    )
+  })
+
+  it("falls back to the variable name for unknown variables", {
+    expect_equal(
+      aNCA:::.plotgroup_labels(c("ROUTE", "NOTAVAR"), list(ROUTE = "Route")),
+      c("Route", "NOTAVAR")
+    )
+  })
+
+  it("always returns one label per variable", {
+    vars <- c("A", "B", "C")
+    expect_length(aNCA:::.plotgroup_labels(vars, list(B = "Bee")), length(vars))
+  })
 })
 
 # ---------------------------------------------------------------------------
@@ -355,5 +413,57 @@ describe("req_sbs_pkgs", {
       requireNamespace = function(pkg, quietly = FALSE) TRUE,
       .package = "base"
     )
+  })
+})
+
+# ---------------------------------------------------------------------------
+# .subject_count
+# ---------------------------------------------------------------------------
+
+describe(".subject_count", {
+  it("counts distinct subjects, not records", {
+    df <- data.frame(USUBJID = c("S1", "S1", "S2", "S2", "S2"), AVAL = 1:5)
+    expect_equal(aNCA:::.subject_count(df), 2)
+  })
+
+  it("falls back to the row count when there is no subject column", {
+    expect_equal(aNCA:::.subject_count(data.frame(AVAL = 1:4)), 4)
+  })
+
+  it("makes the subtitle N report subjects rather than rows", {
+    multi <- helper_data[rep(seq_len(nrow(helper_data)), 3), ]
+    subtitle <- aNCA:::generate_subtitle(
+      multi, subtitle = NULL, trt_var = "TRT01A",
+      plotgroup_vars  = c("ROUTE", "PCSPEC", "PARAM"),
+      plotgroup_names = list(ROUTE = "Route", PCSPEC = "Specimen", PARAM = "Analyte")
+    )
+    expect_true(grepl(paste0("N=", dplyr::n_distinct(multi$USUBJID)), subtitle, fixed = TRUE))
+    expect_false(grepl(paste0("N=", nrow(multi)), subtitle, fixed = TRUE))
+  })
+})
+
+describe("keep_blq_timepoints: BLQ ratio is per subject", {
+  it("keeps a timepoint where half the subjects are BLQ, even with repeated records", {
+    # Counting BLQ *rows* against a denominator of distinct *subjects* pushes the ratio
+    # above 1 whenever a subject contributes more than one record to a timepoint.
+    df <- data.frame(
+      USUBJID = c("S1", "S1", "S2", "S2"),
+      NFRLT   = 0, DOSEA = 10,
+      AVALC   = c("BLQ", "BLQ", "5", "6"),
+      AVAL    = c(0, 0, 5, 6),
+      stringsAsFactors = FALSE
+    )
+    expect_equal(nrow(aNCA:::keep_blq_timepoints(df, "NFRLT", "DOSEA")), 1)
+  })
+
+  it("still drops a timepoint where most subjects are BLQ", {
+    df <- data.frame(
+      USUBJID = c("S1", "S2", "S3"),
+      NFRLT   = 0, DOSEA = 10,
+      AVALC   = c("BLQ", "BLQ", "7"),
+      AVAL    = c(0, 0, 7),
+      stringsAsFactors = FALSE
+    )
+    expect_equal(nrow(aNCA:::keep_blq_timepoints(df, "NFRLT", "DOSEA")), 0)
   })
 })
