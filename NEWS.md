@@ -7,6 +7,9 @@
 
 ## Bug Fixes
 
+* TLG listings now mark summary-excluded records with `*` and explain the
+  marker in the footer, using `PKSUMXF` for ADNCA listings and `PPSUMXF` for
+  ADPP listings (#1482).
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
