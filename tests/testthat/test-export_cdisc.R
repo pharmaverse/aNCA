@@ -596,81 +596,80 @@ describe("export_cdisc", {
     )))
   })
 
-  it("PPSUMXF is always present and empty when no exclusions and no flag rules", {
+  it("ANL01FL and ANL01FN are always present when no exclusions and no flag rules", {
     clean_res <- test_pknca_res
     clean_res$result$exclude <- NA_character_
     result <- export_cdisc(clean_res)
-    expect_true("PPSUMXF" %in% names(result$adpp))
-    expect_true(all(result$adpp$PPSUMXF == ""))
+    expect_true("ANL01FL" %in% names(result$adpp))
+    expect_true("ANL01FN" %in% names(result$adpp))
+    expect_true(all(result$adpp$ANL01FL == "Y"))
+    expect_true(all(result$adpp$ANL01FN == 1L))
   })
 
-  it("sets PPSUMXF to Y for excluded rows via .pp_excl marker", {
+  it("sets ANL01FL and ANL01FN blank for excluded rows via .pp_excl marker", {
     tagged_res <- test_pknca_res
     tagged_res$result$exclude <- NA_character_
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
-    expect_true("PPSUMXF" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PPSUMXF == "Y"), 1)
-    expect_equal(sum(result$adpp$PPSUMXF == ""), n - 1)
+    expect_true("ANL01FL" %in% names(result$adpp))
+    expect_true("ANL01FN" %in% names(result$adpp))
+    expect_equal(sum(result$adpp$ANL01FL == ""), 1)
+    expect_equal(sum(result$adpp$ANL01FL == "Y"), n - 1)
+    expect_equal(sum(is.na(result$adpp$ANL01FN)), 1)
+    expect_equal(sum(result$adpp$ANL01FN == 1L, na.rm = TRUE), n - 1)
     expect_false(".pp_excl" %in% names(result$adpp))
     expect_false(".pp_excl_reason" %in% names(result$adpp))
   })
 
-  it("PPSUMXF is character type when exclusions present", {
+  it("ANL01FL is character type and ANL01FN is integer type", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
-    expect_type(result$adpp$PPSUMXF, "character")
+    expect_type(result$adpp$ANL01FL, "character")
+    expect_type(result$adpp$ANL01FN, "integer")
   })
 
-  it("PPSUMXF handles multiple excluded rows", {
+  it("ANL01FL and ANL01FN handle multiple excluded rows", {
     tagged_res <- test_pknca_res
     tagged_res$result$exclude <- NA_character_
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, TRUE, TRUE, rep(FALSE, n - 3))
     result <- export_cdisc(tagged_res)
-    expect_equal(sum(result$adpp$PPSUMXF == "Y"), 3)
-    expect_equal(sum(result$adpp$PPSUMXF == ""), n - 3)
+    expect_equal(sum(result$adpp$ANL01FL == ""), 3)
+    expect_equal(sum(result$adpp$ANL01FL == "Y"), n - 3)
+    expect_equal(sum(is.na(result$adpp$ANL01FN)), 3)
   })
 
-  it("PPSUMXF handles all rows excluded", {
+  it("ANL01FL and ANL01FN handle all rows excluded", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- rep(TRUE, n)
     result <- export_cdisc(tagged_res)
-    expect_true(all(result$adpp$PPSUMXF == "Y"))
-    expect_equal(sum(result$adpp$PPSUMXF == ""), 0)
+    expect_true(all(result$adpp$ANL01FL == ""))
+    expect_true(all(is.na(result$adpp$ANL01FN)))
   })
 
-  it("PPSUMXF and PPSUMRSN do not appear in PP output", {
+  it("ANL01FL and ANL01FN do not appear in PP output", {
     tagged_res <- test_pknca_res
     tagged_res$result$.pp_excl <- rep(FALSE, nrow(tagged_res$result))
     result <- export_cdisc(tagged_res)
-    expect_false("PPSUMXF" %in% names(result$pp))
-    expect_false("PPSUMRSN" %in% names(result$pp))
+    expect_false("ANL01FL" %in% names(result$pp))
+    expect_false("ANL01FN" %in% names(result$pp))
     expect_false(".pp_excl" %in% names(result$pp))
   })
 
-  it("PPSUMXF and PPSUMRSN are present when exclusions exist", {
+  it("ANL01FL and ANL01FN are present when exclusions exist", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
     result <- export_cdisc(tagged_res)
-    expect_true("PPSUMXF" %in% names(result$adpp))
-    expect_true("PPSUMRSN" %in% names(result$adpp))
+    expect_true("ANL01FL" %in% names(result$adpp))
+    expect_true("ANL01FN" %in% names(result$adpp))
   })
 
-  it("PPSUMRSN is always present and empty when no exclusions and no flag rules", {
-    clean_res <- test_pknca_res
-    clean_res$result$exclude <- NA_character_
-    result <- export_cdisc(clean_res)
-    expect_true("PPSUMRSN" %in% names(result$adpp))
-    expect_true(all(result$adpp$PPSUMRSN == ""))
-  })
-
-  it("PPSUMRSN contains exclusion reason from .pp_excl_reason", {
+  it("does not export PPSUMRSN when .pp_excl_reason is present", {
     tagged_res <- test_pknca_res
     n <- nrow(tagged_res$result)
     tagged_res$result$.pp_excl <- c(TRUE, TRUE, rep(FALSE, n - 2))
@@ -678,22 +677,11 @@ describe("export_cdisc", {
       "Outlier", "Protocol deviation", rep(NA_character_, n - 2)
     )
     result <- export_cdisc(tagged_res)
-    reasons <- result$adpp$PPSUMRSN
-    expect_true(any(grepl("Outlier", reasons)))
-    expect_true(any(grepl("Protocol deviation", reasons)))
+    expect_false("PPSUMRSN" %in% names(result$adpp))
     expect_false(".pp_excl_reason" %in% names(result$adpp))
   })
 
-  it("PPSUMRSN is character type when exclusions present", {
-    tagged_res <- test_pknca_res
-    n <- nrow(tagged_res$result)
-    tagged_res$result$.pp_excl <- c(TRUE, rep(FALSE, n - 1))
-    tagged_res$result$.pp_excl_reason <- c("Outlier", rep(NA_character_, n - 1))
-    result <- export_cdisc(tagged_res)
-    expect_type(result$adpp$PPSUMRSN, "character")
-  })
-
-  it("PPSUMXF works correctly with grouping_vars", {
+  it("ANL01FL works correctly with grouping_vars", {
     tagged_res <- test_pknca_res
     tagged_res$result$exclude <- NA_character_
     n <- nrow(tagged_res$result)
@@ -701,9 +689,9 @@ describe("export_cdisc", {
     tagged_res$data$conc$data$GROUP <- "GroupA"
     tagged_res$result$GROUP <- "GroupA"
     result <- export_cdisc(tagged_res, grouping_vars = "GROUP")
-    expect_true("PPSUMXF" %in% names(result$adpp))
+    expect_true("ANL01FL" %in% names(result$adpp))
     expect_true("GROUP" %in% names(result$adpp))
-    expect_equal(sum(result$adpp$PPSUMXF == "Y"), 1)
+    expect_equal(sum(result$adpp$ANL01FL == ""), 1)
   })
 
   it("includes non-standard grouping_vars columns in ADNCA and ADPP outputs", {
@@ -820,26 +808,47 @@ describe("export_cdisc PKSUMXF derivation", {
     expect_equal(pksumxfn_row$Type, "integer")
     expect_equal(pksumxfn_row$Core, "Perm")
   })
+
+  it("ANL01FL and ANL01FN are listed in ADPP metadata", {
+    adpp_vars <- metadata_nca_variables %>%
+      filter(Dataset == "ADPP")
+    expect_true("ANL01FL" %in% adpp_vars$Variable)
+    expect_true("ANL01FN" %in% adpp_vars$Variable)
+
+    anl01fl_row <- adpp_vars %>% filter(Variable == "ANL01FL")
+    expect_equal(nrow(anl01fl_row), 1)
+    expect_equal(anl01fl_row$Label, "Analysis Flag 01")
+    expect_lte(nchar(anl01fl_row$Label), 40)
+    expect_equal(anl01fl_row$Type, "text")
+    expect_equal(anl01fl_row$Core, "Perm")
+
+    anl01fn_row <- adpp_vars %>% filter(Variable == "ANL01FN")
+    expect_equal(nrow(anl01fn_row), 1)
+    expect_equal(anl01fn_row$Label, "Analysis Flag 01 (N)")
+    expect_lte(nchar(anl01fn_row$Label), 40)
+    expect_equal(anl01fn_row$Type, "integer")
+    expect_equal(anl01fn_row$Core, "Perm")
+  })
 })
 
 describe("export_cdisc: flag_rules NULL or empty produces no CRITy columns", {
 
-  it("produces no CRITy columns when flag_rules is NULL, but PPSUMXF/PPSUMRSN are present", {
+  it("produces no CRITy columns when flag_rules is NULL, but ANL01FL/ANL01FN are present", {
     result <- export_cdisc(test_pknca_res, flag_rules = NULL)
     adpp <- result$adpp
     crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
     expect_length(crit_cols, 0)
-    expect_true("PPSUMXF" %in% names(adpp))
-    expect_true("PPSUMRSN" %in% names(adpp))
+    expect_true("ANL01FL" %in% names(adpp))
+    expect_true("ANL01FN" %in% names(adpp))
   })
 
-  it("produces no CRITy columns when flag_rules is empty, but PPSUMXF/PPSUMRSN are present", {
+  it("produces no CRITy columns when flag_rules is empty, but ANL01FL/ANL01FN are present", {
     result <- export_cdisc(test_pknca_res, flag_rules = character(0))
     adpp <- result$adpp
     crit_cols <- grep("^CRIT", names(adpp), value = TRUE)
     expect_length(crit_cols, 0)
-    expect_true("PPSUMXF" %in% names(adpp))
-    expect_true("PPSUMRSN" %in% names(adpp))
+    expect_true("ANL01FL" %in% names(adpp))
+    expect_true("ANL01FN" %in% names(adpp))
   })
 })
 
@@ -936,21 +945,23 @@ describe(".invert_criterion_operator", {
   })
 })
 
-describe("export_cdisc: PPSUMXF and PPSUMRSN derivation", {
+describe("export_cdisc: ANL01FL and ANL01FN derivation", {
 
   # The base fixture may have pre-existing exclude values from PKNCA
-  # (e.g., half-life failures). Clear them to isolate PPSUMXF/PPSUMRSN logic.
+  # (e.g., half-life failures). Clear them to isolate ANL01FL/ANL01FN logic.
   clean_res <- test_pknca_res
   clean_res$result <- clean_res$result %>% mutate(exclude = NA_character_)
 
-  it("sets PPSUMXF to empty when no exclusions exist", {
+  it("sets ANL01FL and ANL01FN when no exclusions exist", {
     result <- export_cdisc(clean_res, flag_rules = c("R2ADJ < 0.7"))
     adpp <- result$adpp
-    expect_true("PPSUMXF" %in% names(adpp))
-    expect_true(all(adpp$PPSUMXF == ""))
+    expect_true("ANL01FL" %in% names(adpp))
+    expect_true("ANL01FN" %in% names(adpp))
+    expect_true(all(adpp$ANL01FL == "Y"))
+    expect_true(all(adpp$ANL01FN == 1L))
   })
 
-  it("sets PPSUMXF to Y for records with any exclusion", {
+  it("sets ANL01FL and ANL01FN blank for records with any exclusion", {
     modified <- clean_res
     modified$result <- modified$result %>%
       mutate(
@@ -966,11 +977,13 @@ describe("export_cdisc: PPSUMXF and PPSUMRSN derivation", {
       filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
     unflagged <- adpp %>%
       filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
-    expect_true(all(flagged$PPSUMXF == "Y"))
-    expect_true(all(unflagged$PPSUMXF == ""))
+    expect_true(all(flagged$ANL01FL == ""))
+    expect_true(all(is.na(flagged$ANL01FN)))
+    expect_true(all(unflagged$ANL01FL == "Y"))
+    expect_true(all(unflagged$ANL01FN == 1L))
   })
 
-  it("populates PPSUMRSN with the exclusion reasons", {
+  it("does not export PPSUMRSN with the exclusion reasons", {
     modified <- clean_res
     modified$result <- modified$result %>%
       mutate(
@@ -982,12 +995,7 @@ describe("export_cdisc: PPSUMXF and PPSUMRSN derivation", {
       )
     result <- export_cdisc(modified, flag_rules = c("R2ADJ < 0.7", "AUCPEO > 20"))
     adpp <- result$adpp
-    flagged <- adpp %>%
-      filter(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1])
-    unflagged <- adpp %>%
-      filter(!(PPTESTCD == "CMAX" & USUBJID == unique(USUBJID)[1]))
-    expect_equal(unique(flagged$PPSUMRSN), "R2ADJ < 0.7; AUCPEO > 20")
-    expect_true(all(unflagged$PPSUMRSN == ""))
+    expect_false("PPSUMRSN" %in% names(adpp))
   })
 })
 
@@ -998,10 +1006,10 @@ describe("export_cdisc: flag columns do not leak to other outputs", {
     expect_false("exclude" %in% names(result$adpp))
   })
 
-  it("does not add CRITy or PPSUMXF columns to the PP dataset", {
+  it("does not add CRITy or ADPP summary flags to the PP dataset", {
     result <- export_cdisc(test_pknca_res, flag_rules = c("R2ADJ < 0.7"))
     pp <- result$pp
-    crit_cols <- grep("^CRIT|PPSUMXF|PPSUMRSN", names(pp), value = TRUE)
+    crit_cols <- grep("^CRIT|ANL01FL|ANL01FN|PPSUMXF|PPSUMRSN", names(pp), value = TRUE)
     expect_length(crit_cols, 0)
   })
 

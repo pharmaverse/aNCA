@@ -58,31 +58,31 @@ describe("filter_tlg_excluded", {
     expect_equal(nrow(result), 0)
   })
 
-  it("removes rows where the named flag (PPSUMXF) is 'Y' (ADPP exclusion flag)", {
+  it("keeps rows where ANL01FL is 'Y' (ADPP inclusion flag)", {
     df <- data.frame(
       x       = 1:4,
-      PPSUMXF = c("", "Y", "", "Y"),
+      ANL01FL = c("Y", "", "Y", ""),
       stringsAsFactors = FALSE
     )
-    result <- filter_tlg_excluded(df, "PPSUMXF")
+    result <- filter_tlg_excluded(df, "ANL01FL")
     expect_equal(nrow(result), 2)
     expect_equal(result$x, c(1L, 3L))
   })
 
   it("applies only the named flag and ignores the other dataset's flag", {
-    # A record excluded from the ADPP summary (PPSUMXF == "Y") but not the ADNCA
+    # A record excluded from the ADPP summary (ANL01FL != "Y") but not the ADNCA
     # summary must still survive ADNCA (PKSUMXF) filtering, and vice-versa.
     df <- data.frame(
       x       = 1:4,
       PKSUMXF = c("Y", "",  "",  ""),
-      PPSUMXF = c("",  "Y", "",  ""),
+      ANL01FL = c("Y", "",  "Y", "Y"),
       stringsAsFactors = FALSE
     )
-    # Filtering as ADNCA drops only the PKSUMXF == "Y" row; the PPSUMXF row stays.
+    # Filtering as ADNCA drops only the PKSUMXF == "Y" row; the ANL01FL row stays.
     adnca <- filter_tlg_excluded(df, "PKSUMXF")
     expect_equal(adnca$x, c(2L, 3L, 4L))
-    # Filtering as ADPP drops only the PPSUMXF == "Y" row; the PKSUMXF row stays.
-    adpp <- filter_tlg_excluded(df, "PPSUMXF")
+    # Filtering as ADPP drops only the ANL01FL != "Y" row; the PKSUMXF row stays.
+    adpp <- filter_tlg_excluded(df, "ANL01FL")
     expect_equal(adpp$x, c(1L, 3L, 4L))
   })
 })
