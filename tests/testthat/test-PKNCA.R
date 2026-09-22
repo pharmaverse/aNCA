@@ -555,6 +555,37 @@ describe("PKNCA_update_data_object", {
     # Points outside the range should remain unflagged
     expect_true(all(is.na(conc$include_half.life[!in_range])))
   })
+
+  it("keeps a single ROUTE column when ROUTE is in keep_interval_cols (#1461)", {
+    # Regression: ROUTE is already carried into the intervals by
+    # format_pkncadata_intervals() via keep_interval_cols. The route join must
+    # not re-add it, otherwise dplyr produces ROUTE.x / ROUTE.y and the plain
+    # ROUTE column pk.nca() requires disappears, crashing the calculation.
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      # Use the AUC method string PKNCA::pk.nca() accepts. The describe-level
+      # `method` ("lin up log down") is only ever passed to update in the other
+      # tests, never to a real calculation, so it would fail pk.nca()'s
+      # match.arg() here.
+      method = "lin up/log down",
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      start_impute = TRUE,
+      keep_interval_cols = "ROUTE",
+      # Parameters must be selected so pk.nca() computes result rows; otherwise
+      # the result is empty and PKNCA_calculate_nca() never reaches the route
+      # handling this test targets.
+      parameter_selections = list(
+        `Single IV Infusion` = c("cmax", "tmax", "auclast")
+      )
+    )
+
+    expect_true("ROUTE" %in% names(updated_data$intervals))
+    expect_false(any(c("ROUTE.x", "ROUTE.y") %in% names(updated_data$intervals)))
+    expect_true(all(!is.na(updated_data$intervals$ROUTE)))
+    expect_no_error(PKNCA_calculate_nca(updated_data))
+  })
 })
 
 
