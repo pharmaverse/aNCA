@@ -23,6 +23,9 @@
 
 ### Bug Fixes
 
+- R-devel package checks no longer fail because the base `tools` package
+  was imported from `NAMESPACE` while listed only in `Suggests`
+  ([\#1496](https://github.com/pharmaverse/aNCA/issues/1496))
 - The upload UI now shows accepted file formats and the current maximum
   upload size, matching `shiny.maxRequestSize` when the app is launched
   through
