@@ -99,6 +99,18 @@ Agent will:
 - Identify which check failed (lint, tests, etc.)
 - Suggest fixes
 
+### Audit Contributor Checklist
+
+```
+Audit the Contributor checklist on PR #NNN
+```
+
+Agent will:
+- Use the `pr-contributor-checklist` skill
+- Check remote GitHub Actions jobs for CI-backed checklist items
+- Avoid installing R if it is not already available
+- Report completed, failing, waiting, not-applicable, and human-test items
+
 ### Add Tests
 
 ```
