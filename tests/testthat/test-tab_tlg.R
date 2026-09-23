@@ -12,11 +12,23 @@ local({
   library(logger)
   library(reactable)
   library(reactable.extras)
+  # tlg_module_ui() builds a bslib layout_sidebar with a shinyWidgets dropdown; without
+  # these the panel builder cannot run and no modules get registered.
+  library(bslib)
+  library(shinyWidgets)
   shiny_dir <- system.file("shiny", package = "aNCA")
   for (f in list(
     c("functions", "tlg_add_picker.R"),
+    c("functions", "zip-utils.R"),
+    c("functions", "tlg_export.R"),
     c("modules", "tab_tlg", "tlg_module.R"),
+    # All four option types: tlg_module_server() resolves the per-option server by name
+    # (`tlg_option_<type>_server`), so a missing one aborts module init partway and leaves
+    # its `tlg_list` unusable.
     c("modules", "tab_tlg", "tlg_option_select.R"),
+    c("modules", "tab_tlg", "tlg_option_text.R"),
+    c("modules", "tab_tlg", "tlg_option_numeric.R"),
+    c("modules", "tab_tlg", "tlg_option_table.R"),
     c("modules", "common", "reactable.R"),
     c("modules", "tab_tlg.R")
   )) {
@@ -149,86 +161,154 @@ describe("tab_tlg_server: data boundary", {
   })
 })
 
-describe("M/P rendering adapter", {
-  it("routes all three M/P modules through unfiltered data and current ADNCA metadata", {
+# Bulk export of the rendered TLGs (issue #1344).  Each module hands its `tlg_list`
+# reactive back to tab_tlg_server, which keeps them in `.tlg_registry`; the download
+# handler resolves that registry and zips the result.
+
+#' Touch the three panel outputs so their renderUI runs and registers the modules.
+#'
+#' The ADPP-backed panels `validate()` out when NCA has not run (this fixture passes no
+#' `adpp`), which `testServer` re-raises on output access.  In the app that is a gated
+#' panel, not a failure, so it is swallowed here -- the point is only to trigger
+#' registration.
+render_tlg_panels <- function(output) {
+  try(output$tables, silent = TRUE)
+  try(output$listings, silent = TRUE)
+  try(output$graphs, silent = TRUE)
+  invisible(NULL)
+}
+
+describe("tab_tlg_server: TLG export registry", {
+  it("registers an entry for every rendered TLG", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      # tlg_order_filtered() is bindEvent(submit_tlg_order), so nothing renders until the
+      # order is submitted -- the same sequence a user goes through.
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      ids <- ls(envir = .tlg_registry)
+      expect_gt(length(ids), 0)
+      # Ids are the catalog keys, and every entry carries its definition and type.
+      entry <- get(ids[1], envir = .tlg_registry)
+      expect_setequal(names(entry), c("def", "type", "items"))
+      expect_true(entry$type %in% c("table", "listing", "graph"))
+      expect_true(is.function(entry$items))
+    })
+  })
+
+  it("exports only the currently selected TLGs, not everything ever rendered", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+      expect_gt(length(.collect_tlg_outputs()), 1)
+
+      # Narrow the order to a single TLG and re-submit.  Modules stay registered on
+      # purpose (removing them would re-create their observers on re-add), so the registry
+      # keeps growing -- but the download must follow the order as it stands now.
+      keep <- tlg_order()$id[tlg_order()$Selection][1]
+      o <- tlg_order()
+      o$Selection <- o$id == keep
+      tlg_order(o)
+      session$setInputs(submit_tlg_order = 2)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      expect_gt(length(ls(envir = .tlg_registry)), 1)  # registry is still append-only
+      collected <- .collect_tlg_outputs()
+      expect_length(collected, 1)
+      expect_equal(names(collected), names(.TLG_DEFINITIONS)[keep])
+    })
+  })
+
+  it("collects outputs without raising when a TLG is still gated or failing", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      # The fixture is deliberately minimal, so most TLGs cannot render.  Collection must
+      # still succeed -- a req()-gated module is "not ready", not a failure.
+      entries <- expect_no_error(.collect_tlg_outputs())
+      expect_gt(length(entries), 0)
+      expect_true(all(vapply(entries, function(e) "items" %in% names(e), logical(1))))
+    })
+  })
+})
+
+
+describe("tab_tlg_server: publishes outputs for the app-wide export", {
+  it("exposes a collector on session$userData that zip.R can call", {
+    # The download lives in the global "Export as ZIP" button, so this module only has to
+    # publish; zip.R reads it through session$userData (#1344).
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      session$flushReact()
+
+      collect <- session$userData$tlg_outputs
+      expect_true(is.function(collect))
+      expect_gt(length(collect()), 0)
+      # Callable with a type filter, which is how the tree selection is applied.
+      tables_only <- collect("table")
+      expect_true(all(vapply(tables_only, function(e) e$type == "table", logical(1))))
+      expect_lt(length(tables_only), length(collect()))
+    })
+  })
+})
+
+describe("tab_tlg_server: configured M/P ratios", {
+  it("uses ADPP ratio values and their summary flags for rendering and export", {
     registered <- new.env(parent = emptyenv())
     server <- tab_tlg_server
     environment(server) <- list2env(list(
       tlg_module_server = function(id, data, type, render_list, ...) {
         registered[[id]] <- list(data = data, render = render_list)
+        reactive(render_list(data()))
       },
       tlg_module_ui = function(...) NULL,
       nav_panel = function(...) list(...)
     ), parent = environment(tab_tlg_server))
     adpp_df <- mp_adpp_fixture()
-    adpp_df$PPSUMXF[1] <- "Y"
-    metadata <- reactiveVal(mp_adnca_fixture())
-    testServer(server, args = list(
-      data = reactive(list(conc = list(data = metadata()))), adpp = reactive(adpp_df)
-    ), {
+    ratio <- adpp_df$PARAMCD == "RACMAX" & adpp_df$ATPTREF == "DOSE 1"
+    adpp_df$AVAL[ratio] <- c(0.37, 0.62)
+    adpp_df$PPSUMXF[ratio & adpp_df$USUBJID == "S1"] <- "Y"
+    current_adpp <- reactiveVal(adpp_df)
+    # No parent/metabolite metadata is needed to display a configured ADPP ratio.
+    testServer(server, args = list(data = test_data, adpp = current_adpp), {
       functions <- c("t_pkpt03_MP_col", "l_pkpl01_mp", "p_pkpg06_mp")
       types <- c("table", "listing", "graph")
       for (i in seq_along(functions)) {
-        .build_tlg_panels(match(functions[i], names(.TLG_DEFINITIONS)), types[i], "_mp_test")
+        .build_tlg_panels(match(functions[i], names(.TLG_DEFINITIONS)), types[i], "_mp")
       }
-      run <- function(fun) {
-        module <- registered[[paste0(match(fun, names(.TLG_DEFINITIONS)), "_mp_test")]]
-        expect_equal(nrow(module$data()), nrow(adpp_df))
+      render <- function(fun) {
+        module <- registered[[paste0(match(fun, names(.TLG_DEFINITIONS)), "_mp")]]
         module$render(module$data())
       }
-      table <- run("t_pkpt03_MP_col")[[1]]
-      expect_equal(table$Mean[table$PARAM == "Cmax"], 0.3)
-      listing <- run("l_pkpl01_mp")[[1]]
-      expect_equal(as.numeric(listing$Cmax), c(0.5, 0.3))
-      plot <- run("p_pkpg06_mp")[[1]]
-      expect_equal(plot$data$AVAL[plot$data$PARAMCD == "CMAX"], 0.3)
-      metadata(transform(metadata(), METABFL = c("Y", "")))
-      table <- run("t_pkpt03_MP_col")[[1]]
-      expect_equal(table$Mean[table$PARAM == "Cmax"], round(10 / 3, 3))
+      table <- render("t_pkpt03_MP_col")[[1]]
+      expect_equal(table$Mean[table$PARAM == "M/P Cmax"], 0.62)
+      expect_equal(table$n[table$PARAM == "M/P Cmax"], 1)
+      listing <- render("l_pkpl01_mp")[[1]]
+      expect_equal(as.numeric(listing$`M/P Cmax`), c(0.37, 0.62))
+      plot <- render("p_pkpg06_mp")[[1]]
+      expect_equal(plot$data$AVAL[plot$data$PARAMCD == "RACMAX"], 0.62)
+      exported <- get("t_pkpt03_MP_col", envir = .tlg_registry)$items()[[1]]
+      expect_equal(exported, table)
+
+      updated <- current_adpp()
+      updated$AVAL[ratio & updated$USUBJID == "S2"] <- 0.91
+      current_adpp(updated)
+      session$flushReact()
+      table <- render("t_pkpt03_MP_col")[[1]]
+      expect_equal(table$Mean[table$PARAM == "M/P Cmax"], 0.91)
+      exported <- get("t_pkpt03_MP_col", envir = .tlg_registry)$items()[[1]]
+      expect_equal(exported, table)
     })
-  })
-
-  it("derives pairing from ADNCA and renders without preconfigured ratios", {
-    result <- .render_mp_tlg(mp_adpp_fixture(), mp_adnca_fixture(), t_pkpt03_MP_col)
-    expect_length(result, 2)
-    expect_equal(result[[1]]$Mean[result[[1]]$PARAM == "Cmax"], 0.4)
-  })
-
-  it("uses updated metadata rather than caching a pair from another session", {
-    data <- mp_adpp_fixture()
-    adnca <- mp_adnca_fixture()
-    adnca$METABFL <- c("Y", "")
-    out <- .render_mp_tlg(data, adnca, p_pkpg06_mp)
-    expect_match(names(out)[1], "RATIO: DrugA / Metab-DrugA", fixed = TRUE)
-    expect_equal(out[[1]]$data$AVAL[out[[1]]$data$PARAMCD == "CMAX"], c(2, 10 / 3))
-  })
-
-  it("does not mix studies sharing the same drug and analyte names", {
-    data <- mp_adpp_fixture()
-    other <- transform(data, STUDYID = "STUDY2")
-    other$AVAL[other$PPCAT == "Metab-DrugA"] <- other$AVAL[other$PPCAT == "Metab-DrugA"] * 2
-    adnca <- rbind(mp_adnca_fixture(), transform(mp_adnca_fixture(), STUDYID = "STUDY2"))
-    out <- .render_mp_tlg(rbind(data, other), adnca, t_pkpt03_MP_col)
-    expect_length(out, 4)
-    expect_false(anyDuplicated(names(out)) > 0)
-    result <- out[[which(grepl("STUDY2.*DOSE 1", names(out)))]]
-    expect_equal(result$Mean[result$PARAM == "Cmax"], 0.8)
-  })
-
-  it("offers ordinary PK parameters instead of requiring existing ratio parameters", {
-    data <- mp_adpp_fixture()
-    expect_setequal(.resolve_option_choices(".rawpkparams", data), c("Cmax", "AUClast"))
-    data$PPANMETH <- NA_character_
-    extra <- transform(data, PARAM = "Custom ratio", PPANMETH = "CMAX TO CMAX [PARAM: DrugA]")
-    expect_setequal(
-      .resolve_option_choices(".rawpkparams", rbind(data, extra)), c("Cmax", "AUClast")
-    )
-  })
-
-  it("only offers the calculated ratio value and unit in M/P output options", {
-    defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
-    expect_equal(unlist(defs$t_pkpt03_MP_col$options$value_var$choices), "AVAL")
-    expect_equal(unlist(defs$l_pkpl01_mp$options$value_var$choices), "AVAL")
-    expect_equal(unlist(defs$l_pkpl01_mp$options$unit_var$choices), "AVALU")
   })
 })

@@ -136,26 +136,21 @@ l_pkpl01 <- function(
 }
 
 #' @describeIn l_pkpl01 Listing of metabolite-to-parent ratios (pkpl01 M/P).
-#'   Computes individual metabolite divided by parent values without requiring
-#'   configured ratios. Summary-excluded records remain in the listing; invalid
-#'   or unpaired values are omitted with a diagnostic. Defaults to splitting by
-#'   `RATIO` and `PPSPEC`; varying profile identifiers are retained too.
-#'   `value_var` must be `"AVAL"` and `unit_var` must be `"AVALU"`: only these
-#'   columns contain the calculated ratios and their dimensionless units.
-#'   See [t_pkpt03_MP_col()].
-#' @inheritParams t_pkpt03_MP_col
+#'   Displays the configured analyte ratios already present in ADPP, without
+#'   recalculating them. Defaults to splitting by `RATIO` and `PPSPEC`; varying
+#'   profile identifiers are retained too. Missing values remain blank and
+#'   summary-excluded records remain in the listing. See [t_pkpt03_MP_col()].
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
 #' @export
 l_pkpl01_mp <- function(
-  data, listgroup_vars = c("RATIO", "PPSPEC"), parent = NULL, metabolite = NULL,
+  data, listgroup_vars = c("RATIO", "PPSPEC"),
   param_var = "PARAM", title = "Listing of Individual Metabolite/Parent Ratios",
   value_var = "AVAL", unit_var = "AVALU", ...
 ) {
-  .mp_check_columns(value_var, unit_var)
-  data <- .mp_ratio_data(data, parent, metabolite, "l_pkpl01_mp")
+  data <- filter_ratio_rows(data, "l_pkpl01_mp", ref_type = "analyte", value_var = value_var)
   listings <- l_pkpl01(
     data,
-    listgroup_vars = union(listgroup_vars, .mp_profile_vars(data)),
+    listgroup_vars = union(listgroup_vars, .ratio_profile_vars(data)),
     param_var = param_var, title = title,
     value_var = value_var, unit_var = unit_var,
     ...
@@ -178,8 +173,7 @@ l_pkpl01_mp <- function(
 #' Ratio rows are selected on the `" TO "` that `calculate_ratios()` writes into
 #' `PPANMETH`, and narrowed to those whose reference group is *not* the analyte
 #' column: treatment, dose profile, route or specimen references. Analyte
-#' references are omitted here. [l_pkpl01_mp()] instead calculates M/P ratios
-#' directly from paired parent/metabolite values.
+#' references are omitted here and displayed by [l_pkpl01_mp()] instead.
 #'
 #' Ratios are computed as part of the NCA run, so a ratio added afterwards does
 #' not appear until the run is repeated. When the data holds no treatment ratios
@@ -198,6 +192,8 @@ l_pkpl01_mp <- function(
 #'   *within* an analyte, so its `RATIO` label ("DOSE 2 / DOSE 1") does not name
 #'   the analyte. `PPCAT` has to split the listings as well, or the parent's and
 #'   the metabolite's ratios share a column and `pivot_wider` keeps one of them.
+#'   Varying study, dose, visit, route and interval identifiers also split the
+#'   listings so distinct profiles are retained.
 #' @param grouping_vars Columns used to identify row keys before pivoting.
 #'   `PARAM` must be included so it is spread into display columns.
 #'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
@@ -218,13 +214,16 @@ l_pkpl04_mp <- function(
   listgroup_vars = c("RATIO", "PPCAT", "PPSPEC"),
   grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
   title         = "Listing of Individual Treatment Ratios",
+  value_var     = "AVAL",
   ...
 ) {
+  data <- filter_ratio_rows(data, "l_pkpl04_mp", ref_type = "other", value_var = value_var)
   l_pkpl01(
-    filter_ratio_rows(data, "l_pkpl04_mp", ref_type = "other"),
-    listgroup_vars = listgroup_vars,
+    data,
+    listgroup_vars = union(listgroup_vars, .ratio_profile_vars(data)),
     grouping_vars = grouping_vars,
     title = title,
+    value_var = value_var,
     ...
   )
 }

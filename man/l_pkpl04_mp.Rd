@@ -9,6 +9,7 @@ l_pkpl04_mp(
   listgroup_vars = c("RATIO", "PPCAT", "PPSPEC"),
   grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
   title = "Listing of Individual Treatment Ratios",
+  value_var = "AVAL",
   ...
 )
 }
@@ -20,13 +21,17 @@ Defaults to the derived \code{RATIO} label, \code{PPCAT} and \code{PPSPEC}. Unli
 metabolite/parent ratio, a treatment ratio compares one group against another
 \emph{within} an analyte, so its \code{RATIO} label ("DOSE 2 / DOSE 1") does not name
 the analyte. \code{PPCAT} has to split the listings as well, or the parent's and
-the metabolite's ratios share a column and \code{pivot_wider} keeps one of them.}
+the metabolite's ratios share a column and \code{pivot_wider} keeps one of them.
+Varying study, dose, visit, route and interval identifiers also split the
+listings so distinct profiles are retained.}
 
 \item{grouping_vars}{Columns used to identify row keys before pivoting.
 \code{PARAM} must be included so it is spread into display columns.
 Default: \code{c("PARAM", "TRT01A", "USUBJID")}.}
 
 \item{title}{Main listing title string.}
+
+\item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }
@@ -43,8 +48,7 @@ display columns (one column per PARAM value) and the rows are keyed by
 Ratio rows are selected on the \code{" TO "} that \code{calculate_ratios()} writes into
 \code{PPANMETH}, and narrowed to those whose reference group is \emph{not} the analyte
 column: treatment, dose profile, route or specimen references. Analyte
-references are omitted here. \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}} instead calculates M/P ratios
-directly from paired parent/metabolite values.
+references are omitted here and displayed by \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}} instead.
 
 Ratios are computed as part of the NCA run, so a ratio added afterwards does
 not appear until the run is repeated. When the data holds no treatment ratios

@@ -41,13 +41,11 @@
 
 #' Parameter values used by one family of ratio outputs.
 #'
-#' The automatic M/P outputs use ordinary PK parameters (`.rawpkparams`), while
-#' `.ratioparams` selects existing configured analyte ratios. Classification uses
-#' the same PPANMETH parser as the calculation helpers.
+#' `.ratioparams` selects configured analyte ratios already in ADPP, using
+#' the same PPANMETH parser as the TLG functions.
 #'
 #' @param df A data frame.
 #' @param ref_type Ratio family to keep, as in `aNCA:::filter_ratio_rows()`.
-#'   Use `"raw"` for ordinary PK parameters used to calculate M/P ratios.
 #' @return Character vector of parameter names, sorted; empty if none.
 .ratio_param_values <- function(df, ref_type = "analyte") {
   if (!"PARAM" %in% names(df)) return(character(0))
@@ -56,7 +54,7 @@
   } else {
     rep(NA_character_, nrow(df))
   }
-  keep <- if (ref_type == "raw") is.na(row_type) else row_type %in% ref_type
+  keep <- row_type %in% ref_type
   values <- unique(as.character(df$PARAM[keep]))
   sort(values[!is.na(values)])
 }
@@ -95,7 +93,6 @@
     .colnames    = function() names(conc_df),
     .ratiocols   = function() .ratio_col_names(conc_df),
     .ratioparams = function() .ratio_param_values(conc_df),
-    .rawpkparams = function() .ratio_param_values(conc_df, ref_type = "raw"),
     .groupcols   = function() .sensible_group_cols(conc_df),
     .urinespecs  = function() .urine_spec_values(conc_df),
     # Named vector: names are the readable labels shown in the dropdown, values

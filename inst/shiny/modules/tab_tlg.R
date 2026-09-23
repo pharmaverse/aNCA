@@ -39,40 +39,6 @@
     setNames(names(defs))
 }
 
-#' Render M/P outputs using the pairing from mapped, unfiltered ADNCA.
-#' Only the M/P functions use this adapter; other TLGs keep their existing inputs.
-#' @param data ADPP values, including summary-excluded records.
-#' @param adnca Unfiltered mapped concentration data.
-#' @param render_list One of the three M/P TLG functions.
-#' @param ... User-selected TLG options.
-.render_mp_tlg <- function(data, adnca, render_list, ...) {
-  pairs <- aNCA:::.mp_analyte_pairs(adnca)
-  keys <- intersect(c("STUDYID", "DOSETRT"), names(pairs))
-  if (!"STUDYID" %in% names(data) && length(unique(pairs$STUDYID)) > 1L) {
-    stop("M/P ratios: ADPP needs STUDYID to distinguish the analyte pairs.")
-  }
-  keys <- intersect(keys, names(data))
-  pairs <- unique(pairs[c(keys, "parent", "metabolite")])
-  if (anyDuplicated(pairs[c(keys, "metabolite")])) {
-    stop("M/P ratios: ambiguous pairing without the drug/study identifiers in ADPP.")
-  }
-  outputs <- lapply(seq_len(nrow(pairs)), function(i) {
-    pair <- pairs[i, , drop = FALSE]
-    keep <- data$PPCAT %in% c(pair$parent, pair$metabolite)
-    for (key in keys) keep <- keep & !is.na(data[[key]]) & data[[key]] == pair[[key]]
-    if (!any(keep)) return(list())
-    result <- render_list(
-      data[keep, , drop = FALSE], parent = pair$parent, metabolite = pair$metabolite, ...
-    )
-    if (nrow(pairs) > 1L && length(keys)) {
-      prefix <- paste(paste(keys, pair[1, keys], sep = ": "), collapse = " / ")
-      names(result) <- paste(prefix, names(result), sep = " / ")
-    }
-    result
-  })
-  do.call(c, outputs)
-}
-
 js_close_button <- tags$button(
   type = "button",
   onclick = "$(this).closest('.modal').modal('hide');",
@@ -394,6 +360,13 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # fresh per Shiny session and does not leak across sessions.
     .registered_modules <- new.env(parent = emptyenv())
 
+    # Registry of rendered outputs, keyed by TLG id, populated as modules are registered
+    # (#1344).  Each entry holds the catalog definition plus the module's `tlg_list`
+    # reactive, so the download handler can write exactly what the user is looking at --
+    # every page, with their sidebar edits applied.  Like `.registered_modules` this lives
+    # inside moduleServer(), so it is per-session.
+    .tlg_registry <- new.env(parent = emptyenv())
+
     # Shared helper: build navset_pill_list panels for one TLG type.
     # Factored out to eliminate the copy-paste across table / graph / listing
     # renderUI blocks.  `id_suffix` must be unique per type to produce
@@ -401,27 +374,23 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     .build_tlg_panels <- function(g_ids, type, id_suffix) {
       lapply(g_ids, function(g_id) {
         g_def     <- .TLG_DEFINITIONS[[g_id]]
+        # `g_id` is tlg_order()'s row number, which is the position in .TLG_DEFINITIONS
+        # (see the `row_number()` above).  The export needs the catalog key itself --
+        # "g_pkcg01_lin", not 12 -- both to name files and because assign() below
+        # requires a character name.
+        g_key     <- names(.TLG_DEFINITIONS)[g_id]
         module_id <- paste0(g_id, id_suffix)
         tlg_data  <- tlg_data_sources[[tlg_data_key(type, g_def$dataset)]]
 
         panel_ui <- if (exists(g_def$fun)) {
-          render_list <- get(g_def$fun)
-          if (g_def$fun %in% c("t_pkpt03_MP_col", "l_pkpl01_mp", "p_pkpg06_mp")) {
-            # The shared ratio calculation needs both sides' exclusion flags.
-            # Summary M/P functions exclude either-side flags; listings retain them.
-            tlg_data <- adpp_data_all
-            mp_fun <- render_list
-            render_list <- function(data, ...) {
-              .render_mp_tlg(data, conc_data_all(), mp_fun, ...)
-            }
-          }
           # Only register the Shiny module once per session to avoid accumulating
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
-            tlg_module_server(
-              module_id, tlg_data, type, render_list, g_def$options, grouping_vars
+            items <- tlg_module_server(
+              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
             )
             assign(module_id, TRUE, envir = .registered_modules)
+            assign(g_key, list(def = g_def, type = type, items = items), envir = .tlg_registry)
           }
           tlg_module_ui(session$ns(module_id), type, g_def$options)
         } else {
@@ -470,5 +439,54 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       panels$"widths" <- c(2, 10)
       do.call(navset_pill_list, panels)
     })
+
+    # These three uiOutputs sit in nav panels, so Shiny suspends them until their tab is
+    # opened -- and it is the renderUI that registers the modules.  Left suspended, a user
+    # who submits an order and downloads without ever clicking through to Graphs would get
+    # a zip with no graphs in it (#1344).
+    for (out_id in c("tables", "graphs", "listings")) {
+      outputOptions(output, out_id, suspendWhenHidden = FALSE)
+    }
+
+    # ---- Bulk export of the rendered TLGs (#1344) --------------------------------------
+    #
+    # The download itself lives in the app-wide "Export as ZIP" button rather than here:
+    # that button is in the sidebar header and so is already on screen on this tab, and a
+    # second export control with its own modal would be the sort of inconsistency the
+    # tables review pushed back on.  This module only publishes its outputs; `zip.R` reads
+    # them through `session$userData` (the module-communication channel in AGENTS.md) and
+    # `write_tlg_exports()` does the writing.
+
+    #' Resolve every registered module's output list.
+    #'
+    #' Each registry entry holds the module's `tlg_list` reactive.  A TLG that is still
+    #' gated (`req()`/`validate()` before NCA has produced its dataset) raises a condition
+    #' when read; that is a "not ready", not a failure, so it resolves to NULL and is
+    #' reported as `empty` in the manifest rather than aborting the whole download.
+    #'
+    #' The registry is append-only by design -- modules stay registered for the life of the
+    #' session so their observers are never created twice -- so it accumulates every TLG
+    #' rendered so far, including ones since removed from the order.  The export must show
+    #' the order as it stands now, so the registry is intersected with the current
+    #' selection rather than taken wholesale.
+    #' @param types Output types to keep, matching the registry's `type` field.
+    .collect_tlg_outputs <- function(types = names(.TLG_EXPORT_DIRS)) {
+      selected <- tryCatch(
+        names(.TLG_DEFINITIONS)[tlg_order_filtered()$id],
+        error = function(e) character()
+      )
+      ids <- intersect(ls(envir = .tlg_registry), selected)
+      out <- lapply(ids, function(g_id) {
+        entry <- get(g_id, envir = .tlg_registry)
+        items <- tryCatch(entry$items(), error = function(e) NULL)
+        list(def = entry$def, type = entry$type, items = items)
+      })
+      names(out) <- ids
+      out[vapply(out, function(e) isTRUE(e$type %in% types), logical(1))]
+    }
+
+    # Published for the app-wide ZIP export.  A function rather than the raw environment so
+    # the reactives are read at download time, in the caller's context.
+    session$userData$tlg_outputs <- .collect_tlg_outputs
   })
 }

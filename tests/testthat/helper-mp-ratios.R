@@ -1,4 +1,4 @@
-# Paired ordinary NCA values, with no manually configured ratio rows.
+# Ordinary NCA values plus the configured ratios exported in ADPP.
 mp_adpp_fixture <- function() {
   parent <- expand.grid(
     USUBJID = c("S1", "S2"), PARAMCD = c("CMAX", "AUCLST"),
@@ -14,6 +14,7 @@ mp_adpp_fixture <- function() {
     ifelse(parent$PARAMCD == "CMAX", 1, 10)
   parent$AVALU <- ifelse(parent$PARAMCD == "CMAX", "ng/mL", "ng*h/mL")
   parent$PPSUMXF <- ""
+  parent$PPANMETH <- NA_character_
   metabolite <- parent
   metabolite$PPCAT <- "Metab-DrugA"
   metabolite$AVAL <- parent$AVAL * ifelse(
@@ -21,15 +22,20 @@ mp_adpp_fixture <- function() {
     ifelse(parent$USUBJID == "S1", 0.5, 0.3),
     ifelse(parent$USUBJID == "S1", 0.25, 0.75)
   )
-  data <- rbind(parent, metabolite)
+  ratios <- metabolite
+  ratios$PARAM <- paste("M/P", ratios$PARAM)
+  ratios$PARAMCD <- paste0("RA", ratios$PARAMCD)
+  ratios$AVAL <- ifelse(
+    ratios$ATPTREF == "DOSE 1",
+    ifelse(ratios$USUBJID == "S1", 0.5, 0.3),
+    ifelse(ratios$USUBJID == "S1", 0.25, 0.75)
+  )
+  ratios$AVALU <- "fraction"
+  ratios$PPANMETH <- paste0(
+    parent$PARAMCD, " TO ", parent$PARAMCD, " [PARAM: DrugA]"
+  )
+  data <- rbind(parent, metabolite, ratios)
   data$PPSTRESN <- data$AVAL
   data$PPSTRESU <- data$AVALU
   data
-}
-
-mp_adnca_fixture <- function() {
-  data.frame(
-    STUDYID = "STUDY1", DOSETRT = "DrugA",
-    PARAM = c("DrugA", "Metab-DrugA"), METABFL = c("", "Y")
-  )
 }

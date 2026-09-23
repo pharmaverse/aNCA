@@ -252,7 +252,7 @@ t_pkpt03_MP_col:
   dataset: ADPP
   pkid: pkpt03
   label: "pkpt03 - Summary M/P Ratios (stats in cols)"
-  description: "Summary of automatically calculated metabolite/parent ratios by TRT [stats in columns]"
+  description: "Summary of metabolite/parent ratios configured in Parameter Selection > Ratios by TRT [stats in columns]"
   link: https://insightsengineering.github.io/tlg-catalog/stable/tables/pharmacokinetic/pkpt03.html
   fun: t_pkpt03_MP_col
   condition: null
@@ -261,8 +261,7 @@ t_pkpt03_MP_col:
     param_filter:
       label: "Parameters to show (PARAM)"
       type: select
-      # M/P values are calculated from ordinary PK parameters, not configured ratios.
-      choices: .rawpkparams
+      choices: .ratioparams
       multiple: true
     .group_label_1: "Grouping"
     # No default: the function splits by its derived "<metabolite> / <parent>"
@@ -289,8 +288,7 @@ t_pkpt03_MP_col:
     value_var:
       label: "Value variable"
       type: select
-      # Only AVAL contains the calculated ratio; other input columns are metadata.
-      choices: ["AVAL"]
+      choices: .colnames
       default: ["AVAL"]
     .group_label_3: "Compare (columns)"
     col_group_var:
@@ -745,7 +743,7 @@ l_pkpl01_mp:
   dataset: ADPP
   pkid: pkpl01
   label: "pkpl01 - M/P Ratio Listing"
-  description: "Individual listings of automatically calculated metabolite/parent ratios by TRT/dose"
+  description: "Individual listings of metabolite/parent ratios configured in Parameter Selection > Ratios by TRT/dose"
   link: https://insightsengineering.github.io/tlg-catalog/stable/listings/pharmacokinetic/pkpl01.html
   fun: l_pkpl01_mp
   condition: null
@@ -784,11 +782,11 @@ l_pkpl01_mp:
     value_var:
       label: "Value variable"
       type: select
-      choices: ["AVAL"]
+      choices: .colnames
     unit_var:
       label: "Unit variable"
       type: select
-      choices: ["AVALU"]
+      choices: .colnames
 
 l_pkpl04_mp:
   is_default: false
@@ -1320,7 +1318,7 @@ p_pkpg06_mp:
   dataset: ADPP
   pkid: pkpg06
   label: "pkpg06 - Boxplot Metabolite/Parent Ratios"
-  description: "Boxplots of automatically calculated metabolite/parent ratios by TRT"
+  description: "Boxplots of metabolite/parent ratios configured in Parameter Selection > Ratios by TRT"
   link: https://insightsengineering.github.io/tlg-catalog/stable/graphs/pharmacokinetic/pkpg06.html
   fun: p_pkpg06_mp
   condition: null

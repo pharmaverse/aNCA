@@ -12,7 +12,7 @@ pkpg_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Ordinary matched NCA values; ratios must be calculated by the TLG.
+# Ordinary values and configured ADPP ratios deliberately carry different values.
 pkpg_ratio_data <- rbind(
   transform(pkpg_data, PPANMETH = NA_character_),
   transform(
@@ -20,6 +20,17 @@ pkpg_ratio_data <- rbind(
     PPCAT    = "Metab-DrugA Plasma",
     AVAL     = pkpg_data$AVAL / 2,
     PPANMETH = NA_character_
+  ),
+  transform(
+    pkpg_data,
+    PPCAT    = "Metab-DrugA Plasma",
+    PARAM    = paste("Ratio", pkpg_data$PARAM),
+    PARAMCD  = paste0("RA", pkpg_data$PARAMCD),
+    AVAL     = pkpg_data$AVAL / 10 + 0.2,
+    AVALU    = "fraction",
+    PPANMETH = paste0(
+      pkpg_data$PARAMCD, " TO ", pkpg_data$PARAMCD, " [PARAM: DrugA Plasma]"
+    )
   )
 )
 
@@ -101,15 +112,15 @@ describe("p_pkpg04_boxp", {
 
 describe("p_pkpg06_mp", {
   plots <- function(data = pkpg_ratio_data, ...) {
-    p_pkpg06_mp(data, parent = "DrugA Plasma", metabolite = "Metab-DrugA Plasma", ...)
+    p_pkpg06_mp(data, ...)
   }
 
   it("plots the ratio values, not the metabolite's raw values", {
     result <- plots()
     plot_df <- result[[1]]$data
     expect_s3_class(result[[1]], "ggplot")
-    expect_true(all(plot_df$AVAL == 0.5))
-    expect_setequal(plot_df$PARAM, pkpg_data$PARAM)
+    expect_equal(sort(plot_df$AVAL), sort(pkpg_data$AVAL / 10 + 0.2))
+    expect_setequal(plot_df$PARAM, paste("Ratio", pkpg_data$PARAM))
     expect_equal(result[[1]]$labels$y, "Metabolite / Parent Ratio")
   })
 
@@ -129,10 +140,34 @@ describe("p_pkpg06_mp", {
     expect_equal(plot$labels$y, "M/P")
   })
 
-  it("errors when there is no usable metabolite/parent pair", {
+  it("plots the supplied ratio values without recalculating the pair", {
+    data <- pkpg_ratio_data
+    selected <- !is.na(data$PPANMETH)
+    data$AVAL[selected] <- seq_len(sum(selected)) / 7
+    plotted <- plots(data)[[1]]$data$AVAL
+    expect_equal(sort(plotted), sort(data$AVAL[selected]))
+  })
+
+  it("keeps configured ratios from separate dose profiles apart", {
+    result <- p_pkpg06_mp(mp_adpp_fixture())
+    expect_length(result, 2)
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]$data
+    dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]$data
+    expect_equal(sort(dose1$AVAL), c(0.3, 0.3, 0.5, 0.5))
+    expect_equal(sort(dose2$AVAL), c(0.25, 0.25, 0.75, 0.75))
+  })
+
+  it("uses an explicitly selected ADPP value column", {
+    data <- transform(pkpg_ratio_data, PPSTRESN = AVAL + 1)
+    selected <- !is.na(data$PPANMETH)
+    plotted <- plots(data, value_var = "PPSTRESN")[[1]]$data$PPSTRESN
+    expect_equal(sort(plotted), sort(data$PPSTRESN[selected]))
+  })
+
+  it("errors when no ratios were configured", {
     expect_error(
       plots(transform(pkpg_data, PPANMETH = NA_character_)),
-      "p_pkpg06_mp: no usable"
+      "p_pkpg06_mp: no ratio parameters found.*Parameter Selection > Ratios"
     )
   })
 
@@ -142,7 +177,7 @@ describe("p_pkpg06_mp", {
       PARAMCD = rep(c("MRTLST", "MRTIFO"), 6),
       PPANMETH = NA_character_
     )
-    expect_error(plots(mrt), "no usable")
+    expect_error(plots(mrt), "no ratio parameters found")
   })
 })
 

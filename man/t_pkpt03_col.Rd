@@ -18,8 +18,6 @@ t_pkpt03_col(
 t_pkpt03_MP_col(
   data,
   list_vars = c("RATIO", "PPSPEC"),
-  parent = NULL,
-  metabolite = NULL,
   value_var = "AVAL",
   ...
 )
@@ -54,10 +52,6 @@ statistic block is repeated once per level, nested under a group header.
 \code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this
 table are ignored.}
 
-\item{parent, metabolite}{Single analyte names from the \code{PPCAT} column in ADPP.
-In the app these are identified automatically using the \code{PARAM}, \code{METABFL}
-and \code{DOSETRT} columns in ADNCA. In standalone calls supply both names explicitly.}
-
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.}
 }
 \value{
@@ -75,15 +69,12 @@ statistics as columns.
 \section{Functions}{
 \itemize{
 \item \code{t_pkpt03_MP_col()}: Summary of metabolite-to-parent ratios (stats in columns).
-Computes metabolite divided by parent for matched individual ADPP parameter
-values, then summarizes these ratios by treatment. No configured ratio rows
-are required. Both input values must be finite, the parent must be non-zero,
-and their units must be compatible. A pair is omitted from the summary if
-either input has \code{PPSUMXF == "Y"}. Defaults to splitting by the derived
-\code{RATIO} label and \code{PPSPEC}; varying study, dose, visit, route and interval
-identifiers are retained as split columns to avoid collapsing profiles.
-\code{value_var} must be \code{"AVAL"}, which holds the calculated ratios; other
-value columns retain the original input values and are not supported.
+Summarizes the configured analyte ratios already present in ADPP. Configure
+ratios in Parameter Selection > Ratios, or load them from settings, then run
+NCA before rendering. No ratios are calculated in the TLG functions.
+Defaults to splitting by the derived \code{RATIO} label and \code{PPSPEC}; varying
+study, dose, visit, route and interval identifiers are retained to avoid
+collapsing profiles. See \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}} and \code{\link[=p_pkpg06_mp]{p_pkpg06_mp()}}.
 
 }}
 \examples{

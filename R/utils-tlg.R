@@ -11,6 +11,67 @@
   warning(warningCondition(paste0(...), class = "tlg_warning"))
 }
 
+#' Keep the source ggplot alongside its plotly conversion.
+#'
+#' `ggplotly()` produces an htmlwidget that can only be written to HTML -- rendering it to
+#' PNG or PDF needs a headless browser (kaleido/webshot2), which aNCA does not depend on.
+#' Stashing the pre-conversion ggplot on the returned object lets the export layer write
+#' raster formats with plain `ggsave()` while still serving HTML from the plotly (#1344).
+#'
+#' Call this **last**, after any `layout()` chain: `layout()` rebuilds the object and
+#' silently drops attributes set before it.
+#'
+#' @param p  A plotly object returned by `ggplotly()` (and possibly `layout()`).
+#' @param gg The ggplot `p` was built from.
+#' @returns `p`, with `gg` attached as the `"ggplot"` attribute.
+#' @noRd
+.with_ggplot <- function(p, gg) {
+  attr(p, "ggplot") <- gg
+  p
+}
+
+#' Carry the widget's title, subtitle and footnote onto the ggplot behind it.
+#'
+#' On the plotly path these are set with `layout()` on the widget, not with `labs()`, so the
+#' ggplot stashed by [.with_ggplot()] -- the one the PNG and PDF export actually renders --
+#' would come out with no titles at all while the on-screen plot has them.  Applying them
+#' here keeps the downloaded image the same as what the user saw, which is the same reason
+#' the log scale is re-applied to the stashed ggplot rather than left to `layout()` (#1344).
+#'
+#' Plotly's line break is `<br>`; ggplot wants a newline, and would otherwise draw the tag
+#' literally.
+#'
+#' The plot margin is reset at the same time.  `pkcg01`/`pkcg02` widen it before calling
+#' `ggplotly()` to clear room for plotly's title and footnote, which are drawn outside the
+#' ggplot's own layout -- carried into the export that becomes a band of empty space above a
+#' title ggplot has already made room for.  `pkcg03` stashes its plot before any margin is
+#' applied, so resetting here also makes the three consistent.
+#'
+#' @param gg       The ggplot to label.
+#' @param title    Plot title, or `NULL`.
+#' @param subtitle Plot subtitle, or `NULL`.
+#' @param footnote Footnote text, rendered as the caption.  `""` when there is none.
+#' @returns `gg` with title, subtitle and caption set, and a margin suited to print.
+#' @noRd
+.label_stashed_ggplot <- function(gg, title = NULL, subtitle = NULL, footnote = NULL) {
+  as_label <- function(x) {
+    if (is.null(x) || length(x) == 0) return(NULL)
+    x <- gsub("<br\\s*/?>", "\n", as.character(x)[1])
+    if (nzchar(trimws(x))) x else NULL
+  }
+  gg +
+    ggplot2::labs(
+      title    = as_label(title),
+      subtitle = as_label(subtitle),
+      caption  = as_label(footnote)
+    ) +
+    ggplot2::theme(
+      plot.margin = ggplot2::margin(5.5, 5.5, 5.5, 5.5, "pt"),
+      # plotly anchors the footnote at x = 0; ggplot right-aligns captions by default.
+      plot.caption = ggplot2::element_text(hjust = 0)
+    )
+}
+
 #' Split a data frame by grouping variables and apply a function to each subset
 #'
 #' Common pattern used by all TLG functions that return one output object per
@@ -89,8 +150,9 @@ split_and_apply <- function(data, list_vars, fn) {
 
 #' Split the reference groups out of a PPANMETH string
 #'
-#' `calculate_ratios()` stamps each ratio row with
-#' `"<PPTESTCD> TO <PPTESTCD_ref> [<key>: <value>, ...]"`.  Two things make this
+#' Ratio metadata uses either the original `[<key>: <value>, ...]` bracket or
+#' `[reference: <key>=<value>, ...; multiplier: <factor>]`. The multiplier is
+#' already included in the ADPP value and is not a reference group. Two things make this
 #' worth parsing defensively rather than with a single tidy regex: the bracket is
 #' omitted when the test and reference groups are identical, and
 #' `.apply_metadata_ppanmeth()` can prepend a parameter's own analysis method with
@@ -110,7 +172,16 @@ split_and_apply <- function(data, list_vars, fn) {
     bracket <- regmatches(x, regexpr("\\[[^][]*\\]$", x))
     if (length(bracket) == 0) return(empty)
 
-    frags <- strsplit(substr(bracket, 2, nchar(bracket) - 1), ", ", fixed = TRUE)[[1]]
+    reference <- substr(bracket, 2, nchar(bracket) - 1)
+    if (startsWith(reference, "multiplier: ")) return(empty)
+    separator <- ": "
+    if (startsWith(reference, "reference: ")) {
+      reference <- sub("^reference: ", "", reference)
+      reference <- sub("; multiplier: [^;]+$", "", reference)
+      separator <- "="
+    }
+    pair_prefix <- paste0("^[^", substr(separator, 1, 1), "]+", separator)
+    frags <- strsplit(reference, ", ", fixed = TRUE)[[1]]
     # ", " is both the separator between pairs and a character a reference value
     # may contain, so a value like "Drug A, Extended Release" splits into a
     # fragment with no "key: " prefix.  Such a fragment belongs to the pair before
@@ -118,14 +189,14 @@ split_and_apply <- function(data, list_vars, fn) {
     # and "Drug A, IR") from both collapsing to "Drug A" and being pooled into one
     # table under a truncated denominator.  A leading fragment has no pair to
     # rejoin to and is dropped.
-    starts_pair <- grepl("^[^:]+: ", frags)
+    starts_pair <- grepl(pair_prefix, frags)
     if (!any(starts_pair)) return(empty)
     pairs <- vapply(
       split(frags[cumsum(starts_pair) > 0], cumsum(starts_pair)[cumsum(starts_pair) > 0]),
       paste, character(1), collapse = ", "
     )
 
-    setNames(sub("^[^:]+: ", "", pairs), sub(": .*$", "", pairs))
+    setNames(sub(pair_prefix, "", pairs), sub(paste0(separator, ".*$"), "", pairs))
   })
 }
 
@@ -147,11 +218,13 @@ split_and_apply <- function(data, list_vars, fn) {
   bare <- trimws(sub("\\s*\\[[^][]*\\]$", "", ppanmeth))
   bare <- sub("^.*; ", "", bare)
 
-  # Parameter codes never contain whitespace, and anchoring both ends means the
-  # pair has to be the whole field rather than a phrase inside one.  That rules
-  # out sentence-shaped text ("interpolated from dose TO last conc"); it cannot
-  # rule out a bare three-word field that happens to read "X TO Y".
-  matched <- regmatches(bare, regexec("^(\\S+) TO (\\S+)$", bare))
+  # Generated ratio codes can carry a " (mean)" suffix, and an aggregated
+  # denominator is written as mean(<code>). Allow those forms without accepting
+  # arbitrary prose around " TO ", such as "interpolated from dose TO last conc".
+  code <- "\\S+(?: \\(mean\\))*"
+  parameter <- paste0("(?:", code, "|mean\\(", code, "\\))")
+  pattern <- paste0("^(", parameter, ") TO (", parameter, ")$")
+  matched <- regmatches(bare, regexec(pattern, bare, perl = TRUE))
   out <- vapply(matched, function(m) {
     if (length(m) == 3) m[2:3] else c(NA_character_, NA_character_)
   }, character(2))
@@ -192,6 +265,18 @@ split_and_apply <- function(data, list_vars, fn) {
   ifelse(!is_ratio, NA_character_, ifelse(is_analyte, "analyte", "other"))
 }
 
+#' Profile identifiers that must not be collapsed in a ratio output
+#' @param data ADPP data.
+#' @returns Present identifiers with more than one value in this output.
+#' @noRd
+.ratio_profile_vars <- function(data) {
+  cols <- intersect(c(
+    "STUDYID", "PPSPEC", "DOSETRT", "ATPTREF", "AVISIT", "AVISITN", "APERIOD", "APERIODC",
+    "PERIOD", "ROUTE", "PPSTINT", "PPENINT"
+  ), names(data))
+  cols[vapply(data[cols], function(x) length(unique(x)) > 1L, logical(1))]
+}
+
 #' Select the ratio rows written by Parameter Selection > Ratios
 #'
 #' Ratio rows are identified by what `calculate_ratios()` writes into `PPANMETH`
@@ -212,10 +297,16 @@ split_and_apply <- function(data, list_vars, fn) {
 #' @param ref_type `"analyte"` keeps ratios whose reference is another analyte
 #'   (metabolite/parent); `"other"` keeps the rest (treatment, dose profile, route,
 #'   specimen); `"any"` keeps all ratio rows.
+#' @param value_var Selected numeric output column, used to identify ratio
+#'   parameters with no computed values. Default: `"AVAL"`.
 #'
-#' @returns The ratio rows of `data`, with `RATIOREF` and `RATIO` added.
+#' @returns The ratio rows of `data`, with `RATIOREF` and `RATIO` added. Missing
+#'   values in varying profile identifiers are labelled `(unspecified)` so
+#'   splitting the displayed outputs does not discard valid ratio values.
 #' @noRd
-filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "any")) {
+filter_ratio_rows <- function(
+  data, caller, ref_type = c("analyte", "other", "any"), value_var = "AVAL"
+) {
   ref_type <- match.arg(ref_type)
 
   # PPANMETH is a permitted ADPP variable, so export_cdisc() drops it outright when
@@ -272,9 +363,9 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
   # neither of which says why -- so name the parameters involved.  The rows are
   # kept rather than dropped: in a listing the blank cell is the honest answer for
   # that subject, and silently removing rows would understate the ratios requested.
-  if (all(c("AVAL", "PARAM") %in% names(ratios))) {
+  if (all(c(value_var, "PARAM") %in% names(ratios))) {
     all_na <- vapply(
-      split(ratios$AVAL, ratios$PARAM), function(v) all(is.na(v)), logical(1)
+      split(ratios[[value_var]], ratios$PARAM), function(v) all(is.na(v)), logical(1)
     )
     if (any(all_na)) {
       .tlg_warn(
@@ -287,7 +378,14 @@ filter_ratio_rows <- function(data, caller, ref_type = c("analyte", "other", "an
     }
   }
 
-  .add_ratio_labels(ratios, refs, ref_type)
+  ratios <- .add_ratio_labels(ratios, refs, ref_type)
+  for (key in .ratio_profile_vars(ratios)) {
+    if (anyNA(ratios[[key]])) {
+      ratios[[key]] <- as.character(ratios[[key]])
+      ratios[[key]][is.na(ratios[[key]])] <- "(unspecified)"
+    }
+  }
+  ratios
 }
 
 #' Add the `RATIO` and `RATIOREF` display columns to selected ratio rows

@@ -129,6 +129,55 @@ describe("calculate_ratios", {
     expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
   })
 
+  it("retains undefined ratios as missing values while preserving finite values", {
+    numerator <- c(2, 0, 2, 2, 2, NA_real_, Inf, -Inf, NaN, 0, 4, 1e308)
+    denominator <- c(0, 0, NA_real_, Inf, -Inf, 2, 2, 2, 2, 2, 2, 1e-308)
+    input <- data.frame(
+      USUBJID = rep(seq_along(numerator), 2),
+      PARAM = rep(c("A", "B"), each = length(numerator)),
+      PPTESTCD = "CMAX",
+      PPORRES = c(denominator, numerator),
+      PPSTRES = c(denominator, numerator),
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
+
+    ratios <- calculate_ratios(
+      input, test_parameter = "CMAX", match_cols = "USUBJID",
+      ref_groups = data.frame(PARAM = "A"), test_groups = data.frame(PARAM = "B"),
+      adjusting_factor = 100, custom_pptestcd = "MPCMAX"
+    )
+
+    expected <- c(rep(NA_real_, 9), 0, 200, NA_real_)
+    expect_equal(ratios$USUBJID, seq_along(numerator))
+    expect_identical(ratios$PPORRES, expected)
+    expect_identical(ratios$PPSTRES, expected)
+    expect_true(all(ratios$PPTESTCD == "MPCMAX"))
+    expect_true(all(ratios$PPANMETH == "CMAX TO CMAX [PARAM: A]"))
+    expect_true(all(ratios$PPSTRESU == "fraction"))
+  })
+
+  it("handles undefined original and standard ratios independently after unit conversion", {
+    input <- data.frame(
+      USUBJID = rep(1:2, 2), PARAM = rep(c("A", "B"), each = 2),
+      PPTESTCD = "CMAX", PPORRES = c(2000, 0, 4, 4),
+      PPSTRES = c(0, 2000, 4, 4),
+      PPORRESU = rep(c("pg/mL", "ng/mL"), each = 2),
+      PPSTRESU = rep(c("pg/mL", "ng/mL"), each = 2)
+    )
+
+    ratios <- calculate_ratios(
+      input, test_parameter = "CMAX", match_cols = "USUBJID",
+      ref_groups = data.frame(PARAM = "A"), test_groups = data.frame(PARAM = "B"),
+      adjusting_factor = 100
+    )
+
+    expect_identical(ratios$PPORRES, c(200, NA_real_))
+    expect_identical(ratios$PPSTRES, c(NA_real_, 200))
+    expect_true(all(ratios$PPORRESU == "fraction"))
+    expect_true(all(ratios$PPSTRESU == "fraction"))
+  })
+
   it("handles unit conversions when needed and possible to convert", {
     res_with_diff_units <- res_simple
     res_with_diff_units$result <- res_simple$result %>%

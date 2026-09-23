@@ -15,7 +15,7 @@ pkpt_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Ordinary parent and metabolite parameters, with no configured ratios.
+# Ordinary values and configured ADPP ratios deliberately carry different values.
 pkpt_ratio_data <- rbind(
   transform(pkpt_data, PPANMETH = NA_character_),
   transform(
@@ -23,6 +23,17 @@ pkpt_ratio_data <- rbind(
     PPCAT    = "Metab-Drug A Plasma",
     AVAL     = pkpt_data$AVAL / 2,
     PPANMETH = NA_character_
+  ),
+  transform(
+    pkpt_data,
+    PPCAT    = "Metab-Drug A Plasma",
+    PARAM    = paste("Ratio", pkpt_data$PARAM),
+    PARAMCD  = paste0("RA", pkpt_data$PARAMCD),
+    AVAL     = pkpt_data$AVAL / 10 + 0.2,
+    AVALU    = "fraction",
+    PPANMETH = paste0(
+      pkpt_data$PARAMCD, " TO ", pkpt_data$PARAMCD, " [PARAM: Drug A Plasma]"
+    )
   )
 )
 
@@ -157,7 +168,7 @@ describe("t_pkpt03_col: multi-variable stratification and filtering (#1356)", {
 
 describe("t_pkpt03_MP_col", {
   tables <- function(data = pkpt_ratio_data, ...) {
-    t_pkpt03_MP_col(data, parent = "Drug A Plasma", metabolite = "Metab-Drug A Plasma", ...)
+    t_pkpt03_MP_col(data, ...)
   }
 
   it("summarizes individual ratios rather than raw metabolite values", {
@@ -165,8 +176,8 @@ describe("t_pkpt03_MP_col", {
     is_cmax <- pkpt_data$PARAM == "Cmax"
     for (trt in unique(pkpt_data$TRT01A)) {
       parent <- pkpt_data$AVAL[is_cmax & pkpt_data$TRT01A == trt]
-      row <- result[result$PARAM == "Cmax" & result$TRT01A == trt, ]
-      expect_equal(row$Mean, 0.5)
+      row <- result[result$PARAM == "Ratio Cmax" & result$TRT01A == trt, ]
+      expect_equal(row$Mean, round(mean(parent / 10 + 0.2), 3))
       expect_false(isTRUE(all.equal(row$Mean, round(mean(parent), 3))))
     }
   })
@@ -195,16 +206,43 @@ describe("t_pkpt03_MP_col", {
     )
   })
 
-  it("keeps original parameter names for filtering without manual ratio configuration", {
-    result <- tables(param_filter = "Cmax")[[1]]
-    expect_equal(unique(result$PARAM), "Cmax")
-    expect_true(all(result$Mean == 0.5))
+  it("filters on the configured ratio parameter names", {
+    result <- tables(param_filter = "Ratio Cmax")[[1]]
+    expect_equal(unique(result$PARAM), "Ratio Cmax")
+    expect_equal(as.numeric(result$Mean), c(0.8, 1.2))
   })
 
-  it("errors when the metabolite has no usable values", {
+  it("summarizes changed ADPP ratios without recalculating ordinary values", {
+    data <- pkpt_ratio_data
+    selected <- !is.na(data$PPANMETH)
+    data$AVAL[selected] <- 2.75
+    result <- tables(data)[[1]]
+    expect_true(all(result$Mean == 2.75))
+    expect_true(all(result$n == 3))
+    expect_setequal(result$PARAM, paste("Ratio", pkpt_data$PARAM))
+  })
+
+  it("keeps configured ratios from separate dose profiles apart", {
+    result <- t_pkpt03_MP_col(mp_adpp_fixture())
+    expect_length(result, 2)
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]
+    expect_equal(dose1$Mean[dose1$PARAM == "M/P Cmax"], 0.4)
+    expect_equal(dose2$Mean[dose2$PARAM == "M/P Cmax"], 0.5)
+    expect_true(all(dose1$n == 2))
+    expect_true(all(dose2$n == 2))
+  })
+
+  it("uses an explicitly selected ADPP value column", {
+    data <- transform(pkpt_ratio_data, PPSTRESN = AVAL + 1)
+    result <- tables(data, value_var = "PPSTRESN", param_filter = "Ratio Cmax")[[1]]
+    expect_equal(as.numeric(result$Mean), c(1.8, 2.2))
+  })
+
+  it("errors when no ratios were configured", {
     expect_error(
       tables(transform(pkpt_data, PPANMETH = NA_character_)),
-      "t_pkpt03_MP_col: no usable"
+      "t_pkpt03_MP_col: no ratio parameters found.*Parameter Selection > Ratios"
     )
   })
 
@@ -215,7 +253,7 @@ describe("t_pkpt03_MP_col", {
       PARAM = rep(c("MRT to Last", "MRT Infinity Obs", "MRT Intravasc"), 6),
       PPANMETH = NA_character_
     )
-    expect_error(tables(mrt), "no usable")
+    expect_error(tables(mrt), "no ratio parameters found")
   })
 
   it("still honours an explicit list_vars from the sidebar", {

@@ -84,6 +84,28 @@ describe(".parse_ratio_reference", {
     expect_equal(out, c(PARAM = "DrugA", PCSPEC = "Plasma"))
   })
 
+  it("reads reference details separately from an already-applied multiplier", {
+    methods <- c(
+      "CMAX TO CMAX [reference: PARAM=DrugA]",
+      "CMAX TO mean(CMAX) [reference: PARAM=DrugA, PCSPEC=Plasma; multiplier: 100]"
+    )
+    out <- .parse_ratio_reference(methods)
+    expect_equal(out[[1]], c(PARAM = "DrugA"))
+    expect_equal(out[[2]], c(PARAM = "DrugA", PCSPEC = "Plasma"))
+  })
+
+  it("preserves comma-containing reference values in the new metadata format", {
+    out <- .parse_ratio_reference(paste0(
+      "Linear up log down; CMAX TO CMAX ",
+      "[reference: PARAM=Drug A, Extended Release, PCSPEC=Plasma; multiplier: 0.01]"
+    ))[[1]]
+    expect_equal(out, c(PARAM = "Drug A, Extended Release", PCSPEC = "Plasma"))
+  })
+
+  it("does not treat a multiplier-only bracket as a reference group", {
+    expect_length(.parse_ratio_reference("CMAX TO CMAX [multiplier: 100]")[[1]], 0)
+  })
+
   it("ignores an analysis method prepended by .apply_metadata_ppanmeth()", {
     # export_cdisc() prepends the parameter's own method with "; ", so the ratio
     # string is not always the whole field.
@@ -141,6 +163,21 @@ describe(".parse_ratio_parameters", {
     expect_equal(unname(out[1, ]), c("AUCLST", "CMAX"))
   })
 
+  it("reads generated mean codes and aggregated references without losing their labels", {
+    out <- .parse_ratio_parameters(c(
+      "CMAX TO mean(CMAX) [reference: PARAM=DrugA; multiplier: 100]",
+      "RACMAX (mean) TO RACMAX (mean)",
+      "RACMAX (mean) TO mean(RACMAX (mean)) [multiplier: 2]"
+    ))
+    expect_equal(
+      unname(out),
+      cbind(
+        c("CMAX", "RACMAX (mean)", "RACMAX (mean)"),
+        c("mean(CMAX)", "RACMAX (mean)", "mean(RACMAX (mean))")
+      )
+    )
+  })
+
   it("returns NA for NA and for free text that merely contains ' TO '", {
     out <- .parse_ratio_parameters(c(NA_character_, "measured from dose TO last conc"))
     expect_true(all(is.na(out)))
@@ -193,6 +230,43 @@ describe("filter_ratio_rows", {
     expect_equal(out$PARAMCD, "RACMAX")
     expect_equal(as.character(out$RATIO), "50mg / 10mg")
     expect_equal(attr(out$RATIO, "label"), "Test / Reference")
+  })
+
+  it("classifies both metadata formats alike and preserves the configured ADPP values", {
+    configured <- adpp
+    configured$PPANMETH[2:3] <- c(
+      "CMAX TO mean(CMAX) [reference: PARAM=DrugA; multiplier: 100]",
+      "CMAX TO CMAX [reference: TRT01A=10mg]"
+    )
+    configured$AVAL[2] <- 37
+    configured$AVALU <- c("ng/mL", "%", "fraction")
+    original <- configured
+
+    analyte <- filter_ratio_rows(configured, "caller", "analyte")
+    other <- filter_ratio_rows(configured, "caller", "other")
+    expect_equal(analyte$AVAL, 37)
+    expect_equal(analyte$AVALU, "%")
+    expect_equal(as.character(analyte$RATIO), "Metab-DrugA / DrugA")
+    expect_equal(other$AVAL, 2)
+    expect_equal(as.character(other$RATIO), "50mg / 10mg")
+    expect_identical(configured, original)
+  })
+
+  it("keeps valid ratios whose varying profile identifiers include missing values", {
+    profiles <- adpp[rep(2, 3), ]
+    profiles$AVAL <- c(0.5, 0.8, 0.2)
+    profiles$ATPTREF <- c("DOSE 1", "DOSE 2", NA_character_)
+    profiles$PPSTINT <- c(0, 0, NA_real_)
+    original <- profiles
+
+    out <- filter_ratio_rows(profiles, "caller", "analyte")
+    splits <- split_and_apply(out, .ratio_profile_vars(out), identity)
+    expect_equal(length(splits), 3)
+    expect_setequal(vapply(splits, function(x) x$AVAL, numeric(1)), profiles$AVAL)
+    expect_equal(out$ATPTREF, c("DOSE 1", "DOSE 2", "(unspecified)"))
+    expect_equal(out$PPSTINT, c("0", "0", "(unspecified)"))
+    expect_identical(out$AVAL, profiles$AVAL)
+    expect_identical(profiles, original)
   })
 
   it("does not read free-text analysis method as a ratio", {
@@ -309,6 +383,23 @@ describe("filter_ratio_rows", {
     expect_equal(as.character(out$RATIO), "AUCLST / CMAX")
   })
 
+  it("labels same-group and chained ratios without treating multipliers as groups", {
+    same_group <- adpp[rep(3, 3), ]
+    same_group$PPANMETH <- c(
+      "AUCLST TO CMAX [multiplier: 100]",
+      "RACMAX (mean) TO RACMAX (mean)",
+      "RACMAX (mean) TO mean(RACMAX (mean)) [multiplier: 2]"
+    )
+    out <- filter_ratio_rows(same_group, "caller", "other")
+    expect_true(all(is.na(out$RATIOREF)))
+    expect_equal(as.character(out$RATIO), c(
+      "AUCLST / CMAX",
+      "RACMAX (mean) / RACMAX (mean)",
+      "RACMAX (mean) / mean(RACMAX (mean))"
+    ))
+    expect_identical(out$AVAL, same_group$AVAL)
+  })
+
   it("prefers the reference group over the parameter pair when both are readable", {
     out <- filter_ratio_rows(adpp, "caller", "analyte")
     expect_equal(as.character(out$RATIO), "Metab-DrugA / DrugA")
@@ -392,6 +483,25 @@ describe("filter_ratio_rows: ratios that could not be computed", {
     ok <- adpp
     ok$AVAL <- c(0.5, 0.8)
     expect_no_warning(filter_ratio_rows(ok, "caller", "analyte"))
+  })
+
+  it("checks the selected value column when AVAL is missing", {
+    alternate <- transform(adpp, AVAL = NA_real_, PPSTRESN = c(0.5, 0.8))
+    expect_no_warning(
+      out <- filter_ratio_rows(alternate, "caller", "analyte", value_var = "PPSTRESN")
+    )
+    expect_identical(out$PPSTRESN, alternate$PPSTRESN)
+    expect_identical(out$AVAL, alternate$AVAL)
+  })
+
+  it("warns for missing selected values even when AVAL contains values", {
+    alternate <- transform(adpp, AVAL = c(0.5, 0.8), PPSTRESN = NA_real_)
+    expect_warning(
+      out <- filter_ratio_rows(alternate, "caller", "analyte", value_var = "PPSTRESN"),
+      "no value was computed for 2 of 2 ratio parameter\\(s\\)"
+    )
+    expect_identical(out$PPSTRESN, alternate$PPSTRESN)
+    expect_identical(out$AVAL, alternate$AVAL)
   })
 
   it("stays quiet when a parameter is only partly missing", {

@@ -214,29 +214,22 @@ t_pkpt03_col <- function(
 }
 
 #' @describeIn t_pkpt03_col Summary of metabolite-to-parent ratios (stats in columns).
-#'   Computes metabolite divided by parent for matched individual ADPP parameter
-#'   values, then summarizes these ratios by treatment. No configured ratio rows
-#'   are required. Both input values must be finite, the parent must be non-zero,
-#'   and their units must be compatible. A pair is omitted from the summary if
-#'   either input has `PPSUMXF == "Y"`. Defaults to splitting by the derived
-#'   `RATIO` label and `PPSPEC`; varying study, dose, visit, route and interval
-#'   identifiers are retained as split columns to avoid collapsing profiles.
-#'   `value_var` must be `"AVAL"`, which holds the calculated ratios; other
-#'   value columns retain the original input values and are not supported.
-#' @param parent,metabolite Single analyte names from the `PPCAT` column in ADPP.
-#'   In the app these are identified automatically using the `PARAM`, `METABFL`
-#'   and `DOSETRT` columns in ADNCA. In standalone calls supply both names explicitly.
+#'   Summarizes the configured analyte ratios already present in ADPP. Configure
+#'   ratios in Parameter Selection > Ratios, or load them from settings, then run
+#'   NCA before rendering. No ratios are calculated in the TLG functions.
+#'   Defaults to splitting by the derived `RATIO` label and `PPSPEC`; varying
+#'   study, dose, visit, route and interval identifiers are retained to avoid
+#'   collapsing profiles. See [l_pkpl01_mp()] and [p_pkpg06_mp()].
 #' @param ... Additional arguments forwarded to [t_pkpt03_col()].
 #' @export
 t_pkpt03_MP_col <- function( # nolint: object_name_linter
-  data, list_vars = c("RATIO", "PPSPEC"), parent = NULL, metabolite = NULL,
+  data, list_vars = c("RATIO", "PPSPEC"),
   value_var = "AVAL", ...
 ) {
-  .mp_check_columns(value_var)
-  data <- .mp_ratio_data(data, parent, metabolite, "t_pkpt03_MP_col", summary = TRUE)
+  data <- filter_ratio_rows(data, "t_pkpt03_MP_col", ref_type = "analyte", value_var = value_var)
   t_pkpt03_col(
     data,
-    list_vars = union(list_vars, .mp_profile_vars(data)),
+    list_vars = union(list_vars, .ratio_profile_vars(data)),
     value_var = value_var,
     ...
   )

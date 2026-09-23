@@ -7,8 +7,6 @@
 p_pkpg06_mp(
   data,
   list_vars = c("RATIO", "PPSPEC"),
-  parent = NULL,
-  metabolite = NULL,
   title = "Boxplot of Metabolite/Parent Ratios by Treatment",
   subtitle = NULL,
   ylab = "Metabolite / Parent Ratio",
@@ -22,18 +20,13 @@ p_pkpg06_mp(
 \item{list_vars}{Columns to split plots by. Defaults to the derived \code{RATIO}
 label and \code{PPSPEC}; varying profile identifiers are retained as well.}
 
-\item{parent, metabolite}{Single analyte names from the \code{PPCAT} column in ADPP.
-In the app these are identified automatically using the \code{PARAM}, \code{METABFL}
-and \code{DOSETRT} columns in ADNCA. In standalone calls supply both names explicitly.}
-
 \item{title}{Optional plot title string.}
 
 \item{subtitle}{Optional plot subtitle; defaults to the analyte pair and profile identifiers.}
 
 \item{ylab}{Y-axis label. Defaults to \code{"Metabolite / Parent Ratio"}.}
 
-\item{value_var}{Numeric ratio column. Must be \code{"AVAL"}, which holds the
-calculated ratios; other value columns retain the original input values.}
+\item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.}
 }
@@ -41,16 +34,15 @@ calculated ratios; other value columns retain the original input values.}
 A named list of ggplot objects (same format as \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}).
 }
 \description{
-Calculates individual metabolite divided by parent ratios from matched ADPP
-values, then plots them by treatment using \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}. No manual ratio
-configuration is required. Pairs with invalid values, zero denominators or
-incompatible units are omitted. If either input is summary-excluded
-(\code{PPSUMXF == "Y"}), its ratio is excluded from the boxplot as well.
+Plots the configured analyte ratios already present in ADPP by treatment
+using \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}. Configure ratios in Parameter Selection > Ratios,
+or load them from settings, then run NCA before rendering. Values are read
+from ADPP without recalculation, keeping plots consistent with exported results.
 }
 \examples{
 \dontrun{
 adpp <- export_cdisc(res_nca)$adpp
-plots <- p_pkpg06_mp(adpp, parent = "DrugA", metabolite = "Metab-DrugA")
+plots <- p_pkpg06_mp(adpp)
 plots[[1]]
 }
 

@@ -20,8 +20,6 @@ l_pkpl01(
 l_pkpl01_mp(
   data,
   listgroup_vars = c("RATIO", "PPSPEC"),
-  parent = NULL,
-  metabolite = NULL,
   param_var = "PARAM",
   title = "Listing of Individual Metabolite/Parent Ratios",
   value_var = "AVAL",
@@ -53,10 +51,6 @@ syntax. Defaults to the unique values of \code{listgroup_vars}.}
 
 \item{footnote}{Footnote string.}
 
-\item{parent, metabolite}{Single analyte names from the \code{PPCAT} column in ADPP.
-In the app these are identified automatically using the \code{PARAM}, \code{METABFL}
-and \code{DOSETRT} columns in ADNCA. In standalone calls supply both names explicitly.}
-
 \item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }
 \value{
@@ -71,13 +65,10 @@ same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per uni
 \section{Functions}{
 \itemize{
 \item \code{l_pkpl01_mp()}: Listing of metabolite-to-parent ratios (pkpl01 M/P).
-Computes individual metabolite divided by parent values without requiring
-configured ratios. Summary-excluded records remain in the listing; invalid
-or unpaired values are omitted with a diagnostic. Defaults to splitting by
-\code{RATIO} and \code{PPSPEC}; varying profile identifiers are retained too.
-\code{value_var} must be \code{"AVAL"} and \code{unit_var} must be \code{"AVALU"}: only these
-columns contain the calculated ratios and their dimensionless units.
-See \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
+Displays the configured analyte ratios already present in ADPP, without
+recalculating them. Defaults to splitting by \code{RATIO} and \code{PPSPEC}; varying
+profile identifiers are retained too. Missing values remain blank and
+summary-excluded records remain in the listing. See \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
 
 }}
 \examples{

@@ -157,7 +157,7 @@ describe("l_pkpl01", {
 
 describe("l_pkpl01_mp", {
   listings <- function(data = mp_adpp_fixture(), ...) {
-    l_pkpl01_mp(data, parent = "DrugA", metabolite = "Metab-DrugA", ...)
+    l_pkpl01_mp(data, ...)
   }
 
   it("lists the M/P ratio rows and names the parent in the listing key", {
@@ -167,16 +167,43 @@ describe("l_pkpl01_mp", {
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("shows calculated values under explicit M/P column headers", {
+  it("shows configured values under explicit M/P column headers", {
     listing <- listings()[[1]]
-    expect_equal(as.numeric(listing$Cmax), c(0.5, 0.3))
-    expect_match(formatters::var_labels(listing)[["Cmax"]], "Metabolite/Parent Ratio", fixed = TRUE)
+    expect_equal(as.numeric(listing[["M/P Cmax"]]), c(0.5, 0.3))
+    expect_match(
+      formatters::var_labels(listing)[["M/P Cmax"]], "Metabolite/Parent Ratio", fixed = TRUE
+    )
   })
 
-  it("errors instead of listing unmatched parent values", {
+  it("keeps both dose profiles without pooling subject values", {
+    result <- listings()
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(0.5, 0.3))
+    expect_equal(as.numeric(dose2[["M/P Cmax"]]), c(0.25, 0.75))
+    expect_false(any(c("Cmax", "AUClast") %in% names(dose1)))
+  })
+
+  it("lists changed ADPP ratios without recalculating ordinary values", {
+    data <- mp_adpp_fixture()
+    selected <- !is.na(data$PPANMETH)
+    data$AVAL[selected] <- data$AVAL[selected] + 2
+    result <- listings(data)
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(2.5, 2.3))
+  })
+
+  it("uses explicitly selected ADPP value and unit columns", {
+    data <- transform(mp_adpp_fixture(), PPSTRESN = AVAL + 1)
+    result <- listings(data, value_var = "PPSTRESN", unit_var = "PPSTRESU")
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(1.5, 1.3))
+  })
+
+  it("errors instead of listing raw values when no ratios were configured", {
     expect_error(
       listings(subset(mp_adpp_fixture(), PPCAT == "DrugA")),
-      "l_pkpl01_mp: no usable"
+      "l_pkpl01_mp: no ratio parameters found.*Parameter Selection > Ratios"
     )
   })
 
@@ -186,7 +213,7 @@ describe("l_pkpl01_mp", {
       PARAMCD = rep(c("MRTLST", "MRTIFO"), 4),
       PPANMETH = NA_character_
     )
-    expect_error(listings(mrt), "no usable")
+    expect_error(listings(mrt), "no ratio parameters found")
   })
 })
 
@@ -218,6 +245,19 @@ describe("l_pkpl04_mp", {
     expect_equal(as.character(metab[["USUBJID"]]), c("S3", "S4"))
     expect_equal(as.numeric(parent[["TRatio Cmax"]]), c(10, 11) / 2)
     expect_equal(as.numeric(metab[["TRatio Cmax"]]), c(10, 11) / 4)
+  })
+
+  it("keeps both dose profiles of each configured treatment ratio", {
+    data <- subset(mp_adpp_fixture(), !is.na(PPANMETH))
+    data$PPANMETH <- sub("PARAM: DrugA", "TRT01A: 5mg", data$PPANMETH, fixed = TRUE)
+    data$PARAM <- sub("M/P", "Treatment", data$PARAM, fixed = TRUE)
+    result <- l_pkpl04_mp(data)
+
+    expect_length(result, 2)
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]
+    expect_equal(as.numeric(dose1[["Treatment Cmax"]]), c(0.5, 0.3))
+    expect_equal(as.numeric(dose2[["Treatment Cmax"]]), c(0.25, 0.75))
   })
 
   it("excludes metabolite/parent ratios and raw parameter rows", {
