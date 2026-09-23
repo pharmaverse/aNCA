@@ -84,6 +84,22 @@ describe(".parse_ratio_reference", {
     expect_equal(out, c(PARAM = "DrugA", PCSPEC = "Plasma"))
   })
 
+  it("preserves bracketed analytes in both ratio metadata formats", {
+    methods <- c(
+      "CMAX TO CMAX [PARAM: [14C]-DrugA]",
+      "CMAX TO mean(CMAX) [reference: PARAM=[14C]-DrugA; multiplier: 100]",
+      paste0(
+        "Interpolation [source: nominal]; CMAX TO CMAX ",
+        "[PARAM: DrugA [salt [sodium]], PCSPEC: Plasma]"
+      )
+    )
+    out <- .parse_ratio_reference(methods)
+
+    expect_equal(out[[1]], c(PARAM = "[14C]-DrugA"))
+    expect_equal(out[[2]], c(PARAM = "[14C]-DrugA"))
+    expect_equal(out[[3]], c(PARAM = "DrugA [salt [sodium]]", PCSPEC = "Plasma"))
+  })
+
   it("reads reference details separately from an already-applied multiplier", {
     methods <- c(
       "CMAX TO CMAX [reference: PARAM=DrugA]",
@@ -122,6 +138,7 @@ describe(".parse_ratio_reference", {
   it("returns nothing for NA or an unparseable bracket", {
     expect_length(.parse_ratio_reference(NA_character_)[[1]], 0)
     expect_length(.parse_ratio_reference("CMAX TO CMAX [DrugA]")[[1]], 0)
+    expect_length(.parse_ratio_reference("CMAX TO CMAX [PARAM: DrugA")[[1]], 0)
   })
 
   it("keeps a reference value that itself contains the ', ' separator", {
@@ -161,6 +178,17 @@ describe(".parse_ratio_parameters", {
   it("ignores an analysis method prepended by .apply_metadata_ppanmeth()", {
     out <- .parse_ratio_parameters("Linear up log down; AUCLST TO CMAX")
     expect_equal(unname(out[1, ]), c("AUCLST", "CMAX"))
+  })
+
+  it("removes outer reference metadata without losing bracketed reference values", {
+    out <- .parse_ratio_parameters(c(
+      "CMAX TO CMAX [PARAM: [14C]-DrugA]",
+      paste0(
+        "Interpolation [source: nominal]; AUCLST TO mean(CMAX) ",
+        "[reference: PARAM=DrugA [salt [sodium]]; multiplier: 100]"
+      )
+    ))
+    expect_equal(unname(out), cbind(c("CMAX", "AUCLST"), c("CMAX", "mean(CMAX)")))
   })
 
   it("reads generated mean codes and aggregated references without losing their labels", {
@@ -252,6 +280,49 @@ describe("filter_ratio_rows", {
     expect_identical(configured, original)
   })
 
+  it("selects configured bracketed analytes and preserves their complete labels and values", {
+    configured <- adpp[rep(2, 3), ]
+    configured$PPCAT <- "Metab-[14C]-DrugA"
+    configured$AVAL <- c(0.41, 41, 0.62)
+    configured$PPANMETH <- c(
+      "CMAX TO CMAX [PARAM: [14C]-DrugA]",
+      "CMAX TO mean(CMAX) [reference: PARAM=[14C]-DrugA; multiplier: 100]",
+      paste0(
+        "Interpolation [source: nominal]; CMAX TO CMAX ",
+        "[PARAM: [14C]-DrugA [salt [sodium]]]"
+      )
+    )
+    original <- configured
+
+    out <- filter_ratio_rows(configured, "caller", "analyte")
+    expect_identical(out$AVAL, configured$AVAL)
+    expect_equal(as.character(out$RATIOREF), c(
+      "[14C]-DrugA", "[14C]-DrugA", "[14C]-DrugA [salt [sodium]]"
+    ))
+    expect_equal(as.character(out$RATIO), paste(out$PPCAT, "/", out$RATIOREF))
+    expect_identical(configured, original)
+  })
+
+  it("keeps custom source parameter codes containing spaces with bracketed analytes", {
+    configured <- adpp[2, ]
+    configured$PPANMETH <- "Ratio with spaces TO Ratio with spaces [PARAM: [14C]-DrugA]"
+
+    out <- filter_ratio_rows(configured, "caller", "analyte")
+    expect_equal(as.character(out$RATIOREF), "[14C]-DrugA")
+    expect_identical(out$AVAL, configured$AVAL)
+  })
+
+  it("does not select bracketed methods without a ratio or an incomplete comparison", {
+    ordinary <- adpp[1, ]
+    for (method in c(
+      "Interpolation [source: nominal] [PARAM: [14C]-DrugA]",
+      "CMAX TO CMAX [PARAM: [14C]-DrugA"
+    )) {
+      ordinary$PPANMETH <- method
+      expect_error(filter_ratio_rows(ordinary, "caller", "any"), "no ratio parameters found")
+    }
+  })
+
   it("keeps valid ratios whose varying profile identifiers include missing values", {
     profiles <- adpp[rep(2, 3), ]
     profiles$AVAL <- c(0.5, 0.8, 0.2)
@@ -267,6 +338,57 @@ describe("filter_ratio_rows", {
     expect_equal(out$PPSTINT, c("0", "0", "(unspecified)"))
     expect_identical(out$AVAL, profiles$AVAL)
     expect_identical(profiles, original)
+  })
+
+  it("keeps crossover dose amounts together for comparison between treatments", {
+    profiles <- adpp[rep(2, 2), ]
+    profiles$USUBJID <- "S1"
+    profiles$TRT01A <- c("5mg", "10mg")
+    profiles$DOSEA <- c(5, 10)
+    profiles$AVAL <- c(0.2, 0.4)
+
+    out <- filter_ratio_rows(profiles, "caller", "analyte")
+    splits <- split_and_apply(out, .ratio_profile_vars(out), identity)
+
+    expect_false("DOSEA" %in% .ratio_profile_vars(out))
+    expect_length(splits, 1)
+    expect_equal(nrow(splits[[1]]), 2)
+    expect_identical(splits[[1]]$TRT01A, profiles$TRT01A)
+    expect_identical(splits[[1]]$AVAL, profiles$AVAL)
+  })
+
+  it("retains a repeated within-subject profile with a missing dose amount", {
+    profiles <- adpp[rep(2, 3), ]
+    profiles$USUBJID <- "S1"
+    profiles$DOSEA <- c(5, 10, NA_real_)
+    profiles$DOSEU <- "mg"
+    profiles$AVAL <- c(0.2, 0.4, 0.9)
+    original <- profiles
+
+    out <- filter_ratio_rows(profiles, "caller", "analyte")
+    splits <- split_and_apply(out, .ratio_profile_vars(out), identity)
+
+    expect_length(splits, 3)
+    expect_setequal(vapply(splits, function(x) x$AVAL, numeric(1)), profiles$AVAL)
+    expect_equal(out$DOSEA, c("5", "10", "(unspecified)"))
+    expect_identical(out$AVAL[out$DOSEA == "(unspecified)"], 0.9)
+    expect_identical(profiles, original)
+  })
+
+  it("keeps repeated within-subject profiles distinct when only dose units differ", {
+    profiles <- adpp[rep(2, 2), ]
+    profiles$USUBJID <- "S1"
+    profiles$DOSEA <- 5
+    profiles$DOSEU <- c("mg", "ug")
+    profiles$AVAL <- c(0.2, 0.7)
+
+    out <- filter_ratio_rows(profiles, "caller", "analyte")
+    splits <- split_and_apply(out, .ratio_profile_vars(out), identity)
+
+    expect_length(splits, 2)
+    expect_setequal(vapply(splits, function(x) x$DOSEU, character(1)), profiles$DOSEU)
+    expect_setequal(vapply(splits, function(x) x$AVAL, numeric(1)), profiles$AVAL)
+    expect_identical(out$DOSEA, profiles$DOSEA)
   })
 
   it("does not read free-text analysis method as a ratio", {

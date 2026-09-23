@@ -39,3 +39,17 @@ mp_adpp_fixture <- function() {
   data$PPSTRESU <- data$AVALU
   data
 }
+
+# Distinct dose events can share the collection-reference label and treatment.
+# A missing first-dose Cmax must stay missing rather than borrowing dose 2.
+mp_same_label_fixture <- function(dose_numbers = TRUE) {
+  data <- subset(mp_adpp_fixture(), !is.na(PPANMETH))
+  dose <- match(data$ATPTREF, c("DOSE 1", "DOSE 2"))
+  data$DOSNOA <- if (dose_numbers) dose else NULL
+  data$DOSEA <- if (dose_numbers) 10 else c(10, 20)[dose]
+  data$DOSEU <- "mg"
+  data$ATPTREF <- "POST DOSE"
+  data$TRT01A <- "DrugA"
+  data$AVAL[data$USUBJID == "S1" & dose == 1 & data$PARAMCD == "RACMAX"] <- NA_real_
+  data
+}

@@ -193,6 +193,54 @@ describe("l_pkpl01_mp", {
     expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(2.5, 2.3))
   })
 
+  it("keeps shared-label dose profiles separate using DOSNOA", {
+    data <- mp_same_label_fixture(dose_numbers = TRUE)
+    result <- l_pkpl01_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSNOA: 1$", names(result))]]
+    dose2 <- result[[grep("DOSNOA: 2$", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(NA_real_, 0.3))
+    expect_equal(as.numeric(dose2[["M/P Cmax"]]), c(0.25, 0.75))
+    expect_equal(as.character(dose1$USUBJID), c("S1", "S2"))
+    expect_equal(as.character(dose2$USUBJID), c("S1", "S2"))
+  })
+
+  it("keeps shared-label dose profiles separate using DOSEA", {
+    data <- mp_same_label_fixture(dose_numbers = FALSE)
+    result <- l_pkpl01_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSEA: 10$", names(result))]]
+    dose2 <- result[[grep("DOSEA: 20$", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(NA_real_, 0.3))
+    expect_equal(as.numeric(dose2[["M/P Cmax"]]), c(0.25, 0.75))
+    expect_equal(as.character(dose1$USUBJID), c("S1", "S2"))
+    expect_equal(as.character(dose2$USUBJID), c("S1", "S2"))
+  })
+
+  it("keeps dose amounts varying only between subjects in the same comparison", {
+    data <- mp_adpp_fixture()
+    data$DOSEA <- ifelse(data$USUBJID == "S1", 10, 20)
+    data$TRT01A <- paste0(data$DOSEA, "mg")
+    result <- l_pkpl01_mp(data)
+    expect_length(result, 2)
+    expect_false(any(grepl("DOSEA:", names(result), fixed = TRUE)))
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    expect_setequal(as.character(dose1$TRT01A), c("10mg", "20mg"))
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(0.5, 0.3))
+  })
+
+  it("displays ratios whose reference analyte includes square brackets", {
+    for (reference in c("[PARAM: [14C]-DrugA]", "[reference: PARAM=[14C]-DrugA]")) {
+      data <- mp_adpp_fixture()
+      data$PPANMETH <- sub("[PARAM: DrugA]", reference, data$PPANMETH, fixed = TRUE)
+      result <- l_pkpl01_mp(data)
+      expect_length(result, 2)
+      expect_true(all(grepl("Metab-DrugA / [14C]-DrugA", names(result), fixed = TRUE)))
+      dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+      expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(0.5, 0.3))
+    }
+  })
+
   it("uses explicitly selected ADPP value and unit columns", {
     data <- transform(mp_adpp_fixture(), PPSTRESN = AVAL + 1)
     result <- listings(data, value_var = "PPSTRESN", unit_var = "PPSTRESU")
@@ -257,6 +305,30 @@ describe("l_pkpl04_mp", {
     dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
     dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]
     expect_equal(as.numeric(dose1[["Treatment Cmax"]]), c(0.5, 0.3))
+    expect_equal(as.numeric(dose2[["Treatment Cmax"]]), c(0.25, 0.75))
+  })
+
+  it("keeps shared-label treatment-ratio profiles separate using DOSNOA", {
+    data <- mp_same_label_fixture(dose_numbers = TRUE)
+    data$PPANMETH <- sub("PARAM: DrugA", "TRT01A: Placebo", data$PPANMETH, fixed = TRUE)
+    data$PARAM <- sub("M/P", "Treatment", data$PARAM, fixed = TRUE)
+    result <- l_pkpl04_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSNOA: 1$", names(result))]]
+    dose2 <- result[[grep("DOSNOA: 2$", names(result))]]
+    expect_equal(as.numeric(dose1[["Treatment Cmax"]]), c(NA_real_, 0.3))
+    expect_equal(as.numeric(dose2[["Treatment Cmax"]]), c(0.25, 0.75))
+  })
+
+  it("keeps shared-label treatment-ratio profiles separate using DOSEA", {
+    data <- mp_same_label_fixture(dose_numbers = FALSE)
+    data$PPANMETH <- sub("PARAM: DrugA", "TRT01A: Placebo", data$PPANMETH, fixed = TRUE)
+    data$PARAM <- sub("M/P", "Treatment", data$PARAM, fixed = TRUE)
+    result <- l_pkpl04_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSEA: 10$", names(result))]]
+    dose2 <- result[[grep("DOSEA: 20$", names(result))]]
+    expect_equal(as.numeric(dose1[["Treatment Cmax"]]), c(NA_real_, 0.3))
     expect_equal(as.numeric(dose2[["Treatment Cmax"]]), c(0.25, 0.75))
   })
 

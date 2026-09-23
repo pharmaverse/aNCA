@@ -141,6 +141,11 @@ split_and_apply <- function(data, list_vars, fn) {
 # them for the entries that default to splitting on one.
 .RATIO_DERIVED_COLS <- c("RATIO", "RATIOREF")
 
+# Match the final outer bracket, allowing balanced brackets inside reference
+# names, e.g. [PARAM: [14C]-DrugA]. (?1) repeats the bracket group recursively.
+# Keeping the anchor outside that group also supports nested reference names.
+.RATIO_BRACKET_PATTERN <- "(\\[(?:[^][]|(?1))*\\])$"
+
 #' Name of the ADPP column holding the values of a PPANMETH reference key
 #' @noRd
 .ratio_key_column <- function(key) {
@@ -169,7 +174,7 @@ split_and_apply <- function(data, list_vars, fn) {
     if (is.na(x)) return(empty)
 
     # Anchored at the end so a prepended analysis method is ignored.
-    bracket <- regmatches(x, regexpr("\\[[^][]*\\]$", x))
+    bracket <- regmatches(x, regexpr(.RATIO_BRACKET_PATTERN, x, perl = TRUE))
     if (length(bracket) == 0) return(empty)
 
     reference <- substr(bracket, 2, nchar(bracket) - 1)
@@ -215,7 +220,7 @@ split_and_apply <- function(data, list_vars, fn) {
 .parse_ratio_parameters <- function(ppanmeth) {
   # Drop a trailing reference bracket and any analysis method
   # `.apply_metadata_ppanmeth()` prepended with "; ", leaving the pair alone.
-  bare <- trimws(sub("\\s*\\[[^][]*\\]$", "", ppanmeth))
+  bare <- trimws(sub(.RATIO_BRACKET_PATTERN, "", ppanmeth, perl = TRUE))
   bare <- sub("^.*; ", "", bare)
 
   # Generated ratio codes can carry a " (mean)" suffix, and an aggregated
@@ -257,7 +262,7 @@ split_and_apply <- function(data, list_vars, fn) {
   # " TO " at all, and admitting it summarized a free-text annotation under a
   # ratio heading, labelled with the bracket's value.
   has_ref <- lengths(refs) > 0 &
-    grepl(" TO ", sub("\\s*\\[[^][]*\\]$", "", ppanmeth))
+    grepl(" TO ", sub(.RATIO_BRACKET_PATTERN, "", ppanmeth, perl = TRUE))
   is_ratio <- !is.na(ppanmeth) &
     (has_ref | !is.na(.parse_ratio_parameters(ppanmeth)[, "test"]))
 
@@ -267,14 +272,31 @@ split_and_apply <- function(data, list_vars, fn) {
 
 #' Profile identifiers that must not be collapsed in a ratio output
 #' @param data ADPP data.
-#' @returns Present identifiers with more than one value in this output.
+#' @returns Varying profile identifiers, plus dose amounts/units when needed to
+#'   distinguish repeated measurements within the same subject and treatment.
 #' @noRd
 .ratio_profile_vars <- function(data) {
   cols <- intersect(c(
-    "STUDYID", "PPSPEC", "DOSETRT", "ATPTREF", "AVISIT", "AVISITN", "APERIOD", "APERIODC",
-    "PERIOD", "ROUTE", "PPSTINT", "PPENINT"
+    "STUDYID", "PPSPEC", "DOSETRT", "DOSNOA", "ATPTREF", "AVISIT", "AVISITN", "APERIOD",
+    "APERIODC", "PERIOD", "ROUTE", "PPSTINT", "PPENINT"
   ), names(data))
-  cols[vapply(data[cols], function(x) length(unique(x)) > 1L, logical(1))]
+  cols <- cols[vapply(data[cols], function(x) length(unique(x)) > 1L, logical(1))]
+
+  # Different subjects or treatment arms can have different doses on the same
+  # comparison page. Split by dose only if those rows would otherwise collapse
+  # within one subject, parameter, ratio and treatment profile.
+  dose_cols <- intersect(c("DOSEA", "DOSEU"), names(data))
+  if ("USUBJID" %in% names(data) && length(dose_cols) > 0) {
+    keys <- intersect(c("USUBJID", "TRT01A", "PPCAT", "PARAM", "RATIO", "RATIOREF", cols),
+                      names(data))
+    profiles <- unique(data[, union(keys, dose_cols), drop = FALSE])
+    if (anyDuplicated(profiles[, keys, drop = FALSE])) {
+      cols <- union(cols, dose_cols[vapply(data[dose_cols], function(x) {
+        length(unique(x)) > 1L
+      }, logical(1))])
+    }
+  }
+  cols
 }
 
 #' Select the ratio rows written by Parameter Selection > Ratios

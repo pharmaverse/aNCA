@@ -157,6 +157,58 @@ describe("p_pkpg06_mp", {
     expect_equal(sort(dose2$AVAL), c(0.25, 0.25, 0.75, 0.75))
   })
 
+  it("keeps shared-label dose profiles separate using DOSNOA", {
+    data <- mp_same_label_fixture(dose_numbers = TRUE)
+    result <- p_pkpg06_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSNOA: 1$", names(result))]]
+    dose2 <- result[[grep("DOSNOA: 2$", names(result))]]
+    cmax1 <- subset(dose1$data, PARAMCD == "RACMAX")
+    cmax2 <- subset(dose2$data, PARAMCD == "RACMAX")
+    expect_equal(cmax1$USUBJID, "S2")
+    expect_equal(cmax1$AVAL, 0.3)
+    expect_equal(cmax2$USUBJID, c("S1", "S2"))
+    expect_equal(cmax2$AVAL, c(0.25, 0.75))
+  })
+
+  it("keeps shared-label dose profiles separate using DOSEA", {
+    data <- mp_same_label_fixture(dose_numbers = FALSE)
+    result <- p_pkpg06_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSEA: 10$", names(result))]]
+    dose2 <- result[[grep("DOSEA: 20$", names(result))]]
+    cmax1 <- subset(dose1$data, PARAMCD == "RACMAX")
+    cmax2 <- subset(dose2$data, PARAMCD == "RACMAX")
+    expect_equal(cmax1$USUBJID, "S2")
+    expect_equal(cmax1$AVAL, 0.3)
+    expect_equal(cmax2$USUBJID, c("S1", "S2"))
+    expect_equal(cmax2$AVAL, c(0.25, 0.75))
+  })
+
+  it("keeps dose amounts varying only between subjects in the same comparison", {
+    data <- mp_adpp_fixture()
+    data$DOSEA <- ifelse(data$USUBJID == "S1", 10, 20)
+    data$TRT01A <- paste0(data$DOSEA, "mg")
+    result <- p_pkpg06_mp(data)
+    expect_length(result, 2)
+    expect_false(any(grepl("DOSEA:", names(result), fixed = TRUE)))
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]$data
+    expect_setequal(as.character(dose1$TRT01A), c("10mg", "20mg"))
+    expect_equal(sort(dose1$AVAL), c(0.3, 0.3, 0.5, 0.5))
+  })
+
+  it("displays ratios whose reference analyte includes square brackets", {
+    for (reference in c("[PARAM: [14C]-DrugA]", "[reference: PARAM=[14C]-DrugA]")) {
+      data <- mp_adpp_fixture()
+      data$PPANMETH <- sub("[PARAM: DrugA]", reference, data$PPANMETH, fixed = TRUE)
+      result <- p_pkpg06_mp(data)
+      expect_length(result, 2)
+      expect_true(all(grepl("Metab-DrugA / [14C]-DrugA", names(result), fixed = TRUE)))
+      dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]$data
+      expect_equal(sort(dose1$AVAL), c(0.3, 0.3, 0.5, 0.5))
+    }
+  })
+
   it("uses an explicitly selected ADPP value column", {
     data <- transform(pkpg_ratio_data, PPSTRESN = AVAL + 1)
     selected <- !is.na(data$PPANMETH)
