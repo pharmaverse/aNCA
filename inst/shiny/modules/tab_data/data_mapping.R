@@ -466,11 +466,12 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
+          duplicate_data <- e$duplicate_data
           on_mapping_complete()
-          if (!isTRUE(session$userData$auto_replay_active)) {
-            removeModal()
-          }
-          df_duplicates(e$duplicate_data)
+          session$onFlushed(
+            function() df_duplicates(duplicate_data),
+            once = TRUE
+          )
           NULL
         }
       )
