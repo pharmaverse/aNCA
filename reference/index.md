@@ -95,6 +95,9 @@
 - [`calculate_table_ratios()`](https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.md)
   : Apply Ratio Calculations to PKNCAresult Object
 
+- [`changed_units()`](https://pharmaverse.github.io/aNCA/reference/changed_units.md)
+  : Keep only units that differ from their data-derived default
+
 - [`convert_volume_units()`](https://pharmaverse.github.io/aNCA/reference/convert_volume_units.md)
   : Convert Volume Units to Match Concentration Denominator Units
 

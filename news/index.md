@@ -23,6 +23,13 @@
 
 ### Bug Fixes
 
+- Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now
+  captured in the exported settings YAML, ZIP export, and generated R
+  script, so R scripts reproduce the same units as the app. The units
+  table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead
+  of a modal-edit flag, and is decoupled from the debounced `settings()`
+  reactive to avoid stalling session auto-replay
+  ([\#1190](https://github.com/pharmaverse/aNCA/issues/1190))
 - R-devel package checks no longer fail because the base `tools` package
   was imported from `NAMESPACE` while listed only in `Suggests`
   ([\#1496](https://github.com/pharmaverse/aNCA/issues/1496))
