@@ -27,7 +27,7 @@
                                    steps, step_labels) {
   observe({
     current <- data_step()
-    if (current == steps[1]) {
+    if (current == steps[1] || isTRUE(mapping_busy())) {
       shinyjs::disable("prev_step")
     } else {
       shinyjs::enable("prev_step")
@@ -40,6 +40,9 @@
   })
 
   observeEvent(input$next_step, {
+    if (isTRUE(mapping_busy())) {
+      return()
+    }
     current_step <- isolate(data_step())
     if (current_step %in% c("upload", "filtering")) {
       idx <- match(current_step, steps)
@@ -49,9 +52,6 @@
       )
     } else if (current_step == "mapping") {
       mapping_busy(TRUE)
-      if (!isTRUE(session$userData$auto_replay_active)) {
-        loading_popup("Applying mapping...")
-      }
       # Defer the submit to a later flush so the loading modal is sent to the
       # browser and painted first. The mapping pipeline is synchronous, so if
       # we incremented the trigger in this same observer it would run to
@@ -285,6 +285,7 @@ tab_data_ui <- function(id) {
         class = "data-tab-content-container",
         div(
           class = "data-tab-content",
+          uiOutput(ns("mapping_status")),
           navset_pill(
             id = ns("data_navset"),
             nav_panel(
@@ -340,6 +341,19 @@ tab_data_server <- function(id) {
     data_step <- reactiveVal("upload")
     mapping_busy <- reactiveVal(FALSE)
 
+    output$mapping_status <- renderUI({
+      if (!isTRUE(mapping_busy())) {
+        return(NULL)
+      }
+      div(
+        class = "alert alert-info d-flex align-items-center gap-2",
+        role = "status",
+        `aria-live` = "polite",
+        span(class = "spinner-border spinner-border-sm", `aria-hidden` = "true"),
+        span("Applying mapping...")
+      )
+    })
+
     auto_replay <- reactiveVal(FALSE)
 
     .setup_step_navigation(
@@ -369,8 +383,13 @@ tab_data_server <- function(id) {
     })
     finish_manual_mapping <- function() {
       if (isTRUE(mapping_busy())) {
-        shiny::removeModal()
-        mapping_busy(FALSE)
+        session$onFlushed(
+          function() {
+            shiny::removeModal()
+            mapping_busy(FALSE)
+          },
+          once = TRUE
+        )
       }
     }
     column_mapping <- data_mapping_server(

@@ -55,6 +55,7 @@ describe("Test for mapping interface", {
     app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
 
     expect_false(app$get_js("Boolean(document.querySelector('#loading-title'))"))
+  })
 
   it("dismisses the loading modal and advances past mapping (#1420)", {
     # With the default data (no duplicates) and unchanged mappings, submitting
@@ -93,9 +94,51 @@ describe("Test for mapping interface", {
     app$click("data-next_step")
     app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
 
-    app$click("data-column_mapping-cancel_duplicates_btn")
+    app$click("data-column_mapping-cancel_duplicate_modal")
     app$wait_for_js("document.querySelector('.modal-duplicates') === null")
 
     expect_false(app$get_js("$('#data-next_step').prop('disabled')"))
+  })
+
+  it("confirms before excluding all duplicate rows", {
+    app <- AppDriver$new(name = "app_mapping_duplicate_confirm")
+    duplicate_data <- testthat::test_path(
+      "../../../../tests/testthat/data/test-duplicate-ADNCA.csv"
+    )
+
+    app$upload_file(`data-raw_data-data_upload` = duplicate_data)
+    app$click("data-next_step")
+    app$wait_for_idle()
+    app$click("data-next_step")
+    app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
+
+    app$click("data-column_mapping-keep_selected_btn")
+    app$wait_for_js(
+      "document.body.innerText.includes('No rows are selected. Exclude all duplicate rows?')"
+    )
+    app$click("data-column_mapping-cancel_exclude_all")
+    app$wait_for_js("document.querySelector('.modal-duplicates') !== null")
+
+    app$click("data-column_mapping-keep_selected_btn")
+    app$wait_for_js(
+      "document.body.innerText.includes('No rows are selected. Exclude all duplicate rows?')"
+    )
+    app$click("data-column_mapping-confirm_exclude_all")
+    app$wait_for_js("document.querySelector('.modal-duplicates') === null")
+  })
+
+  it("clears the mapping status after a required-column error", {
+    app <- AppDriver$new(name = "app_mapping_required_error")
+
+    app$click("data-next_step")
+    app$wait_for_idle()
+    app$set_inputs(`data-column_mapping-select_STUDYID` = "")
+    app$click("data-next_step")
+    app$wait_for_js(
+      "document.body.innerText.includes('Unmapped required columns detected: STUDYID')"
+    )
+
+    expect_false(app$get_js("$('#data-next_step').prop('disabled')"))
+    expect_null(app$get_html(".loading-spinner-container"))
   })
 })
