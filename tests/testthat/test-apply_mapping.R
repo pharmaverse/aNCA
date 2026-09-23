@@ -4,7 +4,7 @@ expected_df <- data.frame(
   DOSETRT = "A",
   AVAL = 1:3,
   AVALU = "ng/mL",
-  DOSE = 1:3,
+  DOSEA = 1:3,
   ADOSEDUR = 0,
   AFRLT = 1:3,
   ATPTREF = factor(1:3)
@@ -15,7 +15,7 @@ var_labels(expected_df) <- c(
   "Name of Treatment",
   "Analysis Value",
   "Analysis Value Unit",
-  "DOSE",
+  "Actual Dose Amount",
   "Actual Duration of Treatment Dose",
   "Act. Rel. Time from Analyte First Dose",
   "Analysis Timepoint Reference"
@@ -85,6 +85,18 @@ describe("apply_mapping", {
         req_mappings = names(expected_df)
       ),
       "Unmapped required columns detected: AVAL"
+    )
+  })
+
+  it("requires DOSEA to create PKNCA dose data", {
+    mapping["DOSEA"] <- ""
+    expect_error(
+      apply_mapping(
+        dataset = test_df,
+        mapping = mapping,
+        desired_order = desired_order
+      ),
+      "Unmapped required columns detected: DOSEA"
     )
   })
 

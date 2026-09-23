@@ -45,7 +45,7 @@ apply_mapping <- function(
   req_mappings = c(
     "USUBJID", "AFRLT", "NFRLT", "ARRLT", "NRRLT",
     "PCSPEC", "ROUTE", "AVAL", "STUDYID", "ATPTREF",
-    "AVALU", "RRLTU", "DOSEU", "PARAM"
+    "AVALU", "RRLTU", "DOSEA", "DOSEU", "PARAM"
   )
 ) {
 
