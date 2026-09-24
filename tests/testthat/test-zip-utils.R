@@ -71,6 +71,40 @@ describe(".build_exploration_allowlist", {
 })
 
 describe("prepare_export_files validation gate", {
+  it("blocks all selected artifacts when one selected CDISC dataset is invalid", {
+    # SAT evidence for the 21 CFR §11.10(a) pre-export integrity control:
+    # an invalid selected artifact must prevent every selected artifact from
+    # being written, including otherwise-valid outputs.
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+
+    session <- test_export_session(list(
+      nca_results = list(nca_pkparam = data.frame(AVAL = 12.3)),
+      CDISC = list(adnca = data.frame(
+        STUDYID = "SAT-001",
+        AVAL = "not-numeric",
+        stringsAsFactors = FALSE
+      )),
+      exploration = list()
+    ))
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input(c("nca_pkparam", "adnca")),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    unlink(target_dir, recursive = TRUE)
+  })
+
   it("blocks selected CDISC exports with invalid data before writing files", {
     target_dir <- tempfile("anca-export-")
     dir.create(target_dir)
