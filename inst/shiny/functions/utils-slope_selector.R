@@ -56,9 +56,9 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
   new_concdata <- new_pknca_data$conc$data
   old_concdata <- old_pknca_data$conc$data
 
-  ix_excl_changes <- hl_flag_change_indices(
-    new_concdata[[excl_hl_col]],
-    old_concdata[[excl_hl_col]]
+  ix_excl_changes <- which(
+    (new_concdata[[excl_hl_col]] %in% TRUE) !=
+      (old_concdata[[excl_hl_col]] %in% TRUE)
   )
   ix_incl_changes <- which(
     paste0(new_concdata[[incl_hl_col]]) != paste0(old_concdata[[incl_hl_col]])
@@ -75,17 +75,6 @@ handle_hl_adj_change <- function(new_pknca_data, old_pknca_data, plot_outputs) {
     plot_outputs <- update_plots_with_pknca(new_pknca_data, plot_outputs, affected_groups)
   }
   plot_outputs
-}
-
-#' Find changes in half-life flag columns
-#'
-#' Treats `NA` and `FALSE` as the same false-like flag value, while still
-#' detecting transitions to or from `TRUE`.
-#' @param new_flag New flag vector.
-#' @param old_flag Previous flag vector.
-#' @return Integer indices where the true/false flag state changed.
-hl_flag_change_indices <- function(new_flag, old_flag) {
-  which((new_flag %in% TRUE) != (old_flag %in% TRUE))
 }
 
 #' Handle interval changes

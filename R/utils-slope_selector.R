@@ -32,6 +32,7 @@ update_pknca_with_rules <- function(data, slopes) {
     if (slopes$TYPE[i] == "Selection") {
       data$conc$data[[include_hl_col]][pnt_idx] <- TRUE
     } else if (slopes$TYPE[i] == "Exclusion") {
+      data$conc$data[[include_hl_col]][pnt_idx] <- NA
       data$conc$data[[exclude_hl_col]][pnt_idx] <- TRUE
     } else {
       stop("Unknown TYPE in slopes: ", slopes$TYPE[i])
@@ -41,6 +42,49 @@ update_pknca_with_rules <- function(data, slopes) {
       rep(slopes$REASON[i], length(pnt_idx))
     )
   }
+  data
+}
+
+#' Resolve half-life include/exclude conflicts
+#'
+#' PKNCA cannot calculate an interval when a profile has both inclusion and
+#' exclusion flags. Resolve conflicts independently for each concentration
+#' profile so exclusions in unrelated profiles are preserved.
+#'
+#' @param data PKNCA data object.
+#'
+#' @returns The PKNCA data object with half-life flags normalized for calculation.
+#'
+#' @noRd
+resolve_hl_include_exclude_conflicts <- function(data) {
+  exclude_hl_col <- data$conc$columns$exclude_half.life
+  include_hl_col <- data$conc$columns$include_half.life
+  if (is.null(exclude_hl_col) || is.null(include_hl_col)) {
+    return(data)
+  }
+
+  conc <- data$conc$data
+  group_cols <- intersect(group_vars(data$conc), names(conc))
+  profiles <- if (length(group_cols) == 0) {
+    list(seq_len(nrow(conc)))
+  } else {
+    split(seq_len(nrow(conc)), interaction(conc[group_cols], drop = TRUE))
+  }
+
+  for (rows in profiles) {
+    include <- conc[[include_hl_col]][rows]
+    exclude <- conc[[exclude_hl_col]][rows]
+
+    if (all(is.na(include) | include %in% FALSE)) {
+      conc[[include_hl_col]][rows] <- NA
+    } else if (any(!is.na(include)) && any(!is.na(exclude))) {
+      excluded_rows <- rows[exclude %in% TRUE]
+      conc[[include_hl_col]][excluded_rows] <- NA
+      conc[[exclude_hl_col]][rows] <- NA
+    }
+  }
+
+  data$conc$data <- conc
   data
 }
 

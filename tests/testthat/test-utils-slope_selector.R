@@ -74,6 +74,7 @@ describe("update_pknca_with_rules", {
 
     new_with_incl <- update_pknca_with_rules(old_data, slopes_incl)
     new_with_excl <- update_pknca_with_rules(old_data, slopes_excl)
+    new_with_incl_then_excl <- update_pknca_with_rules(new_with_incl, slopes_excl)
 
     old_have_points_na <- all(is.na(old_data$conc$data %>%
                                       filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
@@ -88,6 +89,9 @@ describe("update_pknca_with_rules", {
                                   pull(exclude_half.life))
 
     expect_true(all(old_have_points_na, new_have_points_incl, new_have_points_excl))
+    expect_true(all(is.na(new_with_incl_then_excl$conc$data %>%
+      filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+      pull(include_half.life))))
   })
 
   it("returns an error for invalid rule types", {
@@ -102,19 +106,36 @@ describe("update_pknca_with_rules", {
   })
 })
 
-describe("hl_flag_change_indices", {
-  it("treats missing and false half-life flags as unchanged", {
-    expect_identical(
-      hl_flag_change_indices(c(NA, FALSE, TRUE), c(FALSE, NA, TRUE)),
-      integer(0)
-    )
+describe("resolve_hl_include_exclude_conflicts", {
+  data <- FIXTURE_PKNCA_DATA
+  include_col <- data$conc$columns$include_half.life
+  exclude_col <- data$conc$columns$exclude_half.life
+
+  it("resolves conflicts within a profile without clearing other profiles", {
+    conflict_data <- data
+    conflict_data$conc$data[[include_col]] <- NA
+    conflict_data$conc$data[[exclude_col]] <- NA
+    profile_values <- unique(conflict_data$conc$data$USUBJID)
+    conflict_rows <- which(conflict_data$conc$data$USUBJID == profile_values[1])
+    other_rows <- which(conflict_data$conc$data$USUBJID == profile_values[2])
+    conflict_data$conc$data[[include_col]][conflict_rows] <- TRUE
+    conflict_data$conc$data[[exclude_col]][conflict_rows[1]] <- TRUE
+    conflict_data$conc$data[[exclude_col]][other_rows[1]] <- TRUE
+
+    result <- resolve_hl_include_exclude_conflicts(conflict_data)
+
+    expect_true(all(is.na(result$conc$data[[exclude_col]][conflict_rows])))
+    expect_true(is.na(result$conc$data[[include_col]][conflict_rows[1]]))
+    expect_true(result$conc$data[[exclude_col]][other_rows[1]] %in% TRUE)
   })
 
-  it("detects changes when half-life flags become true", {
-    expect_identical(
-      hl_flag_change_indices(c(TRUE, NA), c(NA, TRUE)),
-      c(1L, 2L)
-    )
+  it("normalizes false-only inclusion flags to missing", {
+    false_data <- data
+    false_data$conc$data[[include_col]] <- FALSE
+
+    result <- resolve_hl_include_exclude_conflicts(false_data)
+
+    expect_true(all(is.na(result$conc$data[[include_col]])))
   })
 })
 
