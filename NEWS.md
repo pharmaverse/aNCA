@@ -7,6 +7,15 @@
 
 ## Bug Fixes
 
+* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
+* R-devel package checks no longer fail because the base `tools` package was
+  imported from `NAMESPACE` while listed only in `Suggests` (#1496)
+* The upload UI now shows accepted file formats and the current maximum upload
+  size, matching `shiny.maxRequestSize` when the app is launched through
+  `run_app()` and falling back to the default Shiny limit otherwise. Files
+  above the limit also show an app notification explaining that the data was
+  not loaded because it exceeded the configured limit (#1365)
+* The Parameter Selection matrix no longer silently ignores parameters chosen for metabolite study types. The matrix labeled study types using metabolite information (e.g. `Multiple IV Infusion (Metabolite)`), but the calculation step matches selections against labels derived with metabolite information blanked, so those selections never matched and were dropped. The matrix now reuses the same derivation as calculation time, so every selectable study type is honored (#1471)
 * `pkcg01()` and `pkcg02()` now return named plot lists by reading `id_plot` from the grouped plotting data instead of the raw input data (#1448)
 * Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer draw their tick labels on top of each other. `filter_breaks()` kept a break whenever it sat at least `min_cm_distance` (0.5 cm) from the last one and never looked at how wide the label rendered, so a dense profile with labels such as `119.917` kept 24 breaks where about 16 fit. A gap must now also clear the room the two labels either side of it need, measured with the plot's own `axis.text` styling and padded by a space so they do not run together. Two further problems fed the same bug: the width to fit them into was taken from the panel border grob, whose width is the whole device rather than the panel, and the side-by-side views filtered their breaks before faceting split that panel in two. The width now comes from the plot's own layout, the x scale is applied after faceting, and a y axis is thinned by label height. Candidates outside the plotted range are dropped before any thinning, so a break that is never drawn can no longer shift the first visible one a step past a manual `xmin` (#1441)
 * Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
@@ -129,6 +138,21 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+
+* Download generated tables, listings, and graphs through "Export as ZIP", using the current
+  TLG order and sidebar settings. Available concentration TLGs can be exported before running
+  NCA, without opening each output's tab (#1428, closes #1344).
+
+  - Graphs: PDF (default) or self-contained interactive HTML as one document per TLG, or PNG
+    as one file per plot, retaining plot titles, subtitles, footnotes, and axis scales.
+  - Tables and listings: XLSX (default) as one workbook per TLG with a sheet per split, CSV
+    as one file per split, or PDF paginated across rows and columns. Exports use displayed
+    listing columns and readable summary-table headers.
+  - Files are organised under `TLGs/Graphs/`, `TLGs/Tables/`, and `TLGs/Listings/` by format,
+    with descriptive filenames and unique, Excel-safe worksheet names for split outputs.
+  - A `manifest.csv` records output paths and statuses, including unavailable or failed TLGs,
+    so one output's failure does not prevent the remaining outputs from being downloaded.
+
 * PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
