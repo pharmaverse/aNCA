@@ -223,11 +223,18 @@ describe("adjust_class_and_length", {
     expect_equal(res, df)
   })
 
-  it("skips variables containing all NA values", {
-    # ABLFL exists but is all NA here
-    df <- data.frame(ABLFL = c(NA_character_, NA_character_))
+  it("normalizes all-missing variables according to metadata", {
+    df <- data.frame(
+      VOLUME = c(NA_character_, NA_character_),
+      ABLFL = c(NA_character_, NA_character_),
+      PCDTC = c(NA_character_, NA_character_)
+    )
     res <- adjust_class_and_length(df, metadata_nca_variables)
+
+    expect_type(res$VOLUME, "double")
+    expect_true(all(is.na(res$VOLUME)))
     expect_equal(res$ABLFL, c(NA_character_, NA_character_))
+    expect_equal(res$PCDTC, c(NA_character_, NA_character_))
   })
 
   it("warns when encountering a variable with an unknown type specification", {
