@@ -205,6 +205,7 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 
 - **Before creating a branch**: Always `git fetch origin main && git checkout origin/main` to ensure you branch from the latest remote main. Do not rely on the local `main` ref being up to date.
 - **Branch name**: `<issue-number>-<type>/<short-description>` (e.g., `123-bug/data-upload-fails`)
+- **PR title**: Use `TYPE: concise outcome` so the title states the primary change in a few words. Use an accurate uppercase type such as `FEATURE`, `FIX`, `REFACTOR`, `SKILL`, `DOCS`, `CI`, or `MAINT`; for example, `FIX: Prevent partial ZIP exports`.
 - **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes
 - **PR template**: Use `.github/PULL_REQUEST_TEMPLATE.md`. Link issue with `Closes #<number>`, describe changes, complete the contributor checklist
 - **Reviewers**: Add at least 2 core team members (from DESCRIPTION)
