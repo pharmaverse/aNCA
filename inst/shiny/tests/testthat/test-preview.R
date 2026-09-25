@@ -60,4 +60,29 @@ describe("Tests for app preview", {
     expect_null(app$get_value(output = "nca-nca_results-myresults-table"))
   })
 
+  it("explains when no valid intervals are available", {
+    app <- AppDriver$new(name = "app_preview_no_valid_intervals")
+
+    app$click("data-next_step")
+    app$click("data-next_step")
+    app$wait_for_idle(timeout = 5000)
+    app$click("data-next_step")
+    app$wait_for_idle(timeout = 5000)
+
+    app$set_inputs("page" = "nca")
+    app$wait_for_js(
+      "$('#nca-nca_setup-nca_setup_parameter-clear_all').length > 0",
+      timeout = 5000
+    )
+    app$click("nca-nca_setup-nca_setup_parameter-clear_all")
+    app$wait_for_js("!$('#nca-run_nca').prop('disabled')", timeout = 5000)
+    app$click("nca-run_nca")
+
+    app$wait_for_js(
+      "$('.shiny-notification-error').text().includes('NCA cannot run because no valid intervals are available')",
+      timeout = 5000
+    )
+    expect_null(app$get_value(output = "nca-nca_results-myresults-table"))
+  })
+
 })

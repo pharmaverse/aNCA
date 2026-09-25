@@ -183,10 +183,38 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         return(NULL)
       }
 
-      req(processed_pknca_data())
+      pknca_data <- processed_pknca_data()
+      req(pknca_data)
 
-      if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
-                                                              is.logical)]))) {
+      if (nrow(pknca_data$intervals) == 0) {
+        log_error("No valid NCA intervals available")
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
+          shiny::removeModal()
+          showNotification(
+            paste(
+              "Session restored but NCA could not be auto-run:",
+              "no valid intervals are available for the current data and settings.",
+              "Please adjust settings and run NCA manually."
+            ),
+            type = "warning", duration = 10
+          )
+        } else {
+          showNotification(
+            paste(
+              "NCA cannot run because no valid intervals are available",
+              "for the current data and settings.",
+              "Review selections, filters, and parameter settings."
+            ),
+            type = "error", duration = NULL
+          )
+        }
+        return(NULL)
+      }
+
+      if (all(!unlist(pknca_data$intervals[sapply(pknca_data$intervals,
+                                                   is.logical)]))) {
         log_error("Invalid parameters")
         if (auto_nca_running()) {
           auto_nca_running(FALSE)
