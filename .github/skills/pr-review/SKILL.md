@@ -20,6 +20,20 @@ Do not elevate an uncertain observation to an Issue without explaining the
 available evidence and labeling its confidence. Do not use a Question merely
 to disguise an unsupported Issue.
 
+## Pull-request title
+
+Confirm that the title follows `TYPE: concise outcome (#issue)`: an accurate
+uppercase type (`FEATURE`, `FIX`, `REFACTOR`, `SKILL`, `DOCS`, `CI`, or `MAINT`),
+a short primary outcome, and the issue number at the end. For example:
+
+```text
+FIX: Prevent partial ZIP exports (#1452)
+SKILL: Simplification-first development (#1501)
+```
+
+Raise a **Suggestion** when the title is unclear or does not follow this
+format; do not treat title wording alone as a blocking Issue.
+
 ## Required evidence for each substantive Issue
 
 Every substantive Issue must include:
