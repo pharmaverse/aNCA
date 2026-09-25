@@ -106,6 +106,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+    general_settings <- nca_setup$general_settings
 
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
@@ -159,10 +160,61 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
 
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
-      req(processed_pknca_data())
+      required_selections <- list(
+        analyte = general_settings$analyte(),
+        specimen = general_settings$pcspec(),
+        profile = general_settings$profile()
+      )
+      missing_selections <- names(required_selections)[vapply(
+        required_selections,
+        function(selection) is.null(selection) || length(selection) == 0,
+        logical(1)
+      )]
 
-      if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
-                                                              is.logical)]))) {
+      if (length(missing_selections) > 0) {
+        showNotification(
+          paste0(
+            "Select at least one ",
+            paste(missing_selections, collapse = ", "),
+            " before running NCA."
+          ),
+          type = "error", duration = NULL
+        )
+        return(NULL)
+      }
+
+      pknca_data <- processed_pknca_data()
+      req(pknca_data)
+
+      if (nrow(pknca_data$intervals) == 0) {
+        log_error("No valid NCA intervals available")
+        if (auto_nca_running()) {
+          auto_nca_running(FALSE)
+          session$userData$auto_replay_active <- FALSE
+          shiny::removeModal()
+          showNotification(
+            paste(
+              "Session restored but NCA could not be auto-run:",
+              "no valid intervals are available for the current data and settings.",
+              "Please adjust settings and run NCA manually."
+            ),
+            type = "warning", duration = 10
+          )
+        } else {
+          showNotification(
+            paste(
+              "NCA cannot run because no valid intervals are available",
+              "for the current data and settings.",
+              "Review selections, filters, and parameter settings."
+            ),
+            type = "error", duration = NULL
+          )
+        }
+        return(NULL)
+      }
+
+      if (all(!unlist(pknca_data$intervals[sapply(pknca_data$intervals,
+                                                   is.logical)]))) {
         log_error("Invalid parameters")
         if (auto_nca_running()) {
           auto_nca_running(FALSE)
