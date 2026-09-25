@@ -25,6 +25,24 @@ than guessing:
 Do not install PKNCA or R just to investigate if the environment does not
 already support it. Use repository source review and CI logs instead.
 
+## Upstream Watch
+
+Use this lightweight review when preparing a release or when upstream PKNCA has
+changed since the currently supported aNCA version:
+
+1. Record the aNCA-declared PKNCA version and the upstream release/commit range
+   reviewed.
+2. Read upstream NEWS, source, tests, and linked issues for relevant changes;
+   classify each as irrelevant, monitor, compatibility risk, or upgrade
+   candidate.
+3. For material items, name affected aNCA paths and create/link a follow-up
+   issue with the decision: align now, defer, or retain current support.
+4. Revisit the register at the next release; do not silently treat an upstream
+   main change as a supported dependency version.
+
+Report the review date, source range, classification, decision, and linked
+issue. Use `release-version-review` when evaluating release readiness.
+
 ## High-Risk Areas
 
 Pay special attention to:
