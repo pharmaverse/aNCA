@@ -78,12 +78,7 @@ save_table_format <- function(x, file_name, formats) {
     saveRDS(x, file = paste0(file_name, ".rds"))
   }
   if ("xpt" %in% formats) {
-    tryCatch(
-      haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt")),
-      error = function(e) {
-        message("Error writing XPT file for ", file_name, ": ", e$message)
-      }
-    )
+    haven::write_xpt(format_to_xpt_compatible(x), paste0(file_name, ".xpt"))
   }
 }
 
@@ -448,6 +443,288 @@ get_tree_ids_for_texts <- function(tree, texts) {
 #' @param grouping_vars Reactive or list of grouping variables.
 #' @param input Shiny input object from the zip module.
 #' @param session Shiny session object.
+# Build a standard validation finding for an export artifact outside results.
+.export_artifact_error <- function(artifact, check, expected, observed, message) {
+  .export_finding_row(
+    output = artifact,
+    variable = NA_character_,
+    check = check,
+    severity = "error",
+    expected = expected,
+    observed = observed,
+    message = message
+  )
+}
+
+# Check that a value can be serialised before its writer is reached.
+.export_value_is_serialisable <- function(value) {
+  tryCatch({
+    serialize(value, connection = NULL)
+    TRUE
+  }, error = function(e) FALSE)
+}
+
+# Build the settings payload written to the versioned settings YAML file.
+.settings_export_payload <- function(session) {
+  settings_list <- session$userData$settings()
+
+  # Units are decoupled from settings(); read directly from the session store
+  # and export only the rows that differ from their data-derived default.
+  settings_list$units <- changed_units(session$userData$units_table())
+
+  settings_list$ratio_table <- session$userData$ratio_table()
+
+  list(
+    settings = settings_list,
+    mapping = session$userData$mapping,
+    slope_rules = session$userData$slope_rules(),
+    filters = session$userData$applied_filters,
+    time_duplicate_keys = session$userData$time_duplicate_keys,
+    nca_ran = isTRUE(session$userData$nca_ran)
+  )
+}
+
+# Validate the settings payload without creating the settings file.
+.validate_settings_artifact <- function(session) {
+  payload <- tryCatch(.settings_export_payload(session), error = identity)
+  if (inherits(payload, "error") || !is.list(payload)) {
+    observed <- if (inherits(payload, "error")) payload$message else "not a list"
+    return(.export_artifact_error(
+      "settings.yaml", "settings_structure", "a serialisable settings list",
+      observed, "Settings could not be prepared for export."
+    ))
+  }
+
+  yaml_ok <- tryCatch({
+    yaml::as.yaml(payload)
+    TRUE
+  }, error = function(e) FALSE)
+  if (yaml_ok) return(NULL)
+
+  .export_artifact_error(
+    "settings.yaml", "settings_structure", "YAML-serialisable settings",
+    "not YAML-serialisable", "Settings cannot be serialised to YAML."
+  )
+}
+
+# Validate the raw-data and template prerequisites for an R-script export.
+.validate_script_artifacts <- function(session) {
+  findings <- list()
+  raw_data <- session$userData$raw_data
+  if (is.null(raw_data) || !.export_value_is_serialisable(raw_data)) {
+    findings <- c(findings, list(.export_artifact_error(
+      "input_data.rds", "serialisation", "serialisable input data",
+      if (is.null(raw_data)) "NULL" else .export_class_label(raw_data),
+      "Input data cannot be written to the RDS export."
+    )))
+  }
+
+  template <- system.file("www/templates/script_template.R", package = "aNCA")
+  if (!nzchar(template) || !file.exists(template)) {
+    findings <- c(findings, list(.export_artifact_error(
+      "session_code.R", "template", "an available R-script template",
+      "template not found", "The R-script export template is unavailable."
+    )))
+  }
+  findings
+}
+
+# Prepare the pre-specification workbook payload without writing a file.
+.pre_specs_export_payload <- function(selected, cdisc_data) {
+  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
+  datasets <- unname(rev_map[selected])
+  pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
+  Filter(function(df) is.data.frame(df) && nrow(df) > 0, pre_specs)
+}
+
+# Validate the selected pre-specification workbook payload.
+.validate_pre_specs_artifact <- function(selected, cdisc_data) {
+  pre_specs <- tryCatch(.pre_specs_export_payload(selected, cdisc_data), error = identity)
+  valid <- is.list(pre_specs) && all(vapply(pre_specs, is.data.frame, logical(1)))
+  if (valid) return(NULL)
+  observed <- if (inherits(pre_specs, "error")) {
+    pre_specs$message
+  } else {
+    "invalid pre-specification payload"
+  }
+  .export_artifact_error(
+    "CDISC/Pre_Specs.xlsx", "pre_specs_structure", "a list of data-frame sheets",
+    observed, "CDISC pre-specifications could not be prepared for export."
+  )
+}
+
+# Validate the inputs and dependencies required for a selected slide export.
+.validate_slide_artifacts <- function(input, res_nca) {
+  findings <- list()
+  formats <- input$slide_formats %||% character(0)
+  if (is.null(res_nca)) {
+    findings <- c(findings, list(.export_artifact_error(
+      "presentations", "slide_input", "NCA results", "NULL",
+      "Slides require available NCA results."
+    )))
+  }
+  if (length(formats) == 0) {
+    findings <- c(findings, list(.export_artifact_error(
+      "presentations", "slide_format", "at least one slide format", "none",
+      "Slides were selected without an output format."
+    )))
+  }
+  pptx_available <- requireNamespace("officer", quietly = TRUE) &&
+    requireNamespace("flextable", quietly = TRUE)
+  if ("pptx" %in% formats && !pptx_available) {
+    findings <- c(findings, list(.export_artifact_error(
+      "presentations/results_slides.pptx", "dependency",
+      "officer and flextable", "required package unavailable",
+      "PowerPoint export requires the officer and flextable packages."
+    )))
+  }
+  findings
+}
+
+# Build a complete session-information record for export.
+.session_info_lines <- function() {
+  tryCatch({
+    si <- utils::sessionInfo()
+    hdr <- c(
+      paste("R version:", si$R.version$version.string),
+      paste("Platform: ", si$platform),
+      paste("Running under:", si$running), "",
+      "aNCA and attached packages:", ""
+    )
+    attached <- c(
+      vapply(si$otherPkgs, function(p) {
+        tryCatch(paste0("  ", p$Package, " ", p$Version),
+                 error = function(e) paste0("  ", p$Package))
+      }, ""),
+      vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
+    )
+    hdr <- c(hdr, sort(attached))
+    if (length(si$loadedOnly) > 0) {
+      loaded <- vapply(si$loadedOnly, function(p) {
+        tryCatch(paste0("  ", p$Package, " ", p$Version),
+                 error = function(e) paste0("  ", p$Package))
+      }, "")
+      hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
+    }
+    hdr
+  }, error = function(e) c("Session info unavailable:", e$message))
+}
+
+# Validate that the selected session-information record is complete enough to write.
+.validate_session_artifact <- function() {
+  lines <- .session_info_lines()
+  if (is.character(lines) && length(lines) > 0 && any(grepl("R version:", lines, fixed = TRUE))) {
+    return(NULL)
+  }
+  .export_artifact_error(
+    "session_info.txt", "session_info_structure", "a complete session-information record",
+    "session information unavailable", "Session information could not be prepared for export."
+  )
+}
+
+# Add an artifact finding when its output is selected and its validator is enabled.
+.append_artifact_findings <- function(findings, check, spec) {
+  if (check$is_selected() && aNCA:::.export_validator_enabled(check$validator, spec)) {
+    findings <- c(findings, check$validate())
+  }
+  findings
+}
+
+# Validate artifacts that are generated outside the standard results list.
+.validate_export_artifacts <- function(input, session, res_nca) {
+  selected <- input$res_tree %||% character(0)
+  spec_findings <- validate_export_outputs(list())
+  findings <- if (nrow(spec_findings) > 0) list(spec_findings) else list()
+  spec <- aNCA:::.read_export_validation_spec()
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), selected)
+  checks <- list(
+    list(
+      validator = "settings_structure",
+      is_selected = function() "settings_file" %in% selected,
+      validate = function() list(.validate_settings_artifact(session))
+    ),
+    list(
+      validator = "script_structure",
+      is_selected = function() "r_script" %in% selected,
+      validate = function() .validate_script_artifacts(session)
+    ),
+    list(
+      validator = "slides_structure",
+      is_selected = function() "results_slides" %in% selected,
+      validate = function() .validate_slide_artifacts(input, res_nca)
+    ),
+    list(
+      validator = "pre_specs_structure",
+      is_selected = function() length(selected_cdisc) > 0,
+      validate = function() {
+        list(.validate_pre_specs_artifact(
+          selected_cdisc, session$userData$results$CDISC
+        ))
+      }
+    ),
+    list(
+      validator = "session_info_structure",
+      is_selected = function() "session_info" %in% selected,
+      validate = function() list(.validate_session_artifact())
+    )
+  )
+  for (check in checks) {
+    findings <- .append_artifact_findings(findings, check, spec)
+  }
+  findings <- Filter(Negate(is.null), findings)
+  if (length(findings) == 0) return(.export_empty_findings())
+  out <- do.call(rbind, findings)
+  rownames(out) <- NULL
+  out[EXPORT_FINDING_COLS]
+}
+
+# Validate every selected artifact before any export file is created. Runs
+# object and table-structure checks on standard results, metadata checks on
+# CDISC datasets, and basic checks on settings, script, raw-data, and slides.
+.validate_outputs_pre_export <- function(export_list, obj_names, input, res_nca,
+                                         progress, session) {
+  progress$set(message = "Creating exports...",
+               detail = "Validating outputs...")
+  result_findings <- validate_export_outputs(export_list, obj_names = obj_names)
+  artifact_findings <- .validate_export_artifacts(input, session, res_nca)
+  findings <- rbind(result_findings, artifact_findings)
+  rownames(findings) <- NULL
+
+  warnings <- findings[findings$Severity == "warning", , drop = FALSE]
+  if (nrow(warnings) > 0) {
+    showNotification(
+      sprintf(
+        "Export validation warning: %s.",
+        paste(utils::head(unique(warnings$Output), 3), collapse = ", ")
+      ),
+      type = "warning",
+      duration = NULL,
+      session = session
+    )
+  }
+
+  if (!export_validation_blocks_save(findings)) return(invisible(findings))
+
+  errors <- findings[findings$Severity == "error", , drop = FALSE]
+  showNotification(
+    sprintf(
+      "Save blocked: %d export artifact(s) failed validation (%s).",
+      nrow(errors),
+      paste(utils::head(unique(errors$Output), 3), collapse = ", ")
+    ),
+    type = "error",
+    duration = NULL,
+    session = session
+  )
+  stop(errorCondition(
+    sprintf(
+      "Export validation failed with %d error(s): %s",
+      nrow(errors), paste(unique(errors$Output), collapse = ", ")
+    ),
+    class = "export_validation_error"
+  ))
+}
+
 prepare_export_files <- function(target_dir,
                                  res_nca,
                                  settings,
@@ -456,6 +733,8 @@ prepare_export_files <- function(target_dir,
                                  session,
                                  progress,
                                  slide_config = NULL) {
+
+  selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
 
   # Save Standard Outputs (Tables/Plots)
   progress$set(message = "Creating exports...",
@@ -491,6 +770,14 @@ prepare_export_files <- function(target_dir,
       export_list[[key]] <- results[[key]]
     }
   }
+
+  # Validate every output that will be written before any file is created:
+  # object-class checks on all selected outputs and value-level data-type
+  # checks on the selected CDISC datasets. Aborts the save on error-severity
+  # findings so non-conforming data is never written (cf. 21 CFR 11.10(a)).
+  .validate_outputs_pre_export(
+    export_list, obj_names, input, res_nca, progress, session
+  )
 
   save_output(
     output = export_list,
@@ -532,7 +819,6 @@ prepare_export_files <- function(target_dir,
     progress$inc(0.4)
 
     # Export pre-specification files for selected CDISC datasets
-    selected_cdisc <- intersect(c("pp", "adpp", "adnca"), input$res_tree)
     if (length(selected_cdisc) > 0) {
       progress$set(message = "Creating exports...",
                    detail = "Saving CDISC pre-specifications...")
@@ -661,22 +947,7 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_settings <- function(target_dir, session) {
-  settings_list <- session$userData$settings()
-
-  # Units are decoupled from settings(); read directly from the session store
-  # and export only the rows that differ from their data-derived default.
-  settings_list$units <- changed_units(session$userData$units_table())
-
-  settings_list$ratio_table <- session$userData$ratio_table()
-
-  payload <- list(
-    settings = settings_list,
-    mapping = session$userData$mapping,
-    slope_rules = session$userData$slope_rules(),
-    filters = session$userData$applied_filters,
-    time_duplicate_keys = session$userData$time_duplicate_keys,
-    nca_ran = isTRUE(session$userData$nca_ran)
-  )
+  payload <- .settings_export_payload(session)
 
   dataset_name <- session$userData$dataset_filename %||% ""
 
@@ -715,14 +986,7 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_pre_specs <- function(target_dir, selected, cdisc_data = NULL) {
-  # Reverse lookup: lowercase keys -> uppercase dataset names
-  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
-  datasets <- unname(rev_map[selected])
-
-  pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
-
-  # Keep only non-empty specs
-  pre_specs <- Filter(function(df) nrow(df) > 0, pre_specs)
+  pre_specs <- .pre_specs_export_payload(selected, cdisc_data)
 
   if (length(pre_specs) > 0) {
     cdisc_dir <- file.path(target_dir, "CDISC")
@@ -750,45 +1014,7 @@ prepare_export_files <- function(target_dir,
 #' @keywords internal
 #' @noRd
 .export_session_info <- function(target_dir) {
-  lines <- tryCatch({
-    si <- utils::sessionInfo()
-    hdr <- c(
-      paste("R version:", si$R.version$version.string),
-      paste("Platform: ", si$platform),
-      paste("Running under:", si$running),
-      "",
-      "aNCA and attached packages:",
-      ""
-    )
-
-    # Collect attached packages (base + other) with versions, sorted alphabetically
-    attached <- c(
-      vapply(si$otherPkgs, function(p) {
-        tryCatch(
-          paste0("  ", p$Package, " ", p$Version),
-          error = function(e) paste0("  ", p$Package)
-        )
-      }, ""),
-      vapply(si$basePkgs, function(p) paste0("  ", p, " (base)"), "")
-    )
-    hdr <- c(hdr, sort(attached))
-
-    # Loaded-only (namespace) packages
-    if (length(si$loadedOnly) > 0) {
-      loaded <- vapply(si$loadedOnly, function(p) {
-        tryCatch(
-          paste0("  ", p$Package, " ", p$Version),
-          error = function(e) paste0("  ", p$Package)
-        )
-      }, "")
-      hdr <- c(hdr, "", "Loaded via namespace (not attached):", "", sort(loaded))
-    }
-    hdr
-  }, error = function(e) {
-    c("Session info unavailable:", e$message)
-  })
-
-  writeLines(lines, file.path(target_dir, "session_info.txt"))
+  writeLines(.session_info_lines(), file.path(target_dir, "session_info.txt"))
 }
 
 #' Clean Export Directory

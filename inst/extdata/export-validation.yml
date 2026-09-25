@@ -1,0 +1,44 @@
+version: 1
+requirements:
+  - id: standard_output_structure
+    requirement: "21 CFR §11.10(a)"
+    applies_to: "Selected result tables, plots, and generated R code"
+    validator: standard_output_structure
+    blocks_export: true
+    test: "tests/testthat/test-validate_export_outputs.R"
+  - id: cdisc_schema
+    requirement: "21 CFR §11.10(a)"
+    applies_to: "Selected PP, ADPP, and ADNCA datasets"
+    validator: cdisc_schema
+    blocks_export: true
+    test: "tests/testthat/test-validate_export_outputs.R"
+  - id: settings_structure
+    requirement: "21 CFR §11.10(a)"
+    applies_to: "Selected versioned settings YAML"
+    validator: settings_structure
+    blocks_export: true
+    test: "tests/testthat/test-zip-utils.R"
+  - id: script_structure
+    requirement: "21 CFR §11.10(a)"
+    applies_to: "Selected R script and input-data RDS"
+    validator: script_structure
+    blocks_export: true
+    test: "tests/testthat/test-zip-utils.R"
+  - id: slides_structure
+    requirement: "21 CFR §11.10(a)"
+    applies_to: "Selected result-slide source and formats"
+    validator: slides_structure
+    blocks_export: true
+    test: "tests/testthat/test-zip-utils.R"
+  - id: pre_specs_structure
+    requirement: "21 CFR §11.10(a)"
+    applies_to: "Selected CDISC pre-specification workbook"
+    validator: pre_specs_structure
+    blocks_export: true
+    test: "tests/testthat/test-zip-utils.R"
+  - id: session_info_structure
+    requirement: "21 CFR §11.10(a)"
+    applies_to: "Selected session-information record"
+    validator: session_info_structure
+    blocks_export: true
+    test: "tests/testthat/test-zip-utils.R"
