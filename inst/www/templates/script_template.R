@@ -98,3 +98,21 @@ pivoted_results <- pivot_wider_pknca_results(
   flag_rules = flag_rules,
   extra_vars_to_keep = extra_vars_to_keep
 )
+
+## Descriptive statistics #############################################
+# The app derives summary statistics from ADPP: excluded records
+# (PPSUMXF == "Y") are dropped and PPORRES is taken from the numeric
+# PPSTRESN. Group by any ADPP columns (e.g. add "ROUTE" here).
+summary_groupby <- intersect(
+  c(extra_vars_to_keep, "DOSEA", "ATPTREF"),
+  names(cdisc_datasets$adpp)
+)
+
+summary_stats_data <- cdisc_datasets$adpp %>%
+  filter(is.na(PPSUMXF) | PPSUMXF != "Y") %>%
+  mutate(PPORRES = as.numeric(PPSTRESN), PPORRESU = PPSTRESU)
+
+summary_statistics <- calculate_summary_stats(
+  summary_stats_data,
+  input_groups = summary_groupby
+)
