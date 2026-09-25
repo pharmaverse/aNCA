@@ -300,3 +300,5 @@ This repository uses the following agent configuration:
 - `.github/instructions/` — Path-specific notes for Copilot.
 - `.github/agents/` — Role-specific agent profiles.
 - `.github/skills/` — Reusable agent workflows.
+- **Repository skills:** Use `skill-creation` for new skills and
+  `skill-editing` for substantial edits to existing skills.
