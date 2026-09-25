@@ -9,7 +9,8 @@
 
 * Running NCA with an empty analyte, specimen, or NCA profile selection now
   shows a red notification naming the missing selection instead of stopping
-  silently (#1527)
+  silently. It also explains when the current data and settings provide no
+  valid NCA intervals (#1527)
 
 * Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
 * R-devel package checks no longer fail because the base `tools` package was
