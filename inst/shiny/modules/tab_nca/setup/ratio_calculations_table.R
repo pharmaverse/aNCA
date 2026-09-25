@@ -446,7 +446,15 @@ ratios_table_server <- function(
     return(character(0))
   }
   int_params <- int_params[complete, , drop = FALSE]
-  paste0(int_params$parameter, "_", int_params$start_auc, "-", int_params$end_auc)
+  # Use the custom name when one is set for the row, otherwise the standard
+  # `parameter_start-end` label, so ratio options match the results columns.
+  custom <- if ("custom_name" %in% names(int_params)) {
+    int_params$custom_name
+  } else {
+    rep(NA_character_, nrow(int_params))
+  }
+  standard <- paste0(int_params$parameter, "_", int_params$start_auc, "-", int_params$end_auc)
+  ifelse(!is.na(custom) & custom != "", custom, standard)
 }
 
 # Build reference options from ratio group columns.

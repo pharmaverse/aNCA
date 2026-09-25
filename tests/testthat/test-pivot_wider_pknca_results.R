@@ -171,6 +171,27 @@ describe("pivot_wider_pknca_results", {
     expect_false(any(grepl("NA", rcamint_cols)))
   })
 
+  it("uses a custom interval name for the result column when set (#1463)", {
+    # Attach a custom name to the manual intervals; the result column should use
+    # it (with the unit suffix) instead of the standard AUCINT_start-end pattern.
+    res_custom <- pknca_res
+    res_custom$result <- res_custom$result %>%
+      mutate(interval_name = ifelse(
+        type_interval == "manual" & PPTESTCD == "AUCINT" &
+          start_dose == 0 & end_dose == 2,
+        "Early exposure",
+        NA_character_
+      ))
+
+    result <- pivot_wider_pknca_results(res_custom)
+
+    # Custom-named interval column present; its standard name absent
+    expect_true(any(grepl("Early exposure", colnames(result))))
+    expect_false(any(grepl("AUCINT_0-2\\[", colnames(result))))
+    # The other manual interval (2-4) keeps the standard name
+    expect_true(any(grepl("AUCINT_2-4", colnames(result))))
+  })
+
   it("rounds numeric values to three decimals", {
     expected_num_param_cols <- c(
       "CMAX[ng/mL]", "TMAX[hr]", "TLST[hr]", "LAMZ[1/hr]",

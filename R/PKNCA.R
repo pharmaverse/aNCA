@@ -319,7 +319,7 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     progress = FALSE,
     keep_interval_cols = setdiff(
       c(
-        "ATPTREF", "DOSNOA", "type_interval",
+        "ATPTREF", "DOSNOA", "type_interval", "interval_name",
         adnca_data$dose$columns$route, "ROUTE",
         keep_interval_cols
       ),
