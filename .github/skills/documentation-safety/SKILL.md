@@ -12,8 +12,9 @@ package documentation. Use `ci-roxygen-triage` for an already-failing CI job.
    `DESCRIPTION` dependency declaration.
 2. Check `@param`, `@returns`, `@export`, examples, and import tags match the
    implementation. Do not edit `man/` as the source of truth.
-3. Identify generated artifacts affected by `devtools::document()` and whether
-   the current environment can run it; do not claim generation when unavailable.
+3. Never install R or a toolchain for this workflow. If R is already available,
+   identify generated artifacts affected by `devtools::document()`; otherwise
+   inspect source/CI evidence and state that regeneration needs a developer.
 4. Check `NAMESPACE`, `DESCRIPTION`, and generated manuals will agree after
    regeneration.
 
