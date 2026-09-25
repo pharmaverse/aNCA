@@ -9,9 +9,10 @@
 #' @param data Reactive with data table containing raw data uploaded to the app.
 #' @param adnca_data Reactive with `PKNCAdata` object including the `adnca_data`.
 #'
-#' @returns List with three reactive expressions:
+#' @returns List with reactive expressions:
 #'   * processed_pknca_data - PKNCAdata object with applied settings and slope selections.
 #'   * settings - List with raw settings as gathered by the module.
+#'   * general_settings - Raw analyte, specimen, and profile selectors.
 #'   * slope_rules - Data frame with slope inclusions / exclusions provided by slope selector.
 
 nca_setup_ui <- function(id) {
@@ -276,6 +277,7 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
     list(
       processed_pknca_data = processed_pknca_data,
       settings = final_settings,
+      general_settings = settings_output,
       ratio_table = ratio_table,
       slope_rules = slope_rules
     )

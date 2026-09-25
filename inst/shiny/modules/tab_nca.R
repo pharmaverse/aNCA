@@ -106,6 +106,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
 
     processed_pknca_data <- nca_setup$processed_pknca_data
     settings <- nca_setup$settings
+    general_settings <- nca_setup$general_settings
 
     ratio_table <- nca_setup$ratio_table
     slope_rules <- nca_setup$slope_rules
@@ -159,6 +160,29 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
 
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
+      required_selections <- list(
+        analyte = general_settings$analyte(),
+        specimen = general_settings$pcspec(),
+        profile = general_settings$profile()
+      )
+      missing_selections <- names(required_selections)[vapply(
+        required_selections,
+        function(selection) is.null(selection) || length(selection) == 0,
+        logical(1)
+      )]
+
+      if (length(missing_selections) > 0) {
+        showNotification(
+          paste0(
+            "Select at least one ",
+            paste(missing_selections, collapse = ", "),
+            " before running NCA."
+          ),
+          type = "error", duration = NULL
+        )
+        return(NULL)
+      }
+
       req(processed_pknca_data())
 
       if (all(!unlist(processed_pknca_data()$intervals[sapply(processed_pknca_data()$intervals,
