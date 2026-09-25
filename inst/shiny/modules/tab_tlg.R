@@ -387,7 +387,8 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
             items <- tlg_module_server(
-              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
+              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars,
+              refresh_trigger = reactive(input$submit_tlg_order)
             )
             assign(module_id, TRUE, envir = .registered_modules)
             assign(g_key, list(def = g_def, type = type, items = items), envir = .tlg_registry)

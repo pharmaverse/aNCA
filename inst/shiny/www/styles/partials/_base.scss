@@ -288,6 +288,26 @@ h5 {
       }
     }
   }
+
+  /* title / subtitle / footnote rendered around a table TLG (issue #1430) */
+  .tlg-table-title {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 0.15em;
+  }
+
+  .tlg-table-subtitle {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 0.5em;
+  }
+
+  .tlg-table-footnote {
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 0.5em;
+    margin-bottom: 1.5em;
+  }
 }
 
 .modal-dialog:has(.tlg-option-table) {

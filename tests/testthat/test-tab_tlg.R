@@ -20,6 +20,7 @@ local({
   for (f in list(
     c("functions", "tlg_add_picker.R"),
     c("functions", "zip-utils.R"),
+    c("functions", "utils-tlg.R"),
     c("functions", "tlg_export.R"),
     c("modules", "tab_tlg", "tlg_module.R"),
     # All four option types: tlg_module_server() resolves the per-option server by name
@@ -179,6 +180,64 @@ render_tlg_panels <- function(output) {
 }
 
 describe("tab_tlg_server: TLG export registry", {
+  it("preserves edited labels in rebuilt panels and the export registry after resubmission", {
+    conc <- FIXTURE_CONC_DATA[FIXTURE_CONC_DATA$USUBJID == 1, ]
+    conc$TRT01A <- "Treatment A"
+    testServer(
+      tab_tlg_server,
+      args = list(data = reactive(list(conc = list(data = conc)))),
+      {
+        session$flushReact()
+        table_id <- match("t_pkct01", names(.TLG_DEFINITIONS))
+        order <- tlg_order()
+        order$Selection <- order$id == table_id
+        tlg_order(order)
+        session$setInputs(submit_tlg_order = 1)
+        session$flushReact()
+        render_tlg_panels(output)
+
+        prefix <- paste0(table_id, "_tbl-")
+        labels <- c("title", "subtitle", "footnote")
+        initial <- c(.TLG_DEFINITIONS$t_pkct01$options$title$default, "", "Initial footnote")
+        do.call(session$setInputs, setNames(as.list(initial), paste0(prefix, labels, "-text")))
+        sidebar <- output[[paste0(prefix, "options")]]$html
+        expect_match(sidebar, initial[[1]], fixed = TRUE)
+
+        edited <- c("Study $STUDYID", "Assay: !AVAL", "Reviewed concentration summary")
+        do.call(session$setInputs, setNames(as.list(edited), paste0(prefix, labels, "-text")))
+        do.call(session$setInputs,
+                setNames(list(c("1", "3")), paste0(prefix, "time_filter-select")))
+        session$elapse(800)
+        session$flushReact()
+        # Typing should leave the active widgets intact, until the parent rebuilds them.
+        expect_identical(output[[paste0(prefix, "options")]]$html, sidebar)
+
+        session$setInputs(submit_tlg_order = 2)
+        session$flushReact()
+        render_tlg_panels(output)
+        for (text in edited) {
+          expect_match(output[[paste0(prefix, "options")]]$html, text, fixed = TRUE)
+        }
+        expect_length(ls(envir = .registered_modules), 1)
+
+        # Exercise the collector used by the app-wide ZIP, including resolved annotation
+        # values and real concentration summaries rather than only registry structure.
+        exported <- session$userData$tlg_outputs("table")
+        expect_named(exported, "t_pkct01")
+        expect_length(exported$t_pkct01$items, 1)
+        table <- exported$t_pkct01$items[[1]]
+        expect_s3_class(table, "data.frame")
+        expect_equal(attr(table, "tlg_title"), "Study S1")
+        expect_equal(attr(table, "tlg_subtitle"), "Assay: Analysis Value")
+        expect_equal(attr(table, "tlg_footnote"), edited[[3]])
+        expect_equal(as.numeric(table$NFRLT), c(1, 3))
+        expect_equal(as.numeric(table$n), c(1, 1))
+        expect_equal(as.numeric(table$n_blq), c(0, 0))
+        expect_equal(as.numeric(table$Mean), c(1, 3))
+      }
+    )
+  })
+
   it("registers an entry for every rendered TLG", {
     testServer(tab_tlg_server, args = list(data = test_data), {
       # tlg_order_filtered() is bindEvent(submit_tlg_order), so nothing renders until the
