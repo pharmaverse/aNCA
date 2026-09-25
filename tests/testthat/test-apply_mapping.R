@@ -159,6 +159,52 @@ describe("apply_mapping", {
   })
 })
 
+describe("imported optional mappings", {
+  it("keeps available grouping values and skips only missing values", {
+    shiny_dir <- system.file("shiny", package = "aNCA")
+    source(file.path(shiny_dir, "modules", "tab_data", "data_mapping.R"),
+           local = TRUE)
+
+    result <- .split_imported_mapping_values(
+      values = c("SPECIES", "GENDER"),
+      valid_values = "SPECIES"
+    )
+
+    expect_equal(result$selected, "SPECIES")
+    expect_equal(result$missing, "GENDER")
+  })
+
+  it("keeps numeric constants when numeric mapping values are allowed", {
+    shiny_dir <- system.file("shiny", package = "aNCA")
+    source(file.path(shiny_dir, "modules", "tab_data", "data_mapping.R"),
+           local = TRUE)
+
+    result <- .split_imported_mapping_values(
+      values = c("3.5", "MISSING"),
+      valid_values = character(0),
+      allow_create_numeric = TRUE
+    )
+
+    expect_equal(result$selected, "3.5")
+    expect_equal(result$missing, "MISSING")
+  })
+
+  it("preconfigures all supported grouping candidates in preclinical templates", {
+    candidates <- c(
+      "TRTA", "TRTAN", "ACTARM", "TRT01A", "TRT01P", "RACE", "SEX",
+      "GROUP", "DOSFRM", "GENDER", "SPECIES", "STRAIN", "NOMDOSE",
+      "DOSEP", "COHORT", "PART", "PERIOD", "FEDSTATE"
+    )
+    templates <- c("preclinical_SM_template.yaml", "preclinical_LM_template.yaml")
+
+    for (template in templates) {
+      path <- system.file("www", "templates", template, package = "aNCA")
+      mapping <- yaml::read_yaml(path)$mapping$Grouping_Variables
+      expect_setequal(mapping, candidates)
+    }
+  })
+})
+
 describe("create_metabflag", {
   it("creates the METABFL if indicates the metabolites", {
     test_df <- data.frame(
