@@ -156,11 +156,17 @@ p_pkpg04_boxp <- function(data, ...) {
 
 #' Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)
 #'
-#' Filters ADPP to metabolite rows using the same fallback logic as
-#' [t_pkpt03_MP_col()] (METABFL preferred, then PPCAT/PARAM grep for "metab"),
-#' then delegates to [p_pkpg03_boxp()].
+#' Plots the configured analyte ratios already present in ADPP by treatment
+#' using [p_pkpg03_boxp()]. Configure ratios in Parameter Selection > Ratios,
+#' or load them from settings, then run NCA before rendering. Values are read
+#' from ADPP without recalculation, keeping plots consistent with exported results.
 #'
 #' @inheritParams p_pkpg03_boxp
+#' @inheritParams t_pkpt03_MP_col
+#' @param list_vars Columns to split plots by. Defaults to the derived `RATIO`
+#'   label and `PPSPEC`; varying profile identifiers are retained as well.
+#' @param subtitle Optional plot subtitle; defaults to the analyte pair and profile identifiers.
+#' @param ylab Y-axis label. Defaults to `"Metabolite / Parent Ratio"`.
 #' @param ... Additional arguments forwarded to [p_pkpg03_boxp()].
 #'
 #' @return A named list of ggplot objects (same format as [p_pkpg03_boxp()]).
@@ -173,8 +179,23 @@ p_pkpg04_boxp <- function(data, ...) {
 #' }
 #'
 #' @export
-p_pkpg06_mp <- function(data, ...) {
-  p_pkpg03_boxp(filter_metabolite_rows(data, "p_pkpg06_mp"), ...)
+p_pkpg06_mp <- function(
+  data, list_vars = c("RATIO", "PPSPEC"),
+  title = "Boxplot of Metabolite/Parent Ratios by Treatment", subtitle = NULL,
+  ylab = "Metabolite / Parent Ratio", value_var = "AVAL", ...
+) {
+  data <- filter_ratio_rows(data, "p_pkpg06_mp", ref_type = "analyte", value_var = value_var)
+  plots <- p_pkpg03_boxp(
+    data,
+    list_vars = union(list_vars, .ratio_profile_vars(data)),
+    title = title, subtitle = subtitle, ylab = ylab,
+    value_var = value_var,
+    ...
+  )
+  if (is.null(subtitle)) {
+    for (i in seq_along(plots)) plots[[i]] <- plots[[i]] + labs(subtitle = names(plots)[i])
+  }
+  plots
 }
 
 #' Mean Urine PK Parameter Profile Plot (pkpg01)

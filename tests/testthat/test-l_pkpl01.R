@@ -12,12 +12,40 @@ pkpl_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-pkpl_metab_data <- pkpl_data
-pkpl_metab_data$PPCAT <- ifelse(
-  pkpl_metab_data$TRT01A == "50mg", "Metab-DrugA Plasma", "DrugA Plasma"
-)
-pkpl_metab_data$METABFL <- ifelse(
-  pkpl_metab_data$TRT01A == "50mg", "Y", NA_character_
+# The parent rows plus the ratio rows that Parameter Selection > Ratios appends
+# during the NCA run: one metabolite/parent family (reference on the analyte) and
+# one treatment family (reference on TRT01A).
+.pkpl_ratio_rows <- function(ppcat, bracket, prefix, rows = TRUE, divisor = 2) {
+  # `rows` keeps the fixture honest: a ratio row exists only for the test side of
+  # the comparison, never for the reference group itself.  `divisor` gives each
+  # analyte its own values, so a test can tell which one a cell came from.
+  src <- pkpl_data[rows, , drop = FALSE]
+  transform(
+    src,
+    PPCAT    = ppcat,
+    PARAM    = paste(prefix, src$PARAM),
+    PARAMCD  = paste0(substr(prefix, 1, 2), src$PARAMCD),
+    AVAL     = src$AVAL / divisor,
+    AVALU    = "fraction",
+    PPANMETH = paste0(src$PARAMCD, " TO ", src$PARAMCD, " [", bracket, "]")
+  )
+}
+
+# The treatment family spans both analytes: a treatment ratio compares groups
+# within an analyte, so the parent and the metabolite each get their own row for
+# the same comparison.  A single-analyte fixture cannot show whether the two are
+# kept apart.
+pkpl_ratio_data <- rbind(
+  transform(pkpl_data, PPANMETH = NA_character_),
+  .pkpl_ratio_rows("Metab-DrugA Plasma", "PARAM: DrugA Plasma", "MRatio"),
+  .pkpl_ratio_rows(
+    "DrugA Plasma", "TRT01A: 10mg", "TRatio",
+    rows = pkpl_data$TRT01A == "50mg"
+  ),
+  .pkpl_ratio_rows(
+    "Metab-DrugA Plasma", "TRT01A: 10mg", "TRatio",
+    rows = pkpl_data$TRT01A == "50mg", divisor = 4
+  )
 )
 
 describe("l_pkpl01 (rlistings not installed)", {
@@ -72,6 +100,49 @@ describe("l_pkpl01", {
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
+  it("shows a later dose profile's value rather than a leading NA", {
+    # A ratio is missing for any dose profile where either side could not be
+    # computed, and the first profile is often one of them.  Taking the first row
+    # regardless left the listing blank for a subject that does have a value.
+    multi <- do.call(rbind, lapply(c("S1", "S2"), function(s) {
+      transform(
+        pkpl_data[pkpl_data$USUBJID == s, ][rep(1, 4), ],
+        AVAL = c(NA, NA, 7, 9)
+      )
+    }))
+    out <- l_pkpl01(multi)[[1]]
+    expect_equal(as.numeric(out[["Cmax"]]), c(7, 7))
+  })
+
+  it("agrees with the summary table and the box plot on which row it shows", {
+    # The three outputs collapse the same repeated rows independently: the
+    # listing pivots, the table dedups, the plot dedups after dropping missing
+    # values.  When they disagreed, a subject appeared with a value in one, blank
+    # in the second and missing from the third's n -- on identical input.
+    multi <- do.call(rbind, lapply(c("S1", "S2"), function(s) {
+      transform(
+        pkpl_data[pkpl_data$USUBJID == s & pkpl_data$PARAM == "Cmax", ][rep(1, 3), ],
+        AVAL = c(NA, 7, 9)
+      )
+    }))
+
+    listed <- as.numeric(l_pkpl01(multi)[[1]][["Cmax"]])
+    tabled <- t_pkpt03_col(multi, list_vars = character(0), strat_var = "PARAM")[[1]]
+    plotted <- p_pkpg03_boxp(multi)[[1]]$data$AVAL
+
+    expect_equal(listed, c(7, 7))
+    expect_equal(as.integer(tabled$n), 2L)
+    expect_equal(as.numeric(tabled$Mean), 7)
+    expect_setequal(plotted, c(7, 7))
+  })
+
+  it("still reports NA when every row for a subject is missing", {
+    all_na <- transform(
+      pkpl_data[rep(1, 3), ], AVISIT = paste("Cycle", 1:3), AVAL = NA_real_
+    )
+    expect_true(is.na(l_pkpl01(all_na)[[1]][["Cmax"]]))
+  })
+
   it("handles multi-interval ADPP (duplicate PARAM rows per subject) without error", {
     # Simulate ADPP with two dose intervals: same USUBJID+PARAM appears twice
     dup_data <- rbind(pkpl_data, pkpl_data)
@@ -85,64 +156,204 @@ describe("l_pkpl01", {
 })
 
 describe("l_pkpl01_mp", {
-  it("filters to metabolite rows via METABFL (preferred path)", {
-    result <- l_pkpl01_mp(pkpl_metab_data)
-    # Only Metab-DrugA rows — listing name contains "Metab"
-    expect_true(all(grepl("Metab", names(result), ignore.case = TRUE)))
-  })
+  listings <- function(data = mp_adpp_fixture(), ...) {
+    l_pkpl01_mp(data, ...)
+  }
 
-  it("falls back to PPCAT grep when METABFL absent", {
-    data_ppcat <- pkpl_data
-    data_ppcat$PPCAT <- ifelse(
-      data_ppcat$TRT01A == "50mg", "Metab-DrugA", "DrugA"
-    )
-    data_ppcat <- data_ppcat[, setdiff(names(data_ppcat), "METABFL")]
-    result <- l_pkpl01_mp(data_ppcat)
-    expect_type(result, "list")
+  it("lists the M/P ratio rows and names the parent in the listing key", {
+    result <- listings()
+    expect_length(result, 2)
+    expect_true(all(grepl("RATIO: Metab-DrugA / DrugA / PPSPEC: PLASMA", names(result))))
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("falls back to PARAM grep when METABFL and PPCAT absent", {
-    data_param <- pkpl_data
-    data_param$PARAM <- ifelse(
-      data_param$TRT01A == "50mg",
-      paste0("Metab-", data_param$PARAM),
-      data_param$PARAM
+  it("shows configured values under explicit M/P column headers", {
+    listing <- listings()[[1]]
+    expect_equal(as.numeric(listing[["M/P Cmax"]]), c(0.5, 0.3))
+    expect_match(
+      formatters::var_labels(listing)[["M/P Cmax"]], "Metabolite/Parent Ratio", fixed = TRUE
     )
-    data_param <- data_param[,
-      setdiff(names(data_param), c("METABFL", "PPCAT"))
-    ]
-    result <- l_pkpl01_mp(data_param)
-    expect_type(result, "list")
-    purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("stops with informative error when no metabolite data found", {
-    data_no_metab <- pkpl_data[, setdiff(names(pkpl_data), "METABFL")]
-    expect_error(l_pkpl01_mp(data_no_metab), "no metabolite data found")
+  it("keeps both dose profiles without pooling subject values", {
+    result <- listings()
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(0.5, 0.3))
+    expect_equal(as.numeric(dose2[["M/P Cmax"]]), c(0.25, 0.75))
+    expect_false(any(c("Cmax", "AUClast") %in% names(dose1)))
+  })
+
+  it("lists changed ADPP ratios without recalculating ordinary values", {
+    data <- mp_adpp_fixture()
+    selected <- !is.na(data$PPANMETH)
+    data$AVAL[selected] <- data$AVAL[selected] + 2
+    result <- listings(data)
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(2.5, 2.3))
+  })
+
+  it("keeps shared-label dose profiles separate using DOSNOA", {
+    data <- mp_same_label_fixture(dose_numbers = TRUE)
+    result <- l_pkpl01_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSNOA: 1$", names(result))]]
+    dose2 <- result[[grep("DOSNOA: 2$", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(NA_real_, 0.3))
+    expect_equal(as.numeric(dose2[["M/P Cmax"]]), c(0.25, 0.75))
+    expect_equal(as.character(dose1$USUBJID), c("S1", "S2"))
+    expect_equal(as.character(dose2$USUBJID), c("S1", "S2"))
+  })
+
+  it("keeps shared-label dose profiles separate using DOSEA", {
+    data <- mp_same_label_fixture(dose_numbers = FALSE)
+    result <- l_pkpl01_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSEA: 10$", names(result))]]
+    dose2 <- result[[grep("DOSEA: 20$", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(NA_real_, 0.3))
+    expect_equal(as.numeric(dose2[["M/P Cmax"]]), c(0.25, 0.75))
+    expect_equal(as.character(dose1$USUBJID), c("S1", "S2"))
+    expect_equal(as.character(dose2$USUBJID), c("S1", "S2"))
+  })
+
+  it("keeps dose amounts varying only between subjects in the same comparison", {
+    data <- mp_adpp_fixture()
+    data$DOSEA <- ifelse(data$USUBJID == "S1", 10, 20)
+    data$TRT01A <- paste0(data$DOSEA, "mg")
+    result <- l_pkpl01_mp(data)
+    expect_length(result, 2)
+    expect_false(any(grepl("DOSEA:", names(result), fixed = TRUE)))
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    expect_setequal(as.character(dose1$TRT01A), c("10mg", "20mg"))
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(0.5, 0.3))
+  })
+
+  it("displays ratios whose reference analyte includes square brackets", {
+    for (reference in c("[PARAM: [14C]-DrugA]", "[reference: PARAM=[14C]-DrugA]")) {
+      data <- mp_adpp_fixture()
+      data$PPANMETH <- sub("[PARAM: DrugA]", reference, data$PPANMETH, fixed = TRUE)
+      result <- l_pkpl01_mp(data)
+      expect_length(result, 2)
+      expect_true(all(grepl("Metab-DrugA / [14C]-DrugA", names(result), fixed = TRUE)))
+      dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+      expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(0.5, 0.3))
+    }
+  })
+
+  it("uses explicitly selected ADPP value and unit columns", {
+    data <- transform(mp_adpp_fixture(), PPSTRESN = AVAL + 1)
+    result <- listings(data, value_var = "PPSTRESN", unit_var = "PPSTRESU")
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    expect_equal(as.numeric(dose1[["M/P Cmax"]]), c(1.5, 1.3))
+  })
+
+  it("errors instead of listing raw values when no ratios were configured", {
+    expect_error(
+      listings(subset(mp_adpp_fixture(), PPCAT == "DrugA")),
+      "l_pkpl01_mp: no ratio parameters found.*Parameter Selection > Ratios"
+    )
+  })
+
+  it("does not treat mean-residence-time parameters as ratios", {
+    mrt <- transform(
+      pkpl_data,
+      PARAMCD = rep(c("MRTLST", "MRTIFO"), 4),
+      PPANMETH = NA_character_
+    )
+    expect_error(listings(mrt), "no ratio parameters found")
   })
 })
 
 describe("l_pkpl04_mp", {
-  it("returns a named list of listing_df objects", {
-    result <- l_pkpl04_mp(pkpl_data)
-    expect_type(result, "list")
+  it("lists treatment ratios, the complement of the M/P ones", {
+    result <- l_pkpl04_mp(pkpl_ratio_data)
+    expect_setequal(
+      names(result),
+      c(
+        "RATIO: 50mg / 10mg / PPCAT: DrugA Plasma / PPSPEC: SERUM",
+        "RATIO: 50mg / 10mg / PPCAT: Metab-DrugA Plasma / PPSPEC: SERUM"
+      )
+    )
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("has PARAM as a key (grouping) column", {
-    result <- l_pkpl04_mp(pkpl_data)[[1]]
-    # l_pkpl04_mp has PARAM in grouping_vars so it appears in the listing
-    expect_true(length(result) > 0)
-    expect_s3_class(result, "listing_df")
+  it("keeps each analyte's treatment ratio in its own listing", {
+    # "50mg / 10mg" names the groups being compared, not the analyte, so it is
+    # the same label for the parent and for the metabolite.  Splitting on it
+    # alone put both in one column, where pivot_wider keeps a single value per
+    # subject: half the ratios were dropped and the survivors came from whichever
+    # analyte happened to have a value, with nothing marking which.
+    result <- l_pkpl04_mp(pkpl_ratio_data)
+    parent <- result[["RATIO: 50mg / 10mg / PPCAT: DrugA Plasma / PPSPEC: SERUM"]]
+    metab  <- result[["RATIO: 50mg / 10mg / PPCAT: Metab-DrugA Plasma / PPSPEC: SERUM"]]
+
+    # Both subjects on 50mg appear in both listings, at that analyte's own values.
+    expect_equal(as.character(parent[["USUBJID"]]), c("S3", "S4"))
+    expect_equal(as.character(metab[["USUBJID"]]), c("S3", "S4"))
+    expect_equal(as.numeric(parent[["TRatio Cmax"]]), c(10, 11) / 2)
+    expect_equal(as.numeric(metab[["TRatio Cmax"]]), c(10, 11) / 4)
   })
 
-  it("splits by PPCAT/PPSPEC — consistent with l_pkpl01", {
-    two_specs <- rbind(
-      pkpl_data,
-      transform(pkpl_data, PPSPEC = "URINE")
+  it("keeps both dose profiles of each configured treatment ratio", {
+    data <- subset(mp_adpp_fixture(), !is.na(PPANMETH))
+    data$PPANMETH <- sub("PARAM: DrugA", "TRT01A: 5mg", data$PPANMETH, fixed = TRUE)
+    data$PARAM <- sub("M/P", "Treatment", data$PARAM, fixed = TRUE)
+    result <- l_pkpl04_mp(data)
+
+    expect_length(result, 2)
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]
+    dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]
+    expect_equal(as.numeric(dose1[["Treatment Cmax"]]), c(0.5, 0.3))
+    expect_equal(as.numeric(dose2[["Treatment Cmax"]]), c(0.25, 0.75))
+  })
+
+  it("keeps shared-label treatment-ratio profiles separate using DOSNOA", {
+    data <- mp_same_label_fixture(dose_numbers = TRUE)
+    data$PPANMETH <- sub("PARAM: DrugA", "TRT01A: Placebo", data$PPANMETH, fixed = TRUE)
+    data$PARAM <- sub("M/P", "Treatment", data$PARAM, fixed = TRUE)
+    result <- l_pkpl04_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSNOA: 1$", names(result))]]
+    dose2 <- result[[grep("DOSNOA: 2$", names(result))]]
+    expect_equal(as.numeric(dose1[["Treatment Cmax"]]), c(NA_real_, 0.3))
+    expect_equal(as.numeric(dose2[["Treatment Cmax"]]), c(0.25, 0.75))
+  })
+
+  it("keeps shared-label treatment-ratio profiles separate using DOSEA", {
+    data <- mp_same_label_fixture(dose_numbers = FALSE)
+    data$PPANMETH <- sub("PARAM: DrugA", "TRT01A: Placebo", data$PPANMETH, fixed = TRUE)
+    data$PARAM <- sub("M/P", "Treatment", data$PARAM, fixed = TRUE)
+    result <- l_pkpl04_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSEA: 10$", names(result))]]
+    dose2 <- result[[grep("DOSEA: 20$", names(result))]]
+    expect_equal(as.numeric(dose1[["Treatment Cmax"]]), c(NA_real_, 0.3))
+    expect_equal(as.numeric(dose2[["Treatment Cmax"]]), c(0.25, 0.75))
+  })
+
+  it("excludes metabolite/parent ratios and raw parameter rows", {
+    cols <- names(l_pkpl04_mp(pkpl_ratio_data)[[1]])
+    expect_true(any(grepl("TRatio", cols)))
+    expect_false(any(grepl("MRatio", cols)))
+    expect_false(any(grepl("^Cmax|^AUClast", cols)))
+  })
+
+  it("errors when the data holds only metabolite/parent ratios", {
+    mp_only <- rbind(
+      transform(pkpl_data, PPANMETH = NA_character_),
+      .pkpl_ratio_rows("Metab-DrugA Plasma", "PARAM: DrugA Plasma", "MRatio")
     )
-    result <- l_pkpl04_mp(two_specs)
-    expect_equal(length(result), 2)
+    expect_error(
+      l_pkpl04_mp(mp_only),
+      "none are treatment ratios.*only metabolite/parent ratios were found"
+    )
+  })
+
+  it("errors instead of listing raw rows when no ratios were configured", {
+    expect_error(
+      l_pkpl04_mp(transform(pkpl_data, PPANMETH = NA_character_)),
+      "l_pkpl04_mp: no ratio parameters found"
+    )
   })
 })
