@@ -35,8 +35,10 @@ changed since the currently supported aNCA version:
 2. Read upstream NEWS, source, tests, and linked issues for relevant changes;
    classify each as irrelevant, monitor, compatibility risk, or upgrade
    candidate.
-3. For material items, name affected aNCA paths and create/link a follow-up
-   issue with the decision: align now, defer, or retain current support.
+3. Use [#481](https://github.com/pharmaverse/aNCA/issues/481) as the continuing
+   tracker for next-release PKNCA items: annotate/link the relevant item and
+   decision there. Create a separate linked issue only for immediate,
+   independently actionable work that cannot wait for the next release.
 4. Revisit the register at the next release; do not silently treat an upstream
    main change as a supported dependency version.
 
