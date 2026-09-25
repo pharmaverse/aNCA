@@ -4,7 +4,7 @@ expected_df <- data.frame(
   DOSETRT = "A",
   AVAL = 1:3,
   AVALU = "ng/mL",
-  DOSE = 1:3,
+  DOSEA = 1:3,
   ADOSEDUR = 0,
   AFRLT = 1:3,
   ATPTREF = factor(1:3)
@@ -15,7 +15,7 @@ var_labels(expected_df) <- c(
   "Name of Treatment",
   "Analysis Value",
   "Analysis Value Unit",
-  "DOSE",
+  "Actual Dose Amount",
   "Actual Duration of Treatment Dose",
   "Act. Rel. Time from Analyte First Dose",
   "Analysis Timepoint Reference"
@@ -71,6 +71,18 @@ describe("apply_mapping", {
         req_mappings = names(expected_df)
       ),
       "Unmapped required columns detected: AVAL"
+    )
+  })
+
+  it("requires DOSEA to create PKNCA dose data", {
+    mapping["DOSEA"] <- ""
+    expect_error(
+      apply_mapping(
+        dataset = test_df,
+        mapping = mapping,
+        desired_order = desired_order
+      ),
+      "Unmapped required columns detected: DOSEA"
     )
   })
 
@@ -130,6 +142,52 @@ describe("apply_mapping", {
       apply_mapping(dataset = test_df, mapping = mapping, desired_order = desired_order),
       "Conflictive column names between input and mapping names are removed: DOSETRT"
     )
+  })
+})
+
+describe("imported optional mappings", {
+  it("keeps available grouping values and skips only missing values", {
+    shiny_dir <- system.file("shiny", package = "aNCA")
+    source(file.path(shiny_dir, "modules", "tab_data", "data_mapping.R"),
+           local = TRUE)
+
+    result <- .split_imported_mapping_values(
+      values = c("SPECIES", "GENDER"),
+      valid_values = "SPECIES"
+    )
+
+    expect_equal(result$selected, "SPECIES")
+    expect_equal(result$missing, "GENDER")
+  })
+
+  it("keeps numeric constants when numeric mapping values are allowed", {
+    shiny_dir <- system.file("shiny", package = "aNCA")
+    source(file.path(shiny_dir, "modules", "tab_data", "data_mapping.R"),
+           local = TRUE)
+
+    result <- .split_imported_mapping_values(
+      values = c("3.5", "MISSING"),
+      valid_values = character(0),
+      allow_create_numeric = TRUE
+    )
+
+    expect_equal(result$selected, "3.5")
+    expect_equal(result$missing, "MISSING")
+  })
+
+  it("preconfigures all supported grouping candidates in preclinical templates", {
+    candidates <- c(
+      "TRTA", "TRTAN", "ACTARM", "TRT01A", "TRT01P", "RACE", "SEX",
+      "GROUP", "DOSFRM", "GENDER", "SPECIES", "STRAIN", "NOMDOSE",
+      "DOSEP", "COHORT", "PART", "PERIOD", "FEDSTATE"
+    )
+    templates <- c("preclinical_SM_template.yaml", "preclinical_LM_template.yaml")
+
+    for (template in templates) {
+      path <- system.file("www", "templates", template, package = "aNCA")
+      mapping <- yaml::read_yaml(path)$mapping$Grouping_Variables
+      expect_setequal(mapping, candidates)
+    }
   })
 })
 

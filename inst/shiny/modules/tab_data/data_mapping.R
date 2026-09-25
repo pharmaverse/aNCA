@@ -15,7 +15,7 @@ NON_STD_MAPPING_INFO <- data.frame(
   mapping_alternatives = c(
     paste0(
       "TRTA, TRTAN, ACTARM, TRT01A, TRT01P, RACE, SEX, GROUP, DOSFRM, ",
-      "STRAIN, DOSFRM, NOMDOSE, DOSEP, COHORT, PART, PERIOD, FEDSTATE"
+      "STRAIN, NOMDOSE, DOSEP, COHORT, PART, PERIOD, FEDSTATE"
     ),
     ""
   ),
@@ -170,6 +170,23 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   matched_indices
 }
 
+#' Split imported mapping values into available and missing entries.
+#' @param values Values stored in an imported mapping.
+#' @param valid_values Available dataset columns and predefined values.
+#' @param allow_create_numeric Whether numeric constants are valid mappings.
+#' @returns A list with `selected` and `missing` character vectors.
+#' @keywords internal
+#' @noRd
+.split_imported_mapping_values <- function(values, valid_values,
+                                           allow_create_numeric = FALSE) {
+  values <- values[values != ""]
+  available <- values %in% valid_values
+  if (allow_create_numeric) {
+    available <- available | grepl("^[0-9]+(\\.[0-9]+)?$", values)
+  }
+  list(selected = values[available], missing = values[!available])
+}
+
 #' Validate and apply a single mapping variable.
 #' @param var Variable name from MAPPING_INFO.
 #' @param val Value(s) from the imported mapping.
@@ -184,17 +201,11 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
   valid_values <- c(column_names, predefined)
 
   is_numeric_ok <- isTRUE(var_info$allow_create_numeric)
-  invalid <- val[val != "" & !val %in% valid_values]
-  if (is_numeric_ok) {
-    invalid <- invalid[!grepl("^[0-9]+(\\.[0-9]+)?$", invalid)]
-  }
-
-  if (length(invalid) > 0) {
-    return(paste0(var, " (", paste(invalid, collapse = ", "), ")"))
-  }
+  imported <- .split_imported_mapping_values(val, valid_values, is_numeric_ok)
+  selected <- imported$selected
 
   custom_numeric <- if (is_numeric_ok) {
-    val[!val %in% c(column_names, predefined)]
+    selected[!selected %in% c(column_names, predefined)]
   } else {
     character(0)
   }
@@ -207,15 +218,16 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
         "Mapping Columns" = c(column_names, custom_numeric),
         "Mapping Values" = predefined
       ),
-      selected = val
+      selected = selected
     )
   } else {
     updateSelectizeInput(
-      session, paste0("select_", var), selected = val
+      session, paste0("select_", var), selected = selected
     )
   }
 
-  NULL
+  if (length(imported$missing) == 0) return(NULL)
+  paste0(var, " (", paste(imported$missing, collapse = ", "), ")")
 }
 
 .process_imported_mapping <- function(mapping, adnca_data, session) {

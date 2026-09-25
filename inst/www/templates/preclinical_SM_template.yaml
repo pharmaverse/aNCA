@@ -1,3 +1,23 @@
+mapping:
+  Grouping_Variables:
+    - TRTA
+    - TRTAN
+    - ACTARM
+    - TRT01A
+    - TRT01P
+    - RACE
+    - SEX
+    - GROUP
+    - DOSFRM
+    - GENDER
+    - SPECIES
+    - STRAIN
+    - NOMDOSE
+    - DOSEP
+    - COHORT
+    - PART
+    - PERIOD
+    - FEDSTATE
 settings:
   method: lin up/log down
   bioavailability: f_aucinf.obs
@@ -311,4 +331,3 @@ settings:
       - tmax
       - vz.obs
       - vss.obs
-      
