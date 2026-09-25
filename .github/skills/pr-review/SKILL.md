@@ -22,14 +22,13 @@ to disguise an unsupported Issue.
 
 ## Pull-request title
 
-Confirm that the title follows `TYPE: concise outcome`: an accurate uppercase
-type (`FEATURE`, `FIX`, `REFACTOR`, `SKILL`, `DOCS`, `CI`, or `MAINT`) followed
-by a short description of the primary change. It must describe the change, not
-only an issue number, process state, or generic activity. For example:
+Confirm that the title follows `TYPE: concise outcome (#issue)`: an accurate
+uppercase type (`FEATURE`, `FIX`, `REFACTOR`, `SKILL`, `DOCS`, `CI`, or `MAINT`),
+a short primary outcome, and the issue number at the end. For example:
 
 ```text
-FIX: Prevent partial ZIP exports
-SKILL: Simplification-first development
+FIX: Prevent partial ZIP exports (#1452)
+SKILL: Simplification-first development (#1501)
 ```
 
 Raise a **Suggestion** when the title is unclear or does not follow this

@@ -1,4 +1,4 @@
-<!-- PR title: TYPE: concise outcome (for example, FIX: Prevent partial ZIP exports) -->
+<!-- PR title: TYPE: concise outcome (#issue), e.g. FIX: Prevent partial ZIP exports (#1452) -->
 
 ## Issue
 
