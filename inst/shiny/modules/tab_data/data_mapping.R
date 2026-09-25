@@ -254,7 +254,10 @@ MAPPING_BY_SECTION <- MAPPING_BY_SECTION[sections_order]
 #'
 #' @param id The module ID.
 #' @param adnca_data A reactive expression that returns the dataset to be processed.
-#' @param on_submit A callback function to be executed when the submit button is clicked.
+#' @param imported_mapping Reactive expression containing imported settings mapping.
+#' @param trigger Reactive value used to submit the current mapping.
+#' @param on_mapping_complete Callback called when a mapping attempt is no longer busy.
+#' @param on_duplicate_cancel Callback called when the duplicate modal is cancelled.
 #'
 #' @returns A list containing:
 #' \item{processed_data}{A reactive expression that returns the processed dataset.}
@@ -311,7 +314,9 @@ data_mapping_ui <- function(id) {
   )
 }
 
-data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
+data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
+                                on_mapping_complete = function() {},
+                                on_duplicate_cancel = function() {}) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -423,7 +428,8 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
           }
           showNotification(conditionMessage(e), type = "error", duration = NULL)
           NULL
-        }
+        },
+        finally = on_mapping_complete()
       )
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
@@ -456,25 +462,52 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       tryCatch(
         {
           result <- aNCA:::annotate_duplicates(mapped_data(), dup_rows)
+          on_mapping_complete()
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
-          if (!isTRUE(session$userData$auto_replay_active)) {
-            removeModal()
-          }
-          df_duplicates(e$duplicate_data)
+          duplicate_data <- e$duplicate_data
+          on_mapping_complete()
+          session$onFlushed(
+            function() df_duplicates(duplicate_data),
+            once = TRUE
+          )
           NULL
         }
       )
     }) %>%
       bindEvent(
-        list(mapped_data(), resolved_time_duplicate_rows()),
+        # Key on trigger() so this re-runs on every submit, even when the
+        # mapping (and thus mapped_data()) is unchanged -- otherwise the
+        # on_mapping_complete() callback that closes the loading modal is never
+        # even enqueued on the default "next-next" path. This is necessary but
+        # not sufficient: the parent (tab_data.R) must also defer incrementing
+        # the trigger so removeModal() lands in a later flush than the modal's
+        # showModal(), otherwise the hide races the Bootstrap fade-in and is
+        # dropped. Keep resolved_time_duplicate_rows() so resolving duplicates
+        # re-runs it.
+        list(trigger(), mapped_data(), resolved_time_duplicate_rows()),
         ignoreInit = FALSE
       )
 
     observeEvent(input$keep_selected_btn, {
       req(df_duplicates())
       selected <- getReactableState("duplicate_modal_table", "selected")
+
+      if (is.null(selected) || length(selected) == 0) {
+        showModal(modalDialog(
+          title = "No rows selected",
+          "No rows are selected. Exclude all duplicate rows?",
+          easyClose = FALSE,
+          footer = tagList(
+            actionButton(
+              ns("confirm_exclude_all"), "Exclude all", class = "btn-danger"
+            ),
+            actionButton(ns("cancel_exclude_all"), "Go back")
+          )
+        ))
+        return()
+      }
 
       # Derive rows to EXCLUDE (all duplicate rows the user did NOT select)
       dup_data <- df_duplicates()
@@ -506,8 +539,39 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
       )
     })
 
-    observeEvent(df_duplicates(), {
+    observeEvent(input$confirm_exclude_all, {
+      req(df_duplicates())
+      dup_data <- df_duplicates()
+      prev <- resolved_time_duplicate_rows()
+      new_exclusions <- unique(c(prev, dup_data$ROWID))
+
+      tryCatch(
+        {
+          aNCA:::annotate_duplicates(mapped_data(), new_exclusions)
+          resolved_time_duplicate_rows(new_exclusions)
+          removeModal()
+        },
+        time_duplicate_error = function(e) {
+          resolved_time_duplicate_rows(new_exclusions)
+          df_duplicates(e$duplicate_data)
+          showNotification(
+            "Some duplicate rows remain unresolved. Please select rows to keep.",
+            type = "warning"
+          )
+        }
+      )
+    })
+
+    observeEvent(input$cancel_exclude_all, {
       removeModal()
+      session$onFlushed(
+        function() show_duplicate_modal(),
+        once = TRUE
+      )
+    })
+
+    show_duplicate_modal <- function() {
+      req(df_duplicates())
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -523,18 +587,28 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger) {
           ),
           easyClose = FALSE,
           footer = tagList(
-            actionButton(ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"),
+            actionButton(
+              ns("keep_selected_btn"), "Keep Selected", class = "btn-primary"
+            ),
             actionButton(ns("cancel_duplicate_modal"), "Cancel")
           ),
           size = "l"
         )
+      )
+    }
+
+    observeEvent(df_duplicates(), {
+      removeModal()
+      session$onFlushed(
+        function() show_duplicate_modal(),
+        once = TRUE
       )
     })
 
     observeEvent(input$cancel_duplicate_modal, {
       df_duplicates(NULL)
       removeModal()
-      shinyjs::enable(selector = "#data-next_step")
+      on_duplicate_cancel()
     })
 
     output$duplicate_modal_table <- renderReactable({
