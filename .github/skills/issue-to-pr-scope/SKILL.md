@@ -13,8 +13,10 @@ Use when opening, reviewing, or finalizing a PR linked to an issue.
    unit/integration test, Shiny workflow, SAT, CI, or manual check.
 3. Move out-of-scope improvements to a linked follow-up issue; do not imply
    they are delivered by the PR.
-4. Ensure the PR title/description states the primary outcome, scope, tests,
-   deliberate exclusions, and any human verification still needed.
+4. Ensure the PR description states scope, tests, deliberate exclusions, and
+   any human verification still needed. Use the `Create a PR` section of
+   `agent-workflow` for the title and `pr-review` to review it; this workflow
+   does not redefine title rules.
 
 **Output:** a compact AC-to-implementation-to-evidence table in the PR
 description or review. Use `pr-review` for findings and define SAT evidence
