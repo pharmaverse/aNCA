@@ -369,6 +369,66 @@ describe("update_main_intervals", {
     expect_false(all(is.na(result$intervals$impute)))
   })
 
+  it("does not add end_conc_drop when drop_end_conc is FALSE", {
+    result <- update_main_intervals(
+      data, parameters, int_parameters,
+      start_impute = FALSE, drop_end_conc = FALSE
+    )
+    expect_false(any(grepl("end_conc_drop", result$intervals$impute), na.rm = TRUE))
+  })
+
+  it("adds end_conc_drop only to non-last main intervals per group", {
+    result <- update_main_intervals(
+      data, parameters, int_parameters,
+      start_impute = FALSE, drop_end_conc = TRUE
+    )
+    main_rows <- result$intervals %>% filter(type_interval == "main")
+
+    # Multi-dose subjects (2, 3, 8) have two main intervals per conc group.
+    # The earlier interval (start == 0) is followed by another dose -> tagged.
+    non_last <- main_rows %>% filter(USUBJID %in% c(2, 3, 8), start == 0)
+    expect_true(nrow(non_last) > 0)
+    expect_true(all(grepl("end_conc_drop", non_last$impute)))
+
+    # The last interval per group (start == 5) has no following dose -> untouched.
+    last_multi <- main_rows %>% filter(USUBJID %in% c(2, 3, 8), start == 5)
+    expect_true(nrow(last_multi) > 0)
+    expect_false(any(grepl("end_conc_drop", last_multi$impute), na.rm = TRUE))
+
+    # Single-dose subjects have only one main interval per group -> untouched.
+    single <- main_rows %>% filter(USUBJID %in% c(1, 4, 5, 6, 7))
+    expect_true(nrow(single) > 0)
+    expect_false(any(grepl("end_conc_drop", single$impute), na.rm = TRUE))
+  })
+
+  it("does not add end_conc_drop to manual (partial) intervals", {
+    int_parameters_partial <- data.frame(
+      parameter = "AUCINT",
+      start_auc = c(0, 1),
+      end_auc = c(1, 2)
+    )
+    result <- update_main_intervals(
+      data, parameters, int_parameters_partial,
+      start_impute = FALSE, drop_end_conc = TRUE
+    )
+    manual_rows <- result$intervals %>% filter(type_interval == "manual")
+    expect_false(any(grepl("end_conc_drop", manual_rows$impute), na.rm = TRUE))
+  })
+
+  it("appends end_conc_drop after existing impute methods", {
+    result <- update_main_intervals(
+      data, parameters, int_parameters,
+      start_impute = TRUE, drop_end_conc = TRUE
+    )
+    main_with_impute <- result$intervals %>%
+      filter(type_interval == "main", !is.na(impute), grepl(",", impute))
+    # Where an existing method was present, end_conc_drop is appended at the end
+    if (nrow(main_with_impute) > 0) {
+      expect_true(all(grepl("end_conc_drop$", main_with_impute$impute)))
+    }
+    succeed()
+  })
+
   it("handles empty parameter selections and empty AUC data", {
     # Test with empty parameter list
     result_no_params <- update_main_intervals(data, list(),
