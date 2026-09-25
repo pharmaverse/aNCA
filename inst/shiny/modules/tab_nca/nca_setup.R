@@ -144,25 +144,6 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
       final_data
     })
 
-    intervals_were_empty <- reactiveVal(FALSE)
-    observeEvent(list(settings(), parameters_output$selections()), {
-      # Wait for the parameter matrix to settle, then report only the
-      # transition into an empty-interval state.
-      req(nrow(parameters_output$types_df()) > 0)
-      intervals_are_empty <- nrow(processed_pknca_data()$intervals) == 0
-
-      if (intervals_are_empty && !intervals_were_empty() &&
-          !isTRUE(session$userData$auto_replay_active)) {
-        showNotification(
-          "All intervals were filtered. Please revise your settings",
-          type = "warning",
-          duration = 10
-        )
-      }
-
-      intervals_were_empty(intervals_are_empty)
-    }, ignoreInit = TRUE)
-
     # Keep the post processing ratio calculations requested by the user
     int_parameters <- reactive(settings()$int_parameters)
     ratio_table <- ratios_table_server(

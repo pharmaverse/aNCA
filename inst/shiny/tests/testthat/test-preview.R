@@ -60,24 +60,4 @@ describe("Tests for app preview", {
     expect_null(app$get_value(output = "nca-nca_results-myresults-table"))
   })
 
-  it("warns immediately when parameter selections remove all intervals", {
-    app <- AppDriver$new(name = "app_preview_empty_intervals")
-
-    app$click("data-next_step")
-    app$click("data-next_step")
-    app$wait_for_idle(timeout = 5000)
-    app$click("data-next_step")
-    app$wait_for_idle(timeout = 5000)
-
-    app$set_inputs("page" = "nca")
-    app$wait_for_js(
-      "$('#nca-nca_setup-nca_setup_parameter-clear_all').length > 0",
-      timeout = 5000
-    )
-    app$click("nca-nca_setup-nca_setup_parameter-clear_all")
-    app$wait_for_js(
-      "$('.shiny-notification-warning').text().includes('All intervals were filtered. Please revise your settings')",
-      timeout = 5000
-    )
-  })
 })
