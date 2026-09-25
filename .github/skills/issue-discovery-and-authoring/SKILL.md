@@ -8,12 +8,16 @@ description: Create an evidence-based aNCA issue for a defect, requirement gap, 
 Use when an observation needs a tracked decision or change. Do not create an
 issue for an already-resolved question or an unsupported guess.
 
-1. Inspect the relevant path, tests, issues, and PRs. Separate observed facts
-   from risks and state missing evidence.
+1. Inspect the relevant path, tests, issues, PRs, and applicable project
+   documentation. For feature intent or validation context, consult relevant
+   website/vignette sources such as `vignettes/validations.Rmd` or
+   `vignettes/roadmap.Rmd` when useful; they inform scope, not limit ideas.
+   Separate observed facts from risks and state missing evidence.
 2. Classify the work: defect, incomplete requirement, validation gap, refactor,
    or enhancement. Search for duplicates and link related work.
-3. Use the repository issue template. State impact, affected path, acceptance
-   criteria, evidence needed, and any validation/SAT implication.
+3. Use the repository issue templates required by `AGENTS.md`. State impact,
+   affected path, acceptance criteria, evidence needed, and any validation/SAT
+   implication.
 4. Split independently reviewable work into linked follow-up issues; do not
    hide unrelated improvements in one issue.
 
