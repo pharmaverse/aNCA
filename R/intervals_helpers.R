@@ -250,6 +250,11 @@ interval_remove_impute.data.frame <- function(data,
 
   assert_subset(target_params, all_param_options)
 
+  # Callers may pass the full metadata parameter list while the intervals only
+  # carry a subset of those columns. Restrict to columns that actually exist so
+  # downstream column selection/assignment never references missing columns.
+  target_params <- intersect(target_params, param_cols)
+
   # Identify the interval rows that need to be changed
   target_rows <- identify_target_rows(data, target_impute, target_params, target_groups)
   new_intervals <- data[target_rows, ]
