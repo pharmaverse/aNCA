@@ -43,11 +43,9 @@
 
 ## Features
 
-* Additional grouping variable auto-mapping now suggests `GENDER` and
-  `SPECIES` in addition to the existing grouping candidates (#1486). The
-  preclinical settings templates restore every supported grouping candidate
+* Preclinical settings templates now restore configured grouping candidates
   present in the uploaded data and report missing optional candidates without
-  discarding the available ones.
+  discarding the available ones, including `GENDER` and `SPECIES` (#1486)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
