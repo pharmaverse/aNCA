@@ -127,6 +127,10 @@ describe("calculate_ratios", {
 
     expect_equal(ratios$PPORRES, c(2 / 3, 4 / 5) * 2)
     expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
+    expect_equal(
+      unique(ratios$PPANMETH),
+      "CMAX TO CMAX [reference: PARAM=A; multiplier: 2]"
+    )
   })
 
   it("handles unit conversions when needed and possible to convert", {
@@ -352,6 +356,10 @@ describe("calculate_ratios", {
     expect_equal(nrow(ratios), nrow(ex_subjects))
     expect_equal(sort(ratios$PPORRES), sort(ex_subjects$PPORRES / iv_mean))
     expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+    expect_equal(
+      unique(ratios$PPANMETH),
+      "CMAX TO mean(CMAX) [reference: ROUTE=intravascular]"
+    )
   })
 
   it("if-needed uses individual match when available", {
@@ -412,6 +420,10 @@ describe("calculate_ratios", {
     expect_equal(nrow(ratios), nrow(ex_subjects))
     expect_equal(sort(ratios$PPORRES), sort(ex_subjects$PPORRES / iv_mean))
     expect_true(all(grepl("\\(mean\\)", ratios$PPTESTCD)))
+    expect_equal(
+      unique(ratios$PPANMETH),
+      "CMAX TO mean(CMAX) [reference: ROUTE=intravascular]"
+    )
   })
 
   it("if-needed uses individual where available and aggregates the rest", {
@@ -543,6 +555,10 @@ describe("calculate_table_ratios", {
     # RATIO2 should be exactly 100x RATIO1
     expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
     expect_equal(nrow(r1), nrow(r2))
+    expect_equal(
+      unique(r2$PPANMETH),
+      "CMAX TO CMAX [reference: PARAM=A; multiplier: 100]"
+    )
   })
 
 
