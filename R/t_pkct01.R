@@ -63,6 +63,7 @@
 #' }
 #'
 #' @importFrom stats sd median
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 t_pkct01 <- function( # nolint: cyclocomp_linter
   data,
@@ -83,7 +84,9 @@ t_pkct01 <- function( # nolint: cyclocomp_linter
   }
 
   if (!is.null(time_filter) && length(time_filter) > 0 && time_var %in% names(data)) {
+    column_labels <- var_labels(data)
     data <- data[as.character(data[[time_var]]) %in% as.character(time_filter), , drop = FALSE]
+    var_labels(data) <- column_labels
   }
 
   has_blq_col <- blq_var %in% names(data)

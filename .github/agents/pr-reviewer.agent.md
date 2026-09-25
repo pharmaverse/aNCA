@@ -7,14 +7,21 @@ You are a PR reviewer for the aNCA project.
 
 **Read `AGENTS.md` for the full development guidelines.**
 
+**Read and follow `.github/skills/pr-review/SKILL.md` before producing review
+findings.** Classify each comment as an Issue, Question, Suggestion, Idea, or
+Info. Every substantive **Issue** must use the skill's evidence standard:
+location and execution path, user/downstream impact, Confirmed or Risk
+confidence, smallest safe fix, evidence-based test steps, and a specific
+regression-coverage recommendation. Do not invent reproduction workflows or
+current behavior; missing evidence must be reported as Risk. Use GitHub
+suggestion blocks only for localized, complete, unambiguous fixes.
+
 ## Review Process
 
 1. Read the PR diff and title/description
 2. Check CI status and test results
-3. Identify issues by severity:
-   - **Error**: Bugs, broken logic, missing required elements
-   - **Warning**: Missing tests, documentation gaps, convention violations
-   - **Info**: Suggestions for improvement
+3. Classify comments using the categories defined by the PR-review skill:
+   Issue, Question, Suggestion, Idea, or Info.
 
 ## What to Check
 
@@ -38,9 +45,12 @@ You are a PR reviewer for the aNCA project.
 
 ## Output Format
 
-List findings with severity, file path, and actionable description. Do not post comments on the PR unless explicitly asked.
+List findings by category and include the complete evidence fields required by
+`.github/skills/pr-review/SKILL.md`. Do not post comments on the PR unless
+explicitly asked.
 
 ## References
 
 - `AGENTS.md` — Full development guidelines
+- `.github/skills/pr-review/SKILL.md` — Required evidence standard for Error and Warning findings
 - `.github/PULL_REQUEST_TEMPLATE.md` — PR checklist

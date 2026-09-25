@@ -1,5 +1,23 @@
 # Tests for shared TLG helpers in R/utils-tlg.R.
 
+describe("split_and_apply: annotation labels", {
+  it("preserves custom column labels and values after dropping incomplete split keys", {
+    data <- data.frame(PARAM = c("A", NA, "B", "A"), AVAL = c(2, 99, 8, 6))
+    attr(data$AVAL, "label") <- "Measured concentration"
+
+    expect_warning(
+      split <- split_and_apply(data, "PARAM", identity),
+      "1 row\\(s\\).*excluded"
+    )
+    expect_named(split, c("PARAM: A", "PARAM: B"))
+    expect_equal(as.numeric(split[[1]]$AVAL), c(2, 6))
+    expect_equal(as.numeric(split[[2]]$AVAL), 8)
+    for (part in split) {
+      expect_equal(parse_annotation(part, "Assay: !AVAL"), "Assay: Measured concentration")
+    }
+  })
+})
+
 describe(".select_stats", {
   # A minimal flat summary table: two key columns + a full stat block.
   flat <- data.frame(

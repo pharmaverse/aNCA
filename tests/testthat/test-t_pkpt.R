@@ -502,6 +502,37 @@ describe("t_pkpt label attributes", {
   labelled <- pkpt_data
   attr(labelled$PPCAT, "label") <- "Parameter Category"
 
+  it("preserves annotation labels and summary values through parameter and metabolite filters", {
+    norm <- transform(pkpt_data, PARAMCD = ifelse(PARAM == "Cmax", "CMAXD", PARAMCD))
+    uri <- transform(pkpt_data, PPSPEC = "URINE")
+    fallback <- pkpt_metab_data
+    fallback$METABFL <- NULL
+    fallback$PPCAT <- ifelse(fallback$TRT01A == "50mg", "Metab-DrugA", "DrugA")
+    cases <- list(
+      list(fun = t_pkpt03_col, data = pkpt_data, args = list(param_filter = "Cmax")),
+      list(fun = t_pkpt07_norm, data = norm, args = list(paramcd_filter = "CMAXD")),
+      list(fun = t_pkpt07_norm, data = norm, args = list(paramcd_filter = NULL)),
+      list(fun = t_pkpt08_uri, data = uri, args = list(param_filter = "Cmax")),
+      list(fun = t_pkpt03_MP_col, data = pkpt_metab_data, args = list(param_filter = "Cmax")),
+      list(fun = t_pkpt03_MP_col, data = fallback, args = list(param_filter = "Cmax"))
+    )
+    for (i in seq_along(cases)) {
+      case <- cases[[i]]
+      context <- paste("filter case", i)
+      attr(case$data$AVAL, "label") <- "Measured PK value"
+      attr(case$data$PARAM, "label") <- "PK parameter"
+      out <- do.call(case$fun, c(list(
+        data = case$data, title = "Metric: !AVAL", subtitle = "$PARAM", footnote = "!PARAM"
+      ), case$args))[[1]]
+      expect_equal(attr(out, "tlg_title"), "Metric: Measured PK value", info = context)
+      expect_equal(attr(out, "tlg_subtitle"), "Cmax", info = context)
+      expect_equal(attr(out, "tlg_footnote"), "PK parameter", info = context)
+      expected <- if (i <= 4) c(6, 10) else 10
+      expect_equal(as.numeric(out$Mean), expected, info = context)
+      expect_equal(as.numeric(out$n), rep(3, length(expected)), info = context)
+    }
+  })
+
   it("t_pkpt03_col attaches title, derived subtitle and footnote", {
     out <- t_pkpt03_col(labelled, title = "T", footnote = "F")
     expect_equal(attr(out[[1]], "tlg_title"), "T")

@@ -406,6 +406,26 @@ describe("PK parameter plot subtitles", {
     )
   )
 
+  it("retains column labels through filtering without changing plotted values", {
+    for (id in names(cases)) {
+      data <- cases[[id]]
+      data$AVAL[1] <- NA_real_
+      if ("DOSEA" %in% names(data)) data$DOSEA[3] <- 0
+      baseline <- do.call(get(id), list(data = data))[[1]]
+      attr(data$AVAL, "label") <- "Measured PK value"
+      if ("DOSEA" %in% names(data)) attr(data$DOSEA, "label") <- "Administered dose"
+      result <- do.call(get(id), list(data = data))[[1]]
+      expected_y <- if (id == "p_pkpg01_per") "Percent Dose Recovered (%)" else "Measured PK value"
+      expect_equal(result$labels$y, expected_y, info = id)
+      if (id == "p_pkpg02_doseprop") {
+        expect_equal(result$labels$x, "Administered dose (mg)")
+      }
+      value_col <- if ("AVAL" %in% names(result$data)) "AVAL" else "mean_val"
+      expect_equal(as.numeric(result$data[[value_col]]), as.numeric(baseline$data[[value_col]]),
+                   info = id)
+    }
+  })
+
   it("derives context and parameter-unit pairs for all six catalog entries", {
     catalog <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
     for (id in names(cases)) {

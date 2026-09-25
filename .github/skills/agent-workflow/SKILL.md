@@ -99,6 +99,32 @@ Agent will:
 - Identify which check failed (lint, tests, etc.)
 - Suggest fixes
 
+### Audit Contributor Checklist
+
+```
+Audit the Contributor checklist on PR #NNN
+```
+
+Agent will:
+- Use the `pr-contributor-checklist` skill
+- Check remote GitHub Actions jobs for CI-backed checklist items
+- Avoid installing R if it is not already available
+- Report completed, failing, waiting, not-applicable, and human-test items
+
+### Create a PR
+
+```
+Create a PR for #NNN
+```
+
+Agent will:
+- Use the title `TYPE: concise outcome (#NNN)`.
+- Use an accurate type: `FEATURE`, `FIX`, `REFACTOR`, `SKILL`, `DOCS`, `CI`, or
+  `MAINT`.
+- Keep the outcome terse and state the primary change, for example
+  `FIX: Prevent partial ZIP exports (#1452)`.
+- Use `.github/PULL_REQUEST_TEMPLATE.md` and link the issue in the description.
+
 ### Add Tests
 
 ```

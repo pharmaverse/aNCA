@@ -11,12 +11,13 @@
 #' path <- system.file("shiny/tests/testthat/dummy_simplified.csv", package = "aNCA")
 #' df <- read_pk(path)
 #'
+#' @importFrom tools file_ext
 #' @importFrom utils read.csv
 #' @export
 read_pk <- function(path) {
   if (!file.exists(path)) stop("File does not exist: ", path)
 
-  format <- tools::file_ext(path)
+  format <- file_ext(path)
   if (!format %in% names(readers))
     stop("Invalid file type. Accepted formats are ", paste(names(readers), collapse = ", "))
 

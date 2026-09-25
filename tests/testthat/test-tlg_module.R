@@ -4,6 +4,7 @@ local({
   # The module's error handler calls log_error(); the app attaches logger in app.R.
   library(logger)
   shiny_dir <- system.file("shiny", package = "aNCA")
+  source(file.path(shiny_dir, "functions", "utils-tlg.R"), local = TRUE)
   source(
     file.path(shiny_dir, "modules", "tab_tlg", "tlg_module.R"),
     local = TRUE
@@ -544,6 +545,18 @@ describe("render_graph_outputs: output IDs", {
     shiny::testServer(graph_mod, args = list(items = items), {
       html <- as.character(output$tlg_output$html)
       expect_true(grepl("PPCAT: DrugA", html, fixed = TRUE))
+    })
+  })
+
+  it("omits a redundant graph heading without changing the plot's split name", {
+    key <- "INTRAVENOUS DRIP.SERUM.DrugA.S1-01"
+    items <- setNames(list(structure(fake_plot(), tlg_group_header = FALSE)), key)
+    shiny::testServer(graph_mod, args = list(items = items), {
+      html <- as.character(output$tlg_output$html)
+      expect_false(grepl("<h4", html, fixed = TRUE))
+      expect_false(grepl(key, html, fixed = TRUE))
+      expect_match(html, "plot_1")
+      expect_equal(names(items), key)
     })
   })
 })

@@ -153,6 +153,7 @@
 #' }
 #'
 #' @importFrom stats sd median
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 t_pkpt03_col <- function(
   data,
@@ -171,7 +172,9 @@ t_pkpt03_col <- function(
   }
 
   if (!is.null(param_filter) && length(param_filter) > 0 && "PARAM" %in% names(data)) {
+    column_labels <- var_labels(data)
     data <- data[data$PARAM %in% param_filter, , drop = FALSE]
+    var_labels(data) <- column_labels
   }
 
   if (nrow(data) == 0) return(list(data.frame()))
@@ -258,6 +261,7 @@ t_pkpt03_MP_col <- function(data, ...) { # nolint: object_name_linter
 #' tables <- t_pkpt07_norm(adpp, paramcd_filter = c("CMAXD", "AUCLSTD", "MYPARAMD"))
 #' }
 #'
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 t_pkpt07_norm <- function(
   data,
@@ -272,6 +276,7 @@ t_pkpt07_norm <- function(
   subtitle       = NULL,
   footnote       = NULL
 ) {
+  column_labels <- var_labels(data)
   if (paramcd_var %in% names(data)) {
     if (!is.null(paramcd_filter)) {
       data <- data[data[[paramcd_var]] %in% paramcd_filter, , drop = FALSE]
@@ -288,6 +293,7 @@ t_pkpt07_norm <- function(
       "included. Ensure PARAMCD is exported from your NCA run to use this table."
     )
   }
+  var_labels(data) <- column_labels
   if (nrow(data) == 0) {
     stop(
       "t_pkpt07_norm: no dose-normalized parameters found in ADPP. ",
@@ -334,6 +340,7 @@ t_pkpt07_norm <- function(
 #' }
 #'
 #' @importFrom stats sd median
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 t_pkpt08_uri <- function(
   data,
@@ -348,6 +355,7 @@ t_pkpt08_uri <- function(
   subtitle    = NULL,
   footnote    = NULL
 ) {
+  column_labels <- var_labels(data)
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
     data <- dplyr::filter(data, toupper(.data$PPSPEC) %in% toupper(urine_specs))
@@ -362,6 +370,7 @@ t_pkpt08_uri <- function(
   if (!is.null(param_filter) && length(param_filter) > 0 && "PARAM" %in% names(data)) {
     data <- data[data$PARAM %in% param_filter, , drop = FALSE]
   }
+  var_labels(data) <- column_labels
   if (nrow(data) == 0) {
     stop(
       "t_pkpt08_uri: no urine PK parameter data found in ADPP. ",

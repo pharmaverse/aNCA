@@ -35,6 +35,7 @@
 #'   labs theme_bw theme element_text element_blank facet_wrap
 #' @importFrom rlang .data
 #' @importFrom stats quantile
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 p_pkpg03_boxp <- function(
   data,
@@ -54,10 +55,12 @@ p_pkpg03_boxp <- function(
     stop("p_pkpg03_boxp: missing required columns: ", paste(missing_cols, collapse = ", "))
   }
 
+  column_labels <- var_labels(data)
   data <- data[!is.na(data[[value_var]]), , drop = FALSE]
   if (nrow(data) == 0) return(list())
 
   data[[strat_var]] <- as.factor(data[[strat_var]])
+  var_labels(data) <- column_labels
 
   y_label <- if (!is.null(ylab)) ylab else .get_var_label(data, value_var)
 
@@ -223,6 +226,7 @@ p_pkpg06_mp <- function(data, ...) {
 #'   theme_bw theme element_text
 #' @importFrom rlang .data
 #' @importFrom stats sd
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   data,
@@ -239,6 +243,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   xlab           = NULL,
   ylab           = NULL
 ) {
+  column_labels <- var_labels(data)
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
     data <- dplyr::filter(data, toupper(.data$PPSPEC) %in% toupper(urine_specs))
@@ -277,6 +282,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   if (nrow(data) == 0) return(list())
 
   data[[strat_var]] <- as.factor(data[[strat_var]])
+  var_labels(data) <- column_labels
 
   y_label <- if (!is.null(ylab)) ylab else .get_var_label(data, value_var)
 
@@ -428,6 +434,7 @@ p_pkpg01_per <- function(
 #'   facet_wrap labs scale_x_log10 scale_y_log10 theme_bw theme element_text
 #' @importFrom rlang .data
 #' @importFrom stats lm coef confint predict sd
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
   data,
@@ -451,12 +458,14 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
          paste(missing_cols, collapse = ", "))
   }
 
+  column_labels <- var_labels(data)
   data <- data[
     !is.na(data[[value_var]]) & !is.na(data[[dose_var]]) &
       data[[value_var]] > 0     & data[[dose_var]] > 0, ,
     drop = FALSE
   ]
   if (nrow(data) == 0) return(list())
+  var_labels(data) <- column_labels
 
   x_label <- if (!is.null(xlab)) {
     xlab
