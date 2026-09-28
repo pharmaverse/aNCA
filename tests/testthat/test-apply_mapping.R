@@ -15,7 +15,7 @@ var_labels(expected_df) <- c(
   "Name of Treatment",
   "Analysis Value",
   "Analysis Value Unit",
-  "Actual Dose Amount",
+  "Actual Treatment Dose",
   "Actual Duration of Treatment Dose",
   "Act. Rel. Time from Analyte First Dose",
   "Analysis Timepoint Reference"
