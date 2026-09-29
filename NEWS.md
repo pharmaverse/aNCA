@@ -69,6 +69,10 @@
 * Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
 
 ### TLG Order & Selection
+* TLG order selections, footnotes, stratification, and comments are saved in
+  settings YAML downloads and ZIP exports and restored on upload or version
+  selection. Saved outputs are matched by catalog name; removed outputs are
+  skipped with a warning and new outputs retain their defaults (#1345)
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)
 * Urine TLG functions filter to urine specimens internally; when `PCSPEC`/`PPSPEC` is missing, the resulting warning is surfaced as an in-app notification instead of failing silently (#1335)
 * Redesign the "Add TLGs to order" picker as a catalog checklist with dataset tabs (PK Concentrations / PK Parameters), search, CSV/XLSX export, per-column select-all, and a live selection count (#1335)
