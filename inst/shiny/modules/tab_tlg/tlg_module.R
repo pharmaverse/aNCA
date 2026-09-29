@@ -96,7 +96,9 @@ render_graph_outputs <- function(output, session, current_page_items) {
         height <- if (!is.null(item$height)) paste0(item$height, "px") else "500px"
         plotly::plotlyOutput(session$ns(paste0("plot_", i)), height = height)
       }
-      .with_group_header(nms[i], body)
+      # pkcg01/02 already identify their groups in the plot's own annotations. Keep their
+      # list names for export, without repeating the raw interaction key above the widget.
+      if (isFALSE(attr(item, "tlg_group_header"))) body else .with_group_header(nms[i], body)
     }))
   })
 
@@ -412,6 +414,19 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
       })
     })
+
+    # The option widgets live inside a right-sidebar dropdown on a nav panel, so Shiny
+    # suspends this output until that panel is opened.  While it is suspended the widgets
+    # never reach the browser, their inputs stay NULL, and the is-null guard in tlg_list()
+    # short-circuits the whole render -- which meant a TLG on a tab the user never visited
+    # exported nothing at all (#1344).
+    outputOptions(output, "options", suspendWhenHidden = FALSE)
+
+    # Hand the rendered outputs back to the caller so they can be exported (#1344).
+    # `tlg_list()` is the whole set for this TLG -- every page, with the user's current
+    # sidebar options already applied -- which is exactly what the download should write.
+    # Regenerating from the catalog at download time would silently ignore those edits.
+    tlg_list
   })
 }
 
