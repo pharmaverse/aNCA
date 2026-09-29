@@ -294,6 +294,40 @@ describe("l_pkcl01", {
     )
   })
 
+  it("marks excluded missing concentrations and preserves missing-value formatting", {
+    flagged_adnca <- adnca
+    flagged_adnca$AVAL <- NA_real_
+    flagged_adnca$AVALC <- NA_character_
+    flagged_adnca$PKSUMXF <- c("Y", "", "Y", "")
+    flagged_adnca$NCAXFL <- c("", "Y", "Y", "")
+
+    for (value_var in c("AVAL", "AVALC")) {
+      result <- l_pkcl01(flagged_adnca, listgroup_vars = "PCSPEC",
+                         displaying_vars = value_var)[[1]]
+      expect_equal(as.vector(result[[value_var]]), c("NA*", "NA#", "NA*#", NA))
+      expect_equal(nrow(result), nrow(flagged_adnca))
+
+      formatting <- data.frame(
+        var_name = value_var, Label = "Concentration", na_str = "Missing",
+        zero_str = "BLQ", align = "center", format_fun = NA, digits = NA
+      )
+      result <- l_pkcl01(flagged_adnca, listgroup_vars = "PCSPEC",
+                         displaying_vars = value_var,
+                         formatting_vars_table = formatting)[[1]]
+      expect_equal(as.vector(result[[value_var]]),
+                   c("Missing*", "Missing#", "Missing*#", NA))
+      expect_match(paste(capture.output(print(result)), collapse = "\n"), "Missing\\*#")
+    }
+  })
+
+  it("marks missing concentrations with a raw NCA exclusion reason", {
+    flagged_adnca <- adnca
+    flagged_adnca$exclude <- c("", "", "", "Manual NCA exclusion")
+    result <- l_pkcl01(flagged_adnca)[[2]]
+
+    expect_equal(as.vector(result$AVAL), c("30.55", "NA#"))
+  })
+
   it("marks PKSUMXF records and explains the marker in the footer", {
     flagged_adnca <- adnca
     flagged_adnca$PKSUMXF <- c("", "Y", "", "")

@@ -4,6 +4,8 @@
 #' same engine as [l_pkcl01()].  Returns one listing per unique combination of
 #' `listgroup_vars` (default: `PPCAT` x `PPSPEC`).
 #'
+#' Missing parameter values flagged with `PPSUMXF == "Y"` are displayed as `NA*`.
+#'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param listgroup_vars Character vector of columns used to split the output
 #'   into separate listings. Default: `c("PPCAT", "PPSPEC")`.

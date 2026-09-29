@@ -83,6 +83,20 @@ describe("l_pkpl01", {
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
+  it("marks excluded missing parameters without marking other missing values", {
+    flagged_data <- pkpl_data
+    flagged_data$AVAL[flagged_data$PARAM == "AUClast"] <- NA_real_
+    flagged_data$PPSUMXF <- ""
+    flagged_data$PPSUMXF[2] <- "Y"
+
+    result <- l_pkpl01(flagged_data)[[1]]
+
+    expect_equal(as.vector(result$AUClast), c("NA*", NA, NA, NA))
+    expect_equal(as.vector(result$Cmax), c("5", "6", "10", "11"))
+    expect_equal(nrow(result), length(unique(flagged_data$USUBJID)))
+    expect_match(paste(capture.output(print(result)), collapse = "\n"), "NA\\*")
+  })
+
   it("marks PPSUMXF parameter values and explains the marker in the footer", {
     flagged_data <- pkpl_data
     flagged_data$PPSUMXF <- ""

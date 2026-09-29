@@ -22,6 +22,9 @@
 #'   - Formats the 0 and NA values as defined by the formatting table.
 #'   - Creates a listing for each unique combination of the grouping variables.
 #'
+#' Excluded records retain their markers even when the concentration is missing.
+#' Markers are appended to the configured `na_str` for missing values.
+#'
 #' The `formatting_vars_table` should be a data frame with the following columns:
 #'   - `var_name`: The name of the variable.
 #'   - `Label`: The label for the variable.
@@ -203,8 +206,12 @@ l_pkcl01 <- function(
     ))
 
   value_vars <- intersect(c("AVALC", "AVAL"), displaying_vars)
-  data_grouped <- .mark_sum_excl_vals(data_grouped, "PKSUMXF", value_vars)
-  data_grouped <- .mark_nca_excl_vals(data_grouped, "NCAXFL", value_vars)
+  na_str <- coalesce(
+    formatting_vars_table$na_str[match(value_vars[1], formatting_vars_table$var_name)],
+    "NA"
+  )
+  data_grouped <- .mark_sum_excl_vals(data_grouped, "PKSUMXF", value_vars, na_str)
+  data_grouped <- .mark_nca_excl_vals(data_grouped, "NCAXFL", value_vars, na_str)
 
   # Make sure the data stays labelled
   var_labels(data_grouped) <- c(var_labels(data), id_list = "id")

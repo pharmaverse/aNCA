@@ -50,6 +50,9 @@ The function performs the following steps:
 \item Creates a listing for each unique combination of the grouping variables.
 }
 
+Excluded records retain their markers even when the concentration is missing.
+Markers are appended to the configured \code{na_str} for missing values.
+
 The \code{formatting_vars_table} should be a data frame with the following columns:
 \itemize{
 \item \code{var_name}: The name of the variable.

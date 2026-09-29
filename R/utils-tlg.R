@@ -146,17 +146,18 @@
 #' @param flag_var Exclusion flag column.
 #' @param value_vars Candidate value columns, in display priority order.
 #' @param marker Marker to append.
+#' @param na_str Display text for flagged missing values.
 #' @return The input data with the marker appended to the first value column.
 #' @noRd
-.mark_excl_vals <- function(data, flag_var, value_vars, marker) {
+.mark_excl_vals <- function(data, flag_var, value_vars, marker, na_str = "NA") {
   value_col <- intersect(value_vars, names(data))[1]
   if (is.na(value_col) || !.has_flagged_records(data, flag_var)) {
     return(data)
   }
 
   excluded <- !is.na(data[[flag_var]]) & data[[flag_var]] == "Y"
-  excluded <- excluded & !is.na(data[[value_col]])
   data[[value_col]] <- as.character(data[[value_col]])
+  data[[value_col]][excluded & is.na(data[[value_col]])] <- na_str
   data[[value_col]][excluded] <- paste0(
     data[[value_col]][excluded],
     marker
@@ -169,25 +170,27 @@
 #' @param data A data frame.
 #' @param flag_var Summary-exclusion flag column.
 #' @param value_vars Candidate value columns, in display priority order.
+#' @param na_str Display text for flagged missing values.
 #' @return The input data with the marker appended to the first value column.
 #' @noRd
-.mark_sum_excl_vals <- function(data, flag_var, value_vars) {
-  .mark_excl_vals(data, flag_var, value_vars, .SUMMARY_EXCLUSION_MARKER)
+.mark_sum_excl_vals <- function(data, flag_var, value_vars, na_str = "NA") {
+  .mark_excl_vals(data, flag_var, value_vars, .SUMMARY_EXCLUSION_MARKER, na_str)
 }
 
 #' Mark displayed values excluded from NCA calculations.
 #' @param data A data frame.
 #' @param flag_var NCA-exclusion flag column.
 #' @param value_vars Candidate value columns, in display priority order.
+#' @param na_str Display text for flagged missing values.
 #' @return The input data with the marker appended to the first value column.
 #' @noRd
-.mark_nca_excl_vals <- function(data, flag_var, value_vars) {
+.mark_nca_excl_vals <- function(data, flag_var, value_vars, na_str = "NA") {
   value_col <- intersect(value_vars, names(data))[1]
   excluded <- .nca_excl_rows(data, flag_var)
   if (is.na(value_col) || !any(excluded)) return(data)
 
-  excluded <- excluded & !is.na(data[[value_col]])
   data[[value_col]] <- as.character(data[[value_col]])
+  data[[value_col]][excluded & is.na(data[[value_col]])] <- na_str
   data[[value_col]][excluded] <- paste0(
     data[[value_col]][excluded],
     .NCA_EXCLUSION_MARKER
