@@ -1,6 +1,9 @@
-# Source the common reactable module to test the pure define_cols() helper.
+# Source the common reactable module and its editable-cell dependencies.
 local({
   library(shiny)
+  library(reactable)
+  library(reactable.extras)
+  library(purrr)
   shiny_dir <- system.file("shiny", package = "aNCA")
   source(
     file.path(shiny_dir, "modules", "common", "reactable.R"),
@@ -8,6 +11,34 @@ local({
   )
 },
 envir = parent.env(environment()))
+
+describe("reactable_server: editable cell renderers", {
+  it("preserves an explicitly supplied editable cell renderer", {
+    custom_cell <- reactable::JS("function(cellInfo) { return 'custom:' + cellInfo.value; }")
+    testServer(reactable_server, args = list(
+      data = reactive(data.frame(Footnote = "Saved note")),
+      editable = "Footnote",
+      columns = function(df) list(Footnote = reactable::colDef(cell = custom_cell))
+    ), {
+      session$flushReact()
+      rendered <- jsonlite::fromJSON(output$table, simplifyVector = FALSE)$x$tag$attribs
+      expect_identical(rendered$columns[[1]]$cell, as.character(custom_cell))
+      expect_identical(rendered$data$Footnote, list("Saved note"))
+    })
+  })
+
+  it("retains the default text_extra renderer for unit editors", {
+    testServer(reactable_server, args = list(
+      data = reactive(data.frame(AVALU = "ng/mL")), editable = "AVALU"
+    ), {
+      session$flushReact()
+      rendered <- jsonlite::fromJSON(output$table, simplifyVector = FALSE)$x$tag$attribs
+      expected <- reactable.extras::text_extra(id = session$ns("edit_AVALU"))
+      expect_identical(rendered$columns[[1]]$cell, as.character(expected))
+      expect_identical(rendered$data$AVALU, list("ng/mL"))
+    })
+  })
+})
 
 describe("define_cols", {
   labelled_df <- function() {

@@ -89,7 +89,9 @@ reactable_server <- function(
       if (!is.null(editable)) {
         col_defs <- lapply(editable, function(col) {
           col_def <- lapply(opts$columns[[col]], function(x) x) # unpack other existing colDef-s
-          col_def$cell <- text_extra(id = session$ns(paste0("edit_", col)))
+          if (is.null(col_def$cell)) {
+            col_def$cell <- text_extra(id = session$ns(paste0("edit_", col)))
+          }
 
           do.call(colDef, col_def)
         }) %>%
