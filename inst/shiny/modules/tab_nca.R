@@ -83,6 +83,91 @@ tab_nca_ui <- function(id) {
 
 # .apply_param_exclusions is defined in inst/shiny/functions/utils-exclusions.R
 
+.validate_nca_run <- function(general_settings, processed_pknca_data,
+                              auto_nca_running, session) {
+  required_selections <- list(
+    analyte = general_settings$analyte(),
+    specimen = general_settings$pcspec(),
+    profile = general_settings$profile()
+  )
+  missing_selections <- names(required_selections)[vapply(
+    required_selections,
+    function(selection) is.null(selection) || length(selection) == 0,
+    logical(1)
+  )]
+
+  if (length(missing_selections) > 0) {
+    showNotification(
+      paste0(
+        "Select at least one ",
+        paste(missing_selections, collapse = ", "),
+        " before running NCA."
+      ),
+      type = "error", duration = NULL
+    )
+    return(NULL)
+  }
+
+  pknca_data <- processed_pknca_data()
+  req(pknca_data)
+
+  if (nrow(pknca_data$intervals) == 0) {
+    log_error("No valid NCA intervals available")
+    if (auto_nca_running()) {
+      auto_nca_running(FALSE)
+      session$userData$auto_replay_active <- FALSE
+      shiny::removeModal()
+      showNotification(
+        paste(
+          "Session restored but NCA could not be auto-run:",
+          "no valid intervals are available for the current data and settings.",
+          "Please adjust settings and run NCA manually."
+        ),
+        type = "warning", duration = 10
+      )
+    } else {
+      showNotification(
+        paste(
+          "NCA cannot run because no valid intervals are available",
+          "for the current data and settings.",
+          "Review selections, filters, and parameter settings."
+        ),
+        type = "error", duration = NULL
+      )
+    }
+    return(NULL)
+  }
+
+  interval_logicals <- vapply(pknca_data$intervals, is.logical, logical(1))
+  if (all(!unlist(pknca_data$intervals[interval_logicals]))) {
+    log_error("Invalid parameters")
+    if (auto_nca_running()) {
+      auto_nca_running(FALSE)
+      session$userData$auto_replay_active <- FALSE
+      shiny::removeModal()
+      showNotification(
+        paste(
+          "Session restored but NCA could not be auto-run:",
+          "no suitable parameters for this dataset.",
+          "Please adjust settings and run NCA manually."
+        ),
+        type = "warning", duration = 10
+      )
+    } else {
+      showNotification(
+        paste(
+          "No suitable parameters selected for NCA calculation.",
+          "Please go back and select parameters suitable for the data."
+        ),
+        type = "error", duration = NULL
+      )
+    }
+    return(NULL)
+  }
+
+  pknca_data
+}
+
 tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
                            auto_replay_ready) {
   moduleServer(id, function(input, output, session) {
@@ -160,85 +245,13 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
 
     #' Triggers NCA analysis, creating res_nca reactive
     res_nca <- reactive({
-      required_selections <- list(
-        analyte = general_settings$analyte(),
-        specimen = general_settings$pcspec(),
-        profile = general_settings$profile()
+      processed_data <- .validate_nca_run(
+        general_settings,
+        processed_pknca_data,
+        auto_nca_running,
+        session
       )
-      missing_selections <- names(required_selections)[vapply(
-        required_selections,
-        function(selection) is.null(selection) || length(selection) == 0,
-        logical(1)
-      )]
-
-      if (length(missing_selections) > 0) {
-        showNotification(
-          paste0(
-            "Select at least one ",
-            paste(missing_selections, collapse = ", "),
-            " before running NCA."
-          ),
-          type = "error", duration = NULL
-        )
-        return(NULL)
-      }
-
-      pknca_data <- processed_pknca_data()
-      req(pknca_data)
-
-      if (nrow(pknca_data$intervals) == 0) {
-        log_error("No valid NCA intervals available")
-        if (auto_nca_running()) {
-          auto_nca_running(FALSE)
-          session$userData$auto_replay_active <- FALSE
-          shiny::removeModal()
-          showNotification(
-            paste(
-              "Session restored but NCA could not be auto-run:",
-              "no valid intervals are available for the current data and settings.",
-              "Please adjust settings and run NCA manually."
-            ),
-            type = "warning", duration = 10
-          )
-        } else {
-          showNotification(
-            paste(
-              "NCA cannot run because no valid intervals are available",
-              "for the current data and settings.",
-              "Review selections, filters, and parameter settings."
-            ),
-            type = "error", duration = NULL
-          )
-        }
-        return(NULL)
-      }
-
-      if (all(!unlist(pknca_data$intervals[sapply(pknca_data$intervals,
-                                                   is.logical)]))) {
-        log_error("Invalid parameters")
-        if (auto_nca_running()) {
-          auto_nca_running(FALSE)
-          session$userData$auto_replay_active <- FALSE
-          shiny::removeModal()
-          showNotification(
-            paste(
-              "Session restored but NCA could not be auto-run:",
-              "no suitable parameters for this dataset.",
-              "Please adjust settings and run NCA manually."
-            ),
-            type = "warning", duration = 10
-          )
-        } else {
-          showNotification(
-            paste(
-              "No suitable parameters selected for NCA calculation.",
-              "Please go back and select parameters suitable for the data."
-            ),
-            type = "error", duration = NULL
-          )
-        }
-        return(NULL)
-      }
+      if (is.null(processed_data)) return(NULL)
 
       if (!auto_nca_running()) {
         loading_popup("Calculating NCA results...")
@@ -253,7 +266,7 @@ tab_nca_server <- function(id, pknca_data, extra_group_vars, settings_override,
         pknca_warn_env$warnings <- c()
 
         # Update units table
-        processed_pknca_data <- processed_pknca_data()
+        processed_pknca_data <- processed_data
         # Seed the session units table from the (already simplified) data-derived
         # units the first time NCA runs, so automatic changes such as volume unit
         # simplification are captured for export/R-script even when the user never

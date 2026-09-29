@@ -53,8 +53,15 @@ describe("Tests for app preview", {
     app$wait_for_js("!$('#nca-run_nca').prop('disabled')", timeout = 5000)
     app$click("nca-run_nca")
 
+    selector_message <- paste0(
+      "Select at least one analyte, specimen, profile before running NCA."
+    )
     app$wait_for_js(
-      "$('.shiny-notification-error').text().includes('Select at least one analyte, specimen, profile before running NCA.')",
+      paste0(
+        "$('.shiny-notification-error').text().includes('",
+        selector_message,
+        "')"
+      ),
       timeout = 5000
     )
     expect_null(app$get_value(output = "nca-nca_results-myresults-table"))
@@ -78,8 +85,13 @@ describe("Tests for app preview", {
     app$wait_for_js("!$('#nca-run_nca').prop('disabled')", timeout = 5000)
     app$click("nca-run_nca")
 
+    interval_message <- "NCA cannot run because no valid intervals are available"
     app$wait_for_js(
-      "$('.shiny-notification-error').text().includes('NCA cannot run because no valid intervals are available')",
+      paste0(
+        "$('.shiny-notification-error').text().includes('",
+        interval_message,
+        "')"
+      ),
       timeout = 5000
     )
     expect_null(app$get_value(output = "nca-nca_results-myresults-table"))
