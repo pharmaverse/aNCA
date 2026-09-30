@@ -10,13 +10,16 @@ fields. Do not use for a purely visual label change.
 
 1. List required fields, optional fields, accepted alternatives, types, allowed
    values, defaults, and missing-field behavior.
-2. Trace the contract through upload, metadata/mapping, calculation, plotting,
+2. Identify the source of truth for each rule (metadata, settings, code, or
+   external standard) and the downstream consumer that relies on it.
+3. Trace the contract through upload, metadata/mapping, calculation, plotting,
    settings restoration, and export as applicable.
-3. Prefer an explicit local contract over a hidden global fallback. Distinguish
+4. Prefer an explicit local contract over a hidden global fallback. Distinguish
    absent, `NULL`, empty, and invalid values.
-4. Add focused fixtures for valid, optional-absent, and invalid cases.
+5. Add focused fixtures for valid, optional-absent, and invalid cases.
 
-**Output:** contract table plus affected paths and test cases. Link
+**Output:** contract table including source of truth and downstream consumer,
+plus affected paths and test cases. Link
 `shiny-settings-roundtrip`, `settings-template-governance`, and
 `backward-compatibility-review` when applicable.
 
