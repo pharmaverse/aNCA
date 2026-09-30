@@ -9,12 +9,14 @@ Use when changing settings, schemas, arguments, defaults, generated scripts,
 templates, or exported artifacts.
 
 1. Identify existing users/consumers and the old contract they rely on.
-2. Compare old and new behavior for valid legacy input, optional/removed fields,
-defaults, names, types, units, and output locations.
+2. Identify the minimum supported version or legacy format, then compare old
+   and new behavior for valid legacy input, optional/removed fields,
+   defaults, names, types, units, and output locations.
 3. Choose compatibility behavior: preserve, safely ignore, translate, warn,
-version, migrate, or intentionally break with documented rationale.
+   version, migrate, or intentionally break with documented rationale. State
+   explicitly whether the change is breaking or non-breaking.
 4. Verify one legacy scenario and one current scenario; link a follow-up issue
-for deferred migration work.
+   for deferred migration work.
 
 **Output:** affected contract, compatibility decision, migration/fallback,
 evidence, and residual risk. Use `shiny-settings-roundtrip`,
