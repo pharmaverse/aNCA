@@ -11,10 +11,12 @@ calculation-result changes.
 1. State the scientific intent, affected subjects/profiles, parameter(s), units,
    and expected result direction/value.
 2. Trace data/mapping through PKNCA inputs, calculation, result shaping, CDISC
-   metadata, plots, and export. For submission-facing outputs, check the
-   applicable CDISC dataset structure, variable definitions, controlled
-   terminology, and traceability through to tables, listings, and figures
-   (TLGs); record any deliberate deviation or unresolved compliance risk.
+   metadata, plots, and export. For submission-facing outputs, identify the
+   applicable CDISC standard/version or metadata authority, then check the
+   dataset structure, variable definitions, controlled terminology, and
+   traceability through to tables, listings, and figures (TLGs). Treat CDISC
+   dataset compliance and TLG conventions as related but distinct checks;
+   record any deliberate deviation or unresolved compliance risk.
 3. Compare current and intended behavior with a small representative profile;
    identify unchanged behavior that must remain stable.
 4. Define regression evidence and manual scientific review needed.
