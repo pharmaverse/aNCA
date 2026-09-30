@@ -12,10 +12,13 @@ failure behavior changes.
 message. Check that unsafe calculation, record creation, or partial output
 cannot continue.
 2. Distinguish user-correctable data/configuration errors from internal failures
-without exposing internals or sensitive data.
+   without exposing internals or sensitive data.
 3. Make the message name the affected item and corrective action; preserve
-diagnostic detail in appropriate logs/evidence where available.
-4. Verify valid behavior remains unchanged and add a negative regression case.
+   diagnostic detail in appropriate logs/evidence where available.
+4. Classify the expected response as a blocking error, warning, recoverable
+   validation message, or log-only internal failure, and identify the channel
+   where it appears.
+5. Verify valid behavior remains unchanged and add a negative regression case.
 
 **Output:** failure path, blocked side effect, user message, and test/workflow.
 Use `risk-analysis` for material records or exports.
