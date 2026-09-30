@@ -75,7 +75,7 @@
 <li>
 <code>tests/testthat/</code> — Unit tests</li>
 <li>
-<code>man/</code> — Documentation (auto-generated, do not edit)</li>
+<code>man/</code> — Documentation (auto-generated; follow the Roxygen CI exception in Anti-patterns)</li>
 <li>
 <code>data/</code> — Package data</li>
 <li>
@@ -268,7 +268,7 @@
 </ul></div>
 <div class="section level2">
 <h2 id="working-with-code">Working with Code<a class="anchor" aria-label="anchor" href="#working-with-code"></a></h2>
-<p>Before committing: - <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> — regenerate man pages and NAMESPACE - <code><a href="https://lintr.r-lib.org/reference/lint.html" class="external-link">lintr::lint_package()</a></code> — check code style - <code><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">devtools::test()</a></code> — run tests - <code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> — full package check</p>
+<p>Before committing: - <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> — regenerate man pages and NAMESPACE when R is available - <code><a href="https://lintr.r-lib.org/reference/lint.html" class="external-link">lintr::lint_package()</a></code> — check code style - <code><a href="https://devtools.r-lib.org/reference/test.html" class="external-link">devtools::test()</a></code> — run tests - <code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> — full package check</p>
 </div>
 <div class="section level2">
 <h2 id="issues">Issues<a class="anchor" aria-label="anchor" href="#issues"></a></h2>
@@ -292,10 +292,11 @@
 <div class="section level2">
 <h2 id="anti-patterns">Anti-patterns<a class="anchor" aria-label="anchor" href="#anti-patterns"></a></h2>
 <ul><li>Do not use <code>git push --force</code> or <code>git push --force-with-lease</code> — always use separate commits instead of amending and force-pushing</li>
-<li>Do not edit <code>man/</code> or <code>NAMESPACE</code> files manually</li>
+<li>Do not edit <code>NAMESPACE</code> manually except for the matching <code>importFrom()</code> update required by an <code>@importFrom</code> change.</li>
+<li>Do not edit <code>man/</code> manually, except for a small, exact <code>man/*.Rd</code> diff printed by the Roxygen CI job when R is unavailable. Verify the source roxygen/function change, confirm <code>RoxygenNote</code> matches CI, copy only the reported diff, and let the next CI run confirm it.</li>
 <li>Do not add unused globalVariables to <code>R/zzz.R</code>
 </li>
-<li>Do not push without running <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> first</li>
+<li>Do not push without running <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> first when R is available. When it is unavailable, the exact CI Roxygen exception above may be used.</li>
 <li>Do not skip tests or lintr checks</li>
 <li>Do not assume R is available in dev container (it may not be)</li>
 <li>Do not edit <code>main.css</code> without updating the corresponding <code>.scss</code> source</li>
