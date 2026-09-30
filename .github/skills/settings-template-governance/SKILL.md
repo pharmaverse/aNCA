@@ -14,7 +14,9 @@ behavior that might otherwise change application-wide code.
    Prefer the smallest local setting that satisfies the requirement.
 3. Define absent/invalid setting and absent-column behavior; do not make a
    global auto-mapping solely to support one template.
-4. Verify export/import round-trip and an unaffected template/dataset.
+4. If settings serialization or import is affected, verify the export/import
+   round-trip; otherwise verify the chosen setting with an unaffected
+   template/dataset.
 
 **Output:** chosen layer, rejected alternatives, compatibility behavior, and
 focused verification. Use `shiny-settings-roundtrip` and
