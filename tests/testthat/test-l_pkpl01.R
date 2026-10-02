@@ -84,6 +84,56 @@ describe("l_pkpl01", {
   })
 })
 
+describe("PK listing parameter selection", {
+  it("shows only selected parameters and retains subject values and units", {
+    result <- l_pkpl01(pkpl_data, param_filter = "Cmax")[[1]]
+    expect_equal(rlistings::listing_dispcols(result), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.character(result$USUBJID), paste0("S", 1:4))
+    expect_equal(as.numeric(result$Cmax), c(5, 6, 10, 11))
+    expect_equal(attr(result$Cmax, "label"), "Cmax (ng/mL)")
+    expect_false("AUClast" %in% names(result))
+  })
+
+  it("preserves all parameters by default or with an empty selection", {
+    defaults <- l_pkpl01(pkpl_data)
+    expect_equal(l_pkpl01(pkpl_data, param_filter = character()), defaults)
+    expect_equal(l_pkpl01(pkpl_data, param_filter = c("Cmax", "AUClast")), defaults)
+    expect_setequal(rlistings::listing_dispcols(defaults[[1]]),
+                    c("TRT01A", "USUBJID", "Cmax", "AUClast"))
+  })
+
+  it("selects values from the chosen parameter variable", {
+    result <- l_pkpl01(pkpl_data, param_var = "PARAMCD", param_filter = "AUCLST")[[1]]
+    expect_equal(rlistings::listing_dispcols(result), c("TRT01A", "USUBJID", "AUCLST"))
+    expect_equal(as.numeric(result$AUCLST), c(20, 22, 40, 38))
+    expect_equal(attr(result$AUCLST, "label"), "AUCLST (ng/mL*h)")
+  })
+
+  it("returns no listings for unmatched selections, including without split variables", {
+    expect_equal(l_pkpl01(pkpl_data, param_filter = "missing"), list())
+    expect_equal(l_pkpl01(pkpl_data, listgroup_vars = character(),
+                          param_filter = "missing"), list())
+  })
+
+  it("keeps grouping when parameters differ between listing pages", {
+    other <- transform(pkpl_data[pkpl_data$PARAM == "Cmax", ], PPCAT = "DrugB")
+    result <- l_pkpl01(rbind(pkpl_data, other), param_filter = "AUClast")
+    expect_length(result, 1)
+    expect_match(names(result), "DrugA")
+    expect_equal(as.numeric(result[[1]]$AUClast), c(20, 22, 40, 38))
+  })
+
+  it("passes selection through both wrappers and preserves their row selection", {
+    metabolite <- l_pkpl01_mp(pkpl_metab_data, param_filter = "Cmax")[[1]]
+    treatment <- l_pkpl04_mp(pkpl_data, param_filter = "Cmax")[[1]]
+    expect_equal(rlistings::listing_dispcols(metabolite), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.character(metabolite$USUBJID), c("S3", "S4"))
+    expect_equal(as.numeric(metabolite$Cmax), c(10, 11))
+    expect_equal(rlistings::listing_dispcols(treatment), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.numeric(treatment$Cmax), c(5, 6, 10, 11))
+  })
+})
+
 describe("l_pkpl01_mp", {
   it("filters to metabolite rows via METABFL (preferred path)", {
     result <- l_pkpl01_mp(pkpl_metab_data)
