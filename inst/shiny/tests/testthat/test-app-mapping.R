@@ -82,7 +82,7 @@ describe("Test for mapping interface", {
     expect_null(modal_html)
   })
 
-  it("shows duplicate modal after mapping and re-enables Next on cancel", {
+  it("shows duplicate modal after mapping and re-enables navigation on cancel", {
     app <- AppDriver$new(name = "app_mapping_duplicate_cancel")
     duplicate_data <- testthat::test_path(
       "../../../../tests/testthat/data/test-duplicate-ADNCA.csv"
@@ -98,6 +98,7 @@ describe("Test for mapping interface", {
     app$wait_for_js("document.querySelector('.modal-duplicates') === null")
 
     expect_false(app$get_js("$('#data-next_step').prop('disabled')"))
+    expect_false(app$get_js("$('#data-prev_step').prop('disabled')"))
   })
 
   it("confirms before excluding all duplicate rows", {
@@ -139,6 +140,7 @@ describe("Test for mapping interface", {
     )
 
     expect_false(app$get_js("$('#data-next_step').prop('disabled')"))
+    expect_false(app$get_js("$('#data-prev_step').prop('disabled')"))
     expect_null(app$get_html(".loading-spinner-container"))
   })
 })

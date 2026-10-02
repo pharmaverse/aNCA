@@ -428,8 +428,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
           }
           showNotification(conditionMessage(e), type = "error", duration = NULL)
           NULL
-        },
-        finally = on_mapping_complete()
+        }
       )
     }) %>%
       bindEvent(trigger(), ignoreInit = TRUE)
@@ -446,34 +445,33 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     })
 
     processed_data <- reactive({
-      req(mapped_data())
-
-      dup_rows <- resolved_time_duplicate_rows()
-      if (is.null(dup_rows)) {
-        restored <- .restore_duplicate_exclusions(
-          mapped_data(), imported_mapping()$time_duplicate_keys
-        )
-        if (!is.null(restored)) {
-          resolved_time_duplicate_rows(restored)
-          dup_rows <- restored
-        }
-      }
-
       tryCatch(
         {
+          req(mapped_data())
+
+          dup_rows <- resolved_time_duplicate_rows()
+          if (is.null(dup_rows)) {
+            restored <- .restore_duplicate_exclusions(
+              mapped_data(), imported_mapping()$time_duplicate_keys
+            )
+            if (!is.null(restored)) {
+              resolved_time_duplicate_rows(restored)
+              dup_rows <- restored
+            }
+          }
+
           result <- aNCA:::annotate_duplicates(mapped_data(), dup_rows)
-          on_mapping_complete()
           select(result, any_of(c(names(mapped_data()), "DTYPE")))
         },
         time_duplicate_error = function(e) {
           duplicate_data <- e$duplicate_data
-          on_mapping_complete()
           session$onFlushed(
             function() df_duplicates(duplicate_data),
             once = TRUE
           )
           NULL
-        }
+        },
+        finally = on_mapping_complete()
       )
     }) %>%
       bindEvent(
