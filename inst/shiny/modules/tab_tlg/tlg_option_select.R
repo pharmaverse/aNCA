@@ -53,6 +53,9 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
   label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
 
   conc_df <- if (is.data.frame(data())) data() else data()$conc$data
+  if (isTRUE(opt_def$metabolites_only)) {
+    conc_df <- aNCA:::filter_metabolite_rows(conc_df, allow_empty = TRUE)
+  }
   choices <- {
     if (isTRUE(opt_def$choices == ".colnames")) {
       names(conc_df)
@@ -102,7 +105,7 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
     ns("select"),
     label = label,
     selected = selected,
-    choices = c("", choices),
+    choices = c(setNames("", opt_def$placeholder %||% ""), choices),
     multiple = isTRUE(opt_def$multiple)
   )
 }

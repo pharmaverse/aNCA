@@ -151,6 +151,17 @@ describe("tlg_option_text_server", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_option_select_ui", {
+  it("offers no parent parameters when a metabolite-only dataset is empty", {
+    df <- shiny::reactive(data.frame(PPCAT = "Drug", PARAM = "Cmax", AVAL = 5))
+    opt_def <- list(
+      choices = "$PARAM", metabolites_only = TRUE,
+      placeholder = "All parameters", multiple = TRUE
+    )
+    html <- as.character(shiny::isolate(tlg_option_select_ui("m-param_filter", opt_def, df)))
+    expect_match(html, 'value=""[^>]*>All parameters</option>')
+    expect_false(grepl('value="Cmax"', html, fixed = TRUE))
+  })
+
   it("returns a selectInput with explicit choices", {
     opt_def <- list(
       label    = "Select",
