@@ -17,5 +17,19 @@ A PKNCAdata object with imputation rules applied.
 }
 \description{
 Applies imputation rules to a PKNCAdata object, imputing start values and then
-selectively removing imputation for parameters that are not dependent on AUC.
+selectively removing imputation for observational parameters.
+}
+\details{
+Imputation is removed from purely observational parameters (e.g. \code{tmax},
+\code{cmax}, \code{tlast}, \code{clast.obs}) so aNCA reports their non-imputed values. Two
+families are kept imputed instead:
+\itemize{
+\item AUC/AUMC parameters and anything depending on them.
+\item The terminal-slope (half-life) family: \code{half.life}/\code{lambda.z} and the
+parameters depending on them (\code{R2}, \code{R2ADJ}, \code{LAMZLL}, \code{LAMZUL},
+\code{LAMZNPT}, \code{LAMZSPN}, \code{CLSTP}). This family is derived from the \code{Depends}
+graph rather than the \code{CAT} label so it tracks metadata changes. Keeping
+it imputed ensures the reported slope matches the AUCinf/clearance results
+that are computed from that same imputed slope on the same interval row.
+}
 }
