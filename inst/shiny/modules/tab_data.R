@@ -382,7 +382,10 @@ tab_data_server <- function(id) {
       )
     })
     finish_manual_mapping <- function() {
-      if (isTRUE(mapping_busy())) {
+      # This callback can run from a reactive finally handler or an onFlushed
+      # callback. Read the state in an isolated context so either path can
+      # safely schedule the navigation reset.
+      if (isTRUE(shiny::isolate(mapping_busy()))) {
         session$onFlushed(
           function() {
             shiny::removeModal()
