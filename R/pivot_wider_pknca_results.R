@@ -64,9 +64,10 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
       group_by(!!!syms(conc_groups), DOSNOA) %>%
       # Derive LAMZMTD: was lambda.z manually customized?
       mutate(LAMZMTD = ifelse(
-        any(exclude_half.life) | any(include_half.life), "Manual", "Best slope"
+        any(exclude_half.life %in% TRUE) | any(include_half.life %in% TRUE),
+        "Manual", "Best slope"
       )) %>%
-      filter(!exclude_half.life | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
+      filter(!(exclude_half.life %in% TRUE) | is.na(LAMZLL) | is.na(LAMZNPT)) %>%
       filter(!!sym(time_col) >= (LAMZLL + start) | is.na(LAMZLL)) %>%
       filter(row_number() <= LAMZNPT | is.na(LAMZNPT)) %>%
       mutate(LAMZIX = paste0(IX, collapse = ",")) %>%
