@@ -41,6 +41,11 @@
 
 ## Features
 
+* PK parameter listings now offer a Displayed parameters selector, using the chosen
+  parameter variable, with metabolite listings offering only their available
+  parameters. Clearing the selection shows all parameters. Listing sidebars
+  explain column selection, including the fixed time-after-dose columns (#1431)
+
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
