@@ -15,7 +15,8 @@ flexible_violinboxplot(
   box = TRUE,
   plotly = TRUE,
   seed = NULL,
-  show_excluded = FALSE
+  show_excluded = FALSE,
+  plotly_source = NULL
 )
 }
 \arguments{
@@ -48,6 +49,9 @@ Default (NULL) will use the current R seed.}
 \item{show_excluded}{Logical. If \code{TRUE}, excluded records (those with a populated
 \code{exclude} column) are overlaid as cross-shaped points. They are
 never included in box/violin statistics. Default is \code{FALSE}.}
+
+\item{plotly_source}{Optional Plotly source id used by Shiny click
+events. Ignored when \code{plotly = FALSE}.}
 }
 \value{
 A plotly object representing the violin or box plot.

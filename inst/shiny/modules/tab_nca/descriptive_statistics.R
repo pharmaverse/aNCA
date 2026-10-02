@@ -4,8 +4,12 @@
 #' summary statistics tables.
 #'
 #' @param id A character string used to uniquely identify the module.
-#' @param res_nca A reactive expression that returns the NCA results.
+#' @param res_nca A reactive expression that returns the NCA results. Used only
+#'   to derive default grouping columns from the PKNCA object.
 #' @param grouping_vars A reactive expression that returns the grouping variables.
+#' @param adpp A reactive expression that returns the ADPP dataset. This is the
+#'   single source for summary statistics: exclusions are already applied
+#'   (PPSUMXF) and all grouping columns are present as regular columns.
 #'
 #' @returns A list containing the reactive expression for the summary statistics table.
 
@@ -34,22 +38,42 @@ descriptive_statistics_ui <- function(id) {
 }
 
 # Server function for the summary statistics module
-descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
+descriptive_statistics_server <- function(id, res_nca, grouping_vars, adpp) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Update the input for the group by picker
-    observeEvent(res_nca(), {
+    # Grouping columns available for summary statistics, all sourced from ADPP.
+    # Priority order: PKNCA group columns (minus subject), then classification
+    # columns, then the subject column.
+    adpp_group_cols <- reactive({
       req(res_nca())
+      req(adpp())
+      adpp_cols <- names(adpp())
 
       subj_col <- res_nca()$data$conc$columns$subject
-      group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
-                            # By default SUBJECT column is aggregated
-                            subj_col)
+      group_cols <- setdiff(
+        unname(unlist(res_nca()$data$conc$columns$groups)), subj_col
+      )
       classification_cols <- sort(c(grouping_vars(), "DOSEA", "ATPTREF"))
-      classification_cols <- classification_cols[
-        classification_cols %in% names(res_nca()$data$conc$data)
-      ]
+
+      # Keep only columns that actually exist in ADPP.
+      group_cols <- intersect(group_cols, adpp_cols)
+      classification_cols <- intersect(classification_cols, adpp_cols)
+      subj_col <- intersect(subj_col, adpp_cols)
+
+      list(
+        group_cols = group_cols,
+        classification_cols = classification_cols,
+        subj_col = subj_col
+      )
+    })
+
+    # Update the input for the group by picker
+    observeEvent(adpp_group_cols(), {
+      gc <- adpp_group_cols()
+      group_cols <- gc$group_cols
+      classification_cols <- gc$classification_cols
+      subj_col <- gc$subj_col
 
       grouping_vars <- c(group_cols, classification_cols, subj_col)
       initial_selection <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
@@ -66,47 +90,58 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
                      metadata_type = "variable")
 
       updatePickerInput(session, "summary_groupby",
-                        choices = unique(c(group_cols, classification_cols, subj_col)),
-                        selected = unique(c(group_cols, intersect("ATPTREF", classification_cols))))
+                        choices = grouping_vars,
+                        selected = initial_selection)
 
     })
 
-    # Reactive expression for summary table based on selected group and parameters
+    # Reactive expression for summary table based on selected group and parameters.
+    # ADPP is the single source: exclusions are already applied via PPSUMXF and
+    # all grouping columns are present, so no join from concentration data is
+    # needed.
     summary_stats <- reactive({
-      req(res_nca())
-
-      subj_col <- res_nca()$data$conc$columns$subject
-      group_cols <- setdiff(unname(unlist(res_nca()$data$conc$columns$groups)),
-                            subj_col)
-      classification_cols <- sort(c(grouping_vars(), res_nca()$data$dose$columns$dose, "ATPTREF"))
-      classification_cols <- classification_cols[
-        classification_cols %in% names(res_nca()$data$conc$data)
-      ]
+      req(adpp())
+      gc <- adpp_group_cols()
 
       # Fall back to default grouping when the picker hasn't rendered yet
       selected_groupby <- input$summary_groupby
       if (is.null(selected_groupby)) {
-        selected_groupby <- unique(c(group_cols, intersect("ATPTREF", classification_cols)))
+        selected_groupby <- unique(c(
+          gc$group_cols, intersect("ATPTREF", gc$classification_cols)
+        ))
       }
 
-      results <- res_nca()
+      stats_data <- adpp()
+      # ADPP stores PPORRES as CDISC character; calculate_summary_stats needs
+      # it numeric. Recover the numeric value from PPSTRESN when available,
+      # else coerce PPORRES.
+      if ("PPSTRESN" %in% names(stats_data)) {
+        stats_data$PPORRES <- suppressWarnings(as.numeric(stats_data$PPSTRESN))
+        if ("PPSTRESU" %in% names(stats_data)) {
+          stats_data$PPORRESU <- stats_data$PPSTRESU
+        }
+      } else if ("PPORRES" %in% names(stats_data)) {
+        stats_data$PPORRES <- suppressWarnings(as.numeric(stats_data$PPORRES))
+      }
 
-      # Join subject data to allow the user to group by it
-      cols_to_join <- c(classification_cols, names(PKNCA::getGroups(results)))
-      results_to_join <- res_nca()$data$conc$data %>%
-        select(any_of(cols_to_join)) %>%
-        distinct()
-      stats_data <- inner_join(
-        results$result,
-        results_to_join,
-        by = intersect(names(results$result), names(results_to_join)),
-        relationship = "many-to-many"
-      ) %>%
-        # Exclude flagged records from summary statistics
-        filter(is.na(exclude) | exclude == "") %>%
-        # Rename manual interval parameters to include the range suffix
-        # (e.g. AUCINT -> AUCINT_0-12) so they appear as distinct parameters
-        aNCA:::rename_interval_params()
+      # Exclude records flagged for summary exclusion (flag rules + manual).
+      if ("PPSUMXF" %in% names(stats_data)) {
+        stats_data <- stats_data[
+          is.na(stats_data$PPSUMXF) | stats_data$PPSUMXF != "Y", ,
+          drop = FALSE
+        ]
+      }
+
+      # Partial intervals share a PPTESTCD in ADPP but differ by PPSTINT/
+      # PPENINT (ISO durations). Suffix the interval bounds so they are treated
+      # as distinct parameters in the summary, matching the results view.
+      if (all(c("PPSTINT", "PPENINT") %in% names(stats_data))) {
+        has_int <- !is.na(stats_data$PPSTINT) & stats_data$PPSTINT != ""
+        stats_data$PPTESTCD[has_int] <- paste0(
+          stats_data$PPTESTCD[has_int], "_",
+          stats_data$PPSTINT[has_int], "-", stats_data$PPENINT[has_int]
+        )
+      }
 
       # Calculate summary stats and filter by selected parameters
       calculate_summary_stats(stats_data, selected_groupby)
@@ -124,7 +159,7 @@ descriptive_statistics_server <- function(id, res_nca, grouping_vars) {
         filter(Statistic %in% input$select_display_statistic)
     })
 
-    observeEvent(res_nca(), {
+    observeEvent(summary_stats(), {
       req(summary_stats())
 
       # Get the statistics variables needed
