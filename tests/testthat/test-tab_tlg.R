@@ -44,6 +44,222 @@ test_data <- reactive(list(conc = list(data = data.frame(
   stringsAsFactors = FALSE
 ))))
 
+describe("TLG order settings validation", {
+  it("matches catalog names and skips removed entries with a warning", {
+    saved <- list(
+      removed_output = list(Selection = TRUE),
+      t_pkct01 = list(Selection = FALSE, Footnote = "Saved note", id = 99, Label = "Old label")
+    )
+    expect_warning(
+      result <- .normalize_tlg_order(saved, rev(names(.TLG_DEFINITIONS))),
+      "Skipped TLGs no longer in the catalog: removed_output"
+    )
+    expect_identical(result, list(t_pkct01 = list(Selection = FALSE, Footnote = "Saved note")))
+  })
+
+  it("accepts blank and missing text while rejecting malformed fields", {
+    saved <- list(t_pkct01 = list(
+      Selection = NA, Footnote = NULL, Stratification = "", Comment = c("one", "two")
+    ))
+    messages <- character()
+    result <- withCallingHandlers(
+      .normalize_tlg_order(saved, names(.TLG_DEFINITIONS)),
+      warning = function(w) {
+        messages <<- c(messages, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    )
+    expect_length(messages, 2)
+    expect_identical(result$t_pkct01, list(Footnote = NA_character_, Stratification = ""))
+    expect_identical(.normalize_tlg_order(NULL, names(.TLG_DEFINITIONS)), list())
+    expect_warning(.normalize_tlg_order(list(list(Selection = TRUE)), "t_pkct01"), "unique catalog")
+    expect_warning(
+      .normalize_tlg_order(list(t_pkct01 = "bad row"), "t_pkct01"), "invalid TLG order row"
+    )
+  })
+
+  it("restores reordered catalog entries and leaves new entries at their defaults", {
+    catalog_ids <- c("new_output", "t_pkct01_dose", "t_pkct01")
+    defaults <- data.frame(
+      id = 1:3,
+      Selection = c(FALSE, TRUE, FALSE),
+      Footnote = NA_character_,
+      Label = c("New output", "Current dose label", "Current label")
+    )
+    saved <- .normalize_tlg_order(list(
+      t_pkct01 = list(Selection = TRUE, Footnote = "Saved note"),
+      t_pkct01_dose = list(Selection = FALSE)
+    ), catalog_ids)
+    restored <- .restore_tlg_order(defaults, saved, catalog_ids)
+    expect_identical(restored$Selection, c(FALSE, FALSE, TRUE))
+    expect_identical(restored$Footnote, c(NA_character_, NA_character_, "Saved note"))
+    expect_identical(restored[c("id", "Label")], defaults[c("id", "Label")])
+  })
+})
+
+describe("tab_tlg_server: settings round trip", {
+  it("refreshes editor revisions and rendered text on ordinary and identical restores", {
+    restored <- reactiveVal(NULL)
+    testServer(tab_tlg_server, args = list(data = test_data, settings_override = restored), {
+      render_order <- function() {
+        rendered <- jsonlite::fromJSON(output[["selected_tlg_table-table"]], simplifyVector = FALSE)
+        rendered$x$tag$attribs
+      }
+      footnote_cell <- function(rendered) {
+        Filter(function(col) identical(col$id, "Footnote"), rendered$columns)[[1]]$cell
+      }
+      session$flushReact()
+      initial <- render_order()
+      payload <- list(tlg_order = list(t_pkct01 = list(
+        Selection = TRUE, Footnote = "Restored note"
+      )))
+      restored(payload)
+      session$flushReact()
+      first <- render_order()
+      expect_identical(first$data$Footnote[[1]], "Restored note")
+      expect_false(identical(footnote_cell(first), footnote_cell(initial)))
+
+      # Upload/version handlers reset the reactive before reapplying identical settings.
+      restored(NULL)
+      restored(payload)
+      session$flushReact()
+      second <- render_order()
+      expect_identical(second$data$Footnote[[1]], "Restored note")
+      expect_false(identical(footnote_cell(second), footnote_cell(first)))
+    })
+  })
+
+  it("exports restored text after row selection changes without replaying old edits", {
+    restored <- reactiveVal(NULL)
+    testServer(tab_tlg_server, args = list(data = test_data, settings_override = restored), {
+      session$flushReact()
+      session$userData$settings <- reactive(list(method = "linear"))
+      session$userData$units_table <- reactive(NULL)
+      session$userData$ratio_table <- reactive(NULL)
+      session$userData$slope_rules <- reactive(NULL)
+      session$userData$settings_versions <- reactiveVal(list())
+      export_dir <- withr::local_tempdir()
+
+      for (field in c("Footnote", "Stratification", "Comment")) {
+        old_text <- paste("Unsaved", field)
+        saved_text <- paste("Restored", field)
+        edit <- setNames(list(list(row = 1, column = field, value = old_text)),
+                         paste0("selected_tlg_table-edit_", field))
+        do.call(session$setInputs, edit)
+        expect_identical(session$userData$tlg_order()$t_pkct01[[field]], old_text)
+
+        saved_row <- list(Selection = TRUE)
+        saved_row[[field]] <- saved_text
+        restored(list(tlg_order = list(t_pkct01 = saved_row)))
+        session$flushReact()
+        expect_identical(session$userData$tlg_order()$t_pkct01[[field]], saved_text)
+        session$elapse(800)
+        session$flushReact()
+        expect_identical(session$userData$tlg_order()$t_pkct01[[field]], saved_text)
+
+        for (selected in list(1L, integer(0))) {
+          session$setInputs(`selected_tlg_table-table__reactable__selected` = selected)
+          expect_identical(session$userData$tlg_order()$t_pkct01[[field]], saved_text)
+          .export_settings(export_dir, session)
+          exported <- read_settings(file.path(export_dir, "settings.yaml"))
+          expect_identical(exported$tlg_order$t_pkct01[[field]], saved_text)
+        }
+      }
+    })
+  })
+
+  it("restores saved order edits in a new session through the real YAML reader", {
+    saved <- new.env(parent = emptyenv())
+    saved$file <- withr::local_tempfile(fileext = ".yaml")
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$flushReact()
+      session$setInputs(`selected_tlg_table-edit_Footnote` = list(
+        row = 1, column = "Footnote", value = "Line 1\nLine 2: !AVAL"
+      ))
+      session$elapse(800)
+      session$flushReact()
+      session$setInputs(`selected_tlg_table-edit_Stratification` = list(
+        row = 1, column = "Stratification", value = "TRT01A, SEX"
+      ))
+      session$elapse(800)
+      session$flushReact()
+      session$setInputs(`selected_tlg_table-edit_Comment` = list(
+        row = 1, column = "Comment", value = "For review"
+      ))
+      session$elapse(800)
+      session$flushReact()
+
+      # A selected and a deselected output must both survive the settings file.
+      order <- tlg_order()
+      order$Selection[match("g_pkcg01_lin", names(.TLG_DEFINITIONS))] <- FALSE
+      order$Selection[match("t_pkct01_dose", names(.TLG_DEFINITIONS))] <- TRUE
+      tlg_order(order)
+      saved$expected <- session$userData$tlg_order()
+      expect_identical(saved$expected$t_pkct01$Footnote, "Line 1\nLine 2: !AVAL")
+      expect_identical(saved$expected$t_pkct01$Stratification, "TRT01A, SEX")
+      expect_identical(saved$expected$t_pkct01$Comment, "For review")
+      write_versioned_settings(list(create_settings_version(list(
+        settings = list(method = "linear"), tlg_order = saved$expected
+      ))), saved$file)
+    })
+
+    restored <- reactiveVal(read_settings(saved$file))
+    testServer(tab_tlg_server, args = list(data = test_data, settings_override = restored), {
+      session$flushReact()
+      expect_identical(session$userData$tlg_order(), saved$expected)
+      expect_true(session$userData$tlg_order()$t_pkct01_dose$Selection)
+      expect_false(session$userData$tlg_order()$g_pkcg01_lin$Selection)
+      expect_true("For review" %in% displayed_order()$Comment)
+      expect_true("Line 1\nLine 2: !AVAL" %in% displayed_order()$Footnote)
+      expect_identical(tlg_order()$Label, default_order$Label)
+    })
+  })
+
+  it("refreshes an existing table and resets absent fields and legacy settings to defaults", {
+    restored <- reactiveVal(NULL)
+    testServer(tab_tlg_server, args = list(data = test_data, settings_override = restored), {
+      session$flushReact()
+      initial <- displayed_order()
+      restored(list(tlg_order = list(t_pkct01_dose = list(
+        Selection = TRUE, Footnote = "First version", Comment = "Keep only in first version"
+      ))))
+      session$flushReact()
+      expect_equal(nrow(displayed_order()), nrow(initial) + 1L)
+      expect_true("First version" %in% displayed_order()$Footnote)
+      expect_true(session$userData$tlg_order()$t_pkct01$Selection) # New catalog row keeps default.
+
+      restored(list(tlg_order = list(t_pkct01_dose = list(Selection = FALSE))))
+      session$flushReact()
+      expect_identical(displayed_order(), initial)
+      expect_true(is.na(session$userData$tlg_order()$t_pkct01_dose$Comment))
+      expect_true(is.na(session$userData$tlg_order()$t_pkct01_dose$Footnote))
+
+      restored(list(tlg_order = list(t_pkct01 = list(Selection = FALSE))))
+      session$flushReact()
+      expect_false(session$userData$tlg_order()$t_pkct01$Selection)
+      restored(list(settings = list(method = "linear")))
+      session$flushReact()
+      expect_identical(displayed_order(), initial)
+    })
+  })
+
+  it("preserves urine deselections when data arrives later and retains defaults for new outputs", {
+    data <- reactiveVal(NULL)
+    restored <- reactiveVal(list(tlg_order = list(t_pkpt08_uri = list(Selection = FALSE))))
+    testServer(tab_tlg_server, args = list(data = data, settings_override = restored), {
+      session$flushReact()
+      data(list(conc = list(data = data.frame(PCSPEC = "URINE", AVAL = 1))))
+      session$flushReact()
+      expect_false(session$userData$tlg_order()$t_pkpt08_uri$Selection)
+      expect_true(session$userData$tlg_order()$l_pkcl02_uri$Selection)
+      expect_true(session$userData$tlg_order()$t_pkct01$Selection)
+      data(list(conc = list(data = data.frame(PCSPEC = "URINE", AVAL = 2))))
+      session$flushReact()
+      expect_false(session$userData$tlg_order()$t_pkpt08_uri$Selection)
+    })
+  })
+})
+
 describe("tab_tlg_server: add-picker selection", {
   it("sets Selection = TRUE for exactly the checked ids on confirm", {
     testServer(tab_tlg_server, args = list(data = test_data), {
