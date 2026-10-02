@@ -1,5 +1,9 @@
 # aNCA (development version)
 
+## Improvements
+
+* Standardise the treatment-formulation variable on the CDISC-style name `FRMUL` in the column-mapping alternatives and dose-escalation info columns, while keeping the legacy `DOSFRM` as an auto-map alternative so datasets uploaded with a `DOSFRM` column still map correctly. Also removes a duplicate `DOSFRM` entry in the grouping-variable alternatives (#1453)
+
 ## Maintenance
 
 * Document the return value for the NCA Parameter Units table UI module (#1374)
