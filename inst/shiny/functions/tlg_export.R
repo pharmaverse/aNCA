@@ -33,10 +33,17 @@
 #' @noRd
 .prepare_export_frame <- function(df) {
   if (inherits(df, "listing_df") && requireNamespace("rlistings", quietly = TRUE)) {
+    labels <- list(
+      tlg_title = formatters::main_title(df),
+      tlg_subtitle = formatters::subtitles(df),
+      tlg_footnote = formatters::main_footer(df)
+    )
     disp <- tryCatch(rlistings::listing_dispcols(df), error = function(e) NULL)
     if (length(disp) > 0 && all(disp %in% names(df))) {
       df <- as.data.frame(df)[, disp, drop = FALSE]
     }
+    # Keep display metadata for PDF, even after dropping the listing class/working columns.
+    for (key in names(labels)) attr(df, key) <- labels[[key]]
   }
   .flatten_export_cols(df)
 }
@@ -348,7 +355,7 @@ write_tlg_exports <- function(entries,
   tryCatch({
     sections <- unlist(
       lapply(seq_along(plots), function(i) {
-        list(htmltools::tags$h2(leaf[i]), .tlg_as_widget(plots[[i]]))
+        list(htmltools::tags$h2(leaf[i]), .tlg_ggplotly(plots[[i]]))
       }),
       recursive = FALSE
     )
@@ -377,16 +384,6 @@ write_tlg_exports <- function(entries,
   } else {
     as.character(label)[1]
   }
-}
-
-#' Coerce one graph output to something `save_html()` can embed.
-#'
-#' The concentration plots are already plotly widgets, carrying the title, subtitle and
-#' footnote as layout annotations.  The `p_pkpg*` builders return plain ggplots, which have
-#' to be converted -- the same thing `save_ggplot_format()` does for its HTML branch.
-#' @noRd
-.tlg_as_widget <- function(x) {
-  if (inherits(x, "plotly")) x else plotly::ggplotly(x)
 }
 
 #' Write one TLG's tables or listings, in each requested format.
@@ -526,8 +523,13 @@ write_tlg_exports <- function(entries,
       mpf <- formatters::basic_matrix_form(
         as.data.frame(frames[[i]]), ignore_rownames = TRUE
       )
-      formatters::main_title(mpf) <- title
-      if (nzchar(captions[i])) formatters::subtitles(mpf) <- captions[i]
+      item_title <- attr(frames[[i]], "tlg_title")
+      if (is.null(item_title)) item_title <- title
+      formatters::main_title(mpf) <- gsub("<br>", "\n", item_title, fixed = TRUE)
+      # parse_annotation() uses <br> for display; formatters expects separate text lines.
+      subtitle <- .tlg_pdf_lines(c(captions[i], attr(frames[[i]], "tlg_subtitle")))
+      formatters::subtitles(mpf) <- unique(subtitle)
+      formatters::main_footer(mpf) <- .tlg_pdf_lines(attr(frames[[i]], "tlg_footnote"))
       mpf
     })
     # Landscape: TLG summary tables are wide, and a portrait page splits them over roughly
@@ -547,6 +549,13 @@ write_tlg_exports <- function(entries,
     note   <<- conditionMessage(e)
   })
   .tlg_manifest_row(g_id, entry, rel, status, note)
+}
+
+#' Turn TLG annotation line breaks into plain PDF label lines.
+#' @noRd
+.tlg_pdf_lines <- function(text) {
+  lines <- unlist(strsplit(gsub("<br>", "\n", text, fixed = TRUE), "\n", fixed = TRUE))
+  as.character(lines[!is.na(lines) & nzchar(lines)])
 }
 
 #' Section captions for the splits of a table PDF.

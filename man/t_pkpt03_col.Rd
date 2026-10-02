@@ -12,7 +12,10 @@ t_pkpt03_col(
   value_var = "AVAL",
   param_filter = NULL,
   col_group_var = NULL,
-  stats = NULL
+  stats = NULL,
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 
 t_pkpt03_MP_col(data, ...)
@@ -47,6 +50,15 @@ statistic block is repeated once per level, nested under a group header.
 \code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this
 table are ignored.}
 
+\item{title}{Table title. Supports \verb{$VAR} / \code{!VAR} annotation syntax (see
+\code{\link[=parse_annotation]{parse_annotation()}}). Attached to each returned table as a \code{tlg_title}
+attribute.}
+
+\item{subtitle}{Per-table subtitle. \code{NULL} (default) names each \code{list_vars}
+split variable and its value.}
+
+\item{footnote}{Table footnote, attached as a \code{tlg_footnote} attribute.}
+
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}.}
 }
 \value{
@@ -55,6 +67,8 @@ Each data frame has one column per \code{strat_var} followed by the statistics:
 \code{n}, \code{Mean}, \code{SD}, \code{CV_pct}, \code{GeoMean}, \code{GeoCV_pct}, \code{Median}, \code{Min}, \code{Max}.
 When \code{col_group_var} is set, the statistic columns are prefixed per group
 level and a \code{col_groups} attribute drives the rendered two-level header.
+\code{tlg_title} / \code{tlg_subtitle} / \code{tlg_footnote} attributes carry the resolved
+label text.
 }
 \description{
 Summarizes pharmacokinetic parameters from ADPP data. Returns one data frame
