@@ -7,6 +7,15 @@
 
 ## Bug Fixes
 
+* Metabolite/parent TLG tables, listings and boxplots now display configured
+  ratios from ADPP, using the same NCA calculation as exported results.
+  Outputs identify the reference analyte and retain separate dose/visit
+  profiles. When ratios are missing, they explain how to configure them
+  and rerun NCA. Undefined ratios, including zero denominators, are retained
+  as missing values by the shared calculation and in ADPP (#1450).
+* PK parameter listings, summary tables and boxplots consistently prefer a
+  non-missing value when equivalent rows collapse to one displayed record
+  (#1450).
 * Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
@@ -17,6 +26,7 @@
   not loaded because it exceeded the configured limit (#1365)
 * The Parameter Selection matrix no longer silently ignores parameters chosen for metabolite study types. The matrix labeled study types using metabolite information (e.g. `Multiple IV Infusion (Metabolite)`), but the calculation step matches selections against labels derived with metabolite information blanked, so those selections never matched and were dropped. The matrix now reuses the same derivation as calculation time, so every selectable study type is honored (#1471)
 * `pkcg01()` and `pkcg02()` now return named plot lists by reading `id_plot` from the grouped plotting data instead of the raw input data (#1448)
+
 * Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer draw their tick labels on top of each other. `filter_breaks()` kept a break whenever it sat at least `min_cm_distance` (0.5 cm) from the last one and never looked at how wide the label rendered, so a dense profile with labels such as `119.917` kept 24 breaks where about 16 fit. A gap must now also clear the room the two labels either side of it need, measured with the plot's own `axis.text` styling and padded by a space so they do not run together. Two further problems fed the same bug: the width to fit them into was taken from the panel border grob, whose width is the whole device rather than the panel, and the side-by-side views filtered their breaks before faceting split that panel in two. The width now comes from the plot's own layout, the x scale is applied after faceting, and a y axis is thinned by label height. Candidates outside the plotted range are dropped before any thinning, so a break that is never drawn can no longer shift the first visible one a step past a manual `xmin` (#1441)
 * Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
 * Restored settings now ignore incomplete partial interval rows with missing or invalid start/end values before they reach the NCA setup state, preventing spurious interval parameters from uploaded settings (#1347)
@@ -44,7 +54,7 @@
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
-  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent filtered)
+  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent ratios)
   - `t_pkpt07_norm` — dose-normalized PK parameter summary table
   - `t_pkpt08_uri` — urine cumulative amount and % dose recovered summary table (n, Mean, SD, CV%, Median, Min, Max)
   - `t_pkpt11_gmr` — geometric mean ratio table with 90% CIs
@@ -52,8 +62,8 @@
   - `p_pkpg06_mp` — boxplot of metabolite/parent PK parameter ratios
   - `p_pkpg01_cum` / `p_pkpg01_per` — mean cumulative urine amount and % dose recovered line plots
   - `p_pkpg02_doseprop` — dose-proportionality scatter plot with power-model regression on log-log scale
-  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite-filtered)
-  - `l_pkpl04_mp` — individual PK parameter listing organised for treatment comparison
+  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all parameters and metabolite/parent ratios)
+  - `l_pkpl04_mp` — individual treatment ratio listing
   - `l_pkcl02_uri` — urine concentration and volume listing
 * ADPP-based TLG outputs now correctly exclude rows flagged via `PPSUMXF = "Y"`, consistent with ADNCA exclusion via `PKSUMXF` (#1343)
 * Summary tables are easier to read: split tables (e.g. by analyte/specimen) now show the group as a header, `t_pkct01` rows are grouped by treatment arm with timepoints in numeric order, statistic columns use readable headers (e.g. "Geometric Mean", "CV%"), and urine specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively (#1343)

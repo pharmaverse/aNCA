@@ -15,7 +15,12 @@ t_pkpt03_col(
   stats = NULL
 )
 
-t_pkpt03_MP_col(data, ...)
+t_pkpt03_MP_col(
+  data,
+  list_vars = c("RATIO", "PPSPEC"),
+  value_var = "AVAL",
+  ...
+)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
@@ -64,10 +69,12 @@ statistics as columns.
 \section{Functions}{
 \itemize{
 \item \code{t_pkpt03_MP_col()}: Summary of metabolite-to-parent ratios (stats in columns).
-Filters to metabolite rows using \code{METABFL} (preferred) or, when absent from ADPP,
-falls back to rows where \code{PPCAT} or \code{PARAM} contains "metab" (case-insensitive).
-\code{METABFL} is present in ADPP only when it was included as a grouping variable in
-the NCA run.
+Summarizes the configured analyte ratios already present in ADPP. Configure
+ratios in Parameter Selection > Ratios, or load them from settings, then run
+NCA before rendering. No ratios are calculated in the TLG functions.
+Defaults to splitting by the derived \code{RATIO} label and \code{PPSPEC}; varying
+study, dose, visit, route and interval identifiers are retained to avoid
+collapsing profiles. See \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}} and \code{\link[=p_pkpg06_mp]{p_pkpg06_mp()}}.
 
 }}
 \examples{

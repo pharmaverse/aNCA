@@ -262,3 +262,53 @@ describe("tab_tlg_server: publishes outputs for the app-wide export", {
     })
   })
 })
+
+describe("tab_tlg_server: configured M/P ratios", {
+  it("uses ADPP ratio values and their summary flags for rendering and export", {
+    registered <- new.env(parent = emptyenv())
+    server <- tab_tlg_server
+    environment(server) <- list2env(list(
+      tlg_module_server = function(id, data, type, render_list, ...) {
+        registered[[id]] <- list(data = data, render = render_list)
+        reactive(render_list(data()))
+      },
+      tlg_module_ui = function(...) NULL,
+      nav_panel = function(...) list(...)
+    ), parent = environment(tab_tlg_server))
+    adpp_df <- mp_adpp_fixture()
+    ratio <- adpp_df$PARAMCD == "RACMAX" & adpp_df$ATPTREF == "DOSE 1"
+    adpp_df$AVAL[ratio] <- c(0.37, 0.62)
+    adpp_df$PPSUMXF[ratio & adpp_df$USUBJID == "S1"] <- "Y"
+    current_adpp <- reactiveVal(adpp_df)
+    # No parent/metabolite metadata is needed to display a configured ADPP ratio.
+    testServer(server, args = list(data = test_data, adpp = current_adpp), {
+      functions <- c("t_pkpt03_MP_col", "l_pkpl01_mp", "p_pkpg06_mp")
+      types <- c("table", "listing", "graph")
+      for (i in seq_along(functions)) {
+        .build_tlg_panels(match(functions[i], names(.TLG_DEFINITIONS)), types[i], "_mp")
+      }
+      render <- function(fun) {
+        module <- registered[[paste0(match(fun, names(.TLG_DEFINITIONS)), "_mp")]]
+        module$render(module$data())
+      }
+      table <- render("t_pkpt03_MP_col")[[1]]
+      expect_equal(table$Mean[table$PARAM == "M/P Cmax"], 0.62)
+      expect_equal(table$n[table$PARAM == "M/P Cmax"], 1)
+      listing <- render("l_pkpl01_mp")[[1]]
+      expect_equal(as.numeric(listing$`M/P Cmax`), c(0.37, 0.62))
+      plot <- render("p_pkpg06_mp")[[1]]
+      expect_equal(plot$data$AVAL[plot$data$PARAMCD == "RACMAX"], 0.62)
+      exported <- get("t_pkpt03_MP_col", envir = .tlg_registry)$items()[[1]]
+      expect_equal(exported, table)
+
+      updated <- current_adpp()
+      updated$AVAL[ratio & updated$USUBJID == "S2"] <- 0.91
+      current_adpp(updated)
+      session$flushReact()
+      table <- render("t_pkpt03_MP_col")[[1]]
+      expect_equal(table$Mean[table$PARAM == "M/P Cmax"], 0.91)
+      exported <- get("t_pkpt03_MP_col", envir = .tlg_registry)$items()[[1]]
+      expect_equal(exported, table)
+    })
+  })
+})
