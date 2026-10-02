@@ -314,6 +314,26 @@ data_mapping_ui <- function(id) {
   )
 }
 
+.update_mapping_inputs <- function(session, data, imported_mapping, input_ids) {
+  column_names <- names(data)
+  update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
+
+  # If VOLUME or WTBL is not mapped, neither is its unit column.
+  if (!"VOLUME" %in% column_names) {
+    updateSelectizeInput(session, "select_VOLUMEU", selected = "")
+  }
+  if (!"WTBL" %in% column_names) {
+    updateSelectizeInput(session, "select_WTBLU", selected = "")
+  }
+
+  mapping <- imported_mapping$mapping
+  if (!is.null(mapping)) {
+    session$userData$mapping_skipped <- .process_imported_mapping(
+      mapping, data, session
+    )
+  }
+}
+
 data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
                                 on_mapping_complete = function() {},
                                 on_duplicate_cancel = function() {}) {
@@ -333,25 +353,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
 
     # Populate the static inputs with column names
     observeEvent(c(adnca_data(), imported_mapping()), {
-      column_names <- names(adnca_data())
-      update_selectize_inputs(session, input_ids, column_names, MAPPING_INFO)
-
-      # Exceptions:
-      # If by default VOLUME is not mapped, then neither is VOLUMEU
-      if (!"VOLUME" %in% column_names) {
-        updateSelectizeInput(session, "select_VOLUMEU", selected = "")
-      }
-      # If by default WTBL is not mapped, then neither is WTBLU
-      if (!"WTBL" %in% column_names) {
-        updateSelectizeInput(session, "select_WTBLU", selected = "")
-      }
-
-      mapping <- imported_mapping()$mapping
-      if (!is.null(mapping)) {
-        # process mapping using settings to override default selections
-        skipped <- .process_imported_mapping(mapping, adnca_data(), session)
-        session$userData$mapping_skipped <- skipped
-      }
+      .update_mapping_inputs(
+        session, adnca_data(), imported_mapping(), input_ids
+      )
     })
     # Populate the dynamic input Metabolites
     observe({
