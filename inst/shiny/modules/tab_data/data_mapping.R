@@ -399,7 +399,10 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
 
     mapped_data <- reactive({
       req(adnca_data())
-      log_info("Processing data mapping...")
+      log_info(paste(
+        "Processing data mapping; input rows =", nrow(adnca_data()),
+        "input columns =", ncol(adnca_data())
+      ))
 
       mapping_ <- mapping()
       names(mapping_) <- gsub("^select_", "", names(mapping_))
@@ -422,7 +425,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
           }
         ),
         error = function(e) {
-          log_error(conditionMessage(e))
+          log_error(paste("Mapping failed:", conditionMessage(e)))
           if (!isTRUE(session$userData$auto_replay_active)) {
             removeModal()
           }
@@ -445,6 +448,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     })
 
     processed_data <- reactive({
+      log_trace("Duplicate validation started.")
       tryCatch(
         {
           req(mapped_data())
@@ -465,6 +469,10 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
         },
         time_duplicate_error = function(e) {
           duplicate_data <- e$duplicate_data
+          log_warn(paste(
+            "Duplicate validation found", nrow(duplicate_data),
+            "unresolved rows; scheduling duplicate modal."
+          ))
           session$onFlushed(
             function() df_duplicates(duplicate_data),
             once = TRUE
@@ -491,6 +499,10 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     observeEvent(input$keep_selected_btn, {
       req(df_duplicates())
       selected <- getReactableState("duplicate_modal_table", "selected")
+      log_trace(paste(
+        "Duplicate modal Keep Selected clicked; selected rows =",
+        length(selected %||% integer(0))
+      ))
 
       if (is.null(selected) || length(selected) == 0) {
         showModal(modalDialog(
@@ -596,6 +608,9 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     }
 
     observeEvent(df_duplicates(), {
+      log_info(paste(
+        "Duplicate modal requested; rows =", nrow(df_duplicates())
+      ))
       removeModal()
       session$onFlushed(
         function() show_duplicate_modal(),
@@ -604,6 +619,7 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     })
 
     observeEvent(input$cancel_duplicate_modal, {
+      log_info("Duplicate modal cancelled; returning control to navigation.")
       df_duplicates(NULL)
       removeModal()
       on_duplicate_cancel()

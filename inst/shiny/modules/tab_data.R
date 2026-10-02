@@ -40,10 +40,15 @@
   })
 
   observeEvent(input$next_step, {
+    current_step <- isolate(data_step())
+    log_info(paste(
+      "Data navigation: Next requested at step", current_step,
+      "mapping_busy =", isTRUE(isolate(mapping_busy()))
+    ))
     if (isTRUE(mapping_busy())) {
+      log_warn("Data navigation: Next ignored because mapping is busy.")
       return()
     }
-    current_step <- isolate(data_step())
     if (current_step %in% c("upload", "filtering")) {
       idx <- match(current_step, steps)
       data_step(steps[idx + 1])
@@ -52,6 +57,7 @@
       )
     } else if (current_step == "mapping") {
       mapping_busy(TRUE)
+      log_info("Data navigation: mapping submission started.")
       # Defer the submit to a later flush so the loading modal is sent to the
       # browser and painted first. The mapping pipeline is synchronous, so if
       # we incremented the trigger in this same observer it would run to
@@ -62,6 +68,7 @@
       # hide and the spinner stays on screen forever. Deferring puts the submit
       # (and its removeModal) in a subsequent flush where the hide applies.
       shinyjs::delay(100, {
+        log_trace("Data navigation: deferred mapping trigger fired.")
         trigger_mapping_submit(trigger_mapping_submit() + 1)
       })
     } else if (current_step == "preview") {
@@ -82,6 +89,10 @@
 
   observeEvent(input$prev_step, {
     current <- data_step()
+    log_info(paste(
+      "Data navigation: Previous requested at step", current,
+      "mapping_busy =", isTRUE(mapping_busy())
+    ))
     idx <- match(current, steps)
     if (!is.na(idx) && idx > 1) {
       data_step(steps[idx - 1])
@@ -385,9 +396,12 @@ tab_data_server <- function(id) {
       # This callback can run from a reactive finally handler or an onFlushed
       # callback. Read the state in an isolated context so either path can
       # safely schedule the navigation reset.
-      if (isTRUE(shiny::isolate(mapping_busy()))) {
+      busy <- isTRUE(shiny::isolate(mapping_busy()))
+      log_info(paste("Mapping terminal callback received; busy =", busy))
+      if (busy) {
         session$onFlushed(
           function() {
+            log_info("Mapping terminal callback: navigation state reset.")
             shiny::removeModal()
             mapping_busy(FALSE)
           },
