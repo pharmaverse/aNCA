@@ -179,6 +179,25 @@ render_tlg_panels <- function(output) {
 }
 
 describe("tab_tlg_server: TLG export registry", {
+  it("reuses the same modules when the order is submitted repeatedly", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      registered <- ls(envir = .registered_modules)
+      items <- lapply(as.list(.tlg_registry), function(entry) entry$items)
+      expect_gt(length(registered), 0)
+
+      for (submission in 2:4) {
+        session$setInputs(submit_tlg_order = submission)
+        session$flushReact()
+        render_tlg_panels(output)
+        expect_identical(ls(envir = .registered_modules), registered)
+        expect_identical(lapply(as.list(.tlg_registry), function(entry) entry$items), items)
+      }
+    })
+  })
+
   it("registers an entry for every rendered TLG", {
     testServer(tab_tlg_server, args = list(data = test_data), {
       # tlg_order_filtered() is bindEvent(submit_tlg_order), so nothing renders until the
