@@ -408,9 +408,23 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       purrr::keep(\(x) !is.null(x)) %>%
       do.call(reactiveValues, .)
 
-    #' creates widgets responsible for custimizing the plots
+    # Only the dependent selector is rebuilt when its source column changes.
+    # Other widgets keep their layout and user edits.
+    dependent_options <- purrr::keep(options, function(def) {
+      is.list(def) && !is.null(def$choices_from)
+    })
+    purrr::iwalk(dependent_options, function(def, id) {
+      output[[id]] <- renderUI({
+        column <- options_values[[def$choices_from]]()
+        if (length(column) == 1 && nzchar(column)) def$choices <- paste0("$", column)
+        .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
+      })
+      outputOptions(output, id, suspendWhenHidden = FALSE)
+    })
+
     output$options <- renderUI({
       purrr::imap(options, function(def, id) {
+        if (id %in% names(dependent_options)) return(uiOutput(session$ns(id)))
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
       })
     })
@@ -442,6 +456,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
   if (grepl(".group_label", opt_id)) {
     return(tags$h1(opt_def, class = "tlg-group-label"))
   }
+  if (is.character(opt_def)) return(helpText(opt_def))
   ui_fn <- get(glue::glue("tlg_option_{opt_def$type}_ui"))
   # Only the select widget resolves the .pknca_groups default; other widget types
   # keep their original three-argument signature.

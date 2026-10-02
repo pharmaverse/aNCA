@@ -490,6 +490,7 @@ l_pkcl01:
       choices: .colnames
       multiple: true
       default: ["NFRLT", "AFRLT", "AVALC"]
+    .help_columns: "Choose data columns to display alongside the listing grouping variables. Clear the selection to use the default columns."
     .group_label_3: "Formatting"
     formatting_vars_table:
       label: "Variables formatting"
@@ -564,6 +565,8 @@ l_pkcl01_tad:
       choices: .colnames
       multiple: true
       default: ["TRT01A", "USUBJID", "ATPTREF"]
+    .group_label_columns: "Displayed variables (fixed)"
+    .help_columns: "This time-after-dose listing always shows nominal time (NRRLT), actual time (ARRLT), and concentration (AVAL)."
     .group_label_3: "Formatting"
     formatting_vars_table:
       label: "Variables formatting"
@@ -649,6 +652,7 @@ l_pkcl02_uri:
       type: select
       choices: .colnames
       multiple: true
+    .help_columns: "Choose data columns to display alongside the listing grouping variables. Clear the selection to show the default time, concentration, and available volume columns."
     .group_label_4: "Formatting"
     formatting_vars_table:
       label: "Variables formatting"
@@ -716,10 +720,19 @@ l_pkpl01:
       multiple: true
       default: ["TRT01A", "USUBJID"]
     .group_label_3: "Columns"
+    .help_columns: "Each selected parameter becomes a column. Leave Displayed parameters empty to show all parameters. Changing Parameter variable resets this selection."
     param_var:
       label: "Parameter variable"
       type: select
       choices: .colnames
+      default: PARAM
+    param_filter:
+      label: "Displayed parameters"
+      type: select
+      choices: $PARAM
+      choices_from: param_var
+      placeholder: "All parameters"
+      multiple: true
     value_var:
       label: "Value variable"
       type: select
@@ -764,10 +777,20 @@ l_pkpl01_mp:
       multiple: true
       default: ["TRT01A", "USUBJID"]
     .group_label_3: "Columns"
+    .help_columns: "Each selected parameter becomes a column. Leave Displayed parameters empty to show all parameters. Changing Parameter variable resets this selection."
     param_var:
       label: "Parameter variable"
       type: select
       choices: .colnames
+      default: PARAM
+    param_filter:
+      label: "Displayed parameters"
+      type: select
+      choices: $PARAM
+      choices_from: param_var
+      metabolites_only: true
+      placeholder: "All parameters"
+      multiple: true
     value_var:
       label: "Value variable"
       type: select
@@ -812,10 +835,19 @@ l_pkpl04_mp:
       multiple: true
       default: ["PARAM", "TRT01A", "USUBJID"]
     .group_label_3: "Columns"
+    .help_columns: "Each selected parameter becomes a column. Leave Displayed parameters empty to show all parameters. Changing Parameter variable resets this selection."
     param_var:
       label: "Parameter variable"
       type: select
       choices: .colnames
+      default: PARAM
+    param_filter:
+      label: "Displayed parameters"
+      type: select
+      choices: $PARAM
+      choices_from: param_var
+      placeholder: "All parameters"
+      multiple: true
     value_var:
       label: "Value variable"
       type: select
