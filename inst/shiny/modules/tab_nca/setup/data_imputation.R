@@ -128,6 +128,44 @@ data_imputation_ui <- function(id) {
           width = "500px"
         )
       )
+    ),
+    hr(),
+    # Drop end-of-interval concentration widget and help button
+    fluidRow(
+      column(
+        width = 10,
+        input_switch(
+          id = ns("drop_end_conc"),
+          label = "Drop End Concentration",
+          value = FALSE
+        )
+      ),
+      column(
+        width = 2,
+        dropdown(
+          div(
+            tags$h2("Drop End Concentration Help"),
+            p(
+              "Drops the concentration measured exactly at the end of each",
+              "interval before regular (non-partial) parameter calculations.",
+              "Only applies to main intervals; partial/interval parameters are",
+              "left untouched."
+            ),
+            p(
+              "This is useful for multiple-dose data where the concentration at",
+              "the interval end really belongs to the next dose (e.g. an imputed",
+              "C0). Including it can distort parameters such as Cmax, Tmax and AUC;",
+              "genuine troughs are unaffected when the point does not sit exactly",
+              "at the interval end."
+            )
+          ),
+          style = "unite",
+          right = TRUE,
+          icon = icon("question"),
+          status = "primary",
+          width = "500px"
+        )
+      )
     )
   )
 }
@@ -147,6 +185,11 @@ data_imputation_server <- function(id, settings_override) {
       # Restore impute_c0 switch
       if (!is.null(imputation$impute_c0)) {
         update_switch("should_impute_c0", value = imputation$impute_c0)
+      }
+
+      # Restore drop_end_conc switch
+      if (!is.null(imputation$drop_end_conc)) {
+        update_switch("drop_end_conc", value = imputation$drop_end_conc)
       }
 
       # Restore BLQ strategy dropdown
@@ -249,6 +292,7 @@ data_imputation_server <- function(id, settings_override) {
 
     list(
       should_impute_c0 = reactive(input$should_impute_c0),
+      drop_end_conc = reactive(input$drop_end_conc),
       blq_strategy = reactive(input$select_blq_strategy),
       blq_imputation_rule = blq_imputation_rule
     )
