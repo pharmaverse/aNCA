@@ -4,6 +4,8 @@
 #' same engine as [l_pkcl01()].  Returns one listing per unique combination of
 #' `listgroup_vars` (default: `PPCAT` x `PPSPEC`).
 #'
+#' Missing parameter values flagged with `PPSUMXF == "Y"` are displayed as `NA*`.
+#'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param listgroup_vars Character vector of columns used to split the output
 #'   into separate listings. Default: `c("PPCAT", "PPSPEC")`.
@@ -71,6 +73,7 @@ l_pkpl01 <- function(
 
   .make_wide_listing <- function(df) {
     has_unit <- unit_var %in% names(df)
+    has_summary_exclusions <- .has_summary_excluded_records(df, "PPSUMXF")
 
     col_labels <- if (has_unit) {
       vapply(sort(unique(df[[param_var]])), function(p) {
@@ -82,10 +85,10 @@ l_pkpl01 <- function(
       sort(unique(df[[param_var]]))
     }
 
+    df$.val_fmt <- round(as.numeric(df[[value_var]]), 3)
+    df <- .mark_sum_excl_vals(df, "PPSUMXF", ".val_fmt")
+
     wide <- df %>%
-      dplyr::mutate(
-        .val_fmt = round(as.numeric(.data[[value_var]]), 3)
-      ) %>%
       dplyr::select(dplyr::all_of(c(
         intersect(listgroup_vars, names(df)),
         grouping_vars, param_var, ".val_fmt"
@@ -96,7 +99,7 @@ l_pkpl01 <- function(
         # When a subject has multiple rows for the same PARAM (e.g. multi-
         # interval ADPP), take the first value rather than creating list-columns.
         values_fn   = dplyr::first,
-        values_fill = NA_real_
+        values_fill = if (has_summary_exclusions) NA_character_ else NA_real_
       )
 
     param_cols <- sort(unique(df[[param_var]]))
@@ -123,7 +126,11 @@ l_pkpl01 <- function(
       main_title  = parse_annotation(data = df, text = title),
       subtitles   = gsub("<br>", "\n",
                          parse_annotation(data = df, text = subtitle)),
-      main_footer = parse_annotation(data = df, text = footnote)
+      main_footer = .add_sum_excl_footnote(
+        parse_annotation(data = df, text = footnote),
+        df,
+        "PPSUMXF"
+      )
     )
   }
 

@@ -54,6 +54,9 @@ Creates individual-level listings of PK parameters from ADPP data using the
 same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per unique combination of
 \code{listgroup_vars} (default: \code{PPCAT} x \code{PPSPEC}).
 }
+\details{
+Missing parameter values flagged with \code{PPSUMXF == "Y"} are displayed as \verb{NA*}.
+}
 \section{Functions}{
 \itemize{
 \item \code{l_pkpl01_mp()}: Listing filtered to metabolite rows (pkpl01 M/P).
