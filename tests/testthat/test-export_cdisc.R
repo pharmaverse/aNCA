@@ -138,7 +138,7 @@ describe("export_cdisc", {
     )
     expect_equal(
       unique(res_no_atpt_pctpt_vars$adnca$ATPTN),
-      NA
+      NA_real_
     )
   })
 

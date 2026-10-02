@@ -164,7 +164,7 @@ adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {
   for (var in names(df)) {
     var_specs <- metadata %>% filter(Variable == var, !duplicated(Variable))
 
-    if (nrow(var_specs) == 0 || all(is.na(df[[var]]))) next
+    if (nrow(var_specs) == 0) next
 
     df[[var]] <- .apply_var_rules(
       df[[var]], var_specs$Type, var_specs$Length, var, adjust_length
