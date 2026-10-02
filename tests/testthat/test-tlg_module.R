@@ -1,6 +1,7 @@
 # Source the TLG module to test pure utility functions
 local({
   library(shiny)
+  library(shinyWidgets)
   # The module's error handler calls log_error(); the app attaches logger in app.R.
   library(logger)
   shiny_dir <- system.file("shiny", package = "aNCA")
@@ -137,7 +138,7 @@ describe(".tlg_module_edit_widget", {
     )
     result <- .tlg_module_edit_widget("mod-myopt", opt_def, data = NULL)
     html   <- as.character(result)
-    # tlg_option_select_ui returns a selectInput
+    # tlg_option_select_ui returns a pickerInput
     expect_true(grepl("X", html))
     expect_true(grepl("Y", html))
   })
@@ -148,6 +149,36 @@ describe(".tlg_module_edit_widget", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_module_server", {
+  it("passes all selected statistics and zero values to the TLG function", {
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data = shiny::reactive(data.frame(NFRLT = c(0, 1))),
+        type = "table",
+        render_list = function(data, stats, time_filter, xmin) {
+          list(data.frame(stat = stats, time = time_filter, xmin = xmin))
+        },
+        options = list(
+          stats = list(type = "select", choices = ".stats", multiple = TRUE),
+          time_filter = list(type = "select", choices = "$NFRLT", multiple = TRUE),
+          xmin = list(type = "numeric", default = 0)
+        )
+      ),
+      {
+        session$setInputs(
+          `stats-select` = names(aNCA:::.STAT_LABELS),
+          `time_filter-select` = "0",
+          `xmin-numeric` = 0
+        )
+        session$elapse(800)
+        result <- tlg_list()[[1]]
+        expect_equal(result$stat, names(aNCA:::.STAT_LABELS))
+        expect_equal(result$time, rep("0", length(aNCA:::.STAT_LABELS)))
+        expect_equal(result$xmin, rep(0, length(aNCA:::.STAT_LABELS)))
+      }
+    )
+  })
+
   test_data <- shiny::reactive(
     list(conc = list(data = data.frame(
       NFRLT = 1:3, AVAL = c(5, 4, 3), stringsAsFactors = FALSE
@@ -231,7 +262,7 @@ describe("tlg_module_server", {
   })
 
   it("still renders when a multi-select option is left empty (no default)", {
-    # Regression: a `multiple` selectInput with nothing selected reports NULL.
+    # Regression: a `multiple` pickerInput with nothing selected reports NULL.
     # tlg_module_server's is-null guard would then return NULL and blank the
     # whole table.  With the option server coercing NULL -> "", the empty option
     # is simply dropped and the table renders with the function default.
@@ -305,7 +336,7 @@ describe(".tlg_module_edit_widget", {
     )
     result <- .tlg_module_edit_widget("mod-myopt", opt_def, data = NULL)
     html   <- as.character(result)
-    # tlg_option_select_ui returns a selectInput
+    # tlg_option_select_ui returns a pickerInput
     expect_true(grepl("X", html))
     expect_true(grepl("Y", html))
   })
