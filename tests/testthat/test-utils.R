@@ -22,6 +22,46 @@ describe("rename_interval_params", {
     result <- rename_interval_params(df)
     expect_equal(result$PPTESTCD, c("CMAX", "AUCLST"))
   })
+
+  it("uses the custom interval name when provided (#1463)", {
+    df <- data.frame(
+      PPTESTCD = c("CMAX", "AUCINT", "AUCINT"),
+      type_interval = c("main", "manual", "manual"),
+      start_dose = c(0, 0, 12),
+      end_dose = c(24, 12, 24),
+      interval_name = c(NA, "Early exposure", NA),
+      stringsAsFactors = FALSE
+    )
+    result <- rename_interval_params(df)
+    # Row with a custom name uses it; empty falls back to the standard suffix;
+    # main rows are untouched.
+    expect_equal(result$PPTESTCD, c("CMAX", "Early exposure", "AUCINT_12-24"))
+  })
+
+  it("falls back to the standard name for empty custom names (#1463)", {
+    df <- data.frame(
+      PPTESTCD = c("AUCINT", "AUCINT"),
+      type_interval = c("manual", "manual"),
+      start_dose = c(0, 0),
+      end_dose = c(12, 24),
+      interval_name = c("", NA),
+      stringsAsFactors = FALSE
+    )
+    result <- rename_interval_params(df)
+    expect_equal(result$PPTESTCD, c("AUCINT_0-12", "AUCINT_0-24"))
+  })
+
+  it("works when the interval_name column is absent (#1463)", {
+    df <- data.frame(
+      PPTESTCD = "AUCINT",
+      type_interval = "manual",
+      start_dose = 0,
+      end_dose = 24,
+      stringsAsFactors = FALSE
+    )
+    result <- rename_interval_params(df)
+    expect_equal(result$PPTESTCD, "AUCINT_0-24")
+  })
 })
 
 describe(".eval_range", {

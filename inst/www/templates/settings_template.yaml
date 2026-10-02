@@ -18,6 +18,12 @@ settings:
     end_auc:
     - 24.0
     - 24.0
+    custom_name:
+    - Early exposure
+    - ~
+    study_type:
+    - All
+    - Single Extravascular
   flags:
     R2ADJ:
       is.checked: yes

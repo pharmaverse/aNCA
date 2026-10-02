@@ -7,6 +7,7 @@
 
 ## Bug Fixes
 
+* Restricting a partial interval to a specific study type no longer silently drops the interval from the results and PP/ADPP output. The "Study Type" dropdown derived its labels with metabolite information (e.g. `Multiple IV Infusion (Metabolite)`), but the interval calculation matches against labels derived with metabolite information blanked, so the selected label never matched and the interval was never calculated. The dropdown now reuses the same derivation as calculation time, so every offered label matches (#1463)
 * Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
@@ -40,6 +41,10 @@
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
 
 ## Features
+
+### Partial Interval Calculations
+* Partial interval parameters can now be given a custom name. When set, the custom name replaces the standard `PPTESTCD_<start>-<end>` label (e.g. `AUCINT_0-24`) in the results table, plots and ratio-parameter options; the underlying PKNCA parameter and CDISC `PPTESTCD` are unchanged. Leaving the name blank keeps the standard label (#1463)
+* Each partial interval parameter can now be restricted to a single study type detected in the data (e.g. only `Excretion Data`), via a new "Study Type" column. The default "All" keeps the previous behaviour of calculating the interval for every study type. Both fields round-trip through the settings file and the exported R script (#1463)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):

@@ -153,6 +153,7 @@ analyte
 analytes
 aucpext
 aucs
+behaviour
 bioavailability
 bioequivalence
 cdisc
@@ -180,6 +181,7 @@ frac
 ggplot
 ggplots
 hardcoded
+honoured
 ifelse
 img
 intravascular

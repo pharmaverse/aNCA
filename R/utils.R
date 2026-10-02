@@ -3,10 +3,13 @@
 #' For rows where `type_interval == "manual"`, appends
 #' `_<start_dose>-<end_dose>` to `PPTESTCD` so that each interval
 #' appears as a distinct entry (e.g., `AUCINT` becomes `AUCINT_0-12`).
+#' When a manual interval carries a non-empty `interval_name` (a user-defined
+#' custom label), that name is used verbatim instead of the range suffix.
 #' Non-manual rows are left unchanged.
 #'
 #' @param data A data frame with columns `PPTESTCD`, `type_interval`,
-#'   `start_dose`, and `end_dose`.
+#'   `start_dose`, and `end_dose`. An optional `interval_name` column, when
+#'   present, supplies custom labels for manual intervals.
 #'
 #' @returns The input data frame with `PPTESTCD` renamed for manual intervals.
 #'
@@ -15,9 +18,16 @@
 #' @noRd
 #' @keywords internal
 rename_interval_params <- function(data) {
+  if (!"interval_name" %in% names(data)) {
+    data$interval_name <- NA_character_
+  }
   mutate(data, PPTESTCD = ifelse(
     type_interval == "manual",
-    paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose)),
+    ifelse(
+      !is.na(interval_name) & interval_name != "",
+      interval_name,
+      paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose))
+    ),
     PPTESTCD
   ))
 }
