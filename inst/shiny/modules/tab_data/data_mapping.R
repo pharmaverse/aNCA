@@ -573,15 +573,20 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     })
 
     observeEvent(input$cancel_exclude_all, {
+      duplicate_data <- df_duplicates()
       removeModal()
       session$onFlushed(
-        function() show_duplicate_modal(),
+        function() show_duplicate_modal(duplicate_data),
         once = TRUE
       )
     })
 
-    show_duplicate_modal <- function() {
-      req(df_duplicates())
+    show_duplicate_modal <- function(duplicate_data) {
+      req(!is.null(duplicate_data))
+      log_trace(paste(
+        "Rendering duplicate modal after flush; rows =",
+        nrow(duplicate_data)
+      ))
       showModal(
         modalDialog(
           title = "Duplicate Rows Detected",
@@ -608,12 +613,13 @@ data_mapping_server <- function(id, adnca_data, imported_mapping, trigger,
     }
 
     observeEvent(df_duplicates(), {
+      duplicate_data <- df_duplicates()
       log_info(paste(
-        "Duplicate modal requested; rows =", nrow(df_duplicates())
+        "Duplicate modal requested; rows =", nrow(duplicate_data)
       ))
       removeModal()
       session$onFlushed(
-        function() show_duplicate_modal(),
+        function() show_duplicate_modal(duplicate_data),
         once = TRUE
       )
     })
