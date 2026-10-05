@@ -289,7 +289,7 @@ tab_tlg_server <- function(id, data) {
     # apply_labels() restores column `label` attributes stripped by the
     # PKNCA/dplyr pipeline so the `!COLUMN` label-reference syntax resolves in
     # title/subtitle/footnote/axis inputs.
-    conc_data_all <- reactive({
+    conc_data <- reactive({
       req(data())
       apply_labels(data()$adnca, type = "ADNCA")
     })
