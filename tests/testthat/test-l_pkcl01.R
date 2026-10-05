@@ -343,10 +343,35 @@ describe("l_pkcl01", {
       attr(listings$`A.Plasma.Oral`, "main_footer"),
       c(
         "Existing footnote",
-        "* Record excluded from summary tables and plots (PKSUMXF = \"Y\")."
+        "* Summary and mean plots excluded (PKSUMXF = \"Y\")."
       )
     )
     expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
+  })
+
+  it("uses one stable marker dictionary for summary reasons", {
+    flagged_adnca <- adnca
+    flagged_adnca$PKSUMXF <- c("Y", "Y", "", "")
+    flagged_adnca$PKSUM1RS <- c("Reason B", "Reason A", "", "Reason C")
+
+    listings <- l_pkcl01(
+      flagged_adnca,
+      listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+      grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+      displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+      footnote = "Existing footnote"
+    )
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ**", "20.12*"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "* Summary and mean plots excluded: PKSUM1RS = \"Reason A\".",
+        "** Summary and mean plots excluded: PKSUM1RS = \"Reason B\"."
+      )
+    )
+    expect_true(grepl("\\*\\*", as.character(listings$`A.Plasma.Oral`$AVAL[1])))
   })
 
   it("marks NCAXFL records and explains the marker in the footer", {
@@ -364,10 +389,36 @@ describe("l_pkcl01", {
       attr(listings$`A.Plasma.Oral`, "main_footer"),
       c(
         "Existing footnote",
-        "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)."
+        "# NCA excluded record (NCAXFL = \"Y\")."
       )
     )
     expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
+  })
+
+  it("uses multiple NCA reason markers from exported NCA columns", {
+    flagged_adnca <- adnca
+    flagged_adnca$NCAXFL <- c("Y", "Y", "", "")
+    flagged_adnca$NCA1XRS <- c("Reason B", "Reason A", "", "")
+    flagged_adnca$NCA2XRS <- c("Reason C", "", "", "")
+
+    listings <- l_pkcl01(
+      flagged_adnca,
+      listgroup_vars = c("PARAM", "PCSPEC", "ROUTE"),
+      grouping_vars = c("TRT01A", "USUBJID", "ATPTREF"),
+      displaying_vars = c("NFRLT", "AFRLT", "AVAL"),
+      footnote = "Existing footnote"
+    )
+
+    expect_equal(as.vector(listings$`A.Plasma.Oral`$AVAL), c("BLQ#####", "20.12#"))
+    expect_equal(
+      attr(listings$`A.Plasma.Oral`, "main_footer"),
+      c(
+        "Existing footnote",
+        "# NCA excluded record: NCA1XRS = \"Reason A\".",
+        "## NCA excluded record: NCA1XRS = \"Reason B\".",
+        "### NCA excluded record: NCA2XRS = \"Reason C\"."
+      )
+    )
   })
 
   it("marks raw PKNCA exclude records and explains the marker in the footer", {
@@ -385,7 +436,7 @@ describe("l_pkcl01", {
       attr(listings$`A.Plasma.Oral`, "main_footer"),
       c(
         "Existing footnote",
-        "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)."
+        "# NCA excluded record: exclude = \"Manual NCA exclusion\"."
       )
     )
     expect_equal(attr(listings$`B.Plasma.IV`, "main_footer"), "Existing footnote")
@@ -407,8 +458,8 @@ describe("l_pkcl01", {
       attr(listings$`A.Plasma.Oral`, "main_footer"),
       c(
         "Existing footnote",
-        "* Record excluded from summary tables and plots (PKSUMXF = \"Y\").",
-        "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)."
+        "* Summary and mean plots excluded (PKSUMXF = \"Y\").",
+        "# NCA excluded record (NCAXFL = \"Y\")."
       )
     )
   })
@@ -487,7 +538,7 @@ describe("l_pkcl02_uri", {
 
     expect_equal(as.vector(result$AVAL), c("1.2", "3.4#"))
     expect_true(
-      "# Record excluded from NCA calculations (NCAXFL = \"Y\" or NCA exclude reason present)." %in%
+      "# NCA excluded record (NCAXFL = \"Y\")." %in%
         attr(result, "main_footer")
     )
   })

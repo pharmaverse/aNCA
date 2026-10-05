@@ -210,8 +210,18 @@ l_pkcl01 <- function(
     formatting_vars_table$na_str[match(value_vars[1], formatting_vars_table$var_name)],
     "NA"
   )
-  data_grouped <- .mark_sum_excl_vals(data_grouped, "PKSUMXF", value_vars, na_str)
-  data_grouped <- .mark_nca_excl_vals(data_grouped, "NCAXFL", value_vars, na_str)
+  sum_dictionary <- .exclusion_details(
+    data_grouped, "PKSUMXF", .SUMMARY_EXCLUSION_MARKER, summary_only = TRUE
+  )$dictionary
+  nca_dictionary <- .exclusion_details(
+    data_grouped, "NCAXFL", .NCA_EXCLUSION_MARKER
+  )$dictionary
+  data_grouped <- .mark_sum_excl_vals(
+    data_grouped, "PKSUMXF", value_vars, na_str, dictionary = sum_dictionary
+  )
+  data_grouped <- .mark_nca_excl_vals(
+    data_grouped, "NCAXFL", value_vars, na_str, dictionary = nca_dictionary
+  )
 
   # Make sure the data stays labelled
   var_labels(data_grouped) <- c(var_labels(data), id_list = "id")
@@ -248,12 +258,14 @@ l_pkcl01 <- function(
     footnote <- .add_sum_excl_footnote(
       footnote,
       list_data,
-      "PKSUMXF"
+      "PKSUMXF",
+      dictionary = sum_dictionary
     )
     footnote <- .add_nca_excl_footnote(
       footnote,
       list_data,
-      "NCAXFL"
+      "NCAXFL",
+      dictionary = nca_dictionary
     )
 
 

@@ -112,9 +112,22 @@ describe("l_pkpl01", {
       attr(result, "main_footer"),
       c(
         "Existing footnote",
-        "* Record excluded from summary tables and plots (PPSUMXF = \"Y\")."
+        "* Summary and mean plots excluded (PPSUMXF = \"Y\")."
       )
     )
+  })
+
+  it("uses sorted unique reasons for stable ADPP markers", {
+    flagged_data <- pkpl_data
+    flagged_data$PPSUMXF <- ""
+    flagged_data$PPSUMXF[1:2] <- "Y"
+    flagged_data$PPSUMRSN <- ""
+    flagged_data$PPSUMRSN[1] <- "Reason B; Reason A"
+    flagged_data$PPSUMRSN[2] <- "Reason C"
+
+    result <- l_pkpl01(flagged_data)[[1]]
+    expect_equal(as.character(result$Cmax[1]), "5***")
+    expect_equal(as.character(result$AUClast[1]), "20###")
   })
 })
 

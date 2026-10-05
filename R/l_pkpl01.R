@@ -71,6 +71,10 @@ l_pkpl01 <- function(
     )
   }
 
+  sum_dictionary <- .exclusion_details(
+    data, "PPSUMXF", .SUMMARY_EXCLUSION_MARKER, summary_only = TRUE
+  )$dictionary
+
   .make_wide_listing <- function(df) {
     has_unit <- unit_var %in% names(df)
     has_summary_exclusions <- .has_summary_excluded_records(df, "PPSUMXF")
@@ -86,7 +90,9 @@ l_pkpl01 <- function(
     }
 
     df$.val_fmt <- round(as.numeric(df[[value_var]]), 3)
-    df <- .mark_sum_excl_vals(df, "PPSUMXF", ".val_fmt")
+    df <- .mark_sum_excl_vals(
+      df, "PPSUMXF", ".val_fmt", dictionary = sum_dictionary
+    )
 
     wide <- df %>%
       dplyr::select(dplyr::all_of(c(
@@ -129,7 +135,8 @@ l_pkpl01 <- function(
       main_footer = .add_sum_excl_footnote(
         parse_annotation(data = df, text = footnote),
         df,
-        "PPSUMXF"
+        "PPSUMXF",
+        dictionary = sum_dictionary
       )
     )
   }
