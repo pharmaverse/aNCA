@@ -37,12 +37,19 @@ local({
 },
 envir = parent.env(environment()))
 
-test_data <- reactive(list(conc = list(data = data.frame(
-  USUBJID = c("S1", "S2"),
-  PCSPEC  = c("PLASMA", "PLASMA"),
-  AVAL    = c(1, 2),
-  stringsAsFactors = FALSE
-))))
+test_data <- reactive(list(
+  adnca = data.frame(
+    USUBJID = c("S1", "S2"),
+    PCSPEC  = c("PLASMA", "PLASMA"),
+    AVAL    = c(1, 2),
+    stringsAsFactors = FALSE
+  ),
+  adpp = data.frame(
+    USUBJID = c("S1", "S2"),
+    AVAL    = c(3, 4),
+    stringsAsFactors = FALSE
+  )
+))
 
 describe("tab_tlg_server: add-picker selection", {
   it("sets Selection = TRUE for exactly the checked ids on confirm", {
@@ -128,8 +135,7 @@ describe("tab_tlg_server: data boundary", {
     shiny::testServer(
       tab_tlg_server,
       args = list(
-        data = shiny::reactive(list(conc = list(data = adnca_df))),
-        adpp = shiny::reactive(adpp_df)
+        data = shiny::reactive(list(adnca = adnca_df, adpp = adpp_df))
       ),
       {
         expect_equal(attr(conc_data_all()$AVAL, "label"), "Analysis Value")
@@ -146,8 +152,7 @@ describe("tab_tlg_server: data boundary", {
     shiny::testServer(
       tab_tlg_server,
       args = list(
-        data = shiny::reactive(list(conc = list(data = adnca_df))),
-        adpp = shiny::reactive(adpp_df)
+        data = shiny::reactive(list(adnca = adnca_df, adpp = adpp_df))
       ),
       {
         # Filtered sources drop the flagged row from their OWN dataset only.
