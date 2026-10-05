@@ -233,6 +233,7 @@ h5 {
   margin-top: 1em;
   /* Well containing tabs for each tlg */
   /* tlg tab */
+  /* title / subtitle / footnote rendered around a table TLG (issue #1430) */
 }
 
 .tlg-module div.well {
@@ -283,6 +284,25 @@ h5 {
 
 .tlg-module .tlg-options-container .form-group.shiny-input-container label {
   margin: 0;
+}
+
+.tlg-module .tlg-table-title {
+  font-size: 1.15rem;
+  font-weight: bold;
+  margin-bottom: 0.15em;
+}
+
+.tlg-module .tlg-table-subtitle {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 0.5em;
+}
+
+.tlg-module .tlg-table-footnote {
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 0.5em;
+  margin-bottom: 1.5em;
 }
 
 .modal-dialog:has(.tlg-option-table) {

@@ -77,6 +77,7 @@
 * The standalone mean, urine, dose-proportionality and box plot entries (`pkcg03` by dose, `pkpg01`/`pkpg02`/`pkpg03`/`pkpg04`/`pkpg06`) expose Title, Subtitle and Footnote inputs in the sidebar, matching the other graph entries (#1356)
 * Summary tables can filter which stratification values appear: a "Parameters to show" filter on the `pkpt03/07/08` tables and a "Timepoints to show" filter on the `pkct01` tables restrict the rows to the chosen `PARAM`/timepoint values (#1356)
 * Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
+* All 33 TLG entries offer Title, Subtitle and Footnote controls, with catalog-based default wording. Summary-table subtitles follow the selected split variables, and PK-parameter plot subtitles identify each plot's analyte, specimen, visit and units. Labels and axis edits persist when the order is re-submitted, and Reset to defaults restores their defaults. Labels remain visible in downloaded HTML graphs and PDF tables and listings, and the urine concentration listing title is editable (#1476)
 
 ### TLG Order & Selection
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)

@@ -341,6 +341,22 @@ describe("l_pkcl02_uri", {
     expect_true("VOLUME" %in% names(result))
   })
 
+  # Issue #1430: `title` used to be hardcoded in the forwarded call to l_pkcl01, so the
+  # sidebar could not expose it -- a user-supplied title was a duplicate-argument error.
+  it("defaults to the catalog urine listing title", {
+    result <- l_pkcl02_uri(uri_data)[[1]]
+    expect_equal(
+      formatters::main_title(result),
+      paste0("Listing of Urine PK Concentration and Volume ",
+             "by Treatment Group, Subject and Nominal Time, PK Population")
+    )
+  })
+
+  it("accepts a user-supplied title instead of erroring on a duplicate argument", {
+    result <- l_pkcl02_uri(uri_data, title = "My Urine Title")[[1]]
+    expect_equal(formatters::main_title(result), "My Urine Title")
+  })
+
   it("does not include VOLUME when column is absent from data", {
     data_no_vol <- uri_data[, setdiff(names(uri_data), c("VOLUME", "VOLUMEU"))]
     result <- l_pkcl02_uri(data_no_vol)[[1]]

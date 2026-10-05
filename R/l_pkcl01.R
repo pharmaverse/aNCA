@@ -277,6 +277,10 @@ l_pkcl01_tad <- function(data, ...) {
 #' @param displaying_vars Character vector of columns to display. When `NULL`
 #'   (default), uses `c("NFRLT", "AFRLT", "AVAL")` plus `VOLUME`/`VOLUMEU`
 #'   if those columns exist in the data.
+#' @param title Main listing title. Bound as a named parameter rather than left
+#'   to `...` so the sidebar can expose it: forwarding a user-supplied `title`
+#'   through `...` while the wrapper also sets one is a duplicate-argument error
+#'   at render time.
 #' @param ... Additional arguments forwarded to [l_pkcl01()].
 #'
 #' @return A named list of `listing_df` objects.
@@ -294,6 +298,10 @@ l_pkcl02_uri <- function(
   urine_specs     = c("URINE"),
   listgroup_vars  = c("PARAM", "PCSPEC"),
   displaying_vars = NULL,
+  title = paste0(
+    "Listing of Urine PK Concentration and Volume ",
+    "by Treatment Group, Subject and Nominal Time, PK Population"
+  ),
   ...
 ) {
   if ("PCSPEC" %in% names(data)) {
@@ -328,10 +336,7 @@ l_pkcl02_uri <- function(
     data,
     listgroup_vars  = listgroup_vars,
     displaying_vars = displaying_vars,
-    title = paste0(
-      "Listing of Urine PK Concentration and Volume ",
-      "by Treatment Group, Subject and Nominal Time, PK Population"
-    ),
+    title = title,
     ...
   )
 }

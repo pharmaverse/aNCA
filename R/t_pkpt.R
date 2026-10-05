@@ -126,12 +126,20 @@
 #'   `c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min",
 #'   "Max")`. `NULL` (default) shows all of them. Names not produced by this
 #'   table are ignored.
+#' @param title Table title. Supports `$VAR` / `!VAR` annotation syntax (see
+#'   [parse_annotation()]). Attached to each returned table as a `tlg_title`
+#'   attribute.
+#' @param subtitle Per-table subtitle. `NULL` (default) names each `list_vars`
+#'   split variable and its value.
+#' @param footnote Table footnote, attached as a `tlg_footnote` attribute.
 #'
 #' @return A named list of data frames, one per combination of `list_vars`.
 #'   Each data frame has one column per `strat_var` followed by the statistics:
 #'   `n`, `Mean`, `SD`, `CV_pct`, `GeoMean`, `GeoCV_pct`, `Median`, `Min`, `Max`.
 #'   When `col_group_var` is set, the statistic columns are prefixed per group
 #'   level and a `col_groups` attribute drives the rendered two-level header.
+#'   `tlg_title` / `tlg_subtitle` / `tlg_footnote` attributes carry the resolved
+#'   label text.
 #'
 #' @examples
 #' \dontrun{
@@ -145,6 +153,7 @@
 #' }
 #'
 #' @importFrom stats sd median
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 t_pkpt03_col <- function(
   data,
@@ -153,7 +162,10 @@ t_pkpt03_col <- function(
   value_var  = "AVAL",
   param_filter = NULL,
   col_group_var = NULL,
-  stats = NULL
+  stats = NULL,
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 ) {
   if (!value_var %in% names(data)) {
     stop("t_pkpt03_col: missing required column: ", value_var)
@@ -162,7 +174,9 @@ t_pkpt03_col <- function(
   data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   if (!is.null(param_filter) && length(param_filter) > 0 && "PARAM" %in% names(data)) {
+    column_labels <- var_labels(data)
     data <- data[data$PARAM %in% param_filter, , drop = FALSE]
+    var_labels(data) <- column_labels
   }
 
   if (nrow(data) == 0) return(list(data.frame()))
@@ -194,13 +208,18 @@ t_pkpt03_col <- function(
     )
   }
 
+  if (is.null(subtitle)) subtitle <- .split_subtitle(data, intersect(list_vars, names(data)))
+
   split_and_apply(
     data, list_vars,
     function(df) {
-      .build_pkpp_table(
-        df, strat_var, value_var, .summarise_adpp,
-        col_group_var = col_group_var, group_levels = group_levels,
-        stats = stats
+      .attach_table_labs(
+        .build_pkpp_table(
+          df, strat_var, value_var, .summarise_adpp,
+          col_group_var = col_group_var, group_levels = group_levels,
+          stats = stats
+        ),
+        df, title, subtitle, footnote
       )
     }
   )
@@ -244,6 +263,7 @@ t_pkpt03_MP_col <- function(data, ...) { # nolint: object_name_linter
 #' tables <- t_pkpt07_norm(adpp, paramcd_filter = c("CMAXD", "AUCLSTD", "MYPARAMD"))
 #' }
 #'
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 t_pkpt07_norm <- function(
   data,
@@ -253,8 +273,12 @@ t_pkpt07_norm <- function(
   strat_var      = c("TRT01A", "PARAM"),
   value_var      = "AVAL",
   col_group_var  = NULL,
-  stats          = NULL
+  stats          = NULL,
+  title          = NULL,
+  subtitle       = NULL,
+  footnote       = NULL
 ) {
+  column_labels <- var_labels(data)
   data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   if (paramcd_var %in% names(data)) {
@@ -273,6 +297,7 @@ t_pkpt07_norm <- function(
       "included. Ensure PARAMCD is exported from your NCA run to use this table."
     )
   }
+  var_labels(data) <- column_labels
   if (nrow(data) == 0) {
     stop(
       "t_pkpt07_norm: no dose-normalized parameters found in ADPP. ",
@@ -286,7 +311,10 @@ t_pkpt07_norm <- function(
     strat_var = strat_var,
     value_var = value_var,
     col_group_var = col_group_var,
-    stats = stats
+    stats = stats,
+    title = title,
+    subtitle = subtitle,
+    footnote = footnote
   )
 }
 
@@ -316,6 +344,7 @@ t_pkpt07_norm <- function(
 #' }
 #'
 #' @importFrom stats sd median
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 t_pkpt08_uri <- function(
   data,
@@ -325,8 +354,12 @@ t_pkpt08_uri <- function(
   value_var   = "AVAL",
   param_filter = NULL,
   col_group_var = NULL,
-  stats       = NULL
+  stats       = NULL,
+  title       = NULL,
+  subtitle    = NULL,
+  footnote    = NULL
 ) {
+  column_labels <- var_labels(data)
   data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   if ("PPSPEC" %in% names(data)) {
@@ -343,6 +376,7 @@ t_pkpt08_uri <- function(
   if (!is.null(param_filter) && length(param_filter) > 0 && "PARAM" %in% names(data)) {
     data <- data[data$PARAM %in% param_filter, , drop = FALSE]
   }
+  var_labels(data) <- column_labels
   if (nrow(data) == 0) {
     stop(
       "t_pkpt08_uri: no urine PK parameter data found in ADPP. ",
@@ -382,14 +416,19 @@ t_pkpt08_uri <- function(
     )
   }
 
+  if (is.null(subtitle)) subtitle <- .split_subtitle(data, intersect(list_vars, names(data)))
+
   split_and_apply(
     data, list_vars,
     function(df) {
-      .build_pkpp_table(
-        df, strat_var, value_var,
-        function(v) .summarise_adpp(v, include_geo = FALSE),
-        col_group_var = col_group_var, group_levels = group_levels,
-        stats = stats
+      .attach_table_labs(
+        .build_pkpp_table(
+          df, strat_var, value_var,
+          function(v) .summarise_adpp(v, include_geo = FALSE),
+          col_group_var = col_group_var, group_levels = group_levels,
+          stats = stats
+        ),
+        df, title, subtitle, footnote
       )
     }
   )
@@ -436,7 +475,10 @@ t_pkpt11_gmr <- function(
   list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
-  value_var = "AVAL"
+  value_var = "AVAL",
+  title     = NULL,
+  subtitle  = NULL,
+  footnote  = NULL
 ) {
   required_cols <- c(value_var, strat_var, param_var)
   missing_cols <- setdiff(required_cols, names(data))
@@ -545,5 +587,9 @@ t_pkpt11_gmr <- function(
     apply_labels(result, type = "ADPP")
   }
 
-  split_and_apply(data, list_vars, make_table)
+  if (is.null(subtitle)) subtitle <- .split_subtitle(data, intersect(list_vars, names(data)))
+
+  split_and_apply(data, list_vars, function(df) {
+    .attach_table_labs(make_table(df), df, title, subtitle, footnote)
+  })
 }

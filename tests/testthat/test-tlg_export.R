@@ -2,6 +2,7 @@
 local({
   library(shiny)
   shiny_dir <- system.file("shiny", package = "aNCA")
+  source(file.path(shiny_dir, "functions", "utils-tlg.R"), local = TRUE)
   source(file.path(shiny_dir, "functions", "zip-utils.R"), local = TRUE)
   source(file.path(shiny_dir, "functions", "tlg_export.R"), local = TRUE)
 },
@@ -429,6 +430,24 @@ describe("write_tlg_exports: combined HTML output", {
     expect_true(file.exists(file.path(d, "Graphs", "html", "pkpg03_boxp.html")))
   })
 
+  it("keeps edited ggplot labels in the interactive document", {
+    d <- withr::local_tempdir()
+    gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) +
+      ggplot2::geom_point() +
+      ggplot2::labs(
+        title = "Edited parameter title", subtitle = "Analyte: DrugA\nSpecimen: SERUM",
+        caption = "Edited parameter footnote"
+      )
+    m <- write_tlg_exports(list(p_pkpg03_boxp = entry("graph", list(all = gg))), d,
+                           ggplot_formats = "html")
+    html <- paste(readLines(file.path(d, m$file), warn = FALSE), collapse = "\n")
+    expect_equal(m$status, "ok")
+    expect_match(html, "Edited parameter title", fixed = TRUE)
+    expect_match(html, "Analyte: DrugA", fixed = TRUE)
+    expect_match(html, "Specimen: SERUM", fixed = TRUE)
+    expect_match(html, "Edited parameter footnote", fixed = TRUE)
+  })
+
   it("still writes the per-plot formats alongside it", {
     d <- withr::local_tempdir()
     items <- setNames(list(stashed_plotly(), stashed_plotly()), c("S1", "S2"))
@@ -457,6 +476,68 @@ describe("write_tlg_exports: combined HTML output", {
 })
 
 describe("write_tlg_exports: table and listing PDF output", {
+  it("keeps each table's labels and split key while paginating long content", {
+    d <- withr::local_tempdir()
+    frame <- data.frame(Subject = sprintf("S%03d", seq_len(8)))
+    for (i in seq_len(20)) frame[[paste0("TreatmentGroup", i, "Mean")]] <- seq_len(8)
+    title <- paste(rep("PK concentration summary by treatment and nominal time", 4), collapse = " ")
+    title <- paste("Summary of concentrations", title, sep = "\n")
+    attr(frame, "tlg_title") <- gsub("\n", "<br>", title, fixed = TRUE)
+    attr(frame, "tlg_subtitle") <- "Edited subtitle<br>PK population"
+    attr(frame, "tlg_footnote") <- "Edited footnote<br>Below quantification limit values excluded"
+    second <- frame[1:2, ]
+    attr(second, "tlg_title") <- "Second analyte title"
+    captured <- NULL
+    export_pdf <- formatters::export_as_pdf
+    m <- with_mocked_bindings(
+      write_tlg_exports(list(t_pkct01 = entry("table", list(DrugA = frame, DrugB = second))), d,
+                        table_formats = "pdf"),
+      export_as_pdf = function(x, ...) {
+        captured <<- x
+        export_pdf(x, ...)
+      },
+      .package = "formatters"
+    )
+    expect_equal(m$status, "ok")
+    expect_false(grepl("exceeds the page", m$note))
+    expect_gt(as.integer(sub(" .*", "", m$note)), 2L)
+    expect_equal(formatters::main_title(captured[[1]]), title)
+    expect_equal(formatters::main_title(captured[[2]]), "Second analyte title")
+    expect_equal(
+      formatters::subtitles(captured[[1]]), c("DrugA", "Edited subtitle", "PK population")
+    )
+    expect_equal(formatters::main_footer(captured[[1]]),
+                 c("Edited footnote", "Below quantification limit values excluded"))
+  })
+
+  it("keeps listing labels after narrowing the export to displayed columns", {
+    skip_if_not_installed("rlistings")
+    d <- withr::local_tempdir()
+    raw <- data.frame(Subject = c("S1", "S2"), Value = c(1, 2), Working = "hidden")
+    listing <- rlistings::as_listing(
+      raw, key_cols = "Subject", disp_cols = c("Subject", "Value"),
+      main_title = "Edited listing title", subtitles = "Edited listing subtitle",
+      main_footer = "Edited listing footnote"
+    )
+    captured <- NULL
+    export_pdf <- formatters::export_as_pdf
+    m <- with_mocked_bindings(
+      write_tlg_exports(list(l_pkcl01 = entry("listing", list(DrugA = listing))), d,
+                        table_formats = c("csv", "xlsx", "pdf")),
+      export_as_pdf = function(x, ...) {
+        captured <<- x
+        export_pdf(x, ...)
+      },
+      .package = "formatters"
+    )
+    expect_true(all(m$status == "ok"))
+    expect_equal(formatters::main_title(captured[[1]]), "Edited listing title")
+    expect_equal(formatters::subtitles(captured[[1]]), c("DrugA", "Edited listing subtitle"))
+    expect_equal(formatters::main_footer(captured[[1]]), "Edited listing footnote")
+    csv <- read.csv(file.path(d, m$file[endsWith(m$file, ".csv")]))
+    expect_equal(csv, raw[c("Subject", "Value")])
+  })
+
   it("writes one document per TLG with the splits as sections", {
     d <- withr::local_tempdir()
     items <- setNames(list(head(mtcars), head(mtcars)), c("PARAM: DrugA", "PARAM: DrugB"))
