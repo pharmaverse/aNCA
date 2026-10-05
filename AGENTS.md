@@ -9,7 +9,7 @@ This is the single source of truth for all AI coding agents (GitHub Copilot, Ona
 - `inst/shiny/functions/` — Shared Shiny helper functions (app-only)
 - `inst/shiny/www/styles/` — SCSS source files for styling
 - `tests/testthat/` — Unit tests
-- `man/` — Documentation (auto-generated, do not edit)
+- `man/` — Documentation (auto-generated; follow the Roxygen CI exception in Anti-patterns)
 - `data/` — Package data
 - `data-raw/` — Developer-time scripts (e.g., CSS compilation)
 
@@ -190,7 +190,7 @@ All PRs must pass:
 ## Working with Code
 
 Before committing:
-- `devtools::document()` — regenerate man pages and NAMESPACE
+- `devtools::document()` — regenerate man pages and NAMESPACE when R is available
 - `lintr::lint_package()` — check code style
 - `devtools::test()` — run tests
 - `devtools::check()` — full package check
@@ -213,9 +213,10 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 ## Anti-patterns
 
 - Do not use `git push --force` or `git push --force-with-lease` — always use separate commits instead of amending and force-pushing
-- Do not edit `man/` or `NAMESPACE` files manually
+- Do not edit `NAMESPACE` manually except for the matching `importFrom()` update required by an `@importFrom` change.
+- Do not edit `man/` manually, except for a small, exact `man/*.Rd` diff printed by the Roxygen CI job when R is unavailable. Verify the source roxygen/function change, confirm `RoxygenNote` matches CI, copy only the reported diff, and let the next CI run confirm it.
 - Do not add unused globalVariables to `R/zzz.R`
-- Do not push without running `devtools::document()` first
+- Do not push without running `devtools::document()` first when R is available. When it is unavailable, the exact CI Roxygen exception above may be used.
 - Do not skip tests or lintr checks
 - Do not assume R is available in dev container (it may not be)
 - Do not edit `main.css` without updating the corresponding `.scss` source
