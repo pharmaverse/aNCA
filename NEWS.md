@@ -7,6 +7,8 @@
 
 ## Bug Fixes
 
+* TLGs now use the exported CDISC ADNCA and ADPP datasets as their data
+  sources, keeping exclusion markers and columns consistent with CDISC exports (#1482).
 * TLG listings now mark summary-excluded records with `*` and explain the
   marker in the footer, using `PKSUMXF` for ADNCA listings and `PPSUMXF` for
   ADPP listings (#1482).
