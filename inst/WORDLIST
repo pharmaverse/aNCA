@@ -167,6 +167,7 @@ dataformat
 dateTime
 datetime
 datetimes
+debounced
 deduplicated
 devtools
 df

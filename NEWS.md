@@ -9,6 +9,12 @@
 
 * Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
 
+* Running NCA with an empty analyte, specimen, or NCA profile selection now
+  shows a red notification naming the missing selection instead of stopping
+  silently. It also explains when the current data and settings provide no
+  valid NCA intervals (#1527)
+
+* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
@@ -122,6 +128,21 @@
 * Right-side sidebars resizable by dragging; default width 250px (#1156)
 
 ### Export & Output
+
+* Download generated tables, listings, and graphs through "Export as ZIP", using the current
+  TLG order and sidebar settings. Available concentration TLGs can be exported before running
+  NCA, without opening each output's tab (#1428, closes #1344).
+
+  - Graphs: PDF (default) or self-contained interactive HTML as one document per TLG, or PNG
+    as one file per plot, retaining plot titles, subtitles, footnotes, and axis scales.
+  - Tables and listings: XLSX (default) as one workbook per TLG with a sheet per split, CSV
+    as one file per split, or PDF paginated across rows and columns. Exports use displayed
+    listing columns and readable summary-table headers.
+  - Files are organised under `TLGs/Graphs/`, `TLGs/Tables/`, and `TLGs/Listings/` by format,
+    with descriptive filenames and unique, Excel-safe worksheet names for split outputs.
+  - A `manifest.csv` records output paths and statuses, including unavailable or failed TLGs,
+    so one output's failure does not prevent the remaining outputs from being downloaded.
+
 * PowerPoint export includes a PPTESTCD glossary slide after the title slide, listing all PK parameter codes and their full names (#1326)
 * General button at top of page to save all NCA results, settings, and draft slides as a ZIP file (#638)
 * Dose-normalised summary slides added to PPT/QMD export, controlled via Customise Slides modal (#1054)
