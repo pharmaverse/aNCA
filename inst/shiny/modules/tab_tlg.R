@@ -281,11 +281,19 @@ tab_tlg_server <- function(id, data) {
     # Individual listings use the complete exported datasets; tables and graphs
     # use summary-filtered variants.  apply_labels() restores column labels after
     # filtering so annotation syntax remains available downstream.
+    # Summary tables and mean plots drop summary-excluded rows
+    # themselves via filter_summary_excluded(); individual/combined plots and
+    # listings keep every record.  This replaces the earlier filtered/`_all`
+    # split, which filtered all graphs (including individual pkcg01) as a side
+    # effect (#1438).
+    # apply_labels() restores column `label` attributes stripped by the
+    # PKNCA/dplyr pipeline so the `!COLUMN` label-reference syntax resolves in
+    # title/subtitle/footnote/axis inputs.
     conc_data_all <- reactive({
       req(data())
       apply_labels(data()$adnca, type = "ADNCA")
     })
-    adpp_data_all <- reactive({
+    adpp_data <- reactive({
       # A PK-parameter (ADPP) output was requested but NCA has not been run, so
       # ADPP is unavailable. Surface it as a toast in addition to the inline
       # placeholder, since the empty panel alone reads as a silent failure.
@@ -304,26 +312,10 @@ tab_tlg_server <- function(id, data) {
       apply_labels(data()$adpp, type = "ADPP")
     })
 
-    # Summary-filtered variants for tables and mean plots: rows flagged
-    # PKSUMXF (ADNCA) / PPSUMXF (ADPP) == "Y" are removed from summary
-    # statistics and mean plots, but NOT from individual listings.  Each dataset
-    # is filtered by its own flag only -- a record excluded from the
-    # PK-parameter summary (PPSUMXF) must still be able to appear in the
-    # concentration representations, and vice-versa.
-    conc_data <- reactive(
-      apply_labels(filter_tlg_excluded(conc_data_all(), "PKSUMXF"), type = "ADNCA")
-    )
-    adpp_data <- reactive(
-      apply_labels(filter_tlg_excluded(adpp_data_all(), "PPSUMXF"), type = "ADPP")
-    )
-
-    # (dataset, type) -> data reactive.  Listings resolve to the "*_all"
-    # (unfiltered) source; tables and graphs resolve to the filtered source.
+    # dataset name -> data reactive.
     tlg_data_sources <- list(
-      ADNCA     = conc_data,
-      ADNCA_all = conc_data_all,
-      ADPP      = adpp_data,
-      ADPP_all  = adpp_data_all
+      ADNCA = conc_data,
+      ADPP  = adpp_data
     )
 
     # CDISC grouping variables (minus the subject column) -- the sensible default
@@ -371,7 +363,7 @@ tab_tlg_server <- function(id, data) {
         # requires a character name.
         g_key     <- names(.TLG_DEFINITIONS)[g_id]
         module_id <- paste0(g_id, id_suffix)
-        tlg_data  <- tlg_data_sources[[tlg_data_key(type, g_def$dataset)]]
+        tlg_data  <- tlg_data_sources[[g_def$dataset]]
 
         panel_ui <- if (exists(g_def$fun)) {
           # Only register the Shiny module once per session to avoid accumulating
