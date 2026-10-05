@@ -175,10 +175,12 @@ filter_summary_excluded <- function(data, flag) {
 #' @param data A CDISC ADPP data frame.
 #' @param caller Character string naming the calling function, used in the
 #'   error message. Default: `"filter_metabolite_rows"`.
+#' @param allow_empty Return an empty data frame instead of an error when no
+#'   metabolite rows are found. Used to populate sidebar choices. Default: `FALSE`.
 #'
 #' @return A filtered data frame containing only metabolite rows.
 #' @noRd
-filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows") {
+filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allow_empty = FALSE) {
   # Preferred: explicit METABFL flag set by the NCA grouping variable
   if ("METABFL" %in% names(data) &&
         any(!is.na(data$METABFL) & data$METABFL != "")) {
@@ -197,6 +199,8 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows") {
       )
     }
   }
+
+  if (allow_empty) return(data[FALSE, , drop = FALSE])
 
   stop(
     caller, ": no metabolite data found. ",

@@ -51,6 +51,8 @@
 
 ## Features
 
+* PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns (#1531)
+
 ### TLG Catalog
 * TLG sidebar dropdowns now offer search, Select all / Deselect all, and a count for selections of more than three values (#1530)
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):

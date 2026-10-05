@@ -17,6 +17,10 @@ local({
     file.path(shiny_dir, "modules", "tab_tlg", "tlg_option_select.R"),
     local = TRUE
   )
+  source(
+    file.path(shiny_dir, "modules", "tab_tlg", "tlg_option_text.R"),
+    local = TRUE
+  )
 },
 envir = parent.env(environment()))
 
@@ -25,6 +29,13 @@ envir = parent.env(environment()))
 # ---------------------------------------------------------------------------
 
 describe(".tlg_module_edit_widget", {
+  it("renders sidebar guidance without making it a function argument", {
+    text <- "This listing always shows NRRLT, ARRLT, and AVAL."
+    html <- as.character(.tlg_module_edit_widget("m-.help_columns", text, data = NULL))
+    expect_match(html, "help-block")
+    expect_match(html, text, fixed = TRUE)
+  })
+
   it("returns an h1 group-label tag when opt_id contains '.group_label'", {
     result <- .tlg_module_edit_widget(
       "section.group_label", "My Section", data = NULL
@@ -89,6 +100,90 @@ describe("tlg_module_server", {
         expect_equal(result$stat, names(aNCA:::.STAT_LABELS))
         expect_equal(result$time, rep("0", length(aNCA:::.STAT_LABELS)))
         expect_equal(result$xmin, rep(0, length(aNCA:::.STAT_LABELS)))
+      }
+    )
+  })
+
+  it("limits metabolite parameter choices to the rows the listing uses", {
+    df <- data.frame(
+      USUBJID = "S1", TRT01A = "A",
+      PPCAT = c("Drug", "Metab-Drug", "Metab-Drug"),
+      PPSPEC = c("URINE", "SERUM", "SERUM"),
+      PARAM = c("Amount recovered", "Cmax", "AUC"),
+      PARAMCD = c("RCAMINT", "CMAX", "AUCLST"),
+      AVAL = c(100, 5, 20), AVALU = c("mg", "ng/mL", "ng*h/mL")
+    )
+    defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
+    opts <- defs$l_pkpl01_mp$options[c("param_var", "param_filter")]
+    shiny::testServer(
+      tlg_module_server,
+      args = list(data = shiny::reactive(df), type = "listing",
+                  render_list = l_pkpl01_mp, options = opts),
+      {
+        session$setInputs(`param_var-select` = "PARAM")
+        expect_match(output$param_filter$html, 'value="Cmax"')
+        expect_match(output$param_filter$html, 'value="AUC"')
+        expect_false(grepl('value="Amount recovered"', output$param_filter$html, fixed = TRUE))
+        expect_match(output$param_filter$html, 'data-none-selected-text="All parameters"')
+
+        session$setInputs(`param_filter-select` = "Cmax")
+        session$elapse(800)
+        expect_equal(length(tlg_list()), 1L)
+        expect_equal(as.numeric(tlg_list()[[1]]$Cmax), 5)
+        expect_false("AUC" %in% rlistings::listing_dispcols(tlg_list()[[1]]))
+
+        session$setInputs(`param_var-select` = "PARAMCD", `param_filter-select` = NULL)
+        session$elapse(800)
+        expect_match(output$param_filter$html, 'value="CMAX"')
+        expect_false(grepl('value="RCAMINT"', output$param_filter$html, fixed = TRUE))
+        expect_equal(as.numeric(tlg_list()[[1]]$CMAX), 5)
+        expect_equal(as.numeric(tlg_list()[[1]]$AUCLST), 20)
+      }
+    )
+  })
+
+  it("updates parameter choices independently and applies or clears the selection", {
+    df <- data.frame(
+      USUBJID = c("S1", "S1"), TRT01A = "A", PPCAT = "Drug", PPSPEC = "PLASMA",
+      PARAM = c("Cmax", "AUC"), PARAMCD = c("CMAX", "AUCIFO"),
+      AVAL = c(5, 20), AVALU = c("ng/mL", "ng*h/mL")
+    )
+    defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
+    opts <- defs$l_pkpl01$options[c("title", "param_var", "param_filter", ".help_columns")]
+    shiny::testServer(
+      tlg_module_server,
+      args = list(data = shiny::reactive(df), type = "listing",
+                  render_list = l_pkpl01, options = opts),
+      {
+        session$setInputs(`title-text` = "Custom title", `param_var-select` = "PARAM")
+        expect_match(output$param_filter$html, 'value="Cmax"')
+        expect_match(output$options$html, "show all parameters")
+        expect_false(".help_columns" %in% names(reactiveValuesToList(options_values)))
+
+        session$setInputs(`param_filter-select` = "Cmax")
+        session$elapse(800)
+        expect_equal(rlistings::listing_dispcols(tlg_list()[[1]]),
+                     c("TRT01A", "USUBJID", "Cmax"))
+        expect_equal(as.numeric(tlg_list()[[1]]$Cmax), 5)
+
+        session$setInputs(`param_var-select` = "PARAMCD", `param_filter-select` = NULL)
+        session$elapse(800)
+        expect_match(output$param_filter$html, 'value="CMAX"')
+        expect_false(grepl('value="Cmax"', output$param_filter$html, fixed = TRUE))
+        expect_equal(options_values$title(), "Custom title")
+        expect_setequal(rlistings::listing_dispcols(tlg_list()[[1]]),
+                        c("TRT01A", "USUBJID", "CMAX", "AUCIFO"))
+
+        session$setInputs(`param_filter-select` = "AUCIFO")
+        session$elapse(800)
+        expect_equal(as.numeric(tlg_list()[[1]]$AUCIFO), 20)
+        expect_false("CMAX" %in% rlistings::listing_dispcols(tlg_list()[[1]]))
+
+        session$setInputs(`param_var-select` = "", `param_filter-select` = NULL)
+        session$elapse(800)
+        expect_match(output$param_filter$html, 'value="Cmax"')
+        expect_setequal(rlistings::listing_dispcols(tlg_list()[[1]]),
+                        c("TRT01A", "USUBJID", "Cmax", "AUC"))
       }
     )
   })

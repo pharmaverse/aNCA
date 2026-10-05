@@ -23,6 +23,20 @@ describe("tlg.yaml sidebar options", {
     expect_gt(length(entries_with_options), 0)
   })
 
+  it("offers parameter selection on all PK listings while keeping TAD columns fixed", {
+    for (id in c("l_pkpl01", "l_pkpl01_mp", "l_pkpl04_mp")) {
+      expect_equal(defs[[id]]$options$param_filter$choices_from, "param_var")
+      expect_equal(defs[[id]]$options$param_filter$choices, "$PARAM")
+      expect_true(defs[[id]]$options$param_filter$multiple)
+      expect_equal(defs[[id]]$options$param_filter$placeholder, "All parameters")
+    }
+    expect_true(defs$l_pkpl01_mp$options$param_filter$metabolites_only)
+    expect_null(defs$l_pkpl01$options$param_filter$metabolites_only)
+    expect_null(defs$l_pkpl04_mp$options$param_filter$metabolites_only)
+    expect_null(defs$l_pkcl01_tad$options$displaying_vars)
+    expect_match(defs$l_pkcl01_tad$options$.help_columns, "NRRLT.*ARRLT.*AVAL")
+  })
+
   for (id in names(entries_with_options)) {
     entry <- entries_with_options[[id]]
 

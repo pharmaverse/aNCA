@@ -1,5 +1,23 @@
 # Tests for shared TLG helpers in R/utils-tlg.R.
 
+describe("filter_metabolite_rows", {
+  it("allows empty sidebar choices while retaining the default output error", {
+    df <- data.frame(PPCAT = "Drug", PARAM = "Cmax", AVAL = 5)
+    expect_error(filter_metabolite_rows(df), "no metabolite data found")
+    expect_identical(filter_metabolite_rows(df, allow_empty = TRUE), df[FALSE, ])
+  })
+
+  it("uses the same flag and label fallbacks for sidebar choices and outputs", {
+    flagged <- data.frame(METABFL = c("", "Y"), PPCAT = "Drug", PARAM = "Cmax", AVAL = c(5, 2))
+    category <- data.frame(PPCAT = c("Drug", "Metab-Drug"), PARAM = "Cmax", AVAL = c(5, 2))
+    parameter <- data.frame(PARAM = c("Cmax", "Metab-Cmax"), AVAL = c(5, 2))
+    for (df in list(flagged, category, parameter)) {
+      expect_equal(filter_metabolite_rows(df, allow_empty = TRUE)$AVAL, 2)
+      expect_identical(filter_metabolite_rows(df, allow_empty = TRUE), filter_metabolite_rows(df))
+    }
+  })
+})
+
 describe("filter_summary_excluded", {
   it("drops PKSUMXF == 'Y' rows (ADNCA summary exclusion)", {
     df <- data.frame(
