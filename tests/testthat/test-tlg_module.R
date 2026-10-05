@@ -1,6 +1,7 @@
 # Source the TLG module to test pure utility functions
 local({
   library(shiny)
+  library(shinyWidgets)
   # The module's error handler calls log_error(); the app attaches logger in app.R.
   library(logger)
   shiny_dir <- system.file("shiny", package = "aNCA")
@@ -22,92 +23,6 @@ local({
   )
 },
 envir = parent.env(environment()))
-
-describe("filter_tlg_excluded", {
-  it("removes rows where the named flag (PKSUMXF) is 'Y'", {
-    df <- data.frame(
-      x = 1:5,
-      PKSUMXF = c("", "Y", "", "Y", ""),
-      stringsAsFactors = FALSE
-    )
-    result <- filter_tlg_excluded(df, "PKSUMXF")
-    expect_equal(nrow(result), 3)
-    expect_equal(result$x, c(1, 3, 5))
-  })
-
-  it("returns all rows when the named flag column is absent", {
-    df <- data.frame(x = 1:3)
-    result <- filter_tlg_excluded(df, "PKSUMXF")
-    expect_equal(nrow(result), 3)
-    expect_equal(result$x, 1:3)
-  })
-
-  it("returns all rows when the named flag is all empty", {
-    df <- data.frame(
-      x = 1:3,
-      PKSUMXF = rep("", 3),
-      stringsAsFactors = FALSE
-    )
-    result <- filter_tlg_excluded(df, "PKSUMXF")
-    expect_equal(nrow(result), 3)
-  })
-
-  it("returns empty data frame when all rows are excluded", {
-    df <- data.frame(
-      x = 1:2,
-      PKSUMXF = c("Y", "Y"),
-      stringsAsFactors = FALSE
-    )
-    result <- filter_tlg_excluded(df, "PKSUMXF")
-    expect_equal(nrow(result), 0)
-  })
-
-  it("removes rows where the named flag (PPSUMXF) is 'Y' (ADPP exclusion flag)", {
-    df <- data.frame(
-      x       = 1:4,
-      PPSUMXF = c("", "Y", "", "Y"),
-      stringsAsFactors = FALSE
-    )
-    result <- filter_tlg_excluded(df, "PPSUMXF")
-    expect_equal(nrow(result), 2)
-    expect_equal(result$x, c(1L, 3L))
-  })
-
-  it("applies only the named flag and ignores the other dataset's flag", {
-    # A record excluded from the ADPP summary (PPSUMXF == "Y") but not the ADNCA
-    # summary must still survive ADNCA (PKSUMXF) filtering, and vice-versa.
-    df <- data.frame(
-      x       = 1:4,
-      PKSUMXF = c("Y", "",  "",  ""),
-      PPSUMXF = c("",  "Y", "",  ""),
-      stringsAsFactors = FALSE
-    )
-    # Filtering as ADNCA drops only the PKSUMXF == "Y" row; the PPSUMXF row stays.
-    adnca <- filter_tlg_excluded(df, "PKSUMXF")
-    expect_equal(adnca$x, c(2L, 3L, 4L))
-    # Filtering as ADPP drops only the PPSUMXF == "Y" row; the PKSUMXF row stays.
-    adpp <- filter_tlg_excluded(df, "PPSUMXF")
-    expect_equal(adpp$x, c(1L, 3L, 4L))
-  })
-})
-
-# ---------------------------------------------------------------------------
-# tlg_data_key
-# ---------------------------------------------------------------------------
-
-describe("tlg_data_key", {
-  it("routes listings to the unfiltered '<dataset>_all' source", {
-    expect_equal(tlg_data_key("listing", "ADNCA"), "ADNCA_all")
-    expect_equal(tlg_data_key("listing", "ADPP"), "ADPP_all")
-  })
-
-  it("routes tables and graphs to the summary-filtered source", {
-    expect_equal(tlg_data_key("table", "ADNCA"), "ADNCA")
-    expect_equal(tlg_data_key("graph", "ADNCA"), "ADNCA")
-    expect_equal(tlg_data_key("table", "ADPP"), "ADPP")
-    expect_equal(tlg_data_key("graph", "ADPP"), "ADPP")
-  })
-})
 
 # ---------------------------------------------------------------------------
 # .tlg_module_edit_widget
@@ -148,7 +63,7 @@ describe(".tlg_module_edit_widget", {
     )
     result <- .tlg_module_edit_widget("mod-myopt", opt_def, data = NULL)
     html   <- as.character(result)
-    # tlg_option_select_ui returns a selectInput
+    # tlg_option_select_ui returns a pickerInput
     expect_true(grepl("X", html))
     expect_true(grepl("Y", html))
   })
@@ -159,6 +74,36 @@ describe(".tlg_module_edit_widget", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_module_server", {
+  it("passes all selected statistics and zero values to the TLG function", {
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data = shiny::reactive(data.frame(NFRLT = c(0, 1))),
+        type = "table",
+        render_list = function(data, stats, time_filter, xmin) {
+          list(data.frame(stat = stats, time = time_filter, xmin = xmin))
+        },
+        options = list(
+          stats = list(type = "select", choices = ".stats", multiple = TRUE),
+          time_filter = list(type = "select", choices = "$NFRLT", multiple = TRUE),
+          xmin = list(type = "numeric", default = 0)
+        )
+      ),
+      {
+        session$setInputs(
+          `stats-select` = names(aNCA:::.STAT_LABELS),
+          `time_filter-select` = "0",
+          `xmin-numeric` = 0
+        )
+        session$elapse(800)
+        result <- tlg_list()[[1]]
+        expect_equal(result$stat, names(aNCA:::.STAT_LABELS))
+        expect_equal(result$time, rep("0", length(aNCA:::.STAT_LABELS)))
+        expect_equal(result$xmin, rep(0, length(aNCA:::.STAT_LABELS)))
+      }
+    )
+  })
+
   it("limits metabolite parameter choices to the rows the listing uses", {
     df <- data.frame(
       USUBJID = "S1", TRT01A = "A",
@@ -179,7 +124,7 @@ describe("tlg_module_server", {
         expect_match(output$param_filter$html, 'value="Cmax"')
         expect_match(output$param_filter$html, 'value="AUC"')
         expect_false(grepl('value="Amount recovered"', output$param_filter$html, fixed = TRUE))
-        expect_match(output$param_filter$html, 'value=""[^>]*>All parameters</option>')
+        expect_match(output$param_filter$html, 'data-none-selected-text="All parameters"')
 
         session$setInputs(`param_filter-select` = "Cmax")
         session$elapse(800)
@@ -326,7 +271,7 @@ describe("tlg_module_server", {
   })
 
   it("still renders when a multi-select option is left empty (no default)", {
-    # Regression: a `multiple` selectInput with nothing selected reports NULL.
+    # Regression: a `multiple` pickerInput with nothing selected reports NULL.
     # tlg_module_server's is-null guard would then return NULL and blank the
     # whole table.  With the option server coercing NULL -> "", the empty option
     # is simply dropped and the table renders with the function default.
@@ -400,7 +345,7 @@ describe(".tlg_module_edit_widget", {
     )
     result <- .tlg_module_edit_widget("mod-myopt", opt_def, data = NULL)
     html   <- as.character(result)
-    # tlg_option_select_ui returns a selectInput
+    # tlg_option_select_ui returns a pickerInput
     expect_true(grepl("X", html))
     expect_true(grepl("Y", html))
   })

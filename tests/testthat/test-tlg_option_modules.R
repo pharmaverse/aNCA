@@ -4,6 +4,7 @@
 # Source all required module files
 local({
   library(shiny)
+  library(shinyWidgets)
   shiny_dir <- system.file("shiny", package = "aNCA")
   source(
     file.path(shiny_dir, "modules", "tab_tlg", "tlg_option_numeric.R"),
@@ -151,6 +152,19 @@ describe("tlg_option_text_server", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_option_select_ui", {
+  it("shows the empty-selection label without adding a bulk-select choice", {
+    df <- shiny::reactive(data.frame(PARAM = c("Cmax", "AUC", "Cmax")))
+    opt_def <- list(choices = "$PARAM", placeholder = "All parameters", multiple = TRUE)
+    html <- as.character(shiny::isolate(tlg_option_select_ui("m-param_filter", opt_def, df)))
+
+    expect_match(html, 'data-none-selected-text="All parameters"', fixed = TRUE)
+    expect_match(html, 'data-actions-box="true"', fixed = TRUE)
+    expect_match(html, '<option value="Cmax">Cmax</option>', fixed = TRUE)
+    expect_match(html, '<option value="AUC">AUC</option>', fixed = TRUE)
+    expect_false(grepl('<option value=""', html, fixed = TRUE))
+    expect_false(grepl(" selected[ =>]", html))
+  })
+
   it("offers no parent parameters when a metabolite-only dataset is empty", {
     df <- shiny::reactive(data.frame(PPCAT = "Drug", PARAM = "Cmax", AVAL = 5))
     opt_def <- list(
@@ -158,11 +172,12 @@ describe("tlg_option_select_ui", {
       placeholder = "All parameters", multiple = TRUE
     )
     html <- as.character(shiny::isolate(tlg_option_select_ui("m-param_filter", opt_def, df)))
-    expect_match(html, 'value=""[^>]*>All parameters</option>')
+    expect_match(html, 'data-none-selected-text="All parameters"')
+    expect_false(grepl('<option value=""', html, fixed = TRUE))
     expect_false(grepl('value="Cmax"', html, fixed = TRUE))
   })
 
-  it("returns a selectInput with explicit choices", {
+  it("returns a searchable single picker with a blank choice", {
     opt_def <- list(
       label    = "Select",
       choices  = c("A", "B", "C"),
@@ -174,6 +189,66 @@ describe("tlg_option_select_ui", {
     expect_true(grepl("A", html))
     expect_true(grepl("B", html))
     expect_true(grepl("C", html))
+    expect_match(html, "selectpicker")
+    expect_match(html, 'data-live-search="true"', fixed = TRUE)
+    expect_match(html, 'data-actions-box="false"', fixed = TRUE)
+    expect_match(html, '<option value=""', fixed = TRUE)
+  })
+
+  it("offers bulk actions and a count without a blank multi-select choice", {
+    opt_def <- list(choices = LETTERS[1:5], multiple = TRUE)
+    ui <- shiny::isolate(tlg_option_select_ui(
+      "test-sel", opt_def, data = shiny::reactive(data.frame())
+    ))
+    html <- as.character(ui)
+    expect_match(html, 'data-live-search="true"', fixed = TRUE)
+    expect_match(html, 'data-actions-box="true"', fixed = TRUE)
+    expect_match(html, 'data-selected-text-format="count &gt; 3"', fixed = TRUE)
+    expect_false(grepl('<option value=""', html, fixed = TRUE))
+    expect_false(grepl(" selected[ =>]", html))
+  })
+
+  it("keeps readable statistic labels and their submitted values", {
+    opt_def <- list(choices = ".stats", default = "GeoMean", multiple = TRUE)
+    html <- as.character(shiny::isolate(tlg_option_select_ui(
+      "test-sel", opt_def, data = shiny::reactive(data.frame())
+    )))
+    expect_match(html, '<option value="GeoMean" selected>Geometric Mean</option>', fixed = TRUE)
+    expect_match(html, '<option value="CV_pct">CV%</option>', fixed = TRUE)
+    expect_match(html, '<option value="n_blq">Number BLQ</option>', fixed = TRUE)
+  })
+
+  it("resolves grouping and urine choices in the picker", {
+    sample_data <- shiny::reactive(data.frame(
+      SEX = c("F", "M"), PCSPEC = c("SERUM", "URINE"), AVALU = "ng/mL"
+    ))
+    for (token in c(".groupcols", ".urinespecs")) {
+      opt_def <- list(choices = token, default = ".all", multiple = TRUE)
+      html <- as.character(shiny::isolate(tlg_option_select_ui(
+        "test-sel", opt_def, data = sample_data
+      )))
+      if (token == ".groupcols") {
+        expect_match(html, '<option value="SEX" selected>SEX</option>', fixed = TRUE)
+        expect_match(html, '<option value="PCSPEC" selected>PCSPEC</option>', fixed = TRUE)
+        expect_false(grepl("AVALU", html, fixed = TRUE))
+      } else {
+        expect_match(html, '<option value="URINE" selected>URINE</option>', fixed = TRUE)
+        expect_false(grepl("SERUM", html, fixed = TRUE))
+      }
+    }
+  })
+
+  it("keeps zero as a selectable default from a numeric data column", {
+    sample_data <- shiny::reactive(data.frame(NFRLT = c(0, 1, NA)))
+    for (multiple in c(FALSE, TRUE)) {
+      opt_def <- list(choices = "$NFRLT", default = 0, multiple = multiple)
+      html <- as.character(shiny::isolate(tlg_option_select_ui(
+        "test-sel", opt_def, data = sample_data
+      )))
+      expect_match(html, '<option value="0" selected>0</option>', fixed = TRUE)
+      expect_match(html, '<option value="1">1</option>', fixed = TRUE)
+      expect_false(grepl('value="NA"', html, fixed = TRUE))
+    }
   })
 
   it("pre-selects the default value when provided", {
@@ -185,7 +260,7 @@ describe("tlg_option_select_ui", {
     )
     ui   <- tlg_option_select_ui("test-sel", opt_def, data = NULL)
     html <- as.character(ui)
-    expect_true(grepl("selected", html, ignore.case = TRUE))
+    expect_match(html, '<option value="B" selected>B</option>', fixed = TRUE)
   })
 
   it("selects all choices when default is '.all'", {
@@ -197,8 +272,8 @@ describe("tlg_option_select_ui", {
     )
     ui   <- tlg_option_select_ui("test-sel", opt_def, data = NULL)
     html <- as.character(ui)
-    expect_true(grepl("X", html))
-    expect_true(grepl("Y", html))
+    expect_match(html, '<option value="X" selected>X</option>', fixed = TRUE)
+    expect_match(html, '<option value="Y" selected>Y</option>', fixed = TRUE)
   })
 
   it("selects the PKNCA grouping vars present in the data when default is '.pknca_groups'", {
@@ -240,7 +315,7 @@ describe("tlg_option_select_ui", {
       tlg_option_select_ui("m-strat_var", opt_def, data = sample_data)
     )
     html <- as.character(ui)
-    expect_false(grepl("selected", html))
+    expect_false(grepl(" selected[ =>]", html))
   })
 
   it("derives choices from column names when choices is '.colnames'", {
@@ -281,7 +356,7 @@ describe("tlg_option_select_ui", {
   })
 
   it("derives choices from a tibble column, not the column name", {
-    # `[` on a tibble returns a one-column tibble, which would make selectInput label the
+    # `[` on a tibble returns a one-column tibble, which would make the picker label the
     # option with the column name instead of its values.
     sample_data <- shiny::reactive(
       list(conc = list(data = dplyr::tibble(PPSPEC = c("SERUM", "URINE", "SERUM"))))
@@ -393,7 +468,7 @@ describe("tlg_option_select_server", {
   })
 
   it("coerces an empty multi-select (NULL input) to \"\" so rendering is not blocked", {
-    # A `multiple` selectInput with nothing selected reports input$select = NULL.
+    # A `multiple` pickerInput with nothing selected reports input$select = NULL.
     # If the server passed that NULL through, tlg_module_server's is-null guard
     # would return NULL and blank the whole table.  It must return "" instead.
     opt_def       <- list(
