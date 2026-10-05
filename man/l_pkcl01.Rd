@@ -13,7 +13,7 @@ l_pkcl01(
   title = paste0("Listing of PK Concentration by Treatment Group,",
     "Subject and Nominal Time, PK Population"),
   subtitle = NULL,
-  footnote = "*: Subjects excluded from the summary table and mean plots"
+  footnote = NULL
 )
 }
 \arguments{
@@ -49,6 +49,9 @@ The function performs the following steps:
 \item Formats the 0 and NA values as defined by the formatting table.
 \item Creates a listing for each unique combination of the grouping variables.
 }
+
+Excluded records retain their markers even when the concentration is missing.
+Markers are appended to the configured \code{na_str} for missing values.
 
 The \code{formatting_vars_table} should be a data frame with the following columns:
 \itemize{

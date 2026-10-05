@@ -489,7 +489,7 @@ l_pkcl01:
       type: select
       choices: .colnames
       multiple: true
-      default: ["NFRLT", "AFRLT", "AVALC"]
+      default: ["NFRLT", "AFRLT", "AVAL"]
     .group_label_3: "Formatting"
     formatting_vars_table:
       label: "Variables formatting"

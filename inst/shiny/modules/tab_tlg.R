@@ -9,7 +9,7 @@
 #' Read more in the contributing guide.
 #'
 #' @param id ID of the module
-#' @param data ADNCA data object, processed and mapped.
+#' @param data Reactive exported CDISC dataset list with `adnca` and `adpp` members.
 
 #' Parses TLG definitions from the yaml file, holds all definitions.
 .TLG_DEFINITIONS <- {
@@ -75,7 +75,7 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
+tab_tlg_server <- function(id, data) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
@@ -112,7 +112,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
           mutate(
             Selection = case_when(
               Condition == "" | is.na(Condition) | is.null(Condition) ~ Selection,
-              any(unique(toupper(data()$conc$data$PCSPEC)) %in% Condition) ~ TRUE,
+              any(unique(toupper(data()$adnca$PCSPEC)) %in% Condition) ~ TRUE,
               TRUE ~ Selection
             )
           )
@@ -244,8 +244,8 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
 
     # Toggle submit button depending on whether the data is available #
     observeEvent(data(), ignoreInit = FALSE, ignoreNULL = FALSE, {
-      shinyjs::toggleState("submit_tlg_order", !is.null(data()$conc$data))
-      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()$conc$data))
+      shinyjs::toggleState("submit_tlg_order", !is.null(data()$adnca))
+      shinyjs::toggleState("submit_tlg_order_alt", !is.null(data()$adnca))
     })
 
     #' change tab to first populated tab
@@ -276,8 +276,12 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     }) %>%
       bindEvent(c(input$submit_tlg_order))
 
-    # Single source of truth per dataset -- every TLG receives the full,
-    # unfiltered data.  Summary tables and mean plots drop summary-excluded rows
+    # TLGs consume the exported CDISC datasets so their source columns and
+    # exclusion flags are identical to the datasets offered to users.
+    # Individual listings use the complete exported datasets; tables and graphs
+    # use summary-filtered variants.  apply_labels() restores column labels after
+    # filtering so annotation syntax remains available downstream.
+    # Summary tables and mean plots drop summary-excluded rows
     # themselves via filter_summary_excluded(); individual/combined plots and
     # listings keep every record.  This replaces the earlier filtered/`_all`
     # split, which filtered all graphs (including individual pkcg01) as a side
@@ -287,14 +291,13 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # title/subtitle/footnote/axis inputs.
     conc_data <- reactive({
       req(data())
-      apply_labels(data()$conc$data, type = "ADNCA")
+      apply_labels(data()$adnca, type = "ADNCA")
     })
     adpp_data <- reactive({
       # A PK-parameter (ADPP) output was requested but NCA has not been run, so
-      # ADPP is unavailable. Surface it as a toast (Gero, #1335) in addition to
-      # the inline placeholder, since the empty panel alone reads as a silent
-      # failure.
-      if (is.null(adpp())) {
+      # ADPP is unavailable. Surface it as a toast in addition to the inline
+      # placeholder, since the empty panel alone reads as a silent failure.
+      if (is.null(data()$adpp)) {
         # Fixed id so multiple ADPP panels collapse into one toast rather than
         # stacking an identical message per output.
         showNotification(
@@ -303,10 +306,10 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
         )
       }
       validate(need(
-        !is.null(adpp()),
+        !is.null(data()$adpp),
         "ADPP data is not available. Run NCA first to view PK parameter outputs."
       ))
-      apply_labels(adpp(), type = "ADPP")
+      apply_labels(data()$adpp, type = "ADPP")
     })
 
     # dataset name -> data reactive.
@@ -315,22 +318,17 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       ADPP  = adpp_data
     )
 
-    # PKNCA grouping variables (minus the subject column) -- the sensible default
-    # row-stratification set for the summary tables (issue 1356: separate stats by
-    # every grouping variable but USUBJID).  Derived from the processed PKNCA
-    # object so it reflects the study's actual grouping structure; the option
-    # layer resolves the `.pknca_groups` default token against it.
+    # CDISC grouping variables (minus the subject column) -- the sensible default
+    # row-stratification set for summary tables.  The TLG boundary is the exported
+    # CDISC data, so derive the available grouping columns from ADNCA rather than
+    # reaching back into the processed PKNCA object.
     grouping_vars <- reactive({
       req(data())
-      groups  <- tryCatch(names(PKNCA::getGroups(data()$conc)), error = function(e) character())
-      subject <- tryCatch(data()$conc$columns$subject, error = function(e) NULL)
-      groups  <- setdiff(groups, subject)
-      # CDISC renames the specimen grouping column PCSPEC (ADNCA) -> PPSPEC (ADPP)
-      # via export_cdisc(); expose both aliases so each dataset's table defaults
-      # to whichever it actually carries when the option layer intersects with
-      # the data columns.
-      if ("PCSPEC" %in% groups) groups <- union(groups, "PPSPEC")
-      groups
+      candidate_groups <- c(
+        "TRT01A", "TRT01P", "DOSEA", "PARAM", "PCSPEC", "PPSPEC",
+        "PPCAT", "ATPTREF", "NFRLT", "NRRLT"
+      )
+      intersect(candidate_groups, names(data()$adnca))
     })
 
     # Track which module IDs have already been registered for this session.

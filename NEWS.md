@@ -7,6 +7,11 @@
 
 ## Bug Fixes
 
+* TLGs now use the exported CDISC ADNCA and ADPP datasets as their data
+  sources, keeping exclusion markers and columns consistent with CDISC exports (#1482).
+* TLG listings now mark summary-excluded records with `*` and explain the
+  marker in the footer, using `PKSUMXF` for ADNCA listings and `PPSUMXF` for
+  ADPP listings (#1482).
 * Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
 
 * Running NCA with an empty analyte, specimen, or NCA profile selection now
