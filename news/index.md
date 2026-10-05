@@ -23,6 +23,12 @@
 
 ### Bug Fixes
 
+- Running NCA with an empty analyte, specimen, or NCA profile selection
+  now shows a red notification naming the missing selection instead of
+  stopping silently. It also explains when the current data and settings
+  provide no valid NCA intervals
+  ([\#1527](https://github.com/pharmaverse/aNCA/issues/1527))
+
 - Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now
   captured in the exported settings YAML, ZIP export, and generated R
   script, so R scripts reproduce the same units as the app. The units
@@ -30,9 +36,11 @@
   of a modal-edit flag, and is decoupled from the debounced `settings()`
   reactive to avoid stalling session auto-replay
   ([\#1190](https://github.com/pharmaverse/aNCA/issues/1190))
+
 - R-devel package checks no longer fail because the base `tools` package
   was imported from `NAMESPACE` while listed only in `Suggests`
   ([\#1496](https://github.com/pharmaverse/aNCA/issues/1496))
+
 - The upload UI now shows accepted file formats and the current maximum
   upload size, matching `shiny.maxRequestSize` when the app is launched
   through
@@ -41,6 +49,7 @@
   limit also show an app notification explaining that the data was not
   loaded because it exceeded the configured limit
   ([\#1365](https://github.com/pharmaverse/aNCA/issues/1365))
+
 - The Parameter Selection matrix no longer silently ignores parameters
   chosen for metabolite study types. The matrix labeled study types
   using metabolite information
@@ -50,12 +59,14 @@
   matrix now reuses the same derivation as calculation time, so every
   selectable study type is honored
   ([\#1471](https://github.com/pharmaverse/aNCA/issues/1471))
+
 - [`pkcg01()`](https://pharmaverse.github.io/aNCA/reference/pkcg01.md)
   and
   [`pkcg02()`](https://pharmaverse.github.io/aNCA/reference/pkcg02.md)
   now return named plot lists by reading `id_plot` from the grouped
   plotting data instead of the raw input data
   ([\#1448](https://github.com/pharmaverse/aNCA/issues/1448))
+
 - Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer
   draw their tick labels on top of each other.
   [`filter_breaks()`](https://pharmaverse.github.io/aNCA/reference/filter_breaks.md)
@@ -74,18 +85,22 @@
   thinning, so a break that is never drawn can no longer shift the first
   visible one a step past a manual `xmin`
   ([\#1441](https://github.com/pharmaverse/aNCA/issues/1441))
+
 - Canceling the duplicate-row resolution modal after mapping now
   re-enables the Data tab’s Next button, and manual mapping submissions
   show a loading popup while processing
   ([\#1420](https://github.com/pharmaverse/aNCA/issues/1420))
+
 - Restored settings now ignore incomplete partial interval rows with
   missing or invalid start/end values before they reach the NCA setup
   state, preventing spurious interval parameters from uploaded settings
   ([\#1347](https://github.com/pharmaverse/aNCA/issues/1347))
+
 - NCA Results now derive the `Missing` flag at the subject/profile
   level, so parameter-level metadata from active flag parameters can no
   longer duplicate rows in the pivoted results table
   ([\#1479](https://github.com/pharmaverse/aNCA/issues/1479))
+
 - Running NCA with “Impute Start Concentration” turned off no longer
   errors with `PKNCA_impute_method_FALSE not found`. When start
   imputation was off, the per-interval `impute` column was absent, so
@@ -97,12 +112,14 @@
   collide with the column
   ([\#1121](https://github.com/pharmaverse/aNCA/issues/1121),
   [\#1266](https://github.com/pharmaverse/aNCA/issues/1266))
+
 - With “Impute Start Concentration” turned off, the first interval now
   starts at C1 (the first sample at or after the dose) instead of the
   predose time. The sample feeding the start time was picked by an
   unordered `slice(1)`, so it could be the predose record whose negative
   `ARRLT` pulled the interval start before the dose
   ([\#1121](https://github.com/pharmaverse/aNCA/issues/1121))
+
 - The generated R-script (session code) now passes `blq_imputation_rule`
   to
   [`PKNCA_update_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_update_data_object.md),
@@ -112,16 +129,19 @@
   and omitted it during interval setup, so exported scripts did not
   reproduce the app’s BLQ handling
   ([\#1445](https://github.com/pharmaverse/aNCA/issues/1445))
+
 - Mean concentration plots no longer drop timepoints that are well under
   the BLQ threshold: the BLQ ratio counted flagged records against a
   denominator of distinct subjects, so a subject contributing several
   records to a timepoint could push the ratio above 1. It is now counted
   per subject on both sides
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - The “X ticks” option on the linear and logarithmic concentration plots
   now takes effect. `plotly` was regenerating the axis itself, so the
   chosen column was ignored; the side-by-side variants were already
   unaffected ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - Mean concentration plots (`pkcg03`) and the urine,
   dose-proportionality and box plot entries no longer render as blank
   panels: graph output IDs were taken from the plot list’s names while
@@ -129,13 +149,16 @@
   plots are split into a named list never bound to its output. Split
   graphs now also show the group as a header, the way split tables do
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - TLG sidebar options set to `0` are no longer silently ignored: the
   option filter treated a literal `0` the same as “unset”, so an axis
   limit of `0` (`xmin`/`ymin`) had no effect
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - A TLG that produces no output now explains why instead of rendering a
   blank panel with no message
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - Combined concentration plots (`pkcg02`) no longer group by `USUBJID`
   by default, which produced one plot per subject instead of an overlaid
   combined plot. They now default to the study’s PKNCA grouping
@@ -143,19 +166,23 @@
   as an explicit choice; the individual side-by-side plot (`pkcg01`)
   correspondingly groups by subject rather than by treatment
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - Concentration plot titles no longer disappear when a plot group covers
   more than one treatment: the treatment names are now collapsed into a
   single subtitle string, where previously the subtitle became a
   character vector that `plotly` rendered as no title at all
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - Concentration plot subtitles no longer mislabel grouping variables: a
   variable with no configured display name (e.g. `USUBJID` on `pkcg02`)
   is labeled with its own name instead of being dropped, which shifted
   every following label onto the wrong value
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - The `pkcg03` mean plot “Summary Statistic” dropdown now opens with its
   default (`Mean_sdi`) selected instead of appearing blank
   ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
+
 - Fix app failing to launch from an installed package: internal
   (non-exported) functions called from the Shiny app are now
   namespace-qualified so they resolve after `R CMD INSTALL`, and the app
