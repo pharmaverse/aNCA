@@ -168,6 +168,8 @@ t_pkpt03_col <- function(
     stop("t_pkpt03_col: missing required column: ", value_var)
   }
 
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
+
   if (!is.null(param_filter) && length(param_filter) > 0 && "PARAM" %in% names(data)) {
     data <- data[data$PARAM %in% param_filter, , drop = FALSE]
   }
@@ -273,6 +275,8 @@ t_pkpt07_norm <- function(
   col_group_var  = NULL,
   stats          = NULL
 ) {
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
+
   if (paramcd_var %in% names(data)) {
     if (!is.null(paramcd_filter)) {
       data <- data[data[[paramcd_var]] %in% paramcd_filter, , drop = FALSE]
@@ -343,6 +347,8 @@ t_pkpt08_uri <- function(
   col_group_var = NULL,
   stats       = NULL
 ) {
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
+
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
     data <- dplyr::filter(data, toupper(.data$PPSPEC) %in% toupper(urine_specs))
@@ -457,6 +463,8 @@ t_pkpt11_gmr <- function(
   if (length(missing_cols) > 0) {
     stop("t_pkpt11_gmr: missing required columns: ", paste(missing_cols, collapse = ", "))
   }
+
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   arms <- sort(unique(data[[strat_var]]))
   if (is.null(ref_arm)) ref_arm <- arms[1]

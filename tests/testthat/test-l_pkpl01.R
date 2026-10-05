@@ -184,6 +184,25 @@ describe("l_pkpl01_mp", {
     expect_false(any(c("Cmax", "AUClast") %in% names(dose1)))
   })
 
+  it("keeps excluded ratios in listings while summaries use the ADPP flag", {
+    data <- mp_adpp_fixture()
+    data$PPSUMXF[data$USUBJID == "S1"] <- "Y"
+    data$PKSUMXF <- ifelse(data$USUBJID == "S2", "Y", "")
+
+    listed <- l_pkpl01_mp(data)
+    tabled <- t_pkpt03_MP_col(data)
+    plotted <- p_pkpg06_mp(data)
+    dose1 <- grep("ATPTREF: DOSE 1", names(listed))
+    summary <- tabled[[grep("ATPTREF: DOSE 1", names(tabled))]]
+    plot_data <- plotted[[grep("ATPTREF: DOSE 1", names(plotted))]]$data
+
+    expect_equal(as.numeric(listed[[dose1]][["M/P Cmax"]]), c(0.5, 0.3))
+    expect_equal(summary$n[summary$PARAM == "M/P Cmax"], 1L)
+    expect_equal(summary$Mean[summary$PARAM == "M/P Cmax"], 0.3)
+    expect_equal(unique(plot_data$USUBJID), "S2")
+    expect_equal(plot_data$AVAL[plot_data$PARAMCD == "RACMAX"], 0.3)
+  })
+
   it("lists changed ADPP ratios without recalculating ordinary values", {
     data <- mp_adpp_fixture()
     selected <- !is.na(data$PPANMETH)
