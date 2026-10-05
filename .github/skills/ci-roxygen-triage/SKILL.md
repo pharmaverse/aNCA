@@ -15,9 +15,10 @@ fails if `man/*` or `DESCRIPTION` differ from what is committed. A failure means
 the generated docs / `NAMESPACE` / collate are out of sync with the roxygen
 comments in `R/`.
 
-The fix is always in the **source** (`R/*.R` roxygen blocks, and the manually
-maintained `NAMESPACE`/`DESCRIPTION` entries the project keeps in step), not in
-the generated `man/` files.
+The source (`R/*.R` roxygen blocks, and the manually maintained
+`NAMESPACE`/`DESCRIPTION` entries the project keeps in step) remains the source
+of truth. When R is unavailable, the exact-CI exception below permits a small,
+verified generated-manual update.
 
 ## When to use
 
@@ -54,8 +55,7 @@ in `DESCRIPTION` can itself cause noise.
 
 ### 2. Trace each stale artifact to its source
 
-Do not edit files under `man/` — they are generated (see `AGENTS.md`). Map each
-diff back to the source that produces it:
+Map each diff back to the source that produces it:
 
 - **`man/<fn>.Rd`** -> the roxygen block above `<fn>` in `R/<fn>.R`. The diff
   shows what regeneration *would* produce; the committed `.Rd` is stale because
@@ -93,22 +93,35 @@ produce exactly what the diff shows should be there:
 Follow the project's roxygen conventions in `AGENTS.md` (exported functions need
 `@param`, `@return`, `@export`; keep `zzz.R` globals sorted; etc.).
 
+### 3a. Exact-CI manual exception
+
+When R is unavailable, an agent may apply a `man/*.Rd` change by hand only when
+all conditions hold:
+
+- CI prints the complete, line-local diff and it affects only `man/*.Rd`.
+- The corresponding `R/*.R` source and roxygen block explain the change.
+- `DESCRIPTION` `RoxygenNote` matches the CI Roxygen version.
+- The change copies CI output exactly; it does not infer, reformat, or broaden it.
+
+Do not use this exception for `NAMESPACE`, `DESCRIPTION`, broad or incomplete
+diffs, a source/CI mismatch, or uncertain generated output. Record the CI job
+and rely on the next CI run as final verification.
+
 ### 4. Verify what you can, and report
 
-You cannot run R, so you cannot run
-`roxygen2::roxygenize()` / `devtools::document()` locally — the generated `man/`
-and `NAMESPACE` cannot be produced here, so **the regenerated files themselves
-must be created by a developer running `devtools::document()`**, and final
-verification is the CI re-run.
+You cannot run R, so you cannot run `roxygen2::roxygenize()` /
+`devtools::document()` locally. Apply the exact-CI manual exception only when
+it qualifies; otherwise a developer must regenerate the artifacts. In both
+cases, final verification is the CI re-run.
 
 Before handing off:
 
 - Confirm each source change (roxygen tags, `NAMESPACE` lines, `DESCRIPTION`
   fields) is consistent with what the diff said the output should be.
 - Check `NAMESPACE` and `DESCRIPTION` Imports agree for every `@importFrom`.
-- Flag clearly that `devtools::document()` must be run and the regenerated
-  `man/*`/`NAMESPACE` committed — the source edits alone will not turn the check
-  green unless the generated files are also regenerated and pushed.
+- Flag whether the exact-CI exception was used or `devtools::document()` still
+  must be run. Source edits alone do not turn the check green until matching
+  generated artifacts are committed.
 
 Then report per artifact: the file, the source it traces to, and the fix
 applied. Example:
@@ -125,12 +138,11 @@ applied. Example:
 - The check regenerates the whole package, so a stale artifact can originate
   from the base branch rather than the PR's diff. Note when the cause is
   inherited.
-- Never edit `man/` or `NAMESPACE`/`DESCRIPTION` generated content to
-  "match" without fixing the roxygen source — the next regeneration would just
-  revert it.
+- Never edit generated content without tracing it to correct source. The exact
+  CI manual exception permits only verified, line-local `man/*.Rd` output.
 - Do not use `[skip lint]` (which also skips this job) to get a green run.
-- The agent's source edits are necessary but **not sufficient**: a developer
-  must run `devtools::document()` to produce the committed generated files.
+- The agent's source edits are necessary but **not sufficient** unless the
+  exact-CI manual exception applies.
 
 ## References
 
