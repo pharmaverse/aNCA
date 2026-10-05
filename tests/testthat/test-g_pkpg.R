@@ -406,12 +406,14 @@ describe("PK parameter plot subtitles", {
     )
   )
 
-  it("retains column labels through filtering without changing plotted values", {
+  it("retains column labels and excludes flagged values through plot filters", {
     for (id in names(cases)) {
       data <- cases[[id]]
       data$AVAL[1] <- NA_real_
       if ("DOSEA" %in% names(data)) data$DOSEA[3] <- 0
-      baseline <- do.call(get(id), list(data = data))[[1]]
+      data$PPSUMXF <- ifelse(seq_len(nrow(data)) == 2, "Y", "")
+      kept <- data[data$PPSUMXF != "Y", , drop = FALSE]
+      baseline <- do.call(get(id), list(data = kept))[[1]]
       attr(data$AVAL, "label") <- "Measured PK value"
       if ("DOSEA" %in% names(data)) attr(data$DOSEA, "label") <- "Administered dose"
       result <- do.call(get(id), list(data = data))[[1]]

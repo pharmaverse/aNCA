@@ -56,6 +56,8 @@ p_pkpg03_boxp <- function(
   }
 
   column_labels <- var_labels(data)
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
+
   data <- data[!is.na(data[[value_var]]), , drop = FALSE]
   if (nrow(data) == 0) return(list())
 
@@ -244,6 +246,8 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   ylab           = NULL
 ) {
   column_labels <- var_labels(data)
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
+
   if ("PPSPEC" %in% names(data)) {
     # Case-insensitive match (CDISC value is "URINE"; source casing varies).
     data <- dplyr::filter(data, toupper(.data$PPSPEC) %in% toupper(urine_specs))
@@ -459,6 +463,8 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
   }
 
   column_labels <- var_labels(data)
+  data <- filter_summary_excluded(data, flag = "PPSUMXF")
+
   data <- data[
     !is.na(data[[value_var]]) & !is.na(data[[dose_var]]) &
       data[[value_var]] > 0     & data[[dose_var]] > 0, ,

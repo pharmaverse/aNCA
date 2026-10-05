@@ -502,7 +502,7 @@ describe("t_pkpt label attributes", {
   labelled <- pkpt_data
   attr(labelled$PPCAT, "label") <- "Parameter Category"
 
-  it("preserves annotation labels and summary values through parameter and metabolite filters", {
+  it("preserves annotation labels and excluded-row counts through table filters", {
     norm <- transform(pkpt_data, PARAMCD = ifelse(PARAM == "Cmax", "CMAXD", PARAMCD))
     uri <- transform(pkpt_data, PPSPEC = "URINE")
     fallback <- pkpt_metab_data
@@ -519,6 +519,7 @@ describe("t_pkpt label attributes", {
     for (i in seq_along(cases)) {
       case <- cases[[i]]
       context <- paste("filter case", i)
+      case$data$PPSUMXF <- ifelse(case$data$USUBJID %in% c("S2", "S5"), "Y", "")
       attr(case$data$AVAL, "label") <- "Measured PK value"
       attr(case$data$PARAM, "label") <- "PK parameter"
       out <- do.call(case$fun, c(list(
@@ -527,9 +528,9 @@ describe("t_pkpt label attributes", {
       expect_equal(attr(out, "tlg_title"), "Metric: Measured PK value", info = context)
       expect_equal(attr(out, "tlg_subtitle"), "Cmax", info = context)
       expect_equal(attr(out, "tlg_footnote"), "PK parameter", info = context)
-      expected <- if (i <= 4) c(6, 10) else 10
+      expected <- if (i <= 4) c(6, 9.5) else 9.5
       expect_equal(as.numeric(out$Mean), expected, info = context)
-      expect_equal(as.numeric(out$n), rep(3, length(expected)), info = context)
+      expect_equal(as.numeric(out$n), rep(2, length(expected)), info = context)
     }
   })
 
