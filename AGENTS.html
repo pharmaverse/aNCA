@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9201</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9203</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -281,7 +281,7 @@
 <li>
 <strong>Branch name</strong>: <code>&lt;issue-number&gt;-&lt;type&gt;/&lt;short-description&gt;</code> (e.g., <code>123-bug/data-upload-fails</code>)</li>
 <li>
-<strong>Before submitting</strong>: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes</li>
+<strong>Before submitting</strong>: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes. <strong>Before adding or editing any NEWS.md entry, apply the <code>.github/skills/news-curation/SKILL.md</code> decision gate</strong> — only user-observable changes belong in NEWS; drop internal-only or already-shipped invisible changes, and fold same-theme fixes into existing entries.</li>
 <li>
 <strong>PR template</strong>: Use <code>.github/PULL_REQUEST_TEMPLATE.md</code>. Link issue with <code>Closes #&lt;number&gt;</code>, describe changes, complete the contributor checklist</li>
 <li>
@@ -315,6 +315,8 @@
 <code>.github/agents/</code> — Role-specific agent profiles.</li>
 <li>
 <code>.github/skills/</code> — Reusable agent workflows.</li>
+<li>
+<code>.github/skills/news-curation/SKILL.md</code> — Decide whether a change belongs in NEWS.md and how to phrase it. Apply whenever opening/updating a PR or editing NEWS.md.</li>
 <li>
 <strong>Repository skills:</strong> Use <code>skill-creation</code> for new skills and <code>skill-editing</code> for substantial edits to existing skills.</li>
 </ul></div>

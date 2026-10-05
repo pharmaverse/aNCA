@@ -269,7 +269,12 @@ for requesting new features
   `123-bug/data-upload-fails`)
 - **Before submitting**: Run checks above, bump version (+1 compared to
   the main branch). Propose NEWS.md updates (with the \# of the pull
-  request) by adding information about features or bug fixes
+  request) by adding information about features or bug fixes. **Before
+  adding or editing any NEWS.md entry, apply the
+  `.github/skills/news-curation/SKILL.md` decision gate** — only
+  user-observable changes belong in NEWS; drop internal-only or
+  already-shipped invisible changes, and fold same-theme fixes into
+  existing entries.
 - **PR template**: Use `.github/PULL_REQUEST_TEMPLATE.md`. Link issue
   with `Closes #<number>`, describe changes, complete the contributor
   checklist
@@ -307,5 +312,8 @@ This repository uses the following agent configuration:
 - `.github/instructions/` — Path-specific notes for Copilot.
 - `.github/agents/` — Role-specific agent profiles.
 - `.github/skills/` — Reusable agent workflows.
+- `.github/skills/news-curation/SKILL.md` — Decide whether a change
+  belongs in NEWS.md and how to phrase it. Apply whenever
+  opening/updating a PR or editing NEWS.md.
 - **Repository skills:** Use `skill-creation` for new skills and
   `skill-editing` for substantial edits to existing skills.

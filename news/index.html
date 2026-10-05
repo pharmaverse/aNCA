@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9201</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9203</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-development-version">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h3>
-<ul><li><p>Running NCA with an empty analyte, specimen, or NCA profile selection now shows a red notification naming the missing selection instead of stopping silently. It also explains when the current data and settings provide no valid NCA intervals (<a href="https://github.com/pharmaverse/aNCA/issues/1527" class="external-link">#1527</a>)</p></li>
+<ul><li><p>Summary-exclusion flags (<code>PKSUMXF</code>/<code>PPSUMXF</code>) no longer hide records from individual concentration plots (<code>pkcg01</code>) and combined plots (<code>pkcg02</code>). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (<a href="https://github.com/pharmaverse/aNCA/issues/1438" class="external-link">#1438</a>)</p></li>
+<li><p>Running NCA with an empty analyte, specimen, or NCA profile selection now shows a red notification naming the missing selection instead of stopping silently. It also explains when the current data and settings provide no valid NCA intervals (<a href="https://github.com/pharmaverse/aNCA/issues/1527" class="external-link">#1527</a>)</p></li>
 <li><p>Automatic volume unit simplification (e.g. <code>mg*L/mL</code> → <code>mg</code>) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (<code>PPSTRESU</code> vs <code>PPORRESU</code>) instead of a modal-edit flag, and is decoupled from the debounced <code>settings()</code> reactive to avoid stalling session auto-replay (<a href="https://github.com/pharmaverse/aNCA/issues/1190" class="external-link">#1190</a>)</p></li>
 <li><p>R-devel package checks no longer fail because the base <code>tools</code> package was imported from <code>NAMESPACE</code> while listed only in <code>Suggests</code> (<a href="https://github.com/pharmaverse/aNCA/issues/1496" class="external-link">#1496</a>)</p></li>
 <li><p>The upload UI now shows accepted file formats and the current maximum upload size, matching <code>shiny.maxRequestSize</code> when the app is launched through <code><a href="../reference/run_app.html">run_app()</a></code> and falling back to the default Shiny limit otherwise. Files above the limit also show an app notification explaining that the data was not loaded because it exceeded the configured limit (<a href="https://github.com/pharmaverse/aNCA/issues/1365" class="external-link">#1365</a>)</p></li>
