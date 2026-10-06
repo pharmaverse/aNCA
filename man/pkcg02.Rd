@@ -85,7 +85,10 @@ pkcg02(
 A list of ggplot or plotly objects for each unique group.
 }
 \description{
-This function generates a list of plotly objects PK concentration-time profiles by group
+This function generates a list of plotly objects PK concentration-time profiles by group.
+Records flagged with \code{PKSUMXF == "Y"} remain visible as crosses; other records
+retain circular points. A footnote explains the crosses in plots containing
+flagged records, including interactive plots and static exports.
 }
 \examples{
 # Make an example small dataset

@@ -7,7 +7,7 @@
 
 ## Bug Fixes
 
-* Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
+* Summary-excluded records remain visible in individual and combined concentration plots (`pkcg01`/`pkcg02`), with crosses and an explanatory footnote. Summary tables and mean plots continue to omit these records, including in exported R scripts (#1438, #1534).
 
 * Running NCA with an empty analyte, specimen, or NCA profile selection now
   shows a red notification naming the missing selection instead of stopping
