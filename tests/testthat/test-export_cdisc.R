@@ -183,10 +183,11 @@ describe("export_cdisc", {
       int_rows <- which(grepl("INT", result$pp$PPTESTCD))
       expect_true(all(result$pp$PPTESTCD[int_rows] == expected_cd))
 
-      # PPANMETH should be set for consolidated rows
+      # PPANMETH should be set for consolidated rows; PKNCA after 0.12.1 reports
+      # its own method, which the metadata value is prepended to
       expect_true("PPANMETH" %in% names(result$pp))
       expect_true(all(
-        result$pp$PPANMETH[int_rows] == "Interpolation truncated at next dose time"
+        startsWith(result$pp$PPANMETH[int_rows], "Interpolation truncated at next dose time")
       ))
 
       # PPSTINT/PPENINT should still be derived correctly
@@ -518,13 +519,12 @@ describe("export_cdisc", {
     test_vz_data$intervals <- test_vz_data$intervals %>%
       filter(USUBJID %in% unique(USUBJID)[c(5, 7)]) %>%
       mutate(
-        vz.last = TRUE,
         vz.obs = TRUE,
         vz.pred = TRUE
       )
     test_vz_result <- suppressWarnings(PKNCA::pk.nca(test_vz_data))
     test_vz_result$result <- test_vz_result$result %>%
-      filter(PPTESTCD %in% c("vz.last", "vz.obs", "vz.pred")) %>%
+      filter(PPTESTCD %in% c("vz.obs", "vz.pred")) %>%
       mutate(
         PPSTRES = PPORRES,
         PPSTRESU = PPORRESU
