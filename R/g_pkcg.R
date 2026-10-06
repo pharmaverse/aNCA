@@ -28,6 +28,9 @@ g_pkcg01_sbs <- function(data, ...) {
 #' Generate PK Concentration-Time Profile Plots
 #'
 #' This function generates a list of ggplots for PK concentration-time profiles.
+#' Records flagged with `PKSUMXF == "Y"` remain visible as crosses; other records
+#' retain circular points. A footnote explains the crosses in plots containing
+#' flagged records, including interactive plots and static exports.
 #'
 #' @param adnca            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
@@ -137,7 +140,7 @@ pkcg01 <- function(
     )
   ) +
     ggplot2::geom_line(linewidth = 0.4) +
-    ggplot2::geom_point(size = 2) +
+    .pkcg_points(adnca_grouped) +
     labs(
       x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
       y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
@@ -249,6 +252,7 @@ pkcg01 <- function(
         parse_annotation(plot_data, footnote)
       }
     }
+    footnote <- .pkcg_exclusion_footnote(plot_data, footnote, plotly)
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
 
@@ -330,6 +334,40 @@ pkcg01 <- function(
   # files 1..n instead of using the group (#1344).
   plots %>%
     setNames(unique(adnca_grouped[["id_plot"]]))
+}
+
+#' Draw concentration points without changing line groups or color legends.
+#'
+#' Identity shapes stay within the existing Plotly traces. A discrete shape scale
+#' would split those traces and add exclusion categories to the color legend.
+#'
+#' @param data Concentration data for the plot family.
+#' @returns A point layer with crosses for summary-excluded concentrations.
+#' @importFrom ggplot2 aes geom_point
+#' @noRd
+.pkcg_points <- function(data) {
+  if (!any(data[["PKSUMXF"]] %in% "Y")) {
+    return(geom_point(size = 2))
+  }
+  geom_point(
+    aes(shape = I(ifelse(.data[["PKSUMXF"]] %in% "Y", 4, 19))),
+    size = 2
+  )
+}
+
+#' Explain exclusion shapes only on plots containing excluded records.
+#'
+#' @param data Concentration data for one plot.
+#' @param footnote Parsed user footnote, or an empty string.
+#' @param plotly Whether the footnote will be rendered as HTML.
+#' @returns The footnote with an exclusion explanation when needed.
+#' @noRd
+.pkcg_exclusion_footnote <- function(data, footnote, plotly) {
+  if (!any(data[["PKSUMXF"]] %in% "Y")) {
+    return(footnote)
+  }
+  note <- "Crosses mark concentrations excluded from summary tables and mean plots."
+  paste(c(footnote[nzchar(footnote)], note), collapse = if (plotly) "<br>" else "\n")
 }
 
 # Helper Function for Title Generation
@@ -419,7 +457,10 @@ g_pkcg02_sbs <- function(data, ...) {
 
 #' Generate Combined PK Concentration-Time Profile Plot by Cohort
 #'
-#' This function generates a list of plotly objects PK concentration-time profiles by group
+#' This function generates a list of plotly objects PK concentration-time profiles by group.
+#' Records flagged with `PKSUMXF == "Y"` remain visible as crosses; other records
+#' retain circular points. A footnote explains the crosses in plots containing
+#' flagged records, including interactive plots and static exports.
 #'
 #' @param adnca            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
@@ -531,7 +572,7 @@ pkcg02 <- function(
     )
   ) +
     ggplot2::geom_line(linewidth = 0.4) +
-    ggplot2::geom_point(size = 2) +
+    .pkcg_points(adnca_grouped) +
     ggplot2::labs(
       x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
       y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
@@ -640,6 +681,7 @@ pkcg02 <- function(
         parse_annotation(plot_data, footnote)
       }
     }
+    footnote <- .pkcg_exclusion_footnote(plot_data, footnote, plotly)
     footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
       suppressWarnings({

@@ -86,6 +86,9 @@ A list of ggplot or plotly objects for each unique group.
 }
 \description{
 This function generates a list of ggplots for PK concentration-time profiles.
+Records flagged with \code{PKSUMXF == "Y"} remain visible as crosses; other records
+retain circular points. A footnote explains the crosses in plots containing
+flagged records, including interactive plots and static exports.
 }
 \examples{
 adnca <- adnca_example
