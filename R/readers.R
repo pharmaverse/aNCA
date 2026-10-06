@@ -17,7 +17,7 @@
 read_pk <- function(path) {
   if (!file.exists(path)) stop("File does not exist: ", path)
 
-  format <- tools::file_ext(path)
+  format <- file_ext(path)
   if (!format %in% names(readers))
     stop("Invalid file type. Accepted formats are ", paste(names(readers), collapse = ", "))
 

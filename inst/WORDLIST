@@ -155,6 +155,7 @@ analyte
 analytes
 aucpext
 aucs
+behaviour
 bioavailability
 bioequivalence
 cdisc
@@ -168,6 +169,7 @@ dataformat
 dateTime
 datetime
 datetimes
+debounced
 deduplicated
 dev
 devtools
