@@ -571,8 +571,9 @@ describe("PKNCA_calculate_nca", {
     expect_true("start_dose" %in% colnames(nca_results$result))
     expect_true("end_dose" %in% colnames(nca_results$result))
 
-    # Check that only two items have been added to the list
-    expect_equal(length(colnames(nca_results$result)), 15)
+    # Check that only two items have been added to the list (PKNCA after 0.12.1
+    # also reports the analysis method in PPANMETH)
+    expect_equal(length(setdiff(colnames(nca_results$result), "PPANMETH")), 15)
   })
 })
 

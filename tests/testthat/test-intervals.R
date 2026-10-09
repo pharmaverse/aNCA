@@ -292,6 +292,7 @@ describe("update_main_intervals", {
     filter(type_interval == "main") %>%
     select(-impute) %>%
     left_join(subject_params, by = "USUBJID", relationship = "many-to-many")
+  data$options$keep_interval_cols <- c(data$options$keep_interval_cols, "STUDYID")
 
   # Parameter list keyed by auto-detected study type names from detect_study_types().
   # Fixture data produces these types based on ROUTE, ADOSEDUR, DOSNOA, and METABFL.
@@ -453,7 +454,12 @@ describe("update_main_intervals", {
       data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_keep
     )
     res_all_keep <- get_results(all_keep, blq_keep)
-    expect_equal(res_no_blq, res_all_keep)
+    # PKNCA after 0.12.1 names the requested imputation in PPANMETH even when it
+    # changes nothing, so compare everything else
+    expect_equal(
+      select(res_no_blq, -any_of("PPANMETH")),
+      select(res_all_keep, -any_of("PPANMETH"))
+    )
 
     # --- 3. BLQ imputation: before.tmax, after.tmax, and both ---
     blq_before <- list(before.tmax = 100, after.tmax = "keep")

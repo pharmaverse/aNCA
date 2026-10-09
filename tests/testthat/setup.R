@@ -368,6 +368,8 @@ base::local({
 
   FIXTURE_PKNCA_DATA$options <<- list(keep_interval_cols = c("ATPTREF",
                                                              "DOSNOA",
+                                                             "DOSETRT",
+                                                             "ROUTE",
                                                              "type_interval"))
 
   # Add start_dose and end_dose columns
