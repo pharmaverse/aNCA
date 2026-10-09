@@ -187,11 +187,40 @@ describe("pivot_wider_pknca_results", {
 
   it("adds appropriate labels to columns (CDISC PPTEST)", {
     labels <- formatters::var_labels(pivoted_res)
-    expected_labels <- c(
-      PCSPEC = NA, USUBJID = NA, PARAM = NA, start = NA, end = NA, ATPTREF = NA,
-      DOSNOA = NA, AFRLT = NA, ARRLT = NA, NFRLT = NA, NRRLT = NA, ROUTE = NA,
-      DOSEA = NA, DOSETRT = NA, ADOSEDUR = NA, DOSEU = NA,
-      `AUCLST[hr*ng/mL]` = "AUC to Last Nonzero Conc",
+
+    # Derive the expected labels straight from the metadata object, keyed on the
+    # columns PKNCA actually produced. This keeps the test robust to PKNCA
+    # version differences (e.g. dev PKNCA adds `lambda.z.corrxy`/`CORRXY`, which
+    # 0.12.1 does not compute) without hardcoding a per-version condition.
+    #
+    # The derivation is an independent code path from add_label_attribute(): it
+    # parses the pivoted output column-name strings and looks them up in
+    # metadata_nca_parameters, rather than reading the structured PKNCA result.
+    expected_labels <- vapply(names(labels), function(col) {
+      pptestcd <- gsub("\\[.*\\]", "", col)
+      parsed <- regmatches(
+        pptestcd,
+        regexec("^(.+)_(\\d+\\.?\\d*)-(\\d+\\.?\\d*)$", pptestcd)
+      )[[1]]
+      if (length(parsed) == 4) {
+        base_label <- metadata_nca_parameters$PPTEST[
+          match(parsed[2], metadata_nca_parameters$PPTESTCD)
+        ]
+        base_label <- gsub("T1", parsed[3], base_label)
+        gsub("T2", parsed[4], base_label)
+      } else {
+        metadata_nca_parameters$PPTEST[
+          match(pptestcd, metadata_nca_parameters$PPTESTCD)
+        ]
+      }
+    }, character(1))
+
+    expect_equal(labels, expected_labels)
+
+    # Golden spot-check on a handful of representative parameters so the metadata
+    # content itself (not just the pipeline) stays covered. Guard version-only
+    # parameters so this still passes on both CRAN and dev PKNCA.
+    golden <- c(
       `CMAX[ng/mL]` = "Max Conc",
       `TMAX[hr]` = "Time of CMAX Observation",
       `TLST[hr]` = "Time of Last Nonzero Conc",
@@ -204,13 +233,13 @@ describe("pivot_wider_pknca_results", {
       `LAMZNPT[count]` = "Number of Points for Lambda z",
       `CLSTP[ng/mL]` = "Clast pred",
       `LAMZHL[hr]` = "Half-Life Lambda z",
-      `LAMZSPN` = "Lambda z Span",
-      `AUCIFO[hr*ng/mL]` = "AUC Infinity Obs",
       `AUCINT_0-2[hr*ng/mL]` = "AUC from 0 to 2",
-      `AUCINT_2-4[hr*ng/mL]` = "AUC from 2 to 4",
-      `LAMZIX` = NA, `LAMZMTD` = NA, `Exclude` = NA
+      LAMZIX = NA_character_
     )
-    expect_equal(labels, expected_labels)
+    if ("CORRXY" %in% names(labels)) {
+      golden["CORRXY"] <- "Correlation Between TimeX and Log ConcY"
+    }
+    expect_equal(labels[names(golden)], golden)
   })
 
   it("handles exclude values correctly", {

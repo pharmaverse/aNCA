@@ -170,6 +170,11 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- ""
   df_conc$exclude_half.life <- FALSE
+  # NA (not FALSE) is the neutral default: PKNCA treats an all-NA include
+  # column as "no manual selection" (automatic best-slope), whereas an all-FALSE
+  # column triggers manually.selected.points with zero points, breaking every
+  # half-life. Manual selections later set specific points to TRUE.
+  df_conc$include_half.life <- NA
 
   # Create PKNCA conc object
 
@@ -477,6 +482,8 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     },
     add = TRUE
   )
+
+  pknca_data <- resolve_hl_include_exclude_conflicts(pknca_data)
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)

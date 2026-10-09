@@ -76,10 +76,14 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
     return(list(plots = list(), data = list()))
   }
 
+  original_excl <- pknca_data$conc$data[[exclude_hl_col]]
+  pknca_data <- resolve_hl_include_exclude_conflicts(pknca_data)
+
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,
     concu_col, exclude_hl_col, title_vars
   )
+  d_conc_with_res[[exclude_hl_col]] <- original_excl[d_conc_with_res$ROWID]
 
   # Mark points used in half-life calculation
   info_per_plot_list <- d_conc_with_res %>%
