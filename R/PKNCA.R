@@ -483,7 +483,7 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     add = TRUE
   )
 
-  pknca_data <- resolve_hl_include_exclude_conflicts(pknca_data)
+  pknca_data <- resolve_hl_incl_excl_conflicts(pknca_data)
 
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)

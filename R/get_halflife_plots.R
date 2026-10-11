@@ -77,7 +77,7 @@ get_halflife_plots <- function(pknca_data, add_annotations = TRUE,
   }
 
   original_excl <- pknca_data$conc$data[[exclude_hl_col]]
-  pknca_data <- resolve_hl_include_exclude_conflicts(pknca_data)
+  pknca_data <- resolve_hl_incl_excl_conflicts(pknca_data)
 
   d_conc_with_res <- .merge_conc_with_nca_results(
     pknca_data, time_col, conc_col, timeu_col,

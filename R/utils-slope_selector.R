@@ -56,7 +56,7 @@ update_pknca_with_rules <- function(data, slopes) {
 #' @returns The PKNCA data object with half-life flags normalized for calculation.
 #'
 #' @noRd
-resolve_hl_include_exclude_conflicts <- function(data) {
+resolve_hl_incl_excl_conflicts <- function(data) {
   exclude_hl_col <- data$conc$columns$exclude_half.life
   include_hl_col <- data$conc$columns$include_half.life
   if (is.null(exclude_hl_col) || is.null(include_hl_col)) {

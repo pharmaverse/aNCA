@@ -114,7 +114,7 @@ describe("update_pknca_with_rules", {
   })
 })
 
-describe("resolve_hl_include_exclude_conflicts", {
+describe("resolve_hl_incl_excl_conflicts", {
   data <- FIXTURE_PKNCA_DATA
   include_col <- data$conc$columns$include_half.life
   exclude_col <- data$conc$columns$exclude_half.life
@@ -130,7 +130,7 @@ describe("resolve_hl_include_exclude_conflicts", {
     conflict_data$conc$data[[exclude_col]][conflict_rows[1]] <- TRUE
     conflict_data$conc$data[[exclude_col]][other_rows[1]] <- TRUE
 
-    result <- resolve_hl_include_exclude_conflicts(conflict_data)
+    result <- resolve_hl_incl_excl_conflicts(conflict_data)
 
     expect_true(all(is.na(result$conc$data[[exclude_col]][conflict_rows])))
     expect_true(is.na(result$conc$data[[include_col]][conflict_rows[1]]))
@@ -141,7 +141,7 @@ describe("resolve_hl_include_exclude_conflicts", {
     false_data <- data
     false_data$conc$data[[include_col]] <- FALSE
 
-    result <- resolve_hl_include_exclude_conflicts(false_data)
+    result <- resolve_hl_incl_excl_conflicts(false_data)
 
     expect_true(all(is.na(result$conc$data[[include_col]])))
   })
