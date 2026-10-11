@@ -80,18 +80,26 @@ describe("update_pknca_with_rules", {
                                       filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
                                       pull(include_half.life)))
 
-    new_have_points_incl <- all(new_with_incl$conc$data %>%
-                                  filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
-                                  pull(include_half.life))
+    new_have_points_incl <- all(
+      new_with_incl$conc$data %>%
+        filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+        pull(include_half.life)
+    )
 
-    new_have_points_excl <- all(new_with_excl$conc$data %>%
-                                  filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
-                                  pull(exclude_half.life))
+    new_have_points_excl <- all(
+      new_with_excl$conc$data %>%
+        filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+        pull(exclude_half.life)
+    )
 
     expect_true(all(old_have_points_na, new_have_points_incl, new_have_points_excl))
-    expect_true(all(is.na(new_with_incl_then_excl$conc$data %>%
-      filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
-      pull(include_half.life))))
+    expect_true(all(
+      is.na(
+        new_with_incl_then_excl$conc$data %>%
+          filter(USUBJID == group1$USUBJID, AFRLT >= 2, AFRLT <= 4) %>%
+          pull(include_half.life)
+      )
+    ))
   })
 
   it("returns an error for invalid rule types", {
