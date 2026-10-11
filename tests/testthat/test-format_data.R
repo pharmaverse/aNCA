@@ -12,7 +12,9 @@ ADNCA <- data.frame(
   DOSEA = rep(c(5, 10), each = 10),
   ROUTE = rep(c("intravascular", "extravascular"), each = 10),
   ADOSEDUR = rep(c(0, 0), each = 10),
-  AVAL = runif(20)
+  AVAL = runif(20),
+  exclude_half.life = FALSE,
+  include_half.life = NA
 )
 
 describe("format_pkncaconc_data", {

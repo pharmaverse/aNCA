@@ -170,6 +170,11 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
   df_conc$is.included.hl <- FALSE
   df_conc$REASON <- ""
   df_conc$exclude_half.life <- FALSE
+  # NA (not FALSE) is the neutral default: PKNCA treats an all-NA include
+  # column as "no manual selection" (automatic best-slope), whereas an all-FALSE
+  # column triggers manually.selected.points with zero points, breaking every
+  # half-life. Manual selections later set specific points to TRUE.
+  df_conc$include_half.life <- NA
 
   # Create PKNCA conc object
 
@@ -478,6 +483,8 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     add = TRUE
   )
 
+  pknca_data <- resolve_hl_incl_excl_conflicts(pknca_data)
+
   # Calculate results using PKNCA
   results <- PKNCA::pk.nca(data = pknca_data, verbose = FALSE)
 
@@ -503,7 +510,8 @@ PKNCA_calculate_nca <- function(pknca_data, blq_rule = NULL) { # nolint: object_
     # TODO: PKNCA package should offer a better solution to this at some point
     # Prevent that when t0 is used with non-imputed params to show off two result rows
     # just choose the derived ones (last row always due to interval_helper funs)
-    group_by(across(-c(intersect(names(.), c("PPSTRES", "PPORRES", "exclude"))))) %>%
+    # PPANMETH describes the calculation (including imputation), not its identity.
+    group_by(across(-any_of(c("PPSTRES", "PPORRES", "exclude", "PPANMETH")))) %>%
     slice_tail(n = 1) %>%
     ungroup()
 
