@@ -355,3 +355,47 @@ describe("cdisc_validation_blocks_save", {
     expect_true(cdisc_validation_blocks_save(invalid_schema))
   })
 })
+
+
+describe("validate_cdisc_types: selected custom grouping variables", {
+  it("allows custom analysis groups with an explicit validation limitation", {
+    df <- data.frame(DOSFRM = "TABLET", CUSTOM = 42, ARMGRP = factor("A"))
+    data <- list(adpp = df, adnca = df)
+    original <- data
+    findings <- validate_cdisc_types(data, grouping_vars = names(df))
+    expect_equal(nrow(findings), 6)
+    expect_true(all(findings$Severity == "warning"))
+    expect_true(all(findings$Check == "custom_grouping_variable"))
+    expect_true(all(grepl("metadata type/length checks are unavailable", findings$Message)))
+    expect_false(cdisc_validation_blocks_save(findings))
+    expect_identical(data, original)
+  })
+
+  it("blocks unselected unknown fields and custom PP fields", {
+    df <- data.frame(CUSTOM = "A")
+    expect_true(cdisc_validation_blocks_save(validate_cdisc_types(list(adpp = df))))
+    findings <- validate_cdisc_types(list(pp = df), grouping_vars = "CUSTOM")
+    expect_equal(findings$Check, "unknown_variable")
+    expect_true(cdisc_validation_blocks_save(findings))
+  })
+
+  it("never bypasses known type, length, or indexed metadata rules", {
+    findings <- validate_cdisc_types(
+      list(adnca = data.frame(AVAL = "bad", STUDYID = strrep("X", 9), NCA2XRS = 123)),
+      grouping_vars = c("AVAL", "STUDYID", "NCA2XRS")
+    )
+    expect_equal(findings$Check, c("class", "length", "class"))
+    expect_true(all(findings$Severity == "error"))
+  })
+
+  it("blocks unsupported custom grouping columns", {
+    invalid <- list(list("A"), matrix(1:2, nrow = 1), 1 + 2i, as.raw(1))
+    for (col in invalid) {
+      df <- data.frame(STUDYID = "S1")
+      df$CUSTOM <- col
+      findings <- validate_cdisc_types(list(adpp = df), grouping_vars = "CUSTOM")
+      expect_equal(findings$Variable, "CUSTOM")
+      expect_equal(findings$Severity, "error")
+    }
+  })
+})

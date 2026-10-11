@@ -62,6 +62,39 @@ describe("metadata_nca_variables is consistent with what is expected", {
 })
 
 describe("export_cdisc", {
+  it("validates the example dataset with its default grouping variables", {
+    groups <- c("TRT01A", "RACE", "SEX", "DOSFRM", "CUSTOM")
+    example <- adnca_example
+    example$CUSTOM <- "Study-specific group"
+    data <- PKNCA_create_data_object(example)
+    types <- unique(.derive_study_types(data)$type)
+    selections <- setNames(lapply(types, function(type) {
+      if (type == "Excretion Data") "ae" else c("cmax", "auclast")
+    }), types)
+    data <- PKNCA_update_data_object(
+      data, method = "lin up/log down",
+      selected_analytes = unique(adnca_example$PARAM),
+      selected_profile = unique(adnca_example$ATPTREF),
+      selected_pcspec = unique(adnca_example$PCSPEC),
+      keep_interval_cols = groups, parameter_selections = selections
+    )
+    result <- suppressWarnings(PKNCA_calculate_nca(data))
+    exported <- export_cdisc(result, grouping_vars = groups)
+
+    for (dataset in c("adpp", "adnca")) {
+      expect_gt(nrow(exported[[dataset]]), 0)
+      expect_true(all(groups %in% names(exported[[dataset]])))
+      expect_equal(unique(exported[[dataset]]$DOSFRM), unique(adnca_example$DOSFRM))
+    }
+    findings <- validate_export_outputs(list(CDISC = exported), grouping_vars = groups)
+    expect_equal(nrow(findings), 4)
+    expect_true(all(findings$Severity == "warning"))
+    expect_setequal(findings$Variable, c("DOSFRM", "CUSTOM"))
+    expect_equal(unique(exported$adpp$CUSTOM), "Study-specific group")
+    expect_equal(unique(exported$adnca$CUSTOM), "Study-specific group")
+    expect_false(export_validation_blocks_save(findings))
+  })
+
   it("exports a list with CDISC objects", {
     result <- export_cdisc(test_pknca_res)
     expect_type(result, "list")

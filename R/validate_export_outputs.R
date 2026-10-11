@@ -206,7 +206,7 @@ EXPORT_TABLE_NODES <- c(
 
 # Value-level CDISC findings for the selected CDISC datasets, or an empty
 # findings frame when none are present/selected
-.export_cdisc_findings <- function(output, obj_names, metadata) {
+.export_cdisc_findings <- function(output, obj_names, metadata, grouping_vars) {
   cdisc <- output[["CDISC"]]
   if (is.null(cdisc) || !is.list(cdisc) || length(cdisc) == 0) {
     return(.export_empty_findings())
@@ -215,7 +215,9 @@ EXPORT_TABLE_NODES <- c(
     cdisc <- cdisc[intersect(names(cdisc), obj_names)]
   }
   if (length(cdisc) == 0) return(.export_empty_findings())
-  .export_map_cdisc_findings(validate_cdisc_types(cdisc, metadata = metadata))
+  .export_map_cdisc_findings(validate_cdisc_types(
+    cdisc, metadata = metadata, grouping_vars = grouping_vars
+  ))
 }
 
 #' Validate exported outputs before saving
@@ -242,6 +244,8 @@ EXPORT_TABLE_NODES <- c(
 #'   written. When `NULL` (the default) every leaf is validated.
 #' @param metadata Metadata data frame passed to [validate_cdisc_types()] for
 #'   the CDISC value-level checks. Defaults to `metadata_nca_variables`.
+#' @param grouping_vars Selected custom grouping variables allowed in ADPP/ADNCA,
+#'   passed to [validate_cdisc_types()]. Known fields and PP remain strictly checked.
 #'
 #' @returns A tidy findings data frame with columns `Output`, `Variable`,
 #'   `Check`, `Severity`, `Expected`, `Observed`, and `Message`. `Variable` is
@@ -257,7 +261,8 @@ EXPORT_TABLE_NODES <- c(
 #' validate_export_outputs(output)
 validate_export_outputs <- function(output,
                                     obj_names = NULL,
-                                    metadata = metadata_nca_variables) {
+                                    metadata = metadata_nca_variables,
+                                    grouping_vars = character(0)) {
   spec <- .read_export_validation_spec()
   spec_errors <- .validate_export_spec(spec)
   spec_findings <- lapply(spec_errors, function(message) {
@@ -277,7 +282,7 @@ validate_export_outputs <- function(output,
     list()
   }
   cdisc_findings <- if (.export_validator_enabled("cdisc_schema", spec)) {
-    .export_cdisc_findings(output, obj_names, metadata)
+    .export_cdisc_findings(output, obj_names, metadata, grouping_vars)
   } else {
     .export_empty_findings()
   }

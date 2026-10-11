@@ -7,7 +7,8 @@
 validate_export_outputs(
   output,
   obj_names = NULL,
-  metadata = metadata_nca_variables
+  metadata = metadata_nca_variables,
+  grouping_vars = character(0)
 )
 }
 \arguments{
@@ -20,6 +21,9 @@ written. When \code{NULL} (the default) every leaf is validated.}
 
 \item{metadata}{Metadata data frame passed to \code{\link[=validate_cdisc_types]{validate_cdisc_types()}} for
 the CDISC value-level checks. Defaults to \code{metadata_nca_variables}.}
+
+\item{grouping_vars}{Selected custom grouping variables allowed in ADPP/ADNCA,
+passed to \code{\link[=validate_cdisc_types]{validate_cdisc_types()}}. Known fields and PP remain strictly checked.}
 }
 \value{
 A tidy findings data frame with columns \code{Output}, \code{Variable},

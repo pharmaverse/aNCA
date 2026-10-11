@@ -71,6 +71,38 @@ describe(".build_exploration_allowlist", {
 })
 
 describe("prepare_export_files validation gate", {
+  it("exports selected custom analysis groups but blocks an unselected column", {
+    target_dir <- tempfile("anca-custom-export-")
+    dir.create(target_dir)
+    on.exit(unlink(target_dir, recursive = TRUE), add = TRUE)
+    df <- data.frame(STUDYID = "S1", DOSFRM = "TABLET", CUSTOM = 42)
+    session <- test_export_session(list(CDISC = list(adpp = df, adnca = df)))
+    input <- test_export_input(c("adpp", "adnca"))
+    prepare_export_files(
+      target_dir, res_nca = NULL, settings = NULL,
+      grouping_vars = c("DOSFRM", "CUSTOM"), input = input,
+      session = session, progress = test_export_progress
+    )
+    for (dataset in c("adpp", "adnca")) {
+      actual <- read.csv(file.path(target_dir, "CDISC", paste0(dataset, ".csv")))
+      expect_equal(actual$DOSFRM, "TABLET")
+      expect_equal(actual$CUSTOM, 42)
+    }
+
+    blocked_dir <- tempfile("anca-blocked-export-")
+    dir.create(blocked_dir)
+    on.exit(unlink(blocked_dir, recursive = TRUE), add = TRUE)
+    expect_error(
+      prepare_export_files(
+        blocked_dir, res_nca = NULL, settings = NULL,
+        grouping_vars = "DOSFRM", input = input,
+        session = session, progress = test_export_progress
+      ),
+      class = "export_validation_error"
+    )
+    expect_length(list.files(blocked_dir, recursive = TRUE), 0)
+  })
+
   it("blocks all selected artifacts when one selected CDISC dataset is invalid", {
     # SAT evidence for the 21 CFR §11.10(a) pre-export integrity control:
     # an invalid selected artifact must prevent every selected artifact from

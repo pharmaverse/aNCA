@@ -682,20 +682,22 @@ get_tree_ids_for_texts <- function(tree, texts) {
 # object and table-structure checks on standard results, metadata checks on
 # CDISC datasets, and basic checks on settings, script, raw-data, and slides.
 .validate_outputs_pre_export <- function(export_list, obj_names, input, res_nca,
-                                         progress, session) {
+                                         progress, session, grouping_vars = character(0)) {
   progress$set(message = "Creating exports...",
                detail = "Validating outputs...")
-  result_findings <- validate_export_outputs(export_list, obj_names = obj_names)
+  result_findings <- validate_export_outputs(
+    export_list, obj_names = obj_names, grouping_vars = grouping_vars
+  )
   artifact_findings <- .validate_export_artifacts(input, session, res_nca)
   findings <- rbind(result_findings, artifact_findings)
   rownames(findings) <- NULL
 
   warnings <- findings[findings$Severity == "warning", , drop = FALSE]
   if (nrow(warnings) > 0) {
-    showNotification(
+    shiny::showNotification(
       sprintf(
         "Export validation warning: %s.",
-        paste(utils::head(unique(warnings$Output), 3), collapse = ", ")
+        paste(utils::head(unique(warnings$Message), 3), collapse = " ")
       ),
       type = "warning",
       duration = NULL,
@@ -706,7 +708,7 @@ get_tree_ids_for_texts <- function(tree, texts) {
   if (!export_validation_blocks_save(findings)) return(invisible(findings))
 
   errors <- findings[findings$Severity == "error", , drop = FALSE]
-  showNotification(
+  shiny::showNotification(
     sprintf(
       "Save blocked: %d export artifact(s) failed validation (%s).",
       nrow(errors),
@@ -776,7 +778,7 @@ prepare_export_files <- function(target_dir,
   # checks on the selected CDISC datasets. Aborts the save on error-severity
   # findings so non-conforming data is never written (cf. 21 CFR 11.10(a)).
   .validate_outputs_pre_export(
-    export_list, obj_names, input, res_nca, progress, session
+    export_list, obj_names, input, res_nca, progress, session, grouping_vars
   )
 
   save_output(

@@ -119,11 +119,33 @@ CDISC_FINDING_COLS <- c(
 }
 
 # Unknown-variable finding for a column absent from the approved metadata.
-.cdisc_finding_unknown <- function(ds_name, var, n) {
+.cdisc_finding_unknown <- function(ds_name, var, n, col, grouping_vars) {
+  if (ds_name %in% c("ADPP", "ADNCA") && var %in% grouping_vars) {
+    return(.cdisc_finding_custom_group(ds_name, var, col))
+  }
   .cdisc_finding_row(
     ds_name, var, "unknown_variable", "error",
     "declared in metadata", "not in metadata", n,
     sprintf("Column '%s' is not declared in the metadata for %s.", var, ds_name)
+  )
+}
+
+# Selected custom analysis variables have no metadata type or length to check.
+.cdisc_finding_custom_group <- function(ds_name, var, col) {
+  supported <- is.atomic(col) && is.null(dim(col)) &&
+    typeof(col) %in% c("character", "double", "integer", "logical")
+  .cdisc_finding_row(
+    ds_name, var, "custom_grouping_variable", if (supported) "warning" else "error",
+    "an exportable grouping vector", .cdisc_observed_class(col), length(col),
+    if (supported) {
+      sprintf(
+        paste0("%s.%s is a selected custom grouping variable; ",
+               "metadata type/length checks are unavailable."),
+        ds_name, var
+      )
+    } else {
+      sprintf("%s.%s is not a supported grouping vector.", ds_name, var)
+    }
   )
 }
 
@@ -156,13 +178,16 @@ CDISC_FINDING_COLS <- c(
 }
 
 # Validate a single column, returning a findings row or NULL when it conforms
-.validate_one_cdisc_column <- function(df, var, ds_name, ds_meta, check_length) {
+.validate_one_cdisc_column <- function(df, var, ds_name, ds_meta, check_length,
+                                       grouping_vars = character(0)) {
   col <- df[[var]]
   specs <- .match_cdisc_spec(var, ds_meta)
 
   # Unknown variable: absent from metadata (including its indexed-variable
   # template, e.g. NCAwXRS covers NCA1XRS/NCA2XRS)
-  if (is.null(specs)) return(.cdisc_finding_unknown(ds_name, var, nrow(df)))
+  if (is.null(specs)) {
+    return(.cdisc_finding_unknown(ds_name, var, nrow(df), col, grouping_vars))
+  }
 
   expected_class <- .cdisc_expected_class(specs$Type)
   if (is.na(expected_class)) return(NULL)
@@ -180,9 +205,10 @@ CDISC_FINDING_COLS <- c(
 }
 
 # Validate a single dataset's columns against its metadata specs
-.validate_one_cdisc_dataset <- function(df, ds_name, ds_meta, check_length) {
+.validate_one_cdisc_dataset <- function(df, ds_name, ds_meta, check_length,
+                                        grouping_vars = character(0)) {
   findings <- lapply(names(df), function(var) {
-    .validate_one_cdisc_column(df, var, ds_name, ds_meta, check_length)
+    .validate_one_cdisc_column(df, var, ds_name, ds_meta, check_length, grouping_vars)
   })
   findings <- Filter(Negate(is.null), findings)
 
@@ -200,7 +226,7 @@ CDISC_FINDING_COLS <- c(
 # processed; `cols` fixes the output column order.
 
 .iterate_cdisc_datasets <- function(cdisc_data, metadata, check_length,
-                                    per_dataset, empty, cols) {
+                                    per_dataset, empty, cols, grouping_vars = character(0)) {
   if (is.null(cdisc_data) || length(cdisc_data) == 0) return(empty)
 
   keys <- intersect(names(cdisc_data), names(CDISC_KEY_DS_MAP))
@@ -210,7 +236,7 @@ CDISC_FINDING_COLS <- c(
   results <- lapply(keys, function(key) {
     ds_name <- CDISC_KEY_DS_MAP[[key]]
     ds_meta <- metadata[metadata$Dataset == ds_name, , drop = FALSE]
-    per_dataset(cdisc_data[[key]], ds_name, ds_meta, check_length)
+    per_dataset(cdisc_data[[key]], ds_name, ds_meta, check_length, grouping_vars)
   })
 
   out <- do.call(rbind, results)
@@ -239,6 +265,10 @@ CDISC_FINDING_COLS <- c(
 #'   and `Length` columns. Defaults to `metadata_nca_variables`.
 #' @param check_length Logical. Check character values against the declared
 #'   `Length`? Defaults to `TRUE`.
+#' @param grouping_vars Character vector of explicitly selected grouping variables.
+#'   Undeclared variables in this vector are allowed in ADPP and ADNCA when they
+#'   contain supported atomic vectors, with a warning that metadata type/length
+#'   checks are unavailable. PP remains strict. Known metadata rules always apply.
 #'
 #' @returns A tidy findings data frame with columns `Dataset`, `Variable`,
 #'   `Check`, `Severity`, `Expected`, `Observed`, `N_Affected`, and
@@ -252,12 +282,14 @@ CDISC_FINDING_COLS <- c(
 #' validate_cdisc_types(cdisc_data)
 validate_cdisc_types <- function(cdisc_data,
                                  metadata = metadata_nca_variables,
-                                 check_length = TRUE) {
+                                 check_length = TRUE,
+                                 grouping_vars = character(0)) {
   .iterate_cdisc_datasets(
     cdisc_data, metadata, check_length,
     per_dataset = .validate_one_cdisc_dataset,
     empty = .cdisc_empty_findings(),
-    cols = CDISC_FINDING_COLS
+    cols = CDISC_FINDING_COLS,
+    grouping_vars = grouping_vars
   )
 }
 
@@ -265,7 +297,7 @@ validate_cdisc_types <- function(cdisc_data,
 #'
 #' Predicate used by the export/Save flow to refuse a save when any
 #' `error`-severity finding is present. `warning`-severity findings (for
-#' example unknown columns) do not block saving.
+#' example selected custom grouping columns) do not block saving.
 #'
 #' @param findings A findings data frame as returned by
 #'   [validate_cdisc_types()].

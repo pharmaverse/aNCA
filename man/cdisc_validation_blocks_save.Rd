@@ -17,7 +17,7 @@ otherwise \code{FALSE}.
 \description{
 Predicate used by the export/Save flow to refuse a save when any
 \code{error}-severity finding is present. \code{warning}-severity findings (for
-example unknown columns) do not block saving.
+example selected custom grouping columns) do not block saving.
 }
 \examples{
 findings <- validate_cdisc_types(list())

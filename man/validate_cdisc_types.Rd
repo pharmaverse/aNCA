@@ -7,7 +7,8 @@
 validate_cdisc_types(
   cdisc_data,
   metadata = metadata_nca_variables,
-  check_length = TRUE
+  check_length = TRUE,
+  grouping_vars = character(0)
 )
 }
 \arguments{
@@ -20,6 +21,11 @@ and \code{Length} columns. Defaults to \code{metadata_nca_variables}.}
 
 \item{check_length}{Logical. Check character values against the declared
 \code{Length}? Defaults to \code{TRUE}.}
+
+\item{grouping_vars}{Character vector of explicitly selected grouping variables.
+Undeclared variables in this vector are allowed in ADPP and ADNCA when they
+contain supported atomic vectors, with a warning that metadata type/length
+checks are unavailable. PP remains strict. Known metadata rules always apply.}
 }
 \value{
 A tidy findings data frame with columns \code{Dataset}, \code{Variable},

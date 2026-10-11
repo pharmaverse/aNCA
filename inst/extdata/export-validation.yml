@@ -8,7 +8,7 @@ requirements:
     test: "tests/testthat/test-validate_export_outputs.R"
   - id: cdisc_schema
     requirement: "21 CFR §11.10(a)"
-    applies_to: "Selected PP, ADPP, and ADNCA datasets"
+    applies_to: "Selected PP, ADPP, and ADNCA datasets; selected custom ADPP/ADNCA groups receive structural checks with metadata limitations reported"
     validator: cdisc_schema
     blocks_export: true
     test: "tests/testthat/test-validate_export_outputs.R"

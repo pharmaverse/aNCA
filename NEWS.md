@@ -79,11 +79,14 @@
   raw-data, slides, pre-specifications, and session information are checked
   before export. The CDISC datasets (ADNCA, ADPP, PP) are additionally checked
   value by value against the data types and lengths declared in the package
-  metadata; fields outside the approved metadata block export. Indexed CDISC
+  metadata; unselected fields outside the approved metadata block export. Indexed CDISC
   variable families (e.g.
   `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are
   recognised so they are no longer wrongly reported as undeclared, and
-  `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP (#1451)
+  `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP. Selected custom grouping
+  variables (including `DOSFRM`) are allowed in ADPP and ADNCA with a warning
+  that metadata type/length checks are unavailable. Known fields and PP remain
+  strictly validated (#1452)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
