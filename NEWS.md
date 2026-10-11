@@ -79,7 +79,7 @@
   raw-data, slides, pre-specifications, and session information are checked
   before export. The CDISC datasets (ADNCA, ADPP, PP) are additionally checked
   value by value against the data types and lengths declared in the package
-  metadata; unselected fields outside the approved metadata block export. Indexed CDISC
+  metadata; not selected fields outside the approved metadata block export. Indexed CDISC
   variable families (e.g.
   `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are
   recognised so they are no longer wrongly reported as undeclared, and
