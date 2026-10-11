@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9204</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9205</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -170,7 +170,7 @@ with formula <code>DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID</code>.</p></li>
 <span class="r-in"><span><span class="fu">PKNCA_create_data_object</span><span class="op">(</span><span class="va">adnca_data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Formula for concentration:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55e49a3666b0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5591f729dfe8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data are dense PK.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With 1 subjects defined in the 'USUBJID' column.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>
@@ -190,20 +190,20 @@ with formula <code>DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID</code>.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      3     3     3      0.5  hour       0             intravascular      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      4     4     4      0.5  hour       0             intravascular      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      6     6     6      0.5  hour       0             intravascular      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  is.excluded.hl is.included.hl REASON exclude_half.life volume</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  include_half.life</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  is.excluded.hl is.included.hl REASON exclude_half.life include_half.life</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  volume</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Formula for dosing:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Nominal time column is: NFRLT</span>
@@ -213,8 +213,10 @@ with formula <code>DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID</code>.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    0 ng/mL   100    mg</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU CONCDUR nca_exclude     std_route DOSNOA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0     0     0      0.5  hour       0             intravascular      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  is.excluded.hl is.included.hl REASON exclude_half.life exclude</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE    &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  is.excluded.hl is.included.hl REASON exclude_half.life include_half.life</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           FALSE          FALSE                    FALSE                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  exclude</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;NA&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With 1 rows of interval specifications.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> With units</span>

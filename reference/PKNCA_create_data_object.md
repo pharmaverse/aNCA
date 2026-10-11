@@ -151,7 +151,7 @@ adnca_data <- data.frame(
 PKNCA_create_data_object(adnca_data)
 #> Formula for concentration:
 #>  AVAL ~ AFRLT | STUDYID + PCSPEC + DOSETRT + USUBJID/PARAM
-#> <environment: 0x55e49a3666b0>
+#> <environment: 0x5591f729dfe8>
 #> Data are dense PK.
 #> With 1 subjects defined in the 'USUBJID' column.
 #> Nominal time column is: NFRLT
@@ -171,20 +171,20 @@ PKNCA_create_data_object(adnca_data)
 #>      3     3     3      0.5  hour       0             intravascular      1
 #>      4     4     4      0.5  hour       0             intravascular      1
 #>      6     6     6      0.5  hour       0             intravascular      1
-#>  is.excluded.hl is.included.hl REASON exclude_half.life volume
-#>           FALSE          FALSE                    FALSE     NA
-#>           FALSE          FALSE                    FALSE     NA
-#>           FALSE          FALSE                    FALSE     NA
-#>           FALSE          FALSE                    FALSE     NA
-#>           FALSE          FALSE                    FALSE     NA
-#>           FALSE          FALSE                    FALSE     NA
-#>  include_half.life
-#>                 NA
-#>                 NA
-#>                 NA
-#>                 NA
-#>                 NA
-#>                 NA
+#>  is.excluded.hl is.included.hl REASON exclude_half.life include_half.life
+#>           FALSE          FALSE                    FALSE                NA
+#>           FALSE          FALSE                    FALSE                NA
+#>           FALSE          FALSE                    FALSE                NA
+#>           FALSE          FALSE                    FALSE                NA
+#>           FALSE          FALSE                    FALSE                NA
+#>           FALSE          FALSE                    FALSE                NA
+#>  volume
+#>      NA
+#>      NA
+#>      NA
+#>      NA
+#>      NA
+#>      NA
 #> Formula for dosing:
 #>  DOSEA ~ AFRLT | STUDYID + DOSETRT + USUBJID
 #> Nominal time column is: NFRLT
@@ -194,8 +194,10 @@ PKNCA_create_data_object(adnca_data)
 #>  STUDY001 Plasma    IV   DrugA SUBJ001       1 AnalyteA    0 ng/mL   100    mg
 #>  AFRLT ARRLT NFRLT ADOSEDUR RRLTU CONCDUR nca_exclude     std_route DOSNOA
 #>      0     0     0      0.5  hour       0             intravascular      1
-#>  is.excluded.hl is.included.hl REASON exclude_half.life exclude
-#>           FALSE          FALSE                    FALSE    <NA>
+#>  is.excluded.hl is.included.hl REASON exclude_half.life include_half.life
+#>           FALSE          FALSE                    FALSE                NA
+#>  exclude
+#>     <NA>
 #> 
 #> With 1 rows of interval specifications.
 #> With units
