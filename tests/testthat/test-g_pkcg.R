@@ -259,6 +259,40 @@ describe("concentration exclusion shapes in interactive plots (#1534)", {
   }
 })
 
+
+describe("concentration plot footer space (#1536)", {
+  for (variant in shape_variants) {
+    it(paste(variant, "keeps footnotes inside the widget and above the color legend"), {
+      fn <- get(variant)
+      for (note in list(NULL, "Custom note", "Line 1\nLine 2<br/>Line 3<br>Line 4")) {
+        widget <- fn(shape_data, color_var = "USUBJID", footnote = note)[[1]]
+        layout <- plotly::plotly_build(widget)$x$layout
+        footer <- Filter(function(x) grepl(shape_note, x$text, fixed = TRUE),
+                         layout$annotations)[[1]]
+        lines <- length(strsplit(footer$text, "\n|<br\\s*/?>")[[1]])
+        panel_height <- layout$height - layout$margin$t - layout$margin$b
+        # Coordinates below the panel, in pixels: leave room for ticks and axis title,
+        # then the full note, then the legend. Increasing notes must not shrink the panel.
+        footer_top <- -footer$y * panel_height - footer$yshift
+        footer_bottom <- footer_top + lines * 20
+        legend_top <- -layout$legend$y * panel_height
+        expect_equal(footer$xanchor, "left")
+        expect_equal(footer$yanchor, "top")
+        expect_gte(footer_top, 60)
+        expect_lt(footer_bottom, legend_top)
+        expect_lt(legend_top, layout$margin$b)
+        expect_gte(panel_height, 400)
+        expect_equal(widget$height, layout$height)
+        # SBS facet labels survive adding a footer.
+        if (grepl("sbs$", variant)) {
+          texts <- vapply(layout$annotations, `[[`, character(1), "text")
+          expect_true(all(c("Linear view", "Semilogarithmic view (Log10)") %in% texts))
+        }
+      }
+    })
+  }
+})
+
 describe("concentration exclusion shape flag handling", {
   it("keeps normal points and footnotes when flags are missing or not Y", {
     unflagged <- shape_data

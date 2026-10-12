@@ -105,6 +105,4 @@ plotly::plotly_build(plots[[1]]) # View the first plot
 }
 \author{
 Kezia Kobana
-magic numbers for footnote position and margin, work in app up to 4 lines
-NOTE: might require some fine tuning down the line, looks fine now
 }

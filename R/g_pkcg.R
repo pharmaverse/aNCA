@@ -240,11 +240,9 @@ pkcg01 <- function(
     subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
-    title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
 
     plot$data <- plot_data
 
-    #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
       if (is.null(footnote)) {
         ""
@@ -253,47 +251,10 @@ pkcg01 <- function(
       }
     }
     footnote <- .pkcg_exclusion_footnote(plot_data, footnote, plotly)
-    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
 
-      gg_plot <- plot +
-        theme(
-          # add margin to make space for subtitle and footnote #
-          plot.margin = margin(
-            title_margin,
-            0,
-            footnote_y * 5,
-            0,
-            "cm"
-          )
-        )
-
-      plotly_plot <- gg_plot %>%
-        # This because of no spec of parse annotation generates warning is.na()
-        ggplotly(
-          tooltip = c("x", "y"),
-          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
-          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
-          # the SBS variant already relied on FALSE for exactly this reason.
-          dynamicTicks = FALSE,
-          #' NOTE: might require some fine tuning down the line, looks fine now
-          height = 500 + (footnote_y * 25) + title_margin * 50
-        ) %>%
-        layout(
-          # title and subtitle #
-          title = list(text = title_text),
-          # footnote #
-          annotations = list(
-            x = 0,
-            y =  -footnote_y,
-            text = footnote,
-            showarrow = FALSE,
-            yref = "paper",
-            xref = "paper",
-            align = "left",
-            parse = TRUE
-          )
-        )
+      gg_plot <- plot
+      plotly_plot <- .pkcg_plotly(gg_plot, title_text, footnote)
 
       if (scale == "LOG") {
         plotly_plot <- plotly_plot %>%
@@ -334,6 +295,48 @@ pkcg01 <- function(
   # files 1..n instead of using the group (#1344).
   plots %>%
     setNames(unique(adnca_grouped[["id_plot"]]))
+}
+
+#' Reserve separate space for axes, footnotes and the color legend.
+#'
+#' Pixel offsets keep the footnote clear of the x-axis at any panel height. The
+#' widget grows with each footnote line, including the summary-exclusion note.
+#' Plotly can expand the bottom margin further when the color legend wraps.
+#'
+#' @param plot Source ggplot.
+#' @param title_text Parsed title and subtitle, with HTML line breaks.
+#' @param footnote Parsed footnote, including any exclusion explanation.
+#' @returns A Plotly widget with room for its annotations and legend.
+#' @importFrom plotly ggplotly layout
+#' @noRd
+.pkcg_plotly <- function(plot, title_text, footnote) {
+  line_count <- function(text) length(strsplit(text, "\\n|<br\\s*/?>")[[1]])
+  note_height <- 20 * line_count(footnote)
+  top <- 60 + 20 * line_count(title_text)
+  bottom <- 100 + note_height
+  panel_height <- 400
+
+  ggplotly(
+    plot,
+    tooltip = c("x", "y"),
+    # Retain ggplot's filtered breaks, including the selected X ticks column.
+    dynamicTicks = FALSE,
+    height = panel_height + top + bottom
+  ) %>%
+    layout(
+      title = list(text = title_text, y = 1, yanchor = "top", pad = list(t = 30)),
+      margin = list(t = top, b = bottom, l = 75, r = 20),
+      annotations = list(
+        x = 0, y = 0, xref = "paper", yref = "paper",
+        xanchor = "left", yanchor = "top", yshift = -60,
+        text = footnote, showarrow = FALSE, align = "left",
+        font = list(size = 12)
+      ),
+      legend = list(
+        x = 0, xanchor = "left", yanchor = "top",
+        y = -(70 + note_height) / panel_height
+      )
+    )
 }
 
 #' Draw concentration points without changing line groups or color legends.
@@ -669,11 +672,9 @@ pkcg02 <- function(
     subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
-    title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
 
     plot$data <- plot_data
 
-    #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
       if (is.null(footnote)) {
         ""
@@ -682,47 +683,10 @@ pkcg02 <- function(
       }
     }
     footnote <- .pkcg_exclusion_footnote(plot_data, footnote, plotly)
-    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     if (plotly) {
       suppressWarnings({
-        gg_plot <- plot +
-          theme(
-            # add margin to make space for subtitle and footnote #
-            plot.margin = margin(
-              title_margin,
-              0,
-              footnote_y * 5,
-              0,
-              "cm"
-            )
-          )
-
-        # This because of no spec of parse annotation generates warning is.na()
-        plotly_plot <- ggplotly(
-          gg_plot,
-          tooltip = c("x", "y"),
-          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
-          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
-          # the SBS variant already relied on FALSE for exactly this reason.
-          dynamicTicks = FALSE,
-          #' NOTE: might require some fine tuning down the line, looks fine now
-          height = 500 + (footnote_y * 25) + title_margin * 50
-        ) %>%
-          layout(
-            # title and subtitle #
-            title = list(text = title_text),
-            # footnote #
-            annotations = list(
-              x = 0,
-              y =  -footnote_y,
-              text = footnote,
-              showarrow = FALSE,
-              yref = "paper",
-              xref = "paper",
-              align = "left",
-              parse = TRUE
-            )
-          )
+        gg_plot <- plot
+        plotly_plot <- .pkcg_plotly(gg_plot, title_text, footnote)
 
         if (scale == "LOG") {
           plotly_plot <- plotly_plot %>%

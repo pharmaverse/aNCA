@@ -101,6 +101,4 @@ plots_lin <- pkcg01(adnca = adnca, xmax = 1, scale = "LIN")
 }
 \author{
 Gerardo Rodriguez
-magic numbers for footnote position and margin, work in app up to 4 lines
-NOTE: might require some fine tuning down the line, looks fine now
 }
