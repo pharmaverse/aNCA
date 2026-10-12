@@ -4,6 +4,30 @@ source(
   local = TRUE
 )
 
+test_export_progress <- list(
+  set = function(...) NULL,
+  inc = function(...) NULL
+)
+
+test_export_session <- function(results, send_notification = function(...) NULL) {
+  list(
+    userData = list(
+      results = results,
+      exploration_custom_names = function() character(0)
+    ),
+    sendNotification = send_notification
+  )
+}
+
+test_export_input <- function(res_tree, table_formats = "csv") {
+  list(
+    res_tree = res_tree,
+    plot_formats = character(0),
+    table_formats = table_formats,
+    slide_formats = character(0)
+  )
+}
+
 describe(".build_exploration_allowlist", {
   it("returns defaults when no custom names exist", {
     result <- .build_exploration_allowlist(
@@ -43,6 +67,219 @@ describe(".build_exploration_allowlist", {
       custom_names = custom
     )
     expect_equal(result, character(0))
+  })
+})
+
+describe("prepare_export_files validation gate", {
+  it("exports selected custom analysis groups but blocks an unselected column", {
+    target_dir <- tempfile("anca-custom-export-")
+    dir.create(target_dir)
+    on.exit(unlink(target_dir, recursive = TRUE), add = TRUE)
+    df <- data.frame(STUDYID = "S1", DOSFRM = "TABLET", CUSTOM = 42)
+    session <- test_export_session(list(CDISC = list(adpp = df, adnca = df)))
+    input <- test_export_input(c("adpp", "adnca"))
+    prepare_export_files(
+      target_dir, res_nca = NULL, settings = NULL,
+      grouping_vars = c("DOSFRM", "CUSTOM"), input = input,
+      session = session, progress = test_export_progress
+    )
+    for (dataset in c("adpp", "adnca")) {
+      actual <- read.csv(file.path(target_dir, "CDISC", paste0(dataset, ".csv")))
+      expect_equal(actual$DOSFRM, "TABLET")
+      expect_equal(actual$CUSTOM, 42)
+    }
+
+    blocked_dir <- tempfile("anca-blocked-export-")
+    dir.create(blocked_dir)
+    on.exit(unlink(blocked_dir, recursive = TRUE), add = TRUE)
+    expect_error(
+      prepare_export_files(
+        blocked_dir, res_nca = NULL, settings = NULL,
+        grouping_vars = "DOSFRM", input = input,
+        session = session, progress = test_export_progress
+      ),
+      class = "export_validation_error"
+    )
+    expect_length(list.files(blocked_dir, recursive = TRUE), 0)
+  })
+
+  it("blocks all selected artifacts when one selected CDISC dataset is invalid", {
+    # SAT evidence for the 21 CFR §11.10(a) pre-export integrity control:
+    # an invalid selected artifact must prevent every selected artifact from
+    # being written, including otherwise-valid outputs.
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+
+    session <- test_export_session(list(
+      nca_results = list(nca_pkparam = data.frame(AVAL = 12.3)),
+      CDISC = list(adnca = data.frame(
+        STUDYID = "SAT-001",
+        AVAL = "not-numeric",
+        stringsAsFactors = FALSE
+      )),
+      exploration = list()
+    ))
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input(c("nca_pkparam", "adnca")),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    unlink(target_dir, recursive = TRUE)
+  })
+
+  it("blocks selected CDISC exports with invalid data before writing files", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+    notifications <- character(0)
+
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)),
+      exploration = list()
+    ), send_notification = function(type, payload) {
+      notifications <<- c(notifications, as.character(payload$html))
+    })
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("adnca"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    expect_true(any(grepl("Save blocked", notifications)))
+    unlink(target_dir, recursive = TRUE)
+  })
+
+  it("blocks selected outputs with the wrong object kind before writing files", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+
+    session <- test_export_session(list(
+      nca_results = list(nca_pkparam = ggplot2::ggplot()),
+      exploration = list()
+    ))
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("nca_pkparam"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    unlink(target_dir, recursive = TRUE)
+  })
+
+  it("blocks CDISC exports with columns outside the approved schema", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+    notifications <- character(0)
+
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(NOTINMETA = "x", stringsAsFactors = FALSE)),
+      exploration = list()
+    ), send_notification = function(type, payload) {
+      notifications <<- c(notifications, as.character(payload$html))
+    })
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("adnca"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_true(any(grepl("Save blocked", notifications)))
+    unlink(target_dir, recursive = TRUE)
+  })
+})
+
+describe("selected export artifact validation", {
+  it("blocks an R-script export without serialisable raw data", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_export_artifacts(
+      input = test_export_input("r_script"), session = session, res_nca = NULL
+    )
+    row <- findings[findings$Output == "input_data.rds", ]
+    expect_equal(row$Severity, "error")
+    expect_true(export_validation_blocks_save(findings))
+  })
+
+  it("blocks a settings export that cannot prepare its settings payload", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_export_artifacts(
+      input = test_export_input("settings_file"), session = session, res_nca = NULL
+    )
+    row <- findings[findings$Output == "settings.yaml", ]
+    expect_equal(row$Check, "settings_structure")
+    expect_true(export_validation_blocks_save(findings))
+  })
+
+  it("blocks selected slides without NCA results or an output format", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_export_artifacts(
+      input = test_export_input("results_slides", table_formats = character(0)),
+      session = session,
+      res_nca = NULL
+    )
+    expect_true(all(findings$Severity == "error"))
+    expect_true(all(c("slide_input", "slide_format") %in% findings$Check))
+  })
+
+  it("validates selected pre-specifications and session information", {
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(STUDYID = "S1", stringsAsFactors = FALSE)),
+      exploration = list()
+    ))
+    findings <- .validate_export_artifacts(
+      input = test_export_input(c("adnca", "session_info")),
+      session = session, res_nca = NULL
+    )
+    expect_equal(nrow(findings), 0)
+  })
+})
+
+describe("save_table_format", {
+  it("propagates XPT writer failures so export cannot silently continue", {
+    mockery::stub(
+      save_table_format,
+      "haven::write_xpt",
+      function(...) stop("xpt failed", call. = FALSE)
+    )
+
+    expect_error(
+      save_table_format(data.frame(x = 1), tempfile("table-"), formats = "xpt"),
+      "xpt failed"
+    )
   })
 })
 
