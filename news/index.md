@@ -200,6 +200,10 @@
   reproduce the app’s BLQ handling
   ([\#1445](https://github.com/pharmaverse/aNCA/issues/1445))
 
+- XPT export writer failures now block the ZIP export and notify the
+  user instead of being logged only to the R console
+  ([\#1452](https://github.com/pharmaverse/aNCA/issues/1452))
+
 - Mean concentration plots no longer drop timepoints that are well under
   the BLQ threshold: the BLQ ratio counted flagged records against a
   denominator of distinct subjects, so a subject contributing several
@@ -285,6 +289,26 @@
   ([\#1351](https://github.com/pharmaverse/aNCA/issues/1351))
 
 ### Features
+
+- Exporting results now validates every selected non-TLG artifact before
+  anything is written and blocks the save when a problem is found (a
+  data-integrity control; cf. 21 CFR 11.10(a)). The controlled
+  traceability matrix at `inst/extdata/export-validation.yml` defines
+  the checks and their regression tests. Tables must have a valid basic
+  structure, ggplots must build, plots and code must have the expected
+  object type, and generated settings, scripts, raw-data, slides,
+  pre-specifications, and session information are checked before export.
+  The CDISC datasets (ADNCA, ADPP, PP) are additionally checked value by
+  value against the data types and lengths declared in the package
+  metadata; not selected fields outside the approved metadata block
+  export. Indexed CDISC variable families (e.g. `NCA1XRS`/`NCA2XRS`
+  under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are recognised so they
+  are no longer wrongly reported as undeclared, and
+  `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP. Selected custom
+  grouping variables (including `DOSFRM`) are allowed in ADPP and ADNCA
+  with a warning that metadata type/length checks are unavailable. Known
+  fields and PP remain strictly validated
+  ([\#1452](https://github.com/pharmaverse/aNCA/issues/1452))
 
 #### TLG Catalog
 

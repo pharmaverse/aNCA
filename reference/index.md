@@ -95,6 +95,9 @@
 - [`calculate_table_ratios()`](https://pharmaverse.github.io/aNCA/reference/calculate_table_ratios.md)
   : Apply Ratio Calculations to PKNCAresult Object
 
+- [`cdisc_validation_blocks_save()`](https://pharmaverse.github.io/aNCA/reference/cdisc_validation_blocks_save.md)
+  : Does a set of validation findings block saving?
+
 - [`changed_units()`](https://pharmaverse.github.io/aNCA/reference/changed_units.md)
   : Keep only units that differ from their data-derived default
 
@@ -160,6 +163,9 @@
 
 - [`export_cdisc()`](https://pharmaverse.github.io/aNCA/reference/export_cdisc.md)
   : Export CDISC Data
+
+- [`export_validation_blocks_save()`](https://pharmaverse.github.io/aNCA/reference/export_validation_blocks_save.md)
+  : Do export findings block saving?
 
 - [`filter_breaks()`](https://pharmaverse.github.io/aNCA/reference/filter_breaks.md)
   : Filter Breaks for X-Axis
@@ -410,6 +416,12 @@
 
 - [`update_pknca_with_rules()`](https://pharmaverse.github.io/aNCA/reference/update_pknca_with_rules.md)
   : Apply Slope Rules to Update Data
+
+- [`validate_cdisc_types()`](https://pharmaverse.github.io/aNCA/reference/validate_cdisc_types.md)
+  : Validate CDISC datasets against metadata-declared data types
+
+- [`validate_export_outputs()`](https://pharmaverse.github.io/aNCA/reference/validate_export_outputs.md)
+  : Validate exported outputs before saving
 
 - [`validate_pk()`](https://pharmaverse.github.io/aNCA/reference/validate_pk.md)
   : Validates data table with raw pk data.
