@@ -42,7 +42,7 @@ Default: \code{c("PPCAT", "PPSPEC")}.}
 
 \item{subtitle}{Optional plot subtitle string. When \code{NULL}, generated from
 each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
-Use \code{""} to suppress the subtitle.}
+Use \code{""} to suppress the subtitle. Supports the same annotation tokens as \code{title}.}
 
 \item{footnote}{Optional footnote / caption.}
 

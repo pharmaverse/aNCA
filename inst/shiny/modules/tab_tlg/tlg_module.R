@@ -250,10 +250,13 @@ tlg_module_ui <- function(id, type, options) {
 #' @param grouping_vars reactive returning the PKNCA grouping variables (minus the
 #'   subject column); used to resolve the `.pknca_groups` default of select options
 #' @param refresh_trigger Reactive invalidated when the parent rebuilds the module UI.
+#' @param label_settings Reactive named list of raw text labels restored from settings.
+#' @returns A list of reactives: rendered `items` and editable raw text `labels`.
 #'
 tlg_module_server <- function(id, data, type, render_list, options = NULL, # nolint: cyclocomp_linter
                               grouping_vars = reactive(character()),
-                              refresh_trigger = reactive(NULL)) {
+                              refresh_trigger = reactive(NULL),
+                              label_settings = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     current_page <- reactiveVal(1)
 
@@ -399,7 +402,12 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
     options_values <- lapply(names(options), function(option) {
       if (is.character(options[[option]])) return(NULL)
       fn <- get(glue::glue("tlg_option_{options[[option]]$type}_server"))
-      fn(option, options[[option]], data, reactive(input$reset_widgets))
+      args <- list(option, options[[option]], data, reactive(input$reset_widgets))
+      if (identical(options[[option]]$type, "select")) args$grouping_vars <- grouping_vars
+      if (identical(options[[option]]$type, "text")) {
+        args$value_override <- reactive(label_settings()[[option]])
+      }
+      do.call(fn, args)
     }) %>%
       setNames(names(options)) %>%
       purrr::keep(\(x) !is.null(x)) %>%
@@ -409,11 +417,19 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
     #'
     #' `isolate()` keeps the value read one-way: taking a reactive dependency on the option
     #' values would re-render the whole sidebar on every keystroke.
+    options_rendered <- FALSE
     output$options <- renderUI({
       # Rebuilding the parent UI otherwise replays this output's cached initial markup.
       refresh_trigger()
+      # Before inputs are mounted, empty select values mean uninitialized; keep
+      # runtime defaults such as .all and .pknca_groups for that first render.
+      label_settings()
       current <- isolate(purrr::map(reactiveValuesToList(options_values), function(v) v()))
-      purrr::imap(.carry_forward_text_values(options, current), function(def, id) {
+      if (!options_rendered) {
+        current <- current[names(isolate(text_labels()))]
+      }
+      options_rendered <<- TRUE
+      purrr::imap(.carry_forward_option_values(options, current), function(def, id) {
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
       })
     })
@@ -425,15 +441,22 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
     # exported nothing at all (#1344).
     outputOptions(output, "options", suspendWhenHidden = FALSE)
 
+    text_labels <- reactive({
+      text_ids <- names(options)[vapply(options, function(def) {
+        is.list(def) && identical(def$type, "text")
+      }, logical(1))]
+      setNames(lapply(text_ids, function(id) options_values[[id]]()), text_ids)
+    })
+
     # Hand the rendered outputs back to the caller so they can be exported (#1344).
     # `tlg_list()` is the whole set for this TLG -- every page, with the user's current
     # sidebar options already applied -- which is exactly what the download should write.
     # Regenerating from the catalog at download time would silently ignore those edits.
-    tlg_list
+    list(items = tlg_list, labels = text_labels)
   })
 }
 
-#' Replace each text option's declared default with the value it currently holds.
+#' Carry text and select values into rebuilt option widgets.
 #'
 #' Re-submitting the order re-runs the `renderUI` in `tab_tlg` that builds a module's UI,
 #' which hands `uiOutput(ns("options"))` a fresh DOM node and re-executes the option
@@ -441,21 +464,21 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
 #' silently discards whatever the user had typed (issue #1430).  Carrying the live value
 #' forward as the widget's value makes the edit survive.
 #'
-#' Only `text` options are carried forward: `select` defaults may be runtime tokens
-#' (`.all`, `.pknca_groups`) that must stay unresolved, and the `table` widget keeps its
-#' rows in `default_rows`, so neither round-trips through `default`.
+#' Select values are carried only after the first render, so runtime defaults
+#' (`.all`, `.pknca_groups`) can initialize the original widgets. Reset observers
+#' retain the catalog definitions rather than the creation-time values.
 #'
 #' @param options Option definitions from `tlg.yaml`.  `.group_label_*` entries are plain
 #'   strings with no `type` and pass through untouched.
 #' @param current Named list of the value each option currently holds; a `NULL` entry means
 #'   the widget has not reported a value yet, so the declared default stands.
-#' @returns `options`, with text defaults replaced where a current value exists.
+#' @returns `options`, with text/select defaults replaced where a current value exists.
 #' @noRd
-.carry_forward_text_values <- function(options, current) {
+.carry_forward_option_values <- function(options, current) {
   purrr::imap(options, function(def, id) {
     # `.group_label_*` headers are plain strings, and `$` on an atomic vector is an error,
     # so the is.list() guard has to come first.
-    if (is.list(def) && identical(def$type, "text") && !is.null(current[[id]])) {
+    if (is.list(def) && def$type %in% c("text", "select") && !is.null(current[[id]])) {
       def$default <- current[[id]]
     }
     def

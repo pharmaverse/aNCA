@@ -52,6 +52,20 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
 
   label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
 
+  config <- .tlg_select_config(opt_def, data, grouping_vars)
+
+  selectInput(
+    ns("select"),
+    label = label,
+    selected = config$selected,
+    choices = config$choices,
+    multiple = isTRUE(opt_def$multiple)
+  )
+}
+
+#' Resolve select choices and catalog defaults for creation and reset.
+#' @noRd
+.tlg_select_config <- function(opt_def, data, grouping_vars = reactive(character())) {
   conc_df <- if (is.data.frame(data())) data() else data()$conc$data
   choices <- {
     if (isTRUE(opt_def$choices == ".colnames")) {
@@ -98,13 +112,7 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
     }
   }
 
-  selectInput(
-    ns("select"),
-    label = label,
-    selected = selected,
-    choices = c("", choices),
-    multiple = isTRUE(opt_def$multiple)
-  )
+  list(choices = c("", choices), selected = selected)
 }
 
 #' Function generating an input widget server for TLG option.
@@ -114,11 +122,16 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
 #'                      values or choices etc.
 #' @param reset_trigger a reactive expression on which the module will restore its returned value
 #'                      to the default one.
+#' @param grouping_vars Reactive grouping variables for the `.pknca_groups` default.
 #' @returns a reactive with the input value
-tlg_option_select_server <- function(id, opt_def, data, reset_trigger) {
+tlg_option_select_server <- function(id, opt_def, data, reset_trigger,
+                                     grouping_vars = reactive(character())) {
   moduleServer(id, function(input, output, session) {
     #' Reset the input to default value upon reset_trigger
-    observeEvent(reset_trigger(), shinyjs::reset("select"))
+    observeEvent(reset_trigger(), {
+      config <- .tlg_select_config(opt_def, data, grouping_vars)
+      updateSelectInput(session, "select", selected = config$selected)
+    })
 
     reactive({
       # A `multiple` selectInput with nothing selected returns NULL (a single

@@ -14,11 +14,12 @@
 #'   Default: `c("PPCAT", "PPSPEC")`.
 #' @param all_points Logical. When `TRUE`, individual data points are overlaid
 #'   on the boxes (pkpg04 style). Default: `FALSE`.
-#' @param title Optional plot title string.
+#' @param title Optional plot title. Supports `$COLUMN` value tokens and
+#'   `!COLUMN` column-label tokens, resolved within each plot's data split.
 #' @param subtitle Optional plot subtitle string. When `NULL`, generated from
 #'   each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
-#'   Use `""` to suppress the subtitle.
-#' @param footnote Optional footnote string.
+#'   Use `""` to suppress the subtitle. Supports the same annotation tokens as `title`.
+#' @param footnote Optional footnote string. Supports the same annotation tokens as `title`.
 #' @param ylab Y-axis label. Defaults to the label attribute of `value_var`.
 #'
 #' @return A named list of ggplot objects.
@@ -76,6 +77,7 @@ p_pkpg03_boxp <- function(
       dedup_cols <- intersect(c("USUBJID", strat_var, param_var, "AVISIT"), names(df))
       df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
     }
+    var_labels(df) <- column_labels
     p <- ggplot2::ggplot(
       df,
       ggplot2::aes(
@@ -96,9 +98,13 @@ p_pkpg03_boxp <- function(
       ggplot2::facet_wrap(stats::as.formula(paste("~", param_var)),
                           scales = "free_y") +
       ggplot2::labs(
-        title    = title,
-        subtitle = if (is.null(subtitle)) .pk_parameter_subtitle(df, param_var) else subtitle,
-        caption  = footnote,
+        title    = .pk_parameter_label(df, title),
+        subtitle = if (is.null(subtitle)) {
+          .pk_parameter_subtitle(df, param_var)
+        } else {
+          .pk_parameter_label(df, subtitle)
+        },
+        caption  = .pk_parameter_label(df, footnote),
         x        = NULL,
         y        = y_label,
         fill     = NULL
@@ -208,7 +214,8 @@ p_pkpg06_mp <- function(data, ...) {
 #'   Default: `"PPENINT"`.
 #' @param list_vars Columns used to split output into separate plots.
 #'   Default: `c("PPCAT")`.
-#' @param title Optional plot title.
+#' @param title Optional plot title. Supports `$COLUMN` value tokens and
+#'   `!COLUMN` column-label tokens, resolved within each plot's data split.
 #' @inheritParams p_pkpg03_boxp
 #' @param footnote Optional footnote / caption.
 #' @param xlab X-axis label. Default: `"Collection Interval"`.
@@ -344,6 +351,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
         ymax = mean_val + sd_val
       )
 
+    var_labels(df) <- column_labels
     p <- ggplot2::ggplot(
       summary_df,
       ggplot2::aes(
@@ -360,9 +368,13 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
         width = if (use_num) 0.5 else 0.2, alpha = 0.7
       ) +
       ggplot2::labs(
-        title    = page_title,
-        subtitle = if (is.null(subtitle)) .pk_parameter_subtitle(df, param_var) else subtitle,
-        caption  = footnote,
+        title    = .pk_parameter_label(df, page_title),
+        subtitle = if (is.null(subtitle)) {
+          .pk_parameter_subtitle(df, param_var)
+        } else {
+          .pk_parameter_label(df, subtitle)
+        },
+        caption  = .pk_parameter_label(df, footnote),
         x        = x_axis_label,
         y        = y_label,
         color    = NULL
@@ -531,13 +543,18 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
       ggplot2::aes()
     }
 
+    var_labels(df) <- column_labels
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data[[dose_var]], y = .data[[value_var]])) +
       ggplot2::geom_point(point_aes, size = 2, alpha = 0.8) +
       ggplot2::facet_wrap(stats::as.formula(paste("~", param_var)), scales = "free") +
       ggplot2::labs(
-        title    = title,
-        subtitle = if (is.null(subtitle)) .pk_parameter_subtitle(df, param_var) else subtitle,
-        caption  = footnote,
+        title    = .pk_parameter_label(df, title),
+        subtitle = if (is.null(subtitle)) {
+          .pk_parameter_subtitle(df, param_var)
+        } else {
+          .pk_parameter_label(df, subtitle)
+        },
+        caption  = .pk_parameter_label(df, footnote),
         x        = x_label,
         y        = y_label,
         color    = NULL
@@ -673,4 +690,11 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
   }
   if (length(lines) == 0) return(NULL)
   paste(unlist(lapply(lines, strwrap, width = 80)), collapse = "\n")
+}
+
+#' Resolve custom PK plot text and use plain line breaks for all renderers.
+#' @noRd
+.pk_parameter_label <- function(data, text) {
+  if (is.null(text)) return(NULL)
+  gsub("<br>", "\n", .tlg_label(data, text) %||% "", fixed = TRUE)
 }

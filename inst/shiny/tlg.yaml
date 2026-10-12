@@ -1010,7 +1010,7 @@ g_pkcg01_lin:
     footnote:
       type: text
       label: Footnote
-      default: "Records flagged for exclusion from summary statistics are not shown."
+      default: "Individual profiles include records flagged for exclusion from summary statistics."
     xlab:
       type: text
       label: X axis label

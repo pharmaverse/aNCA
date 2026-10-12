@@ -60,3 +60,58 @@
     annotations = c(widget$x$layout$annotations, label_annotations)
   )
 }
+
+#' Keep supported text labels from a settings payload, keyed by catalog name.
+#'
+#' Unknown catalog entries/options and malformed values cannot replace defaults.
+#' Empty strings and annotation tokens are kept verbatim. Older settings omit this key.
+#' @param saved Named list from the top-level `tlg_labels` settings key.
+#' @param definitions Current catalog definitions.
+#' @returns A named list of valid text labels.
+#' @noRd
+.normalize_tlg_labels <- function(saved, definitions) {
+  if (is.null(saved) || identical(saved, list())) return(list())
+  if (!.tlg_label_map_valid(saved)) {
+    warning("Ignored invalid TLG labels: expected unique catalog names.", call. = FALSE)
+    return(list())
+  }
+  keys <- intersect(names(saved), names(definitions))
+  if (length(keys) < length(saved)) {
+    warning("Ignored unknown or invalid TLG labels in settings.", call. = FALSE)
+  }
+  labels <- lapply(keys, function(key) {
+    .normalize_tlg_label_entry(saved[[key]], definitions[[key]]$options)
+  })
+  labels <- setNames(labels, keys)
+  labels[lengths(labels) > 0L]
+}
+
+#' @noRd
+.tlg_label_map_valid <- function(x) {
+  is.list(x) && !is.null(names(x)) && !anyDuplicated(names(x)) && all(nzchar(names(x)))
+}
+
+#' @noRd
+.normalize_tlg_label_entry <- function(entry, options) {
+  if (!.tlg_label_map_valid(entry)) {
+    warning("Ignored unknown or invalid TLG labels in settings.", call. = FALSE)
+    return(NULL)
+  }
+  text_ids <- names(options)[vapply(options, function(def) {
+    is.list(def) && identical(def$type, "text")
+  }, logical(1))]
+  valid <- vapply(entry, function(value) {
+    is.character(value) && length(value) == 1L && !is.na(value)
+  }, logical(1)) & names(entry) %in% text_ids
+  if (any(!valid)) warning("Ignored unknown or invalid TLG labels in settings.", call. = FALSE)
+  entry[valid]
+}
+
+#' Collect raw text from registered modules, retaining unopened imported labels.
+#' @noRd
+.collect_tlg_labels <- function(registry, imported) {
+  for (key in ls(envir = registry)) {
+    imported[[key]] <- get(key, envir = registry)$labels()
+  }
+  imported
+}

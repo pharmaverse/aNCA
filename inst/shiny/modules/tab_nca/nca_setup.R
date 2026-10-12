@@ -234,7 +234,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           slope_rules = slope_rules(),
           filters = session$userData$applied_filters,
           time_duplicate_keys = session$userData$time_duplicate_keys,
-          nca_ran = isTRUE(session$userData$nca_ran)
+          nca_ran = isTRUE(session$userData$nca_ran),
+          tlg_labels = if (is.function(session$userData$tlg_labels)) session$userData$tlg_labels()
         )
 
         dataset_name <- session$userData$dataset_filename %||% ""

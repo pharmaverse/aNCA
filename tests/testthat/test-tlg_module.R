@@ -503,7 +503,7 @@ describe("tlg_module_server: Shiny control-flow conditions", {
 # Issue #1430: re-submitting the order re-runs the option renderer, which used to push the
 # yaml default back to the client and wipe whatever the user had typed.
 
-describe(".carry_forward_text_values", {
+describe(".carry_forward_option_values", {
   options <- list(
     .group_label_1 = "Labs",
     title = list(type = "text", label = "Title", default = "Catalog Title"),
@@ -512,30 +512,28 @@ describe(".carry_forward_text_values", {
   )
 
   it("replaces a text default with the value the widget currently holds", {
-    out <- .carry_forward_text_values(options, list(title = "User Edit"))
+    out <- .carry_forward_option_values(options, list(title = "User Edit"))
     expect_equal(out$title$default, "User Edit")
   })
 
   it("keeps the declared default when the widget has not reported a value", {
-    out <- .carry_forward_text_values(options, list())
+    out <- .carry_forward_option_values(options, list())
     expect_equal(out$title$default, "Catalog Title")
   })
 
   it("carries an emptied box forward so the function default applies again", {
-    out <- .carry_forward_text_values(options, list(title = ""))
+    out <- .carry_forward_option_values(options, list(title = ""))
     expect_equal(out$title$default, "")
   })
 
-  it("leaves select and numeric options alone", {
-    # A select default may be an unresolved runtime token, and the table widget keeps its
-    # rows in `default_rows`; neither round-trips through `default`.
-    out <- .carry_forward_text_values(options, list(strat = c("A", "B"), xmin = 5))
-    expect_equal(out$strat$default, ".pknca_groups")
+  it("carries live select values and leaves numeric options alone", {
+    out <- .carry_forward_option_values(options, list(strat = c("A", "B"), xmin = 5))
+    expect_equal(out$strat$default, c("A", "B"))
     expect_equal(out$xmin$default, 0)
   })
 
   it("passes .group_label_* section headers through untouched", {
-    out <- .carry_forward_text_values(options, list(title = "x"))
+    out <- .carry_forward_option_values(options, list(title = "x"))
     expect_equal(out$.group_label_1, "Labs")
   })
 })
@@ -808,5 +806,47 @@ describe("TLG ggplot labels in Plotly", {
       expect_true(all(c("Cmax", "AUC") %in% text))
       expect_match(output$tlg_output$html, paste0("height:", expected_height, "px"), fixed = TRUE)
     })
+  })
+})
+
+describe("tlg_module_server: select values on UI refresh", {
+  it("retains filters and cleared selections in rebuilt markup without losing initial defaults", {
+    refresh <- reactiveVal(0L)
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data = reactive(data.frame(NFRLT = c(0.5, 1), AVAL = c(2, 8))),
+        type = "table",
+        render_list = function(data, time_filter = NULL, ...) {
+          if (!is.null(time_filter)) data <- data[data$NFRLT %in% time_filter, ]
+          list(data)
+        },
+        options = list(
+          time_filter = list(type = "select", choices = "$NFRLT", multiple = TRUE),
+          groups = list(type = "select", choices = ".colnames", default = ".pknca_groups",
+                        multiple = TRUE)
+        ),
+        grouping_vars = reactive("NFRLT"),
+        refresh_trigger = refresh
+      ),
+      {
+        initial <- output$options$html
+        expect_match(initial, 'value="NFRLT" selected', fixed = TRUE)
+        session$setInputs(`time_filter-select` = "0.5", `groups-select` = "NFRLT")
+        session$elapse(800)
+        expect_identical(output$options$html, initial)
+        refresh(1L)
+        session$flushReact()
+        expect_match(output$options$html, 'value="0.5" selected', fixed = TRUE)
+        expect_equal(tlg_list()[[1]]$AVAL, 2)
+
+        session$setInputs(`time_filter-select` = NULL, `groups-select` = NULL)
+        refresh(2L)
+        session$elapse(800)
+        expect_false(grepl('value="0.5" selected', output$options$html, fixed = TRUE))
+        expect_false(grepl('value="NFRLT" selected', output$options$html, fixed = TRUE))
+        expect_equal(tlg_list()[[1]]$AVAL, c(2, 8))
+      }
+    )
   })
 })

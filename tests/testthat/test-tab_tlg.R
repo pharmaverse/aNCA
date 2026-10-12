@@ -31,6 +31,7 @@ local({
     c("modules", "tab_tlg", "tlg_option_numeric.R"),
     c("modules", "tab_tlg", "tlg_option_table.R"),
     c("modules", "common", "reactable.R"),
+    c("modules", "tab_data", "data_upload.R"),
     c("modules", "tab_tlg.R")
   )) {
     source(do.call(file.path, c(list(shiny_dir), as.list(f))), local = TRUE)
@@ -246,7 +247,7 @@ describe("tab_tlg_server: TLG export registry", {
       expect_gt(length(ids), 0)
       # Ids are the catalog keys, and every entry carries its definition and type.
       entry <- get(ids[1], envir = .tlg_registry)
-      expect_setequal(names(entry), c("def", "type", "items"))
+      expect_setequal(names(entry), c("def", "type", "items", "labels"))
       expect_true(entry$type %in% c("table", "listing", "graph"))
       expect_true(is.function(entry$items))
     })
@@ -313,6 +314,96 @@ describe("tab_tlg_server: publishes outputs for the app-wide export", {
       tables_only <- collect("table")
       expect_true(all(vapply(tables_only, function(e) e$type == "table", logical(1))))
       expect_lt(length(tables_only), length(collect()))
+    })
+  })
+})
+
+describe("tab_tlg_server: sidebar label settings", {
+  it("round-trips raw labels and restores/reset them without changing the values", {
+    conc <- FIXTURE_CONC_DATA[FIXTURE_CONC_DATA$USUBJID == 1, ]
+    conc$TRT01A <- "Treatment A"
+    restored <- reactiveVal(NULL)
+    testServer(tab_tlg_server, args = list(
+      data = reactive(list(conc = list(data = conc))), settings_override = restored
+    ), {
+      # Reading before registration must not cache an empty export forever.
+      expect_identical(session$userData$tlg_labels(), list())
+      order <- tlg_order()
+      order$Selection <- order$id == match("t_pkct01", names(.TLG_DEFINITIONS))
+      tlg_order(order)
+      session$setInputs(submit_tlg_order = 1)
+      render_tlg_panels(output)
+      prefix <- paste0(order$id[order$Selection], "_tbl-")
+      edited <- list(title = "Study $STUDYID", subtitle = "Assay: !AVAL", footnote = "Reviewed\nPK")
+      do.call(session$setInputs, setNames(edited, paste0(prefix, names(edited), "-text")))
+      session$flushReact()
+      expect_identical(session$userData$tlg_labels()$t_pkct01, edited)
+
+      session$userData$settings <- reactive(list(method = "linear"))
+      session$userData$units_table <- reactive(NULL)
+      session$userData$ratio_table <- reactive(NULL)
+      session$userData$slope_rules <- reactive(NULL)
+      session$userData$settings_versions <- reactiveVal(list())
+      target <- withr::local_tempdir()
+      .export_settings(target, session)
+      imported <- read_settings(file.path(target, "settings.yaml"))
+      expect_identical(imported$tlg_labels$t_pkct01, edited)
+      expect_identical(.settings_export_payload(session)$tlg_labels, imported$tlg_labels)
+
+      # An unopened graph's labels must survive a subsequent settings save.
+      imported$tlg_labels$p_pkpg02_doseprop <- list(title = "Saved graph", subtitle = "")
+      attr(imported, "versioned")$versions[[1]]$tlg_labels <- imported$tlg_labels
+      upload <- function() {
+        .apply_uploaded_settings(
+          list(list(type = "settings", content = imported, name = "settings.yaml")),
+          list(), restored, reactiveVal(NULL), session, session$ns
+        )
+      }
+      expect_identical(upload(), list())
+      session$flushReact()
+      expect_identical(session$userData$tlg_labels()$t_pkct01, edited)
+      expect_identical(session$userData$tlg_labels()$p_pkpg02_doseprop,
+                       list(title = "Saved graph", subtitle = ""))
+      expect_match(output[[paste0(prefix, "options")]]$html, "Assay: !AVAL", fixed = TRUE)
+      do.call(session$setInputs, setNames(list(c("1", "3")), paste0(prefix, "time_filter-select")))
+      session$elapse(800)
+      result <- session$userData$tlg_outputs("table")$t_pkct01$items[[1]]
+      expect_equal(attr(result, "tlg_title"), "Study S1")
+      expect_equal(attr(result, "tlg_subtitle"), "Assay: Analysis Value")
+      expect_equal(as.numeric(result$Mean), c(1, 3))
+
+      do.call(session$setInputs, setNames(list("Unsaved edit"), paste0(prefix, "title-text")))
+      expect_equal(session$userData$tlg_labels()$t_pkct01$title, "Unsaved edit")
+      expect_identical(upload(), list())
+      session$flushReact()
+      expect_identical(session$userData$tlg_labels()$t_pkct01, edited)
+
+      do.call(session$setInputs, setNames(list(1), paste0(prefix, "reset_widgets")))
+      expect_equal(session$userData$tlg_labels()$t_pkct01$title,
+                   .TLG_DEFINITIONS$t_pkct01$options$title$default)
+      expect_equal(session$userData$tlg_labels()$t_pkct01$subtitle, "")
+
+      # Loading old settings clears edits rather than inheriting another project's text.
+      do.call(session$setInputs, setNames(list("Later edit"), paste0(prefix, "title-text")))
+      restored(list(settings = list(method = "linear")))
+      session$flushReact()
+      expect_equal(session$userData$tlg_labels()$t_pkct01$title,
+                   .TLG_DEFINITIONS$t_pkct01$options$title$default)
+      expect_null(session$userData$tlg_labels()$p_pkpg02_doseprop)
+    })
+  })
+
+  it("initializes unopened modules from uploaded labels using stable catalog keys", {
+    restored <- reactiveVal(list(tlg_labels = list(t_pkct01 = list(
+      title = "Uploaded title", subtitle = "", footnote = "!AVAL"
+    ))))
+    testServer(tab_tlg_server, args = list(data = test_data, settings_override = restored), {
+      session$flushReact()
+      expect_identical(session$userData$tlg_labels(), restored()$tlg_labels)
+      session$setInputs(submit_tlg_order = 1)
+      render_tlg_panels(output)
+      expect_identical(session$userData$tlg_labels()$t_pkct01, restored()$tlg_labels$t_pkct01)
+      expect_match(output$`1_tbl-options`$html, 'value="Uploaded title"', fixed = TRUE)
     })
   })
 })

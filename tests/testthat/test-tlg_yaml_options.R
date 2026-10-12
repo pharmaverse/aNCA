@@ -229,3 +229,17 @@ describe("tlg.yaml label options", {
     expect_equal(multiline_listing_titles(resolved), character(0))
   })
 })
+
+
+describe("concentration plot exclusion labels", {
+  it("describes retained individual profiles separately from excluded summary records", {
+    resolved <- resolve_tlg_templates(yaml::read_yaml(
+      system.file("shiny/tlg.yaml", package = "aNCA")
+    ))
+    for (id in grep("^g_pkcg0[12]_", names(resolved), value = TRUE)) {
+      expect_match(lab_default(resolved[[id]], "footnote"),
+                   "Individual profiles include records flagged", fixed = TRUE, info = id)
+    }
+    expect_match(lab_default(resolved$g_pkcg03_lin, "footnote"), "are not shown", fixed = TRUE)
+  })
+})

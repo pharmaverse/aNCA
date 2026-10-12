@@ -491,3 +491,34 @@ describe(".urine_spec_values", {
     expect_equal(.urine_spec_values(data.frame(PCSPEC = c(NA, "URINE"))), "URINE")
   })
 })
+
+describe("tlg_option_select_server: catalog reset after remount", {
+  for (default in c(".all", ".pknca_groups", "")) {
+    it(paste("restores the declared", shQuote(default), "default"), {
+      updates <- list()
+      testthat::local_mocked_bindings(
+        updateSelectInput = function(session, input_id, ...) { # nolint: object_name_linter.
+          updates[[length(updates) + 1L]] <<- list(...)$selected
+        },
+        .package = "shiny"
+      )
+      trigger <- shiny::reactiveVal(0L)
+      shiny::testServer(
+        tlg_option_select_server,
+        args = list(
+          opt_def = list(type = "select", choices = ".colnames", default = default),
+          data = shiny::reactive(data.frame(NFRLT = 1, AVAL = 2)),
+          reset_trigger = trigger,
+          grouping_vars = shiny::reactive(c("NFRLT", "absent"))
+        ),
+        {
+          session$setInputs(select = "AVAL")
+          trigger(1L)
+          session$flushReact()
+          expected <- switch(default, .all = c("NFRLT", "AVAL"), .pknca_groups = "NFRLT", "")
+          expect_identical(tail(updates, 1)[[1]], expected)
+        }
+      )
+    })
+  }
+})

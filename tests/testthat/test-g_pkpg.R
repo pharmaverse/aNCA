@@ -524,3 +524,28 @@ describe("PK parameter plot subtitles", {
     }
   })
 })
+
+describe("PK parameter plot annotation tokens", {
+  cases <- list(
+    p_pkpg01_cum = pkpg01_data,
+    p_pkpg01_per = pkpg01_per_data,
+    p_pkpg02_doseprop = pkpg02_data,
+    p_pkpg03_boxp = pkpg_data,
+    p_pkpg04_boxp = pkpg_data,
+    p_pkpg06_mp = pkpg_metab_data
+  )
+  it("resolves custom label tokens after filtering for every PK parameter plot", {
+    for (id in names(cases)) {
+      data <- cases[[id]]
+      attr(data$AVAL, "label") <- "Measured PK value"
+      result <- do.call(get(id), list(
+        data = data, title = "Analyte: $PPCAT", subtitle = "Assay: !AVAL\nReviewed",
+        footnote = "Specimen: $PPSPEC"
+      ))[[1]]
+      analyte <- if (id == "p_pkpg06_mp") "Metab-DrugA Plasma" else unique(data$PPCAT)
+      expect_equal(result$labels$title, paste0("Analyte: ", analyte), info = id)
+      expect_equal(result$labels$subtitle, "Assay: Measured PK value\nReviewed", info = id)
+      expect_equal(result$labels$caption, paste0("Specimen: ", unique(data$PPSPEC)), info = id)
+    }
+  })
+})

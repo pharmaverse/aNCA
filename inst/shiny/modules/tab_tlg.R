@@ -75,7 +75,9 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
+#' @param adpp Reactive ADPP data for PK parameter outputs.
+#' @param settings_override Reactive settings payload from upload or version restore.
+tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
@@ -352,6 +354,22 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
     # inside moduleServer(), so it is per-session.
     .tlg_registry <- new.env(parent = emptyenv())
 
+    imported_labels <- reactive({
+      withCallingHandlers(
+        .normalize_tlg_labels(settings_override()$tlg_labels, .TLG_DEFINITIONS),
+        warning = function(w) {
+          showNotification(conditionMessage(w), type = "warning", duration = 10)
+          invokeRestart("muffleWarning")
+        }
+      )
+    })
+
+    # Include imported labels for outputs that have not been opened/selected yet.
+    # Registered modules supply their current raw text, so tokens remain editable.
+    session$userData$tlg_labels <- function() {
+      .collect_tlg_labels(.tlg_registry, imported_labels())
+    }
+
     # Shared helper: build navset_pill_list panels for one TLG type.
     # Factored out to eliminate the copy-paste across table / graph / listing
     # renderUI blocks.  `id_suffix` must be unique per type to produce
@@ -371,12 +389,15 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
           # Only register the Shiny module once per session to avoid accumulating
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
-            items <- tlg_module_server(
+            module <- tlg_module_server(
               module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars,
-              refresh_trigger = reactive(input$submit_tlg_order)
+              refresh_trigger = reactive(input$submit_tlg_order),
+              label_settings = reactive(imported_labels()[[g_key]])
             )
             assign(module_id, TRUE, envir = .registered_modules)
-            assign(g_key, list(def = g_def, type = type, items = items), envir = .tlg_registry)
+            assign(g_key, list(
+              def = g_def, type = type, items = module$items, labels = module$labels
+            ), envir = .tlg_registry)
           }
           tlg_module_ui(session$ns(module_id), type, g_def$options)
         } else {

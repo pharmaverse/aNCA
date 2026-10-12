@@ -111,6 +111,18 @@ data_upload_ui <- function(id) {
   )
 }
 
+#' Restore a settings payload even when the same file/version is selected again.
+#'
+#' Clearing before setting invalidates the reactiveVal's identical-value cache.
+#' Both writes occur in the same reactive flush, so consumers see the final payload.
+#' @param settings_override Reactive settings store.
+#' @param content Processed settings payload.
+#' @noRd
+.restore_uploaded_settings <- function(settings_override, content) {
+  settings_override(NULL)
+  settings_override(content)
+}
+
 data_upload_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -146,7 +158,7 @@ data_upload_server <- function(id) {
       settings_ver <- getOption("aNCA.settings_version", 1L)
       tryCatch({
         content <- read_settings(settings_path, version = settings_ver)
-        settings_override(content)
+        .restore_uploaded_settings(settings_override, content)
         versioned_attr <- attr(content, "versioned")
         if (!is.null(versioned_attr)) {
           chosen <- aNCA:::.select_version(versioned_attr$versions, settings_ver)
@@ -365,7 +377,7 @@ data_upload_server <- function(id) {
   if (is.null(content)) return()
 
   content$tab <- chosen$tab %||% ""
-  settings_override(content)
+  .restore_uploaded_settings(settings_override, content)
 
   session$userData$settings_versions(versioned$versions)
 
@@ -473,13 +485,13 @@ data_upload_server <- function(id) {
       )
       if (!is.null(content)) {
         content$tab <- v$tab %||% ""
-        settings_override(content)
+        .restore_uploaded_settings(settings_override, content)
         session$userData$settings_versions(versioned_attr$versions)
         log_success("Settings successfully loaded from ", latest$name)
         showNotification("Settings successfully loaded.", type = "message")
       }
     } else {
-      settings_override(latest$content)
+      .restore_uploaded_settings(settings_override, latest$content)
       log_success("Settings successfully loaded from ", latest$name)
       showNotification("Settings successfully loaded.", type = "message")
     }

@@ -224,3 +224,33 @@ describe(".attach_table_labs", {
     expect_null(attr(out, "tlg_footnote"))
   })
 })
+
+describe("sidebar label settings normalization", {
+  source(file.path(system.file("shiny", package = "aNCA"), "functions", "utils-tlg.R"),
+         local = TRUE)
+  definitions <- list(example = list(options = list(
+    title = list(type = "text"), subtitle = list(type = "text"),
+    footnote = list(type = "text"), time_filter = list(type = "select")
+  )))
+  it("keeps blank labels and tokens verbatim", {
+    labels <- list(example = list(title = "$STUDYID", subtitle = "", footnote = "!AVAL\nNote"))
+    expect_identical(.normalize_tlg_labels(labels, definitions), labels)
+    expect_identical(.normalize_tlg_labels(NULL, definitions), list())
+  })
+  it("warns and ignores malformed or unsupported values while retaining valid labels", {
+    labels <- list(example = list(title = "Kept", subtitle = NA_character_,
+                                  footnote = list("nested"), time_filter = "1"))
+    expect_warning(actual <- .normalize_tlg_labels(labels, definitions), "invalid TLG labels")
+    expect_identical(actual, list(example = list(title = "Kept")))
+    expect_warning(
+      actual <- .normalize_tlg_labels(list(unknown = list(title = "Wrong catalog")), definitions),
+      "invalid TLG labels"
+    )
+    expect_length(actual, 0L)
+    for (invalid in list("bad", list(list(title = "unnamed")),
+                         setNames(list(list(), list()), c("example", "example")))) {
+      expect_warning(actual <- .normalize_tlg_labels(invalid, definitions), "unique catalog names")
+      expect_identical(actual, list())
+    }
+  })
+})
