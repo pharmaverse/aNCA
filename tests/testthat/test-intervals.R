@@ -12,7 +12,9 @@ ADNCA <- data.frame(
   DOSEA = rep(c(5, 10), each = 10),
   ROUTE = rep(c("intravascular", "extravascular"), each = 10),
   ADOSEDUR = rep(c(0, 0), each = 10),
-  AVAL = runif(20)
+  AVAL = runif(20),
+  exclude_half.life = FALSE,
+  include_half.life = NA
 )
 
 describe("format_pkncadata_intervals", {
@@ -214,7 +216,9 @@ describe("format_pkncadata_intervals", {
       DOSEA = 10,
       ROUTE = "extravascular",
       ADOSEDUR = 0,
-      AVAL = c(0, 5, 3, 1)
+      AVAL = c(0, 5, 3, 1),
+      exclude_half.life = FALSE,
+      include_half.life = NA
     )
 
     df_conc_pd <- format_pkncaconc_data(
@@ -288,6 +292,7 @@ describe("update_main_intervals", {
     filter(type_interval == "main") %>%
     select(-impute) %>%
     left_join(subject_params, by = "USUBJID", relationship = "many-to-many")
+  data$options$keep_interval_cols <- c(data$options$keep_interval_cols, "STUDYID")
 
   # Parameter list keyed by auto-detected study type names from detect_study_types().
   # Fixture data produces these types based on ROUTE, ADOSEDUR, DOSNOA, and METABFL.
@@ -449,7 +454,12 @@ describe("update_main_intervals", {
       data, param_list, auc_empty, start_impute = TRUE, blq_imputation_rule = blq_keep
     )
     res_all_keep <- get_results(all_keep, blq_keep)
-    expect_equal(res_no_blq, res_all_keep)
+    # PKNCA after 0.12.1 names the requested imputation in PPANMETH even when it
+    # changes nothing, so compare everything else
+    expect_equal(
+      select(res_no_blq, -any_of("PPANMETH")),
+      select(res_all_keep, -any_of("PPANMETH"))
+    )
 
     # --- 3. BLQ imputation: before.tmax, after.tmax, and both ---
     blq_before <- list(before.tmax = 100, after.tmax = "keep")

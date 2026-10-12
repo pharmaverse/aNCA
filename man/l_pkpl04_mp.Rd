@@ -7,7 +7,7 @@
 l_pkpl04_mp(
   data,
   listgroup_vars = c("RATIO", "PPCAT", "PPSPEC"),
-  grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
+  grouping_vars = c("TRT01A", "USUBJID"),
   title = "Listing of Individual Treatment Ratios",
   value_var = "AVAL",
   ...
@@ -26,8 +26,8 @@ Varying study, dose, visit, route and interval identifiers also split the
 listings so distinct profiles are retained.}
 
 \item{grouping_vars}{Columns used to identify row keys before pivoting.
-\code{PARAM} must be included so it is spread into display columns.
-Default: \code{c("PARAM", "TRT01A", "USUBJID")}.}
+The parameter column is supplied separately by \code{param_var}.
+Default: \code{c("TRT01A", "USUBJID")}.}
 
 \item{title}{Main listing title string.}
 
@@ -54,11 +54,6 @@ Ratios are computed as part of the NCA run, so a ratio added afterwards does
 not appear until the run is repeated. When the data holds no treatment ratios
 the listing errors with that instruction rather than silently listing raw
 parameter values, which are not ratios.
-
-Note: \code{PARAM} is listed in \code{grouping_vars} so that it participates in the
-\code{pivot_wider} step (each unique PARAM value becomes a column header). After
-pivoting, \code{PARAM} is no longer a row-key column; the actual listing keys
-are \code{TRT01A} and \code{USUBJID}.
 }
 \examples{
 \dontrun{

@@ -46,16 +46,17 @@
 #'
 #' @param df A data frame.
 #' @param ref_type Ratio family to keep, as in `aNCA:::filter_ratio_rows()`.
-#' @return Character vector of parameter names, sorted; empty if none.
-.ratio_param_values <- function(df, ref_type = "analyte") {
-  if (!"PARAM" %in% names(df)) return(character(0))
+#' @param param_var ADPP column supplying the displayed parameter names or codes.
+#' @return Character vector of parameter names or codes, sorted; empty if none.
+.ratio_param_values <- function(df, ref_type = "analyte", param_var = "PARAM") {
+  if (!param_var %in% names(df)) return(character(0))
   row_type <- if ("PPANMETH" %in% names(df)) {
     aNCA:::.ratio_row_type(df$PPANMETH)
   } else {
     rep(NA_character_, nrow(df))
   }
   keep <- row_type %in% ref_type
-  values <- unique(as.character(df$PARAM[keep]))
+  values <- unique(as.character(df[[param_var]][keep]))
   sort(values[!is.na(values)])
 }
 
@@ -127,32 +128,41 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
   label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
 
   conc_df <- if (is.data.frame(data())) data() else data()$conc$data
-  choices <- .resolve_option_choices(opt_def$choices, conc_df)
-
-  selected <- {
-    if (!is.null(opt_def$default)) {
-      if (isTRUE(opt_def$default == ".all")) {
-        choices
-      } else if (isTRUE(opt_def$default == ".pknca_groups")) {
-        # Default row-stratification = the PKNCA grouping variables (minus
-        # USUBJID) that are actually present in this table's dataset.  When none
-        # are available (e.g. before NCA has run) fall back to nothing selected,
-        # which lets the TLG function use its own default.
-        intersect(grouping_vars(), names(conc_df))
-      } else {
-        opt_def$default
-      }
-    } else {
-      ""
-    }
+  choices <- if (!is.null(opt_def$ratio_type)) {
+    .ratio_param_values(
+      conc_df, ref_type = opt_def$ratio_type,
+      param_var = sub("^\\$", "", opt_def$choices)
+    )
+  } else {
+    .resolve_option_choices(opt_def$choices, conc_df)
   }
 
-  selectInput(
+  selected <- opt_def$default %||% ""
+  if (isTRUE(selected == ".all")) {
+    selected <- choices
+  } else if (isTRUE(selected == ".pknca_groups")) {
+    # Default row-stratification = the PKNCA grouping variables (minus
+    # USUBJID) that are actually present in this table's dataset. When none
+    # are available, leave the selection empty to use the function default.
+    selected <- intersect(grouping_vars(), names(conc_df))
+  }
+
+  multiple <- isTRUE(opt_def$multiple)
+
+  pickerInput(
     ns("select"),
     label = label,
     selected = selected,
-    choices = c("", choices),
-    multiple = isTRUE(opt_def$multiple)
+    # A blank multi-select choice would make "Select all" include the unset sentinel.
+    # Multi-selects are cleared with "Deselect all"; single-selects still need a blank.
+    choices = if (multiple) choices else c("", choices),
+    multiple = multiple,
+    options = list(
+      `none-selected-text` = opt_def$placeholder %||% "Nothing selected",
+      `live-search` = TRUE,
+      `actions-box` = multiple,
+      `selected-text-format` = "count > 3"
+    )
   )
 }
 
@@ -170,7 +180,7 @@ tlg_option_select_server <- function(id, opt_def, data, reset_trigger) {
     observeEvent(reset_trigger(), shinyjs::reset("select"))
 
     reactive({
-      # A `multiple` selectInput with nothing selected returns NULL (a single
+      # A `multiple` pickerInput with nothing selected returns NULL (a single
       # select returns ""). Coerce NULL to "" so an unset optional widget flows
       # through the option filter as "use the function default" rather than
       # tripping the is-null guard in tlg_module_server that halts the whole

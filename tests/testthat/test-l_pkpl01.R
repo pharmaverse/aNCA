@@ -155,6 +155,65 @@ describe("l_pkpl01", {
   })
 })
 
+describe("PK listing parameter selection", {
+  it("shows only selected parameters and retains subject values and units", {
+    result <- l_pkpl01(pkpl_data, param_filter = "Cmax")[[1]]
+    expect_equal(rlistings::listing_dispcols(result), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.character(result$USUBJID), paste0("S", 1:4))
+    expect_equal(as.numeric(result$Cmax), c(5, 6, 10, 11))
+    expect_equal(attr(result$Cmax, "label"), "Cmax (ng/mL)")
+    expect_false("AUClast" %in% names(result))
+  })
+
+  it("preserves all parameters by default or with an empty selection", {
+    defaults <- l_pkpl01(pkpl_data)
+    expect_equal(l_pkpl01(pkpl_data, param_filter = character()), defaults)
+    expect_equal(l_pkpl01(pkpl_data, param_filter = c("Cmax", "AUClast")), defaults)
+    expect_setequal(rlistings::listing_dispcols(defaults[[1]]),
+                    c("TRT01A", "USUBJID", "Cmax", "AUClast"))
+  })
+
+  it("selects values from the chosen parameter variable", {
+    result <- l_pkpl01(pkpl_data, param_var = "PARAMCD", param_filter = "AUCLST")[[1]]
+    expect_equal(rlistings::listing_dispcols(result), c("TRT01A", "USUBJID", "AUCLST"))
+    expect_equal(as.numeric(result$AUCLST), c(20, 22, 40, 38))
+    expect_equal(attr(result$AUCLST, "label"), "AUCLST (ng/mL*h)")
+  })
+
+  it("returns no listings for unmatched selections, including without split variables", {
+    expect_equal(l_pkpl01(pkpl_data, param_filter = "missing"), list())
+    expect_equal(l_pkpl01(pkpl_data, listgroup_vars = character(),
+                          param_filter = "missing"), list())
+  })
+
+  it("keeps grouping when parameters differ between listing pages", {
+    other <- transform(pkpl_data[pkpl_data$PARAM == "Cmax", ], PPCAT = "DrugB")
+    result <- l_pkpl01(rbind(pkpl_data, other), param_filter = "AUClast")
+    expect_length(result, 1)
+    expect_match(names(result), "DrugA")
+    expect_equal(as.numeric(result[[1]]$AUClast), c(20, 22, 40, 38))
+  })
+
+  it("passes name and code selections through both configured ratio wrappers", {
+    data <- mp_adpp_fixture()
+    treatment <- subset(data, !is.na(PPANMETH))
+    treatment$PPANMETH <- sub("PARAM: DrugA", "ATPTREF: DOSE 1", treatment$PPANMETH)
+    data <- rbind(data, treatment)
+    for (fn in list(l_pkpl01_mp, l_pkpl04_mp)) {
+      by_name <- fn(data, param_filter = "M/P Cmax")
+      by_code <- fn(data, param_var = "PARAMCD", param_filter = "RACMAX")
+      expect_length(by_name, 2)
+      expect_length(by_code, 2)
+      expect_equal(as.numeric(by_name[[1]][["M/P Cmax"]]), c(0.5, 0.3))
+      expect_equal(as.numeric(by_code[[1]]$RACMAX), c(0.5, 0.3))
+      expect_false("M/P AUClast" %in% rlistings::listing_dispcols(by_name[[1]]))
+      expect_false("RAAUCLST" %in% rlistings::listing_dispcols(by_code[[1]]))
+      expect_equal(fn(data, param_filter = character()), fn(data))
+      expect_equal(fn(data, param_filter = "CMAX"), list())
+    }
+  })
+})
+
 describe("l_pkpl01_mp", {
   listings <- function(data = mp_adpp_fixture(), ...) {
     l_pkpl01_mp(data, ...)
@@ -285,6 +344,18 @@ describe("l_pkpl01_mp", {
 })
 
 describe("l_pkpl04_mp", {
+  it("keeps parameters on the same subject row when displaying parameter codes", {
+    data <- subset(mp_adpp_fixture(), !is.na(PPANMETH))
+    data$PPANMETH <- sub("PARAM: DrugA", "ATPTREF: DOSE 1", data$PPANMETH)
+    named <- l_pkpl04_mp(data)
+    coded <- l_pkpl04_mp(data, param_var = "PARAMCD")
+    expect_equal(vapply(coded, nrow, integer(1)), vapply(named, nrow, integer(1)))
+    expect_false("PARAM" %in% rlistings::listing_dispcols(coded[[1]]))
+    codes <- unique(data$PARAMCD)
+    expect_true(all(codes %in% rlistings::listing_dispcols(coded[[1]])))
+    expect_false(anyNA(as.data.frame(coded[[1]])[, codes]))
+  })
+
   it("lists treatment ratios, the complement of the M/P ones", {
     result <- l_pkpl04_mp(pkpl_ratio_data)
     expect_setequal(
