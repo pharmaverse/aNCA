@@ -163,15 +163,10 @@ l_pkpl01_mp <- function(data, ...) {
 #' metabolite/parent ratio parameters, but no metabolite filtering is applied --
 #' all PARAM values in the data are included.
 #'
-#' Note: `PARAM` is listed in `grouping_vars` so that it participates in the
-#' `pivot_wider` step (each unique PARAM value becomes a column header). After
-#' pivoting, `PARAM` is no longer a row-key column; the actual listing keys
-#' are `TRT01A` and `USUBJID`.
-#'
 #' @inheritParams l_pkpl01
 #' @param grouping_vars Columns used to identify row keys before pivoting.
-#'   `PARAM` must be included so it is spread into display columns.
-#'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
+#'   The parameter column is supplied separately by `param_var`.
+#'   Default: `c("TRT01A", "USUBJID")`.
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
 #'
 #' @return A named list of `listing_df` objects.
@@ -186,7 +181,7 @@ l_pkpl01_mp <- function(data, ...) {
 #' @export
 l_pkpl04_mp <- function(
   data,
-  grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
+  grouping_vars = c("TRT01A", "USUBJID"),
   title         = "Listing of Individual PK Parameter Values by Treatment",
   ...
 ) {

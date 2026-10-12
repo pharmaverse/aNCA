@@ -833,7 +833,7 @@ l_pkpl04_mp:
       type: select
       choices: .colnames
       multiple: true
-      default: ["PARAM", "TRT01A", "USUBJID"]
+      default: ["TRT01A", "USUBJID"]
     .group_label_3: "Columns"
     .help_columns: "Each selected parameter becomes a column. Leave Displayed parameters empty to show all parameters. Changing Parameter variable resets this selection."
     param_var:

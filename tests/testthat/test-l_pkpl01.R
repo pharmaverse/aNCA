@@ -174,6 +174,17 @@ describe("l_pkpl01_mp", {
 })
 
 describe("l_pkpl04_mp", {
+  it("keeps parameters on the same subject row when displaying parameter codes", {
+    data <- transform(pkpl_data, PARAMCD = ifelse(PARAM == "Cmax", "CMAX", "AUCLST"))
+    named <- l_pkpl04_mp(data)
+    coded <- l_pkpl04_mp(data, param_var = "PARAMCD")
+    expect_equal(vapply(coded, nrow, integer(1)), vapply(named, nrow, integer(1)))
+    expect_false("PARAM" %in% rlistings::listing_dispcols(coded[[1]]))
+    codes <- unique(data$PARAMCD)
+    expect_true(all(codes %in% rlistings::listing_dispcols(coded[[1]])))
+    expect_false(anyNA(as.data.frame(coded[[1]])[, codes]))
+  })
+
   it("returns a named list of listing_df objects", {
     result <- l_pkpl04_mp(pkpl_data)
     expect_type(result, "list")
