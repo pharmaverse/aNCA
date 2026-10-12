@@ -8,7 +8,7 @@ library(aNCA)
 library(dplyr)
 
 # Load raw data #
-data_path <- "../input_data.rds"
+data_path <- settings_list$data_path %||% "input_data.rds"
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data & create PKNCA object ######################
@@ -50,7 +50,7 @@ pknca_obj <- adnca_data %>%
 
 ## Run NCA calculations ########################################
 flag_rules <- settings_list$settings$flags
-ratio_table <- settings_list$ratio_table
+ratio_table <- settings_list$ratio_table %||% data.frame()
 blq_rule <- settings_list$settings$data_imputation$blq_imputation_rule
 
 pknca_res <- pknca_obj %>%

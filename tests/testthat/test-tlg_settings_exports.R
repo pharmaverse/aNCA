@@ -43,6 +43,9 @@ local({
         session$userData$project_prefix <- function(sep) paste0("Example", sep)
         session$setInputs(settings_save_comment = "TLG order")
 
+        # ZIP preflight and the writer must include the same order payload.
+        expect_identical(export_env$.settings_export_payload(session)$tlg_order, saved_order)
+        expect_null(export_env$.validate_settings_artifact(session))
         standalone <- read_settings(output$settings_download)
         expect_identical(standalone$tlg_order, saved_order)
         expect_identical(standalone$settings$method, "linear")
