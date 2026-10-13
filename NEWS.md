@@ -7,6 +7,30 @@
 
 ## Bug Fixes
 
+* Restored compatibility with the upcoming PKNCA release (0.12.2). Running NCA with start imputation (including the default example dataset) no longer fails with duplicate `R2ADJ` results when applying half-life flags. `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
+
+* Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, "Correlation Between TimeX and Log ConcY"). PKNCA 0.12.1.9000 reports the parameter, and without a mapping it appeared unlabelled in `pivot_wider_pknca_results()` output (#481, #1102)
+* The dose-escalation report no longer errors with `undefined columns selected` or `Column \`start\` is not found`. `group_vars()` on a `PKNCAresults` object returns the interval bounds `start` and `end` alongside the grouping columns in PKNCA 0.12.1.9000, but both call sites in `zip-utils.R` wanted only the data's grouping columns and applied the result to concentration data, which has no such columns. They now read the grouping from `PKNCA::as_PKNCAconc()` instead (#1102)
+* The excretion parameters aNCA adds (`ertlst`, `ertmax`, `volpk`, `fe`) are
+  now registered only when the installed PKNCA does not already define them.
+  `PKNCA::add.interval.col()` silently overwrites an existing registration, so
+  newer PKNCA versions that ship these parameters natively (with CDISC codes
+  and dependency metadata) previously had their richer definitions replaced by
+  aNCA's minimal ones. aNCA now defers to PKNCA when it provides the parameter
+  and keeps its own definition only as a fallback for older PKNCA. `utils` is
+  attached to keep PKNCA 0.12.1 interval registration working during strict
+  package-load checks (#1102)
+* The Slope Selector now treats missing and `FALSE` half-life exclusion flags
+  as the same false-like state when detecting plot updates. This keeps PKNCA
+  development-version `NA` flags from suppressing affected plot refreshes
+  (#1102)
+* Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
+
+* Running NCA with an empty analyte, specimen, or NCA profile selection now
+  shows a red notification naming the missing selection instead of stopping
+  silently. It also explains when the current data and settings provide no
+  valid NCA intervals (#1527)
+
 * Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
@@ -21,9 +45,12 @@
 * Canceling the duplicate-row resolution modal after mapping now re-enables the Data tab's Next button, and manual mapping submissions show a loading popup while processing (#1420)
 * Restored settings now ignore incomplete partial interval rows with missing or invalid start/end values before they reach the NCA setup state, preventing spurious interval parameters from uploaded settings (#1347)
 * NCA Results now derive the `Missing` flag at the subject/profile level, so parameter-level metadata from active flag parameters can no longer duplicate rows in the pivoted results table (#1479)
+* Fix the "Processing data mapping..." spinner hanging forever when advancing through mapping (e.g. the default data with no duplicates). The mapping submit ran synchronously in the same flush cycle as the loading modal's `showModal()`, so the pipeline's `removeModal()` was batched with the show and dropped mid Bootstrap fade-in. The submit is now deferred to a later flush so the spinner paints first and the later hide applies; the completion reactive also keys on the submit trigger so it re-runs (and dismisses the modal) even when the mapping is unchanged. Duplicate-row data is also published after the loading modal cleanup flushes, so the duplicate dialog appears reliably and Cancel re-enables the Next button (#1420)
 * Running NCA with "Impute Start Concentration" turned off no longer errors with `PKNCA_impute_method_FALSE not found`. When start imputation was off, the per-interval `impute` column was absent, so the BLQ step read the `impute` function argument instead of the column and built the method string `"blq, FALSE"`. The column is now always present, the reference is pinned to it, and the `update_main_intervals()` argument was renamed `impute` -> `start_impute` so it can no longer collide with the column (#1121, #1266)
 * With "Impute Start Concentration" turned off, the first interval now starts at C1 (the first sample at or after the dose) instead of the predose time. The sample feeding the start time was picked by an unordered `slice(1)`, so it could be the predose record whose negative `ARRLT` pulled the interval start before the dose (#1121)
 * The generated R-script (session code) now passes `blq_imputation_rule` to `PKNCA_update_data_object()`, matching the app. The template only applied the BLQ rule at calculation time (`PKNCA_calculate_nca()`) and omitted it during interval setup, so exported scripts did not reproduce the app's BLQ handling (#1445)
+* XPT export writer failures now block the ZIP export and notify the user
+  instead of being logged only to the R console (#1452)
 * Mean concentration plots no longer drop timepoints that are well under the BLQ threshold: the BLQ ratio counted flagged records against a denominator of distinct subjects, so a subject contributing several records to a timepoint could push the ratio above 1. It is now counted per subject on both sides (#1356)
 * The "X ticks" option on the linear and logarithmic concentration plots now takes effect. `plotly` was regenerating the axis itself, so the chosen column was ignored; the side-by-side variants were already unaffected (#1356)
 * Mean concentration plots (`pkcg03`) and the urine, dose-proportionality and box plot entries no longer render as blank panels: graph output IDs were taken from the plot list's names while the render bindings were registered by position, so any TLG whose plots are split into a named list never bound to its output. Split graphs now also show the group as a header, the way split tables do (#1356)
@@ -33,6 +60,8 @@
 * Concentration plot titles no longer disappear when a plot group covers more than one treatment: the treatment names are now collapsed into a single subtitle string, where previously the subtitle became a character vector that `plotly` rendered as no title at all (#1356)
 * Concentration plot subtitles no longer mislabel grouping variables: a variable with no configured display name (e.g. `USUBJID` on `pkcg02`) is labeled with its own name instead of being dropped, which shifted every following label onto the wrong value (#1356)
 * The `pkcg03` mean plot "Summary Statistic" dropdown now opens with its default (`Mean_sdi`) selected instead of appearing blank (#1356)
+* Fix the "Processing data mapping..." spinner hanging forever when advancing through mapping with unchanged mappings (e.g. the default data with no duplicates). The reactive that closes the loading modal was keyed only on the mapped data and duplicate rows, so it never re-ran when neither changed; it now also keys on the submit trigger (#1420)
+* Fix the "Processing data mapping..." spinner hanging forever when advancing through mapping (e.g. the default data with no duplicates). The mapping submit ran synchronously in the same flush cycle as the loading modal's `showModal()`, so the pipeline's `removeModal()` was batched with the show and dropped mid Bootstrap fade-in. The submit is now deferred to a later flush so the spinner paints first and the later hide applies; the completion reactive also keys on the submit trigger so it re-runs (and dismisses the modal) even when the mapping is unchanged (#1420)
 * Fix app failing to launch from an installed package: internal (non-exported) functions called from the Shiny app are now namespace-qualified so they resolve after `R CMD INSTALL`, and the app logo is served from `inst/shiny/www/` instead of the non-installed `man/figures/` (#1378)
 
 ## Testing
@@ -40,6 +69,24 @@
 * Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`, and TLG Shiny modules (#1351)
 
 ## Features
+
+* Exporting results now validates every selected non-TLG artifact before anything
+  is written and blocks the save when a problem is found (a data-integrity
+  control; cf. 21 CFR 11.10(a)). The controlled traceability matrix at
+  `inst/extdata/export-validation.yml` defines the checks and their regression
+  tests. Tables must have a valid basic structure, ggplots must build, plots and
+  code must have the expected object type, and generated settings, scripts,
+  raw-data, slides, pre-specifications, and session information are checked
+  before export. The CDISC datasets (ADNCA, ADPP, PP) are additionally checked
+  value by value against the data types and lengths declared in the package
+  metadata; not selected fields outside the approved metadata block export. Indexed CDISC
+  variable families (e.g.
+  `NCA1XRS`/`NCA2XRS` under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are
+  recognised so they are no longer wrongly reported as undeclared, and
+  `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP. Selected custom grouping
+  variables (including `DOSFRM`) are allowed in ADPP and ADNCA with a warning
+  that metadata type/length checks are unavailable. Known fields and PP remain
+  strictly validated (#1452)
 
 ### TLG Catalog
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
