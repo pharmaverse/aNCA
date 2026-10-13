@@ -23,6 +23,11 @@ describe("tlg.yaml sidebar options", {
     expect_gt(length(entries_with_options), 0)
   })
 
+  it("explains the fixed urine filter without exposing a specimen selector", {
+    expect_null(defs$l_pkcl02_uri$options$urine_specs)
+    expect_match(defs$l_pkcl02_uri$options$.help_specimen, "only urine.*PCSPEC = URINE")
+  })
+
   it("offers parameter selection on all PK listings while keeping TAD columns fixed", {
     for (id in c("l_pkpl01", "l_pkpl01_mp", "l_pkpl04_mp")) {
       expect_equal(defs[[id]]$options$param_filter$choices_from, "param_var")

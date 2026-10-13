@@ -24,14 +24,14 @@
   as the same false-like state when detecting plot updates. This keeps PKNCA
   development-version `NA` flags from suppressing affected plot refreshes
   (#1102)
-* Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
+* Summary-excluded concentrations remain visible as crosses in individual and combined plots (`pkcg01`/`pkcg02`), with an explanatory footnote alongside custom notes in interactive and exported plots. Summary tables and mean plots continue to omit excluded records, including in exported R scripts (#1439, #1536)
 
 * Running NCA with an empty analyte, specimen, or NCA profile selection now
   shows a red notification naming the missing selection instead of stopping
   silently. It also explains when the current data and settings provide no
   valid NCA intervals (#1527)
 
-* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
+* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay. Settings with no unit overrides now restore the defaults, so their generated R scripts run without an empty-units error (#1190, #1531)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
@@ -70,7 +70,7 @@
 
 ## Features
 
-* PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns (#1531)
+* PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns. The urine concentration listing always includes only urine, removes the redundant specimen selector, and requires specimen information (#1531)
 * Exporting results now validates every selected non-TLG artifact before anything
   is written and blocks the save when a problem is found (a data-integrity
   control; cf. 21 CFR 11.10(a)). The controlled traceability matrix at
