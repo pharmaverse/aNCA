@@ -235,7 +235,8 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
           filters = session$userData$applied_filters,
           time_duplicate_keys = session$userData$time_duplicate_keys,
           nca_ran = isTRUE(session$userData$nca_ran),
-          tlg_labels = if (is.function(session$userData$tlg_labels)) session$userData$tlg_labels()
+          tlg_labels = if (is.function(session$userData$tlg_labels)) session$userData$tlg_labels(),
+          tlg_order = if (is.function(session$userData$tlg_order)) session$userData$tlg_order()
         )
 
         dataset_name <- session$userData$dataset_filename %||% ""

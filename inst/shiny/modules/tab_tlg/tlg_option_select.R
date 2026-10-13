@@ -54,12 +54,17 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
 
   config <- .tlg_select_config(opt_def, data, grouping_vars)
 
-  selectInput(
+  pickerInput(
     ns("select"),
     label = label,
     selected = config$selected,
     choices = config$choices,
-    multiple = isTRUE(opt_def$multiple)
+    multiple = isTRUE(opt_def$multiple),
+    options = list(
+      `live-search` = TRUE,
+      `actions-box` = isTRUE(opt_def$multiple),
+      `selected-text-format` = "count > 3"
+    )
   )
 }
 
@@ -81,7 +86,7 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
       setNames(names(labels), unname(labels))
     } else if (length(opt_def$choices) == 1 && grepl("^\\$", opt_def$choices)) {
       # `[[` rather than `[` so a tibble yields a vector: `[` returns a one-column data frame,
-      # which `selectInput` then labels with the column name instead of its values.
+      # which the picker then labels with the column name instead of its values.
       col <- sub("^\\$", "", opt_def$choices)
       if (col %in% names(conc_df)) {
         col_values <- unique(conc_df[[col]])
@@ -112,7 +117,9 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
     }
   }
 
-  list(choices = c("", choices), selected = selected)
+  # Multi-selects use Deselect all; only single-selects need an unset choice.
+  list(choices = if (isTRUE(opt_def$multiple)) choices else c("", choices),
+       selected = selected)
 }
 
 #' Function generating an input widget server for TLG option.
@@ -130,11 +137,11 @@ tlg_option_select_server <- function(id, opt_def, data, reset_trigger,
     #' Reset the input to default value upon reset_trigger
     observeEvent(reset_trigger(), {
       config <- .tlg_select_config(opt_def, data, grouping_vars)
-      updateSelectInput(session, "select", selected = config$selected)
+      updatePickerInput(session, "select", selected = config$selected)
     })
 
     reactive({
-      # A `multiple` selectInput with nothing selected returns NULL (a single
+      # A `multiple` pickerInput with nothing selected returns NULL (a single
       # select returns ""). Coerce NULL to "" so an unset optional widget flows
       # through the option filter as "use the function default" rather than
       # tripping the is-null guard in tlg_module_server that halts the whole

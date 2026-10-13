@@ -5,19 +5,12 @@
 #' height and margins so multiline labels do not reduce the plotting area.
 #'
 #' @param item A ggplot, Plotly widget or character error message.
-#' @returns A Plotly widget, or the unchanged non-ggplot input.
+#' @returns A labeled Plotly widget, or unchanged input without a source ggplot.
 #' @noRd
 .tlg_ggplotly <- function(item) {
-  if (!inherits(item, "ggplot")) return(item)
-  labels <- vapply(c("title", "subtitle", "caption"), function(key) {
-    text <- item$labels[[key]]
-    if (is.null(text)) return("")
-    lines <- strsplit(as.character(text), "\n", fixed = TRUE)[[1]]
-    width <- if (key == "title") 60 else 80
-    paste(vapply(lines, function(line) {
-      paste(strwrap(line, width = width), collapse = "\n")
-    }, character(1)), collapse = "\n")
-  }, character(1))
+  source <- if (inherits(item, "ggplot")) item else attr(item, "ggplot")
+  if (!inherits(source, "ggplot")) return(item)
+  labels <- .tlg_plot_labels(source)
   line_counts <- vapply(labels, function(text) {
     if (!nzchar(text)) return(0L)
     length(strsplit(text, "\n", fixed = TRUE)[[1]])
@@ -26,9 +19,10 @@
   extra_top <- if (any(line_counts[1:2] > 0)) sum(label_heights[1:2]) + 12 else 0
   extra_bottom <- if (line_counts[[3]] > 0) label_heights[[3]] + 12 else 0
 
-  plot <- item + ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)
-  widget <- plotly::ggplotly(plot, height = 500)
-  margins <- widget$x$layout$margin
+  plot <- source + ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)
+  bare <- plotly::plotly_build(plotly::ggplotly(plot, height = 500))
+  widget <- .tlg_annotation_widget(item, bare, source$labels$caption)
+  margins <- bare$x$layout$margin
   caption_offset <- margins$b
   if (nzchar(labels[["caption"]])) {
     # Plotly's initial margin omits rotated tick-label and legend heights.
@@ -43,6 +37,7 @@
   shifts <- c(margins$t + label_heights[[2]] + 6, margins$t, -caption_offset - 6)
   label_annotations <- lapply(which(nzchar(labels)), function(i) {
     list(
+      name = paste0("tlg-", c("title", "subtitle", "caption")[[i]]),
       text = gsub("\n", "<br>", htmltools::htmlEscape(labels[[i]]), fixed = TRUE),
       x = 0, y = if (i == 3L) 0 else 1,
       xref = "paper", yref = "paper", xanchor = "left",
@@ -51,14 +46,21 @@
       font = list(size = c(18, 12, 11)[[i]], color = "black")
     )
   })
+  resize_labels <- list(
+    text = unname(lapply(c("title", "subtitle", "caption"), function(key) {
+      as.character(source$labels[[key]] %||% "")
+    })),
+    top = margins$t, bottom = margins$b, captionOffset = caption_offset
+  )
   margins$t <- margins$t + extra_top
   margins$b <- margins$b + extra_bottom
   widget$height <- 500 + extra_top + extra_bottom
   widget$x$layout$height <- widget$height
-  plotly::layout(
-    widget, margin = margins,
-    annotations = c(widget$x$layout$annotations, label_annotations)
-  )
+  widget$x$layout$margin <- margins
+  widget$x$layout$annotations <- c(widget$x$layout$annotations, label_annotations)
+  htmlwidgets::onRender(widget, paste(readLines(
+    system.file("shiny/www/tlg_plot_labels.js", package = "aNCA"), warn = FALSE
+  ), collapse = "\n"), data = resize_labels)
 }
 
 #' Keep supported text labels from a settings payload, keyed by catalog name.
@@ -114,4 +116,38 @@
     imported[[key]] <- get(key, envir = registry)$labels()
   }
   imported
+}
+
+#' Wrap annotation text for a fixed-size export or initial widget layout.
+#' @noRd
+.tlg_plot_labels <- function(item) {
+  vapply(c("title", "subtitle", "caption"), function(key) {
+    text <- item$labels[[key]]
+    if (is.null(text)) return("")
+    lines <- strsplit(as.character(text), "\n", fixed = TRUE)[[1]]
+    width <- if (key == "title") 60 else 80
+    paste(vapply(lines, function(line) {
+      paste(strwrap(line, width = width), collapse = "\n")
+    }, character(1)), collapse = "\n")
+  }, character(1))
+}
+
+
+#' Replace concentration annotations without rebuilding their interactive traces.
+#' @noRd
+.tlg_annotation_widget <- function(item, bare, caption) {
+  if (!inherits(item, "plotly")) return(bare)
+  widget <- plotly::plotly_build(item)
+  # The source ggplot has the same facets and labels, but no legacy title spacing.
+  # Keep native log axes, filtered ticks, hover text, symbols and all trace values.
+  widget$x$layout$title <- list(text = "")
+  normalize <- function(text) gsub("<br\\s*/?>", "\n", text %||% "")
+  widget$x$layout$annotations <- Filter(function(annotation) {
+    !(identical(normalize(annotation$text), normalize(caption)) &&
+        identical(annotation$yref, "paper") && isTRUE(annotation$y <= 0))
+  }, widget$x$layout$annotations)
+  widget$x$layout$legend <- bare$x$layout$legend
+  attr(widget, "ggplot") <- attr(item, "ggplot")
+  attr(widget, "tlg_group_header") <- attr(item, "tlg_group_header")
+  widget
 }

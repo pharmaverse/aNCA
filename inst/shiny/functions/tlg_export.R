@@ -323,7 +323,7 @@ write_tlg_exports <- function(entries,
   tryCatch({
     grDevices::pdf(file.path(target_dir, rel), width = 10, height = 6, onefile = TRUE)
     on.exit(grDevices::dev.off(), add = TRUE)
-    for (p in drawable) print(p)
+    for (p in drawable) print(p + do.call(ggplot2::labs, as.list(.tlg_plot_labels(p))))
   }, error = function(e) {
     status <<- "error"
     note   <<- conditionMessage(e)

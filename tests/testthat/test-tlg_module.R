@@ -1,6 +1,7 @@
 # Source the TLG module to test pure utility functions
 local({
   library(shiny)
+  library(shinyWidgets)
   # The module's error handler calls log_error(); the app attaches logger in app.R.
   library(logger)
   shiny_dir <- system.file("shiny", package = "aNCA")
@@ -56,7 +57,7 @@ describe(".tlg_module_edit_widget", {
     )
     result <- .tlg_module_edit_widget("mod-myopt", opt_def, data = NULL)
     html   <- as.character(result)
-    # tlg_option_select_ui returns a selectInput
+    # tlg_option_select_ui returns a pickerInput
     expect_true(grepl("X", html))
     expect_true(grepl("Y", html))
   })
@@ -67,6 +68,36 @@ describe(".tlg_module_edit_widget", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_module_server", {
+  it("passes all selected statistics and zero values to the TLG function", {
+    shiny::testServer(
+      tlg_module_server,
+      args = list(
+        data = shiny::reactive(data.frame(NFRLT = c(0, 1))),
+        type = "table",
+        render_list = function(data, stats, time_filter, xmin) {
+          list(data.frame(stat = stats, time = time_filter, xmin = xmin))
+        },
+        options = list(
+          stats = list(type = "select", choices = ".stats", multiple = TRUE),
+          time_filter = list(type = "select", choices = "$NFRLT", multiple = TRUE),
+          xmin = list(type = "numeric", default = 0)
+        )
+      ),
+      {
+        session$setInputs(
+          `stats-select` = names(aNCA:::.STAT_LABELS),
+          `time_filter-select` = "0",
+          `xmin-numeric` = 0
+        )
+        session$elapse(800)
+        result <- tlg_list()[[1]]
+        expect_equal(result$stat, names(aNCA:::.STAT_LABELS))
+        expect_equal(result$time, rep("0", length(aNCA:::.STAT_LABELS)))
+        expect_equal(result$xmin, rep(0, length(aNCA:::.STAT_LABELS)))
+      }
+    )
+  })
+
   test_data <- shiny::reactive(
     list(conc = list(data = data.frame(
       NFRLT = 1:3, AVAL = c(5, 4, 3), stringsAsFactors = FALSE
@@ -150,7 +181,7 @@ describe("tlg_module_server", {
   })
 
   it("still renders when a multi-select option is left empty (no default)", {
-    # Regression: a `multiple` selectInput with nothing selected reports NULL.
+    # Regression: a `multiple` pickerInput with nothing selected reports NULL.
     # tlg_module_server's is-null guard would then return NULL and blank the
     # whole table.  With the option server coercing NULL -> "", the empty option
     # is simply dropped and the table renders with the function default.
@@ -224,7 +255,7 @@ describe(".tlg_module_edit_widget", {
     )
     result <- .tlg_module_edit_widget("mod-myopt", opt_def, data = NULL)
     html   <- as.character(result)
-    # tlg_option_select_ui returns a selectInput
+    # tlg_option_select_ui returns a pickerInput
     expect_true(grepl("X", html))
     expect_true(grepl("Y", html))
   })
@@ -848,5 +879,63 @@ describe("tlg_module_server: select values on UI refresh", {
         expect_equal(tlg_list()[[1]]$AVAL, c(2, 8))
       }
     )
+  })
+})
+
+
+describe("responsive graph annotations", {
+  it("keeps raw labels for browser reflow and named annotations for layout updates", {
+    plot <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +
+      ggplot2::labs(title = "Study <A> & B", subtitle = "First\nSecond", caption = "Note")
+    widget <- .tlg_ggplotly(plot)
+    hook <- widget$jsHooks$render[[1]]
+    expect_identical(hook$data$text, list("Study <A> & B", "First\nSecond", "Note"))
+    annotations <- plotly::plotly_build(widget)$x$layout$annotations
+    names <- vapply(annotations, function(x) x$name %||% "", character(1))
+    expect_true(all(c("tlg-title", "tlg-subtitle", "tlg-caption") %in% names))
+    expect_gt(hook$data$captionOffset, 0)
+  })
+
+  it("wraps fixed-size export labels without changing the original plot or trace values", {
+    title <- paste(rep("Study treatment and parameter title", 5), collapse = " ")
+    plot <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point() +
+      ggplot2::labs(title = title, subtitle = "First\nSecond", caption = "Note")
+    labels <- .tlg_plot_labels(plot)
+    expect_equal(gsub("\n", " ", labels[["title"]]), title)
+    expect_true(all(nchar(strsplit(labels[["title"]], "\n")[[1]]) <= 60))
+    expect_equal(labels[["subtitle"]], "First\nSecond")
+    expect_equal(plot$labels$title, title)
+    wrapped <- plot + do.call(ggplot2::labs, as.list(labels))
+    expect_identical(ggplot2::ggplot_build(wrapped)$data, ggplot2::ggplot_build(plot)$data)
+  })
+})
+
+
+describe("concentration graph annotation layout", {
+  it("preserves log axes, filtered ticks, hover text and exclusion symbols", {
+    data <- FIXTURE_CONC_DATA
+    data$ROUTE <- "IV"
+    data$TRT01A <- "Treatment A"
+    data$DOSEA <- 5
+    data$PKSUMXF <- ""
+    data$PKSUMXF[1] <- "Y"
+    for (fun in list(g_pkcg01_log, g_pkcg02_log, g_pkcg03_log)) {
+      original <- suppressWarnings(fun(data, title = "Concentration title",
+                                       subtitle = "Study subtitle", footnote = "Custom note"))[[1]]
+      converted <- suppressWarnings(.tlg_ggplotly(original))
+      before <- plotly::plotly_build(original)
+      after <- plotly::plotly_build(converted)
+      expect_identical(after$x$data, before$x$data)
+      expect_identical(after$x$layout$yaxis$type, before$x$layout$yaxis$type)
+      expect_identical(after$x$layout$xaxis$tickvals, before$x$layout$xaxis$tickvals)
+      expect_identical(attr(converted, "ggplot"), attr(original, "ggplot"))
+      expect_identical(attr(converted, "tlg_group_header"), attr(original, "tlg_group_header"))
+      expect_equal(after$x$layout$title$text, "")
+      annotations <- after$x$layout$annotations
+      text <- vapply(annotations, function(x) x$text, character(1))
+      expect_true("Concentration title" %in% text)
+      expect_true("Study subtitle" %in% text)
+      expect_equal(sum(grepl("Custom note", text, fixed = TRUE)), 1L)
+    }
   })
 })
