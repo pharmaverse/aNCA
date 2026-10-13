@@ -27,7 +27,7 @@ tlg_js_str <- function(x) paste0("'", gsub("(['\\\\])", "\\\\\\1", x), "'")
 #' Build the "Add TLGs" catalog checklist UI.
 #'
 #' @param avail Tibble of not-yet-selected TLGs (rows of `tlg_order()` with
-#'   `Selection == FALSE`); must contain `Type`, `Dataset`, `Description`,
+#'   `Selection == FALSE`); must contain `Type`, `Dataset`, `Label`, `Description`,
 #'   `Link`, and `id`.
 #' @param ns Namespace function for the calling module (`session$ns`).
 #' @returns A list with `ui` (the modal body tag) and `group_ids` (the
@@ -48,13 +48,15 @@ build_add_checklist <- function(avail, ns) {
   # can show/hide it.  The active tab is applied client-side.
   build_group_ui <- function(type, dataset, input_id) {
     rows <- dplyr::filter(avail, Type == !!type, Dataset == !!dataset)
-    choice_names <- purrr::map2(rows$Description, rows$Link, function(desc, link) {
+    choice_label <- function(label, desc, link) {
       spec_link <- if (is.na(link)) "" else paste0(
         "<a href='", link, "' target='_blank' onclick='event.stopPropagation()' ",
         "class='tlg-spec' title='View spec'>", spec_icon_html, "</a>"
       )
-      HTML(paste0("<span class='tlg-desc'>", htmltools::htmlEscape(desc), "</span>", spec_link))
-    })
+      HTML(paste0("<span class='tlg-desc'>", htmltools::htmlEscape(label),
+                  "<br>", htmltools::htmlEscape(desc), "</span>", spec_link))
+    }
+    choice_names <- purrr::pmap(list(rows$Label, rows$Description, rows$Link), choice_label)
     div(
       class = "tlg-ds", `data-dataset` = dataset,
       checkboxGroupInput(
