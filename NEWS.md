@@ -7,6 +7,8 @@
 
 ## Bug Fixes
 
+* Generated R scripts use the requested dataset path or the input file beside the ZIP script and run when no ratio calculations were configured (#1528)
+
 * Restored compatibility with the upcoming PKNCA release (0.12.2). Running NCA with start imputation (including the default example dataset) no longer fails with duplicate `R2ADJ` results when applying half-life flags. `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
 
 * Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, "Correlation Between TimeX and Log ConcY"). PKNCA 0.12.1.9000 reports the parameter, and without a mapping it appeared unlabelled in `pivot_wider_pknca_results()` output (#481, #1102)
@@ -117,6 +119,7 @@
 * Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
 
 ### TLG Order & Selection
+* Save and restore TLG order selections, footnotes, stratification, and comments in settings downloads and ZIP exports; warn and skip removed catalog outputs and retain defaults for new outputs (#1528)
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)
 * Urine TLG functions filter to urine specimens internally; when `PCSPEC`/`PPSPEC` is missing, the resulting warning is surfaced as an in-app notification instead of failing silently (#1335)
 * Redesign the "Add TLGs to order" picker as a catalog checklist with dataset tabs (PK Concentrations / PK Parameters), search, CSV/XLSX export, per-column select-all, and a live selection count (#1335)
