@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9206</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9207</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -195,7 +195,10 @@ function allows to specify <code>xaxis_label</code> as an argument, the
 <div class="section level5">
 <h5 id="select">select<a class="anchor" aria-label="anchor" href="#select"></a>
 </h5>
-<p>Standard shiny <code>selectInput</code>.</p>
+<p>Searchable <code><a href="https://dreamrs.github.io/shinyWidgets/reference/pickerInput.html" class="external-link">shinyWidgets::pickerInput</a></code>. Multi-selects
+offer Select all / Deselect all and show a count when more than three
+values are selected. Clearing a selection uses the rendering function
+default; multi-select choices must not include a blank value.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># option id, the same as the argument that is passed to the rendering function, must be unique in the scope of the TLG entry</span></span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">&lt;option id&gt;</span><span class="kw">:</span></span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">  # type of the option/widget</span></span>

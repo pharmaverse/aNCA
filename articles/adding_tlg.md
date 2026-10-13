@@ -105,7 +105,11 @@ Standard shiny `numericInput`.
 
 ##### select
 
-Standard shiny `selectInput`.
+Searchable
+[`shinyWidgets::pickerInput`](https://dreamrs.github.io/shinyWidgets/reference/pickerInput.html).
+Multi-selects offer Select all / Deselect all and show a count when more
+than three values are selected. Clearing a selection uses the rendering
+function default; multi-select choices must not include a blank value.
 
 ``` yaml
 # option id, the same as the argument that is passed to the rendering function, must be unique in the scope of the TLG entry

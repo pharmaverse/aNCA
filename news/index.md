@@ -312,6 +312,9 @@
 
 #### TLG Catalog
 
+- TLG sidebar dropdowns now offer search, Select all / Deselect all, and
+  a count for selections of more than three values
+  ([\#1530](https://github.com/pharmaverse/aNCA/issues/1530))
 - Implement new TLG functions to complete the pkct01, pkpt03/07/08/11,
   pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries
   ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343)):

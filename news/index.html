@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9206</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9207</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,7 +111,8 @@
 <ul><li>Exporting results now validates every selected non-TLG artifact before anything is written and blocks the save when a problem is found (a data-integrity control; cf. 21 CFR 11.10(a)). The controlled traceability matrix at <code>inst/extdata/export-validation.yml</code> defines the checks and their regression tests. Tables must have a valid basic structure, ggplots must build, plots and code must have the expected object type, and generated settings, scripts, raw-data, slides, pre-specifications, and session information are checked before export. The CDISC datasets (ADNCA, ADPP, PP) are additionally checked value by value against the data types and lengths declared in the package metadata; not selected fields outside the approved metadata block export. Indexed CDISC variable families (e.g. <code>NCA1XRS</code>/<code>NCA2XRS</code> under the <code>NCAwXRS</code> template, <code>CRIT1</code>..<code>CRIT4</code>) are recognised so they are no longer wrongly reported as undeclared, and <code>DOSEA</code>/<code>DOSEU</code>/<code>CRIT*</code> are now declared for ADPP. Selected custom grouping variables (including <code>DOSFRM</code>) are allowed in ADPP and ADNCA with a warning that metadata type/length checks are unavailable. Known fields and PP remain strictly validated (<a href="https://github.com/pharmaverse/aNCA/issues/1452" class="external-link">#1452</a>)</li>
 </ul><div class="section level4">
 <h4 id="tlg-catalog-development-version">TLG Catalog<a class="anchor" aria-label="anchor" href="#tlg-catalog-development-version"></a></h4>
-<ul><li>Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (<a href="https://github.com/pharmaverse/aNCA/issues/1343" class="external-link">#1343</a>):
+<ul><li>TLG sidebar dropdowns now offer search, Select all / Deselect all, and a count for selections of more than three values (<a href="https://github.com/pharmaverse/aNCA/issues/1530" class="external-link">#1530</a>)</li>
+<li>Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (<a href="https://github.com/pharmaverse/aNCA/issues/1343" class="external-link">#1343</a>):
 <ul><li>
 <code>t_pkct01</code> / <code>t_pkct01_dose</code> / <code>t_pkct01_tad</code> / <code>t_pkct01_dose_tad</code> — summary concentration tables (by TRT or dose, from first dose or TAD)</li>
 <li>
