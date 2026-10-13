@@ -1,7 +1,10 @@
 # Generate PK Concentration-Time Profile Plots
 
 This function generates a list of ggplots for PK concentration-time
-profiles.
+profiles. Records flagged with `PKSUMXF == "Y"` remain visible as
+crosses; other records retain circular points. A footnote explains the
+crosses in plots containing flagged records, including interactive plots
+and static exports.
 
 ## Usage
 
@@ -139,9 +142,7 @@ A list of ggplot or plotly objects for each unique group.
 
 ## Author
 
-Gerardo Rodriguez magic numbers for footnote position and margin, work
-in app up to 4 lines NOTE: might require some fine tuning down the line,
-looks fine now
+Gerardo Rodriguez
 
 ## Examples
 
