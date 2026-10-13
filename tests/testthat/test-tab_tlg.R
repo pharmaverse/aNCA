@@ -390,6 +390,25 @@ render_tlg_panels <- function(output) {
 }
 
 describe("tab_tlg_server: TLG export registry", {
+  it("reuses the same modules when the order is submitted repeatedly", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      registered <- ls(envir = .registered_modules)
+      items <- lapply(as.list(.tlg_registry), function(entry) entry$items)
+      expect_gt(length(registered), 0)
+
+      for (submission in 2:4) {
+        session$setInputs(submit_tlg_order = submission)
+        session$flushReact()
+        render_tlg_panels(output)
+        expect_identical(ls(envir = .registered_modules), registered)
+        expect_identical(lapply(as.list(.tlg_registry), function(entry) entry$items), items)
+      }
+    })
+  })
+
   it("registers an entry for every rendered TLG", {
     testServer(tab_tlg_server, args = list(data = test_data), {
       # tlg_order_filtered() is bindEvent(submit_tlg_order), so nothing renders until the
@@ -470,6 +489,27 @@ describe("tab_tlg_server: publishes outputs for the app-wide export", {
       tables_only <- collect("table")
       expect_true(all(vapply(tables_only, function(e) e$type == "table", logical(1))))
       expect_lt(length(tables_only), length(collect()))
+    })
+  })
+})
+
+
+describe("tab_tlg_server: companion settings compatibility", {
+  it("retains imported annotations and order metadata independently", {
+    saved <- reactiveVal(list(
+      tlg_labels = list(t_pkct01 = list(title = "Saved title", footnote = "Rendered note")),
+      tlg_order = list(t_pkct01 = list(Selection = FALSE, Footnote = "Metadata note",
+                                       Stratification = "SEX", Comment = "Saved comment"))
+    ))
+    testServer(tab_tlg_server, args = list(data = test_data, settings_override = saved), {
+      session$flushReact()
+      expect_identical(session$userData$tlg_labels()$t_pkct01, saved()$tlg_labels$t_pkct01)
+      expect_identical(session$userData$tlg_order()$t_pkct01, saved()$tlg_order$t_pkct01)
+      saved(list(tlg_labels = list(t_pkct01 = list(title = "Earlier version")),
+                 tlg_order = list(t_pkct01 = list(Selection = TRUE, Footnote = "Earlier note"))))
+      session$flushReact()
+      expect_identical(session$userData$tlg_labels()$t_pkct01$title, "Earlier version")
+      expect_identical(session$userData$tlg_order()$t_pkct01$Footnote, "Earlier note")
     })
   })
 })

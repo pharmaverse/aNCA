@@ -26,7 +26,7 @@
   as the same false-like state when detecting plot updates. This keeps PKNCA
   development-version `NA` flags from suppressing affected plot refreshes
   (#1102)
-* Summary-exclusion flags (`PKSUMXF`/`PPSUMXF`) no longer hide records from individual concentration plots (`pkcg01`) and combined plots (`pkcg02`). The flags now drop records only from summary tables and mean plots, as intended, while individual/combined plots and listings show every record. Summary/mean TLG functions self-filter, so the correct behaviour also applies in the exported R script (#1438)
+* Summary-excluded concentrations remain visible as crosses in individual and combined plots (`pkcg01`/`pkcg02`), with an explanatory footnote alongside custom notes in interactive and exported plots. Summary tables and mean plots continue to omit excluded records, including in exported R scripts (#1439, #1536)
 
 * Running NCA with an empty analyte, specimen, or NCA profile selection now
   shows a red notification naming the missing selection instead of stopping
@@ -91,6 +91,7 @@
   strictly validated (#1452)
 
 ### TLG Catalog
+* TLG sidebar dropdowns now offer search, Select all / Deselect all, and a count for selections of more than three values (#1530)
 * Implement new TLG functions to complete the pkct01, pkpt03/07/08/11, pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries (#1343):
   - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad` — summary concentration tables (by TRT or dose, from first dose or TAD)
   - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables with stats in columns (full dataset and metabolite/parent filtered)

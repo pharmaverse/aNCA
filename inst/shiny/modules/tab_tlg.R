@@ -167,6 +167,9 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
+    # Preserve the companion TLG settings when its editor is unavailable.
+    session$userData$tlg_labels <- reactive(settings_override()$tlg_labels)
+
     #' Load TLG orders definitions
     default_order <- {
       purrr::map_dfr(.TLG_DEFINITIONS, ~ dplyr::tibble(

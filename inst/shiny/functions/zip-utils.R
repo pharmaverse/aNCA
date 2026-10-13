@@ -480,10 +480,9 @@ get_tree_ids_for_texts <- function(tree, texts) {
     slope_rules = session$userData$slope_rules(),
     filters = session$userData$applied_filters,
     time_duplicate_keys = session$userData$time_duplicate_keys,
-    tlg_order = if (is.function(session$userData$tlg_order)) {
-      session$userData$tlg_order()
-    },
-    nca_ran = isTRUE(session$userData$nca_ran)
+    nca_ran = isTRUE(session$userData$nca_ran),
+    tlg_labels = if (is.function(session$userData$tlg_labels)) session$userData$tlg_labels(),
+    tlg_order = if (is.function(session$userData$tlg_order)) session$userData$tlg_order()
   )
 }
 
