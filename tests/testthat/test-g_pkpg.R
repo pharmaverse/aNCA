@@ -12,12 +12,26 @@ pkpg_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-pkpg_metab_data <- pkpg_data
-pkpg_metab_data$PPCAT <- ifelse(
-  pkpg_metab_data$TRT01A == "50mg", "Metab-DrugA Plasma", "DrugA Plasma"
-)
-pkpg_metab_data$METABFL <- ifelse(
-  pkpg_metab_data$TRT01A == "50mg", "Y", NA_character_
+# Ordinary values and configured ADPP ratios deliberately carry different values.
+pkpg_ratio_data <- rbind(
+  transform(pkpg_data, PPANMETH = NA_character_),
+  transform(
+    pkpg_data,
+    PPCAT    = "Metab-DrugA Plasma",
+    AVAL     = pkpg_data$AVAL / 2,
+    PPANMETH = NA_character_
+  ),
+  transform(
+    pkpg_data,
+    PPCAT    = "Metab-DrugA Plasma",
+    PARAM    = paste("Ratio", pkpg_data$PARAM),
+    PARAMCD  = paste0("RA", pkpg_data$PARAMCD),
+    AVAL     = pkpg_data$AVAL / 10 + 0.2,
+    AVALU    = "fraction",
+    PPANMETH = paste0(
+      pkpg_data$PARAMCD, " TO ", pkpg_data$PARAMCD, " [PARAM: DrugA Plasma]"
+    )
+  )
 )
 
 describe("p_pkpg03_boxp", {
@@ -97,40 +111,125 @@ describe("p_pkpg04_boxp", {
 })
 
 describe("p_pkpg06_mp", {
-  it("filters to metabolite rows using METABFL (preferred path)", {
-    result <- p_pkpg06_mp(pkpg_metab_data)
-    # Only metabolite arm rows reach the plot — check it returns a ggplot
-    expect_s3_class(result[[1]], "ggplot")
-    # Plot data should only contain metabolite arm (50mg)
+  plots <- function(data = pkpg_ratio_data, ...) {
+    p_pkpg06_mp(data, ...)
+  }
+
+  it("plots the ratio values, not the metabolite's raw values", {
+    result <- plots()
     plot_df <- result[[1]]$data
-    expect_true(all(plot_df$TRT01A == "50mg"))
+    expect_s3_class(result[[1]], "ggplot")
+    expect_equal(sort(plot_df$AVAL), sort(pkpg_data$AVAL / 10 + 0.2))
+    expect_setequal(plot_df$PARAM, paste("Ratio", pkpg_data$PARAM))
+    expect_equal(result[[1]]$labels$y, "Metabolite / Parent Ratio")
   })
 
-  it("falls back to PPCAT grep when METABFL absent", {
-    data_ppcat <- pkpg_data
-    data_ppcat$PPCAT <- ifelse(
-      data_ppcat$TRT01A == "50mg", "Metab-DrugA", "DrugA"
+  it("names the parent in the plot key so the ratio is self-explanatory", {
+    result <- plots()
+    expect_equal(
+      names(result),
+      "RATIO: Metab-DrugA Plasma / DrugA Plasma / PPSPEC: SERUM"
     )
-    data_ppcat <- data_ppcat[, setdiff(names(data_ppcat), "METABFL")]
-    result <- p_pkpg06_mp(data_ppcat)
-    expect_type(result, "list")
-    purrr::walk(result, ~ expect_s3_class(.x, "ggplot"))
+    expect_identical(result[[1]]$labels$subtitle, names(result)[1])
   })
 
-  it("falls back to PARAM grep when METABFL and PPCAT absent", {
-    data_param <- pkpg_data
-    data_param$PARAM <- ifelse(data_param$TRT01A == "50mg",
-                               paste0("Metab-", data_param$PARAM),
-                               data_param$PARAM)
-    data_param <- data_param[, setdiff(names(data_param), c("METABFL", "PPCAT"))]  # nolint
-    result <- p_pkpg06_mp(data_param)
-    expect_type(result, "list")
-    purrr::walk(result, ~ expect_s3_class(.x, "ggplot"))
+  it("preserves user-specified titles and axis labels", {
+    plot <- plots(title = "Custom title", subtitle = "Custom subtitle", ylab = "M/P")[[1]]
+    expect_equal(plot$labels$title, "Custom title")
+    expect_equal(plot$labels$subtitle, "Custom subtitle")
+    expect_equal(plot$labels$y, "M/P")
   })
 
-  it("stops with informative error when no metabolite data found", {
-    data_no_metab <- pkpg_data[, setdiff(names(pkpg_data), "METABFL")]
-    expect_error(p_pkpg06_mp(data_no_metab), "no metabolite data found")
+  it("plots the supplied ratio values without recalculating the pair", {
+    data <- pkpg_ratio_data
+    selected <- !is.na(data$PPANMETH)
+    data$AVAL[selected] <- seq_len(sum(selected)) / 7
+    plotted <- plots(data)[[1]]$data$AVAL
+    expect_equal(sort(plotted), sort(data$AVAL[selected]))
+  })
+
+  it("keeps configured ratios from separate dose profiles apart", {
+    result <- p_pkpg06_mp(mp_adpp_fixture())
+    expect_length(result, 2)
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]$data
+    dose2 <- result[[grep("ATPTREF: DOSE 2", names(result))]]$data
+    expect_equal(sort(dose1$AVAL), c(0.3, 0.3, 0.5, 0.5))
+    expect_equal(sort(dose2$AVAL), c(0.25, 0.25, 0.75, 0.75))
+  })
+
+  it("keeps shared-label dose profiles separate using DOSNOA", {
+    data <- mp_same_label_fixture(dose_numbers = TRUE)
+    result <- p_pkpg06_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSNOA: 1$", names(result))]]
+    dose2 <- result[[grep("DOSNOA: 2$", names(result))]]
+    cmax1 <- subset(dose1$data, PARAMCD == "RACMAX")
+    cmax2 <- subset(dose2$data, PARAMCD == "RACMAX")
+    expect_equal(cmax1$USUBJID, "S2")
+    expect_equal(cmax1$AVAL, 0.3)
+    expect_equal(cmax2$USUBJID, c("S1", "S2"))
+    expect_equal(cmax2$AVAL, c(0.25, 0.75))
+  })
+
+  it("keeps shared-label dose profiles separate using DOSEA", {
+    data <- mp_same_label_fixture(dose_numbers = FALSE)
+    result <- p_pkpg06_mp(data)
+    expect_length(result, 2)
+    dose1 <- result[[grep("DOSEA: 10$", names(result))]]
+    dose2 <- result[[grep("DOSEA: 20$", names(result))]]
+    cmax1 <- subset(dose1$data, PARAMCD == "RACMAX")
+    cmax2 <- subset(dose2$data, PARAMCD == "RACMAX")
+    expect_equal(cmax1$USUBJID, "S2")
+    expect_equal(cmax1$AVAL, 0.3)
+    expect_equal(cmax2$USUBJID, c("S1", "S2"))
+    expect_equal(cmax2$AVAL, c(0.25, 0.75))
+  })
+
+  it("keeps dose amounts varying only between subjects in the same comparison", {
+    data <- mp_adpp_fixture()
+    data$DOSEA <- ifelse(data$USUBJID == "S1", 10, 20)
+    data$TRT01A <- paste0(data$DOSEA, "mg")
+    result <- p_pkpg06_mp(data)
+    expect_length(result, 2)
+    expect_false(any(grepl("DOSEA:", names(result), fixed = TRUE)))
+    dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]$data
+    expect_setequal(as.character(dose1$TRT01A), c("10mg", "20mg"))
+    expect_equal(sort(dose1$AVAL), c(0.3, 0.3, 0.5, 0.5))
+  })
+
+  it("displays ratios whose reference analyte includes square brackets", {
+    for (reference in c("[PARAM: [14C]-DrugA]", "[reference: PARAM=[14C]-DrugA]")) {
+      data <- mp_adpp_fixture()
+      data$PPANMETH <- sub("[PARAM: DrugA]", reference, data$PPANMETH, fixed = TRUE)
+      result <- p_pkpg06_mp(data)
+      expect_length(result, 2)
+      expect_true(all(grepl("Metab-DrugA / [14C]-DrugA", names(result), fixed = TRUE)))
+      dose1 <- result[[grep("ATPTREF: DOSE 1", names(result))]]$data
+      expect_equal(sort(dose1$AVAL), c(0.3, 0.3, 0.5, 0.5))
+    }
+  })
+
+  it("uses an explicitly selected ADPP value column", {
+    data <- transform(pkpg_ratio_data, PPSTRESN = AVAL + 1)
+    selected <- !is.na(data$PPANMETH)
+    plotted <- plots(data, value_var = "PPSTRESN")[[1]]$data$PPSTRESN
+    expect_equal(sort(plotted), sort(data$PPSTRESN[selected]))
+  })
+
+  it("errors when no ratios were configured", {
+    expect_error(
+      plots(transform(pkpg_data, PPANMETH = NA_character_)),
+      "p_pkpg06_mp: no ratio parameters found.*Parameter Selection > Ratios"
+    )
+  })
+
+  it("does not treat mean-residence-time parameters as ratios", {
+    mrt <- transform(
+      pkpg_data,
+      PARAMCD = rep(c("MRTLST", "MRTIFO"), 6),
+      PPANMETH = NA_character_
+    )
+    expect_error(plots(mrt), "no ratio parameters found")
   })
 })
 

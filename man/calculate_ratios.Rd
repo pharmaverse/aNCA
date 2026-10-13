@@ -38,6 +38,8 @@ By default is NULL, allowing rows not in ref_groups be used as test.}
 }
 \value{
 A data.frame result object with the calculated ratios.
+Undefined ratios (missing or non-finite inputs, zero denominators, or
+non-finite results) are retained as \code{NA_real_}.
 }
 \description{
 Calculate Ratios from PKNCA Results

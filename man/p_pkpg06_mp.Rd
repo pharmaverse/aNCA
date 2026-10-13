@@ -4,10 +4,29 @@
 \alias{p_pkpg06_mp}
 \title{Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)}
 \usage{
-p_pkpg06_mp(data, ...)
+p_pkpg06_mp(
+  data,
+  list_vars = c("RATIO", "PPSPEC"),
+  title = "Boxplot of Metabolite/Parent Ratios by Treatment",
+  subtitle = NULL,
+  ylab = "Metabolite / Parent Ratio",
+  value_var = "AVAL",
+  ...
+)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
+
+\item{list_vars}{Columns to split plots by. Defaults to the derived \code{RATIO}
+label and \code{PPSPEC}; varying profile identifiers are retained as well.}
+
+\item{title}{Optional plot title string.}
+
+\item{subtitle}{Optional plot subtitle; defaults to the analyte pair and profile identifiers.}
+
+\item{ylab}{Y-axis label. Defaults to \code{"Metabolite / Parent Ratio"}.}
+
+\item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.}
 }
@@ -15,9 +34,10 @@ p_pkpg06_mp(data, ...)
 A named list of ggplot objects (same format as \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}).
 }
 \description{
-Filters ADPP to metabolite rows using the same fallback logic as
-\code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}} (METABFL preferred, then PPCAT/PARAM grep for "metab"),
-then delegates to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.
+Plots the configured analyte ratios already present in ADPP by treatment
+using \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}. Configure ratios in Parameter Selection > Ratios,
+or load them from settings, then run NCA before rendering. Values are read
+from ADPP without recalculation, keeping plots consistent with exported results.
 }
 \examples{
 \dontrun{

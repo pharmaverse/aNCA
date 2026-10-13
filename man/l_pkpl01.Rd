@@ -14,10 +14,19 @@ l_pkpl01(
   unit_var = "AVALU",
   title = "Listing of Individual PK Parameters",
   subtitle = NULL,
-  footnote = NULL
+  footnote = NULL,
+  param_filter = NULL
 )
 
-l_pkpl01_mp(data, ...)
+l_pkpl01_mp(
+  data,
+  listgroup_vars = c("RATIO", "PPSPEC"),
+  param_var = "PARAM",
+  title = "Listing of Individual Metabolite/Parent Ratios",
+  value_var = "AVAL",
+  unit_var = "AVALU",
+  ...
+)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
@@ -43,6 +52,9 @@ syntax. Defaults to the unique values of \code{listgroup_vars}.}
 
 \item{footnote}{Footnote string.}
 
+\item{param_filter}{Optional character vector of values from \code{param_var} to
+display as columns. \code{NULL} or an empty vector (default) keeps all parameters.}
+
 \item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }
 \value{
@@ -56,8 +68,11 @@ same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per uni
 }
 \section{Functions}{
 \itemize{
-\item \code{l_pkpl01_mp()}: Listing filtered to metabolite rows (pkpl01 M/P).
-Uses the same METABFL -> PPCAT -> PARAM fallback as \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
+\item \code{l_pkpl01_mp()}: Listing of metabolite-to-parent ratios (pkpl01 M/P).
+Displays the configured analyte ratios already present in ADPP, without
+recalculating them. Defaults to splitting by \code{RATIO} and \code{PPSPEC}; varying
+profile identifiers are retained too. Missing values remain blank and
+summary-excluded records remain in the listing. See \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
 
 }}
 \examples{

@@ -18,6 +18,8 @@
 #' @param subtitle Per-listing subtitle. Supports `$VAR` / `!VAR` annotation
 #'   syntax. Defaults to the unique values of `listgroup_vars`.
 #' @param footnote Footnote string.
+#' @param param_filter Optional character vector of values from `param_var` to
+#'   display as columns. `NULL` or an empty vector (default) keeps all parameters.
 #'
 #' @return A named list of `listing_df` objects (one per `listgroup_vars`
 #'   combination), suitable for printing in a Shiny `verbatimTextOutput`.
@@ -42,7 +44,8 @@ l_pkpl01 <- function(
   unit_var        = "AVALU",
   title    = "Listing of Individual PK Parameters",
   subtitle = NULL,
-  footnote = NULL
+  footnote = NULL,
+  param_filter = NULL
 ) {
   if (!requireNamespace("rlistings", quietly = TRUE)) {
     stop(
@@ -58,6 +61,11 @@ l_pkpl01 <- function(
          paste(missing_cols, collapse = ", "))
   }
 
+  if (length(param_filter) > 0) {
+    data <- data[data[[param_var]] %in% param_filter, , drop = FALSE]
+  }
+  if (nrow(data) == 0) return(list())
+
   data <- apply_labels(data, type = "ADPP")
 
   if (is.null(subtitle)) {
@@ -70,17 +78,7 @@ l_pkpl01 <- function(
   }
 
   .make_wide_listing <- function(df) {
-    has_unit <- unit_var %in% names(df)
-
-    col_labels <- if (has_unit) {
-      vapply(sort(unique(df[[param_var]])), function(p) {
-        u <- unique(df[[unit_var]][df[[param_var]] == p])
-        u <- u[!is.na(u)][1]
-        if (!is.na(u) && nchar(u) > 0) paste0(p, " (", u, ")") else p
-      }, character(1))
-    } else {
-      sort(unique(df[[param_var]]))
-    }
+    col_labels <- .pkpl_column_labels(df, param_var, unit_var)
 
     wide <- df %>%
       dplyr::mutate(
@@ -94,8 +92,13 @@ l_pkpl01 <- function(
         names_from  = dplyr::all_of(param_var),
         values_from = ".val_fmt",
         # When a subject has multiple rows for the same PARAM (e.g. multi-
-        # interval ADPP), take the first value rather than creating list-columns.
-        values_fn   = dplyr::first,
+        # interval ADPP), take one value rather than creating list-columns --
+        # the first that is actually present.  `dplyr::first` returned a leading
+        # NA even when a later dose profile had a value, so the listing showed a
+        # blank cell for a subject the summary table counted and averaged.  That
+        # is routine for ratios: a ratio is missing for any profile where either
+        # side could not be computed, and the first profile is often one of them.
+        values_fn   = .first_present,
         values_fill = NA_real_
       )
 
@@ -130,39 +133,74 @@ l_pkpl01 <- function(
   split_and_apply(data, listgroup_vars, .make_wide_listing)
 }
 
-#' @describeIn l_pkpl01 Listing filtered to metabolite rows (pkpl01 M/P).
-#'   Uses the same METABFL -> PPCAT -> PARAM fallback as [t_pkpt03_MP_col()].
-#' @param ... Additional arguments forwarded to [l_pkpl01()].
-#' @export
-l_pkpl01_mp <- function(data, ...) {
-  l_pkpl01(filter_metabolite_rows(data, "l_pkpl01_mp"), ...)
+# Build the display headers in parameter order, using the first available unit.
+.pkpl_column_labels <- function(df, param_var, unit_var) {
+  params <- sort(unique(df[[param_var]]))
+  if (!unit_var %in% names(df)) return(params)
+  vapply(params, function(p) {
+    units <- unique(df[[unit_var]][df[[param_var]] == p])
+    unit <- units[!is.na(units)][1]
+    if (!is.na(unit) && nchar(unit) > 0) paste0(p, " (", unit, ")") else p
+  }, character(1))
 }
 
-#' Individual Treatment Comparison Listing (pkpl04)
+#' @describeIn l_pkpl01 Listing of metabolite-to-parent ratios (pkpl01 M/P).
+#'   Displays the configured analyte ratios already present in ADPP, without
+#'   recalculating them. Defaults to splitting by `RATIO` and `PPSPEC`; varying
+#'   profile identifiers are retained too. Missing values remain blank and
+#'   summary-excluded records remain in the listing. See [t_pkpt03_MP_col()].
+#' @param ... Additional arguments forwarded to [l_pkpl01()].
+#' @export
+l_pkpl01_mp <- function(
+  data, listgroup_vars = c("RATIO", "PPSPEC"),
+  param_var = "PARAM", title = "Listing of Individual Metabolite/Parent Ratios",
+  value_var = "AVAL", unit_var = "AVALU", ...
+) {
+  data <- filter_ratio_rows(data, "l_pkpl01_mp", ref_type = "analyte", value_var = value_var)
+  listings <- l_pkpl01(
+    data,
+    listgroup_vars = union(listgroup_vars, .ratio_profile_vars(data)),
+    param_var = param_var, title = title,
+    value_var = value_var, unit_var = unit_var,
+    ...
+  )
+  lapply(listings, function(listing) {
+    cols <- intersect(as.character(unique(data[[param_var]])), names(listing))
+    var_labels(listing)[cols] <- paste0(var_labels(listing)[cols], " - Metabolite/Parent Ratio")
+    listing
+  })
+}
+
+#' Individual Treatment Ratio Listing (pkpl04)
 #'
-#' Produces a per-subject listing of individual PK parameter values organised
-#' for treatment comparison. Each listing page covers one PPCAT/PPSPEC
-#' combination. PK parameters become display columns (one column per PARAM value)
-#' and the rows are keyed by `TRT01A` and `USUBJID`.
+#' Produces a per-subject listing of the treatment ratios computed by
+#' **Parameter Selection > Ratios** during the NCA run. PK parameters become
+#' display columns (one column per PARAM value) and the rows are keyed by
+#' `TRT01A` and `USUBJID`.
 #'
 #' @details
-#' This listing shows the raw individual `AVAL` values from ADPP, not
-#' pre-computed ratios. If your ADPP contains NCA ratio parameters (e.g.
-#' metabolite-to-parent AUC ratios added via the aNCA ratio-calculation
-#' module), those parameters are displayed here just like any other PARAM row.
-#' The `_mp` suffix in the function name reflects its typical use with
-#' metabolite/parent ratio parameters, but no metabolite filtering is applied --
-#' all PARAM values in the data are included.
+#' Ratio rows are selected on the `" TO "` that `calculate_ratios()` writes into
+#' `PPANMETH`, and narrowed to those whose reference group is *not* the analyte
+#' column: treatment, dose profile, route or specimen references. Analyte
+#' references are omitted here and displayed by [l_pkpl01_mp()] instead.
 #'
-#' Note: `PARAM` is listed in `grouping_vars` so that it participates in the
-#' `pivot_wider` step (each unique PARAM value becomes a column header). After
-#' pivoting, `PARAM` is no longer a row-key column; the actual listing keys
-#' are `TRT01A` and `USUBJID`.
+#' Ratios are computed as part of the NCA run, so a ratio added afterwards does
+#' not appear until the run is repeated. When the data holds no treatment ratios
+#' the listing errors with that instruction rather than silently listing raw
+#' parameter values, which are not ratios.
 #'
 #' @inheritParams l_pkpl01
+#' @param listgroup_vars Columns used to split the output into separate listings.
+#'   Defaults to the derived `RATIO` label, `PPCAT` and `PPSPEC`. Unlike a
+#'   metabolite/parent ratio, a treatment ratio compares one group against another
+#'   *within* an analyte, so its `RATIO` label ("DOSE 2 / DOSE 1") does not name
+#'   the analyte. `PPCAT` has to split the listings as well, or the parent's and
+#'   the metabolite's ratios share a column and `pivot_wider` keeps one of them.
+#'   Varying study, dose, visit, route and interval identifiers also split the
+#'   listings so distinct profiles are retained.
 #' @param grouping_vars Columns used to identify row keys before pivoting.
-#'   `PARAM` must be included so it is spread into display columns.
-#'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
+#'   The parameter column is supplied separately by `param_var`.
+#'   Default: `c("TRT01A", "USUBJID")`.
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
 #'
 #' @return A named list of `listing_df` objects.
@@ -177,9 +215,19 @@ l_pkpl01_mp <- function(data, ...) {
 #' @export
 l_pkpl04_mp <- function(
   data,
-  grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
-  title         = "Listing of Individual PK Parameter Values by Treatment",
+  listgroup_vars = c("RATIO", "PPCAT", "PPSPEC"),
+  grouping_vars = c("TRT01A", "USUBJID"),
+  title         = "Listing of Individual Treatment Ratios",
+  value_var     = "AVAL",
   ...
 ) {
-  l_pkpl01(data, grouping_vars = grouping_vars, title = title, ...)
+  data <- filter_ratio_rows(data, "l_pkpl04_mp", ref_type = "other", value_var = value_var)
+  l_pkpl01(
+    data,
+    listgroup_vars = union(listgroup_vars, .ratio_profile_vars(data)),
+    grouping_vars = grouping_vars,
+    title = title,
+    value_var = value_var,
+    ...
+  )
 }
