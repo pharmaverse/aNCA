@@ -95,6 +95,8 @@ readers <- list(
 #' select a specific version by index or comment. The full versioned
 #' object is attached as attribute `"versioned"` so callers can offer
 #' version selection.
+#' Empty optional units tables are restored as `NULL`, preserving the default
+#' units when settings are replayed or used to generate an R script.
 #'
 #' @param path Character string with path to the settings YAML file.
 #' @param version Version selector for versioned settings files.
@@ -148,7 +150,7 @@ read_settings <- function(path, version = 1L) {
   }
 
   obj$slope_rules <- .normalize_optional_df(obj$slope_rules)
-  obj$settings$units <- .convert_list_to_df(obj$settings$units)
+  obj$settings$units <- .normalize_optional_df(obj$settings$units)
   obj$settings$int_parameters <- .normalize_optional_df(obj$settings$int_parameters)
   obj$filters <- .convert_filter_values(obj$filters)
   obj$settings$ratio_table <- .normalize_optional_df(obj$settings$ratio_table)

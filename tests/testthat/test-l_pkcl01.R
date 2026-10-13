@@ -325,6 +325,9 @@ describe("l_pkcl02_uri", {
     result <- l_pkcl02_uri(uri_data)
     listing_df <- result[[1]]
     expect_equal(nrow(listing_df), 2)
+    expect_equal(as.character(listing_df$USUBJID), c("S1", "S2"))
+    expect_equal(as.numeric(listing_df$AVAL), c(1.2, 3.4))
+    expect_equal(as.numeric(listing_df$VOLUME), c(100, 120))
   })
 
   it("matches urine specimens case-insensitively", {
@@ -363,11 +366,39 @@ describe("l_pkcl02_uri", {
     expect_type(result, "list")
   })
 
-  it("warns when PCSPEC column is absent and skips the urine filter", {
+  it("requires specimen information instead of treating unknown rows as urine", {
     data_no_pcspec <- uri_data[, setdiff(names(uri_data), "PCSPEC"), drop = FALSE]
-    expect_warning(
+    expect_error(
       l_pkcl02_uri(data_no_pcspec),
       "PCSPEC.*column not found"
     )
+  })
+
+  it("keeps all case variants and drops missing and non-urine specimens", {
+    mixed <- uri_data[rep(1, 6), ]
+    mixed$PCSPEC <- c("URINE", "Urine", "urine", "SERUM", NA, "")
+    mixed$USUBJID <- paste0("S", seq_len(6))
+    mixed$AVAL <- seq_len(6)
+    result <- l_pkcl02_uri(mixed, listgroup_vars = "PARAM")[[1]]
+    expect_equal(as.character(result$USUBJID), c("S1", "S2", "S3"))
+    expect_equal(as.numeric(result$AVAL), 1:3)
+  })
+
+  it("explains empty input and missing specimen values", {
+    expect_error(l_pkcl02_uri(uri_data[FALSE, ]), "no urine concentration data found")
+    missing_specimens <- uri_data
+    missing_specimens$PCSPEC <- c(NA, "", NA, "")
+    expect_error(l_pkcl02_uri(missing_specimens), "no urine concentration data found")
+  })
+
+  it("preserves legacy urine calls without allowing the filter to be overridden", {
+    expected <- l_pkcl02_uri(uri_data)
+    expect_equal(l_pkcl02_uri(uri_data, urine_specs = c("Urine", "urine")), expected)
+    expect_equal(l_pkcl02_uri(uri_data, urine_specs = character()), expected)
+    expect_warning(
+      actual <- l_pkcl02_uri(uri_data, urine_specs = c("URINE", "SERUM", NA)),
+      "urine_specs is ignored", class = "tlg_warning"
+    )
+    expect_equal(actual, expected)
   })
 })
