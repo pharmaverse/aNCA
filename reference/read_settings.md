@@ -5,7 +5,9 @@ versioned format (top-level `current` key). For versioned files the most
 recent version is returned by default. Use `version` to select a
 specific version by index or comment. The full versioned object is
 attached as attribute `"versioned"` so callers can offer version
-selection.
+selection. Empty optional units tables are restored as `NULL`,
+preserving the default units when settings are replayed or used to
+generate an R script.
 
 ## Usage
 

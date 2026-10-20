@@ -122,6 +122,14 @@ function default; multi-select choices must not include a blank value.
   # - '.colnames' keyword will pull the choices from the data column names
   # - '$COLUMN_NAME' keyword will pull choices from values of a specific column
   choices:
+  # optional: another option selecting the column to read choices from;
+  # changing it resets this selector; choices above supplies the fallback column
+  choices_from:
+  # optional: restrict choices to the metabolite rows used by metabolite outputs
+  metabolites_only:
+  # optional: text shown when the selection is empty (e.g. "All parameters");
+  # this is picker display text, not an additional selectable value
+  placeholder:
   # whether to allow for multiple values to be selected  
   multiple:
   # default value to be provided in the field;
@@ -172,6 +180,14 @@ entry.
 ```
 
 #### Examples
+
+Plain text guidance can be placed between widgets using a `.help_` key.
+Like group labels, these strings are displayed in the sidebar and are
+not passed to the TLG function:
+
+``` yaml
+.help_columns: "Leave Displayed parameters empty to show all parameters."
+```
 
 For examples of TLG definition implementations, please see
 [tlg.yaml](https://github.com/pharmaverse/aNCA/blob/main/inst/shiny/tlg.yaml)

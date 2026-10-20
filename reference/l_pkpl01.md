@@ -18,7 +18,8 @@ l_pkpl01(
   unit_var = "AVALU",
   title = "Listing of Individual PK Parameters",
   subtitle = NULL,
-  footnote = NULL
+  footnote = NULL,
+  param_filter = NULL
 )
 
 l_pkpl01_mp(data, ...)
@@ -66,6 +67,11 @@ l_pkpl01_mp(data, ...)
 - footnote:
 
   Footnote string.
+
+- param_filter:
+
+  Optional character vector of values from `param_var` to display as
+  columns. `NULL` or an empty vector (default) keeps all parameters.
 
 - ...:
 

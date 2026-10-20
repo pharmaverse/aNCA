@@ -13,7 +13,7 @@ and the rows are keyed by TRT01A and USUBJID."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9208</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9209</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,7 +77,7 @@ and the rows are keyed by <code>TRT01A</code> and <code>USUBJID</code>.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">l_pkpl04_mp</span><span class="op">(</span></span>
 <span>  <span class="va">data</span>,</span>
-<span>  grouping_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PARAM"</span>, <span class="st">"TRT01A"</span>, <span class="st">"USUBJID"</span><span class="op">)</span>,</span>
+<span>  grouping_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRT01A"</span>, <span class="st">"USUBJID"</span><span class="op">)</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Listing of Individual PK Parameter Values by Treatment"</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -93,8 +93,8 @@ and the rows are keyed by <code>TRT01A</code> and <code>USUBJID</code>.</p>
 
 <dt id="arg-grouping-vars">grouping_vars<a class="anchor" aria-label="anchor" href="#arg-grouping-vars"></a></dt>
 <dd><p>Columns used to identify row keys before pivoting.
-<code>PARAM</code> must be included so it is spread into display columns.
-Default: <code>c("PARAM", "TRT01A", "USUBJID")</code>.</p></dd>
+The parameter column is supplied separately by <code>param_var</code>.
+Default: <code>c("TRT01A", "USUBJID")</code>.</p></dd>
 
 
 <dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
@@ -118,10 +118,6 @@ module), those parameters are displayed here just like any other PARAM row.
 The <code>_mp</code> suffix in the function name reflects its typical use with
 metabolite/parent ratio parameters, but no metabolite filtering is applied –
 all PARAM values in the data are included.</p>
-<p>Note: <code>PARAM</code> is listed in <code>grouping_vars</code> so that it participates in the
-<code>pivot_wider</code> step (each unique PARAM value becomes a column header). After
-pivoting, <code>PARAM</code> is no longer a row-key column; the actual listing keys
-are <code>TRT01A</code> and <code>USUBJID</code>.</p>
     </div>
 
     <div class="section level2">

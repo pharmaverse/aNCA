@@ -11,7 +11,7 @@ column per PARAM value) and the rows are keyed by `TRT01A` and
 ``` r
 l_pkpl04_mp(
   data,
-  grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
+  grouping_vars = c("TRT01A", "USUBJID"),
   title = "Listing of Individual PK Parameter Values by Treatment",
   ...
 )
@@ -25,9 +25,9 @@ l_pkpl04_mp(
 
 - grouping_vars:
 
-  Columns used to identify row keys before pivoting. `PARAM` must be
-  included so it is spread into display columns. Default:
-  `c("PARAM", "TRT01A", "USUBJID")`.
+  Columns used to identify row keys before pivoting. The parameter
+  column is supplied separately by `param_var`. Default:
+  `c("TRT01A", "USUBJID")`.
 
 - title:
 
@@ -51,11 +51,6 @@ module), those parameters are displayed here just like any other PARAM
 row. The `_mp` suffix in the function name reflects its typical use with
 metabolite/parent ratio parameters, but no metabolite filtering is
 applied – all PARAM values in the data are included.
-
-Note: `PARAM` is listed in `grouping_vars` so that it participates in
-the `pivot_wider` step (each unique PARAM value becomes a column
-header). After pivoting, `PARAM` is no longer a row-key column; the
-actual listing keys are `TRT01A` and `USUBJID`.
 
 ## Examples
 

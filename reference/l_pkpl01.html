@@ -11,7 +11,7 @@ listgroup_vars (default: PPCAT x PPSPEC)."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9208</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9209</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,7 +81,8 @@ same engine as <code><a href="l_pkcl01.html">l_pkcl01()</a></code>.  Returns one
 <span>  unit_var <span class="op">=</span> <span class="st">"AVALU"</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Listing of Individual PK Parameters"</span>,</span>
 <span>  subtitle <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  footnote <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  footnote <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  param_filter <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">l_pkpl01_mp</span><span class="op">(</span><span class="va">data</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -130,6 +131,11 @@ syntax. Defaults to the unique values of <code>listgroup_vars</code>.</p></dd>
 
 <dt id="arg-footnote">footnote<a class="anchor" aria-label="anchor" href="#arg-footnote"></a></dt>
 <dd><p>Footnote string.</p></dd>
+
+
+<dt id="arg-param-filter">param_filter<a class="anchor" aria-label="anchor" href="#arg-param-filter"></a></dt>
+<dd><p>Optional character vector of values from <code>param_var</code> to
+display as columns. <code>NULL</code> or an empty vector (default) keeps all parameters.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

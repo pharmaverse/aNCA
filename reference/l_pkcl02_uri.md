@@ -1,7 +1,7 @@
 # Urine Concentration and Volume Listing (pkcl02)
 
-Filters ADNCA to urine specimen rows (where `PCSPEC %in% urine_specs`)
-then delegates to
+Filters ADNCA to urine specimen rows (`PCSPEC == "URINE"`, ignoring
+case) then delegates to
 [`l_pkcl01()`](https://pharmaverse.github.io/aNCA/reference/l_pkcl01.md)
 with VOLUME and VOLUMEU added to the displayed columns when those
 columns are present in the data.
@@ -26,14 +26,13 @@ l_pkcl02_uri(
 
 - urine_specs:
 
-  Character vector of specimen type values to keep, matched
-  case-insensitively against `PCSPEC`. Default: `c("URINE")`.
+  Retained for compatibility with older scripts; ignored. The listing
+  always includes only urine. Non-urine values trigger a warning.
 
 - listgroup_vars:
 
   Character vector of columns used to split output into separate
-  listings. Default: `c("PARAM", "PCSPEC")`. When `PCSPEC` is absent
-  from `data`, it is silently removed from this vector.
+  listings. Default: `c("PARAM", "PCSPEC")`.
 
 - displaying_vars:
 
@@ -49,6 +48,12 @@ l_pkcl02_uri(
 ## Value
 
 A named list of `listing_df` objects.
+
+## Details
+
+`PCSPEC` is required to identify urine records. Missing specimen values
+are excluded. An error explains when `PCSPEC` is absent or no urine
+records remain.
 
 ## Examples
 
