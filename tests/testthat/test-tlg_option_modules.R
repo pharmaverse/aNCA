@@ -152,6 +152,31 @@ describe("tlg_option_text_server", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_option_select_ui", {
+  it("shows the empty-selection label without adding a bulk-select choice", {
+    df <- shiny::reactive(data.frame(PARAM = c("Cmax", "AUC", "Cmax")))
+    opt_def <- list(choices = "$PARAM", placeholder = "All parameters", multiple = TRUE)
+    html <- as.character(shiny::isolate(tlg_option_select_ui("m-param_filter", opt_def, df)))
+
+    expect_match(html, 'data-none-selected-text="All parameters"', fixed = TRUE)
+    expect_match(html, 'data-actions-box="true"', fixed = TRUE)
+    expect_match(html, '<option value="Cmax">Cmax</option>', fixed = TRUE)
+    expect_match(html, '<option value="AUC">AUC</option>', fixed = TRUE)
+    expect_false(grepl('<option value=""', html, fixed = TRUE))
+    expect_false(grepl(" selected[ =>]", html))
+  })
+
+  it("offers no parent parameters when a metabolite-only dataset is empty", {
+    df <- shiny::reactive(data.frame(PPCAT = "Drug", PARAM = "Cmax", AVAL = 5))
+    opt_def <- list(
+      choices = "$PARAM", metabolites_only = TRUE,
+      placeholder = "All parameters", multiple = TRUE
+    )
+    html <- as.character(shiny::isolate(tlg_option_select_ui("m-param_filter", opt_def, df)))
+    expect_match(html, 'data-none-selected-text="All parameters"')
+    expect_false(grepl('<option value=""', html, fixed = TRUE))
+    expect_false(grepl('value="Cmax"', html, fixed = TRUE))
+  })
+
   it("returns a searchable single picker with a blank choice", {
     opt_def <- list(
       label    = "Select",

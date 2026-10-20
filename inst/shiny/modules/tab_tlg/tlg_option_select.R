@@ -53,6 +53,9 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
   label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
 
   conc_df <- if (is.data.frame(data())) data() else data()$conc$data
+  if (isTRUE(opt_def$metabolites_only)) {
+    conc_df <- aNCA:::filter_metabolite_rows(conc_df, allow_empty = TRUE)
+  }
   choices <- {
     if (isTRUE(opt_def$choices == ".colnames")) {
       names(conc_df)
@@ -80,22 +83,14 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
     }
   }
 
-  selected <- {
-    if (!is.null(opt_def$default)) {
-      if (isTRUE(opt_def$default == ".all")) {
-        choices
-      } else if (isTRUE(opt_def$default == ".pknca_groups")) {
-        # Default row-stratification = the PKNCA grouping variables (minus
-        # USUBJID) that are actually present in this table's dataset.  When none
-        # are available (e.g. before NCA has run) fall back to nothing selected,
-        # which lets the TLG function use its own default.
-        intersect(grouping_vars(), names(conc_df))
-      } else {
-        opt_def$default
-      }
-    } else {
-      ""
-    }
+  selected <- opt_def$default %||% ""
+  if (isTRUE(selected == ".all")) {
+    selected <- choices
+  } else if (isTRUE(selected == ".pknca_groups")) {
+    # Default row-stratification = the PKNCA grouping variables (minus
+    # USUBJID) that are actually present in this table's dataset. When none
+    # are available, leave the selection empty to use the function default.
+    selected <- intersect(grouping_vars(), names(conc_df))
   }
 
   multiple <- isTRUE(opt_def$multiple)
@@ -109,6 +104,7 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
     choices = if (multiple) choices else c("", choices),
     multiple = multiple,
     options = list(
+      `none-selected-text` = opt_def$placeholder %||% "Nothing selected",
       `live-search` = TRUE,
       `actions-box` = multiple,
       `selected-text-format` = "count > 3"
