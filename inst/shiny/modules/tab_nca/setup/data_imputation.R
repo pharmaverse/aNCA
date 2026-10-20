@@ -137,7 +137,7 @@ data_imputation_ui <- function(id) {
         input_switch(
           id = ns("drop_end_conc"),
           label = "Drop End Concentration",
-          value = FALSE
+          value = TRUE
         )
       ),
       column(
