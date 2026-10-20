@@ -9,7 +9,8 @@ update_main_intervals(
   parameter_selections = NULL,
   int_parameters = NULL,
   start_impute = TRUE,
-  blq_imputation_rule = NULL
+  blq_imputation_rule = NULL,
+  drop_end_conc = FALSE
 )
 }
 \arguments{
@@ -29,6 +30,13 @@ imputation rule using PKNCA format. The list should either contain three element
 Each element can be a numeric value (substituting the BLQ value), or a string such as
 \code{"drop"} (ignores the value) or \code{"keep"} (keeps the value as 0). Default is NULL,
 which does not specify any BLQ imputation in any interval.}
+
+\item{drop_end_conc}{Logical. If \code{TRUE}, the concentration measured exactly at
+the end of each main interval is dropped before regular (non-partial) parameter
+calculations via the \code{end_conc_drop} imputation. This does not affect
+interval/partial parameter rows (\code{type_interval == "manual"}) nor the last dose
+profile per concentration group, whose end-boundary point is a genuine terminal
+sample rather than a next-dose C0. Default \code{FALSE}.}
 }
 \value{
 An updated PKNCAdata object with parameter intervals based on user selections.
