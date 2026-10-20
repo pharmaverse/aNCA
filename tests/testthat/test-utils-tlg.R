@@ -1,5 +1,64 @@
 # Tests for shared TLG helpers in R/utils-tlg.R.
 
+describe("filter_summary_excluded", {
+  it("drops PKSUMXF == 'Y' rows (ADNCA summary exclusion)", {
+    df <- data.frame(
+      x = 1:5,
+      PKSUMXF = c("", "Y", "", "Y", NA_character_),
+      stringsAsFactors = FALSE
+    )
+    result <- filter_summary_excluded(df, flag = "PKSUMXF")
+    expect_equal(result$x, c(1L, 3L, 5L))
+  })
+
+  it("drops PPSUMXF == 'Y' rows (ADPP summary exclusion)", {
+    df <- data.frame(
+      x = 1:4,
+      PPSUMXF = c("", "Y", "", "Y"),
+      stringsAsFactors = FALSE
+    )
+    result <- filter_summary_excluded(df, flag = "PPSUMXF")
+    expect_equal(result$x, c(1L, 3L))
+  })
+
+  it("is a no-op when no exclusion-flag column is present", {
+    df <- data.frame(x = 1:3)
+    expect_equal(filter_summary_excluded(df, flag = "PKSUMXF")$x, 1:3)
+  })
+
+  it("uses only PPSUMXF for ADPP summaries when both flags are present", {
+    df <- data.frame(
+      x = 1:4,
+      PKSUMXF = c("Y", "",  "",  ""),
+      PPSUMXF = c("",  "Y", "",  ""),
+      stringsAsFactors = FALSE
+    )
+    expect_equal(filter_summary_excluded(df, flag = "PPSUMXF")$x, c(1L, 3L, 4L))
+  })
+
+  it("uses only PKSUMXF for ADNCA summaries when both flags are present", {
+    df <- data.frame(
+      x = 1:4,
+      PKSUMXF = c("Y", "",  "",  ""),
+      PPSUMXF = c("",  "Y", "",  ""),
+      stringsAsFactors = FALSE
+    )
+    expect_equal(filter_summary_excluded(df, flag = "PKSUMXF")$x, c(2L, 3L, 4L))
+  })
+
+  it("preserves column label attributes across the row filter", {
+    df <- data.frame(
+      AVAL = c(1, 2, 3),
+      PKSUMXF = c("", "Y", ""),
+      stringsAsFactors = FALSE
+    )
+    attr(df$AVAL, "label") <- "Analysis Value"
+    result <- filter_summary_excluded(df, flag = "PKSUMXF")
+    expect_equal(attr(result$AVAL, "label"), "Analysis Value")
+    expect_equal(nrow(result), 2)
+  })
+})
+
 describe(".select_stats", {
   # A minimal flat summary table: two key columns + a full stat block.
   flat <- data.frame(
