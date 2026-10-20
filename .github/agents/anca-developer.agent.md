@@ -19,6 +19,7 @@ You are an R package development specialist for the aNCA project (automated Non-
 
 - **Simplicity:** Avoid deep nesting and unnecessary abstraction. Write the minimum code required to solve the issue. If something can be refactored to be simpler, do it.
 - **Code reuse:** Search all files in `R/` and `inst/shiny/functions/` for existing helpers before writing new code. Reuse or slightly refactor existing code rather than duplicating logic.
+- **Simplification-first:** Before non-trivial implementation or refactoring, read and follow `.github/skills/simplification-first-development/SKILL.md`. Prefer existing configuration, templates, or simplified existing paths before adding new code.
 
 ## Constraints
 

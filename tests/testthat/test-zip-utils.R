@@ -4,6 +4,30 @@ source(
   local = TRUE
 )
 
+test_export_progress <- list(
+  set = function(...) NULL,
+  inc = function(...) NULL
+)
+
+test_export_session <- function(results, send_notification = function(...) NULL) {
+  list(
+    userData = list(
+      results = results,
+      exploration_custom_names = function() character(0)
+    ),
+    sendNotification = send_notification
+  )
+}
+
+test_export_input <- function(res_tree, table_formats = "csv") {
+  list(
+    res_tree = res_tree,
+    plot_formats = character(0),
+    table_formats = table_formats,
+    slide_formats = character(0)
+  )
+}
+
 describe(".build_exploration_allowlist", {
   it("returns defaults when no custom names exist", {
     result <- .build_exploration_allowlist(
@@ -43,6 +67,219 @@ describe(".build_exploration_allowlist", {
       custom_names = custom
     )
     expect_equal(result, character(0))
+  })
+})
+
+describe("prepare_export_files validation gate", {
+  it("exports selected custom analysis groups but blocks an unselected column", {
+    target_dir <- tempfile("anca-custom-export-")
+    dir.create(target_dir)
+    on.exit(unlink(target_dir, recursive = TRUE), add = TRUE)
+    df <- data.frame(STUDYID = "S1", DOSFRM = "TABLET", CUSTOM = 42)
+    session <- test_export_session(list(CDISC = list(adpp = df, adnca = df)))
+    input <- test_export_input(c("adpp", "adnca"))
+    prepare_export_files(
+      target_dir, res_nca = NULL, settings = NULL,
+      grouping_vars = c("DOSFRM", "CUSTOM"), input = input,
+      session = session, progress = test_export_progress
+    )
+    for (dataset in c("adpp", "adnca")) {
+      actual <- read.csv(file.path(target_dir, "CDISC", paste0(dataset, ".csv")))
+      expect_equal(actual$DOSFRM, "TABLET")
+      expect_equal(actual$CUSTOM, 42)
+    }
+
+    blocked_dir <- tempfile("anca-blocked-export-")
+    dir.create(blocked_dir)
+    on.exit(unlink(blocked_dir, recursive = TRUE), add = TRUE)
+    expect_error(
+      prepare_export_files(
+        blocked_dir, res_nca = NULL, settings = NULL,
+        grouping_vars = "DOSFRM", input = input,
+        session = session, progress = test_export_progress
+      ),
+      class = "export_validation_error"
+    )
+    expect_length(list.files(blocked_dir, recursive = TRUE), 0)
+  })
+
+  it("blocks all selected artifacts when one selected CDISC dataset is invalid", {
+    # SAT evidence for the 21 CFR §11.10(a) pre-export integrity control:
+    # an invalid selected artifact must prevent every selected artifact from
+    # being written, including otherwise-valid outputs.
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+
+    session <- test_export_session(list(
+      nca_results = list(nca_pkparam = data.frame(AVAL = 12.3)),
+      CDISC = list(adnca = data.frame(
+        STUDYID = "SAT-001",
+        AVAL = "not-numeric",
+        stringsAsFactors = FALSE
+      )),
+      exploration = list()
+    ))
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input(c("nca_pkparam", "adnca")),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    unlink(target_dir, recursive = TRUE)
+  })
+
+  it("blocks selected CDISC exports with invalid data before writing files", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+    notifications <- character(0)
+
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(STUDYID = 123, stringsAsFactors = FALSE)),
+      exploration = list()
+    ), send_notification = function(type, payload) {
+      notifications <<- c(notifications, as.character(payload$html))
+    })
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("adnca"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    expect_true(any(grepl("Save blocked", notifications)))
+    unlink(target_dir, recursive = TRUE)
+  })
+
+  it("blocks selected outputs with the wrong object kind before writing files", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+
+    session <- test_export_session(list(
+      nca_results = list(nca_pkparam = ggplot2::ggplot()),
+      exploration = list()
+    ))
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("nca_pkparam"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_equal(list.files(target_dir, recursive = TRUE), character(0))
+    unlink(target_dir, recursive = TRUE)
+  })
+
+  it("blocks CDISC exports with columns outside the approved schema", {
+    target_dir <- tempfile("anca-export-")
+    dir.create(target_dir)
+    notifications <- character(0)
+
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(NOTINMETA = "x", stringsAsFactors = FALSE)),
+      exploration = list()
+    ), send_notification = function(type, payload) {
+      notifications <<- c(notifications, as.character(payload$html))
+    })
+
+    expect_error(
+      prepare_export_files(
+        target_dir = target_dir,
+        res_nca = NULL,
+        settings = NULL,
+        grouping_vars = character(0),
+        input = test_export_input("adnca"),
+        session = session,
+        progress = test_export_progress
+      ),
+      "Export validation failed"
+    )
+
+    expect_true(any(grepl("Save blocked", notifications)))
+    unlink(target_dir, recursive = TRUE)
+  })
+})
+
+describe("selected export artifact validation", {
+  it("blocks an R-script export without serialisable raw data", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_export_artifacts(
+      input = test_export_input("r_script"), session = session, res_nca = NULL
+    )
+    row <- findings[findings$Output == "input_data.rds", ]
+    expect_equal(row$Severity, "error")
+    expect_true(export_validation_blocks_save(findings))
+  })
+
+  it("blocks a settings export that cannot prepare its settings payload", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_export_artifacts(
+      input = test_export_input("settings_file"), session = session, res_nca = NULL
+    )
+    row <- findings[findings$Output == "settings.yaml", ]
+    expect_equal(row$Check, "settings_structure")
+    expect_true(export_validation_blocks_save(findings))
+  })
+
+  it("blocks selected slides without NCA results or an output format", {
+    session <- test_export_session(list(exploration = list()))
+    findings <- .validate_export_artifacts(
+      input = test_export_input("results_slides", table_formats = character(0)),
+      session = session,
+      res_nca = NULL
+    )
+    expect_true(all(findings$Severity == "error"))
+    expect_true(all(c("slide_input", "slide_format") %in% findings$Check))
+  })
+
+  it("validates selected pre-specifications and session information", {
+    session <- test_export_session(list(
+      CDISC = list(adnca = data.frame(STUDYID = "S1", stringsAsFactors = FALSE)),
+      exploration = list()
+    ))
+    findings <- .validate_export_artifacts(
+      input = test_export_input(c("adnca", "session_info")),
+      session = session, res_nca = NULL
+    )
+    expect_equal(nrow(findings), 0)
+  })
+})
+
+describe("save_table_format", {
+  it("propagates XPT writer failures so export cannot silently continue", {
+    mockery::stub(
+      save_table_format,
+      "haven::write_xpt",
+      function(...) stop("xpt failed", call. = FALSE)
+    )
+
+    expect_error(
+      save_table_format(data.frame(x = 1), tempfile("table-"), formats = "xpt"),
+      "xpt failed"
+    )
   })
 })
 
@@ -129,9 +366,10 @@ describe("get_dose_esc_results", {
     # This mirrors the real app call in prepare_export_files() using the analyte
     # grouping column. Previously, groups were derived from intervals (which lacks
     # the analyte column), causing empty ind_params for metabolite groups.
+    conc_nca <- PKNCA::as_PKNCAconc(FIXTURE_PKNCA_RES)
     group_by_vars <- setdiff(
-      dplyr::group_vars(FIXTURE_PKNCA_RES),
-      FIXTURE_PKNCA_RES$data$conc$columns$subject
+      dplyr::group_vars(conc_nca),
+      conc_nca$columns$subject
     )
     res <- get_dose_esc_results(
       o_nca              = FIXTURE_PKNCA_RES,
@@ -158,9 +396,10 @@ describe("get_dose_esc_results", {
     urine_rows$PCSPEC <- "URINE"
     fixture_extra$data$conc$data <- rbind(FIXTURE_PKNCA_RES$data$conc$data, urine_rows)
 
+    conc_nca <- PKNCA::as_PKNCAconc(FIXTURE_PKNCA_RES)
     group_by_vars <- setdiff(
-      dplyr::group_vars(FIXTURE_PKNCA_RES),
-      FIXTURE_PKNCA_RES$data$conc$columns$subject
+      dplyr::group_vars(conc_nca),
+      conc_nca$columns$subject
     )
     n_result_groups <- nrow(unique(FIXTURE_PKNCA_RES$result[, c(group_by_vars, "ATPTREF")]))
 
@@ -171,5 +410,273 @@ describe("get_dose_esc_results", {
       boxplot_parameters = character(0)
     )
     expect_equal(length(res), n_result_groups)
+  })
+})
+
+# Format handling added for the bulk TLG export (issue #1344): PDF for ggplots, XLSX for
+# tables, and raster output for plotly objects that carry their source ggplot.
+
+describe("save_ggplot_format", {
+  gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+
+  it("writes a PDF when asked", {
+    d <- withr::local_tempdir()
+    save_ggplot_format(gg, file.path(d, "p"), "pdf")
+    expect_true(file.exists(file.path(d, "p.pdf")))
+  })
+})
+
+describe("save_table_format", {
+  it("writes an XLSX when asked", {
+    d <- withr::local_tempdir()
+    save_table_format(head(mtcars), file.path(d, "t"), "xlsx")
+    expect_true(file.exists(file.path(d, "t.xlsx")))
+  })
+
+  it("writes an XLSX from an rlistings listing_df, which is not a plain data.frame", {
+    skip_if_not_installed("rlistings")
+    d <- withr::local_tempdir()
+    lst <- rlistings::as_listing(data.frame(a = 1:3, b = letters[1:3]), key_cols = "a")
+    expect_no_error(save_table_format(lst, file.path(d, "l"), "xlsx"))
+    expect_true(file.exists(file.path(d, "l.xlsx")))
+  })
+})
+
+describe("save_plotly_format", {
+  gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+
+  it("renders PNG from the stashed source ggplot", {
+    d <- withr::local_tempdir()
+    save_plotly_format(aNCA:::.with_ggplot(plotly::ggplotly(gg), gg), file.path(d, "p"), "png")
+    expect_true(file.exists(file.path(d, "p.png")))
+    # Only what was asked for -- HTML drags in a multi-MB dependency folder per plot.
+    expect_false(file.exists(file.path(d, "p.html")))
+  })
+
+  it("falls back to HTML when there is no stashed ggplot to rasterise", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "png")
+    expect_false(file.exists(file.path(d, "p.png")))
+    # Never silently produce nothing: HTML is the only thing a bare plotly can yield.
+    expect_true(file.exists(file.path(d, "p.html")))
+  })
+
+  # saveWidget() inlines every dependency but does not reliably delete the library
+  # directory it staged them in, so the archive carried a full copy of plotly and jQuery
+  # per graph that no HTML file even referenced (#1344).
+  it("leaves no orphaned _files directory next to the HTML", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "html")
+    expect_true(file.exists(file.path(d, "p.html")))
+    expect_false(dir.exists(file.path(d, "p_files")))
+  })
+
+  it("writes a self-contained HTML, so dropping _files loses nothing", {
+    d <- withr::local_tempdir()
+    save_plotly_format(plotly::ggplotly(gg), file.path(d, "p"), "html")
+    html <- paste(readLines(file.path(d, "p.html"), warn = FALSE), collapse = "\n")
+    expect_false(grepl("<script[^>]+src=\"p_files/", html))
+  })
+})
+
+describe("save_ggplot_format: html", {
+  it("cleans up the widget library directory for ggplot input too", {
+    d <- withr::local_tempdir()
+    gg <- ggplot2::ggplot(mtcars, ggplot2::aes(wt, mpg)) + ggplot2::geom_point()
+    save_ggplot_format(gg, file.path(d, "g"), "html")
+    expect_true(file.exists(file.path(d, "g.html")))
+    expect_false(dir.exists(file.path(d, "g_files")))
+  })
+})
+
+# .make_zip_filename gained a `suffix` argument so the TLG bulk download can reuse the
+# project/study naming instead of duplicating it (issue #1344).
+local({
+  library(shiny)
+  source(
+    file.path(system.file("shiny", package = "aNCA"), "modules", "tab_nca", "zip.R"),
+    local = TRUE
+  )
+},
+envir = parent.env(environment()))
+
+describe(".make_zip_filename", {
+  fake_session <- function(project = "", label = "") {
+    list(userData = list(
+      project_name    = function() project,
+      study_ids_label = function() label
+    ))
+  }
+
+  it("defaults to the project name with a .zip extension", {
+    expect_equal(.make_zip_filename(fake_session("MyProject")), "MyProject.zip")
+  })
+
+  it("honours a custom suffix so exports are distinguishable", {
+    expect_equal(
+      .make_zip_filename(fake_session("MyProject"), "_TLGs.zip"), "MyProject_TLGs.zip"
+    )
+  })
+
+  it("falls back to the study label, then to a bare NCA name", {
+    expect_equal(.make_zip_filename(fake_session("", "S123"), "_TLGs.zip"),
+                 "NCA_S123_TLGs.zip")
+    expect_equal(.make_zip_filename(fake_session("", ""), "_TLGs.zip"), "NCA_TLGs.zip")
+  })
+
+  it("replaces characters that are not safe in a file name", {
+    expect_equal(.make_zip_filename(fake_session("My Project/v2")), "My_Project_v2.zip")
+  })
+})
+
+# Rendered TLGs are exported through the app-wide "Export as ZIP" button rather than a
+# second control on the TLG tab (issue #1344).
+local({
+  library(shiny)
+  source(
+    file.path(system.file("shiny", package = "aNCA"), "modules", "tab_nca", "zip.R"),
+    local = TRUE
+  )
+},
+envir = parent.env(environment()))
+
+describe(".available_tlg_types", {
+  it("reports nothing before the TLG module has published anything", {
+    expect_length(.available_tlg_types(list(userData = list())), 0)
+  })
+
+  it("reports only the types that actually rendered", {
+    rendered <- list(a = list(type = "table"), b = list(type = "graph"))
+    sess <- list(userData = list(tlg_outputs = function(types = c("table", "listing", "graph")) {
+      Filter(function(e) e$type %in% types, rendered)
+    }))
+    expect_setequal(.available_tlg_types(sess), c("table", "graph"))
+  })
+})
+
+describe(".available_tree_items: TLG branch", {
+  it("omits the branch when no TLGs have rendered", {
+    expect_null(.available_tree_items(TRUE, character(), NULL, character())$TLGs)
+  })
+
+  it("offers only the nodes matching the rendered types", {
+    items <- .available_tree_items(TRUE, character(), NULL, c("table", "graph"))
+    expect_named(items$TLGs, c("tlg_tables", "tlg_graphs"))
+  })
+
+  it("offers the branch before NCA has run, without unlocking the NCA-only branches", {
+    # Concentration TLGs render off mapped ADNCA alone, so gating the branch on NCA left
+    # them on screen but impossible to tick in the dialog (#1344).
+    items <- .available_tree_items(FALSE, character(), NULL, c("graph", "listing"))
+    expect_named(items$TLGs, c("tlg_listings", "tlg_graphs"), ignore.order = TRUE)
+    expect_null(items$nca_results)
+    expect_null(items$CDISC)
+    expect_named(items$extras, c("settings_file", "session_info"))
+  })
+})
+
+describe(".clean_export_dir: TLG outputs", {
+  it("keeps TLG files, whose names come from the catalog and not from tree nodes", {
+    d <- withr::local_tempdir()
+    dir.create(file.path(d, "TLGs", "Tables", "xlsx"), recursive = TRUE)
+    writeLines("x", file.path(d, "TLGs", "Tables", "xlsx", "pkct01.xlsx"))
+    writeLines("x", file.path(d, "TLGs", "manifest.csv"))
+    writeLines("x", file.path(d, "junk.txt"))
+
+    .clean_export_dir(
+      d,
+      list(res_tree = "tlg_tables", table_formats = "xlsx",
+           plot_formats = "png", slide_formats = NULL),
+      NULL
+    )
+    expect_true(file.exists(file.path(d, "TLGs", "Tables", "xlsx", "pkct01.xlsx")))
+    expect_true(file.exists(file.path(d, "TLGs", "manifest.csv")))
+    expect_false(file.exists(file.path(d, "junk.txt")))
+  })
+})
+
+# Rendered TLGs get their own format controls rather than sharing the dataset ones, whose
+# defaults were wrong in both directions for TLGs: "html" was on (hundreds of MB of widgets
+# nobody asked for) and "xlsx" was not (tables could only ever be CSV) -- see #1344.
+describe("TLG export formats", {
+  it("defaults to PDF for graphs and XLSX for tables", {
+    # PDF is written as one multi-page document per TLG, so the default keeps a full order
+    # to a handful of files rather than one image per plot.  XLSX keeps the table default
+    # machine-readable; PDF is the filing format and is opt-in.
+    expect_equal(TLG_GRAPH_FORMATS_DEFAULT, "pdf")
+    expect_equal(TLG_TABLE_FORMATS_DEFAULT, "xlsx")
+    expect_true(all(c("png", "pdf") %in% TLG_GRAPH_FORMATS))
+    expect_false("html" %in% TLG_GRAPH_FORMATS_DEFAULT)
+    expect_false("pdf" %in% TLG_TABLE_FORMATS_DEFAULT)
+  })
+
+  it("offers pdf for tables and listings as well as graphs", {
+    # Asked for as a filing format.  It is in both lists, which is why the two cannot share
+    # one selectize: options are keyed by value, so a repeat is dropped from the second.
+    expect_true("pdf" %in% TLG_TABLE_FORMATS)
+    expect_true("pdf" %in% TLG_GRAPH_FORMATS)
+  })
+
+  it("keeps TLG nodes out of the dataset format checks", {
+    # They have their own controls now, so a TLG selection must not demand a dataset format.
+    expect_length(
+      .check_format_selections(
+        tree = "tlg_graphs", plot_formats = character(), table_formats = character(),
+        slide_formats = character(),
+        tlg_graph_formats = "png", tlg_table_formats = character()
+      ),
+      0
+    )
+  })
+
+  it("accepts the defaults for any TLG selection", {
+    expect_length(
+      .check_format_selections(
+        tree = TLG_NODES, plot_formats = "png", table_formats = "csv",
+        slide_formats = "qmd",
+        tlg_graph_formats = TLG_GRAPH_FORMATS_DEFAULT,
+        tlg_table_formats = TLG_TABLE_FORMATS_DEFAULT
+      ),
+      0
+    )
+  })
+
+  it("names the control that was emptied rather than reporting both", {
+    graphs_only <- .check_format_selections(
+      tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
+      slide_formats = "qmd", tlg_graph_formats = "png", tlg_table_formats = character()
+    )
+    expect_match(paste(graphs_only, collapse = " "), "no table format is chosen")
+    expect_no_match(paste(graphs_only, collapse = " "), "no graph format is chosen")
+
+    tables_only <- .check_format_selections(
+      tree = c("tlg_graphs", "tlg_tables"), plot_formats = "png", table_formats = "csv",
+      slide_formats = "qmd", tlg_graph_formats = character(), tlg_table_formats = "xlsx"
+    )
+    expect_match(paste(tables_only, collapse = " "), "no graph format is chosen")
+    expect_no_match(paste(tables_only, collapse = " "), "no table format is chosen")
+  })
+
+  it("does not demand a graph format for a tables-only selection", {
+    # The two controls are independent: an order with no graphs in it must still export.
+    expect_length(
+      .check_format_selections(
+        tree = c("tlg_tables", "tlg_listings"), plot_formats = "png",
+        table_formats = "csv", slide_formats = "qmd",
+        tlg_graph_formats = character(), tlg_table_formats = "xlsx"
+      ),
+      0
+    )
+  })
+
+  it("says nothing about TLGs when none are selected", {
+    expect_length(
+      .check_format_selections(
+        tree = "adnca", plot_formats = "png", table_formats = "csv",
+        slide_formats = "qmd",
+        tlg_graph_formats = character(), tlg_table_formats = character()
+      ),
+      0
+    )
   })
 })

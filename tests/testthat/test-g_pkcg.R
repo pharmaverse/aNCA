@@ -160,6 +160,216 @@ describe("g_pkcg01_log", {
   })
 })
 
+describe("summary-exclusion scoping (#1438)", {
+  # Flag every record of one subject for summary exclusion.
+  flagged <- adnca
+  flagged$PKSUMXF <- ""
+  excluded_subj <- unique(flagged$USUBJID)[1]
+  flagged$PKSUMXF[flagged$USUBJID == excluded_subj] <- "Y"
+
+  it("individual plots (g_pkcg01) keep summary-excluded subjects", {
+    baseline <- g_pkcg01_lin(adnca, plotly = FALSE)
+    with_flag <- g_pkcg01_lin(flagged, plotly = FALSE)
+    # One plot per subject; flagging must not drop the subject's plot (the bug
+    # this fixes removed it). id_plot names end in ".<USUBJID>".
+    expect_equal(length(with_flag), length(baseline))
+    expect_true(any(grepl(paste0("\\.", excluded_subj, "$"), names(with_flag))))
+  })
+
+  it("mean plots (g_pkcg03) drop summary-excluded records", {
+    # DOSNOP/DOSEA grouping: with only one subject flagged the mean plot still
+    # renders, but the flagged subject's rows must not reach the summary. Assert
+    # via the underlying filter so the check is independent of plot internals.
+    kept <- filter_summary_excluded(flagged, flag = "PKSUMXF")
+    expect_false(any(kept$USUBJID == excluded_subj))
+    expect_true(all(adnca$USUBJID %in% unique(c(kept$USUBJID, excluded_subj))))
+  })
+})
+
+# Shared exclusion fixture: one flagged concentration per subject, between included points.
+shape_profile <- adnca %>%
+  filter(USUBJID == "1") %>%
+  mutate(AVAL = AVAL + 1, PKSUMXF = c("", "Y", NA, "N", ""))
+shape_data <- bind_rows(shape_profile, mutate(shape_profile, USUBJID = "2", AVAL = AVAL * 2))
+included_shapes <- mutate(shape_data, PKSUMXF = "")
+shape_note <- "Crosses mark concentrations excluded from summary tables and mean plots."
+shape_variants <- c(
+  "g_pkcg01_lin", "g_pkcg01_log", "g_pkcg01_sbs",
+  "g_pkcg02_lin", "g_pkcg02_log", "g_pkcg02_sbs"
+)
+
+describe("concentration exclusion shapes in static plots (#1534)", {
+  for (variant in shape_variants) {
+    it(paste(variant, "changes only excluded point shapes in static plots"), {
+      fn <- get(variant)
+      baseline <- fn(included_shapes, plotly = FALSE, color_var = "USUBJID")
+      plots <- fn(shape_data, plotly = FALSE, color_var = "USUBJID", footnote = "Custom note")
+
+      expect_equal(names(plots), names(baseline))
+      for (i in seq_along(plots)) {
+        built <- ggplot2::ggplot_build(plots[[i]])
+        original <- ggplot2::ggplot_build(baseline[[i]])
+        points <- built$data[[2]]
+        expect_equal(nrow(points), nrow(original$data[[2]]))
+        expect_equal(as.numeric(points$shape), ifelse(points$x == 1, 4, 19))
+        expect_equal(built$data[[1]], original$data[[1]])
+        expect_equal(points[, setdiff(names(points), "shape")],
+                     original$data[[2]][, setdiff(names(points), "shape")])
+        expect_equal(plots[[i]]$labels$caption, paste("Custom note", shape_note, sep = "\n"))
+        expect_equal(plots[[i]]$theme$legend.position, baseline[[i]]$theme$legend.position)
+      }
+    })
+  }
+})
+
+describe("concentration exclusion shapes in interactive plots (#1534)", {
+  for (variant in shape_variants) {
+    it(paste(variant, "preserves Plotly traces and exported shapes"), {
+      fn <- get(variant)
+      baseline <- fn(included_shapes, color_var = "USUBJID")
+      widgets <- fn(shape_data, color_var = "USUBJID", footnote = "Custom note")
+
+      # Apart from the marker symbols, traces must retain their coordinates,
+      # colors, line groups, legend entries, and hover text exactly.
+      without_symbols <- function(traces) {
+        lapply(traces, function(trace) {
+          trace$marker$symbol <- NULL
+          trace
+        })
+      }
+      for (i in seq_along(widgets)) {
+        traces <- widgets[[i]]$x$data
+        expect_equal(without_symbols(traces), without_symbols(baseline[[i]]$x$data))
+        marker_traces <- Filter(function(trace) grepl("markers", trace$mode), traces)
+        expect_gt(length(marker_traces), 0)
+        for (trace in marker_traces) {
+          expect_equal(trace$marker$symbol, ifelse(trace$x == 1, "x-thin-open", "circle"))
+        }
+        rendered <- plotly::plotly_build(widgets[[i]])
+        annotations <- vapply(rendered$x$layout$annotations,
+                              function(annotation) annotation$text, character(1))
+        expect_true(paste("Custom note", shape_note, sep = "<br>") %in% annotations)
+
+        exported <- attr(widgets[[i]], "ggplot")
+        points <- ggplot2::ggplot_build(exported)$data[[2]]
+        expect_equal(as.numeric(points$shape), ifelse(points$x == 1, 4, 19))
+        expect_equal(exported$labels$caption, paste("Custom note", shape_note, sep = "\n"))
+      }
+    })
+  }
+})
+
+
+describe("concentration plot footer space (#1536)", {
+  for (variant in shape_variants) {
+    it(paste(variant, "keeps footnotes inside the widget and above the color legend"), {
+      fn <- get(variant)
+      for (note in list(NULL, "Custom note", "Line 1\nLine 2<br/>Line 3<br>Line 4")) {
+        widget <- fn(shape_data, color_var = "USUBJID", footnote = note)[[1]]
+        layout <- plotly::plotly_build(widget)$x$layout
+        footer <- Filter(function(x) grepl(shape_note, x$text, fixed = TRUE),
+                         layout$annotations)[[1]]
+        lines <- length(strsplit(footer$text, "\n|<br\\s*/?>")[[1]])
+        panel_height <- layout$height - layout$margin$t - layout$margin$b
+        # Coordinates below the panel, in pixels: leave room for ticks and axis title,
+        # then the full note, then the legend. Increasing notes must not shrink the panel.
+        footer_top <- -footer$y * panel_height - footer$yshift
+        footer_bottom <- footer_top + lines * 20
+        legend_top <- -layout$legend$y * panel_height
+        expect_equal(footer$xanchor, "left")
+        expect_equal(footer$yanchor, "top")
+        expect_gte(footer_top, 60)
+        expect_lt(footer_bottom, legend_top)
+        expect_lt(legend_top, layout$margin$b)
+        expect_gte(panel_height, 400)
+        expect_equal(widget$height, layout$height)
+        # SBS facet labels survive adding a footer.
+        if (grepl("sbs$", variant)) {
+          texts <- vapply(layout$annotations, `[[`, character(1), "text")
+          expect_true(all(c("Linear view", "Semilogarithmic view (Log10)") %in% texts))
+        }
+      }
+    })
+  }
+})
+
+describe("concentration exclusion shape flag handling", {
+  it("keeps normal points and footnotes when flags are missing or not Y", {
+    unflagged <- shape_data
+    unflagged$PKSUMXF <- NULL
+    # Supplemental flags and exclusion reasons must not select concentration shapes.
+    unflagged$PPSUMXF <- "Y"
+    unflagged$PKSUM1RS <- "Other reason"
+    not_excluded <- mutate(shape_data, PKSUMXF = rep(c("", NA, "N", "", NA), 2))
+    for (fn in list(pkcg01, pkcg02)) {
+      for (data in list(unflagged, not_excluded)) {
+        plots <- fn(data, plotly = FALSE, footnote = "Custom note")
+        for (plot in plots) {
+          points <- ggplot2::ggplot_build(plot)$data[[2]]
+          expect_true(all(points$shape == 19))
+          expect_equal(plot$labels$caption, "Custom note")
+        }
+      }
+    }
+  })
+
+  it("marks an entirely excluded profile without removing any points", {
+    flagged <- mutate(shape_data, PKSUMXF = "Y")
+    for (fn in list(pkcg01, pkcg02)) {
+      plots <- fn(flagged, plotly = FALSE)
+      expect_equal(sum(vapply(plots, function(plot) nrow(plot$data), integer(1))),
+                   nrow(flagged))
+      for (plot in plots) {
+        points <- ggplot2::ggplot_build(plot)$data[[2]]
+        expect_true(all(points$shape == 4))
+        expect_equal(plot$labels$caption, shape_note)
+      }
+    }
+  })
+})
+
+describe("concentration exclusion annotations", {
+  it("adds the explanation per plot even when the first group has no exclusions", {
+    later_group <- included_shapes
+    later_group$PKSUMXF[later_group$USUBJID == "2"] <- "Y"
+    for (fn in list(pkcg01, pkcg02)) {
+      for (interactive in c(FALSE, TRUE)) {
+        plots <- fn(later_group, plotly = interactive, plotgroup_vars = "USUBJID",
+                    color_var = "TRT01A", footnote = "Subject $USUBJID")
+        for (i in seq_along(plots)) {
+          plot <- if (interactive) attr(plots[[i]], "ggplot") else plots[[i]]
+          points <- ggplot2::ggplot_build(plot)$data[[2]]
+          expect_true(all(points$shape == if (i == 1) 19 else 4))
+          expected <- if (i == 1) "Subject 1" else paste("Subject 2", shape_note, sep = "\n")
+          expect_equal(plot$labels$caption, expected)
+        }
+      }
+    }
+  })
+})
+
+describe("concentration exclusions in summary outputs", {
+  it("still omits excluded concentrations from mean plots and summary tables", {
+    data <- mutate(
+      bind_rows(shape_data, mutate(shape_profile, USUBJID = "3")),
+      DOSEA = 100,
+      PKSUMXF = ifelse(USUBJID == "2" & AFRLT == 1, "Y", ""),
+      AVAL = ifelse(PKSUMXF == "Y", 999, AVAL),
+      AVALC = as.character(AVAL)
+    )
+    mean_plot <- pkcg03(data, plotly = FALSE)[[1]]
+    mean_row <- mean_plot$data[mean_plot$data$NFRLT == 1, ]
+    expect_equal(mean_row$n, 2)
+    expect_equal(mean_row$mean, 2)
+    expect_equal(mean_plot$labels$caption, "")
+
+    summary <- t_pkct01(data)[[1]]
+    summary_row <- summary[summary$NFRLT == 1, ]
+    expect_equal(summary_row$n, 2)
+    expect_equal(summary_row$Mean, 2)
+  })
+})
+
 describe("pkcg02", {
   it("generates valid ggplots with LIN scale", {
     combined_plots_lin <- pkcg02(
@@ -516,4 +726,134 @@ describe("g_pkcg03_log", {
     vdiffr::expect_doppelganger("g_pkcg03_log", meanplot_log)
   })
 
+})
+
+# The bulk TLG export writes graphs as PNG (issue #1344).  A plotly widget cannot be
+# rasterised without a headless browser, so the concentration plot builders stash the
+# ggplot they were built from on the returned object.  `layout()` rebuilds a plotly object
+# and drops attributes set before it, so this also guards the ordering of that attachment.
+
+describe("plotly outputs carry their source ggplot for export", {
+  it("attaches the ggplot for every pkcg01 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      plots <- pkcg01(adnca, scale = sc, plotly = TRUE)
+      expect_s3_class(attr(plots[[1]], "ggplot"), "ggplot")
+      expect_true(all(vapply(plots, function(p) isFALSE(attr(p, "tlg_group_header")), logical(1))))
+      expect_true(all(nzchar(names(plots))))
+      expect_length(names(plots), length(plots))
+    }
+  })
+
+  it("attaches the ggplot for every pkcg02 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      plots <- pkcg02(adnca, scale = sc, plotly = TRUE)
+      expect_s3_class(attr(plots[[1]], "ggplot"), "ggplot")
+      expect_true(all(vapply(plots, function(p) isFALSE(attr(p, "tlg_group_header")), logical(1))))
+      expect_true(all(nzchar(names(plots))))
+      expect_length(names(plots), length(plots))
+    }
+  })
+
+  it("attaches the ggplot for every pkcg03 scale", {
+    for (sc in c("LIN", "LOG", "SBS")) {
+      p <- pkcg03(adpc1, scale = sc, plotly = TRUE)[[1]]
+      expect_s3_class(attr(p, "ggplot"), "ggplot")
+      expect_null(attr(p, "tlg_group_header"))
+    }
+  })
+
+  it("log-scales the stashed ggplot, which the plotly path applies via layout()", {
+    # On the plotly path the log axis comes from layout(), leaving the ggplot linear; it is
+    # scaled explicitly so the exported PNG matches the widget.  LIN has no y scale added.
+    has_y_scale <- function(gg) {
+      any(vapply(gg$scales$scales, function(s) "y" %in% s$aesthetics, logical(1)))
+    }
+    expect_true(has_y_scale(attr(pkcg01(adnca, scale = "LOG", plotly = TRUE)[[1]], "ggplot")))
+    expect_false(has_y_scale(attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")))
+  })
+
+  it("leaves non-plotly output as a bare ggplot with no attribute", {
+    p <- pkcg01(adnca, scale = "LIN", plotly = FALSE)[[1]]
+    expect_s3_class(p, "ggplot")
+    expect_null(attr(p, "ggplot"))
+  })
+})
+
+# The plot lists were named from `adnca`, but `id_plot` is only created on the grouped
+# copy, so setNames() received NULL and silently dropped every name.  The TLG export then
+# had no split key to work with and numbered the files 1..n (#1344).
+describe("pkcg plot list names", {
+  it("names pkcg01 output by plot group, not by position", {
+    plots <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
+    expect_false(is.null(names(plots)))
+    expect_equal(length(names(plots)), length(plots))
+    expect_true(all(nzchar(names(plots))))
+    expect_false(any(grepl("^[0-9]+$", names(plots))))
+  })
+
+  it("names pkcg02 output by plot group, not by position", {
+    plots <- pkcg02(adnca, scale = "LIN", plotly = FALSE)
+    expect_false(is.null(names(plots)))
+    expect_true(all(nzchar(names(plots))))
+    expect_false(any(grepl("^[0-9]+$", names(plots))))
+  })
+
+  it("names carry the grouping values, so exported files are distinguishable", {
+    plots <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
+    # Names are interaction() levels over the plot grouping vars, e.g.
+    # "extravascular.SERUM.A.1" -- the subject is the trailing component.
+    expect_equal(length(unique(names(plots))), length(plots))
+    subjects <- unique(as.character(adnca$USUBJID))
+    expect_true(all(vapply(
+      names(plots),
+      function(nm) any(vapply(subjects, function(s) endsWith(nm, paste0(".", s)), logical(1))),
+      logical(1)
+    )))
+  })
+})
+
+# The plotly path sets title/subtitle/footnote with layout() on the widget, so the ggplot
+# stashed for PNG/PDF export had none of them and the downloaded image did not match what
+# the user saw on screen (#1344).
+describe("stashed ggplot labelling", {
+  it("carries the title and subtitle onto the ggplot the export renders", {
+    gg <- attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")
+    expect_match(gg$labels$title, "PK Concentration-Time Profile")
+    expect_match(gg$labels$subtitle, "Treatment Group:")
+    expect_match(gg$labels$subtitle, "Subject ID:")
+  })
+
+  it("carries the footnote across as the caption", {
+    p <- pkcg01(adnca, scale = "LIN", plotly = TRUE, footnote = "BLQ set to zero")[[1]]
+    expect_equal(attr(p, "ggplot")$labels$caption, "BLQ set to zero")
+  })
+
+  it("converts plotly line breaks so the tag is not drawn literally", {
+    gg <- attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")
+    expect_false(grepl("<br", gg$labels$subtitle, fixed = TRUE))
+    expect_match(gg$labels$subtitle, "\n")
+  })
+
+  it("labels pkcg02 and pkcg03 the same way", {
+    # pkcg03 groups by DOSEA, which only the adpc1 fixture carries.
+    for (p in list(pkcg02(adnca, scale = "LIN", plotly = TRUE)[[1]],
+                   pkcg03(adpc1, scale = "LIN", plotly = TRUE)[[1]])) {
+      gg <- attr(p, "ggplot")
+      expect_s3_class(gg, "ggplot")
+      expect_true(nzchar(gg$labels$title))
+    }
+  })
+
+  it("drops the plotly-only margin so the export has no empty band above the title", {
+    # pkcg01/02 widen the margin to clear room for plotly's overlaid title; ggplot lays out
+    # its own, so carrying that margin into the PNG just adds whitespace.
+    gg <- attr(pkcg01(adnca, scale = "LIN", plotly = TRUE)[[1]], "ggplot")
+    expect_equal(as.numeric(gg$theme$plot.margin), rep(5.5, 4))
+  })
+
+  it("leaves the non-plotly path alone", {
+    p <- pkcg01(adnca, scale = "LIN", plotly = FALSE)[[1]]
+    expect_match(p$labels$title, "PK Concentration-Time Profile")
+    expect_null(attr(p, "ggplot"))
+  })
 })

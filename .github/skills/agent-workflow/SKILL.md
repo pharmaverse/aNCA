@@ -111,6 +111,20 @@ Agent will:
 - Avoid installing R if it is not already available
 - Report completed, failing, waiting, not-applicable, and human-test items
 
+### Create a PR
+
+```
+Create a PR for #NNN
+```
+
+Agent will:
+- Use the title `TYPE: concise outcome (#NNN)`.
+- Use an accurate type: `FEATURE`, `FIX`, `REFACTOR`, `SKILL`, `DOCS`, `CI`, or
+  `MAINT`.
+- Keep the outcome terse and state the primary change, for example
+  `FIX: Prevent partial ZIP exports (#1452)`.
+- Use `.github/PULL_REQUEST_TEMPLATE.md` and link the issue in the description.
+
 ### Add Tests
 
 ```

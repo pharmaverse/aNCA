@@ -28,6 +28,9 @@ g_pkcg01_sbs <- function(data, ...) {
 #' Generate PK Concentration-Time Profile Plots
 #'
 #' This function generates a list of ggplots for PK concentration-time profiles.
+#' Records flagged with `PKSUMXF == "Y"` remain visible as crosses; other records
+#' retain circular points. A footnote explains the crosses in plots containing
+#' flagged records, including interactive plots and static exports.
 #'
 #' @param adnca            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
@@ -137,7 +140,7 @@ pkcg01 <- function(
     )
   ) +
     ggplot2::geom_line(linewidth = 0.4) +
-    ggplot2::geom_point(size = 2) +
+    .pkcg_points(adnca_grouped) +
     labs(
       x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
       y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
@@ -237,11 +240,9 @@ pkcg01 <- function(
     subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
-    title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
 
     plot$data <- plot_data
 
-    #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
       if (is.null(footnote)) {
         ""
@@ -249,47 +250,11 @@ pkcg01 <- function(
         parse_annotation(plot_data, footnote)
       }
     }
-    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
+    footnote <- .pkcg_exclusion_footnote(plot_data, footnote, plotly)
     if (plotly) {
 
-      plotly_plot <- plot +
-        theme(
-          # add margin to make space for subtitle and footnote #
-          plot.margin = margin(
-            title_margin,
-            0,
-            footnote_y * 5,
-            0,
-            "cm"
-          )
-        )
-
-      plotly_plot <- plotly_plot %>%
-        # This because of no spec of parse annotation generates warning is.na()
-        ggplotly(
-          tooltip = c("x", "y"),
-          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
-          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
-          # the SBS variant already relied on FALSE for exactly this reason.
-          dynamicTicks = FALSE,
-          #' NOTE: might require some fine tuning down the line, looks fine now
-          height = 500 + (footnote_y * 25) + title_margin * 50
-        ) %>%
-        layout(
-          # title and subtitle #
-          title = list(text = title_text),
-          # footnote #
-          annotations = list(
-            x = 0,
-            y =  -footnote_y,
-            text = footnote,
-            showarrow = FALSE,
-            yref = "paper",
-            xref = "paper",
-            align = "left",
-            parse = TRUE
-          )
-        )
+      gg_plot <- plot
+      plotly_plot <- .pkcg_plotly(gg_plot, title_text, footnote)
 
       if (scale == "LOG") {
         plotly_plot <- plotly_plot %>%
@@ -298,9 +263,24 @@ pkcg01 <- function(
             autorange = TRUE,
             tickformat = "~r"
           ))
+        # The ggplot is left unscaled on the plotly path (the log axis is applied by
+        # layout() above), so scale it here to keep the exported image faithful to the
+        # widget.  Same transform and floor labeller as the non-plotly branch.
+        suppressMessages(
+          gg_plot <- gg_plot +
+            scale_y_continuous(
+              transform = "log10",
+              labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+            )
+        )
       }
 
-      plotly_plot
+      # Attached last: layout() rebuilds the object and would drop these attributes.
+      # The plot's annotations replace the Shiny split-key heading, not its export name.
+      structure(
+        .with_ggplot(plotly_plot, .label_stashed_ggplot(gg_plot, title, subtitle, footnote)),
+        tlg_group_header = FALSE
+      )
     } else {
       plot +
         labs(
@@ -310,8 +290,87 @@ pkcg01 <- function(
         )
     }
   })
+  # `id_plot` is created on `adnca_grouped`, not on `adnca` -- naming from the latter
+  # returned NULL, which silently stripped the names and left the export numbering the
+  # files 1..n instead of using the group (#1344).
   plots %>%
     setNames(unique(adnca_grouped[["id_plot"]]))
+}
+
+#' Reserve separate space for axes, footnotes and the color legend.
+#'
+#' Pixel offsets keep the footnote clear of the x-axis at any panel height. The
+#' widget grows with each footnote line, including the summary-exclusion note.
+#' Plotly can expand the bottom margin further when the color legend wraps.
+#'
+#' @param plot Source ggplot.
+#' @param title_text Parsed title and subtitle, with HTML line breaks.
+#' @param footnote Parsed footnote, including any exclusion explanation.
+#' @returns A Plotly widget with room for its annotations and legend.
+#' @importFrom plotly ggplotly layout
+#' @noRd
+.pkcg_plotly <- function(plot, title_text, footnote) {
+  line_count <- function(text) length(strsplit(text, "\\n|<br\\s*/?>")[[1]])
+  note_height <- 20 * line_count(footnote)
+  top <- 60 + 20 * line_count(title_text)
+  bottom <- 100 + note_height
+  panel_height <- 400
+
+  ggplotly(
+    plot,
+    tooltip = c("x", "y"),
+    # Retain ggplot's filtered breaks, including the selected X ticks column.
+    dynamicTicks = FALSE,
+    height = panel_height + top + bottom
+  ) %>%
+    layout(
+      title = list(text = title_text, y = 1, yanchor = "top", pad = list(t = 30)),
+      margin = list(t = top, b = bottom, l = 75, r = 20),
+      annotations = list(
+        x = 0, y = 0, xref = "paper", yref = "paper",
+        xanchor = "left", yanchor = "top", yshift = -60,
+        text = footnote, showarrow = FALSE, align = "left",
+        font = list(size = 12)
+      ),
+      legend = list(
+        x = 0, xanchor = "left", yanchor = "top",
+        y = -(70 + note_height) / panel_height
+      )
+    )
+}
+
+#' Draw concentration points without changing line groups or color legends.
+#'
+#' Identity shapes stay within the existing Plotly traces. A discrete shape scale
+#' would split those traces and add exclusion categories to the color legend.
+#'
+#' @param data Concentration data for the plot family.
+#' @returns A point layer with crosses for summary-excluded concentrations.
+#' @importFrom ggplot2 aes geom_point
+#' @noRd
+.pkcg_points <- function(data) {
+  if (!any(data[["PKSUMXF"]] %in% "Y")) {
+    return(geom_point(size = 2))
+  }
+  geom_point(
+    aes(shape = I(ifelse(.data[["PKSUMXF"]] %in% "Y", 4, 19))),
+    size = 2
+  )
+}
+
+#' Explain exclusion shapes only on plots containing excluded records.
+#'
+#' @param data Concentration data for one plot.
+#' @param footnote Parsed user footnote, or an empty string.
+#' @param plotly Whether the footnote will be rendered as HTML.
+#' @returns The footnote with an exclusion explanation when needed.
+#' @noRd
+.pkcg_exclusion_footnote <- function(data, footnote, plotly) {
+  if (!any(data[["PKSUMXF"]] %in% "Y")) {
+    return(footnote)
+  }
+  note <- "Crosses mark concentrations excluded from summary tables and mean plots."
+  paste(c(footnote[nzchar(footnote)], note), collapse = if (plotly) "<br>" else "\n")
 }
 
 # Helper Function for Title Generation
@@ -401,7 +460,10 @@ g_pkcg02_sbs <- function(data, ...) {
 
 #' Generate Combined PK Concentration-Time Profile Plot by Cohort
 #'
-#' This function generates a list of plotly objects PK concentration-time profiles by group
+#' This function generates a list of plotly objects PK concentration-time profiles by group.
+#' Records flagged with `PKSUMXF == "Y"` remain visible as crosses; other records
+#' retain circular points. A footnote explains the crosses in plots containing
+#' flagged records, including interactive plots and static exports.
 #'
 #' @param adnca            A data frame containing the data.
 #' @param xvar            A character string of the variable name for the x-axis.
@@ -513,7 +575,7 @@ pkcg02 <- function(
     )
   ) +
     ggplot2::geom_line(linewidth = 0.4) +
-    ggplot2::geom_point(size = 2) +
+    .pkcg_points(adnca_grouped) +
     ggplot2::labs(
       x = paste0(parse_annotation(plot_data, xlab), collapse = ","),
       y = paste0(parse_annotation(plot_data, ylab), collapse = ",")
@@ -610,11 +672,9 @@ pkcg02 <- function(
     subtitle <- generate_subtitle(plot_data, subtitle, trt_var, plotgroup_vars, plotgroup_names)
 
     title_text <- paste0(title, "<br>", "<sup>", subtitle, "</sup>")
-    title_margin <- (0.5 * length(unlist(strsplit(title_text, "\n|<br>"))))
 
     plot$data <- plot_data
 
-    #' magic numbers for footnote position and margin, work in app up to 4 lines
     footnote <- {
       if (is.null(footnote)) {
         ""
@@ -622,47 +682,11 @@ pkcg02 <- function(
         parse_annotation(plot_data, footnote)
       }
     }
-    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
+    footnote <- .pkcg_exclusion_footnote(plot_data, footnote, plotly)
     if (plotly) {
       suppressWarnings({
-        plotly_plot <- plot +
-          theme(
-            # add margin to make space for subtitle and footnote #
-            plot.margin = margin(
-              title_margin,
-              0,
-              footnote_y * 5,
-              0,
-              "cm"
-            )
-          )
-
-        # This because of no spec of parse annotation generates warning is.na()
-        plotly_plot <- ggplotly(
-          plotly_plot,
-          tooltip = c("x", "y"),
-          # FALSE so plotly keeps ggplot's breaks (tickmode "array"). With TRUE, plotly
-          # regenerates ticks itself (tickmode "auto") and the X ticks option is ignored;
-          # the SBS variant already relied on FALSE for exactly this reason.
-          dynamicTicks = FALSE,
-          #' NOTE: might require some fine tuning down the line, looks fine now
-          height = 500 + (footnote_y * 25) + title_margin * 50
-        ) %>%
-          layout(
-            # title and subtitle #
-            title = list(text = title_text),
-            # footnote #
-            annotations = list(
-              x = 0,
-              y =  -footnote_y,
-              text = footnote,
-              showarrow = FALSE,
-              yref = "paper",
-              xref = "paper",
-              align = "left",
-              parse = TRUE
-            )
-          )
+        gg_plot <- plot
+        plotly_plot <- .pkcg_plotly(gg_plot, title_text, footnote)
 
         if (scale == "LOG") {
           plotly_plot <- plotly_plot %>%
@@ -671,9 +695,22 @@ pkcg02 <- function(
               autorange = TRUE,
               tickformat = "~r"
             ))
+          # See the pkcg01 branch: the ggplot is unscaled on the plotly path, so scale it
+          # here to keep the exported image faithful to the widget.
+          suppressMessages(
+            gg_plot <- gg_plot +
+              scale_y_continuous(
+                transform = "log10",
+                labels = function(x) ifelse(x == 1e-3, yes = 0, no = x)
+              )
+          )
         }
 
-        plotly_plot
+        # See pkcg01: preserve export names but omit the redundant Shiny group heading.
+        structure(
+          .with_ggplot(plotly_plot, .label_stashed_ggplot(gg_plot, title, subtitle, footnote)),
+          tlg_group_header = FALSE
+        )
       })
     } else {
       plot +
@@ -684,6 +721,8 @@ pkcg02 <- function(
         )
     }
   })
+  # See the note in g_pkcg01(): the names come from `adnca_grouped`, which is where
+  # `id_plot` is created (#1344).
   plots %>%
     setNames(unique(adnca_grouped[["id_plot"]]))
 
@@ -831,6 +870,10 @@ pkcg03 <- function(
   summary_method = "Mean_sdi",
   whiskers_lwr_upr = c("Both", "Upper", "Lower")[1]
 ) {
+  # Mean plot: drop rows flagged for summary exclusion (individual pkcg01/pkcg02
+  # keep them). No-op when the flag column is absent.
+  adnca <- filter_summary_excluded(adnca, flag = "PKSUMXF")
+
   xmin <- as.numeric(xmin)
   xmax <- as.numeric(xmax)
   ymin <- as.numeric(ymin)
@@ -1069,9 +1112,22 @@ pkcg03 <- function(
               autorange = TRUE,
               tickformat = "~r"
             ))
+          # See the pkcg01 branch: the ggplot is unscaled on the plotly path, so scale it
+          # here to keep the exported image faithful to the widget.
+          suppressMessages(
+            plot <- plot +
+              scale_y_continuous(
+                transform = "log10",
+                labels = \(x) ifelse(x == 1e-3, yes = 0, no = x)
+              )
+          )
         }
 
-        plotly_plot
+        # Attached last: layout() rebuilds the object and would drop it.
+        .with_ggplot(
+          plotly_plot,
+          .label_stashed_ggplot(plot, title, subtitle, footnote)
+        )
       })
     } else {
       plot <- plot +
