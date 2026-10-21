@@ -308,8 +308,23 @@ describe("filter_ratio_rows", {
 
   it("labels the derived columns so !RATIO annotations resolve", {
     out <- filter_ratio_rows(adpp, "caller", "analyte")
-    expect_equal(attr(out$RATIO, "label"), "Metabolite / Parent")
-    expect_equal(attr(out$RATIOREF, "label"), "Parent (reference analyte)")
+    expect_equal(attr(out$RATIO, "label"), "Test Analyte / Reference Analyte")
+    expect_equal(attr(out$RATIOREF, "label"), "Reference Analyte (Denominator)")
+  })
+
+  it("labels inverse analyte ratios without changing configured values or parameter names", {
+    inverse <- adpp[2, ]
+    inverse$PPCAT <- "DrugA"
+    inverse$PPANMETH <- "CMAX TO CMAX [PARAM: Metab-DrugA]"
+    inverse$AVAL <- 2
+    out <- filter_ratio_rows(inverse, "caller", "analyte")
+    expect_equal(as.character(out$RATIO), "DrugA / Metab-DrugA")
+    expect_equal(as.character(out$RATIOREF), "Metab-DrugA")
+    expect_equal(attr(out$RATIO, "label"), "Test Analyte / Reference Analyte")
+    expect_equal(attr(out$RATIOREF, "label"), "Reference Analyte (Denominator)")
+    expect_equal(out$AVAL, 2)
+    expect_identical(out$PARAMCD, inverse$PARAMCD)
+    expect_identical(out$PARAM, inverse$PARAM)
   })
 
   it("selects treatment ratios as the complement of the analyte ones", {

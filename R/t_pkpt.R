@@ -215,13 +215,17 @@ t_pkpt03_col <- function(
   )
 }
 
-#' @describeIn t_pkpt03_col Summary of metabolite-to-parent ratios (stats in columns).
+#' @describeIn t_pkpt03_col Summary of configured analyte ratios (stats in columns),
+#'   including inverse ratios. The `RATIO` header identifies test / reference.
 #'   Summarizes the configured analyte ratios already present in ADPP. Configure
 #'   ratios in Parameter Selection > Ratios, or load them from settings, then run
 #'   NCA before rendering. No ratios are calculated in the TLG functions.
 #'   Defaults to splitting by the derived `RATIO` label and `PPSPEC`; varying
 #'   study, dose, visit, route and interval identifiers are retained to avoid
-#'   collapsing profiles. See [l_pkpl01_mp()] and [p_pkpg06_mp()].
+#'   collapsing profiles. Parameters with the same direction and profile share
+#'   a table, with rows per treatment and parameter. The number of tables can
+#'   therefore differ from the number of configured ratios. See [l_pkpl01_mp()]
+#'   and [p_pkpg06_mp()].
 #' @param ... Additional arguments forwarded to [t_pkpt03_col()].
 #' @export
 t_pkpt03_MP_col <- function( # nolint: object_name_linter

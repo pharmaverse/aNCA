@@ -226,11 +226,12 @@ describe("l_pkpl01_mp", {
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
 
-  it("shows configured values under explicit M/P column headers", {
+  it("shows configured values under direction-neutral ratio column headers", {
     listing <- listings()[[1]]
     expect_equal(as.numeric(listing[["M/P Cmax"]]), c(0.5, 0.3))
     expect_match(
-      formatters::var_labels(listing)[["M/P Cmax"]], "Metabolite/Parent Ratio", fixed = TRUE
+      formatters::var_labels(listing)[["M/P Cmax"]],
+      "Analyte Ratio (Test / Reference)", fixed = TRUE
     )
   })
 

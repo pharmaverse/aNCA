@@ -144,16 +144,21 @@ l_pkpl01 <- function(
   }, character(1))
 }
 
-#' @describeIn l_pkpl01 Listing of metabolite-to-parent ratios (pkpl01 M/P).
+#' @describeIn l_pkpl01 Listing of configured analyte ratios (pkpl01 M/P),
+#'   including inverse ratios. The `RATIO` subtitle identifies test / reference.
 #'   Displays the configured analyte ratios already present in ADPP, without
 #'   recalculating them. Defaults to splitting by `RATIO` and `PPSPEC`; varying
 #'   profile identifiers are retained too. Missing values remain blank and
-#'   summary-excluded records remain in the listing. See [t_pkpt03_MP_col()].
+#'   summary-excluded records remain in the listing. Each page has subjects as
+#'   rows within treatment and configured parameters as columns. Parameters with
+#'   the same direction and profile share a page; a different direction or route
+#'   appears on a separate page. Parameter names and codes retain their ADPP
+#'   labels, including custom codes. See [t_pkpt03_MP_col()].
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
 #' @export
 l_pkpl01_mp <- function(
   data, listgroup_vars = c("RATIO", "PPSPEC"),
-  param_var = "PARAM", title = "Listing of Individual Metabolite/Parent Ratios",
+  param_var = "PARAM", title = "Listing of Individual Analyte Ratios (Test / Reference)",
   value_var = "AVAL", unit_var = "AVALU", ...
 ) {
   data <- filter_ratio_rows(data, "l_pkpl01_mp", ref_type = "analyte", value_var = value_var)
@@ -166,7 +171,9 @@ l_pkpl01_mp <- function(
   )
   lapply(listings, function(listing) {
     cols <- intersect(as.character(unique(data[[param_var]])), names(listing))
-    var_labels(listing)[cols] <- paste0(var_labels(listing)[cols], " - Metabolite/Parent Ratio")
+    var_labels(listing)[cols] <- paste0(
+      var_labels(listing)[cols], " - Analyte Ratio (Test / Reference)"
+    )
     listing
   })
 }

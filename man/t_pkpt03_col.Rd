@@ -68,13 +68,17 @@ statistics as columns.
 }
 \section{Functions}{
 \itemize{
-\item \code{t_pkpt03_MP_col()}: Summary of metabolite-to-parent ratios (stats in columns).
+\item \code{t_pkpt03_MP_col()}: Summary of configured analyte ratios (stats in columns),
+including inverse ratios. The \code{RATIO} header identifies test / reference.
 Summarizes the configured analyte ratios already present in ADPP. Configure
 ratios in Parameter Selection > Ratios, or load them from settings, then run
 NCA before rendering. No ratios are calculated in the TLG functions.
 Defaults to splitting by the derived \code{RATIO} label and \code{PPSPEC}; varying
 study, dose, visit, route and interval identifiers are retained to avoid
-collapsing profiles. See \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}} and \code{\link[=p_pkpg06_mp]{p_pkpg06_mp()}}.
+collapsing profiles. Parameters with the same direction and profile share
+a table, with rows per treatment and parameter. The number of tables can
+therefore differ from the number of configured ratios. See \code{\link[=l_pkpl01_mp]{l_pkpl01_mp()}}
+and \code{\link[=p_pkpg06_mp]{p_pkpg06_mp()}}.
 
 }}
 \examples{

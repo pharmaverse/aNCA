@@ -83,6 +83,7 @@ p_pkpg03_boxp <- function(
                             alpha = 0.7, width = 0.5) +
       ggplot2::stat_summary(
         fun      = "mean",
+        geom     = "point",
         shape    = 8,
         size     = 0.8,
         color    = "black",
@@ -156,19 +157,23 @@ p_pkpg04_boxp <- function(data, ...) {
   p_pkpg03_boxp(data, all_points = TRUE, ...)
 }
 
-#' Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)
+#' Boxplot of Analyte PK Parameter Ratios (pkpg06)
 #'
 #' Plots the configured analyte ratios already present in ADPP by treatment
 #' using [p_pkpg03_boxp()]. Configure ratios in Parameter Selection > Ratios,
 #' or load them from settings, then run NCA before rendering. Values are read
 #' from ADPP without recalculation, keeping plots consistent with exported results.
+#' Includes inverse ratios; the subtitle shows test / reference. Parameters with
+#' the same direction and profile share a page as separate facets, each with its
+#' own y-axis scale. The star marks the mean. A group with one subject has a flat
+#' box because its quartiles are identical.
 #'
 #' @inheritParams p_pkpg03_boxp
 #' @inheritParams t_pkpt03_MP_col
 #' @param list_vars Columns to split plots by. Defaults to the derived `RATIO`
 #'   label and `PPSPEC`; varying profile identifiers are retained as well.
 #' @param subtitle Optional plot subtitle; defaults to the analyte pair and profile identifiers.
-#' @param ylab Y-axis label. Defaults to `"Metabolite / Parent Ratio"`.
+#' @param ylab Y-axis label. Defaults to `"Analyte Ratio (Test / Reference)"`.
 #' @param ... Additional arguments forwarded to [p_pkpg03_boxp()].
 #'
 #' @return A named list of ggplot objects (same format as [p_pkpg03_boxp()]).
@@ -183,8 +188,8 @@ p_pkpg04_boxp <- function(data, ...) {
 #' @export
 p_pkpg06_mp <- function(
   data, list_vars = c("RATIO", "PPSPEC"),
-  title = "Boxplot of Metabolite/Parent Ratios by Treatment", subtitle = NULL,
-  ylab = "Metabolite / Parent Ratio", value_var = "AVAL", ...
+  title = "Boxplot of Analyte Ratios by Treatment", subtitle = NULL,
+  ylab = "Analyte Ratio (Test / Reference)", value_var = "AVAL", ...
 ) {
   data <- filter_ratio_rows(data, "p_pkpg06_mp", ref_type = "analyte", value_var = value_var)
   plots <- p_pkpg03_boxp(

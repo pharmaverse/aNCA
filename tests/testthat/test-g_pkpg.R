@@ -82,8 +82,22 @@ describe("p_pkpg03_boxp", {
 
   it("does not overlay individual points when all_points = FALSE", {
     result <- p_pkpg03_boxp(pkpg_data, all_points = FALSE)[[1]]
-    layer_classes <- sapply(result$layers, function(l) class(l$geom)[1])
-    expect_false(any(layer_classes == "GeomJitter"))
+    jitter_layers <- vapply(
+      result$layers, function(l) inherits(l$position, "PositionJitter"), logical(1)
+    )
+    expect_false(any(jitter_layers))
+  })
+
+  it("renders mean markers for one- and two-subject groups without missing-range warnings", {
+    withr::local_pdf(NULL)
+    expected <- list(c(5, 20), c(5.5, 21))
+    for (n in 1:2) {
+      data <- pkpg_data[pkpg_data$USUBJID %in% paste0("S", seq_len(n)), ]
+      plot <- p_pkpg03_boxp(data)[[1]]
+      expect_no_warning(ggplot2::ggplotGrob(plot))
+      means <- ggplot2::layer_data(plot, 2)
+      expect_equal(sort(means$y), expected[[n]])
+    }
   })
 })
 
@@ -96,9 +110,11 @@ describe("p_pkpg04_boxp", {
 
   it("overlays individual jitter points (all_points = TRUE)", {
     result <- p_pkpg04_boxp(pkpg_data)[[1]]
-    # geom_jitter registers as "GeomPoint" internally
-    layer_classes <- sapply(result$layers, function(l) class(l$geom)[1])
-    expect_true(any(layer_classes == "GeomPoint"))
+    jitter_layers <- vapply(
+      result$layers, function(l) inherits(l$position, "PositionJitter"), logical(1)
+    )
+    expect_true(any(jitter_layers))
+    expect_equal(nrow(ggplot2::layer_data(result, which(jitter_layers))), 12L)
   })
 
   it("suppresses boxplot outlier points when all_points = TRUE", {
@@ -121,7 +137,7 @@ describe("p_pkpg06_mp", {
     expect_s3_class(result[[1]], "ggplot")
     expect_equal(sort(plot_df$AVAL), sort(pkpg_data$AVAL / 10 + 0.2))
     expect_setequal(plot_df$PARAM, paste("Ratio", pkpg_data$PARAM))
-    expect_equal(result[[1]]$labels$y, "Metabolite / Parent Ratio")
+    expect_equal(result[[1]]$labels$y, "Analyte Ratio (Test / Reference)")
   })
 
   it("names the parent in the plot key so the ratio is self-explanatory", {

@@ -163,7 +163,7 @@ filter_summary_excluded <- function(data, flag) {
 
 # The analyte column is fixed to "PARAM" when the PKNCA objects are built
 # (see `R/PKNCA.R`), so a ratio whose reference group is keyed on `PARAM` is one
-# analyte divided by another -- a metabolite/parent ratio.  `export_cdisc()`
+# analyte divided by another, including inverse metabolite/parent ratios. `export_cdisc()`
 # moves that analyte into `PPCAT` and reuses `PARAM` for the parameter name, so
 # the bracketed keys in PPANMETH are pre-export column names and have to be
 # translated before they can be read off an ADPP row.
@@ -282,7 +282,7 @@ filter_summary_excluded <- function(data, flag) {
 #'
 #' @param ppanmeth Character vector of PPANMETH values.
 #' @returns A character vector the same length as `ppanmeth`: `"analyte"` for a
-#'   metabolite/parent ratio, `"other"` for any other reference group, `NA` for a
+#'   ratio between analytes, `"other"` for any other reference group, `NA` for a
 #'   row that is not a ratio at all.
 #' @noRd
 .ratio_row_type <- function(ppanmeth) {
@@ -351,8 +351,8 @@ filter_summary_excluded <- function(data, flag) {
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param caller Character string naming the calling function, used in error messages.
 #' @param ref_type `"analyte"` keeps ratios whose reference is another analyte
-#'   (metabolite/parent); `"other"` keeps the rest (treatment, dose profile, route,
-#'   specimen); `"any"` keeps all ratio rows.
+#'   (including inverse metabolite/parent ratios); `"other"` keeps the rest
+#'   (treatment, dose profile, route, specimen); `"any"` keeps all ratio rows.
 #' @param value_var Selected numeric output column, used to identify ratio
 #'   parameters with no computed values. Default: `"AVAL"`.
 #'
@@ -488,12 +488,12 @@ filter_ratio_rows <- function(
   # entry in `metadata_nca_variables` and `apply_labels()` would fall back to the
   # bare column name -- which is what the `!VAR` annotation syntax renders.
   attr(ratios$RATIO, "label") <- if (ref_type == "analyte") {
-    "Metabolite / Parent"
+    "Test Analyte / Reference Analyte"
   } else {
     "Test / Reference"
   }
   attr(ratios$RATIOREF, "label") <- if (ref_type == "analyte") {
-    "Parent (reference analyte)"
+    "Reference Analyte (Denominator)"
   } else {
     "Reference group"
   }
