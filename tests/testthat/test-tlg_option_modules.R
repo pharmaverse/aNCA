@@ -152,6 +152,31 @@ describe("tlg_option_text_server", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_option_select_ui", {
+  it("shows the empty-selection label without adding a bulk-select choice", {
+    df <- shiny::reactive(data.frame(PARAM = c("Cmax", "AUC", "Cmax")))
+    opt_def <- list(choices = "$PARAM", placeholder = "All parameters", multiple = TRUE)
+    html <- as.character(shiny::isolate(tlg_option_select_ui("m-param_filter", opt_def, df)))
+
+    expect_match(html, 'data-none-selected-text="All parameters"', fixed = TRUE)
+    expect_match(html, 'data-actions-box="true"', fixed = TRUE)
+    expect_match(html, '<option value="Cmax">Cmax</option>', fixed = TRUE)
+    expect_match(html, '<option value="AUC">AUC</option>', fixed = TRUE)
+    expect_false(grepl('<option value=""', html, fixed = TRUE))
+    expect_false(grepl(" selected[ =>]", html))
+  })
+
+  it("offers no parent parameters when a metabolite-only dataset is empty", {
+    df <- shiny::reactive(data.frame(PPCAT = "Drug", PARAM = "Cmax", AVAL = 5))
+    opt_def <- list(
+      choices = "$PARAM", metabolites_only = TRUE,
+      placeholder = "All parameters", multiple = TRUE
+    )
+    html <- as.character(shiny::isolate(tlg_option_select_ui("m-param_filter", opt_def, df)))
+    expect_match(html, 'data-none-selected-text="All parameters"')
+    expect_false(grepl('<option value=""', html, fixed = TRUE))
+    expect_false(grepl('value="Cmax"', html, fixed = TRUE))
+  })
+
   it("returns a searchable single picker with a blank choice", {
     opt_def <- list(
       label    = "Select",
@@ -437,12 +462,12 @@ describe("tlg_option_select_server", {
       ),
       {
         session$setInputs(select = "")
-        expect_equal(session$getReturned()(), "")
+        expect_identical(session$getReturned()(), "")
       }
     )
   })
 
-  it("coerces an empty multi-select (NULL input) to \"\" so rendering is not blocked", {
+  it("preserves an explicit empty multi-select", {
     # A `multiple` pickerInput with nothing selected reports input$select = NULL.
     # If the server passed that NULL through, tlg_module_server's is-null guard
     # would return NULL and blank the whole table.  It must return "" instead.
@@ -463,7 +488,7 @@ describe("tlg_option_select_server", {
       ),
       {
         session$setInputs(select = NULL)
-        expect_equal(session$getReturned()(), "")
+        expect_identical(session$getReturned()(), character())
       }
     )
   })
@@ -551,4 +576,35 @@ describe(".urine_spec_values", {
   it("ignores NA specimen values", {
     expect_equal(.urine_spec_values(data.frame(PCSPEC = c(NA, "URINE"))), "URINE")
   })
+})
+
+describe("tlg_option_select_server: catalog reset after remount", {
+  for (default in c(".all", ".pknca_groups", "")) {
+    it(paste("restores the declared", shQuote(default), "default"), {
+      updates <- list()
+      testthat::local_mocked_bindings(
+        updatePickerInput = function(session, input_id, ...) { # nolint: object_name_linter.
+          updates[[length(updates) + 1L]] <<- list(...)$selected
+        },
+        .package = "shinyWidgets"
+      )
+      trigger <- shiny::reactiveVal(0L)
+      shiny::testServer(
+        tlg_option_select_server,
+        args = list(
+          opt_def = list(type = "select", choices = ".colnames", default = default),
+          data = shiny::reactive(data.frame(NFRLT = 1, AVAL = 2)),
+          reset_trigger = trigger,
+          grouping_vars = shiny::reactive(c("NFRLT", "absent"))
+        ),
+        {
+          session$setInputs(select = "AVAL")
+          trigger(1L)
+          session$flushReact()
+          expected <- switch(default, .all = c("NFRLT", "AVAL"), .pknca_groups = "NFRLT", "")
+          expect_identical(tail(updates, 1)[[1]], expected)
+        }
+      )
+    })
+  }
 })

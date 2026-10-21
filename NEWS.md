@@ -7,7 +7,7 @@
 
 ## Bug Fixes
 
-* Generated R scripts use the requested dataset path or the input file beside the ZIP script and run when no ratio calculations were configured (#1528)
+* Generated R scripts use the requested dataset path or the input file beside the ZIP script and run when no ratio calculations are configured (#1476, #1528)
 
 * Restored compatibility with the upcoming PKNCA release (0.12.2). Running NCA with start imputation (including the default example dataset) no longer fails with duplicate `R2ADJ` results when applying half-life flags. `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
 
@@ -33,7 +33,7 @@
   silently. It also explains when the current data and settings provide no
   valid NCA intervals (#1527)
 
-* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
+* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay. Settings with no unit overrides now restore the defaults, so their generated R scripts run without an empty-units error (#1190, #1531)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
@@ -72,6 +72,9 @@
 
 ## Features
 
+* TLG settings restore the submitted output selection and applied sidebar filters, grouping, parameters, columns, labels and comments from standalone or ZIP settings files. Order now shows output selection; labels and comments use the TLG sidebars. Existing order notes remain metadata, and repeated restores, cleared selections and catalog changes are preserved (#1528)
+
+* PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns. The urine concentration listing always includes only urine, removes the redundant specimen selector, and requires specimen information (#1531)
 * Exporting results now validates every selected non-TLG artifact before anything
   is written and blocks the save when a problem is found (a data-integrity
   control; cf. 21 CFR 11.10(a)). The controlled traceability matrix at
@@ -117,9 +120,9 @@
 * The standalone mean, urine, dose-proportionality and box plot entries (`pkcg03` by dose, `pkpg01`/`pkpg02`/`pkpg03`/`pkpg04`/`pkpg06`) expose Title, Subtitle and Footnote inputs in the sidebar, matching the other graph entries (#1356)
 * Summary tables can filter which stratification values appear: a "Parameters to show" filter on the `pkpt03/07/08` tables and a "Timepoints to show" filter on the `pkct01` tables restrict the rows to the chosen `PARAM`/timepoint values (#1356)
 * Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
+* All 33 TLG entries offer Title, Subtitle and Footnote controls, with catalog-based default wording. Summary-table subtitles follow the selected split variables, and PK-parameter plot subtitles identify each plot's analyte, specimen, visit and units. Labels, axis edits and selected filters persist when the order is re-submitted; editable labels also round-trip through saved settings, and Reset to defaults restores their defaults. The Add TLG picker shows the catalog labels; graph annotations wrap within the app and exported HTML, and PDF graph labels are wrapped. Labels remain visible in PDF tables and listings, and the urine concentration listing title is editable (#1476)
 
 ### TLG Order & Selection
-* Save and restore TLG order selections, footnotes, stratification, and comments in settings downloads and ZIP exports; warn and skip removed catalog outputs and retain defaults for new outputs (#1528)
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)
 * Urine TLG functions filter to urine specimens internally; when `PCSPEC`/`PPSPEC` is missing, the resulting warning is surfaced as an in-app notification instead of failing silently (#1335)
 * Redesign the "Add TLGs to order" picker as a catalog checklist with dataset tabs (PK Concentrations / PK Parameters), search, CSV/XLSX export, per-column select-all, and a live selection count (#1335)

@@ -14,9 +14,12 @@
 #'   Default: `c("PPCAT", "PPSPEC")`.
 #' @param all_points Logical. When `TRUE`, individual data points are overlaid
 #'   on the boxes (pkpg04 style). Default: `FALSE`.
-#' @param title Optional plot title string.
-#' @param subtitle Optional plot subtitle string.
-#' @param footnote Optional footnote string.
+#' @param title Optional plot title. Supports `$COLUMN` value tokens and
+#'   `!COLUMN` column-label tokens, resolved within each plot's data split.
+#' @param subtitle Optional plot subtitle string. When `NULL`, generated from
+#'   each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
+#'   Use `""` to suppress the subtitle. Supports the same annotation tokens as `title`.
+#' @param footnote Optional footnote string. Supports the same annotation tokens as `title`.
 #' @param ylab Y-axis label. Defaults to the label attribute of `value_var`.
 #'
 #' @return A named list of ggplot objects.
@@ -33,6 +36,7 @@
 #'   labs theme_bw theme element_text element_blank facet_wrap
 #' @importFrom rlang .data
 #' @importFrom stats quantile
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 p_pkpg03_boxp <- function(
   data,
@@ -52,12 +56,14 @@ p_pkpg03_boxp <- function(
     stop("p_pkpg03_boxp: missing required columns: ", paste(missing_cols, collapse = ", "))
   }
 
+  column_labels <- var_labels(data)
   data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   data <- data[!is.na(data[[value_var]]), , drop = FALSE]
   if (nrow(data) == 0) return(list())
 
   data[[strat_var]] <- as.factor(data[[strat_var]])
+  var_labels(data) <- column_labels
 
   y_label <- if (!is.null(ylab)) ylab else .get_var_label(data, value_var)
 
@@ -71,6 +77,7 @@ p_pkpg03_boxp <- function(
       dedup_cols <- intersect(c("USUBJID", strat_var, param_var, "AVISIT"), names(df))
       df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
     }
+    var_labels(df) <- column_labels
     p <- ggplot2::ggplot(
       df,
       ggplot2::aes(
@@ -91,9 +98,13 @@ p_pkpg03_boxp <- function(
       ggplot2::facet_wrap(stats::as.formula(paste("~", param_var)),
                           scales = "free_y") +
       ggplot2::labs(
-        title    = title,
-        subtitle = subtitle,
-        caption  = footnote,
+        title    = .pk_parameter_label(df, title),
+        subtitle = if (is.null(subtitle)) {
+          .pk_parameter_subtitle(df, param_var)
+        } else {
+          .pk_parameter_label(df, subtitle)
+        },
+        caption  = .pk_parameter_label(df, footnote),
         x        = NULL,
         y        = y_label,
         fill     = NULL
@@ -203,8 +214,9 @@ p_pkpg06_mp <- function(data, ...) {
 #'   Default: `"PPENINT"`.
 #' @param list_vars Columns used to split output into separate plots.
 #'   Default: `c("PPCAT")`.
-#' @param title Optional plot title.
-#' @param subtitle Optional plot subtitle.
+#' @param title Optional plot title. Supports `$COLUMN` value tokens and
+#'   `!COLUMN` column-label tokens, resolved within each plot's data split.
+#' @inheritParams p_pkpg03_boxp
 #' @param footnote Optional footnote / caption.
 #' @param xlab X-axis label. Default: `"Collection Interval"`.
 #' @param ylab Y-axis label. Defaults to the label attribute of `value_var`.
@@ -223,6 +235,7 @@ p_pkpg06_mp <- function(data, ...) {
 #'   theme_bw theme element_text
 #' @importFrom rlang .data
 #' @importFrom stats sd
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   data,
@@ -239,6 +252,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   xlab           = NULL,
   ylab           = NULL
 ) {
+  column_labels <- var_labels(data)
   data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   if ("PPSPEC" %in% names(data)) {
@@ -279,6 +293,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
   if (nrow(data) == 0) return(list())
 
   data[[strat_var]] <- as.factor(data[[strat_var]])
+  var_labels(data) <- column_labels
 
   y_label <- if (!is.null(ylab)) ylab else .get_var_label(data, value_var)
 
@@ -336,6 +351,7 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
         ymax = mean_val + sd_val
       )
 
+    var_labels(df) <- column_labels
     p <- ggplot2::ggplot(
       summary_df,
       ggplot2::aes(
@@ -352,9 +368,13 @@ p_pkpg01_cum <- function( # nolint: cyclocomp_linter
         width = if (use_num) 0.5 else 0.2, alpha = 0.7
       ) +
       ggplot2::labs(
-        title    = page_title,
-        subtitle = subtitle,
-        caption  = footnote,
+        title    = .pk_parameter_label(df, page_title),
+        subtitle = if (is.null(subtitle)) {
+          .pk_parameter_subtitle(df, param_var)
+        } else {
+          .pk_parameter_label(df, subtitle)
+        },
+        caption  = .pk_parameter_label(df, footnote),
         x        = x_axis_label,
         y        = y_label,
         color    = NULL
@@ -411,7 +431,7 @@ p_pkpg01_per <- function(
 #' @param ci_level  Confidence level for the slope CI. Default: `0.90`.
 #' @param log_scale Logical. When `TRUE` (default), both axes are log10-scaled.
 #' @param title    Optional plot title.
-#' @param subtitle Optional plot subtitle.
+#' @inheritParams p_pkpg03_boxp
 #' @param footnote Optional footnote / caption.
 #' @param xlab     X-axis label. Defaults to `dose_var` label + unit.
 #' @param ylab     Y-axis label. Defaults to the label attribute of `value_var`.
@@ -430,6 +450,7 @@ p_pkpg01_per <- function(
 #'   facet_wrap labs scale_x_log10 scale_y_log10 theme_bw theme element_text
 #' @importFrom rlang .data
 #' @importFrom stats lm coef confint predict sd
+#' @importFrom formatters var_labels `var_labels<-`
 #' @export
 p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
   data,
@@ -453,6 +474,7 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
          paste(missing_cols, collapse = ", "))
   }
 
+  column_labels <- var_labels(data)
   data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
   data <- data[
@@ -461,6 +483,7 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
     drop = FALSE
   ]
   if (nrow(data) == 0) return(list())
+  var_labels(data) <- column_labels
 
   x_label <- if (!is.null(xlab)) {
     xlab
@@ -520,13 +543,18 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
       ggplot2::aes()
     }
 
+    var_labels(df) <- column_labels
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data[[dose_var]], y = .data[[value_var]])) +
       ggplot2::geom_point(point_aes, size = 2, alpha = 0.8) +
       ggplot2::facet_wrap(stats::as.formula(paste("~", param_var)), scales = "free") +
       ggplot2::labs(
-        title    = title,
-        subtitle = subtitle,
-        caption  = footnote,
+        title    = .pk_parameter_label(df, title),
+        subtitle = if (is.null(subtitle)) {
+          .pk_parameter_subtitle(df, param_var)
+        } else {
+          .pk_parameter_label(df, subtitle)
+        },
+        caption  = .pk_parameter_label(df, footnote),
         x        = x_label,
         y        = y_label,
         color    = NULL
@@ -628,4 +656,45 @@ p_pkpg02_doseprop <- function( # nolint: cyclocomp_linter
   }
 
   split_and_apply(data, list_vars, .make_dp_plot)
+}
+
+#' Generate a PK parameter plot subtitle from one data split.
+#'
+#' Pair parameters with units before removing duplicates so faceted plots retain
+#' the unit belonging to each parameter. Missing optional metadata is omitted.
+#'
+#' @param data The filtered data for one plot.
+#' @param param_var Column containing parameter names.
+#' @returns A subtitle string, or `NULL` when no label information is available.
+#' @noRd
+.pk_parameter_subtitle <- function(data, param_var) {
+  context_labels <- c(PPCAT = "Analyte", PPSPEC = "Specimen", AVISIT = "Visit")
+  context <- vapply(intersect(names(context_labels), names(data)), function(var) {
+    values <- unique(as.character(data[[var]]))
+    values <- values[!is.na(values) & nzchar(trimws(values))]
+    if (length(values) == 0) return("")
+    paste0(context_labels[[var]], ": ", paste(values, collapse = ", "))
+  }, character(1))
+  lines <- unname(context[nzchar(context)])
+
+  params <- as.character(data[[param_var]])
+  has_param <- !is.na(params) & nzchar(trimws(params))
+  if ("AVALU" %in% names(data)) {
+    units <- as.character(data$AVALU)
+    has_unit <- has_param & !is.na(units) & nzchar(trimws(units))
+    params[has_unit] <- paste0(params[has_unit], " (", units[has_unit], ")")
+  }
+  params <- unique(params[has_param])
+  if (length(params) > 0) {
+    lines <- c(lines, paste0("PK Parameter: ", paste(params, collapse = ", ")))
+  }
+  if (length(lines) == 0) return(NULL)
+  paste(unlist(lapply(lines, strwrap, width = 80)), collapse = "\n")
+}
+
+#' Resolve custom PK plot text and use plain line breaks for all renderers.
+#' @noRd
+.pk_parameter_label <- function(data, text) {
+  if (is.null(text)) return(NULL)
+  gsub("<br>", "\n", .tlg_label(data, text) %||% "", fixed = TRUE)
 }

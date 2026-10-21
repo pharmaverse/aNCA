@@ -1,4 +1,41 @@
+source(system.file("shiny/functions/utils-tlg-settings.R", package = "aNCA"), local = TRUE)
 # Tests for shared TLG helpers in R/utils-tlg.R.
+
+describe("split_and_apply: annotation labels", {
+  it("preserves custom column labels and values after dropping incomplete split keys", {
+    data <- data.frame(PARAM = c("A", NA, "B", "A"), AVAL = c(2, 99, 8, 6))
+    attr(data$AVAL, "label") <- "Measured concentration"
+
+    expect_warning(
+      split <- split_and_apply(data, "PARAM", identity),
+      "1 row\\(s\\).*excluded"
+    )
+    expect_named(split, c("PARAM: A", "PARAM: B"))
+    expect_equal(as.numeric(split[[1]]$AVAL), c(2, 6))
+    expect_equal(as.numeric(split[[2]]$AVAL), 8)
+    for (part in split) {
+      expect_equal(parse_annotation(part, "Assay: !AVAL"), "Assay: Measured concentration")
+    }
+  })
+})
+
+describe("filter_metabolite_rows", {
+  it("allows empty sidebar choices while retaining the default output error", {
+    df <- data.frame(PPCAT = "Drug", PARAM = "Cmax", AVAL = 5)
+    expect_error(filter_metabolite_rows(df), "no metabolite data found")
+    expect_identical(filter_metabolite_rows(df, allow_empty = TRUE), df[FALSE, ])
+  })
+
+  it("uses the same flag and label fallbacks for sidebar choices and outputs", {
+    flagged <- data.frame(METABFL = c("", "Y"), PPCAT = "Drug", PARAM = "Cmax", AVAL = c(5, 2))
+    category <- data.frame(PPCAT = c("Drug", "Metab-Drug"), PARAM = "Cmax", AVAL = c(5, 2))
+    parameter <- data.frame(PARAM = c("Cmax", "Metab-Cmax"), AVAL = c(5, 2))
+    for (df in list(flagged, category, parameter)) {
+      expect_equal(filter_metabolite_rows(df, allow_empty = TRUE)$AVAL, 2)
+      expect_identical(filter_metabolite_rows(df, allow_empty = TRUE), filter_metabolite_rows(df))
+    }
+  })
+})
 
 describe("filter_summary_excluded", {
   it("drops PKSUMXF == 'Y' rows (ADNCA summary exclusion)", {
@@ -129,5 +166,110 @@ describe(".select_stats", {
     out <- .select_stats(g, "SD")
     expect_equal(names(out), "TRT01A")
     expect_equal(length(attr(out, "col_groups")), 0L)
+  })
+})
+
+# Issue #1430: title, subtitle and footnote resolution shared by the table TLGs.
+
+describe(".tlg_label", {
+  df <- data.frame(
+    PARAM  = c("DrugA", "DrugA"),
+    TRT01A = c("5 mg", "10 mg"),
+    stringsAsFactors = FALSE
+  )
+
+  it("returns NULL for unset text so the caller can fall back to its own default", {
+    expect_null(.tlg_label(df, NULL))
+    expect_null(.tlg_label(df, ""))
+  })
+
+  it("resolves a $COL token that is constant within the split", {
+    expect_equal(.tlg_label(df, "Analyte: $PARAM"), "Analyte: DrugA")
+  })
+
+  it("collapses a token that varies within the split instead of returning a vector", {
+    # A vector reaching labs()/as_listing() blanks the label rather than erroring, so the
+    # helper must hand back exactly one string.
+    out <- .tlg_label(df, "Treatment: $TRT01A")
+    expect_length(out, 1L)
+    expect_equal(out, "Treatment: 5 mg, Treatment: 10 mg")
+  })
+
+  it("passes plain text through unchanged", {
+    expect_equal(.tlg_label(df, "NE: Not Estimable"), "NE: Not Estimable")
+  })
+})
+
+describe(".split_subtitle", {
+  it("returns NULL when there are no split variables", {
+    expect_null(.split_subtitle(data.frame(A = 1), character(0)))
+  })
+
+  it("uses the column label when one is present", {
+    df <- data.frame(PARAM = "DrugA", stringsAsFactors = FALSE)
+    attr(df$PARAM, "label") <- "Parameter"
+    expect_equal(.split_subtitle(df, "PARAM"), "Parameter: $PARAM")
+  })
+
+  it("falls back to the column name rather than emitting ERR", {
+    # `!PARAM` would resolve to the literal string "ERR" when the column carries no label,
+    # which is what ADNCA does for PARAM/PCSPEC.
+    df <- data.frame(PARAM = "DrugA", stringsAsFactors = FALSE)
+    expect_equal(.split_subtitle(df, "PARAM"), "PARAM: $PARAM")
+  })
+
+  it("joins several split variables with newlines", {
+    df <- data.frame(PARAM = "DrugA", PCSPEC = "SERUM", stringsAsFactors = FALSE)
+    expect_equal(.split_subtitle(df, c("PARAM", "PCSPEC")), "PARAM: $PARAM\nPCSPEC: $PCSPEC")
+  })
+})
+
+describe(".attach_table_labs", {
+  df   <- data.frame(n = 1)
+  data <- data.frame(PARAM = "DrugA", stringsAsFactors = FALSE)
+
+  it("attaches all three labels as attributes", {
+    out <- .attach_table_labs(df, data, "T", "Analyte: $PARAM", "F")
+    expect_equal(attr(out, "tlg_title"), "T")
+    expect_equal(attr(out, "tlg_subtitle"), "Analyte: DrugA")
+    expect_equal(attr(out, "tlg_footnote"), "F")
+  })
+
+  it("leaves the table contents untouched and omits labels that are unset", {
+    out <- .attach_table_labs(df, data, "T", NULL, NULL)
+    expect_equal(names(out), names(df))
+    expect_equal(out$n, df$n)
+    expect_null(attr(out, "tlg_subtitle"))
+    expect_null(attr(out, "tlg_footnote"))
+  })
+})
+
+describe("sidebar label settings normalization", {
+  source(file.path(system.file("shiny", package = "aNCA"), "functions", "utils-tlg.R"),
+         local = TRUE)
+  definitions <- list(example = list(options = list(
+    title = list(type = "text"), subtitle = list(type = "text"),
+    footnote = list(type = "text"), time_filter = list(type = "select")
+  )))
+  it("keeps blank labels and tokens verbatim", {
+    labels <- list(example = list(title = "$STUDYID", subtitle = "", footnote = "!AVAL\nNote"))
+    expect_identical(.normalize_tlg_labels(labels, definitions), labels)
+    expect_identical(.normalize_tlg_labels(NULL, definitions), list())
+  })
+  it("warns and ignores malformed or unsupported values while retaining valid labels", {
+    labels <- list(example = list(title = "Kept", subtitle = NA_character_,
+                                  footnote = list("nested"), time_filter = "1"))
+    expect_warning(actual <- .normalize_tlg_labels(labels, definitions), "invalid TLG labels")
+    expect_identical(actual, list(example = list(title = "Kept")))
+    expect_warning(
+      actual <- .normalize_tlg_labels(list(unknown = list(title = "Wrong catalog")), definitions),
+      "invalid TLG labels"
+    )
+    expect_length(actual, 0L)
+    for (invalid in list("bad", list(list(title = "unnamed")),
+                         setNames(list(list(), list()), c("example", "example")))) {
+      expect_warning(actual <- .normalize_tlg_labels(invalid, definitions), "unique catalog names")
+      expect_identical(actual, list())
+    }
   })
 })

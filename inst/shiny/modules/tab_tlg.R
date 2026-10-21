@@ -34,6 +34,9 @@
       opt_def <- template_def
     }
 
+    opt_def$options$order_comment <- list(
+      type = "text", label = "Comment (not shown in output)", default = "", metadata = TRUE
+    )
     opt_def
   }) %>%
     setNames(names(defs))
@@ -63,6 +66,7 @@ tab_tlg_ui <- function(id) {
           actionButton(ns("submit_tlg_order"), "Submit Order Details", class = "btn-primary")
         )
       ),
+      tags$p("After restoring settings, submit the order to display its outputs."),
       card(reactable_ui(ns("selected_tlg_table"))),
     ),
     nav_panel("Tables", uiOutput(ns("tables"), class = "tlg-module"), value = "Tables"),
@@ -75,100 +79,11 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-# Only user-editable order fields are portable; catalog metadata and row IDs
-# always come from the current catalog.
-.TLG_ORDER_FIELDS <- c("Selection", "Footnote", "Stratification", "Comment")
-
-.valid_tlg_order_value <- function(value, field) {
-  if (field == "Selection") {
-    return(is.logical(value) && length(value) == 1L && !is.na(value))
-  }
-  is.null(value) ||
-    (is.atomic(value) && length(value) == 1L && (is.character(value) || is.na(value)))
-}
-
-.normalize_tlg_order_row <- function(entry, key) {
-  if (!is.list(entry) || is.data.frame(entry)) {
-    warning("Ignored invalid TLG order row: ", key, call. = FALSE)
-    return(list())
-  }
-  result <- list()
-  for (field in intersect(.TLG_ORDER_FIELDS, names(entry))) {
-    value <- entry[[field]]
-    if (!.valid_tlg_order_value(value, field)) {
-      warning("Ignored invalid TLG order field: ", key, "/", field, call. = FALSE)
-      next
-    }
-    result[field] <- list(if (is.null(value)) NA_character_ else value)
-  }
-  result
-}
-
-#' Validate saved order fields, matching stable catalog keys rather than row IDs.
-#' @param saved Named list of saved TLG order rows, or NULL for older settings.
-#' @param catalog_ids Names of the current catalog entries.
-#' @returns A named list of supported, valid order fields.
-#' @noRd
-.normalize_tlg_order <- function(saved, catalog_ids) {
-  if (is.null(saved) || length(saved) == 0L) return(list())
-  ids <- names(saved)
-  valid <- c(
-    is.list(saved), !is.data.frame(saved), !is.null(ids),
-    !anyNA(ids), all(nzchar(ids)), !anyDuplicated(ids)
-  )
-  if (!all(valid)) {
-    warning("Ignored invalid TLG order settings: expected unique catalog names.", call. = FALSE)
-    return(list())
-  }
-  missing <- setdiff(ids, catalog_ids)
-  if (length(missing) > 0L) {
-    warning(
-      "Skipped TLGs no longer in the catalog: ", paste(missing, collapse = ", "), call. = FALSE
-    )
-  }
-  ids <- intersect(ids, catalog_ids)
-  setNames(lapply(ids, function(key) .normalize_tlg_order_row(saved[[key]], key)), ids)
-}
-
-.restore_tlg_order <- function(default_order, saved, catalog_ids) {
-  for (key in names(saved)) {
-    i <- match(key, catalog_ids)
-    for (field in names(saved[[key]])) default_order[[field]][i] <- saved[[key]][[field]]
-  }
-  default_order
-}
-
-# Keep edits across client-side paging, but start with fresh values and remount
-# inputs for each server-rendered snapshot, including identical settings restores.
-.tlg_order_edit_cell <- function(id, revision) {
-  reactable::JS(sprintf("(function() {
-    const edits = Object.create(null);
-    return function(cellInfo) {
-      const row = cellInfo.index;
-      const value = Object.prototype.hasOwnProperty.call(edits, row)
-        ? edits[row] : cellInfo.value;
-      return React.createElement('input', {
-        key: %s + ':' + row,
-        defaultValue: value == null ? '' : value,
-        onInput: function(event) {
-          edits[row] = event.target.value;
-          Shiny.setInputValue(%s, {
-            row: row + 1, column: cellInfo.column.id, value: event.target.value
-          }, {priority: 'event'});
-        }
-      });
-    };
-  })()", revision, jsonlite::toJSON(id, auto_unbox = TRUE)))
-}
-
 #' @param adpp Reactive ADPP data for PK parameter outputs.
 #' @param settings_override Reactive settings payload from upload or version restore.
 tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
-
-    # Preserve the companion TLG settings when its editor is unavailable.
-    session$userData$tlg_labels <- reactive(settings_override()$tlg_labels)
 
     #' Load TLG orders definitions
     default_order <- {
@@ -193,28 +108,31 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
         dplyr::mutate(id = dplyr::row_number(), .before = dplyr::everything())
     }
     tlg_order <- reactiveVal(default_order)
+    submitted_order <- reactiveVal(NULL)
 
-    # Save every row, including deselections, under its stable catalog key.
-    session$userData$tlg_order <- reactive({
-      order <- tlg_order()
-      rows <- lapply(seq_len(nrow(order)), function(i) as.list(order[i, .TLG_ORDER_FIELDS]))
-      setNames(rows, names(.TLG_DEFINITIONS)[order$id])
-    })
+    # Export the submitted selection that produced the current outputs. Before
+    # submission, save the draft order so it can still be restored later.
+    session$userData$tlg_order <- function() {
+      order <- submitted_order() %||% tlg_order()
+      .collect_tlg_order(order, .tlg_registry, names(.TLG_DEFINITIONS))
+    }
 
-    imported_tlg_order <- reactive({
+    imported_settings <- reactive({
       withCallingHandlers(
-        .normalize_tlg_order(settings_override()$tlg_order, names(.TLG_DEFINITIONS)),
+        .normalize_tlg_settings(settings_override(), .TLG_DEFINITIONS),
         warning = function(w) {
           showNotification(conditionMessage(w), type = "warning", duration = 10)
           invokeRestart("muffleWarning")
         }
       )
     })
+    imported_tlg_order <- reactive(imported_settings()$tlg_order)
 
     # Rebuild from current defaults for each restore, so absent rows/fields do
     # not inherit edits from a previously loaded settings version.
     observeEvent(settings_override(), {
       tlg_order(.restore_tlg_order(default_order, imported_tlg_order(), names(.TLG_DEFINITIONS)))
+      submitted_order(NULL)
     }, ignoreNULL = FALSE, priority = 100)
 
     # Based on the TLG list conditions for data() define the preselected rows in $Selection
@@ -250,48 +168,20 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
     # and Description feeds the submit log — none need to be user-facing.
     displayed_order <- reactive({
       dplyr::filter(tlg_order(), Selection) %>%
-        dplyr::select(Type, Dataset, Output, Footnote, Stratification, Comment)
+        dplyr::select(Type, Dataset, Output)
     }) %>%
       bindEvent(data(), input$confirm_add_tlg, input$remove_tlg, settings_override())
 
-    edit_revision <- 0L
     selected_tlg_state <- reactable_server(
       "selected_tlg_table",
       displayed_order,
-      download_buttons = c("csv", "xlsx"),
+      download_buttons = character(),
       groupBy = c("Type", "Dataset"),
       defaultExpanded = TRUE,
       wrap = TRUE,
       selection = "multiple",
-      editable = c("Footnote", "Stratification", "Comment"),
-      edit_debounce = 0,
-      columns = function(df) {
-        edit_revision <<- edit_revision + 1L
-        fields <- c("Footnote", "Stratification", "Comment")
-        editors <- setNames(lapply(fields, function(field) {
-          colDef(cell = .tlg_order_edit_cell(
-            session$ns(paste0("selected_tlg_table-edit_", field)), edit_revision
-          ))
-        }), fields)
-        define_cols(df, overrides = c(list(Output = colDef(html = TRUE)), editors))
-      }
+      columns = function(df) define_cols(df, overrides = list(Output = colDef(html = TRUE)))
     )
-
-    observeEvent(isolate(selected_tlg_state())$edit(), {
-      info <- selected_tlg_state()$edit()
-
-      # info$column is the display-frame column (reactable.extras reports the
-      # column name; older versions report a positional index). Resolve to a name
-      # and only ever write to an editable column, so a stray edit event can never
-      # overwrite an internal column (id/PKid/Condition/...) of the full frame.
-      editable_cols <- c("Footnote", "Stratification", "Comment")
-      col <- if (is.numeric(info$column)) names(displayed_order())[info$column] else info$column
-      req(col %in% editable_cols)
-
-      new_tlg_order <- tlg_order()
-      new_tlg_order[new_tlg_order$Selection, ][info$row, col] <- info$value
-      tlg_order(new_tlg_order)
-    })
 
     # Issue #1335: the "Add TLGs" picker is a catalog-style checklist -- dataset
     # tabs (PK Concentrations / PK Parameters) over one column per Type (Tables /
@@ -382,6 +272,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
     #' for mysterious reasons nav_select() and updateTabsetPanel() were not working,
     #' so solved this using JavaScript
     observeEvent(list(input$submit_tlg_order), ignoreInit = TRUE, {
+      req(nrow(tlg_order_filtered()) > 0L)
       tab_to_switch <- pull(tlg_order_filtered()[1, "Type"]) %>% paste0("s")
       shinyjs::runjs(
         paste0("
@@ -396,15 +287,20 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
       )
     })
 
-    # Submit the TLG order, filter selected TLGs
-    tlg_order_filtered <- reactive({
+    observeEvent(input$submit_tlg_order, {
       req(data())
-      tlg_order_filt <- tlg_order()[tlg_order()$Selection, ]
-      log_debug("Submitted TLGs:\n", paste0("* ", tlg_order_filt$Description, collapse = "\n"))
+      submitted_order(tlg_order())
+    }, priority = 50)
 
-      tlg_order_filt
-    }) %>%
-      bindEvent(c(input$submit_tlg_order))
+    # Restoring settings clears the previous submission, so exports cannot mix
+    # a newly restored order with outputs from the preceding settings version.
+    tlg_order_filtered <- reactive({
+      req(data(), submitted_order())
+      order <- submitted_order()
+      selected <- order[order$Selection, ]
+      log_debug("Submitted TLGs:\n", paste0("* ", selected$Description, collapse = "\n"))
+      selected
+    })
 
     # Single source of truth per dataset -- every TLG receives the full,
     # unfiltered data.  Summary tables and mean plots drop summary-excluded rows
@@ -482,6 +378,15 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
     # inside moduleServer(), so it is per-session.
     .tlg_registry <- new.env(parent = emptyenv())
 
+    imported_labels <- reactive(imported_settings()$tlg_labels)
+    imported_options <- reactive(imported_settings()$tlg_options)
+    session$userData$tlg_labels <- function() {
+      .collect_tlg_labels(.tlg_registry, imported_labels())
+    }
+    session$userData$tlg_options <- function() {
+      .collect_tlg_options(.tlg_registry, imported_options())
+    }
+
     # Shared helper: build navset_pill_list panels for one TLG type.
     # Factored out to eliminate the copy-paste across table / graph / listing
     # renderUI blocks.  `id_suffix` must be unique per type to produce
@@ -501,11 +406,20 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
           # Only register the Shiny module once per session to avoid accumulating
           # duplicate pagination observers on re-submit.
           if (!exists(module_id, envir = .registered_modules, inherits = FALSE)) {
-            items <- tlg_module_server(
-              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars
+            module <- tlg_module_server(
+              module_id, tlg_data, type, get(g_def$fun), g_def$options, grouping_vars,
+              refresh_trigger = reactive(input$submit_tlg_order),
+              label_settings = reactive(imported_labels()[[g_key]]),
+              option_settings = reactive(imported_options()[[g_key]]),
+              comment_settings = reactive({
+                .tlg_order_comment(imported_tlg_order()[[g_key]])
+              })
             )
             assign(module_id, TRUE, envir = .registered_modules)
-            assign(g_key, list(def = g_def, type = type, items = items), envir = .tlg_registry)
+            assign(g_key, list(
+              def = g_def, type = type, items = module$items, labels = module$labels,
+              options = module$options, comment = module$comment
+            ), envir = .tlg_registry)
           }
           tlg_module_ui(session$ns(module_id), type, g_def$options)
         } else {
@@ -574,7 +488,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL), settings_override = 
 
     #' Resolve every registered module's output list.
     #'
-    #' Each registry entry holds the module's `tlg_list` reactive.  A TLG that is still
+    #' Each registry entry holds the module's current rendered-items reactive.  A TLG that is still
     #' gated (`req()`/`validate()` before NCA has produced its dataset) raises a condition
     #' when read; that is a "not ready", not a failure, so it resolves to NULL and is
     #' reported as `empty` in the manifest rather than aborting the whole download.

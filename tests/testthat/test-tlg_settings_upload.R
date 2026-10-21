@@ -1,5 +1,6 @@
 local({
   library(shiny)
+  source(system.file("shiny/functions/utils-tlg-settings.R", package = "aNCA"), local = TRUE)
   library(dplyr)
   library(purrr)
   library(logger)

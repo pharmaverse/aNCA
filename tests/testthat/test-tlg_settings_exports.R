@@ -4,6 +4,7 @@ local({
   library(shiny)
   export_env <- new.env(parent = environment())
   shiny_dir <- system.file("shiny", package = "aNCA")
+  source(file.path(shiny_dir, "functions", "utils-tlg-settings.R"), local = export_env)
   source(file.path(shiny_dir, "modules", "tab_nca", "nca_setup.R"), local = export_env)
   source(file.path(shiny_dir, "functions", "zip-utils.R"), local = export_env)
 

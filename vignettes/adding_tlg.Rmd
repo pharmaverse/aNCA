@@ -97,6 +97,17 @@ uses the rendering function default; multi-select choices must not include a bla
   # - '.colnames' keyword will pull the choices from the data column names
   # - '$COLUMN_NAME' keyword will pull choices from values of a specific column
   choices:
+  # optional: another option selecting the column to read choices from;
+  # changing it resets this selector; choices above supplies the fallback column
+  choices_from:
+  # optional: restrict choices to the metabolite rows used by metabolite outputs
+  metabolites_only:
+  # optional: text shown when the selection is empty (e.g. "All parameters");
+  # this is picker display text, not an additional selectable value
+  placeholder:
+  # optional: use the function default when this selection is explicitly empty
+  # (only for controls that document this behavior, such as displayed columns)
+  empty_uses_default:
   # whether to allow for multiple values to be selected  
   multiple:
   # default value to be provided in the field;
@@ -140,6 +151,13 @@ In order to group options widgets visually, you can specify `group_label`s in be
 ```
 
 ### Examples
+Plain text guidance can be placed between widgets using a `.help_` key. Like group
+labels, these strings are displayed in the sidebar and are not passed to the TLG function:
+
+```yaml
+.help_columns: "Leave Displayed parameters empty to show all parameters."
+```
+
 For examples of TLG definition implementations, please see [tlg.yaml](https://github.com/pharmaverse/aNCA/blob/main/inst/shiny/tlg.yaml) file in the repository.
 
 ## Implementation function
@@ -151,3 +169,30 @@ Function should be defined within `aNCA` package and meet the following criteria
     - `g_*` for graphs
   - should accept a `data` argument for providing results to be rendered as a given TLG
   - should return a list of entries or a single entry.
+
+
+## Saved TLG settings
+
+Order Details selects outputs. Rendered labels, stratification and other options
+are edited in each TLG sidebar. The sidebar Comment records review metadata and
+is not passed to the rendering function. Older Order Details Footnote and
+Stratification values remain in saved settings as metadata; they do not replace
+rendered labels or grouping selections.
+
+The existing settings YAML envelope carries three maps keyed by stable catalog
+names, such as `t_pkct01`. `tlg_order` stores `Selection` for every catalog entry
+and legacy metadata. `tlg_labels` stores raw text option values, including
+annotation tokens and line breaks. `tlg_options` stores applied select, numeric
+and table option values under their option IDs. Table edits are saved only after
+Confirm. An explicit empty selection or table remains empty; an absent option
+uses the current catalog default. Explicit empty grouping selections are passed to the rendering function, while
+unset single selectors use its default behavior.
+
+Standalone settings and ZIP settings use the same TLG snapshot. After submission,
+they save the submitted selection and current sidebar options used to generate
+exported outputs. Draft order changes take effect on the next Submit. Restoring
+settings clears the prior submission: submit the restored order to display and
+export its outputs. Repeated uploads replace the previous snapshot, and Reset to
+defaults restores the current catalog values. Values for unavailable ADPP outputs
+remain pending until NCA data is available. Removed catalog entries and invalid
+options are reported and skipped; new catalog options use their defaults.

@@ -12,6 +12,7 @@ avail_fixture <- function() {
     Type        = c("Table", "Listing", "Graph"),
     Dataset     = c("PK Concentrations", "PK Parameters", "PK Concentrations"),
     PKid        = c("pkct01", "pkcl01", "pkpg01"),
+    Label       = c("pkct01 - Summary", "pkcl01 - Listing", "pkpg01 - Cumulative"),
     Description = c("Conc summary table", "Listing of parameters", "Cumulative plot"),
     Link        = c("http://spec/1", NA_character_, "http://spec/3")
   )
@@ -53,6 +54,8 @@ describe("build_add_checklist", {
     expect_true(all(grepl("^modal_check_", res$group_ids)))
 
     html <- as.character(res$ui)
+    # Catalog labels and IDs remain searchable alongside the descriptions.
+    expect_match(html, "pkpg01 - Cumulative", fixed = TRUE)
     # every output description is rendered
     expect_true(grepl("Conc summary table", html))
     expect_true(grepl("Listing of parameters", html))
