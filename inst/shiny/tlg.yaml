@@ -633,15 +633,7 @@ l_pkcl02_uri:
     footnote:
       type: text
       label: Footnote
-    .group_label_2: "Filtering"
-    # Urine-only listing: choices are restricted to urine-looking PCSPEC values and all
-    # are selected by default, so the filter reflects what the listing actually shows.
-    urine_specs:
-      label: "Specimen Material Type"
-      type: select
-      choices: .urinespecs
-      default: .all
-      multiple: true
+    .help_specimen: "This listing includes only urine records (PCSPEC = URINE, ignoring case). Specimen information is required."
     .group_label_3: "Grouping"
     listgroup_vars:
       label: "Table grouping variables"

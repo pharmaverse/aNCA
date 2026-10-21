@@ -655,3 +655,14 @@ describe("tlg_module_server: Shiny control-flow conditions", {
     })
   })
 })
+
+describe("tlg_module_server: urine specimen errors", {
+  it("explains missing specimen information in the listing panel", {
+    args <- list(type = "listing", data = shiny::reactive(data.frame(AVAL = 1)),
+                 render_list = l_pkcl02_uri, options = list())
+    shiny::testServer(tlg_module_server, args = args, {
+      expect_match(tlg_list(), "Error: l_pkcl02_uri: 'PCSPEC' column not found")
+      expect_match(tlg_list(), "Provide PCSPEC to identify urine concentration records")
+    })
+  })
+})

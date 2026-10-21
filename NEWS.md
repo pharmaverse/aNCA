@@ -40,7 +40,7 @@
   silently. It also explains when the current data and settings provide no
   valid NCA intervals (#1527)
 
-* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
+* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay. Settings with no unit overrides now restore the defaults, so their generated R scripts run without an empty-units error (#1190, #1531)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
@@ -80,7 +80,7 @@
 
 ## Features
 
-* PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns (#1531)
+* PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns. The urine concentration listing always includes only urine, removes the redundant specimen selector, and requires specimen information (#1531)
 * Exporting results now validates every selected non-TLG artifact before anything
   is written and blocks the save when a problem is found (a data-integrity
   control; cf. 21 CFR 11.10(a)). The controlled traceability matrix at
