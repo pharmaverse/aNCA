@@ -7,6 +7,8 @@
 
 ## Bug Fixes
 
+* Generated R scripts use the requested dataset path or the input file beside the ZIP script and run when no ratio calculations are configured (#1476, #1528)
+
 * Restored compatibility with the upcoming PKNCA release (0.12.2). Running NCA with start imputation (including the default example dataset) no longer fails with duplicate `R2ADJ` results when applying half-life flags. `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
 
 * Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, "Correlation Between TimeX and Log ConcY"). PKNCA 0.12.1.9000 reports the parameter, and without a mapping it appeared unlabelled in `pivot_wider_pknca_results()` output (#481, #1102)
@@ -116,6 +118,7 @@
 * The standalone mean, urine, dose-proportionality and box plot entries (`pkcg03` by dose, `pkpg01`/`pkpg02`/`pkpg03`/`pkpg04`/`pkpg06`) expose Title, Subtitle and Footnote inputs in the sidebar, matching the other graph entries (#1356)
 * Summary tables can filter which stratification values appear: a "Parameters to show" filter on the `pkpt03/07/08` tables and a "Timepoints to show" filter on the `pkct01` tables restrict the rows to the chosen `PARAM`/timepoint values (#1356)
 * Summary tables now warn (instead of silently degrading) when a chosen stratification variable is not present in the data — e.g. the "by Dose" concentration tables when a dose-amount column is not carried in the concentration data — so it is clear why a table grouped by fewer variables (#1356)
+* All 33 TLG entries offer Title, Subtitle and Footnote controls, with catalog-based default wording. Summary-table subtitles follow the selected split variables, and PK-parameter plot subtitles identify each plot's analyte, specimen, visit and units. Labels, axis edits and selected filters persist when the order is re-submitted; editable labels also round-trip through saved settings, and Reset to defaults restores their defaults. The Add TLG picker shows the catalog labels; graph annotations wrap within the app and exported HTML, and PDF graph labels are wrapped. Labels remain visible in PDF tables and listings, and the urine concentration listing title is editable (#1476)
 
 ### TLG Order & Selection
 * Simplify the TLG Order Details table: the internal `Condition` column is hidden (it stays in `tlg.yaml` as metadata that still auto-selects urine outputs) and the table is trimmed to Type, Dataset, Output, Footnote, Stratification, and Comment (#1335)

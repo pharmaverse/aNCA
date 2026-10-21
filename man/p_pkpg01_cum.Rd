@@ -54,9 +54,12 @@ Default: \code{"PPENINT"}.}
 \item{list_vars}{Columns used to split output into separate plots.
 Default: \code{c("PPCAT")}.}
 
-\item{title}{Optional plot title.}
+\item{title}{Optional plot title. Supports \verb{$COLUMN} value tokens and
+\code{!COLUMN} column-label tokens, resolved within each plot's data split.}
 
-\item{subtitle}{Optional plot subtitle.}
+\item{subtitle}{Optional plot subtitle string. When \code{NULL}, generated from
+each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
+Use \code{""} to suppress the subtitle. Supports the same annotation tokens as \code{title}.}
 
 \item{footnote}{Optional footnote / caption.}
 

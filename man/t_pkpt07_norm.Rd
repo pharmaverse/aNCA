@@ -12,7 +12,10 @@ t_pkpt07_norm(
   strat_var = c("TRT01A", "PARAM"),
   value_var = "AVAL",
   col_group_var = NULL,
-  stats = NULL
+  stats = NULL,
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 }
 \arguments{
@@ -51,6 +54,15 @@ statistic block is repeated once per level, nested under a group header.
 \item{stats}{Optional character vector of statistics to display, chosen from
 \code{c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")}. \code{NULL} (default) shows all of them. Names not produced by this
 table are ignored.}
+
+\item{title}{Table title. Supports \verb{$VAR} / \code{!VAR} annotation syntax (see
+\code{\link[=parse_annotation]{parse_annotation()}}). Attached to each returned table as a \code{tlg_title}
+attribute.}
+
+\item{subtitle}{Per-table subtitle. \code{NULL} (default) names each \code{list_vars}
+split variable and its value.}
+
+\item{footnote}{Table footnote, attached as a \code{tlg_footnote} attribute.}
 }
 \value{
 Named list of data frames (same format as \code{\link[=t_pkpt03_col]{t_pkpt03_col()}}).
