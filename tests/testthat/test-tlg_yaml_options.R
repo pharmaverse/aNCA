@@ -35,9 +35,9 @@ describe("tlg.yaml sidebar options", {
       expect_true(defs[[id]]$options$param_filter$multiple)
       expect_equal(defs[[id]]$options$param_filter$placeholder, "All parameters")
     }
-    expect_true(defs$l_pkpl01_mp$options$param_filter$metabolites_only)
-    expect_null(defs$l_pkpl01$options$param_filter$metabolites_only)
-    expect_null(defs$l_pkpl04_mp$options$param_filter$metabolites_only)
+    expect_equal(defs$l_pkpl01_mp$options$param_filter$ratio_type, "analyte")
+    expect_null(defs$l_pkpl01$options$param_filter$ratio_type)
+    expect_equal(defs$l_pkpl04_mp$options$param_filter$ratio_type, "other")
     expect_null(defs$l_pkcl01_tad$options$displaying_vars)
     expect_match(defs$l_pkcl01_tad$options$.help_columns, "NRRLT.*ARRLT.*AVAL")
   })

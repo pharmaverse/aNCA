@@ -100,8 +100,8 @@ uses the rendering function default; multi-select choices must not include a bla
   # optional: another option selecting the column to read choices from;
   # changing it resets this selector; choices above supplies the fallback column
   choices_from:
-  # optional: restrict choices to the metabolite rows used by metabolite outputs
-  metabolites_only:
+  # optional: restrict parameter choices to configured ADPP ratios (analyte or other)
+  ratio_type:
   # optional: text shown when the selection is empty (e.g. "All parameters");
   # this is picker display text, not an additional selectable value
   placeholder:

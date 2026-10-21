@@ -330,3 +330,67 @@ describe("get_session_code: ", {
     expect_false(any(grepl(placeholder, file_content)))
   })
 })
+
+describe("get_settings_code: configured ratio replay", {
+  it("executes all three forward and inverse ratios with empty unit overrides", {
+    raw <- subset(adnca_example, PCSPEC == "SERUM")
+    subjects <- raw$USUBJID[!duplicated(raw$ROUTE)]
+    raw <- raw[raw$USUBJID %in% subjects & raw$ATPTREF %in% c("DOSE 1", "DOSE 2"), ]
+    mapped <- intersect(MAPPING_DESIRED_ORDER, names(raw))
+    mapping <- as.list(stats::setNames(mapped, mapped))
+    mapping$Metabolites <- "Metab-DrugA"
+    mapping$Grouping_Variables <- c("TRT01A", "SEX")
+    obj <- PKNCA_create_data_object(raw, mapping = mapping)
+    types <- unique(.derive_study_types(obj)$type)
+    selections <- stats::setNames(rep(list(c("cmax", "auclast")), length(types)), types)
+    ratios <- data.frame(
+      TestParameter = c("AUCLST", "CMAX", "CMAX"),
+      RefParameter = c("AUCLST", "CMAX", "CMAX"),
+      TestGroups = "(all other levels)",
+      RefGroups = c("PARAM: DrugA", "PARAM: Metab-DrugA", "PARAM: DrugA"),
+      AggregateSubject = "no", AdjustingFactor = 1,
+      PPTESTCD = c("MRAUCLST", "MRCMAX", "MRCMAX11")
+    )
+    settings <- list(mapping = mapping, settings = list(
+      analyte = unique(raw$PARAM), profile = unique(raw$ATPTREF), pcspec = "SERUM",
+      method = "lin up/log down", data_imputation = list(impute_c0 = TRUE),
+      parameters = list(selections = selections), flags = list(), ratio_table = ratios,
+      units = data.frame(PPTESTCD = character(), PPORRESU = character(), PPSTRESU = character())
+    ))
+    directory <- withr::local_tempdir()
+    settings_path <- file.path(directory, "settings.yaml")
+    yaml::write_yaml(settings, settings_path)
+    restored <- read_settings(settings_path)
+    expect_equal(restored$settings$ratio_table, ratios)
+    expect_null(restored$settings$units)
+
+    # Use the exported ZIP layout expected by the unmodified script template.
+    saveRDS(raw, file.path(directory, "input_data.rds"))
+    script_directory <- file.path(directory, "R")
+    dir.create(script_directory)
+    script <- file.path(script_directory, "replay.R")
+    get_settings_code(settings_path, data_path = "../input_data.rds", output_path = script)
+    replay <- new.env(parent = globalenv())
+    withr::with_dir(script_directory, sys.source(script, envir = replay))
+    expect_equal(replay$ratio_table, ratios)
+    expect_null(replay$units_table)
+
+    adpp <- replay$cdisc_datasets$adpp
+    keys <- c("STUDYID", "USUBJID", "PPSPEC", "ATPTREF", "DOSEA", "ROUTE")
+    for (i in seq_len(nrow(ratios))) {
+      code <- ratios$TestParameter[i]
+      reference <- sub("PARAM: ", "", ratios$RefGroups[i], fixed = TRUE)
+      numerator <- adpp[adpp$PARAMCD == code & adpp$PPCAT != reference, ]
+      denominator <- adpp[adpp$PARAMCD == code & adpp$PPCAT == reference, ]
+      expected <- merge(numerator, denominator, by = keys, suffixes = c(".test", ".ref"))
+      actual <- adpp[adpp$PARAMCD == ratios$PPTESTCD[i], ]
+      comparison <- merge(actual, expected, by = keys)
+      expect_equal(nrow(comparison), nrow(actual))
+      expect_gt(nrow(actual), 0L)
+      expect_equal(comparison$AVAL, comparison$AVAL.test / comparison$AVAL.ref)
+      expect_match(actual$PPANMETH, paste0("[", ratios$RefGroups[i], "]"), fixed = TRUE)
+      expect_setequal(actual$ROUTE, unique(raw$ROUTE))
+      expect_setequal(actual$ATPTREF, c("DOSE 1", "DOSE 2"))
+    }
+  })
+})
