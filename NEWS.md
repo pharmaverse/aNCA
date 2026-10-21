@@ -7,6 +7,9 @@
 
 ## Bug Fixes
 
+* All-missing input columns now use their metadata-defined types during
+  preprocessing, so optional numeric fields such as `VOLUME` remain numeric
+  when uploaded empty (#1506)
 * Restored compatibility with the upcoming PKNCA release (0.12.2). Running NCA with start imputation (including the default example dataset) no longer fails with duplicate `R2ADJ` results when applying half-life flags. `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
 
 * Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, "Correlation Between TimeX and Log ConcY"). PKNCA 0.12.1.9000 reports the parameter, and without a mapping it appeared unlabelled in `pivot_wider_pknca_results()` output (#481, #1102)
