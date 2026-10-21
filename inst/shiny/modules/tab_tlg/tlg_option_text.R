@@ -8,10 +8,11 @@ tlg_option_text_ui <- function(id, opt_def, data) {
 
   label <- if (is.null(opt_def$label)) sub(".*-(.*)", "\\1", id) else opt_def$label
 
-  textInput(
+  textAreaInput(
     ns("text"),
     label = label,
-    value = opt_def$default
+    value = opt_def$default,
+    rows = 2
   )
 }
 
@@ -33,7 +34,7 @@ tlg_option_text_server <- function(id, opt_def, data, reset_trigger,
     observeEvent(value_override(), {
       restored <- value_override()
       value(if (is.null(restored)) default else restored)
-      updateTextInput(session, "text", value = value())
+      updateTextAreaInput(session, "text", value = value())
     }, ignoreNULL = FALSE, priority = 100)
 
     #' Reset the input to the declared default upon reset_trigger.
@@ -45,7 +46,7 @@ tlg_option_text_server <- function(id, opt_def, data, reset_trigger,
     #' be a no-op.
     observeEvent(reset_trigger(), {
       value(default)
-      updateTextInput(session, "text", value = default)
+      updateTextAreaInput(session, "text", value = default)
     }, ignoreInit = TRUE)
 
     value

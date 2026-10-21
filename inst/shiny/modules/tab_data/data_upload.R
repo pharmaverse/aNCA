@@ -466,7 +466,6 @@ data_upload_server <- function(id) {
   if (length(found_settings) > 1) {
     errors <- append(errors, "Error: Multiple settings files detected.
                      Please upload only one settings file.")
-    settings_override(NULL)
   } else if (length(found_settings) == 1) {
     latest <- found_settings[[1]]
     versioned_attr <- attr(latest$content, "versioned")

@@ -462,12 +462,12 @@ describe("tlg_option_select_server", {
       ),
       {
         session$setInputs(select = "")
-        expect_equal(session$getReturned()(), "")
+        expect_identical(session$getReturned()(), "")
       }
     )
   })
 
-  it("coerces an empty multi-select (NULL input) to \"\" so rendering is not blocked", {
+  it("preserves an explicit empty multi-select", {
     # A `multiple` pickerInput with nothing selected reports input$select = NULL.
     # If the server passed that NULL through, tlg_module_server's is-null guard
     # would return NULL and blank the whole table.  It must return "" instead.
@@ -488,7 +488,7 @@ describe("tlg_option_select_server", {
       ),
       {
         session$setInputs(select = NULL)
-        expect_equal(session$getReturned()(), "")
+        expect_identical(session$getReturned()(), character())
       }
     )
   })

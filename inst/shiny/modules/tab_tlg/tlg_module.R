@@ -171,9 +171,11 @@ tlg_module_ui <- function(id, type, options) {
               You can specify any {type} customization options that are supported by the specific
               {type} implementation function.
             ")),
-            tags$p(glue::glue(
-              "Leaving a widget empty will allow default behaviour of the {type} function."
-            )),
+            tags$p(
+              "Blank text, numeric and single-choice fields use the function defaults. ",
+              "Cleared multiple-choice fields apply an empty selection unless ",
+              "their help specifies a default."
+            ),
             tags$p(
               "In text fields, you can reference values / columns in the dataset by using
               the dollar sign (", tags$b("$"), ") and providing column name, e.g. ",
@@ -251,12 +253,16 @@ tlg_module_ui <- function(id, type, options) {
 #'   subject column); used to resolve the `.pknca_groups` default of select options
 #' @param refresh_trigger Reactive invalidated when the parent rebuilds the module UI.
 #' @param label_settings Reactive named list of raw text labels restored from settings.
-#' @returns A list of reactives: rendered `items` and editable raw text `labels`.
+#' @param option_settings Reactive non-text settings restored from settings.
+#' @param comment_settings Reactive order comment, which is not a rendered label.
+#' @returns Reactives for rendered items, labels, applied options and the order comment.
 #'
 tlg_module_server <- function(id, data, type, render_list, options = NULL, # nolint: cyclocomp_linter
                               grouping_vars = reactive(character()),
                               refresh_trigger = reactive(NULL),
-                              label_settings = reactive(NULL)) {
+                              label_settings = reactive(NULL),
+                              option_settings = reactive(NULL),
+                              comment_settings = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     current_page <- reactiveVal(1)
 
@@ -303,17 +309,29 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
     })
 
     #' keeps list of plots to render, with options gathered from the UI and applied
-    tlg_list <- reactive({
+    rendered_items <- reactive({
       list_options <- purrr::imap(
         reactiveValuesToList(options_values), function(value, name) value()
       )
 
+      metadata_ids <- names(options)[vapply(options, function(def) {
+        is.list(def) && isTRUE(def$metadata)
+      }, logical(1))]
+      list_options <- list_options[setdiff(names(list_options), metadata_ids)]
+      # A few controls explicitly document empty as "use the function default".
+      # Keep that meaning without discarding empty grouping selections elsewhere.
+      use_default <- vapply(names(list_options), function(id) {
+        isTRUE(options[[id]]$empty_uses_default) && length(list_options[[id]]) == 0L
+      }, logical(1))
+      list_options <- list_options[!use_default]
       if (any(sapply(list_options, is.null))) return(NULL)
 
       # Only "" and NA mean "unset". A literal 0 is a legitimate value — nominal timepoint 0,
       # or an axis limit of 0 — and treating it as unset silently disabled the whole option.
-      # A cleared numeric widget arrives as NULL and is already handled above.
-      list_options <- purrr::keep(list_options, function(value) all(!value %in% c("", NA)))
+      # Cleared numeric widgets use NA. Explicit empty multi-selections are kept.
+      list_options <- purrr::keep(list_options, function(value) {
+        is.data.frame(value) || all(!value %in% c("", NA))
+      })
 
       rendered <- tryCatch({
         # Data arrives label-restored from the tab_tlg boundary (see
@@ -371,8 +389,10 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
 
       if (inherits(rendered, "condition")) stop(rendered)
       rendered
-    }) %>%
-      debounce(750)
+    })
+    # Debounce the display only. Downloads must render the same current options
+    # that are written to settings even immediately after a sidebar edit.
+    tlg_list <- debounce(rendered_items, 750)
 
     #' raw entries shown on the current page (slice of the full TLG list); the
     #' per-type render helpers below turn them into reactables / plotly / prints
@@ -404,9 +424,17 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       if (is.character(options[[option]])) return(NULL)
       fn <- get(glue::glue("tlg_option_{options[[option]]$type}_server"))
       args <- list(option, options[[option]], data, reactive(input$reset_widgets))
-      if (identical(options[[option]]$type, "select")) args$grouping_vars <- grouping_vars
-      if (identical(options[[option]]$type, "text")) {
-        args$value_override <- reactive(label_settings()[[option]])
+      if (identical(options[[option]]$type, "select")) {
+        args$grouping_vars <- grouping_vars
+        source <- options[[option]]$choices_from
+        if (!is.null(source)) args$choices_from <- reactive(options_values[[source]]())
+      }
+      args$value_override <- if (isTRUE(options[[option]]$metadata)) {
+        comment_settings
+      } else if (identical(options[[option]]$type, "text")) {
+        reactive(label_settings()[[option]])
+      } else {
+        reactive(option_settings()[[option]])
       }
       do.call(fn, args)
     }) %>%
@@ -420,13 +448,12 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
       is.list(def) && !is.null(def$choices_from)
     })
     purrr::iwalk(dependent_options, function(def, id) {
-      rendered <- FALSE
       output[[id]] <- renderUI({
         refresh_trigger()
         column <- options_values[[def$choices_from]]()
         if (length(column) == 1 && nzchar(column)) def$choices <- paste0("$", column)
-        if (rendered) def$default <- isolate(options_values[[id]]())
-        rendered <<- TRUE
+        option_settings()
+        def$default <- isolate(options_values[[id]]())
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
       })
       outputOptions(output, id, suspendWhenHidden = FALSE)
@@ -436,18 +463,13 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
     #'
     #' `isolate()` keeps the value read one-way: taking a reactive dependency on the option
     #' values would re-render the whole sidebar on every keystroke.
-    options_rendered <- FALSE
     output$options <- renderUI({
       # Rebuilding the parent UI otherwise replays this output's cached initial markup.
       refresh_trigger()
-      # Before inputs are mounted, empty select values mean uninitialized; keep
-      # runtime defaults such as .all and .pknca_groups for that first render.
       label_settings()
+      option_settings()
+      comment_settings()
       current <- isolate(purrr::map(reactiveValuesToList(options_values), function(v) v()))
-      if (!options_rendered) {
-        current <- current[names(isolate(text_labels()))]
-      }
-      options_rendered <<- TRUE
       purrr::imap(.carry_forward_option_values(options, current), function(def, id) {
         if (id %in% names(dependent_options)) return(uiOutput(session$ns(id)))
         .tlg_module_edit_widget(session$ns(id), def, data, grouping_vars)
@@ -456,23 +478,34 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
 
     # The option widgets live inside a right-sidebar dropdown on a nav panel, so Shiny
     # suspends this output until that panel is opened.  While it is suspended the widgets
-    # never reach the browser, their inputs stay NULL, and the is-null guard in tlg_list()
+    # never reach the browser, their inputs stay NULL, and the is-null guard in rendered_items()
     # short-circuits the whole render -- which meant a TLG on a tab the user never visited
     # exported nothing at all (#1344).
     outputOptions(output, "options", suspendWhenHidden = FALSE)
 
     text_labels <- reactive({
       text_ids <- names(options)[vapply(options, function(def) {
-        is.list(def) && identical(def$type, "text")
+        is.list(def) && identical(def$type, "text") && !isTRUE(def$metadata)
       }, logical(1))]
       setNames(lapply(text_ids, function(id) options_values[[id]]()), text_ids)
     })
 
     # Hand the rendered outputs back to the caller so they can be exported (#1344).
-    # `tlg_list()` is the whole set for this TLG -- every page, with the user's current
+    # `rendered_items()` is the whole set for this TLG -- every page, with the user's current
     # sidebar options already applied -- which is exactly what the download should write.
     # Regenerating from the catalog at download time would silently ignore those edits.
-    list(items = tlg_list, labels = text_labels)
+    applied_options <- reactive({
+      ids <- names(options)[vapply(options, function(def) {
+        is.list(def) && !identical(def$type, "text")
+      }, logical(1))]
+      values <- setNames(lapply(ids, function(id) options_values[[id]]()), ids)
+      values[!vapply(values, is.null, logical(1))]
+    })
+    order_comment <- reactive({
+      if (is.null(options_values$order_comment)) NULL else options_values$order_comment()
+    })
+    list(items = rendered_items, labels = text_labels,
+         options = applied_options, comment = order_comment)
   })
 }
 
@@ -484,8 +517,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
 #' silently discards whatever the user had typed (issue #1430).  Carrying the live value
 #' forward as the widget's value makes the edit survive.
 #'
-#' Select values are carried only after the first render, so runtime defaults
-#' (`.all`, `.pknca_groups`) can initialize the original widgets. Reset observers
+#' Option servers resolve runtime defaults before the first render. Reset observers
 #' retain the catalog definitions rather than the creation-time values.
 #'
 #' @param options Option definitions from `tlg.yaml`.  `.group_label_*` entries are plain
@@ -498,7 +530,7 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
   purrr::imap(options, function(def, id) {
     # `.group_label_*` headers are plain strings, and `$` on an atomic vector is an error,
     # so the is.list() guard has to come first.
-    if (is.list(def) && def$type %in% c("text", "select") && !is.null(current[[id]])) {
+    if (is.list(def) && def$type %in% c("text", "select", "numeric") && !is.null(current[[id]])) {
       def$default <- current[[id]]
     }
     def

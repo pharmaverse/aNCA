@@ -120,7 +120,7 @@ pkcg01 <- function(
   # save col labels, as further adnca tranformations cause them to be lost #
   adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars))) %>%
+    dplyr::mutate(id_plot = .tlg_group_ids(!!!syms(plotgroup_vars))) %>%
     filter(!is.na(id_plot))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
@@ -420,12 +420,12 @@ generate_subtitle <- function(plot_data, subtitle, trt_var, plotgroup_vars, plot
       # Collapse rather than interpolate: a plot group spanning more than one treatment
       # would otherwise vectorise the whole subtitle, which plotly renders as no title.
       "Treatment Group: ", paste(unique(plot_data[[trt_var]]), collapse = ", "),
-      " (N=", .subject_count(plot_data), ")<br>",
-      paste(
-        .plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
-        unique(plot_data[, plotgroup_vars]),
-        sep = "", collapse = ", "
-      )
+      " (N=", .subject_count(plot_data), ")",
+      if (length(plotgroup_vars)) {
+        paste0("<br>", generate_subtitle_mean(
+          plot_data, NULL, plotgroup_vars, plotgroup_names
+        ))
+      }
     )
   } else {
     parse_annotation(plot_data, subtitle)
@@ -554,7 +554,7 @@ pkcg02 <- function(
   # save col labels, as further adnca tranformations cause them to be lost #
   adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
+    dplyr::mutate(id_plot = .tlg_group_ids(!!!syms(plotgroup_vars)))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
   old_labels <- c(formatters::var_labels(adnca), id_plot = NA)
@@ -898,7 +898,7 @@ pkcg03 <- function(
 
   adnca_grouped <- adnca %>%
     mutate(across(all_of(plotgroup_vars), as.character)) %>%
-    dplyr::mutate(id_plot = interaction(!!!syms(plotgroup_vars)))
+    dplyr::mutate(id_plot = .tlg_group_ids(!!!syms(plotgroup_vars)))
 
   # reapply col labels to grouped data and make sure all variables are labeled #
   old_labels <- c(formatters::var_labels(adnca), id_plot = NA)
@@ -1198,6 +1198,7 @@ generate_title_mean <- function(plot_data, title, scale, studyid, mean_group_var
 # Helper Function for Subtitle Generation
 generate_subtitle_mean <- function(plot_data, subtitle, plotgroup_vars, plotgroup_names) {
   if (is.null(subtitle)) {
+    if (!length(plotgroup_vars)) return("")
     paste0(paste(.plotgroup_labels(plotgroup_vars, plotgroup_names), ": ",
                  unique(plot_data[, plotgroup_vars]),
                  sep = "", collapse = ", ")

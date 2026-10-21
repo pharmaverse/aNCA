@@ -72,6 +72,8 @@
 
 ## Features
 
+* TLG settings restore the submitted output selection and applied sidebar filters, grouping, parameters, columns, labels and comments from standalone or ZIP settings files. Order now shows output selection; labels and comments use the TLG sidebars. Existing order notes remain metadata, and repeated restores, cleared selections and catalog changes are preserved (#1528)
+
 * PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns. The urine concentration listing always includes only urine, removes the redundant specimen selector, and requires specimen information (#1531)
 * Exporting results now validates every selected non-TLG artifact before anything
   is written and blocks the save when a problem is found (a data-integrity
