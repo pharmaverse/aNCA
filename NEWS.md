@@ -7,6 +7,8 @@
 
 ## Bug Fixes
 
+* Generated R scripts use the requested dataset path or the input file beside the ZIP script and run when no ratio calculations are configured (#1476, #1528)
+
 * Restored compatibility with the upcoming PKNCA release (0.12.2). Running NCA with start imputation (including the default example dataset) no longer fails with duplicate `R2ADJ` results when applying half-life flags. `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
 
 * Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, "Correlation Between TimeX and Log ConcY"). PKNCA 0.12.1.9000 reports the parameter, and without a mapping it appeared unlabelled in `pivot_wider_pknca_results()` output (#481, #1102)
@@ -31,7 +33,7 @@
   silently. It also explains when the current data and settings provide no
   valid NCA intervals (#1527)
 
-* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay (#1190)
+* Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now captured in the exported settings YAML, ZIP export, and generated R script, so R scripts reproduce the same units as the app. The units table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead of a modal-edit flag, and is decoupled from the debounced `settings()` reactive to avoid stalling session auto-replay. Settings with no unit overrides now restore the defaults, so their generated R scripts run without an empty-units error (#1190, #1531)
 * R-devel package checks no longer fail because the base `tools` package was
   imported from `NAMESPACE` while listed only in `Suggests` (#1496)
 * The upload UI now shows accepted file formats and the current maximum upload
@@ -70,6 +72,7 @@
 
 ## Features
 
+* PK listings now let users select displayed parameters and show all parameters when cleared; listing sidebars explain selectable and fixed columns. The urine concentration listing always includes only urine, removes the redundant specimen selector, and requires specimen information (#1531)
 * Exporting results now validates every selected non-TLG artifact before anything
   is written and blocks the save when a problem is found (a data-integrity
   control; cf. 21 CFR 11.10(a)). The controlled traceability matrix at

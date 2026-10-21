@@ -264,16 +264,15 @@ l_pkcl01_tad <- function(data, ...) {
 
 #' Urine Concentration and Volume Listing (pkcl02)
 #'
-#' Filters ADNCA to urine specimen rows (where `PCSPEC %in% urine_specs`) then
+#' Filters ADNCA to urine specimen rows (`PCSPEC == "URINE"`, ignoring case) then
 #' delegates to [l_pkcl01()] with VOLUME and VOLUMEU added to the displayed
 #' columns when those columns are present in the data.
 #'
 #' @param data A CDISC ADNCA data frame (from `export_cdisc()$adnca`).
-#' @param urine_specs Character vector of specimen type values to keep, matched
-#'   case-insensitively against `PCSPEC`. Default: `c("URINE")`.
+#' @param urine_specs Retained for compatibility with older scripts; ignored.
+#'   The listing always includes only urine. Non-urine values trigger a warning.
 #' @param listgroup_vars Character vector of columns used to split output into
-#'   separate listings. Default: `c("PARAM", "PCSPEC")`. When `PCSPEC` is
-#'   absent from `data`, it is silently removed from this vector.
+#'   separate listings. Default: `c("PARAM", "PCSPEC")`.
 #' @param displaying_vars Character vector of columns to display. When `NULL`
 #'   (default), uses `c("NFRLT", "AFRLT", "AVAL")` plus `VOLUME`/`VOLUMEU`
 #'   if those columns exist in the data.
@@ -284,6 +283,9 @@ l_pkcl01_tad <- function(data, ...) {
 #' @param ... Additional arguments forwarded to [l_pkcl01()].
 #'
 #' @return A named list of `listing_df` objects.
+#' @details `PCSPEC` is required to identify urine records. Missing specimen
+#'   values are excluded. An error explains when `PCSPEC` is absent or no urine
+#'   records remain.
 #'
 #' @examples
 #' \dontrun{
@@ -304,26 +306,22 @@ l_pkcl02_uri <- function(
   ),
   ...
 ) {
-  if ("PCSPEC" %in% names(data)) {
-    # Case-insensitive match so "Urine"/"urine" are also kept (CDISC value is
-    # "URINE", but source data casing varies).
-    data <- dplyr::filter(data, toupper(.data$PCSPEC) %in% toupper(urine_specs))
-  } else {
+  if (!all(toupper(urine_specs) %in% "URINE")) {
     .tlg_warn(
-      "l_pkcl02_uri: 'PCSPEC' column not found in data; the urine specimen ",
-      "filter was not applied. All rows are treated as urine. If your data ",
-      "contains non-urine records, the output will be incorrect. Ensure ",
-      "PCSPEC is present in the source concentration data."
+      "l_pkcl02_uri: urine_specs is ignored; only PCSPEC = URINE records are listed."
     )
-    # Drop PCSPEC from listgroup_vars so l_pkcl01's all_of() doesn't fail on an
-    # absent column — mirrors the intersect() guard used by split_and_apply().
-    listgroup_vars <- intersect(listgroup_vars, names(data))
   }
+  if (!"PCSPEC" %in% names(data)) {
+    stop(
+      "l_pkcl02_uri: 'PCSPEC' column not found in data. ",
+      "Provide PCSPEC to identify urine concentration records."
+    )
+  }
+  data <- filter(data, toupper(.data$PCSPEC) %in% "URINE")
   if (nrow(data) == 0) {
     stop(
       "l_pkcl02_uri: no urine concentration data found. ",
-      "Ensure PCSPEC contains one of: ",
-      paste(urine_specs, collapse = ", ")
+      "Ensure PCSPEC contains URINE (case-insensitive)."
     )
   }
 

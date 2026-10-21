@@ -20,11 +20,15 @@
   extra_bottom <- if (line_counts[[3]] > 0) label_heights[[3]] + 12 else 0
 
   plot <- source + ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL)
-  bare <- plotly::plotly_build(plotly::ggplotly(plot, height = 500))
-  widget <- .tlg_annotation_widget(item, bare, source$labels$caption)
-  margins <- bare$x$layout$margin
+  existing_widget <- inherits(item, "plotly")
+  widget <- if (existing_widget) {
+    .tlg_annotation_widget(item, source$labels$caption)
+  } else {
+    plotly::plotly_build(plotly::ggplotly(plot, height = 500))
+  }
+  margins <- widget$x$layout$margin
   caption_offset <- margins$b
-  if (nzchar(labels[["caption"]])) {
+  if (nzchar(labels[["caption"]]) && !existing_widget) {
     # Plotly's initial margin omits rotated tick-label and legend heights.
     # Measure the rows below the last ggplot panel before placing the footnote.
     grob <- ggplot2::ggplotGrob(plot)
@@ -50,7 +54,8 @@
     text = unname(lapply(c("title", "subtitle", "caption"), function(key) {
       as.character(source$labels[[key]] %||% "")
     })),
-    top = margins$t, bottom = margins$b, captionOffset = caption_offset
+    top = margins$t, bottom = margins$b, captionOffset = caption_offset,
+    measureBottom = existing_widget
   )
   margins$t <- margins$t + extra_top
   margins$b <- margins$b + extra_bottom
@@ -135,10 +140,11 @@
 
 #' Replace concentration annotations without rebuilding their interactive traces.
 #' @noRd
-.tlg_annotation_widget <- function(item, bare, caption) {
-  if (!inherits(item, "plotly")) return(bare)
+.tlg_annotation_widget <- function(item, caption) {
   widget <- plotly::plotly_build(item)
-  # The source ggplot has the same facets and labels, but no legacy title spacing.
+  # The interactive widget already has valid geometry. Rebuilding its static
+  # ggplot only to measure labels repeats scale transformations and warnings
+  # (notably nonpositive error-bar bounds on native logarithmic axes).
   # Keep native log axes, filtered ticks, hover text, symbols and all trace values.
   widget$x$layout$title <- list(text = "")
   normalize <- function(text) gsub("<br\\s*/?>", "\n", text %||% "")
@@ -146,7 +152,6 @@
     !(identical(normalize(annotation$text), normalize(caption)) &&
         identical(annotation$yref, "paper") && isTRUE(annotation$y <= 0))
   }, widget$x$layout$annotations)
-  widget$x$layout$legend <- bare$x$layout$legend
   attr(widget, "ggplot") <- attr(item, "ggplot")
   attr(widget, "tlg_group_header") <- attr(item, "tlg_group_header")
   widget

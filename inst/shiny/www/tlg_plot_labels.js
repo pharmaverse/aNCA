@@ -4,6 +4,7 @@ function(el, x, labels) {
   var context = canvas.getContext('2d');
   var previousWidth;
   var previousHeight;
+  var captionOffset = labels.captionOffset;
   var busy = false;
   var escape = function(text) {
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -48,8 +49,17 @@ function(el, x, labels) {
     });
     var top = text[0].length * heights[0] + text[1].length * heights[1];
     var bottom = text[2].length * heights[2];
+    if (labels.measureBottom && bottom) {
+      // Existing widgets already know their tick and legend geometry. Measure it
+      // in the browser instead of rebuilding the data through ggplot in R.
+      var chartTop = el.getBoundingClientRect().top;
+      var panelBottom = chartTop + el._fullLayout._size.t + el._fullLayout._size.h;
+      el.querySelectorAll('.legend, .xtitle, .xtick').forEach(function(node) {
+        captionOffset = Math.max(captionOffset, node.getBoundingClientRect().bottom - panelBottom);
+      });
+    }
     var extraTop = top ? top + 12 : 0;
-    var extraBottom = bottom ? bottom + 12 + labels.captionOffset - labels.bottom : 0;
+    var extraBottom = bottom ? bottom + 12 + captionOffset - labels.bottom : 0;
     var height = 500 + extraTop + extraBottom;
     previousHeight = height;
     var update = {
@@ -59,7 +69,7 @@ function(el, x, labels) {
       height: height
     };
     var shifts = [labels.top + text[1].length * heights[1] + 6,
-                  labels.top, -labels.captionOffset - 6];
+                  labels.top, -captionOffset - 6];
     el._fullLayout.annotations.forEach(function(annotation, index) {
       var i = ['tlg-title', 'tlg-subtitle', 'tlg-caption'].indexOf(annotation.name);
       if (i < 0) return;
