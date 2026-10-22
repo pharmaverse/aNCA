@@ -562,6 +562,41 @@ describe("PKNCA_update_data_object", {
 nca_results <- PKNCA_calculate_nca(pknca_data)
 
 describe("PKNCA_calculate_nca", {
+  it("retains one result per parameter after start imputation with method metadata", {
+    example <- subset(adnca_example, USUBJID == "S1-01" & PCSPEC == "SERUM" & PARAM == "DrugA")
+    data <- PKNCA_create_data_object(example)
+    selections <- setNames(
+      list(c("cmax", "auclast", "aucinf.obs", "half.life")),
+      unique(.derive_study_types(data)$type)
+    )
+    data <- PKNCA_update_data_object(
+      data, method = "lin up/log down", selected_analytes = "DrugA",
+      selected_profile = unique(example$ATPTREF), selected_pcspec = "SERUM",
+      parameter_selections = selections
+    )
+    raw <- PKNCA::pk.nca(data, verbose = FALSE)$result
+    result <- PKNCA_calculate_nca(data)
+    keys <- c("USUBJID", "PARAM", "start", "end", "PPTESTCD")
+    expect_equal(anyDuplicated(result$result[keys]), 0L)
+
+    # Preserve the existing preference for the last (derived) result and its method.
+    expected <- raw[!duplicated(raw[keys], fromLast = TRUE), ]
+    actual <- result$result
+    expected <- expected[do.call(order, expected[keys]), ]
+    actual <- actual[do.call(order, actual[keys]), ]
+    expect_equal(actual$PPORRES, expected$PPORRES)
+    if ("PPANMETH" %in% names(raw)) {
+      expect_equal(actual$PPANMETH, expected$PPANMETH)
+    }
+
+    result$result$PPTESTCD <- translate_terms(result$result$PPTESTCD)
+    flagged <- PKNCA_hl_rules_exclusion(result, list(R2ADJ = 0.99))
+    half_life <- subset(flagged$result, PPTESTCD == "LAMZHL")
+    r2 <- subset(flagged$result, PPTESTCD == "R2ADJ")
+    expect_true(any(r2$PPORRES < 0.99))
+    expect_equal(half_life$exclude, ifelse(r2$PPORRES < 0.99, "R2ADJ < 0.99", NA_character_))
+  })
+
   it("calculates results for PKNCA analysis", {
     expect_s3_class(nca_results, "PKNCAresults")
   })
@@ -572,7 +607,8 @@ describe("PKNCA_calculate_nca", {
     expect_true("end_dose" %in% colnames(nca_results$result))
 
     # Check that only two items have been added to the list
-    expect_equal(length(colnames(nca_results$result)), 15)
+    raw_columns <- names(PKNCA::pk.nca(pknca_data, verbose = FALSE)$result)
+    expect_setequal(names(nca_results$result), c(raw_columns, "start_dose", "end_dose"))
   })
 })
 

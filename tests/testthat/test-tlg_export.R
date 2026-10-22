@@ -73,6 +73,18 @@ describe(".tlg_export_basenames", {
 })
 
 describe(".prepare_export_frame", {
+  it("exports the selected PK parameter columns with the same values", {
+    df <- data.frame(
+      USUBJID = c("S1", "S1"), TRT01A = "A", PPCAT = "Drug", PPSPEC = "PLASMA",
+      PARAM = c("Cmax", "AUC"), AVAL = c(5, 20), AVALU = c("ng/mL", "ng*h/mL")
+    )
+    listing <- l_pkpl01(df, param_filter = "Cmax")[[1]]
+    out <- .prepare_export_frame(listing)
+    expect_equal(names(out), rlistings::listing_dispcols(listing))
+    expect_equal(names(out), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.numeric(out$Cmax), 5)
+  })
+
   it("flattens the two-level 'Compare in columns' header into readable names", {
     # Grouped summary tables prefix each statistic with "<level><.GROUP_SEP>"; a flat file
     # has one header row, so the raw name would carry a \037 control character.

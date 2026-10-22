@@ -14,7 +14,8 @@ l_pkpl01(
   unit_var = "AVALU",
   title = "Listing of Individual PK Parameters",
   subtitle = NULL,
-  footnote = NULL
+  footnote = NULL,
+  param_filter = NULL
 )
 
 l_pkpl01_mp(data, ...)
@@ -42,6 +43,9 @@ headers (\code{"<PARAM> (<unit>)"}). Default: \code{"AVALU"}.}
 syntax. Defaults to the unique values of \code{listgroup_vars}.}
 
 \item{footnote}{Footnote string.}
+
+\item{param_filter}{Optional character vector of values from \code{param_var} to
+display as columns. \code{NULL} or an empty vector (default) keeps all parameters.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }

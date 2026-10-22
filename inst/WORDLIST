@@ -25,11 +25,13 @@ BLQ
 Bioavailability
 Buckeridge
 CDISC
+CFR
 CMAX
 CRITy
 CRITyFL
 Clast
 Cmax
+ConcY
 Cond
 Customise
 Customizable
@@ -130,6 +132,7 @@ TRT
 TRTRINT
 TestGroups
 TestParameter
+TimeX
 Timepoint
 Tlast
 Tmax
@@ -169,6 +172,7 @@ datetime
 datetimes
 debounced
 deduplicated
+dev
 devtools
 df
 dm
@@ -194,6 +198,7 @@ mL
 macroparameters
 md
 metab
+natively
 nca
 ng
 normalised
@@ -220,6 +225,8 @@ pred
 predose
 px
 qmd
+recognised
+recursed
 renderable
 reproducibility
 resizable
@@ -228,6 +235,7 @@ roadmap
 rpptx
 runnable
 selectable
+serialise
 signif
 src
 standardizations
@@ -242,6 +250,7 @@ tooltip
 tooltips
 ug
 ungrouped
+unlabelled
 unmapped
 utilise
 visualizable

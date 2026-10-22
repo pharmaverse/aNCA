@@ -9,7 +9,7 @@ This is the single source of truth for all AI coding agents (GitHub Copilot, Ona
 - `inst/shiny/functions/` — Shared Shiny helper functions (app-only)
 - `inst/shiny/www/styles/` — SCSS source files for styling
 - `tests/testthat/` — Unit tests
-- `man/` — Documentation (auto-generated, do not edit)
+- `man/` — Documentation (auto-generated; follow the Roxygen CI exception in Anti-patterns)
 - `data/` — Package data
 - `data-raw/` — Developer-time scripts (e.g., CSS compilation)
 
@@ -190,7 +190,7 @@ All PRs must pass:
 ## Working with Code
 
 Before committing:
-- `devtools::document()` — regenerate man pages and NAMESPACE
+- `devtools::document()` — regenerate man pages and NAMESPACE when R is available
 - `lintr::lint_package()` — check code style
 - `devtools::test()` — run tests
 - `devtools::check()` — full package check
@@ -205,7 +205,7 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 
 - **Before creating a branch**: Always `git fetch origin main && git checkout origin/main` to ensure you branch from the latest remote main. Do not rely on the local `main` ref being up to date.
 - **Branch name**: `<issue-number>-<type>/<short-description>` (e.g., `123-bug/data-upload-fails`)
-- **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes
+- **Before submitting**: Run checks above, bump version (+1 compared to the main branch). Propose NEWS.md updates (with the # of the pull request) by adding information about features or bug fixes. **Before adding or editing any NEWS.md entry, apply the `.github/skills/news-curation/SKILL.md` decision gate** — only user-observable changes belong in NEWS; drop internal-only or already-shipped invisible changes, and fold same-theme fixes into existing entries.
 - **PR template**: Use `.github/PULL_REQUEST_TEMPLATE.md`. Link issue with `Closes #<number>`, describe changes, complete the contributor checklist
 - **Reviewers**: Add at least 2 core team members (from DESCRIPTION)
 - **Merge**: Core team will merge once approved
@@ -213,9 +213,10 @@ When creating issues, use the templates in `.github/ISSUE_TEMPLATE/`:
 ## Anti-patterns
 
 - Do not use `git push --force` or `git push --force-with-lease` — always use separate commits instead of amending and force-pushing
-- Do not edit `man/` or `NAMESPACE` files manually
+- Do not edit `NAMESPACE` manually except for the matching `importFrom()` update required by an `@importFrom` change.
+- Do not edit `man/` manually, except for a small, exact `man/*.Rd` diff printed by the Roxygen CI job when R is unavailable. Verify the source roxygen/function change, confirm `RoxygenNote` matches CI, copy only the reported diff, and let the next CI run confirm it.
 - Do not add unused globalVariables to `R/zzz.R`
-- Do not push without running `devtools::document()` first
+- Do not push without running `devtools::document()` first when R is available. When it is unavailable, the exact CI Roxygen exception above may be used.
 - Do not skip tests or lintr checks
 - Do not assume R is available in dev container (it may not be)
 - Do not edit `main.css` without updating the corresponding `.scss` source
@@ -230,3 +231,5 @@ This repository uses the following agent configuration:
 - `.github/instructions/` — Path-specific notes for Copilot.
 - `.github/agents/` — Role-specific agent profiles.
 - `.github/skills/` — Reusable agent workflows.
+- `.github/skills/news-curation/SKILL.md` — Decide whether a change belongs in NEWS.md and how to phrase it. Apply whenever opening/updating a PR or editing NEWS.md.
+- **Repository skills:** Use `skill-creation` for new skills and `skill-editing` for substantial edits to existing skills.
