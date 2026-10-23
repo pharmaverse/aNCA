@@ -314,6 +314,32 @@ describe("PKNCA_update_data_object", {
     expect_true("ATPTREF" %in% updated_data$options$keep_interval_cols)
   })
 
+  it("keeps VOLUME as an interval column only when the concentration data has it", {
+    # pk.nca() rejects an interval column that keep_interval_cols does not
+    # list, and errors on a listed column that the intervals lack
+    without_volume <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs
+    )
+    expect_false("VOLUME" %in% names(without_volume$intervals))
+    expect_false("VOLUME" %in% without_volume$options$keep_interval_cols)
+    expect_no_error(PKNCA::assert_intervals(without_volume$intervals, without_volume))
+
+    with_volume <- PKNCA_update_data_object(
+      adnca_data = PKNCA_create_data_object(transform(simple_data, VOLUME = 1, VOLUMEU = "mL")),
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs
+    )
+    expect_true("VOLUME" %in% names(with_volume$intervals))
+    expect_true("VOLUME" %in% with_volume$options$keep_interval_cols)
+    expect_no_error(PKNCA::assert_intervals(with_volume$intervals, with_volume))
+  })
+
   it("uses default min.hl.points of 3 when not specified", {
     updated_data <- PKNCA_update_data_object(
       adnca_data = pknca_data,
