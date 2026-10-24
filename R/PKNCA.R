@@ -326,6 +326,10 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
       c(
         "ATPTREF", "DOSNOA", "type_interval",
         adnca_data$dose$columns$route, "ROUTE",
+        # format_pkncadata_intervals() carries VOLUME into the intervals when
+        # the concentration data has it.  pk.nca() rejects an interval column
+        # that is not kept, and fails on a kept column that is absent.
+        intersect("VOLUME", names(data$conc$data)),
         keep_interval_cols
       ),
       # Columns already in the formula should not be re-added
