@@ -2,857 +2,263 @@
 
 ## aNCA (development version)
 
-### Maintenance
+### Data & settings
 
-- Document the return value for the NCA Parameter Units table UI module
-  ([\#1374](https://github.com/pharmaverse/aNCA/issues/1374))
-- Refresh stale in-code TODO comments whose referenced issues have since
-  closed: the slope-selector `na.omit` guard is now documented as a
-  defensive safety net
-  ([\#641](https://github.com/pharmaverse/aNCA/issues/641) reworked the
-  reactivity), and the BLQ dropped-record workaround points to the
-  current imputation-consistency issues
-  ([\#1057](https://github.com/pharmaverse/aNCA/issues/1057),
-  [\#1442](https://github.com/pharmaverse/aNCA/issues/1442),
-  [\#1443](https://github.com/pharmaverse/aNCA/issues/1443)) instead of
-  the closed [\#139](https://github.com/pharmaverse/aNCA/issues/139).
-  Clarified why meta-mapping keys are excluded in
-  [`apply_mapping()`](https://pharmaverse.github.io/aNCA/reference/apply_mapping.md).
-  Part of the TODO inventory in
-  [\#1447](https://github.com/pharmaverse/aNCA/issues/1447)
-
-### Bug Fixes
-
-- Restored compatibility with the upcoming PKNCA release (0.12.2).
-  Running NCA with start imputation (including the default example
-  dataset) no longer fails with duplicate `R2ADJ` results when applying
-  half-life flags.
-  [`PKNCA_create_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_create_data_object.md)
-  now creates the `include_half.life` column it names when building the
-  `PKNCAconc` object; dev PKNCA errors when a half-life column is named
-  but absent, which previously broke data object creation and the test
-  suite at setup.
-  [`detect_study_types()`](https://pharmaverse.github.io/aNCA/reference/detect_study_types.md)
-  now treats an explicit `NULL` volume column the same as a missing one,
-  since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion
-  data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were
-  shortened to satisfy the SDTM 40-character limit that dev PKNCA
-  enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA
-  requirement targeted by this compatibility work
-  ([\#1102](https://github.com/pharmaverse/aNCA/issues/1102))
-
-- Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, “Correlation
-  Between TimeX and Log ConcY”). PKNCA 0.12.1.9000 reports the
-  parameter, and without a mapping it appeared unlabelled in
-  [`pivot_wider_pknca_results()`](https://pharmaverse.github.io/aNCA/reference/pivot_wider_pknca_results.md)
-  output ([\#481](https://github.com/pharmaverse/aNCA/issues/481),
-  [\#1102](https://github.com/pharmaverse/aNCA/issues/1102))
-
-- The dose-escalation report no longer errors with
-  `undefined columns selected` or `Column \`start\` is not
-  found`.`group_vars()`on a`PKNCAresults`object returns the interval bounds`start`and`end`alongside the grouping columns in PKNCA 0.12.1.9000, but both call sites in`zip-utils.R`wanted only the data's grouping columns and applied the result to concentration data, which has no such columns. They now read the grouping from`PKNCA::as_PKNCAconc()\`
-  instead ([\#1102](https://github.com/pharmaverse/aNCA/issues/1102))
-
-- The excretion parameters aNCA adds (`ertlst`, `ertmax`, `volpk`, `fe`)
-  are now registered only when the installed PKNCA does not already
-  define them.
-  [`PKNCA::add.interval.col()`](https://humanpred.github.io/pknca/reference/add.interval.col.html)
-  silently overwrites an existing registration, so newer PKNCA versions
-  that ship these parameters natively (with CDISC codes and dependency
-  metadata) previously had their richer definitions replaced by aNCA’s
-  minimal ones. aNCA now defers to PKNCA when it provides the parameter
-  and keeps its own definition only as a fallback for older PKNCA.
-  `utils` is attached to keep PKNCA 0.12.1 interval registration working
-  during strict package-load checks
-  ([\#1102](https://github.com/pharmaverse/aNCA/issues/1102))
-
-- The Slope Selector now treats missing and `FALSE` half-life exclusion
-  flags as the same false-like state when detecting plot updates. This
-  keeps PKNCA development-version `NA` flags from suppressing affected
-  plot refreshes
-  ([\#1102](https://github.com/pharmaverse/aNCA/issues/1102))
-
-- Summary-excluded concentrations remain visible as crosses in
-  individual and combined plots (`pkcg01`/`pkcg02`), with an explanatory
-  footnote alongside custom notes in interactive and exported plots.
-  Summary tables and mean plots continue to omit excluded records,
-  including in exported R scripts
-  ([\#1439](https://github.com/pharmaverse/aNCA/issues/1439),
-  [\#1536](https://github.com/pharmaverse/aNCA/issues/1536))
-
-- Running NCA with an empty analyte, specimen, or NCA profile selection
-  now shows a red notification naming the missing selection instead of
-  stopping silently. It also explains when the current data and settings
-  provide no valid NCA intervals
-  ([\#1527](https://github.com/pharmaverse/aNCA/issues/1527))
-
-- Automatic volume unit simplification (e.g. `mg*L/mL` → `mg`) is now
-  captured in the exported settings YAML, ZIP export, and generated R
-  script, so R scripts reproduce the same units as the app. The units
-  table now detects changes by value (`PPSTRESU` vs `PPORRESU`) instead
-  of a modal-edit flag, and is decoupled from the debounced `settings()`
-  reactive to avoid stalling session auto-replay. Settings with no unit
-  overrides now restore the defaults, so their generated R scripts run
-  without an empty-units error
-  ([\#1190](https://github.com/pharmaverse/aNCA/issues/1190),
-  [\#1531](https://github.com/pharmaverse/aNCA/issues/1531))
-
-- R-devel package checks no longer fail because the base `tools` package
-  was imported from `NAMESPACE` while listed only in `Suggests`
-  ([\#1496](https://github.com/pharmaverse/aNCA/issues/1496))
-
-- The upload UI now shows accepted file formats and the current maximum
-  upload size, matching `shiny.maxRequestSize` when the app is launched
-  through
-  [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
-  and falling back to the default Shiny limit otherwise. Files above the
-  limit also show an app notification explaining that the data was not
-  loaded because it exceeded the configured limit
-  ([\#1365](https://github.com/pharmaverse/aNCA/issues/1365))
-
-- The Parameter Selection matrix no longer silently ignores parameters
-  chosen for metabolite study types. The matrix labeled study types
-  using metabolite information
-  (e.g. `Multiple IV Infusion (Metabolite)`), but the calculation step
-  matches selections against labels derived with metabolite information
-  blanked, so those selections never matched and were dropped. The
-  matrix now reuses the same derivation as calculation time, so every
-  selectable study type is honored
-  ([\#1471](https://github.com/pharmaverse/aNCA/issues/1471))
-
-- [`pkcg01()`](https://pharmaverse.github.io/aNCA/reference/pkcg01.md)
-  and
-  [`pkcg02()`](https://pharmaverse.github.io/aNCA/reference/pkcg02.md)
-  now return named plot lists by reading `id_plot` from the grouped
-  plotting data instead of the raw input data
-  ([\#1448](https://github.com/pharmaverse/aNCA/issues/1448))
-
-- Concentration plot x axes (`pkcg01`, `pkcg02`, `pkcg03`) no longer
-  draw their tick labels on top of each other.
-  [`filter_breaks()`](https://pharmaverse.github.io/aNCA/reference/filter_breaks.md)
-  kept a break whenever it sat at least `min_cm_distance` (0.5 cm) from
-  the last one and never looked at how wide the label rendered, so a
-  dense profile with labels such as `119.917` kept 24 breaks where about
-  16 fit. A gap must now also clear the room the two labels either side
-  of it need, measured with the plot’s own `axis.text` styling and
-  padded by a space so they do not run together. Two further problems
-  fed the same bug: the width to fit them into was taken from the panel
-  border grob, whose width is the whole device rather than the panel,
-  and the side-by-side views filtered their breaks before faceting split
-  that panel in two. The width now comes from the plot’s own layout, the
-  x scale is applied after faceting, and a y axis is thinned by label
-  height. Candidates outside the plotted range are dropped before any
-  thinning, so a break that is never drawn can no longer shift the first
-  visible one a step past a manual `xmin`
-  ([\#1441](https://github.com/pharmaverse/aNCA/issues/1441))
-
-- Canceling the duplicate-row resolution modal after mapping now
-  re-enables the Data tab’s Next button, and manual mapping submissions
-  show a loading popup while processing
-  ([\#1420](https://github.com/pharmaverse/aNCA/issues/1420))
-
-- Restored settings now ignore incomplete partial interval rows with
-  missing or invalid start/end values before they reach the NCA setup
-  state, preventing spurious interval parameters from uploaded settings
-  ([\#1347](https://github.com/pharmaverse/aNCA/issues/1347))
-
-- NCA Results now derive the `Missing` flag at the subject/profile
-  level, so parameter-level metadata from active flag parameters can no
-  longer duplicate rows in the pivoted results table
-  ([\#1479](https://github.com/pharmaverse/aNCA/issues/1479))
-
-- Fix the “Processing data mapping…” spinner hanging forever when
-  advancing through mapping (e.g. the default data with no duplicates).
-  The mapping submit ran synchronously in the same flush cycle as the
-  loading modal’s `showModal()`, so the pipeline’s `removeModal()` was
-  batched with the show and dropped mid Bootstrap fade-in. The submit is
-  now deferred to a later flush so the spinner paints first and the
-  later hide applies; the completion reactive also keys on the submit
-  trigger so it re-runs (and dismisses the modal) even when the mapping
-  is unchanged. Duplicate-row data is also published after the loading
-  modal cleanup flushes, so the duplicate dialog appears reliably and
-  Cancel re-enables the Next button
-  ([\#1420](https://github.com/pharmaverse/aNCA/issues/1420))
-
-- Running NCA with “Impute Start Concentration” turned off no longer
-  errors with `PKNCA_impute_method_FALSE not found`. When start
-  imputation was off, the per-interval `impute` column was absent, so
-  the BLQ step read the `impute` function argument instead of the column
-  and built the method string `"blq, FALSE"`. The column is now always
-  present, the reference is pinned to it, and the
-  [`update_main_intervals()`](https://pharmaverse.github.io/aNCA/reference/update_main_intervals.md)
-  argument was renamed `impute` -\> `start_impute` so it can no longer
-  collide with the column
-  ([\#1121](https://github.com/pharmaverse/aNCA/issues/1121),
-  [\#1266](https://github.com/pharmaverse/aNCA/issues/1266))
-
-- With “Impute Start Concentration” turned off, the first interval now
-  starts at C1 (the first sample at or after the dose) instead of the
-  predose time. The sample feeding the start time was picked by an
-  unordered `slice(1)`, so it could be the predose record whose negative
-  `ARRLT` pulled the interval start before the dose
-  ([\#1121](https://github.com/pharmaverse/aNCA/issues/1121))
-
-- The generated R-script (session code) now passes `blq_imputation_rule`
-  to
-  [`PKNCA_update_data_object()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_update_data_object.md),
-  matching the app. The template only applied the BLQ rule at
-  calculation time
-  ([`PKNCA_calculate_nca()`](https://pharmaverse.github.io/aNCA/reference/PKNCA_calculate_nca.md))
-  and omitted it during interval setup, so exported scripts did not
-  reproduce the app’s BLQ handling
-  ([\#1445](https://github.com/pharmaverse/aNCA/issues/1445))
-
-- XPT export writer failures now block the ZIP export and notify the
-  user instead of being logged only to the R console
-  ([\#1452](https://github.com/pharmaverse/aNCA/issues/1452))
-
-- Mean concentration plots no longer drop timepoints that are well under
-  the BLQ threshold: the BLQ ratio counted flagged records against a
-  denominator of distinct subjects, so a subject contributing several
-  records to a timepoint could push the ratio above 1. It is now counted
-  per subject on both sides
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- The “X ticks” option on the linear and logarithmic concentration plots
-  now takes effect. `plotly` was regenerating the axis itself, so the
-  chosen column was ignored; the side-by-side variants were already
-  unaffected ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- Mean concentration plots (`pkcg03`) and the urine,
-  dose-proportionality and box plot entries no longer render as blank
-  panels: graph output IDs were taken from the plot list’s names while
-  the render bindings were registered by position, so any TLG whose
-  plots are split into a named list never bound to its output. Split
-  graphs now also show the group as a header, the way split tables do
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- TLG sidebar options set to `0` are no longer silently ignored: the
-  option filter treated a literal `0` the same as “unset”, so an axis
-  limit of `0` (`xmin`/`ymin`) had no effect
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- A TLG that produces no output now explains why instead of rendering a
-  blank panel with no message
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- Combined concentration plots (`pkcg02`) no longer group by `USUBJID`
-  by default, which produced one plot per subject instead of an overlaid
-  combined plot. They now default to the study’s PKNCA grouping
-  variables (which exclude the subject), with `USUBJID` still available
-  as an explicit choice; the individual side-by-side plot (`pkcg01`)
-  correspondingly groups by subject rather than by treatment
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- Concentration plot titles no longer disappear when a plot group covers
-  more than one treatment: the treatment names are now collapsed into a
-  single subtitle string, where previously the subtitle became a
-  character vector that `plotly` rendered as no title at all
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- Concentration plot subtitles no longer mislabel grouping variables: a
-  variable with no configured display name (e.g. `USUBJID` on `pkcg02`)
-  is labeled with its own name instead of being dropped, which shifted
-  every following label onto the wrong value
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- The `pkcg03` mean plot “Summary Statistic” dropdown now opens with its
-  default (`Mean_sdi`) selected instead of appearing blank
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-- Fix the “Processing data mapping…” spinner hanging forever when
-  advancing through mapping with unchanged mappings (e.g. the default
-  data with no duplicates). The reactive that closes the loading modal
-  was keyed only on the mapped data and duplicate rows, so it never
-  re-ran when neither changed; it now also keys on the submit trigger
-  ([\#1420](https://github.com/pharmaverse/aNCA/issues/1420))
-
-- Fix the “Processing data mapping…” spinner hanging forever when
-  advancing through mapping (e.g. the default data with no duplicates).
-  The mapping submit ran synchronously in the same flush cycle as the
-  loading modal’s `showModal()`, so the pipeline’s `removeModal()` was
-  batched with the show and dropped mid Bootstrap fade-in. The submit is
-  now deferred to a later flush so the spinner paints first and the
-  later hide applies; the completion reactive also keys on the submit
-  trigger so it re-runs (and dismisses the modal) even when the mapping
-  is unchanged
-  ([\#1420](https://github.com/pharmaverse/aNCA/issues/1420))
-
-- Fix app failing to launch from an installed package: internal
-  (non-exported) functions called from the Shiny app are now
-  namespace-qualified so they resolve after `R CMD INSTALL`, and the app
-  logo is served from `inst/shiny/www/` instead of the non-installed
-  `man/figures/`
-  ([\#1378](https://github.com/pharmaverse/aNCA/issues/1378))
-
-### Testing
-
-- Add 100% line coverage for `g_pkcg.R`, `g_lineplot.R`, `l_pkcl01.R`,
-  and TLG Shiny modules
-  ([\#1351](https://github.com/pharmaverse/aNCA/issues/1351))
-
-### Features
-
-- PK listings now let users select displayed parameters and show all
-  parameters when cleared; listing sidebars explain selectable and fixed
-  columns. The urine concentration listing always includes only urine,
-  removes the redundant specimen selector, and requires specimen
-  information
-  ([\#1531](https://github.com/pharmaverse/aNCA/issues/1531))
-- Exporting results now validates every selected non-TLG artifact before
-  anything is written and blocks the save when a problem is found (a
-  data-integrity control; cf. 21 CFR 11.10(a)). The controlled
-  traceability matrix at `inst/extdata/export-validation.yml` defines
-  the checks and their regression tests. Tables must have a valid basic
-  structure, ggplots must build, plots and code must have the expected
-  object type, and generated settings, scripts, raw-data, slides,
-  pre-specifications, and session information are checked before export.
-  The CDISC datasets (ADNCA, ADPP, PP) are additionally checked value by
-  value against the data types and lengths declared in the package
-  metadata; not selected fields outside the approved metadata block
-  export. Indexed CDISC variable families (e.g. `NCA1XRS`/`NCA2XRS`
-  under the `NCAwXRS` template, `CRIT1`..`CRIT4`) are recognised so they
-  are no longer wrongly reported as undeclared, and
-  `DOSEA`/`DOSEU`/`CRIT*` are now declared for ADPP. Selected custom
-  grouping variables (including `DOSFRM`) are allowed in ADPP and ADNCA
-  with a warning that metadata type/length checks are unavailable. Known
-  fields and PP remain strictly validated
-  ([\#1452](https://github.com/pharmaverse/aNCA/issues/1452))
-
-#### TLG Catalog
-
-- TLG sidebar dropdowns now offer search, Select all / Deselect all, and
-  a count for selections of more than three values
-  ([\#1530](https://github.com/pharmaverse/aNCA/issues/1530))
-- Implement new TLG functions to complete the pkct01, pkpt03/07/08/11,
-  pkpg01/02/03/04/06, pkpl01/04, and pkcl02 catalog entries
-  ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343)):
-  - `t_pkct01` / `t_pkct01_dose` / `t_pkct01_tad` / `t_pkct01_dose_tad`
-    — summary concentration tables (by TRT or dose, from first dose or
-    TAD)
-  - `t_pkpt03_col` / `t_pkpt03_MP_col` — PK parameter summary tables
-    with stats in columns (full dataset and metabolite/parent filtered)
-  - `t_pkpt07_norm` — dose-normalized PK parameter summary table
-  - `t_pkpt08_uri` — urine cumulative amount and % dose recovered
-    summary table (n, Mean, SD, CV%, Median, Min, Max)
-  - `t_pkpt11_gmr` — geometric mean ratio table with 90% CIs
-  - `p_pkpg03_boxp` / `p_pkpg04_boxp` — boxplots of primary PK
-    parameters (with and without individual data points)
-  - `p_pkpg06_mp` — boxplot of metabolite/parent PK parameter ratios
-  - `p_pkpg01_cum` / `p_pkpg01_per` — mean cumulative urine amount and %
-    dose recovered line plots
-  - `p_pkpg02_doseprop` — dose-proportionality scatter plot with
-    power-model regression on log-log scale
-  - `l_pkpl01` / `l_pkpl01_mp` — individual PK parameter listings (all
-    parameters and metabolite-filtered)
-  - `l_pkpl04_mp` — individual PK parameter listing organised for
-    treatment comparison
-  - `l_pkcl02_uri` — urine concentration and volume listing
-- ADPP-based TLG outputs now correctly exclude rows flagged via
-  `PPSUMXF = "Y"`, consistent with ADNCA exclusion via `PKSUMXF`
-  ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343))
-- Summary tables are easier to read: split tables (e.g. by
-  analyte/specimen) now show the group as a header, `t_pkct01` rows are
-  grouped by treatment arm with timepoints in numeric order, statistic
-  columns use readable headers (e.g. “Geometric Mean”, “CV%”), and urine
-  specimen filtering matches `PCSPEC`/`PPSPEC` case-insensitively
-  ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343))
-- The new TLG tables and listings expose right-sidebar customization
-  options (grouping/stratification variables, displayed columns, titles,
-  and filters) matching the original `l_pkcl01` listing; stratification
-  variables are selectable so summary tables can be grouped by
-  covariates such as `SEX` or `RACE`
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- Summary-exclusion flags are scoped both to summary outputs and to
-  their own dataset: ADNCA (concentration) outputs filter on `PKSUMXF`
-  and ADPP (PK parameter) outputs on `PPSUMXF`, so a record excluded
-  from one summary is not dropped from the other’s TLGs, and individual
-  listings show all records (matching their “subjects excluded from the
-  summary table” footnote)
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- Summary tables can compare covariate groups side by side: a new
-  “Compare in columns” option on the `pkct01` and `pkpt03/07/08` tables
-  repeats the statistic block per level of a chosen variable
-  (e.g. `SEX`, `RACE`), rendered as a two-level Group × Statistic column
-  header ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- Summary tables let you choose which statistics to display: a new
-  “Statistics to show” option on the `pkct01` and `pkpt03/07/08` tables
-  filters the columns (e.g. `n`, `Number BLQ`, `Mean`, `SD`, `CV%`);
-  leaving it empty shows all statistics as before
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- Summary-table sidebar inputs share one layout: every summary table
-  (`pkct01` variants and `pkpt03/07/08`) exposes the same option groups
-  — Filtering, Grouping (Split / Stratify), Value, Compare, and
-  Statistics — with `PARAM` and the time/visit columns selected within
-  “Stratify by (rows)” rather than through separate inputs. “Stratify by
-  (rows)” is a multi-select on all of them; on the `pkpt` tables it
-  defaults to every PKNCA grouping variable except the subject
-  (`USUBJID`) so statistics separate by treatment, parameter, and
-  specimen out of the box. The `pkpt11` GMR table keeps its
-  comparison-specific inputs as a documented exception
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- The urine-only TLGs (`pkpt08`, `pkcl02`) restrict their specimen
-  filter to values that look like urine, selected by default, so a urine
-  table or listing cannot be pointed at serum or plasma while
-  non-standard labels such as “Urine - void” stay selectable
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- Split-table group headers name the variable as well as the value
-  (e.g. “PPCAT: Drug A / PCSPEC: PLASMA”) so stacked outputs are
-  self-describing, and summary tables warn when a stratification
-  variable is dropped for also being a table-split variable
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- The standalone mean, urine, dose-proportionality and box plot entries
-  (`pkcg03` by dose, `pkpg01`/`pkpg02`/`pkpg03`/`pkpg04`/`pkpg06`)
-  expose Title, Subtitle and Footnote inputs in the sidebar, matching
-  the other graph entries
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- Summary tables can filter which stratification values appear: a
-  “Parameters to show” filter on the `pkpt03/07/08` tables and a
-  “Timepoints to show” filter on the `pkct01` tables restrict the rows
-  to the chosen `PARAM`/timepoint values
-  ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-- Summary tables now warn (instead of silently degrading) when a chosen
-  stratification variable is not present in the data — e.g. the “by
-  Dose” concentration tables when a dose-amount column is not carried in
-  the concentration data — so it is clear why a table grouped by fewer
-  variables ([\#1356](https://github.com/pharmaverse/aNCA/issues/1356))
-
-#### TLG Order & Selection
-
-- Simplify the TLG Order Details table: the internal `Condition` column
-  is hidden (it stays in `tlg.yaml` as metadata that still auto-selects
-  urine outputs) and the table is trimmed to Type, Dataset, Output,
-  Footnote, Stratification, and Comment
-  ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335))
-- Urine TLG functions filter to urine specimens internally; when
-  `PCSPEC`/`PPSPEC` is missing, the resulting warning is surfaced as an
-  in-app notification instead of failing silently
-  ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335))
-- Redesign the “Add TLGs to order” picker as a catalog checklist with
-  dataset tabs (PK Concentrations / PK Parameters), search, CSV/XLSX
-  export, per-column select-all, and a live selection count
-  ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335))
-- In the “Add TLGs to order” picker, searching now respects the active
-  dataset tab: matches in another dataset surface as a count on that
-  tab’s badge instead of appearing under the current tab, so switching
-  tabs reveals them
-  ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335))
-- In the “Add TLGs to order” picker, the toolbar **Select all** and
-  **Clear all** now act consistently on the whole order — every output
-  across both dataset tabs (limited to the current search when one is
-  active) — while each column’s **Select all** stays scoped to that
-  column ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335))
-- Notify the user when a PK-parameter (ADPP) output is requested before
-  NCA has been run, instead of only showing an empty placeholder
-  ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335))
-
-#### Settings & Configuration
-
-- Settings upload auto-restores the full session: mapping, filters, data
-  processing, tab navigation, and auto-runs NCA if previously run.
-  Incompatible settings degrade gracefully with notifications
-  ([\#1225](https://github.com/pharmaverse/aNCA/issues/1225))
-- Settings version control: YAML file stores multiple versions with
-  metadata. Save button in header, version selection on upload, version
-  delete support
-  ([\#1103](https://github.com/pharmaverse/aNCA/issues/1103))
-- Settings file converted from RDS to YAML for readability and manual
-  editing ([\#901](https://github.com/pharmaverse/aNCA/issues/901))
-- Settings are uploaded on initial opening of the app in the data tab
-  and applied to the next steps
-  ([\#860](https://github.com/pharmaverse/aNCA/issues/860))
-- Column mapping, data filters, ratio table, units, and time-duplicate
-  exclusions are now included in settings YAML export/import
-  ([\#1082](https://github.com/pharmaverse/aNCA/issues/1082),
+- **Data upload:** Combine multiple files, see accepted formats and size
+  limits, and receive clearer upload and mapping errors
+  ([\#821](https://github.com/pharmaverse/aNCA/issues/821),
+  [\#1365](https://github.com/pharmaverse/aNCA/issues/1365),
+  [\#1367](https://github.com/pharmaverse/aNCA/issues/1367)).
+- **Data mapping:** Map excretion times and body-weight units, enter
+  dose duration and treatment intervals directly, and continue after
+  mapping errors or duplicate-row cancellation without stuck loading
+  indicators ([\#745](https://github.com/pharmaverse/aNCA/issues/745),
+  [\#959](https://github.com/pharmaverse/aNCA/issues/959),
+  [\#1051](https://github.com/pharmaverse/aNCA/issues/1051),
+  [\#1402](https://github.com/pharmaverse/aNCA/issues/1402),
+  [\#1420](https://github.com/pharmaverse/aNCA/issues/1420)).
+- **Saved sessions:** Save versioned YAML settings and restore mappings,
+  filters, exclusions, ratios, units, and previous NCA runs from YAML or
+  ZIP, including reusable templates and startup settings
+  ([\#514](https://github.com/pharmaverse/aNCA/issues/514),
+  [\#832](https://github.com/pharmaverse/aNCA/issues/832),
+  [\#860](https://github.com/pharmaverse/aNCA/issues/860),
+  [\#901](https://github.com/pharmaverse/aNCA/issues/901),
+  [\#993](https://github.com/pharmaverse/aNCA/issues/993),
+  [\#1082](https://github.com/pharmaverse/aNCA/issues/1082),
   [\#1091](https://github.com/pharmaverse/aNCA/issues/1091),
+  [\#1103](https://github.com/pharmaverse/aNCA/issues/1103),
   [\#1104](https://github.com/pharmaverse/aNCA/issues/1104),
-  [\#1195](https://github.com/pharmaverse/aNCA/issues/1195))
-- [`run_app()`](https://pharmaverse.github.io/aNCA/reference/run_app.md)
-  accepts a `settings` parameter to pre-load a YAML settings file on
-  startup ([\#514](https://github.com/pharmaverse/aNCA/issues/514))
-- Settings upload is flexible — non-data-specific template settings can
-  be uploaded ([\#993](https://github.com/pharmaverse/aNCA/issues/993))
+  [\#1195](https://github.com/pharmaverse/aNCA/issues/1195),
+  [\#1225](https://github.com/pharmaverse/aNCA/issues/1225)).
+- **Settings stability:** Preserve parameter and summary selections
+  during setup changes, apply filters consistently, and ignore invalid
+  partial intervals in uploaded settings
+  ([\#840](https://github.com/pharmaverse/aNCA/issues/840),
+  [\#1008](https://github.com/pharmaverse/aNCA/issues/1008),
+  [\#1060](https://github.com/pharmaverse/aNCA/issues/1060),
+  [\#1092](https://github.com/pharmaverse/aNCA/issues/1092),
+  [\#1347](https://github.com/pharmaverse/aNCA/issues/1347)).
 
-#### Exploration
+### NCA calculations & results
 
-- Faceted individual and mean exploration plots can now use a shared
-  y-axis range across panels, with the selected setting preserved in
-  generated plot code and saved exports
-  ([\#1424](https://github.com/pharmaverse/aNCA/issues/1424))
-- Faceted exploration plots now align differing units automatically:
-  compatible units (within or across panels) are rescaled to a common
-  unit, and incompatible units are shown per facet (comma-separated in
-  the strip label) with a notification suggesting which grouping
-  variables (e.g. PARAM, PCSPEC) to add to ‘facet by’
-  ([\#1424](https://github.com/pharmaverse/aNCA/issues/1424))
-- “Copy Plot Code” button in the right sidebar opens a modal with a
-  self-contained R script for the current plot, including data loading,
-  mapping, filtering, and PNG/HTML export
-  ([\#1327](https://github.com/pharmaverse/aNCA/issues/1327))
-
-#### NCA Setup
-
-- Summary exclusions now use dataset-specific flags (`PKSUMXF` for ADNCA
-  and `PPSUMXF` for ADPP). The exclusion tabs and accessible row-color
-  tooltips now describe NCA calculation and summary effects explicitly
-  ([\#1436](https://github.com/pharmaverse/aNCA/issues/1436))
-- Renamed “Aggregate Subject” label to “Mean across subjects” in ratio
-  calculations for clarity; updated help text to explain matching
-  mechanics ([\#1297](https://github.com/pharmaverse/aNCA/issues/1297))
-- Parameter Selection tab now contains Partial Intervals, Ratio
-  Calculations, and Units alongside the parameter matrix. The former
-  Settings tab is renamed to General Settings
-  ([\#1239](https://github.com/pharmaverse/aNCA/issues/1239))
-- Parameter selection UI replaced with an interactive checkbox matrix
-  (study types × parameters) with Select All, Defaults, and Clear All
-  buttons ([\#795](https://github.com/pharmaverse/aNCA/issues/795))
-- Partial interval parameters section supports calculations beyond
-  `AUCINT`: `RCAMINT`, `AUCINTD`, `CAVGINT`, and others. Table starts
-  empty by default with a Remove Row button
+- **Parameter selection:** Select parameters by study type in a checkbox
+  matrix, including metabolite profiles, with intervals, ratios, and
+  units together and clearer messages for missing selections
+  ([\#795](https://github.com/pharmaverse/aNCA/issues/795),
+  [\#1114](https://github.com/pharmaverse/aNCA/issues/1114),
+  [\#1239](https://github.com/pharmaverse/aNCA/issues/1239),
+  [\#1471](https://github.com/pharmaverse/aNCA/issues/1471),
+  [\#1527](https://github.com/pharmaverse/aNCA/issues/1527)).
+- **Partial intervals:** Calculate additional interval parameters
+  through Partial Interval Calculations and distinguish dose-relative
+  ranges consistently in results, statistics, and plot selectors
   ([\#524](https://github.com/pharmaverse/aNCA/issues/524),
-  [\#1249](https://github.com/pharmaverse/aNCA/issues/1249))
-- “Min. Points for Half-life” setting added (range 2–10, default 3)
-  ([\#1155](https://github.com/pharmaverse/aNCA/issues/1155))
-- BLQ imputation rules via `NCA Setup > Data Imputation`
-  ([\#139](https://github.com/pharmaverse/aNCA/issues/139))
-- General Exclusions section for in-app NCA exclusions, with “Excl. TLG”
-  checkbox per entry
-  ([\#851](https://github.com/pharmaverse/aNCA/issues/851),
-  [\#1018](https://github.com/pharmaverse/aNCA/issues/1018))
-- Parameter Exclusions tab: exclude individual PK parameter rows from
-  descriptive statistics and ADPP export via PPSUMXF/PPSUMRSN flags
-  ([\#1040](https://github.com/pharmaverse/aNCA/issues/1040))
-- NCA flag rules (NCAwXRS) from ADNCA standards — flagged records are
-  excluded from NCA
-  ([\#752](https://github.com/pharmaverse/aNCA/issues/752))
-- New flagging rule for lambda-z based on R²
-  ([\#834](https://github.com/pharmaverse/aNCA/issues/834))
-- Filter pickers reordered to Analyte → Specimen → NCA Profile with
-  bidirectional cascading
-  ([\#1114](https://github.com/pharmaverse/aNCA/issues/1114))
-- Optional settings (`slope_rules`, `int_parameters`, `ratio_table`)
-  normalized to `NULL` when empty
-  ([\#1262](https://github.com/pharmaverse/aNCA/issues/1262))
-
-#### Ratio Calculations
-
-- Bioavailability removed as a dedicated pipeline — FABS/FREL now
-  computed exclusively via the ratio table
-  ([\#1260](https://github.com/pharmaverse/aNCA/issues/1260))
-- Ratio Calculations UI replaced with formula-style fraction cards
-  ([\#1250](https://github.com/pharmaverse/aNCA/issues/1250))
-- Interval/partial parameters (e.g. AUCINT_0-20) selectable in ratio
-  Test/Ref Parameter dropdowns
-  ([\#1135](https://github.com/pharmaverse/aNCA/issues/1135))
-- Additional grouping variables available for ratio calculations
-  ([\#868](https://github.com/pharmaverse/aNCA/issues/868))
-- Webpage documentation available in help button for further
-  explanations on how to do ratio calculations
-  ([\#1300](https://github.com/pharmaverse/aNCA/issues/1300))
-
-#### Exploration & Plots
-
-- Dose-normalised exploration plots: toggle between default,
-  dose-normalised, or both overlaid on individual and mean plots
-  ([\#986](https://github.com/pharmaverse/aNCA/issues/986))
-- Exploration sidebars: “Add to Exports” saves named plot snapshots to
-  ZIP; “View Exports” shows a gallery modal
-  ([\#1002](https://github.com/pharmaverse/aNCA/issues/1002),
-  [\#1137](https://github.com/pharmaverse/aNCA/issues/1137))
-- Toggle legend visibility, improved tooltips, correct axis/legend
-  labels ([\#988](https://github.com/pharmaverse/aNCA/issues/988))
-- X/Y axis limits for exploration plots, facet titles with subject count
-  ([\#817](https://github.com/pharmaverse/aNCA/issues/817),
-  [\#894](https://github.com/pharmaverse/aNCA/issues/894),
-  [\#984](https://github.com/pharmaverse/aNCA/issues/984))
-- Individual and Mean plots use the same function for consistent layout
-  and themes ([\#712](https://github.com/pharmaverse/aNCA/issues/712))
-- Right-side sidebars resizable by dragging; default width 250px
-  ([\#1156](https://github.com/pharmaverse/aNCA/issues/1156))
-
-#### Export & Output
-
-- Download generated tables, listings, and graphs through “Export as
-  ZIP”, using the current TLG order and sidebar settings. Available
-  concentration TLGs can be exported before running NCA, without opening
-  each output’s tab
-  ([\#1428](https://github.com/pharmaverse/aNCA/issues/1428), closes
-  [\#1344](https://github.com/pharmaverse/aNCA/issues/1344)).
-
-  - Graphs: PDF (default) or self-contained interactive HTML as one
-    document per TLG, or PNG as one file per plot, retaining plot
-    titles, subtitles, footnotes, and axis scales.
-  - Tables and listings: XLSX (default) as one workbook per TLG with a
-    sheet per split, CSV as one file per split, or PDF paginated across
-    rows and columns. Exports use displayed listing columns and readable
-    summary-table headers.
-  - Files are organised under `TLGs/Graphs/`, `TLGs/Tables/`, and
-    `TLGs/Listings/` by format, with descriptive filenames and unique,
-    Excel-safe worksheet names for split outputs.
-  - A `manifest.csv` records output paths and statuses, including
-    unavailable or failed TLGs, so one output’s failure does not prevent
-    the remaining outputs from being downloaded.
-
-- PowerPoint export includes a PPTESTCD glossary slide after the title
-  slide, listing all PK parameter codes and their full names
-  ([\#1326](https://github.com/pharmaverse/aNCA/issues/1326))
-
-- General button at top of page to save all NCA results, settings, and
-  draft slides as a ZIP file
-  ([\#638](https://github.com/pharmaverse/aNCA/issues/638))
-
-- Dose-normalised summary slides added to PPT/QMD export, controlled via
-  Customise Slides modal
-  ([\#1054](https://github.com/pharmaverse/aNCA/issues/1054))
-
-- Export modal allows selecting which slide sections to include in
-  PPTX/HTML exports
-  ([\#972](https://github.com/pharmaverse/aNCA/issues/972))
-
-- CDISC ZIP includes `Pre_Specs.xlsx` with variable-level metadata and
-  session info ([\#998](https://github.com/pharmaverse/aNCA/issues/998),
-  [\#829](https://github.com/pharmaverse/aNCA/issues/829))
-
-- ADPP includes CRITy/CRITyFL columns for flag rules and
-  PPSUMXF/PPSUMRSN for summary exclusion status
-  ([\#1141](https://github.com/pharmaverse/aNCA/issues/1141))
-
-- Non-standard grouping variables included in ADPP and ADNCA outputs
-  ([\#1077](https://github.com/pharmaverse/aNCA/issues/1077))
-
-- R script exported in ZIP to replicate app outputs
-  ([\#789](https://github.com/pharmaverse/aNCA/issues/789))
-
-- Save button enabled after data mapping with progressive content
-  ([\#1136](https://github.com/pharmaverse/aNCA/issues/1136))
-
-- Export filenames use STUDYID as fallback; project name auto-populated
-  from STUDYID
-  ([\#1000](https://github.com/pharmaverse/aNCA/issues/1000))
-
-- Slide outputs grouped by PKNCA groups, dose profile, and additional
-  grouping variables
-  ([\#791](https://github.com/pharmaverse/aNCA/issues/791))
-
-- Mean plots added to TLGs section with BLQ handling
-  ([\#555](https://github.com/pharmaverse/aNCA/issues/555))
-
-- CMAX auto-selected in box plots if available
-  ([\#890](https://github.com/pharmaverse/aNCA/issues/890))
-
-#### Data & Mapping
-
-- Mapping section assertion error now reports the count and offending
-  `mapping_section` values for easier debugging
-  ([\#1367](https://github.com/pharmaverse/aNCA/issues/1367))
-- ADNCA now includes `PKSUM1RS` column storing the general exclusion
-  reason when `PKSUMXF = "Y"`
-  ([\#1331](https://github.com/pharmaverse/aNCA/issues/1331))
-- Upload multiple input files, bound into a single ADNCA dataset
-  ([\#821](https://github.com/pharmaverse/aNCA/issues/821))
-- Optional mapping of AEFRLT for excretion rate parameters (ERTLST,
-  ERTMAX) ([\#745](https://github.com/pharmaverse/aNCA/issues/745))
-- WTBL/WTBLU columns for dose-to-body-weight conversion in excretion
-  calculations ([\#959](https://github.com/pharmaverse/aNCA/issues/959))
-- Custom numeric input values for ADOSEDUR and TRTRINT instead of column
-  mapping ([\#1051](https://github.com/pharmaverse/aNCA/issues/1051))
-- SelectInputs updated to include variable labels
-  ([\#899](https://github.com/pharmaverse/aNCA/issues/899))
-
-#### Documentation & UI
-
-- UI consistency pass: standardized dropdown labels to “Select the…”,
-  help button placement to right-aligned, “colour” to “color”, renamed
-  Save to “Export as ZIP”, simplified download button text, and added
-  “Short Parameter”/“Specimen” columns to Units table
-  ([\#1333](https://github.com/pharmaverse/aNCA/issues/1333))
-- Searchable PK parameter reference table in NCA \> Setup
-  ([\#1023](https://github.com/pharmaverse/aNCA/issues/1023))
-- R Script Walkthrough vignette added to pkgdown website
-  ([\#1090](https://github.com/pharmaverse/aNCA/issues/1090))
-- Ratio Calculations vignette documenting all ratio types
-  ([\#1251](https://github.com/pharmaverse/aNCA/issues/1251))
-- “About” tab with links, citation, authors, license, version, and “Copy
-  session info” button
-  ([\#1015](https://github.com/pharmaverse/aNCA/issues/1015))
-- Help buttons added/updated for Parameter Selection, Slope Selector,
-  Additional Analysis, and Partial Interval Calculations
-  ([\#975](https://github.com/pharmaverse/aNCA/issues/975))
-- Slope selector table uses time-based selection with improved
-  aesthetics and grouping options
-  ([\#956](https://github.com/pharmaverse/aNCA/issues/956),
-  [\#333](https://github.com/pharmaverse/aNCA/issues/333))
-
-### Bug fixes
-
-#### Data & Mapping
-
-- The “Next” button in the Data tab is no longer permanently disabled
-  after an incomplete-mapping error. Users can now correct the mapping
-  and continue without restarting the app
-  ([\#1402](https://github.com/pharmaverse/aNCA/issues/1402))
-
-#### CDISC Export
-
-- `CRITxFL` now uses `""` instead of `"N"` when criterion is violated.
-  `CRITx` shows the acceptance criterion with inverted operator
-  (e.g. flag rule `R2ADJ < 0.7` produces `CRITx = "R2ADJ >= 0.7"`).
-  `CRITxFL = "Y"` means criterion satisfied
-  ([\#1332](https://github.com/pharmaverse/aNCA/issues/1332))
-
-#### NCA Calculations
-
-- Renal clearance (RENALCL) removed from direct PK calculations
-  (inaccurate in PKNCA) — use ratio table instead
-  ([\#781](https://github.com/pharmaverse/aNCA/issues/781))
-- Multidose parameters (MRTMDO, MRTMDP, VSSMDO, VSSMDP, TAT) removed
+  [\#1146](https://github.com/pharmaverse/aNCA/issues/1146),
+  [\#1148](https://github.com/pharmaverse/aNCA/issues/1148),
+  [\#1169](https://github.com/pharmaverse/aNCA/issues/1169),
+  [\#1249](https://github.com/pharmaverse/aNCA/issues/1249),
+  [\#1305](https://github.com/pharmaverse/aNCA/issues/1305),
+  [\#1309](https://github.com/pharmaverse/aNCA/issues/1309)).
+- **Dose intervals:** Corrected urine dose numbering, prevented doses
+  without post-dose samples from being combined, and extended the last
+  interval to the last observed sample
+  ([\#963](https://github.com/pharmaverse/aNCA/issues/963),
+  [\#1116](https://github.com/pharmaverse/aNCA/issues/1116),
+  [\#1235](https://github.com/pharmaverse/aNCA/issues/1235)).
+- **Imputation:** Configure BLQ rules and run NCA without start
+  imputation, using the first sample at or after the dose as the
+  interval start
+  ([\#139](https://github.com/pharmaverse/aNCA/issues/139),
+  [\#1121](https://github.com/pharmaverse/aNCA/issues/1121),
+  [\#1266](https://github.com/pharmaverse/aNCA/issues/1266)).
+- **Half-life selection:** Set minimum point counts, apply R²-based
+  flags, and select slope points by time with corrected grouping,
+  pagination, and plot rendering
+  ([\#333](https://github.com/pharmaverse/aNCA/issues/333),
+  [\#834](https://github.com/pharmaverse/aNCA/issues/834),
+  [\#956](https://github.com/pharmaverse/aNCA/issues/956),
+  [\#1155](https://github.com/pharmaverse/aNCA/issues/1155),
+  [\#1378](https://github.com/pharmaverse/aNCA/issues/1378)).
+- **Calculation exclusions:** Apply general exclusions and ADNCA flag
+  rules, with separate controls for calculation and summary exclusions
+  ([\#752](https://github.com/pharmaverse/aNCA/issues/752),
+  [\#851](https://github.com/pharmaverse/aNCA/issues/851),
+  [\#1018](https://github.com/pharmaverse/aNCA/issues/1018),
+  [\#1040](https://github.com/pharmaverse/aNCA/issues/1040),
+  [\#1436](https://github.com/pharmaverse/aNCA/issues/1436)).
+- **Summary exclusions:** Apply concentration and parameter exclusions
+  to their respective summaries while retaining individual records and
+  marking excluded concentrations in plots and exports
+  ([\#1331](https://github.com/pharmaverse/aNCA/issues/1331),
+  [\#1343](https://github.com/pharmaverse/aNCA/issues/1343),
+  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
+  [\#1439](https://github.com/pharmaverse/aNCA/issues/1439),
+  [\#1536](https://github.com/pharmaverse/aNCA/issues/1536)).
+- **Results accuracy:** Corrected missing-versus-unrequested flags,
+  duplicate result rows, and descriptive-statistics grouping when
+  exporting before opening the results tab
+  ([\#934](https://github.com/pharmaverse/aNCA/issues/934),
+  [\#1169](https://github.com/pharmaverse/aNCA/issues/1169),
+  [\#1264](https://github.com/pharmaverse/aNCA/issues/1264),
+  [\#1479](https://github.com/pharmaverse/aNCA/issues/1479)).
+- **Unavailable parameters:** Removed direct RENALCL calculation in
+  favor of ratios and removed MRTMDO, MRTMDP, VSSMDO, VSSMDP, and TAT
   from direct calculations
-  ([\#869](https://github.com/pharmaverse/aNCA/issues/869))
-- Last dose interval end time extends to last observed sample instead of
-  being cut off at tau
-  ([\#1235](https://github.com/pharmaverse/aNCA/issues/1235))
-- Interval creation reworked to prevent doses being combined when no
-  post-dose samples exist
-  ([\#963](https://github.com/pharmaverse/aNCA/issues/963))
-- DOSNOA computation fixed for specimen-level grouping — urine-only data
-  no longer gets incorrect dose numbering
-  ([\#1116](https://github.com/pharmaverse/aNCA/issues/1116))
-- Dose-aware AUCint parameters now share the same PPTESTCD as their
-  non-dose-aware counterparts in CDISC exports, with `PPANMETH`
-  indicating the analytical method. Internal PPTESTCDs renamed from
-  misleading `D` suffix (e.g. `AUCINTD`) to lowercase `da` suffix
-  (e.g. `AUCINTda`). Fixed wrong PPTEST label for `AUCINTD` which said
-  “Normalized by Dose”
-  ([\#1242](https://github.com/pharmaverse/aNCA/issues/1242))
-- Optional settings (`slope_rules`, `int_parameters`, `ratio_table`) are
-  now normalized to `NULL` when empty, instead of persisting as 0-row
-  data frames throughout the app and settings pipeline
-  ([\#1262](https://github.com/pharmaverse/aNCA/issues/1262))
-- Interval-specific parameters (`aucint.*`, `cav.int.*`) excluded from
-  the Parameter Selection matrix — they require finite sub-intervals and
-  must be configured via Partial Interval Calculations
-  ([\#1309](https://github.com/pharmaverse/aNCA/issues/1309))
+  ([\#781](https://github.com/pharmaverse/aNCA/issues/781),
+  [\#869](https://github.com/pharmaverse/aNCA/issues/869)).
 
-#### Ratio Calculations
+### Ratios & units
 
-- Fixed `Aggregate Subject = yes/if-needed` not aggregating reference
-  values, and ratio columns not appearing in results
-  ([\#1273](https://github.com/pharmaverse/aNCA/issues/1273))
+- **Ratios:** Use formula-style cards for bioavailability and interval
+  ratios, with additional grouping variables, corrected reference
+  averaging, and working result and summary selectors
+  ([\#868](https://github.com/pharmaverse/aNCA/issues/868),
+  [\#1135](https://github.com/pharmaverse/aNCA/issues/1135),
+  [\#1198](https://github.com/pharmaverse/aNCA/issues/1198),
+  [\#1250](https://github.com/pharmaverse/aNCA/issues/1250),
+  [\#1260](https://github.com/pharmaverse/aNCA/issues/1260),
+  [\#1273](https://github.com/pharmaverse/aNCA/issues/1273),
+  [\#1297](https://github.com/pharmaverse/aNCA/issues/1297)).
+- **Units:** Search units by parameter, accept missing or unrecognized
+  units, and preserve custom and simplified units across settings,
+  results, and generated scripts
+  ([\#861](https://github.com/pharmaverse/aNCA/issues/861),
+  [\#870](https://github.com/pharmaverse/aNCA/issues/870),
+  [\#907](https://github.com/pharmaverse/aNCA/issues/907),
+  [\#1027](https://github.com/pharmaverse/aNCA/issues/1027),
+  [\#1159](https://github.com/pharmaverse/aNCA/issues/1159),
+  [\#1190](https://github.com/pharmaverse/aNCA/issues/1190),
+  [\#1216](https://github.com/pharmaverse/aNCA/issues/1216),
+  [\#1531](https://github.com/pharmaverse/aNCA/issues/1531)).
 
-#### NCA Results & Export
+### Exploration & plots
 
-- Interval parameters (e.g. `AUCINT_0-24`) now display human-readable
-  labels in parameter selectors and boxplot y-axis, instead of raw
-  PPTESTCDs ([\#1305](https://github.com/pharmaverse/aNCA/issues/1305))
-- Descriptive statistics were silently ungrouped when exported before
-  visiting the tab — now falls back to default grouping columns
-  ([\#1264](https://github.com/pharmaverse/aNCA/issues/1264))
-- Fixed NA `PPSTRESU` handling: descriptive statistics no longer crash
-  on all-NA unit groups, and manual interval parameters no longer get
-  `NA` in column names
-  ([\#1216](https://github.com/pharmaverse/aNCA/issues/1216))
-- [`get_settings_code()`](https://pharmaverse.github.io/aNCA/reference/get_settings_code.md)
-  reads mapping, filters, ratio table, and units from YAML instead of
-  hardcoded defaults
-  ([\#1189](https://github.com/pharmaverse/aNCA/issues/1189))
-- All Results widgets show interval parameters with range suffix
-  (e.g. `AUCINT_0-12`) instead of collapsing into one entry
-  ([\#1146](https://github.com/pharmaverse/aNCA/issues/1146))
-- Interval parameter renaming uses dose-relative times consistently
-  across statistics, plots, and boxplots
-  ([\#1169](https://github.com/pharmaverse/aNCA/issues/1169))
-- Descriptive statistics columns display correctly with `selector_label`
-  widget; duplicate rows deduplicated
-  ([\#1169](https://github.com/pharmaverse/aNCA/issues/1169))
-- NCA results flagging correctly distinguishes missing vs not-requested
-  parameters ([\#934](https://github.com/pharmaverse/aNCA/issues/934))
-- Custom units table join uses correct keys instead of hardcoded columns
-  ([\#1159](https://github.com/pharmaverse/aNCA/issues/1159))
-- “Summarise by” selector in Matrix Ratios fixed (input ID mismatch)
-  ([\#1198](https://github.com/pharmaverse/aNCA/issues/1198))
-- [`export_cdisc()`](https://pharmaverse.github.io/aNCA/reference/export_cdisc.md)
-  now includes `ATPTREF` and `ROUTE` columns in ADPP output
-  ([\#1276](https://github.com/pharmaverse/aNCA/issues/1276))
+- **Exploration:** Compare original and dose-normalized profiles,
+  customize axes and legends, and use shared facet scales with automatic
+  conversion of compatible units
+  ([\#712](https://github.com/pharmaverse/aNCA/issues/712),
+  [\#817](https://github.com/pharmaverse/aNCA/issues/817),
+  [\#818](https://github.com/pharmaverse/aNCA/issues/818),
+  [\#894](https://github.com/pharmaverse/aNCA/issues/894),
+  [\#984](https://github.com/pharmaverse/aNCA/issues/984),
+  [\#986](https://github.com/pharmaverse/aNCA/issues/986),
+  [\#988](https://github.com/pharmaverse/aNCA/issues/988),
+  [\#1424](https://github.com/pharmaverse/aNCA/issues/1424)).
+- **Reusable plots:** Save named plot snapshots to ZIP, browse saved
+  plots, and copy R code that reproduces the current exploration plot
+  ([\#794](https://github.com/pharmaverse/aNCA/issues/794),
+  [\#1002](https://github.com/pharmaverse/aNCA/issues/1002),
+  [\#1137](https://github.com/pharmaverse/aNCA/issues/1137),
+  [\#1327](https://github.com/pharmaverse/aNCA/issues/1327)).
+- **Plot display:** Fixed overlapping axis labels, ignored ticks and
+  zero limits, blank panels, incorrect grouping labels, missing titles,
+  and box/violin rendering
+  ([\#786](https://github.com/pharmaverse/aNCA/issues/786),
+  [\#890](https://github.com/pharmaverse/aNCA/issues/890),
+  [\#1336](https://github.com/pharmaverse/aNCA/issues/1336),
+  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
+  [\#1441](https://github.com/pharmaverse/aNCA/issues/1441)).
+- **Mean profiles:** Corrected subject-based BLQ filtering and one-sided
+  whiskers, and restored combined concentration plots that overlay
+  subjects by default
+  ([\#555](https://github.com/pharmaverse/aNCA/issues/555),
+  [\#1316](https://github.com/pharmaverse/aNCA/issues/1316),
+  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356)).
 
-#### Slope selector
+### Tables, listings & graphs
 
-- Slope Selector plots are rendered again without error
-  `Can't transform a data frame with NA or '' names` when a grouping
-  value (e.g. `STUDYID`, `PARAM`) contains an underscore. Plot names are
-  now parsed at `key=` boundaries instead of splitting on every
-  underscore
-  ([\#1378](https://github.com/pharmaverse/aNCA/issues/1378)).
+- **TLG catalog:** Added concentration and PK summaries, dose-normalized
+  and urine outputs, geometric mean ratios with 90% confidence
+  intervals, boxplots, dose-proportionality plots, and individual
+  listings ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343)).
+- **TLG selection:** Search and select outputs by dataset, manage the
+  order with bulk controls, and receive explanations for unavailable
+  outputs or missing NCA results
+  ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335),
+  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
+  [\#1530](https://github.com/pharmaverse/aNCA/issues/1530)).
+- **Table customization:** Choose grouping, covariate comparisons,
+  statistics, parameters, timepoints, and listing columns, with readable
+  group headers and warnings for unavailable grouping variables
+  ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343),
+  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
+  [\#1531](https://github.com/pharmaverse/aNCA/issues/1531)).
+- **Urine outputs:** Restrict urine tables and listings to urine
+  specimens and report missing specimen information
+  ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335),
+  [\#1343](https://github.com/pharmaverse/aNCA/issues/1343),
+  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
+  [\#1531](https://github.com/pharmaverse/aNCA/issues/1531)).
 
-#### Settings & Upload
+### Exports & CDISC
 
-- SASS compilation moved from runtime to build-time script, fixing
-  startup crashes on read-only deployments
-  ([\#1107](https://github.com/pharmaverse/aNCA/issues/1107))
-- Settings upload via ZIP file fixed
-  ([\#832](https://github.com/pharmaverse/aNCA/issues/832))
-- App no longer crashes if NCA is rerun with an error
-  ([\#913](https://github.com/pharmaverse/aNCA/issues/913))
-- Parameter selection no longer resets after NCA setup changes (except
-  analyte/specimen changes)
-  ([\#1008](https://github.com/pharmaverse/aNCA/issues/1008))
-- Filtering correctly affects all NCA setup input widgets
-  ([\#1092](https://github.com/pharmaverse/aNCA/issues/1092))
-- Selecting already-defined identity variables for Additional Grouping
-  Variables no longer crashes
-  ([\#1060](https://github.com/pharmaverse/aNCA/issues/1060))
-- Summary statistic grouping variable changes no longer remove previous
-  settings ([\#840](https://github.com/pharmaverse/aNCA/issues/840))
+- **ZIP exports:** Export results, settings, plots, and TLGs using
+  current selections, with PDF/HTML/PNG graphs, XLSX/CSV/PDF tables,
+  study-based filenames, and a manifest of output statuses
+  ([\#638](https://github.com/pharmaverse/aNCA/issues/638),
+  [\#1000](https://github.com/pharmaverse/aNCA/issues/1000),
+  [\#1136](https://github.com/pharmaverse/aNCA/issues/1136),
+  [\#1344](https://github.com/pharmaverse/aNCA/issues/1344),
+  [\#1428](https://github.com/pharmaverse/aNCA/issues/1428)).
+- **Slides:** Customize slide sections and grouping, include
+  dose-normalized summaries, and add a PK parameter glossary
+  ([\#791](https://github.com/pharmaverse/aNCA/issues/791),
+  [\#972](https://github.com/pharmaverse/aNCA/issues/972),
+  [\#1054](https://github.com/pharmaverse/aNCA/issues/1054),
+  [\#1326](https://github.com/pharmaverse/aNCA/issues/1326)).
+- **Reproducible scripts:** Export R scripts that use saved mappings,
+  filters, ratios, units, and BLQ rules to reproduce app results
+  ([\#789](https://github.com/pharmaverse/aNCA/issues/789),
+  [\#1189](https://github.com/pharmaverse/aNCA/issues/1189),
+  [\#1445](https://github.com/pharmaverse/aNCA/issues/1445)).
+- **Export validation:** Validate selected non-TLG exports and CDISC
+  field types and lengths before saving, report custom-field validation
+  limits, and block exports on validation or XPT-writing failures
+  ([\#1452](https://github.com/pharmaverse/aNCA/issues/1452)).
+- **CDISC metadata:** Include pre-specifications, session information,
+  custom grouping variables, dose reference, route, and exclusion flags
+  in exported datasets
+  ([\#829](https://github.com/pharmaverse/aNCA/issues/829),
+  [\#998](https://github.com/pharmaverse/aNCA/issues/998),
+  [\#1077](https://github.com/pharmaverse/aNCA/issues/1077),
+  [\#1141](https://github.com/pharmaverse/aNCA/issues/1141),
+  [\#1276](https://github.com/pharmaverse/aNCA/issues/1276)).
+- **CDISC corrections:** Report acceptance criteria with satisfied flags
+  as `Y` and violations as blank, identify dose-aware methods through
+  `PPANMETH`, and correct CORRXY and TMAX labels
+  ([\#481](https://github.com/pharmaverse/aNCA/issues/481),
+  [\#787](https://github.com/pharmaverse/aNCA/issues/787),
+  [\#1102](https://github.com/pharmaverse/aNCA/issues/1102),
+  [\#1242](https://github.com/pharmaverse/aNCA/issues/1242),
+  [\#1332](https://github.com/pharmaverse/aNCA/issues/1332)).
 
-#### Exploration & Plots
+### Help & compatibility
 
-- ZIP export includes exploration tab outputs: individual and mean plots
-  ([\#794](https://github.com/pharmaverse/aNCA/issues/794))
-- Box/violin plots no longer crash when violin option selected
-  ([\#786](https://github.com/pharmaverse/aNCA/issues/786))
-- Boxplot parameter selector restricted to single selection; shows
-  interval parameters with range suffix
-  ([\#1148](https://github.com/pharmaverse/aNCA/issues/1148))
-- Axis labels show both unique units when \>1 unit exists
-  ([\#818](https://github.com/pharmaverse/aNCA/issues/818))
-
-#### Units & Data
-
-- Units table filtered based on NCA setup; searchable per column
-  ([\#870](https://github.com/pharmaverse/aNCA/issues/870))
-- Unrecognized units allowed in AVALU and DOSEU
-  ([\#861](https://github.com/pharmaverse/aNCA/issues/861))
-- NA units allowed in data per CDISC guidelines
-  ([\#907](https://github.com/pharmaverse/aNCA/issues/907))
-- TMAX label corrected from “Time of CMAX” to “Time of CMAX Observation”
-  ([\#787](https://github.com/pharmaverse/aNCA/issues/787))
-- Pagination controls in the slope selector are less buggy
-  ([\#956](https://github.com/pharmaverse/aNCA/issues/956))
-
-#### TLG
-
-- Fixed one-sided whiskers (Upper/Lower) collapsing to zero height in
-  mean plots (`pkcg03`)
-  ([\#1316](https://github.com/pharmaverse/aNCA/issues/1316))
-- Fixed TLG graph title/label handling: custom titles now apply
-  immediately to combined graphs (`pkcg02`) via dedicated `plotly`
-  outputs, and the `!COLUMN` label-reference syntax works again across
-  title, subtitle, footnote, and axis inputs (column labels are
-  re-applied before rendering, since the PKNCA pipeline strips them)
-  ([\#1336](https://github.com/pharmaverse/aNCA/issues/1336))
-
-### Dependency changes
-
-- Removed `tern` and `nestcolor` — TLG plots (`pkcg01`, `pkcg02`,
-  `pkcg03`) now use inline ggplot2 code
-  ([\#1316](https://github.com/pharmaverse/aNCA/issues/1316))
-- `rlistings`, `officer`, and `flextable` moved from Imports to Suggests
-  — the app notifies users when these are missing
-  ([\#1106](https://github.com/pharmaverse/aNCA/issues/1106))
-- Removed `methods`, `scales`, and `stringr` from package dependencies,
-  replaced with base R equivalents
-  ([\#1108](https://github.com/pharmaverse/aNCA/issues/1108))
-- Settings YAML units accept minimal format: just `PPTESTCD` and
-  `PPSTRESU` ([\#1027](https://github.com/pharmaverse/aNCA/issues/1027))
+- **Help and navigation:** Added parameter references, ratio and
+  R-script guides, contextual help, session information, clearer labels,
+  and resizable sidebars
+  ([\#899](https://github.com/pharmaverse/aNCA/issues/899),
+  [\#975](https://github.com/pharmaverse/aNCA/issues/975),
+  [\#1015](https://github.com/pharmaverse/aNCA/issues/1015),
+  [\#1023](https://github.com/pharmaverse/aNCA/issues/1023),
+  [\#1090](https://github.com/pharmaverse/aNCA/issues/1090),
+  [\#1156](https://github.com/pharmaverse/aNCA/issues/1156),
+  [\#1251](https://github.com/pharmaverse/aNCA/issues/1251),
+  [\#1300](https://github.com/pharmaverse/aNCA/issues/1300),
+  [\#1333](https://github.com/pharmaverse/aNCA/issues/1333)).
+- **PKNCA compatibility:** Fixed development-version failures affecting
+  start imputation, duplicate R2ADJ results, half-life selection,
+  excretion parameters, and dose-escalation reports; R \>= 4.4 is now
+  required ([\#1102](https://github.com/pharmaverse/aNCA/issues/1102)).
+- **App startup:** Fixed installed-package and read-only deployment
+  startup failures and recovery after NCA errors
+  ([\#913](https://github.com/pharmaverse/aNCA/issues/913),
+  [\#1107](https://github.com/pharmaverse/aNCA/issues/1107),
+  [\#1378](https://github.com/pharmaverse/aNCA/issues/1378)).
+- **Optional dependencies:** Reporting packages `rlistings`, `officer`,
+  and `flextable` are now optional, with notifications when required for
+  an output ([\#1106](https://github.com/pharmaverse/aNCA/issues/1106)).
 
 ## aNCA 0.1.0
 
