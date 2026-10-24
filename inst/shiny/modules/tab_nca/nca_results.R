@@ -92,26 +92,10 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
       # Save the latest version of the object
       session$userData$results$nca_results$nca_pkparam <- final_results()
 
-      # Represent the available parameters in the input
-      param_pptest_cols <- intersect(
-        unname(formatters::var_labels(final_results())),
-        unique(c(metadata_nca_parameters$PPTEST, ratio_table()$PPTESTCD))
-      )
-      param_inputnames <- ifelse(
-        param_pptest_cols %in% metadata_nca_parameters$PPTEST,
-        metadata_nca_parameters$PPTESTCD[match(param_pptest_cols, metadata_nca_parameters$PPTEST)],
-        param_pptest_cols
-      )
-
-      # Add manual interval parameters (e.g. AUCINT_0-12) to the selector
-      col_names <- names(final_results())
-      col_base_names <- sub("\\[.*", "", col_names)
-      interval_params <- col_base_names[grepl("_\\d+.*-\\d+", col_base_names)]
-      # Remove bare base names (e.g. "AUCINT") that only exist as manual intervals —
-      # they have no standalone meaning and would appear as empty entries
-      interval_base_names <- unique(sub("_\\d+.*", "", interval_params))
-      param_inputnames <- setdiff(param_inputnames, interval_base_names)
-      param_inputnames <- unique(c(param_inputnames, interval_params))
+      parameter_columns <- aNCA:::.result_parameter_columns(res_nca()$result)
+      param_inputnames <- unique(parameter_columns$parameter[
+        parameter_columns$column %in% names(final_results())
+      ])
 
       selector_label(input = input,
                      output = output,
@@ -125,27 +109,13 @@ nca_results_server <- function(id, pknca_data, res_nca, settings, ratio_table, g
     })
 
     output_results <- reactive({
-      req(final_results(), input$params)
-
-      # Select columns of parameters selected, considering each can have multiple diff units
-      # Include interval-suffixed names so they can be individually toggled
-      col_names_all <- names(final_results())
-      all_param_cols <- unique(c(
-        res_nca()$result$PPTESTCD,
-        sub("\\[.*", "", col_names_all[grepl("_\\d+.*-\\d+", col_names_all)])
-      ))
-      input_params <- sub(":.*", "", input$params)
-      #identify parameters to be removed from final results
-      params_rem_cols <- setdiff(all_param_cols, input_params)
-
-      col_names <- names(final_results())
-      # Extract base names before the "[", or leave as-is if no "["
-      col_base_names <- ifelse(grepl("\\[", col_names),
-                               sub("\\[.*", "", col_names),
-                               col_names)
-
-      final_results() %>%
-        select(c(all_of(col_names[!(col_base_names %in% params_rem_cols)])))
+      req(final_results())
+      if (is.null(input$params)) return(final_results())
+      parameter_columns <- aNCA:::.result_parameter_columns(res_nca()$result)
+      remove_columns <- parameter_columns$column[
+        !parameter_columns$parameter %in% input$params
+      ]
+      final_results() %>% select(-any_of(remove_columns))
     })
 
     reactable_server(

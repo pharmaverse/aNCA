@@ -186,12 +186,17 @@ format_pkncadata_intervals <- function(pknca_conc,
     }
   }
 
+  volume_column <- data$conc$columns$volume
+  if (is.null(volume_column)) {
+    volume_column <- ".interval_volume"
+    conc_data[[volume_column]] <- NA_real_
+  }
   study_types_df <- detect_study_types(
     conc_data,
     groups,
     metabfl_column = "METABFL",
     route_column = data$dose$columns$route,
-    volume_column = data$conc$columns$volume
+    volume_column = volume_column
   )
 
   # Deduplicate by grouping columns to prevent interval row duplication
@@ -241,7 +246,7 @@ format_pkncadata_intervals <- function(pknca_conc,
           interval_name = if (is.na(custom_name) || custom_name == "") {
             NA_character_
           } else {
-            custom_name
+            trimws(custom_name)
           }
         )
     }
@@ -257,7 +262,10 @@ format_pkncadata_intervals <- function(pknca_conc,
 #' are honoured when present:
 #' - `custom_name`: a user-defined label for the interval. When non-empty it replaces
 #'   the standard `PPTESTCD_<start>-<end>` name in user-facing outputs. Carried onto the
-#'   generated interval rows as the `interval_name` column.
+#'   generated interval rows as the `interval_name` column. Names must be unique
+#'   within overlapping study types and cannot reuse existing parameter codes.
+#'   Reused labels for different intervals in separate study types are displayed
+#'   with their standard parameter and range to distinguish them.
 #' - `study_type`: restricts the interval to a single study type (as produced by
 #'   [detect_study_types()]). `NA`, an empty string, or `"All"` applies the interval to
 #'   every study type (the default).
@@ -303,6 +311,8 @@ update_main_intervals <- function(
   if (!"study_type" %in% names(int_parameters)) {
     int_parameters$study_type <- rep(NA_character_, nrow(int_parameters))
   }
+
+  .validate_interval_names(int_parameters)
 
   all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()), c("start", "end"))
 

@@ -19,10 +19,10 @@ calculate_ratio_app(
 \item{res}{A PKNCAresult object.}
 
 \item{test_parameter}{Character. The PPTESTCD value to use as test (numerator).
-May include a range suffix for interval parameters (e.g. \code{AUCINT_0-20}).}
+May include a range suffix (e.g. \code{AUCINT_0-20}) or a custom interval label.}
 
 \item{ref_parameter}{Character. The PPTESTCD value to use as reference (denominator).
-Defaults to test_parameter. May include a range suffix.}
+Defaults to test_parameter. May include a range suffix or custom interval label.}
 
 \item{test_group}{Character. The test group (numerator). Default is "(all other levels)".}
 

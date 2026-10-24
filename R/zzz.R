@@ -71,7 +71,6 @@
       "include_half.life",
       "install.packages",
       "INT_ROWID",
-      "interval_base",
       "interval_name",
       "interval_name_col",
       "interval_next",

@@ -55,7 +55,8 @@ partial_intervals_ui <- function(id) {
                 tags$b("Custom Name"),
                 ": Optional label for the interval. When set, it replaces the",
                 " standard name (e.g. AUCINT_0-24) in results, plots and ratio",
-                " options. Leave blank to keep the standard name."
+                " options. Names must be unique within overlapping study types.",
+                " Leave blank to keep the standard name."
               ),
               tags$li(
                 tags$b("Study Type"),
@@ -100,6 +101,7 @@ partial_intervals_ui <- function(id) {
         )
       )
     ),
+    uiOutput(ns("interval_names_validation")),
     reactableOutput(ns("int_parameters_table"))
   )
 }
@@ -515,7 +517,19 @@ settings_server <- function(id, data, adnca_data, settings_override) {
       })
     })
 
+    interval_names_error <- reactive({
+      tryCatch({
+        aNCA:::.validate_interval_names(int_parameters())
+        NULL
+      }, error = function(e) conditionMessage(e))
+    })
+    output$interval_names_validation <- renderUI({
+      message <- interval_names_error()
+      if (!is.null(message)) div(class = "alert alert-danger", role = "alert", message)
+    })
+
     settings <- reactive({
+      validate(need(is.null(interval_names_error()), interval_names_error()))
       req(input$select_analyte) # Wait on general settings UI to be loaded
 
       list(

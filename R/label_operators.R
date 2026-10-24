@@ -200,26 +200,12 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 #' attr(labeled_df[["CMAX[ng/mL]"]], "label")
 #' @export
 add_label_attribute <- function(df, myres) {
-  # Guarantee the optional custom-name column exists so it can be referenced
-  # unconditionally when building the manual-interval labels.
-  if (!"interval_name" %in% names(myres$result)) {
-    myres$result$interval_name <- NA_character_
-  }
+  named_results <- rename_interval_params(myres$result)
   mapping_vr <- myres$result %>%
     mutate(
-      PPTESTCD_unit = case_when(
-        # Manual intervals use the custom name when provided, otherwise the
-        # standard `PPTESTCD_start-end` pattern. Unit suffix is always appended.
-        type_interval == "manual" ~ paste0(
-          ifelse(
-            !is.na(interval_name) & interval_name != "",
-            interval_name,
-            paste0(PPTESTCD, "_", start, "-", end)
-          ),
-          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        ),
-        !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
-        TRUE ~ PPTESTCD
+      PPTESTCD_unit = paste0(
+        named_results$PPTESTCD,
+        ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
       ),
       PPTESTCD_cdisc_raw = translate_terms(
         PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"

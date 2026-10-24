@@ -23,7 +23,10 @@ are honoured when present:
 \itemize{
 \item \code{custom_name}: a user-defined label for the interval. When non-empty it replaces
 the standard \verb{PPTESTCD_<start>-<end>} name in user-facing outputs. Carried onto the
-generated interval rows as the \code{interval_name} column.
+generated interval rows as the \code{interval_name} column. Names must be unique
+within overlapping study types and cannot reuse existing parameter codes.
+Reused labels for different intervals in separate study types are displayed
+with their standard parameter and range to distinguish them.
 \item \code{study_type}: restricts the interval to a single study type (as produced by
 \code{\link[=detect_study_types]{detect_study_types()}}). \code{NA}, an empty string, or \code{"All"} applies the interval to
 every study type (the default).

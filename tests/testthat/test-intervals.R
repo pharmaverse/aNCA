@@ -690,3 +690,28 @@ describe(".derive_study_types", {
     expect_true("type" %in% names(result))
   })
 })
+
+describe("custom interval name validation at calculation time", {
+  data <- FIXTURE_PKNCA_DATA
+  data$intervals <- data$intervals %>% filter(type_interval == "main")
+  intervals <- data.frame(
+    parameter = "AUCINT", start_auc = c(1.511, 3.137), end_auc = c(3.137, 6.011),
+    custom_name = c("Early", "Early"), study_type = "All"
+  )
+
+  it("stops before calculation when two interval names overlap", {
+    expect_error(update_main_intervals(data, int_parameters = intervals), "rows 1 and 2")
+  })
+
+  it("accepts reuse across distinct study types", {
+    intervals$study_type <- c("Single Extravascular", "Multiple IV Bolus")
+    # Match the production interval grouping (including analyte).
+    data$intervals <- data$intervals %>%
+      left_join(distinct(data$conc$data, USUBJID, PARAM), by = "USUBJID",
+                relationship = "many-to-many")
+    result <- update_main_intervals(data, int_parameters = intervals, start_impute = FALSE)
+    manual <- result$intervals %>% filter(type_interval == "manual")
+    expect_true(all(manual$interval_name == "Early"))
+    expect_true(all(c(1, 3) %in% manual$USUBJID))
+  })
+})

@@ -107,50 +107,22 @@ pivot_wider_pknca_results <- function(myres, flag_rules = NULL, extra_vars_to_ke
   # If present: Pivot manual AUC interval columns and their respective exclude column
   if (any(myres$result$type_interval == "manual")) {
 
-    # TODO(mateusz): could use some refactoring in time, actions are repated, redundant
-    #                columns are created
-    # Guarantee the optional custom-name column exists so the naming logic below
-    # can reference it unconditionally.
-    if (!"interval_name" %in% names(myres$result)) {
-      myres$result$interval_name <- NA_character_
-    }
-
-    manual_aucs_vals <- myres$result %>%
+    manual_results <- rename_interval_params(myres$result) %>%
       filter(type_interval == "manual") %>%
-      mutate(
-        # Base label: the user-defined custom name when present, otherwise the
-        # standard `PPTESTCD_start-end` pattern.
-        interval_base = ifelse(
-          !is.na(interval_name) & interval_name != "",
-          interval_name,
-          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose))
-        ),
-        interval_name_col = paste0(
-          interval_base,
-          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        )
-      ) %>%
+      mutate(interval_name_col = paste0(
+        PPTESTCD,
+        ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
+      ))
+
+    manual_aucs_vals <- manual_results %>%
       select(-exclude, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
-             -PPTESTCD, -interval_base, -interval_name, -type_interval) %>%
-      pivot_wider(names_from = interval_name_col,
-                  values_from = PPSTRES)
+             -PPTESTCD, -interval_name, -type_interval) %>%
+      pivot_wider(names_from = interval_name_col, values_from = PPSTRES)
 
-    manual_aucs_exclude <- myres$result %>%
-      filter(type_interval == "manual") %>%
-      mutate(
-        interval_base = ifelse(
-          !is.na(interval_name) & interval_name != "",
-          interval_name,
-          paste0(PPTESTCD, "_", signif(start_dose), "-", signif(end_dose))
-        ),
-        interval_name_col = paste0(
-          "exclude.", interval_base,
-          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        )
-      ) %>%
+    manual_aucs_exclude <- manual_results %>%
       select(-PPSTRES, -PPSTRESU, -PPORRES, -PPORRESU, -start, -end, -start_dose, -end_dose,
-             -PPTESTCD, -interval_base, -interval_name, -type_interval) %>%
-      pivot_wider(names_from = interval_name_col, values_from = exclude)
+             -PPTESTCD, -interval_name, -type_interval) %>%
+      pivot_wider(names_from = interval_name_col, values_from = exclude, names_prefix = "exclude.")
 
     manual_aucs <- inner_join(
       manual_aucs_vals,

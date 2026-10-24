@@ -2,6 +2,13 @@
 
 S3method(calculate_ratios,PKNCAresults)
 S3method(calculate_ratios,data.frame)
+S3method(clean_deparse,character)
+S3method(clean_deparse,data.frame)
+S3method(clean_deparse,default)
+S3method(clean_deparse,integer)
+S3method(clean_deparse,list)
+S3method(clean_deparse,logical)
+S3method(clean_deparse,numeric)
 S3method(interval_add_impute,PKNCAdata)
 S3method(interval_add_impute,data.frame)
 S3method(interval_remove_impute,PKNCAdata)
@@ -111,130 +118,152 @@ import(dplyr)
 import(formatters)
 import(ggplot2)
 import(tidyr)
-importFrom(PKNCA,exclude)
-importFrom(PKNCA,get.parameter.deps)
-importFrom(PKNCA,pk.calc.c0)
-importFrom(PKNCA,pk.nca)
+importFrom(PKNCA,
+  exclude,
+  get.parameter.deps,
+  pk.calc.c0,
+  pk.nca
+)
 importFrom(bslib,page_sidebar)
-importFrom(dplyr,"%>%")
-importFrom(dplyr,`%>%`)
-importFrom(dplyr,across)
-importFrom(dplyr,add_count)
-importFrom(dplyr,all_of)
-importFrom(dplyr,any_of)
-importFrom(dplyr,arrange)
-importFrom(dplyr,between)
-importFrom(dplyr,bind_rows)
-importFrom(dplyr,case_when)
-importFrom(dplyr,coalesce)
-importFrom(dplyr,cur_group_id)
-importFrom(dplyr,distinct)
-importFrom(dplyr,everything)
-importFrom(dplyr,filter)
-importFrom(dplyr,group_by)
-importFrom(dplyr,group_split)
-importFrom(dplyr,if_any)
-importFrom(dplyr,if_else)
-importFrom(dplyr,inner_join)
-importFrom(dplyr,left_join)
-importFrom(dplyr,mutate)
-importFrom(dplyr,n)
-importFrom(dplyr,n_distinct)
-importFrom(dplyr,rename)
-importFrom(dplyr,row_number)
-importFrom(dplyr,rows_update)
-importFrom(dplyr,rowwise)
-importFrom(dplyr,select)
-importFrom(dplyr,slice)
-importFrom(dplyr,slice_max)
-importFrom(dplyr,slice_tail)
-importFrom(dplyr,summarise)
-importFrom(dplyr,sym)
-importFrom(dplyr,ungroup)
-importFrom(dplyr,where)
-importFrom(formatters,`var_labels<-`)
-importFrom(formatters,var_labels)
-importFrom(ggplot2,aes)
-importFrom(ggplot2,calc_element)
-importFrom(ggplot2,element_blank)
-importFrom(ggplot2,element_text)
-importFrom(ggplot2,facet_wrap)
-importFrom(ggplot2,geom_boxplot)
-importFrom(ggplot2,geom_errorbar)
-importFrom(ggplot2,geom_jitter)
-importFrom(ggplot2,geom_line)
-importFrom(ggplot2,geom_point)
-importFrom(ggplot2,geom_text)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,ggplot_build)
-importFrom(ggplot2,ggplot_gtable)
-importFrom(ggplot2,labs)
-importFrom(ggplot2,scale_alpha_manual)
-importFrom(ggplot2,scale_color_viridis_d)
-importFrom(ggplot2,scale_colour_manual)
-importFrom(ggplot2,scale_shape_manual)
-importFrom(ggplot2,scale_x_continuous)
-importFrom(ggplot2,scale_x_log10)
-importFrom(ggplot2,scale_y_log10)
-importFrom(ggplot2,stat_summary)
-importFrom(ggplot2,theme)
-importFrom(ggplot2,theme_bw)
-importFrom(ggplot2,theme_get)
+importFrom(dplyr,
+  "%>%",
+  across,
+  add_count,
+  all_of,
+  any_of,
+  arrange,
+  between,
+  bind_rows,
+  case_when,
+  coalesce,
+  cur_group_id,
+  distinct,
+  everything,
+  filter,
+  group_by,
+  group_split,
+  if_any,
+  if_else,
+  inner_join,
+  left_join,
+  mutate,
+  n,
+  n_distinct,
+  rename,
+  row_number,
+  rows_update,
+  rowwise,
+  select,
+  slice,
+  slice_max,
+  slice_tail,
+  summarise,
+  sym,
+  ungroup,
+  where
+)
+importFrom(formatters,
+  "var_labels<-",
+  var_labels
+)
+importFrom(ggplot2,
+  aes,
+  calc_element,
+  element_blank,
+  element_text,
+  facet_wrap,
+  geom_boxplot,
+  geom_errorbar,
+  geom_jitter,
+  geom_line,
+  geom_point,
+  geom_text,
+  ggplot,
+  ggplot_build,
+  ggplot_gtable,
+  labs,
+  scale_color_viridis_d,
+  scale_shape_manual,
+  scale_x_continuous,
+  scale_x_log10,
+  scale_y_log10,
+  stat_summary,
+  theme,
+  theme_bw,
+  theme_get
+)
 importFrom(glue,glue)
 importFrom(grid,convertUnit)
 importFrom(htmltools,tags)
 importFrom(htmlwidgets,onRender)
 importFrom(logger,log_info)
-importFrom(magrittr,`%>%`)
-importFrom(plotly,add_lines)
-importFrom(plotly,add_trace)
-importFrom(plotly,event_register)
-importFrom(plotly,ggplotly)
-importFrom(plotly,layout)
-importFrom(plotly,plot_ly)
-importFrom(plotly,plotly_build)
-importFrom(purrr,imap)
-importFrom(purrr,keep)
-importFrom(purrr,map2_chr)
-importFrom(purrr,map_lgl)
-importFrom(purrr,pmap)
-importFrom(purrr,pmap_chr)
-importFrom(purrr,reduce)
+importFrom(magrittr,"%>%")
+importFrom(plotly,
+  add_lines,
+  add_trace,
+  event_register,
+  ggplotly,
+  layout,
+  plot_ly,
+  plotly_build
+)
+importFrom(purrr,
+  imap,
+  keep,
+  map2_chr,
+  map_lgl,
+  pmap,
+  pmap_chr,
+  reduce
+)
 importFrom(reactable,reactable)
 importFrom(reactable.extras,reactable_extras_dependency)
-importFrom(rlang,.data)
-importFrom(rlang,expr)
-importFrom(rlang,sym)
-importFrom(rlang,syms)
+importFrom(rlang,
+  .data,
+  expr,
+  sym,
+  syms
+)
 importFrom(shiny,runApp)
 importFrom(shinyWidgets,pickerInput)
 importFrom(shinycssloaders,withSpinner)
 importFrom(shinyjqui,orderInput)
 importFrom(shinyjs,useShinyjs)
-importFrom(stats,as.formula)
-importFrom(stats,coef)
-importFrom(stats,confint)
-importFrom(stats,lm)
-importFrom(stats,median)
-importFrom(stats,na.omit)
-importFrom(stats,predict)
-importFrom(stats,qt)
-importFrom(stats,quantile)
-importFrom(stats,sd)
-importFrom(stats,setNames)
-importFrom(tidyr,crossing)
-importFrom(tidyr,pivot_longer)
-importFrom(tidyr,pivot_wider)
-importFrom(tidyr,unnest)
+importFrom(stats,
+  as.formula,
+  coef,
+  confint,
+  lm,
+  median,
+  na.omit,
+  predict,
+  qt,
+  quantile,
+  sd,
+  setNames
+)
+importFrom(tidyr,
+  crossing,
+  pivot_longer,
+  pivot_wider,
+  unnest
+)
 importFrom(tools,file_ext)
-importFrom(units,deparse_unit)
-importFrom(units,drop_units)
-importFrom(units,set_units)
-importFrom(units,units_options)
-importFrom(utils,capture.output)
-importFrom(utils,getS3method)
-importFrom(utils,read.csv)
+importFrom(units,
+  deparse_unit,
+  drop_units,
+  set_units,
+  units_options
+)
+importFrom(utils,
+  capture.output,
+  getS3method,
+  head,
+  read.csv
+)
 importFrom(writexl,write_xlsx)
-importFrom(yaml,read_yaml)
-importFrom(yaml,write_yaml)
+importFrom(yaml,
+  read_yaml,
+  write_yaml
+)
 importFrom(zip,zipr)
