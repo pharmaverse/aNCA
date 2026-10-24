@@ -95,11 +95,13 @@ clean_deparse <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
 }
 
 #' @noRd
+#' @export
 clean_deparse.default <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   paste(deparse(obj, width.cutoff = 500), collapse = "")
 }
 
 #' @noRd
+#' @export
 clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   ind <- paste(rep("  ", indent), collapse = "")
 
@@ -116,6 +118,7 @@ clean_deparse.data.frame <- function(obj, indent = 0, max_per_line = 10, min_to_
 }
 
 #' @noRd
+#' @export
 clean_deparse.list <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   ind <- paste(rep("  ", indent), collapse = "")
   n <- length(obj)
@@ -124,7 +127,7 @@ clean_deparse.list <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 
     name <- if (!is.null(nms) && nzchar(nms[i])) nms[i] else paste0("V", i)
     # Quote name if not a valid R symbol
     if (!grepl("^[A-Za-z.][A-Za-z0-9._]*$", name)) {
-      name <- sprintf('"%s"', name)
+      name <- encodeString(name, quote = '"')
     }
     val <- obj[[i]]
     val_str <- clean_deparse(val, indent + 1, max_per_line = max_per_line)
@@ -139,25 +142,29 @@ clean_deparse.list <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 
 }
 
 #' @noRd
-
+#' @export
 clean_deparse.character <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
-  obj <- sprintf('"%s"', obj)
+  obj <- vapply(obj, function(value) {
+    if (is.na(value)) "NA_character_" else encodeString(value, quote = '"')
+  }, character(1), USE.NAMES = FALSE)
   .deparse_vector(obj, indent, max_per_line, min_to_rep)
 }
 
 #' @noRd
-
+#' @export
 clean_deparse.numeric <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   obj <- sprintf("%s", obj)
   .deparse_vector(obj, indent, max_per_line, min_to_rep)
 }
 
 #' @noRd
+#' @export
 clean_deparse.integer <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   clean_deparse.numeric(obj, indent = indent, max_per_line = max_per_line, min_to_rep = min_to_rep)
 }
 
 #' @noRd
+#' @export
 clean_deparse.logical <- function(obj, indent = 0, max_per_line = 10, min_to_rep = 3) {
   obj <- as.character(obj)
   .deparse_vector(obj, indent, max_per_line, min_to_rep)

@@ -200,15 +200,12 @@ generate_tooltip_text <- function(data, labels_df, tooltip_vars, type) {
 #' attr(labeled_df[["CMAX[ng/mL]"]], "label")
 #' @export
 add_label_attribute <- function(df, myres) {
+  named_results <- rename_interval_params(myres$result)
   mapping_vr <- myres$result %>%
     mutate(
-      PPTESTCD_unit = case_when(
-        type_interval == "manual" ~ paste0(
-          PPTESTCD, "_", start, "-", end,
-          ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
-        ),
-        !is.na(PPSTRESU) & PPSTRESU != "" ~ paste0(PPTESTCD, "[", PPSTRESU, "]"),
-        TRUE ~ PPTESTCD
+      PPTESTCD_unit = paste0(
+        named_results$PPTESTCD,
+        ifelse(!is.na(PPSTRESU) & PPSTRESU != "", paste0("[", PPSTRESU, "]"), "")
       ),
       PPTESTCD_cdisc_raw = translate_terms(
         PPTESTCD, mapping_col = "PPTESTCD", target_col = "PPTEST"

@@ -745,3 +745,72 @@ describe("calculate_ratio_app with interval parameters", {
     expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
   })
 })
+
+describe("custom interval ratios", {
+  res <- FIXTURE_PKNCA_RES
+  res$result <- res$result %>%
+    filter(USUBJID == 8) %>%
+    mutate(
+      PPORRESU = "ng/mL", PPSTRESU = "ng/mL",
+      interval_name = ifelse(type_interval == "manual",
+                             ifelse(start_dose == 0, "Early exposure", "Late exposure"), NA)
+    )
+
+  it("calculates the same two ratios for custom and standard names", {
+    standard <- calculate_ratio_app(res, "AUCINT_0-2", ref_group = "PARAM: A")
+    named <- calculate_ratio_app(res, "Early exposure", ref_group = "PARAM: A")
+    expect_equal(nrow(named), 2)
+    expect_equal(named$PPORRES, standard$PPORRES)
+    expect_equal(named$PPSTRES, standard$PPSTRES)
+  })
+
+  it("uses only the requested numerator and denominator ranges", {
+    result <- calculate_ratio_app(res, "Early exposure", "Late exposure", ref_group = "PARAM: A")
+    numerator <- res$result %>%
+      filter(PPTESTCD == "AUCINT", PARAM == "B", start_dose == 0) %>%
+      arrange(ATPTREF)
+    denominator <- res$result %>%
+      filter(PPTESTCD == "AUCINT", PARAM == "A", start_dose == 2) %>%
+      arrange(ATPTREF)
+    expect_equal(nrow(result), 2)
+    expect_equal(sort(result$PPORRES), sort(numerator$PPORRES / denominator$PPORRES))
+  })
+
+  it("retains a separate ratio column when ratios are appended to results", {
+    table <- data.frame(
+      TestParameter = "Early exposure", RefParameter = "Early exposure",
+      TestGroups = "(all other levels)", RefGroups = "PARAM: A",
+      AggregateSubject = "no", AdjustingFactor = 1, PPTESTCD = "Early ratio"
+    )
+    result <- calculate_table_ratios(res, table)
+    ratios <- result$result %>% filter(PPTESTCD == "Early ratio")
+    expect_equal(nrow(ratios), 2)
+    expect_equal(ratios$interval_name, rep("Early ratio", 2))
+    wide <- pivot_wider_pknca_results(result)
+    expect_true("Early ratio[fraction]" %in% names(wide))
+    expect_true("Early exposure[ng/mL]" %in% names(wide))
+  })
+
+  it("requires a qualified choice when a reused custom name is ambiguous", {
+    res$result$interval_name[res$result$type_interval == "manual"] <- "Early"
+    expect_error(calculate_ratio_app(res, "Early", ref_group = "PARAM: A"),
+                 "matches different intervals")
+    actual <- calculate_ratio_app(res, "Early (AUCINT_0-2)", ref_group = "PARAM: A")
+    expected <- calculate_ratio_app(res, "AUCINT_0-2", ref_group = "PARAM: A")
+    expect_equal(nrow(actual), 2)
+    expect_equal(actual$PPORRES, expected$PPORRES)
+  })
+})
+
+describe("qualified interval options", {
+  it("resolves a qualified option when only one study type is in the results", {
+    res <- FIXTURE_PKNCA_RES
+    res$result <- res$result %>%
+      filter(USUBJID == 8, type_interval == "manual", start_dose == 0) %>%
+      mutate(interval_name = "Early", PPORRESU = "ng/mL", PPSTRESU = "ng/mL")
+    qualified <- calculate_ratio_app(res, "Early (AUCINT_0-2)", ref_group = "PARAM: A")
+    standard <- calculate_ratio_app(res, "AUCINT_0-2", ref_group = "PARAM: A")
+    expect_equal(nrow(qualified), 2)
+    expect_equal(qualified$PPORRES, standard$PPORRES)
+  })
+})

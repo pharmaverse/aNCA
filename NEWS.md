@@ -7,6 +7,9 @@
 
 ## Bug Fixes
 
+* Custom partial-interval names now work in ratios and the results parameter selector. Generated R scripts preserve missing names and escape quoted names. Conflicting names within overlapping study types are rejected; names reused for different intervals across separate study types are distinguished in results, summaries, and ratio choices (#1463).
+
+* Restricting a partial interval to a specific study type no longer silently drops the interval from the results and PP/ADPP output. The "Study Type" dropdown derived its labels with metabolite information (e.g. `Multiple IV Infusion (Metabolite)`), but the interval calculation matches against labels derived with metabolite information blanked, so the selected label never matched and the interval was never calculated. The dropdown now reuses the same derivation as calculation time, so every offered label matches (#1463)
 * Restored compatibility with the upcoming PKNCA release (0.12.2). Running NCA with start imputation (including the default example dataset) no longer fails with duplicate `R2ADJ` results when applying half-life flags. `PKNCA_create_data_object()` now creates the `include_half.life` column it names when building the `PKNCAconc` object; dev PKNCA errors when a half-life column is named but absent, which previously broke data object creation and the test suite at setup. `detect_study_types()` now treats an explicit `NULL` volume column the same as a missing one, since dev PKNCA leaves `columns$volume` as `NULL` for non-excretion data. The `ertlst`, `ertmax` and `volpk` parameter descriptions were shortened to satisfy the SDTM 40-character limit that dev PKNCA enforces. aNCA now declares `R (>= 4.4)` to match the GitHub PKNCA requirement targeted by this compatibility work (#1102)
 
 * Added the CDISC mapping for `lambda.z.corrxy` (`CORRXY`, "Correlation Between TimeX and Log ConcY"). PKNCA 0.12.1.9000 reports the parameter, and without a mapping it appeared unlabelled in `pivot_wider_pknca_results()` output (#481, #1102)
@@ -88,6 +91,10 @@
   variables (including `DOSFRM`) are allowed in ADPP and ADNCA with a warning
   that metadata type/length checks are unavailable. Known fields and PP remain
   strictly validated (#1452)
+
+### Partial Interval Calculations
+* Partial interval parameters can now be given a custom name. When set, the custom name replaces the standard `PPTESTCD_<start>-<end>` label (e.g. `AUCINT_0-24`) in the results table, plots and ratio-parameter options; the underlying PKNCA parameter and CDISC `PPTESTCD` are unchanged. Leaving the name blank keeps the standard label (#1463)
+* Each partial interval parameter can now be restricted to a single study type detected in the data (e.g. only `Excretion Data`), via a new "Study Type" column. The default "All" keeps the previous behaviour of calculating the interval for every study type. Both fields round-trip through the settings file and the exported R script (#1463)
 
 ### TLG Catalog
 * TLG sidebar dropdowns now offer search, Select all / Deselect all, and a count for selections of more than three values (#1530)

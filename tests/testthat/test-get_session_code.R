@@ -330,3 +330,53 @@ describe("get_session_code: ", {
     expect_false(any(grepl(placeholder, file_content)))
   })
 })
+
+describe("custom names in generated scripts", {
+  it("round-trips missing, blank, quoted and escaped character values", {
+    values <- c(NA_character_, NA_character_, NA_character_, "", "NA",
+                'Early "exposure"', "dose\\interval", "line\nbreak", "tab\tname")
+    expect_identical(eval(parse(text = clean_deparse(values))), values)
+    expect_identical(eval(parse(text = clean_deparse(NA_character_))), NA_character_)
+  })
+
+  it("preserves interval settings in executable generated code", {
+    intervals <- data.frame(
+      parameter = rep("AUCINT", 3), start_auc = c(0, 2, 4), end_auc = c(2, 4, 6),
+      custom_name = c(NA_character_, NA_character_, 'Late "exposure"'),
+      study_type = c("All", "All", "Single Extravascular")
+    )
+    template <- tempfile(fileext = ".R")
+    output <- tempfile(fileext = ".R")
+    writeLines("intervals <- settings_list$settings$int_parameters", template)
+    get_code(list(settings = list(int_parameters = intervals)), output, template)
+    env <- new.env()
+    expect_no_error(sys.source(output, envir = env))
+    expect_identical(env$intervals, intervals)
+    expect_equal(.interval_names(env$intervals$parameter, env$intervals$start_auc,
+                                 env$intervals$end_auc, env$intervals$custom_name),
+                 c("AUCINT_0-2", "AUCINT_2-4", 'Late "exposure"'))
+  })
+})
+
+describe("interval settings upload and script export", {
+  it("preserves custom names and study types through YAML and R", {
+    original <- list(settings = list(int_parameters = data.frame(
+      parameter = rep("AUCINT", 3), start_auc = c(0, 2, 4), end_auc = c(2, 4, 6),
+      custom_name = c(NA, "", 'Early "exposure"'),
+      study_type = c("All", "Single Extravascular", "Multiple IV Bolus")
+    )))
+    settings_path <- tempfile(fileext = ".yaml")
+    yaml::write_yaml(original, settings_path)
+    restored <- read_settings(settings_path)$settings$int_parameters
+    expect_equal(restored, original$settings$int_parameters)
+    expect_no_error(.validate_interval_names(restored))
+    template <- tempfile(fileext = ".R")
+    writeLines("intervals <- settings_list$settings$int_parameters", template)
+    script <- tempfile(fileext = ".R")
+    get_settings_code(settings_path, "input.csv", script, template)
+    env <- new.env()
+    sys.source(script, envir = env)
+    expect_equal(env$intervals, original$settings$int_parameters)
+    expect_true(is.na(env$intervals$custom_name[1]))
+  })
+})

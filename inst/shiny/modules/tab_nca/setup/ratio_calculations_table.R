@@ -446,7 +446,16 @@ ratios_table_server <- function(
     return(character(0))
   }
   int_params <- int_params[complete, , drop = FALSE]
-  paste0(int_params$parameter, "_", int_params$start_auc, "-", int_params$end_auc)
+  # Use the custom name when one is set for the row, otherwise the standard
+  # `parameter_start-end` label, so ratio options match the results columns.
+  custom <- if ("custom_name" %in% names(int_params)) {
+    int_params$custom_name
+  } else {
+    rep(NA_character_, nrow(int_params))
+  }
+  aNCA:::.interval_names(
+    int_params$parameter, int_params$start_auc, int_params$end_auc, custom
+  )
 }
 
 # Build reference options from ratio group columns.
