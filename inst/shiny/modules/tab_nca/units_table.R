@@ -156,15 +156,14 @@ units_table_server <- function(id, mydata) {
 
       # If the custom unit was changed recalculate the conversion factor
       if (info$column == "PPSTRESU") {
-        def_unit <- modal_units_table[info$row, "PPORRESU"]
-        cust_unit <- modal_units_table[info$row, "PPSTRESU"]
-        conversion_factor_value <- get_conversion_factor(def_unit, cust_unit)
+        conversion_factor_value <- recalculate_conversion_factor(modal_units_table, info$row)
 
         # If the modification lead to an unexpected conversion factor notify the user
-        if (any(is.na(conversion_factor_value))) {
+        if (is.na(conversion_factor_value)) {
           showNotification(
             paste0(
-              "Unrecognised conversion: ", def_unit, " > ", cust_unit,
+              "Unrecognised conversion: ", modal_units_table$PPORRESU[info$row],
+              " > ", modal_units_table$PPSTRESU[info$row],
               ". Either make sure both units are defined in the UNIDATA
               library or impute a conversion factor yourself"
             ),
