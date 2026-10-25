@@ -386,6 +386,44 @@ describe("PKNCA_update_data_object", {
     expect_equal(cmax_row$conversion_factor, 0.001)
   })
 
+  it("resolves conversion factors for a defaults-only custom_units_table", {
+    # Settings templates store only PPTESTCD + PPSTRESU; without resolving the
+    # factor, the unit label changes but values are not converted.
+    custom_units <- data.frame(PPTESTCD = c("cmax", "tmax"), PPSTRESU = c("ug/mL", "day"))
+    updated_data <- PKNCA_update_data_object(
+      adnca_data = pknca_data,
+      method = method,
+      selected_analytes = analytes,
+      selected_profile = dosnos,
+      selected_pcspec = pcspecs,
+      custom_units_table = custom_units
+    )
+    cmax_row <- updated_data$units[updated_data$units$PPTESTCD == "cmax", ]
+    tmax_row <- updated_data$units[updated_data$units$PPTESTCD == "tmax", ]
+    expect_equal(cmax_row$PPSTRESU, "ug/mL")
+    expect_equal(cmax_row$conversion_factor, 0.001)
+    expect_equal(tmax_row$PPSTRESU, "day")
+    expect_equal(tmax_row$conversion_factor, 1 / 24)
+  })
+
+  it("falls back to data units with a warning for unconvertible defaults-only units", {
+    custom_units <- data.frame(PPTESTCD = "cmax", PPSTRESU = "mg")
+    expect_warning(
+      updated_data <- PKNCA_update_data_object(
+        adnca_data = pknca_data,
+        method = method,
+        selected_analytes = analytes,
+        selected_profile = dosnos,
+        selected_pcspec = pcspecs,
+        custom_units_table = custom_units
+      ),
+      "Could not convert units for: cmax"
+    )
+    cmax_row <- updated_data$units[updated_data$units$PPTESTCD == "cmax", ]
+    expect_equal(cmax_row$PPSTRESU, cmax_row$PPORRESU)
+    expect_equal(cmax_row$conversion_factor, 1)
+  })
+
   it("applies custom_units_table correctly when units table has group columns", {
     # Inject a PARAM-grouped units table into ma_data to simulate the scenario
     # where different analytes have different units (e.g. from PKNCA_build_units_table

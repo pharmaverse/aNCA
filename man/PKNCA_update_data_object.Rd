@@ -62,7 +62,10 @@ by study type (forwarded to \code{\link[=update_main_intervals]{update_main_inte
 (forwarded to \code{\link[=update_main_intervals]{update_main_intervals()}}).}
 
 \item{custom_units_table}{Optional data frame with PPSTRESU overrides.
-When provided, applied via \code{\link[dplyr:rows]{dplyr::rows_update()}} on the PKNCAdata units table.}
+When provided, applied via \code{\link[dplyr:rows]{dplyr::rows_update()}} on the PKNCAdata units table.
+A defaults-only table (\code{PPTESTCD} and \code{PPSTRESU}, without \code{PPORRESU} and
+\code{conversion_factor}) is first resolved against the data units with
+\code{\link[=apply_unit_defaults]{apply_unit_defaults()}}.}
 }
 \value{
 A fully configured \code{PKNCAdata} object.
