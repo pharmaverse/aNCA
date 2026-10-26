@@ -1068,3 +1068,33 @@ describe("tlg_module_server: urine specimen errors", {
     })
   })
 })
+
+describe("tlg_module_server: concise diagnostics", {
+  it("logs the no-urine message without the do.call dataset and retains the panel error", {
+    logged <- list()
+    render_module <- tlg_module_server
+    mockery::stub(render_module, "log_error", function(...) {
+      logged[[length(logged) + 1L]] <<- list(...)
+    })
+    data <- data.frame(
+      USUBJID = "SUBJECT_RECORD_MUST_NOT_BE_LOGGED", PPSPEC = "SERUM",
+      PARAMCD = "CMAX", AVAL = 3.597
+    )
+    console <- capture.output(shiny::testServer(render_module, args = list(
+      type = "table", data = shiny::reactive(data), render_list = t_pkpt08_uri,
+      options = list()
+    ), {
+      expect_match(tlg_list(), "Error: t_pkpt08_uri: no urine PK parameter data found")
+      expect_match(tlg_list(), "Ensure urine NCA parameters")
+    }))
+    expect_gt(length(logged), 0L)
+    for (entry in logged) {
+      expect_identical(entry[[1]], "Error in list rendering: ")
+      expect_type(entry[[2]], "character")
+      expect_length(entry[[2]], 1L)
+      expect_match(entry[[2]], "no urine PK parameter data found")
+      expect_false(grepl("SUBJECT_RECORD_MUST_NOT_BE_LOGGED", entry[[2]], fixed = TRUE))
+    }
+    expect_false(any(grepl("SUBJECT_RECORD_MUST_NOT_BE_LOGGED", console, fixed = TRUE)))
+  })
+})

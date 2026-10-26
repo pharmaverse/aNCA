@@ -368,7 +368,7 @@ data_upload_server <- function(id) {
 
   chosen <- versioned$versions[[selected_idx]]
   content <- tryCatch(
-    aNCA:::.process_settings_payload(chosen[setdiff(names(chosen), VERSION_META_KEYS)]),
+    aNCA:::.process_settings_payload(chosen[setdiff(names(chosen), aNCA:::VERSION_META_KEYS)]),
     error = function(e) {
       showNotification(conditionMessage(e), type = "error")
       NULL
@@ -477,7 +477,7 @@ data_upload_server <- function(id) {
     } else if (!is.null(versioned_attr) && length(versioned_attr$versions) == 1) {
       v <- versioned_attr$versions[[1]]
       content <- tryCatch(
-        aNCA:::.process_settings_payload(v[setdiff(names(v), VERSION_META_KEYS)]),
+        aNCA:::.process_settings_payload(v[setdiff(names(v), aNCA:::VERSION_META_KEYS)]),
         error = function(e) {
           errors <<- append(errors, conditionMessage(e))
           NULL

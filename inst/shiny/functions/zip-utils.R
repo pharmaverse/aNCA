@@ -445,7 +445,7 @@ get_tree_ids_for_texts <- function(tree, texts) {
 #' @param session Shiny session object.
 # Build a standard validation finding for an export artifact outside results.
 .export_artifact_error <- function(artifact, check, expected, observed, message) {
-  .export_finding_row(
+  aNCA:::.export_finding_row(
     output = artifact,
     variable = NA_character_,
     check = check,
@@ -516,7 +516,7 @@ get_tree_ids_for_texts <- function(tree, texts) {
   if (is.null(raw_data) || !.export_value_is_serialisable(raw_data)) {
     findings <- c(findings, list(.export_artifact_error(
       "input_data.rds", "serialisation", "serialisable input data",
-      if (is.null(raw_data)) "NULL" else .export_class_label(raw_data),
+      if (is.null(raw_data)) "NULL" else aNCA:::.export_class_label(raw_data),
       "Input data cannot be written to the RDS export."
     )))
   }
@@ -533,7 +533,7 @@ get_tree_ids_for_texts <- function(tree, texts) {
 
 # Prepare the pre-specification workbook payload without writing a file.
 .pre_specs_export_payload <- function(selected, cdisc_data) {
-  rev_map <- setNames(names(CDISC_DS_KEY_MAP), CDISC_DS_KEY_MAP)
+  rev_map <- setNames(names(aNCA:::CDISC_DS_KEY_MAP), aNCA:::CDISC_DS_KEY_MAP)
   datasets <- unname(rev_map[selected])
   pre_specs <- generate_pre_specs(datasets, cdisc_data = cdisc_data)
   Filter(function(df) is.data.frame(df) && nrow(df) > 0, pre_specs)
@@ -674,10 +674,10 @@ get_tree_ids_for_texts <- function(tree, texts) {
     findings <- .append_artifact_findings(findings, check, spec)
   }
   findings <- Filter(Negate(is.null), findings)
-  if (length(findings) == 0) return(.export_empty_findings())
+  if (length(findings) == 0) return(aNCA:::.export_empty_findings())
   out <- do.call(rbind, findings)
   rownames(out) <- NULL
-  out[EXPORT_FINDING_COLS]
+  out[aNCA:::EXPORT_FINDING_COLS]
 }
 
 # Validate every selected artifact before any export file is created. Runs
