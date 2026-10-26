@@ -34,6 +34,7 @@
 ## Tables, listings & graphs
 
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
+* **NEST pilot:** Opt in to PKPT03 summaries, PKPL01 listings and linear PKCG03 graphs built on the existing calculations, with sidebar annotations and HTML/Word table and listing exports in the ZIP (#1540).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
 * **Table customization:** Choose grouping, covariate comparisons, statistics, parameters, timepoints, and listing columns, with readable group headers and warnings for unavailable grouping variables (#1343, #1356, #1531).
 * **Urine outputs:** Restrict urine tables and listings to urine specimens and report missing specimen information (#1335, #1343, #1356, #1531).

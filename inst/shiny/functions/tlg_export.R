@@ -32,6 +32,12 @@
 #' @returns A plain data frame ready for `save_dispatch()`.
 #' @noRd
 .prepare_export_frame <- function(df) {
+  if (inherits(df, "gtsummary")) {
+    df <- attr(df, "tlg_data")
+    headers <- vapply(names(df), function(v) aNCA:::.nest_label(df, v), character(1))
+    grouped <- grepl(aNCA:::.GROUP_SEP, names(df), fixed = TRUE)
+    names(df)[!grouped] <- headers[!grouped]
+  }
   if (inherits(df, "listing_df") && requireNamespace("rlistings", quietly = TRUE)) {
     disp <- tryCatch(rlistings::listing_dispcols(df), error = function(e) NULL)
     if (length(disp) > 0 && all(disp %in% names(df))) {
@@ -407,7 +413,9 @@ write_tlg_exports <- function(entries,
   leaf  <- .tlg_leaf_names(bases, stem)
 
   # Prepare every frame up front: both formats write the same content.
-  prepared <- lapply(items, function(x) if (is.data.frame(x)) .prepare_export_frame(x) else x)
+  prepared <- lapply(items, function(x) {
+    if (is.data.frame(x) || inherits(x, "gtsummary")) .prepare_export_frame(x) else x
+  })
   usable   <- vapply(prepared, is.data.frame, logical(1))
 
   csv_dir <- file.path(sub_dir, "csv", stem)
@@ -431,10 +439,11 @@ write_tlg_exports <- function(entries,
   }
   if ("pdf" %in% table_formats && any(usable)) {
     rows <- c(rows, list(.tlg_write_table_pdf(
-      prepared[usable], names(items)[usable], bases[usable],
+      lapply(items[usable], .tlg_pdf_frame), names(items)[usable], bases[usable],
       stem, sub_dir, target_dir, g_id, entry
     )))
   }
+  rows <- c(rows, .export_nest_documents(g_id, entry, sub_dir, target_dir, table_formats))
   Filter(Negate(is.null), rows)
 }
 
@@ -524,16 +533,28 @@ write_tlg_exports <- function(entries,
       # ignore_rownames: a TLG frame identifies its rows through its own columns, so the
       # data frame's 1..n row names would only add a meaningless leading column.
       mpf <- formatters::basic_matrix_form(
-        as.data.frame(frames[[i]]), ignore_rownames = TRUE
+        as.data.frame(frames[[i]]), ignore_rownames = TRUE,
+        num_rep_cols = attr(frames[[i]], "tlg_key_count") %||% 0L
       )
-      formatters::main_title(mpf) <- title
-      if (nzchar(captions[i])) formatters::subtitles(mpf) <- captions[i]
+      annotations <- attr(frames[[i]], "tlg_annotations")
+      if (is.null(annotations)) {
+        formatters::main_title(mpf) <- title
+        if (nzchar(captions[i])) formatters::subtitles(mpf) <- captions[i]
+      } else {
+        formatters::main_title(mpf) <- annotations$title
+        formatters::subtitles(mpf) <- annotations$subtitle
+        formatters::main_footer(mpf) <- annotations$footnote
+      }
       mpf
     })
     # Landscape: TLG summary tables are wide, and a portrait page splits them over roughly
     # a third more columns' worth of pages for no benefit.
+    pilot <- any(vapply(frames, function(x) !is.null(attr(x, "tlg_annotations")), logical(1)))
+    # Reserve room for wrapped pilot headers and methods notes. The inferred 43-line
+    # budget can overflow the page when a summary fills a complete vertical panel.
     res  <- formatters::export_as_pdf(
-      mpfs, file = file.path(target_dir, rel), landscape = TRUE
+      mpfs, file = file.path(target_dir, rel), landscape = TRUE,
+      cpp = if (pilot) 120 else NULL, lpp = if (pilot) 40 else NULL
     )
     note <- paste(res$npages, if (res$npages == 1) "page" else "pages")
     # export_as_pdf() shrinks nothing -- it reports overflow and carries on -- so say so
@@ -628,4 +649,91 @@ write_tlg_exports <- function(entries,
     note    = if (length(g_id)) note else character(),
     stringsAsFactors = FALSE
   )
+}
+
+# PDF is a presentation export; keep suppressed keys and the resolved annotations.
+.tlg_pdf_frame <- function(x) {
+  if (!inherits(x, "gtsummary")) return(.prepare_export_frame(x))
+  frame <- as.data.frame(gtsummary::as_tibble(x, col_labels = TRUE))
+  names(frame) <- names(.prepare_export_frame(x))
+  wrap <- function(text) {
+    vapply(text, function(s) {
+      if (is.na(s)) "" else paste(strwrap(s, width = 24), collapse = "\n")
+    }, character(1), USE.NAMES = FALSE)
+  }
+  names(frame) <- wrap(names(frame))
+  frame[] <- lapply(frame, function(col) if (is.character(col)) wrap(col) else col)
+  attr(frame, "tlg_key_count") <- attr(x, "tlg_key_count")
+  attr(frame, "tlg_annotations") <- attr(x, "tlg_annotations")
+  frame
+}
+
+# HTML and Word use the same table object as the preview. CSV/XLSX annotations
+# travel in a sidecar so metadata never becomes an apparent analysis row.
+.export_nest_documents <- function(g_id, entry, sub_dir, target_dir, table_formats) {
+  pilot <- vapply(entry$items, inherits, logical(1), "gtsummary")
+  formats <- intersect(table_formats, c("html", "docx"))
+  if (!any(pilot)) {
+    # Outputs that failed to render already have their own skipped manifest rows.
+    if (all(vapply(entry$items, is.character, logical(1)))) return(list())
+    return(lapply(formats, function(fmt) {
+      .tlg_manifest_row(g_id, entry, NA_character_, "skipped",
+                        paste(fmt, "is supported for NEST pilot tables/listings only."))
+    }))
+  }
+  items <- entry$items[pilot]
+  stem <- .tlg_export_basename(g_id, NULL)
+  rows <- list()
+  sidecar <- if (any(c("csv", "xlsx") %in% table_formats)) "annotations.csv"
+  for (fmt in c(sidecar, formats)) {
+    rel <- file.path(sub_dir, if (fmt == "annotations.csv") "annotations" else fmt,
+                     paste0(stem, ".", fmt))
+    dir.create(dirname(file.path(target_dir, rel)), recursive = TRUE, showWarnings = FALSE)
+    status <- "ok"
+    note <- ""
+    tryCatch(
+      .write_nest_document(items, file.path(target_dir, rel), fmt),
+      error = function(e) {
+        status <<- "error"
+        note <<- conditionMessage(e)
+      }
+    )
+    rows[[length(rows) + 1L]] <- .tlg_manifest_row(g_id, entry, rel, status, note)
+  }
+  rows
+}
+
+.write_nest_document <- function(items, path, format) {
+  if (format == "annotations.csv") {
+    annotations <- lapply(seq_along(items), function(i) {
+      data.frame(split = names(items)[i], as.data.frame(attr(items[[i]], "tlg_annotations")))
+    })
+    write.csv(do.call(rbind, annotations), path, row.names = FALSE)
+  } else if (format == "html") {
+    tables <- lapply(items, function(x) htmltools::HTML(gt::as_raw_html(aNCA:::.nest_gt(x))))
+    htmltools::save_html(htmltools::tagList(tables), path)
+  } else if (format == "docx") {
+    aNCA:::.nest_require(c("officer", "flextable"))
+    doc <- officer::read_docx()
+    doc <- officer::docx_set_paragraph_style(
+      doc, "Title", "Title", fp_t = officer::fp_text(bold = TRUE, font.size = 14),
+      fp_p = officer::fp_par(padding.bottom = 6)
+    )
+    doc <- officer::body_set_default_section(doc, officer::prop_section(
+      page_size = officer::page_size(orient = "landscape")
+    ))
+    for (i in seq_along(items)) {
+      if (i > 1L) doc <- officer::body_add_break(doc)
+      annotations <- attr(items[[i]], "tlg_annotations")
+      doc <- officer::body_add_par(doc, annotations$title, style = "Title")
+      doc <- officer::body_add_par(doc, annotations$subtitle)
+      ft <- gtsummary::as_flex_table(items[[i]])
+      ft <- flextable::autofit(flextable::fontsize(ft, size = 9, part = "all"))
+      ft <- flextable::fit_to_width(ft, max_width = 9)
+      doc <- flextable::body_add_flextable(doc, ft)
+      doc <- officer::body_add_par(doc, annotations$footnote)
+    }
+    print(doc, target = path)
+  }
+  invisible(path)
 }

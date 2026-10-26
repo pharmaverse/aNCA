@@ -1,6 +1,6 @@
 Package: aNCA
 Title: (Pre-)Clinical NCA in a Dynamic Shiny App
-Version: 0.1.0.9209
+Version: 0.1.0.9210
 Authors@R: c(
     person("Ercan", "Suekuer", email = "ercan.suekuer@roche.com", role = "aut",
            comment = c(ORCID = "0009-0001-1626-1526")),
@@ -81,7 +81,11 @@ Suggests:
     usethis,
     quarto,
     vdiffr,
-    withr
+    withr,
+    cards (>= 0.9.0),
+    crane (>= 0.3.2),
+    gtsummary (>= 2.6.1),
+    gt (>= 1.4.0)
 Config/testthat/edition: 3
 Language: en-US
 URL: https://pharmaverse.github.io/aNCA/, https://github.com/pharmaverse/aNCA

@@ -98,7 +98,11 @@ render_table_outputs <- function(output, current_page_items) {
     nms <- names(items)
     tagList(lapply(seq_along(items), function(i) {
       df <- items[[i]]
-      body <- if (!is.data.frame(df)) {
+      body <- if (inherits(df, "gtsummary")) {
+        HTML(gt::as_raw_html(aNCA:::.nest_gt(df)))
+      } else if (inherits(df, "listing_df")) {
+        tags$pre(paste(capture.output(print(df)), collapse = "\n"))
+      } else if (!is.data.frame(df)) {
         tags$pre(as.character(df))
       } else if (ncol(df) == 0) {
         tags$p("No data available for this table.")
@@ -109,7 +113,8 @@ render_table_outputs <- function(output, current_page_items) {
           columnGroups = define_col_groups(df)
         )
       }
-      .with_group_header(nms[i], body)
+      # NEST pilots show the split in their own subtitle by default.
+      if (isFALSE(attr(df, "tlg_group_header"))) body else .with_group_header(nms[i], body)
     }))
   })
 }
@@ -196,7 +201,7 @@ tlg_module_ui <- function(id, type, options) {
       switch(
         type,
         graph   = uiOutput(ns("tlg_output")),
-        listing = verbatimTextOutput(ns("tlg_output")),
+        listing = uiOutput(ns("tlg_output")),
         table   = uiOutput(ns("tlg_output"))
       )
     )
@@ -349,12 +354,8 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
 
     if (type == "graph") {
       render_graph_outputs(output, session, current_page_items)
-    } else if (type == "table") {
-      render_table_outputs(output, current_page_items)
     } else {
-      output$tlg_output <- renderPrint({
-        for (item in current_page_items()) print(item)
-      })
+      render_table_outputs(output, current_page_items)
     }
 
     options_values <- lapply(names(options), function(option) {
