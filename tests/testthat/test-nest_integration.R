@@ -90,6 +90,20 @@ describe("NEST catalog and Shiny integration", {
       }
     )
   })
+
+  it("renders legacy listings without an extra group header", {
+    skip_if_not_installed("rlistings")
+    opts <- .TLG_DEFINITIONS$l_pkpl01$options["listgroup_vars"]
+    shiny::testServer(tlg_module_server,
+      args = list(data = shiny::reactive(nest_adpp_fixture()), type = "listing",
+                  render_list = l_pkpl01, options = opts), {
+        session$setInputs(`listgroup_vars-select` = c("PPCAT", "PPSPEC"), entries_per_page = "All")
+        session$elapse(800)
+        expect_match(output$tlg_output$html, "<pre>", fixed = TRUE)
+        expect_false(grepl("tlg-table-group-header", output$tlg_output$html, fixed = TRUE))
+      }
+    )
+  })
 })
 
 describe("NEST exports", {
@@ -111,6 +125,30 @@ describe("NEST exports", {
     expect_equal(nrow(failed), 1)
     expect_match(failed$note, "requires: gt", fixed = TRUE)
   })
+
+  it("identifies each split in exports when a custom subtitle is set", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    skip_if_not_installed("officer")
+    skip_if_not_installed("flextable")
+    data <- nest_adpp_fixture()
+    metabolite <- data
+    metabolite$PPCAT <- "Metab"
+    tables <- t_pkpt03_nest(rbind(data, metabolite), subtitle = "Pilot population")
+    entry <- list(type = "table", items = tables,
+                  def = list(label = "Pilot", type = "Table", dataset = "ADPP"))
+    dest <- tempfile("nest-split-")
+    on.exit(unlink(dest, recursive = TRUE))
+    write_tlg_exports(list(t_pkpt03_nest = entry), dest, table_formats = c("html", "docx"))
+    html <- paste(readLines(file.path(dest, "Tables/html/pkpt03_nest.html")), collapse = "\n")
+    word <- officer::docx_summary(
+      officer::read_docx(file.path(dest, "Tables/docx/pkpt03_nest.docx"))
+    )
+    for (key in c("PPCAT: Drug / PPSPEC: SERUM", "PPCAT: Metab / PPSPEC: SERUM")) {
+      expect_match(html, key, fixed = TRUE)
+      expect_true(key %in% word$text)
+    }
+  })
+
 
   it("keeps wide Word listings readable by splitting columns and repeating keys", {
     skip_if_not_installed("crane", "0.3.2")

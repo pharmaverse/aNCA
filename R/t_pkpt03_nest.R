@@ -2,10 +2,11 @@
 #'
 #' Adapts [t_pkpt03_col()] results to a `cards` ARD and a `gtsummary` wide
 #' summary. Statistics, rounding and summary exclusions use the existing aNCA
-#' implementation. Units are retained as row keys. Interval parameters (with
-#' `PPSTINT`/`PPENINT`, e.g. partial AUCs) are summarized per interval, with the
-#' interval appended to `PARAM`. Conflicting duplicate values are rejected
-#' rather than silently selecting one measurement.
+#' implementation. Units are retained as row keys. Parameters with several
+#' intervals per subject (`PPSTINT`/`PPENINT`, e.g. partial AUC windows) are
+#' summarized per interval, with the interval appended to `PARAM`; one interval
+#' per subject (e.g. urine collections) pools as before. Conflicting duplicate
+#' values are rejected rather than silently selecting one measurement.
 #' Presentation preserves the existing decimal precision independently of the
 #' session's `digits` option.
 #'
@@ -14,13 +15,17 @@
 #'   specimen and dose occasion (`PPCAT`, `PPSPEC`, `ATPTREF`); absent split
 #'   columns are ignored.
 #' @param title,subtitle,footnote Annotation text supporting `$VAR` and `!VAR`.
-#'   A `NULL` subtitle uses the table split key verbatim.
+#'   A `NULL` subtitle uses the table split key verbatim; a custom subtitle is
+#'   followed by the split key so every table identifies its split.
 #' @returns Named list of `gtsummary` objects, or an explanatory string for
 #'   empty data. Each object has `tlg_data` (numeric results), `tlg_ard`
 #'   (presentation ARD), and `tlg_annotations` attributes. ARD `variable` and
 #'   `stat_name` are local row/column identifiers; `tlg_ard_columns` maps the
 #'   statistic identifiers to the original result columns. Grouping columns
 #'   in the ARD identify the source result row. This is not a CDISC submission ARD.
+#' @importFrom dplyr as_tibble
+#' @importFrom magrittr `%>%`
+#' @importFrom stats setNames
 #' @export
 t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
                           strat_var = c("TRT01A", "PARAM"),
@@ -35,10 +40,10 @@ t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
   if (length(param_filter) && "PARAM" %in% names(data)) {
     data <- data[data$PARAM %in% param_filter, , drop = FALSE]
   }
-  data <- .nest_interval_param(data, "PARAM")
   strat_var <- unique(c(strat_var, setdiff(intersect("AVALU", names(data)), list_vars)))
-  .nest_check_cells(data, c(list_vars, .pkpp_dedup_cols(data, strat_var, col_group_var)),
-                    value_var)
+  keys <- c(list_vars, .pkpp_dedup_cols(data, strat_var, col_group_var))
+  data <- .nest_interval_param(data, "PARAM", keys)
+  .nest_check_cells(data, keys, value_var)
   # Parameters are already filtered; interval names no longer match the filter.
   frames <- t_pkpt03_col(data, list_vars, strat_var, value_var, NULL, col_group_var, stats)
   splits <- split_and_apply(data, list_vars, identity)
@@ -47,12 +52,13 @@ t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
     if (!nrow(frame)) return("No data available for this NEST summary.")
     table <- .nest_wide_summary(frame)
     notes <- .nest_annotations(splits[[i]], title, subtitle %||% "", footnote)
-    if (is.null(subtitle)) {
-      # The split key is data, not annotation syntax: never evaluate it as a template.
-      notes$subtitle <- if (identical(names(frames)[i], "all")) "" else names(frames)[i]
-      # The subtitle already identifies the split, so skip the preview's group header.
-      attr(table, "tlg_group_header") <- FALSE
-    }
+    # Every output names its split in the subtitle, after any custom text. The
+    # key is data, not annotation syntax, so it is never evaluated as a template.
+    key <- if (identical(names(frames)[i], "all")) "" else names(frames)[i]
+    lines <- c(if (!is.null(subtitle)) notes$subtitle, key)
+    notes$subtitle <- paste(lines[nzchar(lines)], collapse = "\n")
+    # The subtitle identifies the split, so skip the preview's group header.
+    attr(table, "tlg_group_header") <- FALSE
     .nest_attach(table, frame, notes)
   }) %>% setNames(names(frames))
 }

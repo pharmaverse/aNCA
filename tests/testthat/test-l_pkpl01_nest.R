@@ -73,6 +73,17 @@ describe("l_pkpl01_nest", {
     expect_named(frame, c("TRT01A", "USUBJID", "AUC (PT0H-PT2H)", "AUC (PT0H-PT6H)", "Cmax"))
     expect_equal(as.numeric(frame[["AUC (PT0H-PT6H)"]]), c(6, 12, 18))
     expect_true("AUC (PT0H-PT2H) (h*mg/L)" %in% table$table_styling$header$label)
+    urine <- attr(l_pkpl01_nest(nest_urine_fixture())[[1]], "tlg_data")
+    expect_named(urine, c("TRT01A", "USUBJID", "Amt Rec"))
+    expect_equal(as.numeric(urine[["Amt Rec"]]), c(3, 6, 9))
+  })
+
+  it("follows a custom subtitle with the split key", {
+    skip_if_not_installed("crane", "0.3.2")
+    table <- l_pkpl01_nest(nest_adpp_fixture(), subtitle = "Population: $TRT01A")[[1]]
+    expect_equal(attr(table, "tlg_annotations")$subtitle,
+                 "Population: A\nPPCAT: Drug / PPSPEC: SERUM")
+    expect_false(attr(table, "tlg_group_header"))
   })
 
   it("explains when missing split keys remove every record", {

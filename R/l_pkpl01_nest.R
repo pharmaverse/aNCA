@@ -3,8 +3,11 @@
 #' Uses the same data preparation, rounding and annotation parser as
 #' [l_pkpl01()], with `crane::tbl_listing()` for presentation. Displayed values
 #' keep the existing three-decimal rounding regardless of the session's `digits`
-#' option. Interval parameters (with `PPSTINT`/`PPENINT`, e.g. partial AUCs)
-#' are listed per interval, with the interval appended to the parameter name.
+#' option. Parameters with several intervals per subject (`PPSTINT`/`PPENINT`,
+#' e.g. partial AUC windows) are listed per interval, with the interval appended
+#' to the parameter name; one interval per subject (e.g. urine) keeps one column.
+#' A custom subtitle is followed by the split key so every listing identifies
+#' its split.
 #' Repeated keys are suppressed within their parent groups only. Excluded
 #' records remain in this individual listing. Conflicting values/units within a
 #' reporting key require more grouping variables and produce an explanatory error.
@@ -18,7 +21,8 @@
 #'   numeric values and complete keys for CSV/XLSX; `tlg_annotations` keeps
 #'   resolved titles, subtitles and footnotes. Repeated-key suppression applies
 #'   to presentation only.
-#' @importFrom dplyr as_tibble
+#' @importFrom dplyr all_of as_tibble
+#' @importFrom stats setNames
 #' @export
 l_pkpl01_nest <- function(data, listgroup_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
                           grouping_vars = c("TRT01A", "USUBJID"), param_var = "PARAM",
@@ -33,8 +37,9 @@ l_pkpl01_nest <- function(data, listgroup_vars = c("PPCAT", "PPSPEC", "ATPTREF")
   if (length(missing)) stop("Missing required columns: ", paste(missing, collapse = ", "))
   if (length(param_filter)) data <- data[data[[param_var]] %in% param_filter, , drop = FALSE]
   if (!nrow(data)) return(list("No data available for this NEST listing."))
-  data <- .nest_interval_param(data, param_var)
-  .nest_check_cells(data, c(listgroup_vars, grouping_vars, param_var), value_var)
+  keys <- c(listgroup_vars, grouping_vars, param_var)
+  data <- .nest_interval_param(data, param_var, keys)
+  .nest_check_cells(data, keys, value_var)
   if (unit_var %in% names(data)) {
     known <- !is.na(data[[unit_var]]) & nzchar(trimws(data[[unit_var]]))
     if (any(!known & !is.na(data[[value_var]]))) {
@@ -45,12 +50,22 @@ l_pkpl01_nest <- function(data, listgroup_vars = c("PPCAT", "PPSPEC", "ATPTREF")
   # Parameters are already filtered; interval names no longer match the filter.
   listings <- .pkpl01_listings(data, listgroup_vars, grouping_vars, param_var, value_var,
                                unit_var, title, subtitle, footnote, NULL, .nest_listing)
-  if (is.null(subtitle)) {
-    # The default subtitle already identifies the split, so skip the preview's group header.
-    listings <- lapply(listings, function(x) {
-      if (inherits(x, "gtsummary")) attr(x, "tlg_group_header") <- FALSE
-      x
-    })
+  .nest_listing_split_notes(listings, custom_subtitle = !is.null(subtitle))
+}
+
+# The default subtitle names the split; a custom one gets the split key as an
+# extra line. Either way the preview's group header would repeat it.
+.nest_listing_split_notes <- function(listings, custom_subtitle) {
+  for (i in seq_along(listings)) {
+    if (!inherits(listings[[i]], "gtsummary")) next
+    key <- names(listings)[i]
+    if (custom_subtitle && !is.null(key) && !identical(key, "all")) {
+      notes <- attr(listings[[i]], "tlg_annotations")
+      lines <- c(notes$subtitle, key)
+      notes$subtitle <- paste(lines[nzchar(lines)], collapse = "\n")
+      attr(listings[[i]], "tlg_annotations") <- notes
+    }
+    attr(listings[[i]], "tlg_group_header") <- FALSE
   }
   listings
 }

@@ -21,10 +21,15 @@ describe("NEST dependency and metadata boundary", {
   it("names each interval of interval parameters and keeps the label", {
     d <- nest_interval_fixture()
     attr(d$PARAM, "label") <- "Parameter"
-    out <- .nest_interval_param(d, "PARAM")
+    out <- .nest_interval_param(d, "PARAM", c("PPCAT", "USUBJID"))
     expect_setequal(unique(out$PARAM), c("Cmax", "AUC (PT0H-PT2H)", "AUC (PT0H-PT6H)"))
     expect_equal(attr(out$PARAM, "label"), "Parameter")
-    expect_identical(.nest_interval_param(nest_adpp_fixture(), "PARAM"), nest_adpp_fixture())
+    expect_identical(.nest_interval_param(nest_adpp_fixture(), "PARAM", "USUBJID"),
+                     nest_adpp_fixture())
+    # One interval per subject (urine collections) keeps the parameter name.
+    urine <- nest_urine_fixture()
+    expect_identical(.nest_interval_param(urine, "PARAM", c("PPCAT", "USUBJID"))$PARAM,
+                     rep("Amt Rec", 3))
   })
 
   it("keeps annotation line breaks and escapes markup for gt", {

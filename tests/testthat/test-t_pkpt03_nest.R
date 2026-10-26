@@ -68,6 +68,16 @@ describe("t_pkpt03_nest", {
     expect_equal(as.numeric(frame$Mean), c(6, 12, 2.333))
   })
 
+  it("pools parameters with one interval per subject, matching the legacy table", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    urine <- nest_urine_fixture()
+    frame <- attr(t_pkpt03_nest(urine)[[1]], "tlg_data")
+    expect_equal(as.vector(frame$PARAM), "Amt Rec")
+    expect_equal(as.numeric(frame$n), 3)
+    expect_equal(frame, t_pkpt03_col(urine, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
+                                     strat_var = c("TRT01A", "PARAM", "AVALU"))[[1]])
+  })
+
   it("uses split keys literally as default subtitles", {
     skip_if_not_installed("gtsummary", "2.6.1")
     d <- nest_adpp_fixture()
@@ -77,8 +87,9 @@ describe("t_pkpt03_nest", {
                  "PPCAT: Drug {x} $USUBJID !PARAM / PPSPEC: SERUM")
     expect_false(attr(table, "tlg_group_header"))
     custom <- t_pkpt03_nest(d, subtitle = "Analyte: $PPSPEC")[[1]]
-    expect_equal(attr(custom, "tlg_annotations")$subtitle, "Analyte: SERUM")
-    expect_null(attr(custom, "tlg_group_header"))
+    expect_equal(attr(custom, "tlg_annotations")$subtitle,
+                 "Analyte: SERUM\nPPCAT: Drug {x} $USUBJID !PARAM / PPSPEC: SERUM")
+    expect_false(attr(custom, "tlg_group_header"))
   })
 
   it("retains comparison groups and only selected statistics", {

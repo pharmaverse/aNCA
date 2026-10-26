@@ -81,12 +81,15 @@ render_graph_outputs <- function(output, session, current_page_items) {
   })
 }
 
-#' Wire up the table output for a table TLG module.
+#' Wire up the table output for a table or listing TLG module.
 #'
-#' Renders each page item as a `reactable`, prefixed by an `<h4>` group header
-#' when the item carries a split key (e.g. `"Drug A / PLASMA"`) so stacked
-#' analyte/specimen tables are distinguishable.  `"all"` is the sentinel used by
-#' `split_and_apply()` for un-split single tables and gets no header.
+#' Renders data frames as a `reactable`, NEST pilot `gtsummary` objects through
+#' the shared gt adapter, and legacy `rlistings` listings as text. Tables get an
+#' `<h4>` group header when the item carries a split key (e.g. `"Drug A / PLASMA"`)
+#' so stacked analyte/specimen tables are distinguishable.  `"all"` is the
+#' sentinel used by `split_and_apply()` for un-split single tables and gets no
+#' header. Legacy listings print the split in their own subtitle and NEST pilots
+#' set `tlg_group_header = FALSE`, so neither gets one.
 #'
 #' @param output             Module `output` object.
 #' @param current_page_items Reactive returning the (named) items shown on the
@@ -113,8 +116,11 @@ render_table_outputs <- function(output, current_page_items) {
           columnGroups = define_col_groups(df)
         )
       }
-      # NEST pilots show the split in their own subtitle by default.
-      if (isFALSE(attr(df, "tlg_group_header"))) body else .with_group_header(nms[i], body)
+      if (isFALSE(attr(df, "tlg_group_header")) || inherits(df, "listing_df")) {
+        body
+      } else {
+        .with_group_header(nms[i], body)
+      }
     }))
   })
 }

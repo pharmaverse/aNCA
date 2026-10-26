@@ -28,6 +28,12 @@ listing <- l_pkpl01_nest(adpp, title = "Individual PK parameters: $PPCAT")
 legacy <- t_pkpt03_col(adpp, list_vars = splits, strat_var = c("TRT01A", "PARAM", "AVALU"),
                        stats = c("n", "Mean", "SD"))
 stopifnot(isTRUE(all.equal(lapply(summary, attr, "tlg_data"), legacy)))
+# Every calculated parameter, including urine amounts with subject-specific
+# collection intervals, must match the legacy summary under the same grouping.
+all_summary <- t_pkpt03_nest(as.data.frame(state$adpp))
+all_legacy <- t_pkpt03_col(as.data.frame(state$adpp), list_vars = splits,
+                           strat_var = c("TRT01A", "PARAM", "AVALU"))
+stopifnot(isTRUE(all.equal(lapply(all_summary, attr, "tlg_data"), all_legacy)))
 old_listing <- l_pkpl01(adpp, listgroup_vars = splits)
 for (i in seq_along(listing)) {
   frame <- attr(listing[[i]], "tlg_data")

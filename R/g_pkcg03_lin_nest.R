@@ -13,6 +13,9 @@
 #'   axes, summary method and whisker selection.
 #' @returns Named list of plotly/ggplot objects, or an explanatory string
 #'   when no timepoint meets the existing eligibility rules.
+#' @importFrom dplyr as_tibble
+#' @importFrom ggplot2 labs
+#' @importFrom plotly plotly_build
 #' @export
 g_pkcg03_lin_nest <- function(data, footnote = NULL,
                               plotgroup_vars = c("ROUTE", "PCSPEC", "PARAM"), ...) {

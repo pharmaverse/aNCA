@@ -56,9 +56,9 @@
 
 # Keep the legacy first-row policy for equal repeated dose records. Reject
 # ambiguous cells in the pilot instead of silently choosing a different value.
-.nest_check_cells <- function(data, keys, value_var, unit_var = NULL) {
+.nest_check_cells <- function(data, keys, value_var) {
   keys <- intersect(unique(keys), names(data))
-  columns <- intersect(c(value_var, unit_var), names(data))
+  columns <- intersect(value_var, names(data))
   cells <- unique(data[c(keys, columns)])
   if (anyDuplicated(cells[keys])) {
     stop("NEST pilot: conflicting values or units within a reporting key (",
@@ -74,14 +74,20 @@
   ifelse(is.na(x), "", trimws(formatC(x + 0, format = "f", digits = 3, drop0trailing = TRUE)))
 }
 
-# Interval parameters (e.g. partial AUCs) share one PARAM across intervals. Name
-# each interval so its values are neither pooled nor rejected as duplicates.
-.nest_interval_param <- function(data, param_var) {
+# Partial AUC windows share one PARAM, so a subject has several intervals per
+# reporting key. Name those intervals so their values are neither pooled nor
+# rejected as duplicates. Parameters with one interval per subject (urine
+# collections end at each subject's actual time) keep their name and pool.
+.nest_interval_param <- function(data, param_var, keys) {
   if (!all(c(param_var, "PPSTINT", "PPENINT") %in% names(data))) return(data)
   interval <- !is.na(data$PPSTINT) & !is.na(data$PPENINT)
+  keys <- intersect(unique(c(keys, param_var)), names(data))
+  cells <- unique(data[interval, c(keys, "PPSTINT", "PPENINT"), drop = FALSE])
+  repeated <- unique(cells[[param_var]][duplicated(cells[keys])])
+  rename <- interval & data[[param_var]] %in% repeated
   param <- as.character(data[[param_var]])
-  param[interval] <- paste0(param[interval], " (", data$PPSTINT[interval], "-",
-                            data$PPENINT[interval], ")")
+  param[rename] <- paste0(param[rename], " (", data$PPSTINT[rename], "-",
+                          data$PPENINT[rename], ")")
   attr(param, "label") <- attr(data[[param_var]], "label")
   data[[param_var]] <- param
   data

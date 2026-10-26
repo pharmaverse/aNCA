@@ -16,3 +16,12 @@ nest_interval_fixture <- function() {
   later$AVAL <- later$AVAL * 2
   rbind(d, later)
 }
+
+# Urine-style intervals: one per subject, ending at each subject's actual time.
+nest_urine_fixture <- function() {
+  d <- nest_adpp_fixture()[nest_adpp_fixture()$PARAM == "AUC", ]
+  d$PARAM <- "Amt Rec"
+  d$PPSTINT <- "PT0H"
+  d$PPENINT <- c("PT24.117H", "PT23.881H", "PT24H")
+  d
+}

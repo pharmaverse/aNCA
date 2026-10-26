@@ -47,7 +47,8 @@ statistic block is repeated once per level, nested under a group header.
 table are ignored.}
 
 \item{title, subtitle, footnote}{Annotation text supporting \verb{$VAR} and \code{!VAR}.
-A \code{NULL} subtitle uses the table split key verbatim.}
+A \code{NULL} subtitle uses the table split key verbatim; a custom subtitle is
+followed by the split key so every table identifies its split.}
 }
 \value{
 Named list of \code{gtsummary} objects, or an explanatory string for
@@ -60,10 +61,11 @@ in the ARD identify the source result row. This is not a CDISC submission ARD.
 \description{
 Adapts \code{\link[=t_pkpt03_col]{t_pkpt03_col()}} results to a \code{cards} ARD and a \code{gtsummary} wide
 summary. Statistics, rounding and summary exclusions use the existing aNCA
-implementation. Units are retained as row keys. Interval parameters (with
-\code{PPSTINT}/\code{PPENINT}, e.g. partial AUCs) are summarized per interval, with the
-interval appended to \code{PARAM}. Conflicting duplicate values are rejected
-rather than silently selecting one measurement.
+implementation. Units are retained as row keys. Parameters with several
+intervals per subject (\code{PPSTINT}/\code{PPENINT}, e.g. partial AUC windows) are
+summarized per interval, with the interval appended to \code{PARAM}; one interval
+per subject (e.g. urine collections) pools as before. Conflicting duplicate
+values are rejected rather than silently selecting one measurement.
 Presentation preserves the existing decimal precision independently of the
 session's \code{digits} option.
 }
