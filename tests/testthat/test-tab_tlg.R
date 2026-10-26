@@ -144,7 +144,7 @@ render_tlg_panels <- function(output) {
 }
 
 describe("tab_tlg_server: TLG export registry", {
-  it("preserves edited labels in rebuilt panels and the export registry after resubmission", {
+  it("preserves edited labels in rebuilt panels and exports after submitting the order again", {
     conc <- FIXTURE_CONC_DATA[FIXTURE_CONC_DATA$USUBJID == 1, ]
     conc$TRT01A <- "Treatment A"
     testServer(
