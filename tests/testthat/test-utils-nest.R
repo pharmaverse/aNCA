@@ -27,6 +27,11 @@ describe("NEST dependency and metadata boundary", {
     expect_identical(.nest_interval_param(nest_adpp_fixture(), "PARAM"), nest_adpp_fixture())
   })
 
+  it("keeps annotation line breaks and escapes markup for gt", {
+    skip_if_not_installed("gt")
+    expect_identical(as.character(.nest_html_lines("a<b & c\nd")), "a&lt;b &amp; c<br>d")
+  })
+
   it("names the reporting key in conflict errors", {
     d <- data.frame(USUBJID = NA, PARAM = "AUC", AVAL = c(1, 2))
     expect_error(.nest_check_cells(d, c("USUBJID", "PARAM"), "AVAL"),

@@ -38,10 +38,20 @@
   notes <- attr(table, "tlg_annotations")
   result <- gtsummary::as_gt(table)
   if (nzchar(notes$title) || nzchar(notes$subtitle)) {
-    result <- gt::tab_header(result, title = notes$title, subtitle = notes$subtitle)
+    result <- gt::tab_header(result, title = .nest_html_lines(notes$title),
+                             subtitle = .nest_html_lines(notes$subtitle))
   }
-  if (nzchar(notes$footnote)) result <- gt::tab_source_note(result, notes$footnote)
+  if (nzchar(notes$footnote)) {
+    result <- gt::tab_source_note(result, .nest_html_lines(notes$footnote))
+  }
   result
+}
+
+#' Keep annotation line breaks in gt, which collapses newlines in plain text.
+#' @importFrom htmltools htmlEscape
+#' @noRd
+.nest_html_lines <- function(text) {
+  gt::html(gsub("\n", "<br>", htmlEscape(text), fixed = TRUE))
 }
 
 # Keep the legacy first-row policy for equal repeated dose records. Reject

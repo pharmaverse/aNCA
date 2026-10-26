@@ -112,6 +112,37 @@ describe("NEST exports", {
     expect_match(failed$note, "requires: gt", fixed = TRUE)
   })
 
+  it("keeps wide Word listings readable by splitting columns and repeating keys", {
+    skip_if_not_installed("crane", "0.3.2")
+    skip_if_not_installed("officer")
+    skip_if_not_installed("flextable")
+    data <- expand.grid(USUBJID = c("S1-01", "S1-02"),
+                        PARAM = sprintf("Parameter number %02d", 1:20), stringsAsFactors = FALSE)
+    data$TRT01A <- "DrugA 5 mg, Infusion"
+    data$PPCAT <- "DrugA"
+    data$PPSPEC <- "SERUM"
+    data$AVAL <- seq_len(nrow(data)) + 0.123
+    data$AVALU <- "(Hours*ug/mL)/mg"
+    entry <- list(type = "listing", items = l_pkpl01_nest(data),
+                  def = list(label = "Pilot", type = "Listing", dataset = "ADPP"))
+    dest <- tempfile("nest-docx-")
+    on.exit(unlink(dest, recursive = TRUE))
+    manifest <- write_tlg_exports(list(l_pkpl01_nest = entry), dest, table_formats = "docx")
+    expect_true(all(manifest$status == "ok"))
+    path <- file.path(dest, "Listings/docx/pkpl01_nest.docx")
+    xml_dir <- tempfile()
+    utils::unzip(path, "word/document.xml", exdir = xml_dir)
+    xml <- paste(readLines(file.path(xml_dir, "word/document.xml"), warn = FALSE), collapse = "")
+    sizes <- regmatches(xml, gregexpr('(?<=<w:sz w:val=")[0-9]+', xml, perl = TRUE))[[1]]
+    sizes <- as.integer(sizes)
+    expect_gte(min(sizes) / 2, 8)
+    tables <- lengths(regmatches(xml, gregexpr("<w:tbl[ >]", xml)))
+    expect_gt(tables, 1)
+    text <- officer::docx_summary(officer::read_docx(path))$text
+    expect_equal(sum(text == get_label("USUBJID", type = "ADPP")), tables)
+    expect_true(all(c("Parameter Category: DrugA", "Specimen Material Type: SERUM") %in% text))
+  })
+
   it("paginates a full summary with wrapped labels without overflowing the PDF", {
     skip_if_not_installed("gtsummary", "2.6.1")
     params <- c("AUC to Last Nonzero Conc", "AUC to Last Nonzero Conc Norm by Dose",

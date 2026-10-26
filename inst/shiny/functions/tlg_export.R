@@ -703,6 +703,36 @@ write_tlg_exports <- function(entries,
   rows
 }
 
+# Word cannot paginate columns, and shrinking the font to fit made wide listings
+# unreadable (1 pt for 18 parameters). Split wide tables into column groups that
+# repeat the key columns, as the PDF export does. Widths are estimated in
+# characters from the longest unbreakable word per column; the default budget
+# fits 8 pt text across a landscape page.
+.nest_docx_parts <- function(x, budget = 140) {
+  header <- x$table_styling$header
+  visible <- header$column[!header$hide]
+  keys <- visible[seq_len(attr(x, "tlg_key_count") %||% 0L)]
+  body <- gtsummary::as_tibble(x, col_labels = FALSE)
+  width <- vapply(visible, function(v) {
+    text <- c(header$label[header$column == v], as.character(body[[v]]))
+    words <- unlist(strsplit(text[!is.na(text)], "\\s+"))
+    max(nchar(words), 1) + 2
+  }, numeric(1))
+  room <- max(budget - sum(width[keys]), 1)
+  groups <- list()
+  current <- character()
+  for (v in setdiff(visible, keys)) {
+    if (length(current) && sum(width[c(current, v)]) > room) {
+      groups <- c(groups, list(current))
+      current <- character()
+    }
+    current <- c(current, v)
+  }
+  groups <- c(groups, list(current))
+  if (length(groups) == 1L) return(list(x))
+  gtsummary::tbl_split_by_columns(x, keys = keys, groups = groups)
+}
+
 .write_nest_document <- function(items, path, format) {
   if (format == "annotations.csv") {
     annotations <- lapply(seq_along(items), function(i) {
@@ -722,16 +752,27 @@ write_tlg_exports <- function(entries,
     doc <- officer::body_set_default_section(doc, officer::prop_section(
       page_size = officer::page_size(orient = "landscape")
     ))
+    # Word ignores newlines inside a paragraph, so write one paragraph per line.
+    add_lines <- function(doc, text, style = NULL) {
+      for (line in strsplit(text, "\n", fixed = TRUE)[[1]]) {
+        doc <- officer::body_add_par(doc, line, style = style)
+      }
+      doc
+    }
     for (i in seq_along(items)) {
       if (i > 1L) doc <- officer::body_add_break(doc)
       annotations <- attr(items[[i]], "tlg_annotations")
-      doc <- officer::body_add_par(doc, annotations$title, style = "Title")
-      doc <- officer::body_add_par(doc, annotations$subtitle)
-      ft <- gtsummary::as_flex_table(items[[i]])
-      ft <- flextable::autofit(flextable::fontsize(ft, size = 9, part = "all"))
-      ft <- flextable::fit_to_width(ft, max_width = 9)
-      doc <- flextable::body_add_flextable(doc, ft)
-      doc <- officer::body_add_par(doc, annotations$footnote)
+      doc <- add_lines(doc, annotations$title, style = "Title")
+      doc <- add_lines(doc, annotations$subtitle)
+      parts <- .nest_docx_parts(items[[i]])
+      for (j in seq_along(parts)) {
+        if (j > 1L) doc <- officer::body_add_par(doc, "")
+        ft <- gtsummary::as_flex_table(parts[[j]])
+        ft <- flextable::fontsize(ft, size = 8, part = "all")
+        ft <- flextable::set_table_properties(ft, layout = "autofit", width = 1)
+        doc <- flextable::body_add_flextable(doc, ft)
+      }
+      doc <- add_lines(doc, annotations$footnote)
     }
     print(doc, target = path)
   }

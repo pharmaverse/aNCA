@@ -61,6 +61,8 @@ describe("l_pkpl01_nest", {
                      c("123456.789", "12808.737", "0.5"))
     html <- gt::as_raw_html(.nest_gt(table))
     for (value in c(">123456.789<", ">12808.737<", ">0.5<")) expect_match(html, value, fixed = TRUE)
+    # The default subtitle has one line per split variable; gt must not run them together.
+    expect_match(html, "Parameter Category: Drug<br>Specimen Material Type: SERUM", fixed = TRUE)
     expect_false(attr(table, "tlg_group_header"))
   })
 
