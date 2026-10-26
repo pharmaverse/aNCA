@@ -1350,7 +1350,7 @@ p_pkpg06_mp:
   fun: p_pkpg06_mp
   condition: null
   options:
-    .help_ratios: "The subtitle shows test / reference. Each parameter has a separate facet and y-axis scale. Directions, routes and dose profiles have separate pages. A single-subject group has a flat box; the star marks the mean."
+    .help_ratios: "The subtitle shows test / reference. Each parameter has a separate facet and y-axis scale. Directions, routes and dose profiles have separate pages. Dots show individual ADPP values with horizontal jitter only. A single-subject group has a flat box; the star marks the mean."
     .group_label_labs: "Labs"
     title:
       type: text

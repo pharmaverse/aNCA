@@ -13,7 +13,7 @@
 #' @param list_vars Columns used to split output into separate plot pages.
 #'   Default: `c("PPCAT", "PPSPEC")`.
 #' @param all_points Logical. When `TRUE`, individual data points are overlaid
-#'   on the boxes (pkpg04 style). Default: `FALSE`.
+#'   on the boxes with horizontal jitter only (pkpg04 style). Default: `FALSE`.
 #' @param title Optional plot title string.
 #' @param subtitle Optional plot subtitle string.
 #' @param footnote Optional footnote string.
@@ -108,7 +108,7 @@ p_pkpg03_boxp <- function(
       )
 
     if (all_points) {
-      p <- p + ggplot2::geom_jitter(width = 0.15, size = 1.5, alpha = 0.6)
+      p <- p + geom_jitter(width = 0.15, height = 0, size = 1.5, alpha = 0.6)
     }
 
     # Outlier labels: only shown when all_points = FALSE (pkpg03 style).
@@ -165,8 +165,9 @@ p_pkpg04_boxp <- function(data, ...) {
 #' from ADPP without recalculation, keeping plots consistent with exported results.
 #' Includes inverse ratios; the subtitle shows test / reference. Parameters with
 #' the same direction and profile share a page as separate facets, each with its
-#' own y-axis scale. The star marks the mean. A group with one subject has a flat
-#' box because its quartiles are identical.
+#' own y-axis scale. Individual points retain their ADPP values and are spread
+#' horizontally to reduce overlap. The star marks the mean. A group with one
+#' subject has a flat box because its quartiles are identical.
 #'
 #' @inheritParams p_pkpg03_boxp
 #' @inheritParams t_pkpt03_MP_col
@@ -174,6 +175,7 @@ p_pkpg04_boxp <- function(data, ...) {
 #'   label and `PPSPEC`; varying profile identifiers are retained as well.
 #' @param subtitle Optional plot subtitle; defaults to the analyte pair and profile identifiers.
 #' @param ylab Y-axis label. Defaults to `"Analyte Ratio (Test / Reference)"`.
+#' @param all_points Logical. Overlay individual ratio values. Default: `TRUE`.
 #' @param ... Additional arguments forwarded to [p_pkpg03_boxp()].
 #'
 #' @return A named list of ggplot objects (same format as [p_pkpg03_boxp()]).
@@ -189,14 +191,14 @@ p_pkpg04_boxp <- function(data, ...) {
 p_pkpg06_mp <- function(
   data, list_vars = c("RATIO", "PPSPEC"),
   title = "Boxplot of Analyte Ratios by Treatment", subtitle = NULL,
-  ylab = "Analyte Ratio (Test / Reference)", value_var = "AVAL", ...
+  ylab = "Analyte Ratio (Test / Reference)", value_var = "AVAL", all_points = TRUE, ...
 ) {
   data <- filter_ratio_rows(data, "p_pkpg06_mp", ref_type = "analyte", value_var = value_var)
   plots <- p_pkpg03_boxp(
     data,
     list_vars = union(list_vars, .ratio_profile_vars(data)),
     title = title, subtitle = subtitle, ylab = ylab,
-    value_var = value_var,
+    value_var = value_var, all_points = all_points,
     ...
   )
   if (is.null(subtitle)) {

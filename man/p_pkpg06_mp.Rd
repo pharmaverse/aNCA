@@ -11,6 +11,7 @@ p_pkpg06_mp(
   subtitle = NULL,
   ylab = "Analyte Ratio (Test / Reference)",
   value_var = "AVAL",
+  all_points = TRUE,
   ...
 )
 }
@@ -28,6 +29,8 @@ label and \code{PPSPEC}; varying profile identifiers are retained as well.}
 
 \item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
 
+\item{all_points}{Logical. Overlay individual ratio values. Default: \code{TRUE}.}
+
 \item{...}{Additional arguments forwarded to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.}
 }
 \value{
@@ -40,8 +43,9 @@ or load them from settings, then run NCA before rendering. Values are read
 from ADPP without recalculation, keeping plots consistent with exported results.
 Includes inverse ratios; the subtitle shows test / reference. Parameters with
 the same direction and profile share a page as separate facets, each with its
-own y-axis scale. The star marks the mean. A group with one subject has a flat
-box because its quartiles are identical.
+own y-axis scale. Individual points retain their ADPP values and are spread
+horizontally to reduce overlap. The star marks the mean. A group with one
+subject has a flat box because its quartiles are identical.
 }
 \examples{
 \dontrun{

@@ -35,7 +35,7 @@ Default: \code{"PARAM"}.}
 Default: \code{c("PPCAT", "PPSPEC")}.}
 
 \item{all_points}{Logical. When \code{TRUE}, individual data points are overlaid
-on the boxes (pkpg04 style). Default: \code{FALSE}.}
+on the boxes with horizontal jitter only (pkpg04 style). Default: \code{FALSE}.}
 
 \item{title}{Optional plot title string.}
 

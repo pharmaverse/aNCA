@@ -115,6 +115,9 @@ describe("p_pkpg04_boxp", {
     )
     expect_true(any(jitter_layers))
     expect_equal(nrow(ggplot2::layer_data(result, which(jitter_layers))), 12L)
+    expect_equal(
+      sort(ggplot2::layer_data(result, which(jitter_layers))$y), sort(pkpg_data$AVAL)
+    )
   })
 
   it("suppresses boxplot outlier points when all_points = TRUE", {
@@ -130,6 +133,37 @@ describe("p_pkpg06_mp", {
   plots <- function(data = pkpg_ratio_data, ...) {
     p_pkpg06_mp(data, ...)
   }
+
+  it("shows individual ADPP values by default without vertical jitter", {
+    withr::local_pdf(NULL)
+    data <- mp_adpp_fixture()
+    ratio <- which(!is.na(data$PPANMETH))
+    data$AVAL[ratio[1]] <- NA_real_
+    data$PPSUMXF[ratio[2]] <- "Y"
+    result <- p_pkpg06_mp(data)
+    observed <- numeric()
+    for (plot in result) {
+      points <- which(vapply(
+        plot$layers, function(layer) inherits(layer$position, "PositionJitter"), logical(1)
+      ))
+      expect_length(points, 1L)
+      if (length(points) != 1L) next
+      rendered <- ggplot2::layer_data(plot, points)
+      expect_equal(sort(rendered$y), sort(plot$data$AVAL))
+      observed <- c(observed, rendered$y)
+      expect_no_warning(ggplot2::ggplotGrob(plot))
+    }
+    expected <- data$AVAL[ratio]
+    expected <- expected[!is.na(expected) & data$PPSUMXF[ratio] != "Y"]
+    expect_equal(sort(observed), sort(expected))
+  })
+
+  it("allows individual points to be disabled explicitly", {
+    plot <- plots(all_points = FALSE)[[1]]
+    expect_false(any(vapply(
+      plot$layers, function(layer) inherits(layer$position, "PositionJitter"), logical(1)
+    )))
+  })
 
   it("plots the ratio values, not the metabolite's raw values", {
     result <- plots()
