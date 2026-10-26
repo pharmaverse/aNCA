@@ -681,3 +681,36 @@ describe("TLG export formats", {
     )
   })
 })
+
+describe("export validation with installed-package visibility", {
+  it("returns valid and blocking findings without development-only exports", {
+    app_env <- new.env(parent = baseenv())
+    app_env$`%||%` <- rlang::`%||%`
+    app_env$setNames <- stats::setNames
+    app_env$validate_export_outputs <- validate_export_outputs
+    app_env$generate_pre_specs <- generate_pre_specs
+    source(system.file("shiny/functions/zip-utils.R", package = "aNCA"), local = app_env)
+    session <- test_export_session(list(exploration = list()))
+    clear <- app_env$.validate_export_artifacts(
+      test_export_input(character()), session, NULL
+    )
+    expect_identical(clear, validate_export_outputs(list()))
+    blocked <- app_env$.validate_export_artifacts(
+      test_export_input("settings_file"), session, NULL
+    )
+    expect_identical(blocked$Output, "settings.yaml")
+    expect_identical(blocked$Check, "settings_structure")
+    expect_true(export_validation_blocks_save(blocked))
+    expect_named(blocked, names(clear))
+    specs <- app_env$.pre_specs_export_payload(
+      "adnca", list(adnca = data.frame(STUDYID = "S1"))
+    )
+    expect_true(length(specs) > 0L)
+    expect_true(all(vapply(specs, function(x) is.data.frame(x) && nrow(x) > 0L, logical(1))))
+    app_env$.export_value_is_serialisable <- function(value) FALSE
+    session$userData$raw_data <- data.frame(STUDYID = "S1")
+    unavailable <- app_env$.validate_script_artifacts(session)
+    expect_identical(unavailable[[1]]$Observed, "data.frame")
+    expect_identical(unavailable[[1]]$Check, "serialisation")
+  })
+})

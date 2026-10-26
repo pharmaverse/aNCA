@@ -537,7 +537,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #' vector -- and so render blank -- as soon as `PARAM` stopped being a split
 #' variable.
 #'
-#' The variable name half is resolved through [.get_var_label()] rather than
+#' The variable name half is resolved through `.get_var_label()` rather than
 #' emitted as a `!VAR` token: `parse_annotation()` yields the literal string
 #' `"ERR"` for a column with no `label` attribute, and ADNCA carries no label on
 #' `PARAM`/`PCSPEC`, which produced subtitles reading `"ERR: DrugA"`.
