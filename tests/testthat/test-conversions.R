@@ -457,3 +457,26 @@ describe("changed_units", {
     expect_equal(nrow(changed_units(empty)), 0)
   })
 })
+
+describe("recalculate_conversion_factor", {
+  units <- data.frame(
+    PPTESTCD = c("cmax", "tmax"),
+    PPORRESU = c("ug/mL", "Hours"),
+    PPSTRESU = c("ng/mL", "day"),
+    stringsAsFactors = FALSE
+  )
+
+  it("returns the conversion factor for the given row", {
+    expect_equal(recalculate_conversion_factor(units, 1), 1000)
+    expect_equal(recalculate_conversion_factor(units, 2), 1 / 24)
+  })
+
+  it("works on tibbles, as used by the Parameter Units modal (#1539)", {
+    expect_equal(recalculate_conversion_factor(dplyr::as_tibble(units), 1), 1000)
+  })
+
+  it("returns NA for units that are not convertible", {
+    units$PPSTRESU[1] <- "mg"
+    expect_true(is.na(recalculate_conversion_factor(units, 1)))
+  })
+})
