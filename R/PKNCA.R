@@ -290,6 +290,9 @@ PKNCA_create_data_object <- function( # nolint: object_name_linter
 #' (forwarded to [update_main_intervals()]).
 #' @param custom_units_table Optional data frame with PPSTRESU overrides.
 #' When provided, applied via [dplyr::rows_update()] on the PKNCAdata units table.
+#' A defaults-only table (`PPTESTCD` and `PPSTRESU`, without `PPORRESU` and
+#' `conversion_factor`) is first resolved against the data units with
+#' [apply_unit_defaults()].
 #'
 #' @returns A fully configured `PKNCAdata` object.
 #'
@@ -381,6 +384,19 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
 
   # Apply custom units table
   if (!is.null(custom_units_table)) {
+    # Defaults-only tables (PPTESTCD + PPSTRESU, e.g. settings templates) carry no
+    # conversion factor; resolve them against the data units as the App does.
+    if (!all(c("PPORRESU", "conversion_factor") %in% names(custom_units_table))) {
+      resolved <- apply_unit_defaults(custom_units_table, data$units)
+      if (nrow(resolved$failed) > 0) {
+        warning(
+          "Could not convert units for: ",
+          paste(unique(resolved$failed$PPTESTCD), collapse = ", "),
+          ". Data defaults will be used for these parameters."
+        )
+      }
+      custom_units_table <- resolved$units
+    }
     common_cols <- intersect(names(data$units), names(custom_units_table))
     by_cols <- setdiff(common_cols, c("PPSTRESU", "PPSTRES", "conversion_factor"))
     data$units <- rows_update(
