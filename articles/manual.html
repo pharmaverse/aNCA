@@ -470,6 +470,12 @@ times. These are essential for proper interval calculations in NCA.</p>
 </tr>
 </tbody>
 </table>
+<p><strong>Important</strong>: dose numbering (<code>DOSNOA</code>,
+§2.5.2) is inferred by calculating real <code>dose_time</code> from
+subtracting <code>AFRLT - ARRLT</code>, not copied from
+<code>PCDTC</code>. All records from one real dose must give the same
+<code>AFRLT - ARRLT</code>, or the application assumes there were
+multiple doses given (§8.1).</p>
 </div>
 <div class="section level3">
 <h3 id="units">2.3 Units<a class="anchor" aria-label="anchor" href="#units"></a>
@@ -561,6 +567,22 @@ data - Calculates sequential dose numbers - Links dose times to
 concentration profiles - Dose times are calculated based on
 <code>AFRLT - ARRLT</code> rounding to the 6th decimal to prevent
 floating point issues in interval creation.</p>
+<p><strong>How <code>DOSNOA</code> is assigned</strong>: records are
+sorted by <code>dose_time</code> per subject/analyte/specimen; a new
+<code>DOSNOA</code> is assigned when <code>dose_time</code> jumps
+&gt;0.02h from the previous record. No dosing record is cross-checked -
+a wrong <code>AFRLT</code>/<code>ARRLT</code> on a single sample
+(e.g. from a missing <code>PCDTC</code> backfilled with a nominal time)
+silently splits one real profile into two, each with wrong
+Cmax/AUC/half-life.</p>
+<p><strong>Quick check</strong> for affected profiles:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ADNCA</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>dose_time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">AFRLT</span> <span class="op">-</span> <span class="va">ARRLT</span>, <span class="fl">6</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">USUBJID</span>, <span class="va">PARAM</span>, <span class="va">PCSPEC</span>, <span class="va">ATPTREF</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>n_dose_times <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/n_distinct.html" class="external-link">n_distinct</a></span><span class="op">(</span><span class="va">dose_time</span><span class="op">)</span>, .groups <span class="op">=</span> <span class="st">"drop"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">n_dose_times</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p>Any row returned is a profile at risk of a phantom extra dose.</p>
 </div>
 <div class="section level4">
 <h4 id="interval-creation-parameter-assignment">2.5.3 Interval Creation &amp; Parameter Assignment<a class="anchor" aria-label="anchor" href="#interval-creation-parameter-assignment"></a>
@@ -702,7 +724,7 @@ parameter in <code><a href="../reference/update_main_intervals.html">update_main
 <code>"keep"</code>: Use BLQ as 0</li>
 </ul>
 <p><strong>Example</strong>:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">blq_rule</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  first <span class="op">=</span> <span class="st">"0"</span>,        <span class="co"># Set first BLQ to 0</span></span>
 <span>  middle <span class="op">=</span> <span class="st">"drop"</span>,    <span class="co"># Drop middle BLQ values</span></span>
@@ -1064,7 +1086,7 @@ Function Reference</a></p>
 <div class="section level3">
 <h3 id="nca-execution">5.3 NCA Execution<a class="anchor" aria-label="anchor" href="#nca-execution"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simplified workflow</span></span>
 <span><span class="va">pknca_data</span> <span class="op">&lt;-</span> <span class="fu">PKNCAdata</span><span class="op">(</span><span class="va">conc</span>, <span class="va">dose</span>, <span class="va">intervals</span><span class="op">)</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">pk.nca</span><span class="op">(</span><span class="va">pknca_data</span><span class="op">)</span></span></code></pre></div>
@@ -1293,6 +1315,19 @@ possible - Use observed Clast method instead of predicted - Review
 whether extrapolation assumption is valid - Consider flagging parameters
 if extrapolation exceeds acceptable thresholds</p>
 </div>
+<div class="section level4">
+<h4 id="issue-a-dosing-profile-appears-split-into-two-or-has-fewer-points-than-expected">Issue: A dosing profile appears split into two, or has fewer points
+than expected<a class="anchor" aria-label="anchor" href="#issue-a-dosing-profile-appears-split-into-two-or-has-fewer-points-than-expected"></a>
+</h4>
+<p><strong>Cause</strong>: a wrong <code>AFRLT</code>/<code>ARRLT</code>
+on one sample (often from a missing <code>PCDTC</code> backfilled with a
+nominal time) gives it a different <code>dose_time</code> than the rest
+of its profile, so aNCA infers it’s a new dose (§2.5.2).</p>
+<p><strong>Solutions</strong>: - Run the diagnostic check from §2.5.2 to
+find affected profiles - Check source data: is <code>PCDTC</code>
+populated for every sample? - Fix <code>AFRLT</code>/<code>ARRLT</code>
+to the real collection time</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="understanding-result-flags">8.2 Understanding Result Flags<a class="anchor" aria-label="anchor" href="#understanding-result-flags"></a>
@@ -1418,30 +1453,35 @@ Pharmacokinetics and Pharmacodynamics</em>, 42(1), 11-17. <a href="https://doi.o
 <td>Maximum observed concentration</td>
 </tr>
 <tr class="odd">
+<td><strong>DOSNOA</strong></td>
+<td>Internal sequential dose number, inferred by aNCA from
+<code>AFRLT - ARRLT</code>; not a raw input column</td>
+</tr>
+<tr class="even">
 <td><strong>Half-life (t½)</strong></td>
 <td>Time for concentration to decrease by 50%</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>NCA</strong></td>
 <td>Non-Compartmental Analysis</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>PKNCA</strong></td>
 <td>R package for pharmacokinetic non-compartmental analysis</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>PP</strong></td>
 <td>Pharmacokinetic Parameters domain</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>TLG</strong></td>
 <td>Tables, Listings, and Graphs</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><strong>Tmax</strong></td>
 <td>Time of maximum concentration</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><strong>λz</strong></td>
 <td>Terminal elimination rate constant</td>
 </tr>
