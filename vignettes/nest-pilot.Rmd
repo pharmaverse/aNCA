@@ -61,6 +61,14 @@ The NEST workshop's package map supports `gtsummary`/`crane`, `cards`/`cardx` an
 
 ## Reproduce the validation
 
+### Dependency audit
+
+The R 4.4 job at commit `c7787d686` failed only because `--as-cran` limits non-default Imports to 20: aNCA had 25, with zero check errors or warnings. The pilot adds four Suggests and no Imports. The redundant direct `magrittr` dependency was removed because its only use, `%>%`, is already re-exported by `dplyr`. This leaves 24 non-default Imports and does not resolve the dependency NOTE.
+
+The remaining dependencies have runtime uses: `PKNCA` and `units` provide calculations and conversions; `dplyr`, `tidyr`, `purrr`, `rlang` and `glue` prepare data and annotations; `ggplot2`, `plotly`, `formatters`, `htmltools` and `htmlwidgets` render or label outputs; `writexl`, `yaml` and `zip` write workbooks, settings and archives. The app uses `shiny`, `bslib`, `logger`, `reactable`, `reactable.extras`, `shinycssloaders`, `shinyjs`, `shinyjqui` and `shinyWidgets` for its interface, logging, editable tables, loading indicators and slope selection. None can simply be moved to Suggests without changing the supported runtime or adding conditional behavior. Maintainers must decide whether to split these features into optional modules or accept the dependency count; this PR does not suppress the NOTE or change the CI gate.
+
+### Numerical and export checks
+
 From a checkout with development dependencies installed, run:
 
 ```sh
@@ -68,6 +76,21 @@ Rscript data-raw/validate_nest_pilot.R /tmp/nest-evidence
 ```
 
 `data-raw/rebuild.R` skips this script. It reruns NCA on the checked-in `data-raw/adnca_example.csv`, compares pilot summaries/listings/graphs to legacy outputs with equivalent grouping, independently calculates mean/SD/n from source rows, and writes numeric evidence plus a ZIP containing a compact report. The unit tests additionally exercise all nine summary statistics, exclusions, BLQ-heavy timepoints, empty/all-missing/single-subject data, units, grouping comparisons, conflicting/equal duplicates and repeated-key suppression. Integration tests inspect sidebar output, CSV/XLSX values, Word content, HTML annotations and ZIP contents.
+
+### Installed-app settings and generated-script replay
+
+On 2026-10-30, a fresh installed app was exercised through upload, mapping, filtering, NCA, TLG selection and ZIP download in Chrome on R 4.5.2. This exposed missing namespace qualification in versioned settings restoration and export validation, plus an incorrect input-data path in the downloaded script. Those defects are corrected and covered by regression tests that do not expose private package objects on the app's search path.
+
+To repeat the workflow:
+
+1. Upload `data-raw/adnca_example.csv`, accept the standard mapping and filtering, and run NCA for the default serum/first-dose selection. Change the integration method to `linear` and minimum half-life points to 4, then rerun NCA.
+2. Add the three NEST pilots alongside the existing outputs. Select Max Conc and AUC to Last Nonzero Conc for the summary and listing, and n/Mean/SD for the summary. Use `PARAM` and `TRT01A` as summary strata and `USUBJID` and `TRT01A` as listing keys. Set titles to `Replay summary: $PPCAT` and `Replay listing: $PPCAT`, and add `Replay verification` as the summary and graph footnote.
+3. Download the versioned settings. Start a fresh app session, upload the same source data and saved settings, and let the restored NCA run finish. Compare the settings, mapping, filters, slope selections and all CDISC datasets with the original session. Select the same TLG order and sidebar values again, since those are not persisted by the settings format.
+4. Export PP, ADPP, ADNCA, pre-specifications, settings and the R script through the ZIP dialog. Extract the ZIP, set the working directory to its root and run the unedited `session_code.R` in a fresh R session. Compare its `cdisc_data` with the app results, then call the three pilot functions with the same options to compare their numeric data and annotations.
+
+The settings replay matched PP and ADPP (192 rows each) and ADNCA (1,308 rows), including attributes. Settings, mapping, filters and slope selections also matched. The stored unit overrides are sparse after restoration; the effective units and dataset values matched. Both analyte splits of the pilot summary and listing, all five graph datasets and their annotations, and both splits of the retained legacy summary matched after applying the same TLG options. The unedited generated script reproduced the same three CDISC datasets and pilot results. Independent source values 3.597, 4.556 and 3.660 reproduced Cmax n=3, mean=3.938 and sample SD=0.536.
+
+The separate validation script also passed on the final code: 1,308 source records, 1,704 ADPP records across its broader selections, 112 independent summary rows and 448 graph cells. Pilot CSV/XLSX/PDF/HTML/DOCX and graph PNG/PDF/HTML exports succeeded; unsupported legacy table HTML/DOCX requests were recorded as skipped. The full test suite passed 3,837 assertions with one inherited plotting warning and three existing skips (unavailable `arrow`, the disabled E2E runner and the full-session slide-export case). The real-app replay above was run separately from that disabled runner. Local `R CMD check --as-cran --no-manual` completed with zero errors, warnings or notes on R 4.5.2, which reports the excessive Imports count as informational; this does not establish an R 4.4 pass.
 
 ## Sources reviewed
 

@@ -4,7 +4,7 @@
 
 * **Data upload:** Combine multiple files, see accepted formats and size limits, and receive clearer upload and mapping errors (#821, #1365, #1367).
 * **Data mapping:** Map excretion times and body-weight units, enter dose duration and treatment intervals directly, and continue after mapping errors or duplicate-row cancellation without stuck loading indicators (#745, #959, #1051, #1402, #1420).
-* **Saved sessions:** Save versioned YAML settings and restore mappings, filters, exclusions, ratios, units, and previous NCA runs from YAML or ZIP, including reusable templates and startup settings (#514, #832, #860, #901, #993, #1082, #1091, #1103, #1104, #1195, #1225).
+* **Saved sessions:** Save versioned YAML settings and restore mappings, filters, exclusions, ratios, units, and previous NCA runs from YAML or ZIP, including reusable templates, startup settings, and settings uploaded in installed apps (#514, #832, #860, #901, #993, #1082, #1091, #1103, #1104, #1195, #1225, #1548).
 * **Settings stability:** Preserve parameter and summary selections during setup changes, apply filters consistently, and ignore invalid partial intervals in uploaded settings (#840, #1008, #1060, #1092, #1347).
 
 ## NCA calculations & results
@@ -34,7 +34,7 @@
 ## Tables, listings & graphs
 
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
-* **NEST pilot:** Opt in to PKPT03 summaries, PKPL01 listings and linear PKCG03 graphs built on the existing calculations, with sidebar annotations and HTML/Word table and listing exports in the ZIP (#1540).
+* **NEST pilot:** Opt in to PKPT03 summaries, PKPL01 listings and linear PKCG03 graphs built on the existing calculations, with sidebar annotations and HTML/Word table and listing exports in the ZIP (#1548).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
 * **Table customization:** Choose grouping, covariate comparisons, statistics, parameters, timepoints, and listing columns, with readable group headers and warnings for unavailable grouping variables (#1343, #1356, #1531).
 * **Urine outputs:** Restrict urine tables and listings to urine specimens and report missing specimen information (#1335, #1343, #1356, #1531).
@@ -43,8 +43,8 @@
 
 * **ZIP exports:** Export results, settings, plots, and TLGs using current selections, with PDF/HTML/PNG graphs, XLSX/CSV/PDF tables, study-based filenames, and a manifest of output statuses (#638, #1000, #1136, #1344, #1428).
 * **Slides:** Customize slide sections and grouping, include dose-normalized summaries, and add a PK parameter glossary (#791, #972, #1054, #1326).
-* **Reproducible scripts:** Export R scripts that use saved mappings, filters, ratios, units, and BLQ rules to reproduce app results (#789, #1189, #1445).
-* **Export validation:** Validate selected non-TLG exports and CDISC field types and lengths before saving, report custom-field validation limits, and block exports on validation or XPT-writing failures (#1452).
+* **Reproducible scripts:** Export R scripts that read the bundled input data and use saved mappings, filters, ratios, units, and BLQ rules to reproduce app results; scripts generated from settings use the supplied data path (#789, #1189, #1445, #1548).
+* **Export validation:** Validate selected non-TLG exports and CDISC field types and lengths before saving in installed apps, report custom-field validation limits, and block exports on validation or XPT-writing failures (#1452, #1548).
 * **CDISC metadata:** Include pre-specifications, session information, custom grouping variables, dose reference, route, and exclusion flags in exported datasets (#829, #998, #1077, #1141, #1276).
 * **CDISC corrections:** Report acceptance criteria with satisfied flags as `Y` and violations as blank, identify dose-aware methods through `PPANMETH`, and correct CORRXY and TMAX labels (#481, #787, #1102, #1242, #1332).
 
