@@ -128,6 +128,8 @@ Time variables relate dose administrations to sample collection times. These are
 | `NFRLT` \* | Nominal Relative Time from Analyte First Dose | Planned time since first dose |
 | `NRRLT` \* | Nominal Relative Time from Reference Dose | Planned time since last dose |
 
+**Important**: dose numbering (`DOSNOA`, §2.5.2) is inferred by calculating real `dose_time` from subtracting `AFRLT - ARRLT`, not copied from `PCDTC`. All records from one real dose must give the same `AFRLT - ARRLT`, or the application assumes there were multiple doses given (§8.1).
+
 ## 2.3 Units
 
 Units are essential for parameter calculations and reporting. All unit columns must be present and consistent.
@@ -186,6 +188,20 @@ Data preparation is orchestrated through aNCA's internal functions:
 - Calculates sequential dose numbers
 - Links dose times to concentration profiles
 - Dose times are calculated based on `AFRLT - ARRLT` rounding to the 6th decimal to prevent floating point issues in interval creation.
+
+**How `DOSNOA` is assigned**: records are sorted by `dose_time` per subject/analyte/specimen; a new `DOSNOA` is assigned when `dose_time` jumps >0.02h from the previous record. No dosing record is cross-checked - a wrong `AFRLT`/`ARRLT` on a single sample (e.g. from a missing `PCDTC` backfilled with a nominal time) silently splits one real profile into two, each with wrong Cmax/AUC/half-life.
+
+**Quick check** for affected profiles:
+
+```r
+ADNCA %>%
+  dplyr::mutate(dose_time = round(AFRLT - ARRLT, 6)) %>%
+  dplyr::group_by(USUBJID, PARAM, PCSPEC, ATPTREF) %>%
+  dplyr::summarise(n_dose_times = dplyr::n_distinct(dose_time), .groups = "drop") %>%
+  dplyr::filter(n_dose_times > 1)
+```
+
+Any row returned is a profile at risk of a phantom extra dose.
 
 ### 2.5.3 Interval Creation & Parameter Assignment
 
@@ -569,6 +585,15 @@ Title: Study $STUDYID - !PARAM Analysis
 - Review whether extrapolation assumption is valid
 - Consider flagging parameters if extrapolation exceeds acceptable thresholds
 
+### Issue: A dosing profile appears split into two, or has fewer points than expected
+
+**Cause**: a wrong `AFRLT`/`ARRLT` on one sample (often from a missing `PCDTC` backfilled with a nominal time) gives it a different `dose_time` than the rest of its profile, so aNCA infers it's a new dose (§2.5.2).
+
+**Solutions**:
+- Run the diagnostic check from §2.5.2 to find affected profiles
+- Check source data: is `PCDTC` populated for every sample?
+- Fix `AFRLT`/`ARRLT` to the real collection time
+
 ## 8.2 Understanding Result Flags
 
 aNCA automatically flags results based on predefined scientific rules to help identify potential data or calculation issues.
@@ -623,6 +648,7 @@ Flagged parameters should be reviewed to determine if they're reliable for decis
 | **BLQ** | Below Limit of Quantification |
 | **CDISC** | Clinical Data Interchange Standards Consortium |
 | **Cmax** | Maximum observed concentration |
+| **DOSNOA** | Internal sequential dose number, inferred by aNCA from `AFRLT - ARRLT`; not a raw input column |
 | **Half-life (t½)** | Time for concentration to decrease by 50% |
 | **NCA** | Non-Compartmental Analysis |
 | **PKNCA** | R package for pharmacokinetic non-compartmental analysis |

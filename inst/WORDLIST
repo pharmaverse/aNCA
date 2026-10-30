@@ -27,6 +27,7 @@ Buckeridge
 CDISC
 CFR
 CMAX
+CORRXY
 CRITy
 CRITyFL
 Clast
@@ -156,6 +157,7 @@ analyte
 analytes
 aucpext
 aucs
+backfilled
 behaviour
 bioavailability
 bioequivalence
@@ -251,6 +253,7 @@ ug
 ungrouped
 unlabelled
 unmapped
+unrequested
 utilise
 visualizable
 yaml
