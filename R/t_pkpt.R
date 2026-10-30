@@ -359,6 +359,7 @@ t_pkpt08_uri <- function(
   subtitle    = NULL,
   footnote    = NULL
 ) {
+  has_urine <- any(toupper(data$PPSPEC) %in% toupper(urine_specs))
   column_labels <- var_labels(data)
   data <- filter_summary_excluded(data, flag = "PPSUMXF")
 
@@ -378,10 +379,16 @@ t_pkpt08_uri <- function(
   }
   var_labels(data) <- column_labels
   if (nrow(data) == 0) {
+    if (!has_urine) {
+      stop(errorCondition(paste0(
+        "t_pkpt08_uri: no urine PK parameter data found in ADPP. ",
+        "This TLG requires urine NCA parameters (e.g. Ae, Fe) and PPSPEC containing: ",
+        paste(urine_specs, collapse = ", ")
+      ), class = "tlg_not_applicable"))
+    }
     stop(
-      "t_pkpt08_uri: no urine PK parameter data found in ADPP. ",
-      "Ensure urine NCA parameters (e.g. Ae, Fe) were computed and ",
-      "PPSPEC contains one of: ", paste(urine_specs, collapse = ", ")
+      "t_pkpt08_uri: no urine PK parameter rows remain after summary exclusions ",
+      "and parameter filtering. Check PPSUMXF and param_filter."
     )
   }
 

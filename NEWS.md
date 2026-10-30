@@ -29,7 +29,7 @@
 * **Exploration:** Compare original and dose-normalized profiles, customize axes and legends, and use shared facet scales with automatic conversion of compatible units (#712, #817, #818, #894, #984, #986, #988, #1424).
 * **Reusable plots:** Save named plot snapshots to ZIP, browse saved plots, and copy R code that reproduces the current exploration plot (#794, #1002, #1137, #1327).
 * **Plot display:** Fixed overlapping axis labels, ignored ticks and zero limits, blank panels, incorrect grouping labels, missing titles, and box/violin rendering (#786, #890, #1336, #1356, #1441).
-* **Mean profiles:** Corrected subject-based BLQ filtering and one-sided whiskers, and restored combined concentration plots that overlay subjects by default (#555, #1316, #1356).
+* **Mean profiles:** Corrected subject-based BLQ filtering and one-sided whiskers, restored combined concentration plots that overlay subjects by default, and explicitly truncate log-scale values and error bars at the plotting floor without changing statistics (#555, #1316, #1356, #1476).
 
 ## Tables, listings & graphs
 
@@ -37,7 +37,7 @@
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
 * **Table customization:** Choose grouping, covariate comparisons, statistics, parameters, timepoints, and listing columns, with readable group headers and warnings for unavailable grouping variables (#1343, #1356, #1531).
-* **Urine outputs:** Restrict urine tables and listings to urine specimens and report missing specimen information (#1335, #1343, #1356, #1531).
+* **Urine outputs:** Restrict urine tables and listings to urine specimens report missing specimen information, and distinguish absent urine parameters from records removed by filters or exclusions (#1335, #1343, #1356, #1476, #1531).
 
 ## Exports & CDISC
 
