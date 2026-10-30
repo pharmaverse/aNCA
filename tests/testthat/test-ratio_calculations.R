@@ -129,6 +129,55 @@ describe("calculate_ratios", {
     expect_true(all(grepl("RACMAX", ratios$PPTESTCD)))
   })
 
+  it("retains undefined ratios as missing values while preserving finite values", {
+    numerator <- c(2, 0, 2, 2, 2, NA_real_, Inf, -Inf, NaN, 0, 4, 1e308)
+    denominator <- c(0, 0, NA_real_, Inf, -Inf, 2, 2, 2, 2, 2, 2, 1e-308)
+    input <- data.frame(
+      USUBJID = rep(seq_along(numerator), 2),
+      PARAM = rep(c("A", "B"), each = length(numerator)),
+      PPTESTCD = "CMAX",
+      PPORRES = c(denominator, numerator),
+      PPSTRES = c(denominator, numerator),
+      PPORRESU = "ng/mL",
+      PPSTRESU = "ng/mL"
+    )
+
+    ratios <- calculate_ratios(
+      input, test_parameter = "CMAX", match_cols = "USUBJID",
+      ref_groups = data.frame(PARAM = "A"), test_groups = data.frame(PARAM = "B"),
+      adjusting_factor = 100, custom_pptestcd = "MPCMAX"
+    )
+
+    expected <- c(rep(NA_real_, 9), 0, 200, NA_real_)
+    expect_equal(ratios$USUBJID, seq_along(numerator))
+    expect_identical(ratios$PPORRES, expected)
+    expect_identical(ratios$PPSTRES, expected)
+    expect_true(all(ratios$PPTESTCD == "MPCMAX"))
+    expect_true(all(ratios$PPANMETH == "CMAX TO CMAX [PARAM: A]"))
+    expect_true(all(ratios$PPSTRESU == "fraction"))
+  })
+
+  it("handles undefined original and standard ratios independently after unit conversion", {
+    input <- data.frame(
+      USUBJID = rep(1:2, 2), PARAM = rep(c("A", "B"), each = 2),
+      PPTESTCD = "CMAX", PPORRES = c(2000, 0, 4, 4),
+      PPSTRES = c(0, 2000, 4, 4),
+      PPORRESU = rep(c("pg/mL", "ng/mL"), each = 2),
+      PPSTRESU = rep(c("pg/mL", "ng/mL"), each = 2)
+    )
+
+    ratios <- calculate_ratios(
+      input, test_parameter = "CMAX", match_cols = "USUBJID",
+      ref_groups = data.frame(PARAM = "A"), test_groups = data.frame(PARAM = "B"),
+      adjusting_factor = 100
+    )
+
+    expect_identical(ratios$PPORRES, c(200, NA_real_))
+    expect_identical(ratios$PPSTRES, c(NA_real_, 200))
+    expect_true(all(ratios$PPORRESU == "fraction"))
+    expect_true(all(ratios$PPSTRESU == "fraction"))
+  })
+
   it("handles unit conversions when needed and possible to convert", {
     res_with_diff_units <- res_simple
     res_with_diff_units$result <- res_simple$result %>%
@@ -743,5 +792,99 @@ describe("calculate_ratio_app with interval parameters", {
 
     # RATIO2 values should be exactly 100x RATIO1
     expect_equal(sort(r2$PPORRES), sort(r1$PPORRES) * 100, tolerance = 1e-6)
+  })
+})
+
+describe("configured analyte ratios across NCA and sibling outputs", {
+  it("retains three ratios and their direction, dose and route on real example data", {
+    skip_if_not_installed("rlistings")
+    # Reproduce the three October 20 configurations with both routes and doses.
+    # The bolus subjects include the reported one- and two-subject treatment arms.
+    example <- subset(
+      adnca_example,
+      USUBJID %in% c("S1-01", "S1-06", "S1-07", "S1-08") &
+        ATPTREF %in% c("DOSE 1", "DOSE 2") & PCSPEC == "SERUM"
+    )
+    example <- create_metabfl(example, "Metab-DrugA")
+    nca_data <- PKNCA_create_data_object(example)
+    study_types <- unique(.derive_study_types(nca_data)$type)
+    selections <- setNames(rep(list(c("cmax", "auclast")), length(study_types)), study_types)
+    nca_data <- PKNCA_update_data_object(
+      nca_data, method = "lin up/log down",
+      selected_analytes = unique(example$PARAM),
+      selected_profile = unique(example$ATPTREF), selected_pcspec = "SERUM",
+      start_impute = TRUE, parameter_selections = selections,
+      keep_interval_cols = "TRT01A"
+    )
+    nca <- PKNCA_calculate_nca(nca_data)
+    nca$result$PPTESTCD <- translate_terms(nca$result$PPTESTCD, "PKNCA", "PPTESTCD")
+    configs <- data.frame(
+      TestParameter = c("AUCLST", "CMAX", "CMAX"),
+      RefParameter = c("AUCLST", "CMAX", "CMAX"),
+      TestGroups = "(all other levels)",
+      RefGroups = c("PARAM: DrugA", "PARAM: Metab-DrugA", "PARAM: DrugA"),
+      AggregateSubject = "no", AdjustingFactor = 1,
+      PPTESTCD = c("MRAUCLST", "MRCMAX", "MRCMAX11")
+    )
+    result <- calculate_table_ratios(nca, configs)
+    adpp <- export_cdisc(result, grouping_vars = c("TRT01A", "ATPTREF", "ROUTE"))$adpp
+    ratio_rows <- adpp[adpp$PARAMCD %in% configs$PPTESTCD, ]
+    profile_key <- function(df) paste(df$USUBJID, df$ATPTREF, df$ROUTE)
+    expect_equal(nrow(ratio_rows), 24L)
+
+    for (i in seq_len(nrow(configs))) {
+      code <- configs$PPTESTCD[i]
+      rows <- ratio_rows[ratio_rows$PARAMCD == code, ]
+      reference <- sub("PARAM: ", "", configs$RefGroups[i], fixed = TRUE)
+      base <- nca$result[nca$result$PPTESTCD == configs$TestParameter[i], ]
+      numerator <- base[base$PARAM != reference, ]
+      denominator <- base[base$PARAM == reference, ]
+      num_idx <- match(profile_key(rows), profile_key(numerator))
+      ref_idx <- match(profile_key(rows), profile_key(denominator))
+      expected <- numerator$PPSTRES[num_idx] / denominator$PPSTRES[ref_idx]
+      expect_equal(nrow(rows), 8L)
+      expect_setequal(rows$ATPTREF, c("DOSE 1", "DOSE 2"))
+      expect_setequal(rows$ROUTE, c("INTRAVENOUS BOLUS", "INTRAVENOUS DRIP"))
+      expect_false(anyNA(expected))
+      expect_equal(as.numeric(rows$AVAL), expected, tolerance = 1e-10)
+    }
+    direct <- ratio_rows[ratio_rows$PARAMCD == "MRCMAX11", ]
+    inverse <- ratio_rows[ratio_rows$PARAMCD == "MRCMAX", ]
+    ref_idx <- match(profile_key(direct), profile_key(inverse))
+    expect_equal(as.numeric(direct$AVAL * inverse$AVAL[ref_idx]), rep(1, 8), tolerance = 1e-10)
+
+    tables <- t_pkpt03_MP_col(adpp)
+    listings <- l_pkpl01_mp(adpp)
+    plots <- p_pkpg06_mp(adpp)
+    expect_length(tables, 8L)
+    expect_identical(names(listings), names(tables))
+    expect_identical(names(plots), names(tables))
+    observed <- character()
+    for (i in seq_along(plots)) {
+      plotted <- plots[[i]]$data
+      row_key <- paste(profile_key(plotted), plotted$PARAMCD)
+      adpp_key <- paste(profile_key(ratio_rows), ratio_rows$PARAMCD)
+      idx <- match(row_key, adpp_key)
+      expect_false(anyNA(idx))
+      expect_equal(as.numeric(plotted$AVAL), as.numeric(ratio_rows$AVAL[idx]), tolerance = 0)
+      observed <- c(observed, row_key)
+      listing <- as.data.frame(listings[[i]])
+      for (j in seq_len(nrow(plotted))) {
+        subject <- match(plotted$USUBJID[j], listing$USUBJID)
+        expect_equal(listing[[plotted$PARAM[j]]][subject], round(plotted$AVAL[j], 3))
+      }
+      summary <- tables[[i]]
+      for (j in seq_len(nrow(summary))) {
+        values <- plotted$AVAL[
+          plotted$TRT01A == summary$TRT01A[j] & plotted$PARAM == summary$PARAM[j]
+        ]
+        expect_equal(summary$n[j], length(values))
+        expect_equal(summary$Mean[j], round(mean(values), 3))
+        expect_equal(summary$Min[j], round(min(values), 3))
+        expect_equal(summary$Max[j], round(max(values), 3))
+      }
+    }
+    expect_equal(anyDuplicated(observed), 0L)
+    expect_setequal(observed, paste(profile_key(ratio_rows), ratio_rows$PARAMCD))
   })
 })

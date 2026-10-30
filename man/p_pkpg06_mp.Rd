@@ -2,12 +2,34 @@
 % Please edit documentation in R/g_pkpg.R
 \name{p_pkpg06_mp}
 \alias{p_pkpg06_mp}
-\title{Boxplot of Metabolite/Parent PK Parameter Ratios (pkpg06)}
+\title{Boxplot of Analyte PK Parameter Ratios (pkpg06)}
 \usage{
-p_pkpg06_mp(data, ...)
+p_pkpg06_mp(
+  data,
+  list_vars = c("RATIO", "PPSPEC"),
+  title = "Boxplot of Analyte Ratios by Treatment",
+  subtitle = NULL,
+  ylab = "Analyte Ratio (Test / Reference)",
+  value_var = "AVAL",
+  all_points = TRUE,
+  ...
+)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
+
+\item{list_vars}{Columns to split plots by. Defaults to the derived \code{RATIO}
+label and \code{PPSPEC}; varying profile identifiers are retained as well.}
+
+\item{title}{Optional plot title string.}
+
+\item{subtitle}{Optional plot subtitle; defaults to the analyte pair and profile identifiers.}
+
+\item{ylab}{Y-axis label. Defaults to \code{"Analyte Ratio (Test / Reference)"}.}
+
+\item{value_var}{Column containing the numeric analysis value. Default: \code{"AVAL"}.}
+
+\item{all_points}{Logical. Overlay individual ratio values. Default: \code{TRUE}.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.}
 }
@@ -15,9 +37,15 @@ p_pkpg06_mp(data, ...)
 A named list of ggplot objects (same format as \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}).
 }
 \description{
-Filters ADPP to metabolite rows using the same fallback logic as
-\code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}} (METABFL preferred, then PPCAT/PARAM grep for "metab"),
-then delegates to \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}.
+Plots the configured analyte ratios already present in ADPP by treatment
+using \code{\link[=p_pkpg03_boxp]{p_pkpg03_boxp()}}. Configure ratios in Parameter Selection > Ratios,
+or load them from settings, then run NCA before rendering. Values are read
+from ADPP without recalculation, keeping plots consistent with exported results.
+Includes inverse ratios; the subtitle shows test / reference. Parameters with
+the same direction and profile share a page as separate facets, each with its
+own y-axis scale. Individual points retain their ADPP values and are spread
+horizontally to reduce overlap. The star marks the mean. A group with one
+subject has a flat box because its quartiles are identical.
 }
 \examples{
 \dontrun{

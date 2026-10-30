@@ -104,14 +104,15 @@ describe("tlg_module_server", {
     )
   })
 
-  it("limits metabolite parameter choices to the rows the listing uses", {
+  it("limits ratio parameter choices to the rows the listing uses", {
     df <- data.frame(
       USUBJID = "S1", TRT01A = "A",
       PPCAT = c("Drug", "Metab-Drug", "Metab-Drug"),
       PPSPEC = c("URINE", "SERUM", "SERUM"),
       PARAM = c("Amount recovered", "Cmax", "AUC"),
       PARAMCD = c("RCAMINT", "CMAX", "AUCLST"),
-      AVAL = c(100, 5, 20), AVALU = c("mg", "ng/mL", "ng*h/mL")
+      AVAL = c(100, 0.5, 0.2), AVALU = c("mg", "fraction", "fraction"),
+      PPANMETH = c(NA, "CMAX TO CMAX [PARAM: Drug]", "AUCLST TO AUCLST [PARAM: Drug]")
     )
     defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
     opts <- defs$l_pkpl01_mp$options[c("param_var", "param_filter")]
@@ -129,17 +130,51 @@ describe("tlg_module_server", {
         session$setInputs(`param_filter-select` = "Cmax")
         session$elapse(800)
         expect_equal(length(tlg_list()), 1L)
-        expect_equal(as.numeric(tlg_list()[[1]]$Cmax), 5)
+        expect_equal(as.numeric(tlg_list()[[1]]$Cmax), 0.5)
         expect_false("AUC" %in% rlistings::listing_dispcols(tlg_list()[[1]]))
 
         session$setInputs(`param_var-select` = "PARAMCD", `param_filter-select` = NULL)
         session$elapse(800)
         expect_match(output$param_filter$html, 'value="CMAX"')
         expect_false(grepl('value="RCAMINT"', output$param_filter$html, fixed = TRUE))
-        expect_equal(as.numeric(tlg_list()[[1]]$CMAX), 5)
-        expect_equal(as.numeric(tlg_list()[[1]]$AUCLST), 20)
+        expect_equal(as.numeric(tlg_list()[[1]]$CMAX), 0.5)
+        expect_equal(as.numeric(tlg_list()[[1]]$AUCLST), 0.2)
       }
     )
+  })
+
+  it("keeps parameter-code choices within the configured ratio family", {
+    df <- data.frame(
+      USUBJID = "S1", TRT01A = "A", PPCAT = "Metab-Drug", PPSPEC = "SERUM",
+      PARAM = c("Cmax", "MRT", "Analyte ratio", "Treatment ratio"),
+      PARAMCD = c("CMAX", "MRTLST", "RACMAX", "TRCMAX"),
+      AVAL = c(5, 8, 0.5, 2), AVALU = "fraction",
+      PPANMETH = c(NA, NA, "CMAX TO CMAX [PARAM: Drug]", "CMAX TO CMAX [ATPTREF: DOSE 1]")
+    )
+    defs <- yaml::read_yaml(system.file("shiny/tlg.yaml", package = "aNCA"))
+    for (id in c("l_pkpl01_mp", "l_pkpl04_mp")) {
+      code <- if (id == "l_pkpl01_mp") "RACMAX" else "TRCMAX"
+      value <- if (id == "l_pkpl01_mp") 0.5 else 2
+      opts <- defs[[id]]$options[c("param_var", "param_filter")]
+      shiny::testServer(
+        tlg_module_server,
+        args = list(data = shiny::reactive(df), type = "listing",
+                    render_list = get(id), options = opts),
+        {
+          session$setInputs(`param_var-select` = "PARAMCD")
+          expect_match(output$param_filter$html, paste0('value="', code, '"'))
+          for (other in setdiff(df$PARAMCD, code)) {
+            expect_false(grepl(paste0('value="', other, '"'), output$param_filter$html))
+          }
+          session$setInputs(`param_filter-select` = code)
+          session$elapse(800)
+          expect_equal(as.numeric(tlg_list()[[1]][[code]]), value)
+          session$setInputs(`param_filter-select` = NULL)
+          session$elapse(800)
+          expect_equal(as.numeric(tlg_list()[[1]][[code]]), value)
+        }
+      )
+    }
   })
 
   it("updates parameter choices independently and applies or clears the selection", {
