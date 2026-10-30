@@ -81,7 +81,7 @@ rename_interval_params <- function(data) {
 #' @param text Character text to parse.
 #' @returns Parsed annotation text.
 #'
-#' @importFrom magrittr `%>%`
+#' @importFrom dplyr `%>%`
 #' @importFrom glue glue
 #'
 #' @export
@@ -157,7 +157,7 @@ parse_annotation <- function(data, text) {
 #' @returns Adjusted data frame.
 #'
 #' @importFrom dplyr filter
-#' @importFrom magrittr `%>%`
+#' @importFrom dplyr `%>%`
 #'
 #' @export
 adjust_class_and_length <- function(df, metadata, adjust_length = TRUE) {

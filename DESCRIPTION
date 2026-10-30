@@ -35,7 +35,6 @@ Imports:
     htmltools,
     htmlwidgets,
     logger,
-    magrittr,
     PKNCA (>= 0.12.1),
     plotly (>= 4.11.0),
     purrr,

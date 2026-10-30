@@ -23,8 +23,7 @@
 #'   `stat_name` are local row/column identifiers; `tlg_ard_columns` maps the
 #'   statistic identifiers to the original result columns. Grouping columns
 #'   in the ARD identify the source result row. This is not a CDISC submission ARD.
-#' @importFrom dplyr as_tibble
-#' @importFrom magrittr `%>%`
+#' @importFrom dplyr as_tibble `%>%`
 #' @importFrom stats setNames
 #' @export
 t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
