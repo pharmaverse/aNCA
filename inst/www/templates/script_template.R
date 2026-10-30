@@ -8,7 +8,7 @@ library(aNCA)
 library(dplyr)
 
 # Load raw data #
-data_path <- "../input_data.rds"
+data_path <- settings_list$data_path
 adnca_data <- read_pk(data_path)
 
 ## Preprocess data & create PKNCA object ######################

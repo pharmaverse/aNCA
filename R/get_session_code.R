@@ -257,9 +257,11 @@ get_session_code <- function(
   output_path,
   template_path = system.file("www/templates/script_template.R", package = "aNCA")
 ) {
+  setts_obj <- as.list(session$userData)
+  setts_obj$data_path <- "input_data.rds"
   get_code(
     template_path = template_path,
-    setts_obj = session$userData,
+    setts_obj = setts_obj,
     output_path = output_path
   )
   invisible(output_path)
