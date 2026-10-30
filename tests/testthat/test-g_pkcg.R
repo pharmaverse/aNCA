@@ -659,8 +659,8 @@ describe("pkcg03", {
     p <- plots[[1]]
 
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    expect_equal(rlang::as_label(layer_errorbar$mapping$ymin), "mean")
-    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean_sdi_upr")
+    expect_equal(rlang::eval_tidy(layer_errorbar$mapping$ymin, p$data), p$data$mean)
+    expect_equal(rlang::eval_tidy(layer_errorbar$mapping$ymax, p$data), p$data$mean_sdi_upr)
   })
 
   it("correctly selects whiskers for 'Lower' option", {
@@ -668,8 +668,8 @@ describe("pkcg03", {
     p <- plots[[1]]
 
     layer_errorbar <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    expect_equal(rlang::as_label(layer_errorbar$mapping$ymin), "mean_sdi_lwr")
-    expect_equal(rlang::as_label(layer_errorbar$mapping$ymax), "mean")
+    expect_equal(rlang::eval_tidy(layer_errorbar$mapping$ymin, p$data), p$data$mean_sdi_lwr)
+    expect_equal(rlang::eval_tidy(layer_errorbar$mapping$ymax, p$data), p$data$mean)
   })
 
   it("renders visible one-sided error bars (ymin != ymax)", {
@@ -855,5 +855,51 @@ describe("stashed ggplot labelling", {
     p <- pkcg01(adnca, scale = "LIN", plotly = FALSE)[[1]]
     expect_match(p$labels$title, "PK Concentration-Time Profile")
     expect_null(attr(p, "ggplot"))
+  })
+})
+
+describe("pkcg03: logarithmic error-bar coordinates", {
+  it("truncates only log display coordinates and explains the floor without changing statistics", {
+    conc <- FIXTURE_CONC_DATA[rep(1, 9), ]
+    conc$DOSEA <- 1
+    conc$USUBJID <- rep(c("A", "B", "C"), 3)
+    conc$NFRLT <- rep(1:3, each = 3)
+    conc$AVAL <- c(0, 0, 3, 0, 0, 0, 1, 1, 1)
+    expected_mean <- c(1, 0, 1)
+    expected_lower <- c(1 - sqrt(3), 0, 1)
+    for (scale in c("LIN", "LOG", "SBS")) {
+      for (interactive in c(FALSE, TRUE)) {
+        result <- pkcg03(conc, scale = scale, plotly = interactive, footnote = "Custom note")[[1]]
+        plot <- if (interactive) attr(result, "ggplot") else result
+        stats <- plot$data
+        expect_equal(stats$mean, rep(expected_mean, if (scale == "SBS") 2 else 1))
+        expect_equal(stats$mean_sdi_lwr, rep(expected_lower, if (scale == "SBS") 2 else 1))
+        log_rows <- if (scale == "SBS") {
+          stats$view == "Semilogarithmic view (Log10)"
+        } else {
+          rep(scale == "LOG", nrow(stats))
+        }
+        expect_equal(stats$.plot_lower[!log_rows], stats$mean_sdi_lwr[!log_rows])
+        expect_equal(stats$.plot_lower[log_rows], pmax(stats$mean_sdi_lwr[log_rows], 0.001))
+        expect_equal(stats$.plot_upper[log_rows], pmax(stats$mean_sdi_upr[log_rows], 0.001))
+        expect_equal(stats$.plot_mid[log_rows], pmax(stats$mean[log_rows], 0.001))
+        expect_warning(ggplot2::ggplotGrob(plot), NA)
+        expect_match(plot$labels$caption, "Custom note", fixed = TRUE)
+        expect_identical(grepl("truncated at 0.001", plot$labels$caption), scale != "LIN")
+      }
+    }
+  })
+
+  it("respects upper-only whiskers without warning about an unused negative bound", {
+    conc <- FIXTURE_CONC_DATA[rep(1, 3), ]
+    conc$DOSEA <- 1
+    conc$USUBJID <- c("A", "B", "C")
+    conc$NFRLT <- 1
+    conc$AVAL <- c(0, 0, 3)
+    plot <- pkcg03(conc, scale = "LOG", plotly = FALSE, whiskers_lwr_upr = "Upper")[[1]]
+    expect_equal(plot$data$.plot_lower, 1)
+    expect_equal(plot$data$.plot_upper, 1 + sqrt(3))
+    expect_equal(plot$data$mean_sdi_lwr, 1 - sqrt(3))
+    expect_false(grepl("truncated", plot$labels$caption))
   })
 })
