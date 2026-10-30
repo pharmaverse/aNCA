@@ -14,7 +14,8 @@ l_pkpl01(
   unit_var = "AVALU",
   title = "Listing of Individual PK Parameters",
   subtitle = NULL,
-  footnote = NULL
+  footnote = NULL,
+  param_filter = NULL
 )
 
 l_pkpl01_mp(data, ...)
@@ -43,6 +44,9 @@ syntax. Defaults to the unique values of \code{listgroup_vars}.}
 
 \item{footnote}{Footnote string.}
 
+\item{param_filter}{Optional character vector of values from \code{param_var} to
+display as columns. \code{NULL} or an empty vector (default) keeps all parameters.}
+
 \item{...}{Additional arguments forwarded to \code{\link[=l_pkpl01]{l_pkpl01()}}.}
 }
 \value{
@@ -55,7 +59,11 @@ same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per uni
 \code{listgroup_vars} (default: \code{PPCAT} x \code{PPSPEC}).
 }
 \details{
-Missing parameter values flagged with \code{PPSUMXF == "Y"} are displayed as \verb{NA*}.
+Values flagged with \code{PPSUMXF == "Y"} retain summary-exclusion markers,
+including missing values. Reasons in \code{PPSUMRSN} use \code{*}, \verb{**}, ... in sorted
+order, separated by commas for multiple reasons. A bare \code{*} is reserved for
+unspecified exclusions when present. The dictionary is shared across listing
+groups and parameter selections; footnotes describe only displayed records.
 }
 \section{Functions}{
 \itemize{

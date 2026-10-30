@@ -15,12 +15,11 @@ l_pkcl02_uri(
 \arguments{
 \item{data}{A CDISC ADNCA data frame (from \code{export_cdisc()$adnca}).}
 
-\item{urine_specs}{Character vector of specimen type values to keep, matched
-case-insensitively against \code{PCSPEC}. Default: \code{c("URINE")}.}
+\item{urine_specs}{Retained for compatibility with older scripts; ignored.
+The listing always includes only urine. Non-urine values trigger a warning.}
 
 \item{listgroup_vars}{Character vector of columns used to split output into
-separate listings. Default: \code{c("PARAM", "PCSPEC")}. When \code{PCSPEC} is
-absent from \code{data}, it is silently removed from this vector.}
+separate listings. Default: \code{c("PARAM", "PCSPEC")}.}
 
 \item{displaying_vars}{Character vector of columns to display. When \code{NULL}
 (default), uses \code{c("NFRLT", "AFRLT", "AVAL")} plus \code{VOLUME}/\code{VOLUMEU}
@@ -32,9 +31,14 @@ if those columns exist in the data.}
 A named list of \code{listing_df} objects.
 }
 \description{
-Filters ADNCA to urine specimen rows (where \code{PCSPEC \%in\% urine_specs}) then
+Filters ADNCA to urine specimen rows (\code{PCSPEC == "URINE"}, ignoring case) then
 delegates to \code{\link[=l_pkcl01]{l_pkcl01()}} with VOLUME and VOLUMEU added to the displayed
 columns when those columns are present in the data.
+}
+\details{
+\code{PCSPEC} is required to identify urine records. Missing specimen
+values are excluded. An error explains when \code{PCSPEC} is absent or no urine
+records remain.
 }
 \examples{
 \dontrun{

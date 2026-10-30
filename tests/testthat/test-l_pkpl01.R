@@ -126,8 +126,100 @@ describe("l_pkpl01", {
     flagged_data$PPSUMRSN[2] <- "Reason C"
 
     result <- l_pkpl01(flagged_data)[[1]]
-    expect_equal(as.character(result$Cmax[1]), "5***")
-    expect_equal(as.character(result$AUClast[1]), "20###")
+    expect_equal(as.character(result$Cmax[1]), "5*, **")
+    expect_equal(as.character(result$AUClast[1]), "20***")
+    expect_equal(attr(result, "main_footer"), c(
+      '* Summary and mean plots excluded: PPSUMRSN = "Reason A".',
+      '** Summary and mean plots excluded: PPSUMRSN = "Reason B".',
+      '*** Summary and mean plots excluded: PPSUMRSN = "Reason C".'
+    ))
+  })
+
+  it("keeps reason markers stable across groups, row order and parameter selection", {
+    data <- pkpl_data
+    data$PPCAT <- rep(c("DrugA", "DrugB"), each = 4)
+    data$PPSUMXF <- "Y"
+    data$PPSUMRSN <- ifelse(data$PARAM == "Cmax", "Reason B", "Reason A")
+    result <- l_pkpl01(data)
+    reversed <- l_pkpl01(data[rev(seq_len(nrow(data))), ])
+    selected <- l_pkpl01(data, param_filter = "Cmax")
+    for (i in seq_along(result)) {
+      expect_true(all(endsWith(as.character(result[[i]]$Cmax), "**")))
+      expect_equal(sort(as.character(result[[i]]$Cmax)),
+                   sort(as.character(reversed[[i]]$Cmax)))
+      expect_equal(as.character(selected[[i]]$Cmax), as.character(result[[i]]$Cmax))
+      expect_equal(attr(selected[[i]], "main_footer"),
+                   '** Summary and mean plots excluded: PPSUMRSN = "Reason B".')
+    }
+  })
+
+  it("omits footnotes from discarded duplicate intervals and unflagged rows", {
+    data <- pkpl_data
+    data$PPSUMXF <- ""
+    data$PPSUMRSN <- "Reason A"
+    duplicate <- data[1, ]
+    duplicate$AVAL <- 999
+    duplicate$PPSUMXF <- "Y"
+    result <- l_pkpl01(rbind(data, duplicate))[[1]]
+    expect_equal(as.numeric(result$Cmax), c(5, 6, 10, 11))
+    expect_length(attr(result, "main_footer"), 0)
+
+    data$PPSUMXF[2] <- "Y"
+    data$PPSUMRSN[2] <- "Reason B"
+    result <- l_pkpl01(rbind(data, duplicate))[[1]]
+    expect_equal(as.character(result$AUClast)[1], "20**")
+    expect_equal(attr(result, "main_footer"),
+                 '** Summary and mean plots excluded: PPSUMRSN = "Reason B".')
+  })
+})
+
+describe("PK listing parameter selection", {
+  it("shows only selected parameters and retains subject values and units", {
+    result <- l_pkpl01(pkpl_data, param_filter = "Cmax")[[1]]
+    expect_equal(rlistings::listing_dispcols(result), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.character(result$USUBJID), paste0("S", 1:4))
+    expect_equal(as.numeric(result$Cmax), c(5, 6, 10, 11))
+    expect_equal(attr(result$Cmax, "label"), "Cmax (ng/mL)")
+    expect_false("AUClast" %in% names(result))
+  })
+
+  it("preserves all parameters by default or with an empty selection", {
+    defaults <- l_pkpl01(pkpl_data)
+    expect_equal(l_pkpl01(pkpl_data, param_filter = character()), defaults)
+    expect_equal(l_pkpl01(pkpl_data, param_filter = c("Cmax", "AUClast")), defaults)
+    expect_setequal(rlistings::listing_dispcols(defaults[[1]]),
+                    c("TRT01A", "USUBJID", "Cmax", "AUClast"))
+  })
+
+  it("selects values from the chosen parameter variable", {
+    result <- l_pkpl01(pkpl_data, param_var = "PARAMCD", param_filter = "AUCLST")[[1]]
+    expect_equal(rlistings::listing_dispcols(result), c("TRT01A", "USUBJID", "AUCLST"))
+    expect_equal(as.numeric(result$AUCLST), c(20, 22, 40, 38))
+    expect_equal(attr(result$AUCLST, "label"), "AUCLST (ng/mL*h)")
+  })
+
+  it("returns no listings for unmatched selections, including without split variables", {
+    expect_equal(l_pkpl01(pkpl_data, param_filter = "missing"), list())
+    expect_equal(l_pkpl01(pkpl_data, listgroup_vars = character(),
+                          param_filter = "missing"), list())
+  })
+
+  it("keeps grouping when parameters differ between listing pages", {
+    other <- transform(pkpl_data[pkpl_data$PARAM == "Cmax", ], PPCAT = "DrugB")
+    result <- l_pkpl01(rbind(pkpl_data, other), param_filter = "AUClast")
+    expect_length(result, 1)
+    expect_match(names(result), "DrugA")
+    expect_equal(as.numeric(result[[1]]$AUClast), c(20, 22, 40, 38))
+  })
+
+  it("passes selection through both wrappers and preserves their row selection", {
+    metabolite <- l_pkpl01_mp(pkpl_metab_data, param_filter = "Cmax")[[1]]
+    treatment <- l_pkpl04_mp(pkpl_data, param_filter = "Cmax")[[1]]
+    expect_equal(rlistings::listing_dispcols(metabolite), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.character(metabolite$USUBJID), c("S3", "S4"))
+    expect_equal(as.numeric(metabolite$Cmax), c(10, 11))
+    expect_equal(rlistings::listing_dispcols(treatment), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.numeric(treatment$Cmax), c(5, 6, 10, 11))
   })
 })
 
@@ -171,6 +263,17 @@ describe("l_pkpl01_mp", {
 })
 
 describe("l_pkpl04_mp", {
+  it("keeps parameters on the same subject row when displaying parameter codes", {
+    data <- transform(pkpl_data, PARAMCD = ifelse(PARAM == "Cmax", "CMAX", "AUCLST"))
+    named <- l_pkpl04_mp(data)
+    coded <- l_pkpl04_mp(data, param_var = "PARAMCD")
+    expect_equal(vapply(coded, nrow, integer(1)), vapply(named, nrow, integer(1)))
+    expect_false("PARAM" %in% rlistings::listing_dispcols(coded[[1]]))
+    codes <- unique(data$PARAMCD)
+    expect_true(all(codes %in% rlistings::listing_dispcols(coded[[1]])))
+    expect_false(anyNA(as.data.frame(coded[[1]])[, codes]))
+  })
+
   it("returns a named list of listing_df objects", {
     result <- l_pkpl04_mp(pkpl_data)
     expect_type(result, "list")

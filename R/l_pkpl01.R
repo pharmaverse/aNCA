@@ -4,7 +4,11 @@
 #' same engine as [l_pkcl01()].  Returns one listing per unique combination of
 #' `listgroup_vars` (default: `PPCAT` x `PPSPEC`).
 #'
-#' Missing parameter values flagged with `PPSUMXF == "Y"` are displayed as `NA*`.
+#' Values flagged with `PPSUMXF == "Y"` retain summary-exclusion markers,
+#' including missing values. Reasons in `PPSUMRSN` use `*`, `**`, ... in sorted
+#' order, separated by commas for multiple reasons. A bare `*` is reserved for
+#' unspecified exclusions when present. The dictionary is shared across listing
+#' groups and parameter selections; footnotes describe only displayed records.
 #'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param listgroup_vars Character vector of columns used to split the output
@@ -20,6 +24,8 @@
 #' @param subtitle Per-listing subtitle. Supports `$VAR` / `!VAR` annotation
 #'   syntax. Defaults to the unique values of `listgroup_vars`.
 #' @param footnote Footnote string.
+#' @param param_filter Optional character vector of values from `param_var` to
+#'   display as columns. `NULL` or an empty vector (default) keeps all parameters.
 #'
 #' @return A named list of `listing_df` objects (one per `listgroup_vars`
 #'   combination), suitable for printing in a Shiny `verbatimTextOutput`.
@@ -44,7 +50,8 @@ l_pkpl01 <- function(
   unit_var        = "AVALU",
   title    = "Listing of Individual PK Parameters",
   subtitle = NULL,
-  footnote = NULL
+  footnote = NULL,
+  param_filter = NULL
 ) {
   if (!requireNamespace("rlistings", quietly = TRUE)) {
     stop(
@@ -60,6 +67,15 @@ l_pkpl01 <- function(
          paste(missing_cols, collapse = ", "))
   }
 
+  sum_dictionary <- .exclusion_details(
+    data, "PPSUMXF", .SUMMARY_EXCLUSION_MARKER, summary_only = TRUE
+  )$dictionary
+
+  if (length(param_filter) > 0) {
+    data <- data[data[[param_var]] %in% param_filter, , drop = FALSE]
+  }
+  if (nrow(data) == 0) return(list())
+
   data <- apply_labels(data, type = "ADPP")
 
   if (is.null(subtitle)) {
@@ -71,23 +87,12 @@ l_pkpl01 <- function(
     )
   }
 
-  sum_dictionary <- .exclusion_details(
-    data, "PPSUMXF", .SUMMARY_EXCLUSION_MARKER, summary_only = TRUE
-  )$dictionary
-
   .make_wide_listing <- function(df) {
-    has_unit <- unit_var %in% names(df)
-    has_summary_exclusions <- .has_summary_excluded_records(df, "PPSUMXF")
-
-    col_labels <- if (has_unit) {
-      vapply(sort(unique(df[[param_var]])), function(p) {
-        u <- unique(df[[unit_var]][df[[param_var]] == p])
-        u <- u[!is.na(u)][1]
-        if (!is.na(u) && nchar(u) > 0) paste0(p, " (", u, ")") else p
-      }, character(1))
-    } else {
-      sort(unique(df[[param_var]]))
-    }
+    # Match the existing first-record policy before annotating, so a discarded
+    # interval cannot contribute a footnote to a value that is not displayed.
+    keys <- unique(c(intersect(listgroup_vars, names(df)), grouping_vars, param_var))
+    df <- df[!duplicated(df[keys]), , drop = FALSE]
+    col_labels <- .pkpl_column_labels(df, param_var, unit_var)
 
     df$.val_fmt <- round(as.numeric(df[[value_var]]), 3)
     df <- .mark_sum_excl_vals(
@@ -102,10 +107,7 @@ l_pkpl01 <- function(
       tidyr::pivot_wider(
         names_from  = dplyr::all_of(param_var),
         values_from = ".val_fmt",
-        # When a subject has multiple rows for the same PARAM (e.g. multi-
-        # interval ADPP), take the first value rather than creating list-columns.
-        values_fn   = dplyr::first,
-        values_fill = if (has_summary_exclusions) NA_character_ else NA_real_
+        values_fill = if (is.character(df$.val_fmt)) NA_character_ else NA_real_
       )
 
     param_cols <- sort(unique(df[[param_var]]))
@@ -144,6 +146,17 @@ l_pkpl01 <- function(
   split_and_apply(data, listgroup_vars, .make_wide_listing)
 }
 
+# Build the display headers in parameter order, using the first available unit.
+.pkpl_column_labels <- function(df, param_var, unit_var) {
+  params <- sort(unique(df[[param_var]]))
+  if (!unit_var %in% names(df)) return(params)
+  vapply(params, function(p) {
+    units <- unique(df[[unit_var]][df[[param_var]] == p])
+    unit <- units[!is.na(units)][1]
+    if (!is.na(unit) && nchar(unit) > 0) paste0(p, " (", unit, ")") else p
+  }, character(1))
+}
+
 #' @describeIn l_pkpl01 Listing filtered to metabolite rows (pkpl01 M/P).
 #'   Uses the same METABFL -> PPCAT -> PARAM fallback as [t_pkpt03_MP_col()].
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
@@ -168,15 +181,10 @@ l_pkpl01_mp <- function(data, ...) {
 #' metabolite/parent ratio parameters, but no metabolite filtering is applied --
 #' all PARAM values in the data are included.
 #'
-#' Note: `PARAM` is listed in `grouping_vars` so that it participates in the
-#' `pivot_wider` step (each unique PARAM value becomes a column header). After
-#' pivoting, `PARAM` is no longer a row-key column; the actual listing keys
-#' are `TRT01A` and `USUBJID`.
-#'
 #' @inheritParams l_pkpl01
 #' @param grouping_vars Columns used to identify row keys before pivoting.
-#'   `PARAM` must be included so it is spread into display columns.
-#'   Default: `c("PARAM", "TRT01A", "USUBJID")`.
+#'   The parameter column is supplied separately by `param_var`.
+#'   Default: `c("TRT01A", "USUBJID")`.
 #' @param ... Additional arguments forwarded to [l_pkpl01()].
 #'
 #' @return A named list of `listing_df` objects.
@@ -191,7 +199,7 @@ l_pkpl01_mp <- function(data, ...) {
 #' @export
 l_pkpl04_mp <- function(
   data,
-  grouping_vars = c("PARAM", "TRT01A", "USUBJID"),
+  grouping_vars = c("TRT01A", "USUBJID"),
   title         = "Listing of Individual PK Parameter Values by Treatment",
   ...
 ) {

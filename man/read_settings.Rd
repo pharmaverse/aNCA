@@ -27,4 +27,6 @@ the most recent version is returned by default. Use \code{version} to
 select a specific version by index or comment. The full versioned
 object is attached as attribute \code{"versioned"} so callers can offer
 version selection.
+Empty optional units tables are restored as \code{NULL}, preserving the default
+units when settings are replayed or used to generate an R script.
 }

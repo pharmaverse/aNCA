@@ -75,7 +75,7 @@ tab_tlg_ui <- function(id) {
   )
 }
 
-tab_tlg_server <- function(id, data) {
+tab_tlg_server <- function(id, data, pknca_data = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     log_trace("{session$ns(id)}: Attaching server.")
 
@@ -276,16 +276,14 @@ tab_tlg_server <- function(id, data) {
     }) %>%
       bindEvent(c(input$submit_tlg_order))
 
-    # TLGs consume the exported CDISC datasets so their source columns and
-    # exclusion flags are identical to the datasets offered to users.
-    # Individual listings use the complete exported datasets; tables and graphs
-    # use summary-filtered variants.  apply_labels() restores column labels after
-    # filtering so annotation syntax remains available downstream.
-    conc_data_all <- reactive({
+    # TLGs use full exported CDISC datasets. Summary tables and mean plots
+    # filter their own exclusion flags; individual plots and listings retain all rows.
+    # Restore labels for annotation syntax after the CDISC boundary.
+    conc_data <- reactive({
       req(data())
       apply_labels(data()$adnca, type = "ADNCA")
     })
-    adpp_data_all <- reactive({
+    adpp_data <- reactive({
       # A PK-parameter (ADPP) output was requested but NCA has not been run, so
       # ADPP is unavailable. Surface it as a toast in addition to the inline
       # placeholder, since the empty panel alone reads as a silent failure.
@@ -304,39 +302,20 @@ tab_tlg_server <- function(id, data) {
       apply_labels(data()$adpp, type = "ADPP")
     })
 
-    # Summary-filtered variants for tables and mean plots: rows flagged
-    # PKSUMXF (ADNCA) / PPSUMXF (ADPP) == "Y" are removed from summary
-    # statistics and mean plots, but NOT from individual listings.  Each dataset
-    # is filtered by its own flag only -- a record excluded from the
-    # PK-parameter summary (PPSUMXF) must still be able to appear in the
-    # concentration representations, and vice-versa.
-    conc_data <- reactive(
-      apply_labels(filter_tlg_excluded(conc_data_all(), "PKSUMXF"), type = "ADNCA")
-    )
-    adpp_data <- reactive(
-      apply_labels(filter_tlg_excluded(adpp_data_all(), "PPSUMXF"), type = "ADPP")
-    )
-
-    # (dataset, type) -> data reactive.  Listings resolve to the "*_all"
-    # (unfiltered) source; tables and graphs resolve to the filtered source.
+    # dataset name -> data reactive.
     tlg_data_sources <- list(
-      ADNCA     = conc_data,
-      ADNCA_all = conc_data_all,
-      ADPP      = adpp_data,
-      ADPP_all  = adpp_data_all
+      ADNCA = conc_data,
+      ADPP  = adpp_data
     )
 
-    # CDISC grouping variables (minus the subject column) -- the sensible default
-    # row-stratification set for summary tables.  The TLG boundary is the exported
-    # CDISC data, so derive the available grouping columns from ADNCA rather than
-    # reaching back into the processed PKNCA object.
+    # Keep the study's actual grouping metadata while taking values and flags
+    # exclusively from CDISC. Export renames analyte/specimen in ADPP.
     grouping_vars <- reactive({
-      req(data())
-      candidate_groups <- c(
-        "TRT01A", "TRT01P", "DOSEA", "PARAM", "PCSPEC", "PPSPEC",
-        "PPCAT", "ATPTREF", "NFRLT", "NRRLT"
-      )
-      intersect(candidate_groups, names(data()$adnca))
+      groups <- tryCatch(names(PKNCA::getGroups(pknca_data()$conc)),
+                         error = function(e) character())
+      groups <- setdiff(groups, pknca_data()$conc$columns$subject)
+      aliases <- c(PCSPEC = "PPSPEC", PARAM = "PPCAT")
+      union(groups, unname(aliases[intersect(names(aliases), groups)]))
     })
 
     # Track which module IDs have already been registered for this session.
@@ -371,7 +350,7 @@ tab_tlg_server <- function(id, data) {
         # requires a character name.
         g_key     <- names(.TLG_DEFINITIONS)[g_id]
         module_id <- paste0(g_id, id_suffix)
-        tlg_data  <- tlg_data_sources[[tlg_data_key(type, g_def$dataset)]]
+        tlg_data  <- tlg_data_sources[[g_def$dataset]]
 
         panel_ui <- if (exists(g_def$fun)) {
           # Only register the Shiny module once per session to avoid accumulating

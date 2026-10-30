@@ -1,8 +1,8 @@
 # Server-side tests for tab_tlg_server:
 #  - add-picker selection, removal, and the Order Details edit write-back (issue #1335)
-#  - data boundary: the TLG modules receive an already-exclusion-filtered,
-#    label-restored plain data frame; the filtering and label restoration happen
-#    here, not inside tlg_module_server (issue #1336 / #1356).
+#  - data boundary: the TLG modules receive an unfiltered, label-restored plain
+#    data frame; summary-exclusion filtering happens inside the summary/mean TLG
+#    functions (filter_summary_excluded), not at this boundary (issue #1438).
 
 # Source the tab_tlg module and its server-side dependencies.
 local({
@@ -118,6 +118,16 @@ describe("tab_tlg_server: Order Details edit write-back", {
 })
 
 describe("tab_tlg_server: data boundary", {
+  it("preserves study grouping metadata and the CDISC analyte and specimen aliases", {
+    pknca <- FIXTURE_PKNCA_DATA
+    expected <- setdiff(names(PKNCA::getGroups(pknca$conc)), pknca$conc$columns$subject)
+    expected <- union(expected, c("PPCAT", "PPSPEC"))
+    testServer(tab_tlg_server, args = list(data = test_data, pknca_data = reactive(pknca)), {
+      expect_setequal(grouping_vars(), expected)
+      expect_false(any(c("NFRLT", "NRRLT", "USUBJID") %in% grouping_vars()))
+    })
+  })
+
   adnca_df <- data.frame(
     USUBJID = c("S1", "S2"), AVAL = c(1, 2),
     PKSUMXF = c("Y", NA_character_), stringsAsFactors = FALSE
@@ -128,9 +138,9 @@ describe("tab_tlg_server: data boundary", {
   )
 
   it("restores column labels on every data source (issue 1336)", {
-    # PKNCA/dplyr processing (and row-subsetting) strips label attributes; the
-    # boundary re-applies them so parse_annotation() can resolve `!COLUMN`
-    # references in title/subtitle/footnote/axis inputs downstream.
+    # PKNCA/dplyr processing strips label attributes; the boundary re-applies
+    # them so parse_annotation() can resolve `!COLUMN` references in
+    # title/subtitle/footnote/axis inputs downstream.
     expect_null(attr(adnca_df$AVAL, "label"))
     shiny::testServer(
       tab_tlg_server,
@@ -138,29 +148,24 @@ describe("tab_tlg_server: data boundary", {
         data = shiny::reactive(list(adnca = adnca_df, adpp = adpp_df))
       ),
       {
-        expect_equal(attr(conc_data_all()$AVAL, "label"), "Analysis Value")
         expect_equal(attr(conc_data()$AVAL, "label"), "Analysis Value")
-        expect_equal(attr(adpp_data_all()$AVAL, "label"), "Analysis Value")
         expect_equal(attr(adpp_data()$AVAL, "label"), "Analysis Value")
       }
     )
   })
 
-  it("scopes each exclusion flag to its own dataset", {
-    # A record flagged PPSUMXF (drop from PK-param summary) must still survive in
-    # the concentration source, and vice-versa (issue 1356 / Gero review).
+  it("passes unfiltered data to the modules (exclusion happens in the TLG funcs)", {
+    # Individual plots and listings must see summary-excluded rows; the boundary
+    # therefore keeps every record and leaves filtering to the summary/mean
+    # functions (filter_summary_excluded) (#1438).
     shiny::testServer(
       tab_tlg_server,
       args = list(
         data = shiny::reactive(list(adnca = adnca_df, adpp = adpp_df))
       ),
       {
-        # Filtered sources drop the flagged row from their OWN dataset only.
-        expect_equal(nrow(conc_data()), 1)
-        expect_equal(nrow(adpp_data()), 1)
-        # Unfiltered "all" sources keep every row (used by individual listings).
-        expect_equal(nrow(conc_data_all()), 2)
-        expect_equal(nrow(adpp_data_all()), 2)
+        expect_equal(nrow(conc_data()), 2)
+        expect_equal(nrow(adpp_data()), 2)
       }
     )
   })
@@ -184,6 +189,25 @@ render_tlg_panels <- function(output) {
 }
 
 describe("tab_tlg_server: TLG export registry", {
+  it("reuses the same modules when the order is submitted repeatedly", {
+    testServer(tab_tlg_server, args = list(data = test_data), {
+      session$setInputs(submit_tlg_order = 1)
+      session$flushReact()
+      render_tlg_panels(output)
+      registered <- ls(envir = .registered_modules)
+      items <- lapply(as.list(.tlg_registry), function(entry) entry$items)
+      expect_gt(length(registered), 0)
+
+      for (submission in 2:4) {
+        session$setInputs(submit_tlg_order = submission)
+        session$flushReact()
+        render_tlg_panels(output)
+        expect_identical(ls(envir = .registered_modules), registered)
+        expect_identical(lapply(as.list(.tlg_registry), function(entry) entry$items), items)
+      }
+    })
+  })
+
   it("registers an entry for every rendered TLG", {
     testServer(tab_tlg_server, args = list(data = test_data), {
       # tlg_order_filtered() is bindEvent(submit_tlg_order), so nothing renders until the

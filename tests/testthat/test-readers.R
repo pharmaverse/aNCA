@@ -590,3 +590,27 @@ describe(".validate_ratio_row", {
     expect_length(reasons, 3)
   })
 })
+
+describe("read_settings: optional units overrides", {
+  it("restores an empty exported units table as no overrides", {
+    units <- data.frame(PPTESTCD = character(), PPORRESU = character(),
+                        PPSTRESU = character())
+    for (empty in list(units, list(), data.frame())) {
+      path <- withr::local_tempfile(fileext = ".yaml")
+      yaml::write_yaml(list(settings = list(method = "linear", units = empty)), path)
+      restored <- read_settings(path)
+      expect_null(restored$settings$units)
+
+      script <- withr::local_tempfile(fileext = ".R")
+      get_settings_code(path, data_path = "input_data.rds", output_path = script)
+      expect_true("units_table <- NULL" %in% readLines(script))
+    }
+  })
+
+  it("preserves nonempty units overrides", {
+    units <- data.frame(PPTESTCD = "CMAX", PPORRESU = "ug/mL", PPSTRESU = "ng/mL")
+    path <- withr::local_tempfile(fileext = ".yaml")
+    yaml::write_yaml(list(settings = list(method = "linear", units = units)), path)
+    expect_equal(read_settings(path)$settings$units, units)
+  })
+})

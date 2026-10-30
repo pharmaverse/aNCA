@@ -73,6 +73,18 @@ describe(".tlg_export_basenames", {
 })
 
 describe(".prepare_export_frame", {
+  it("exports the selected PK parameter columns with the same values", {
+    df <- data.frame(
+      USUBJID = c("S1", "S1"), TRT01A = "A", PPCAT = "Drug", PPSPEC = "PLASMA",
+      PARAM = c("Cmax", "AUC"), AVAL = c(5, 20), AVALU = c("ng/mL", "ng*h/mL")
+    )
+    listing <- l_pkpl01(df, param_filter = "Cmax")[[1]]
+    out <- .prepare_export_frame(listing)
+    expect_equal(names(out), rlistings::listing_dispcols(listing))
+    expect_equal(names(out), c("TRT01A", "USUBJID", "Cmax"))
+    expect_equal(as.numeric(out$Cmax), 5)
+  })
+
   it("flattens the two-level 'Compare in columns' header into readable names", {
     # Grouped summary tables prefix each statistic with "<level><.GROUP_SEP>"; a flat file
     # has one header row, so the raw name would carry a \037 control character.
@@ -457,6 +469,38 @@ describe("write_tlg_exports: combined HTML output", {
 })
 
 describe("write_tlg_exports: table and listing PDF output", {
+  it("retains reason markers and footnotes in CSV, XLSX and PDF listings", {
+    skip_if_not_installed("readxl")
+    df <- data.frame(
+      USUBJID = c("S1", "S2"), TRT01A = "A", PPCAT = "Drug", PPSPEC = "SERUM",
+      PARAM = "Cmax", AVAL = c(5, NA), PPSUMXF = "Y", PPSUMRSN = c("Reason A", "")
+    )
+    listing <- l_pkpl01(df)[[1]]
+    notes <- attr(listing, "main_footer")
+    d <- withr::local_tempdir()
+    captured <- NULL
+    m <- with_mocked_bindings(
+      write_tlg_exports(list(l_pkpl01 = entry("listing", list(Footnotes = listing))),
+                        d, table_formats = c("csv", "xlsx", "pdf")),
+      export_as_pdf = function(x, ...) {
+        captured <<- x
+        list(npages = 1, exceeds_width = FALSE, exceeds_height = FALSE)
+      },
+      .package = "formatters"
+    )
+    expect_true(all(m$status == "ok"))
+    csv <- read.csv(file.path(d, "Listings/csv/pkpl01/Footnotes.csv"))
+    expect_equal(csv$Cmax, c("5**", "NA*"))
+    csv_notes <- read.csv(file.path(d, "Listings/csv/pkpl01/footnotes_1.csv"))
+    expect_equal(csv_notes$Footnote, notes)
+    expect_equal(csv_notes$Output, rep("Footnotes.csv", length(notes)))
+    workbook <- file.path(d, "Listings/xlsx/pkpl01.xlsx")
+    expect_equal(readxl::excel_sheets(workbook), c("Footnotes", "Footnotes_1"))
+    expect_equal(readxl::read_xlsx(workbook, sheet = "Footnotes")$Cmax, csv$Cmax)
+    expect_equal(readxl::read_xlsx(workbook, sheet = "Footnotes_1")$Footnote, notes)
+    expect_equal(formatters::main_footer(captured[[1]]), notes)
+  })
+
   it("writes one document per TLG with the splits as sections", {
     d <- withr::local_tempdir()
     items <- setNames(list(head(mtcars), head(mtcars)), c("PARAM: DrugA", "PARAM: DrugB"))

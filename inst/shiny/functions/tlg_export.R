@@ -32,12 +32,14 @@
 #' @returns A plain data frame ready for `save_dispatch()`.
 #' @noRd
 .prepare_export_frame <- function(df) {
+  footer <- attr(df, "main_footer", exact = TRUE)
   if (inherits(df, "listing_df") && requireNamespace("rlistings", quietly = TRUE)) {
     disp <- tryCatch(rlistings::listing_dispcols(df), error = function(e) NULL)
     if (length(disp) > 0 && all(disp %in% names(df))) {
       df <- as.data.frame(df)[, disp, drop = FALSE]
     }
   }
+  attr(df, "main_footer") <- footer
   .flatten_export_cols(df)
 }
 
@@ -423,6 +425,15 @@ write_tlg_exports <- function(entries,
     )
   })
 
+  footnotes <- .tlg_export_footnotes(prepared[usable], paste0(leaf[usable], ".csv"))
+  if ("csv" %in% table_formats && nrow(footnotes) > 0) {
+    notes_name <- tail(.tlg_unique_within(c(leaf, "footnotes"), 60), 1)
+    rows <- c(rows, list(.tlg_write_one(
+      footnotes, file.path(target_dir, csv_dir, notes_name),
+      file.path(csv_dir, paste0(notes_name, ".csv")), g_id, entry, character(), "csv"
+    )))
+  }
+
   if ("xlsx" %in% table_formats && any(usable)) {
     rows <- c(rows, list(.tlg_write_workbook(
       prepared[usable], names(items)[usable], bases[usable],
@@ -478,6 +489,11 @@ write_tlg_exports <- function(entries,
   rel <- file.path(sub_dir, "xlsx", paste0(stem, ".xlsx"))
 
   names(frames) <- .tlg_sheet_names(keys, bases, stem)
+  footnotes <- .tlg_export_footnotes(frames, names(frames))
+  if (nrow(footnotes) > 0) {
+    frames <- c(frames, list(Footnotes = footnotes))
+    names(frames) <- .tlg_unique_within(names(frames), 31)
+  }
   status <- "ok"
   note   <- if (length(frames) > 1) paste(length(frames), "sheets") else ""
   tryCatch(
@@ -528,6 +544,8 @@ write_tlg_exports <- function(entries,
       )
       formatters::main_title(mpf) <- title
       if (nzchar(captions[i])) formatters::subtitles(mpf) <- captions[i]
+      footer <- attr(frames[[i]], "main_footer", exact = TRUE)
+      if (length(footer) > 0) formatters::main_footer(mpf) <- footer
       mpf
     })
     # Landscape: TLG summary tables are wide, and a portrait page splits them over roughly
@@ -547,6 +565,21 @@ write_tlg_exports <- function(entries,
     note   <<- conditionMessage(e)
   })
   .tlg_manifest_row(g_id, entry, rel, status, note)
+}
+
+#' Collect listing footnotes for flat-file exports without changing data rows.
+#' @param frames Prepared data frames.
+#' @param keys Export file or sheet identifiers for each split.
+#' @returns A data frame linking each footnote to its exported split.
+#' @noRd
+.tlg_export_footnotes <- function(frames, keys) {
+  rows <- lapply(seq_along(frames), function(i) {
+    notes <- as.character(attr(frames[[i]], "main_footer", exact = TRUE))
+    notes <- notes[!is.na(notes) & nzchar(notes)]
+    data.frame(Output = rep(keys[i], length(notes)), Footnote = notes)
+  })
+  if (length(rows) == 0) return(data.frame(Output = character(), Footnote = character()))
+  do.call(rbind, rows)
 }
 
 #' Section captions for the splits of a table PDF.
