@@ -33,6 +33,8 @@
 
 ## Tables, listings & graphs
 
+* **Exclusion annotations:** Listings retain excluded and missing values with distinct summary and NCA reason markers and matching footnotes in the app and CSV/XLSX/PDF exports, using the exported CDISC datasets (#1533).
+
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
 * **Table customization:** Choose grouping, covariate comparisons, statistics, parameters, timepoints, and listing columns, with readable group headers and warnings for unavailable grouping variables (#1343, #1356, #1531).

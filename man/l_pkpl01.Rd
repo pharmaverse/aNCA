@@ -58,6 +58,13 @@ Creates individual-level listings of PK parameters from ADPP data using the
 same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per unique combination of
 \code{listgroup_vars} (default: \code{PPCAT} x \code{PPSPEC}).
 }
+\details{
+Values flagged with \code{PPSUMXF == "Y"} retain summary-exclusion markers,
+including missing values. Reasons in \code{PPSUMRSN} use \code{*}, \verb{**}, ... in sorted
+order, separated by commas for multiple reasons. A bare \code{*} is reserved for
+unspecified exclusions when present. The dictionary is shared across listing
+groups and parameter selections; footnotes describe only displayed records.
+}
 \section{Functions}{
 \itemize{
 \item \code{l_pkpl01_mp()}: Listing filtered to metabolite rows (pkpl01 M/P).

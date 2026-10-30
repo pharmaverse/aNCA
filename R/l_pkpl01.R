@@ -4,6 +4,12 @@
 #' same engine as [l_pkcl01()].  Returns one listing per unique combination of
 #' `listgroup_vars` (default: `PPCAT` x `PPSPEC`).
 #'
+#' Values flagged with `PPSUMXF == "Y"` retain summary-exclusion markers,
+#' including missing values. Reasons in `PPSUMRSN` use `*`, `**`, ... in sorted
+#' order, separated by commas for multiple reasons. A bare `*` is reserved for
+#' unspecified exclusions when present. The dictionary is shared across listing
+#' groups and parameter selections; footnotes describe only displayed records.
+#'
 #' @param data A CDISC ADPP data frame (from `export_cdisc()$adpp`).
 #' @param listgroup_vars Character vector of columns used to split the output
 #'   into separate listings. Default: `c("PPCAT", "PPSPEC")`.
@@ -61,6 +67,10 @@ l_pkpl01 <- function(
          paste(missing_cols, collapse = ", "))
   }
 
+  sum_dictionary <- .exclusion_details(
+    data, "PPSUMXF", .SUMMARY_EXCLUSION_MARKER, summary_only = TRUE
+  )$dictionary
+
   if (length(param_filter) > 0) {
     data <- data[data[[param_var]] %in% param_filter, , drop = FALSE]
   }
@@ -78,12 +88,18 @@ l_pkpl01 <- function(
   }
 
   .make_wide_listing <- function(df) {
+    # Match the existing first-record policy before annotating, so a discarded
+    # interval cannot contribute a footnote to a value that is not displayed.
+    keys <- unique(c(intersect(listgroup_vars, names(df)), grouping_vars, param_var))
+    df <- df[!duplicated(df[keys]), , drop = FALSE]
     col_labels <- .pkpl_column_labels(df, param_var, unit_var)
 
+    df$.val_fmt <- round(as.numeric(df[[value_var]]), 3)
+    df <- .mark_sum_excl_vals(
+      df, "PPSUMXF", ".val_fmt", dictionary = sum_dictionary
+    )
+
     wide <- df %>%
-      dplyr::mutate(
-        .val_fmt = round(as.numeric(.data[[value_var]]), 3)
-      ) %>%
       dplyr::select(dplyr::all_of(c(
         intersect(listgroup_vars, names(df)),
         grouping_vars, param_var, ".val_fmt"
@@ -91,10 +107,7 @@ l_pkpl01 <- function(
       tidyr::pivot_wider(
         names_from  = dplyr::all_of(param_var),
         values_from = ".val_fmt",
-        # When a subject has multiple rows for the same PARAM (e.g. multi-
-        # interval ADPP), take the first value rather than creating list-columns.
-        values_fn   = dplyr::first,
-        values_fill = NA_real_
+        values_fill = if (is.character(df$.val_fmt)) NA_character_ else NA_real_
       )
 
     param_cols <- sort(unique(df[[param_var]]))
@@ -121,7 +134,12 @@ l_pkpl01 <- function(
       main_title  = parse_annotation(data = df, text = title),
       subtitles   = gsub("<br>", "\n",
                          parse_annotation(data = df, text = subtitle)),
-      main_footer = parse_annotation(data = df, text = footnote)
+      main_footer = .add_sum_excl_footnote(
+        parse_annotation(data = df, text = footnote),
+        df,
+        "PPSUMXF",
+        dictionary = sum_dictionary
+      )
     )
   }
 

@@ -489,7 +489,7 @@ l_pkcl01:
       type: select
       choices: .colnames
       multiple: true
-      default: ["NFRLT", "AFRLT", "AVALC"]
+      default: ["NFRLT", "AFRLT", "AVAL"]
     .help_columns: "Choose data columns to display alongside the listing grouping variables. Clear the selection to use the default columns."
     .group_label_3: "Formatting"
     formatting_vars_table:

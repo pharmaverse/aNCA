@@ -22,6 +22,14 @@
 #'   - Formats the 0 and NA values as defined by the formatting table.
 #'   - Creates a listing for each unique combination of the grouping variables.
 #'
+#' Excluded records retain their markers even when the concentration is missing.
+#' Markers are appended to the configured `na_str` for missing values.
+#' Summary reasons in `PKSUM1RS` use `*`, `**`, ... and NCA reasons in
+#' `NCA<n>XRS` (or raw `exclude`) use `#`, `##`, ... in sorted reason order.
+#' Multiple reasons are separated by commas. A bare marker is reserved for
+#' unspecified exclusions when present. Each listing explains only its displayed
+#' markers, using a shared dictionary across all listing groups.
+#'
 #' The `formatting_vars_table` should be a data frame with the following columns:
 #'   - `var_name`: The name of the variable.
 #'   - `Label`: The label for the variable.
@@ -83,7 +91,7 @@ l_pkcl01 <- function(
   title = paste0("Listing of PK Concentration by Treatment Group,",
                  "Subject and Nominal Time, PK Population"),
   subtitle = NULL,
-  footnote = "*: Subjects excluded from the summary table and mean plots"
+  footnote = NULL
 ) {
 
   if (!requireNamespace("rlistings", quietly = TRUE)) {
@@ -202,6 +210,24 @@ l_pkcl01 <- function(
         ifelse(. == 0, format_zero[cur_column()], as.character(.))
     ))
 
+  value_vars <- intersect(c("AVALC", "AVAL"), displaying_vars)
+  na_str <- coalesce(
+    formatting_vars_table$na_str[match(value_vars[1], formatting_vars_table$var_name)],
+    "NA"
+  )
+  sum_dictionary <- .exclusion_details(
+    data_grouped, "PKSUMXF", .SUMMARY_EXCLUSION_MARKER, summary_only = TRUE
+  )$dictionary
+  nca_dictionary <- .exclusion_details(
+    data_grouped, "NCAXFL", .NCA_EXCLUSION_MARKER
+  )$dictionary
+  data_grouped <- .mark_sum_excl_vals(
+    data_grouped, "PKSUMXF", value_vars, na_str, dictionary = sum_dictionary
+  )
+  data_grouped <- .mark_nca_excl_vals(
+    data_grouped, "NCAXFL", value_vars, na_str, dictionary = nca_dictionary
+  )
+
   # Make sure the data stays labelled
   var_labels(data_grouped) <- c(var_labels(data), id_list = "id")
   var_labels(data_grouped) <- ifelse(is.na(var_labels(data_grouped)),
@@ -234,6 +260,20 @@ l_pkcl01 <- function(
     list_titles <- gsub("<br>", "\n", parse_annotation(data = list_data,
                                                        text = subtitle))
     footnote <- parse_annotation(data = list_data, text = footnote)
+    if (length(value_vars) > 0) {
+      footnote <- .add_sum_excl_footnote(
+        footnote,
+        list_data,
+        "PKSUMXF",
+        dictionary = sum_dictionary
+      )
+      footnote <- .add_nca_excl_footnote(
+        footnote,
+        list_data,
+        "NCAXFL",
+        dictionary = nca_dictionary
+      )
+    }
 
 
     # Build the listing object
@@ -319,7 +359,7 @@ l_pkcl02_uri <- function(
 
   if (is.null(displaying_vars)) {
     vol_vars        <- intersect(c("VOLUME", "VOLUMEU"), names(data))
-    displaying_vars <- c("NFRLT", "AFRLT", "AVAL", vol_vars)
+    displaying_vars <- c("NFRLT", "AFRLT", vol_vars, "AVAL")
   }
 
   l_pkcl01(

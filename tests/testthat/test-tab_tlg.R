@@ -37,12 +37,19 @@ local({
 },
 envir = parent.env(environment()))
 
-test_data <- reactive(list(conc = list(data = data.frame(
-  USUBJID = c("S1", "S2"),
-  PCSPEC  = c("PLASMA", "PLASMA"),
-  AVAL    = c(1, 2),
-  stringsAsFactors = FALSE
-))))
+test_data <- reactive(list(
+  adnca = data.frame(
+    USUBJID = c("S1", "S2"),
+    PCSPEC  = c("PLASMA", "PLASMA"),
+    AVAL    = c(1, 2),
+    stringsAsFactors = FALSE
+  ),
+  adpp = data.frame(
+    USUBJID = c("S1", "S2"),
+    AVAL    = c(3, 4),
+    stringsAsFactors = FALSE
+  )
+))
 
 describe("tab_tlg_server: add-picker selection", {
   it("sets Selection = TRUE for exactly the checked ids on confirm", {
@@ -111,6 +118,16 @@ describe("tab_tlg_server: Order Details edit write-back", {
 })
 
 describe("tab_tlg_server: data boundary", {
+  it("preserves study grouping metadata and the CDISC analyte and specimen aliases", {
+    pknca <- FIXTURE_PKNCA_DATA
+    expected <- setdiff(names(PKNCA::getGroups(pknca$conc)), pknca$conc$columns$subject)
+    expected <- union(expected, c("PPCAT", "PPSPEC"))
+    testServer(tab_tlg_server, args = list(data = test_data, pknca_data = reactive(pknca)), {
+      expect_setequal(grouping_vars(), expected)
+      expect_false(any(c("NFRLT", "NRRLT", "USUBJID") %in% grouping_vars()))
+    })
+  })
+
   adnca_df <- data.frame(
     USUBJID = c("S1", "S2"), AVAL = c(1, 2),
     PKSUMXF = c("Y", NA_character_), stringsAsFactors = FALSE
@@ -128,8 +145,7 @@ describe("tab_tlg_server: data boundary", {
     shiny::testServer(
       tab_tlg_server,
       args = list(
-        data = shiny::reactive(list(conc = list(data = adnca_df))),
-        adpp = shiny::reactive(adpp_df)
+        data = shiny::reactive(list(adnca = adnca_df, adpp = adpp_df))
       ),
       {
         expect_equal(attr(conc_data()$AVAL, "label"), "Analysis Value")
@@ -145,8 +161,7 @@ describe("tab_tlg_server: data boundary", {
     shiny::testServer(
       tab_tlg_server,
       args = list(
-        data = shiny::reactive(list(conc = list(data = adnca_df))),
-        adpp = shiny::reactive(adpp_df)
+        data = shiny::reactive(list(adnca = adnca_df, adpp = adpp_df))
       ),
       {
         expect_equal(nrow(conc_data()), 2)

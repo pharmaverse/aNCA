@@ -531,13 +531,26 @@ Title: Study $STUDYID - !PARAM Analysis
 1. **Order Details**: User selects desired TLGs
 2. **Parameter Selection**: For each TLG, specify options
 3. **Generation**: TLGs created using appropriate functions
-4. **Export**: Download as PDF, Word, or PowerPoint
+4. **Export**: Download tables and listings as CSV, XLSX, or PDF, and graphs as PNG, HTML, or PDF
+
+### Listing exclusion markers
+
+Listings retain records excluded from summaries (`PKSUMXF` in ADNCA and `PPSUMXF` in ADPP).
+Summary reasons use `*`, `**`, and so on; NCA reasons use `#`, `##`, and so on.
+The reason order is shared across the listing groups in a dataset. Multiple reasons are
+separated by commas, and a bare marker is reserved for exclusions without a reason when present.
+Missing values retain their markers. Footnotes identify the reason and its source column.
+
+PDF listings include these footnotes below the data. CSV exports include a companion
+`footnotes.csv` mapping notes to output files, and XLSX workbooks include a `Footnotes` sheet.
+A numeric suffix is added if that file or sheet name is already used by a listing group.
+The exported data rows retain the displayed values and complete grouping keys.
 
 **Implementation**:
 
-- TLG templates defined in `inst/shiny/tlg_definitions/`
+- TLG catalog defined in `inst/shiny/tlg.yaml`
 - Generation functions in `R/` (e.g., `g_pkcg.R`, `l_pkcl01.R`)
-- Export handled by `{officer}` and `{flextable}`
+- TLG exports handled by `inst/shiny/functions/tlg_export.R`
 
 ---
 

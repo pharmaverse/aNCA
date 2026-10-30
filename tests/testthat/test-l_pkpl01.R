@@ -82,6 +82,95 @@ describe("l_pkpl01", {
     })
     purrr::walk(result, ~ expect_s3_class(.x, "listing_df"))
   })
+
+  it("marks excluded missing parameters without marking other missing values", {
+    flagged_data <- pkpl_data
+    flagged_data$AVAL[flagged_data$PARAM == "AUClast"] <- NA_real_
+    flagged_data$PPSUMXF <- ""
+    flagged_data$PPSUMXF[2] <- "Y"
+
+    result <- l_pkpl01(flagged_data)[[1]]
+
+    expect_equal(as.vector(result$AUClast), c("NA*", NA, NA, NA))
+    expect_equal(as.vector(result$Cmax), c("5", "6", "10", "11"))
+    expect_equal(nrow(result), length(unique(flagged_data$USUBJID)))
+    expect_match(paste(capture.output(print(result)), collapse = "\n"), "NA\\*")
+  })
+
+  it("marks PPSUMXF parameter values and explains the marker in the footer", {
+    flagged_data <- pkpl_data
+    flagged_data$PPSUMXF <- ""
+    flagged_data$PPSUMXF[flagged_data$USUBJID == "S1" &
+                           flagged_data$PARAM == "AUClast"] <- "Y"
+
+    result <- l_pkpl01(flagged_data, footnote = "Existing footnote")[[1]]
+    s1_row <- as.vector(result$USUBJID) == "S1"
+
+    expect_equal(as.vector(result$AUClast)[s1_row], "20*")
+    expect_equal(as.vector(result$Cmax)[s1_row], "5")
+    expect_equal(
+      attr(result, "main_footer"),
+      c(
+        "Existing footnote",
+        "* Summary and mean plots excluded (PPSUMXF = \"Y\")."
+      )
+    )
+  })
+
+  it("uses sorted unique reasons for stable ADPP markers", {
+    flagged_data <- pkpl_data
+    flagged_data$PPSUMXF <- ""
+    flagged_data$PPSUMXF[1:2] <- "Y"
+    flagged_data$PPSUMRSN <- ""
+    flagged_data$PPSUMRSN[1] <- "Reason B; Reason A"
+    flagged_data$PPSUMRSN[2] <- "Reason C"
+
+    result <- l_pkpl01(flagged_data)[[1]]
+    expect_equal(as.character(result$Cmax[1]), "5*, **")
+    expect_equal(as.character(result$AUClast[1]), "20***")
+    expect_equal(attr(result, "main_footer"), c(
+      '* Summary and mean plots excluded: PPSUMRSN = "Reason A".',
+      '** Summary and mean plots excluded: PPSUMRSN = "Reason B".',
+      '*** Summary and mean plots excluded: PPSUMRSN = "Reason C".'
+    ))
+  })
+
+  it("keeps reason markers stable across groups, row order and parameter selection", {
+    data <- pkpl_data
+    data$PPCAT <- rep(c("DrugA", "DrugB"), each = 4)
+    data$PPSUMXF <- "Y"
+    data$PPSUMRSN <- ifelse(data$PARAM == "Cmax", "Reason B", "Reason A")
+    result <- l_pkpl01(data)
+    reversed <- l_pkpl01(data[rev(seq_len(nrow(data))), ])
+    selected <- l_pkpl01(data, param_filter = "Cmax")
+    for (i in seq_along(result)) {
+      expect_true(all(endsWith(as.character(result[[i]]$Cmax), "**")))
+      expect_equal(sort(as.character(result[[i]]$Cmax)),
+                   sort(as.character(reversed[[i]]$Cmax)))
+      expect_equal(as.character(selected[[i]]$Cmax), as.character(result[[i]]$Cmax))
+      expect_equal(attr(selected[[i]], "main_footer"),
+                   '** Summary and mean plots excluded: PPSUMRSN = "Reason B".')
+    }
+  })
+
+  it("omits footnotes from discarded duplicate intervals and unflagged rows", {
+    data <- pkpl_data
+    data$PPSUMXF <- ""
+    data$PPSUMRSN <- "Reason A"
+    duplicate <- data[1, ]
+    duplicate$AVAL <- 999
+    duplicate$PPSUMXF <- "Y"
+    result <- l_pkpl01(rbind(data, duplicate))[[1]]
+    expect_equal(as.numeric(result$Cmax), c(5, 6, 10, 11))
+    expect_length(attr(result, "main_footer"), 0)
+
+    data$PPSUMXF[2] <- "Y"
+    data$PPSUMRSN[2] <- "Reason B"
+    result <- l_pkpl01(rbind(data, duplicate))[[1]]
+    expect_equal(as.character(result$AUClast)[1], "20**")
+    expect_equal(attr(result, "main_footer"),
+                 '** Summary and mean plots excluded: PPSUMRSN = "Reason B".')
+  })
 })
 
 describe("PK listing parameter selection", {
