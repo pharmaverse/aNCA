@@ -37,6 +37,10 @@ local({
       ), {
         session$userData$units_table <- reactiveVal(NULL)
         session$userData$tlg_order <- reactiveVal(saved_order)
+        labels <- list(t_pkct01 = list(title = "Study $STUDYID", footnote = "Line 1\n!AVAL"))
+        options <- list(t_pkct01 = list(strat_var = "NFRLT", time_filter = c("1", "3")))
+        session$userData$tlg_labels <- reactiveVal(labels)
+        session$userData$tlg_options <- reactiveVal(options)
         session$userData$settings_versions <- reactiveVal(list())
         session$userData$settings <- final_settings
         session$userData$ratio_table <- ratio_table
@@ -49,6 +53,8 @@ local({
         expect_null(export_env$.validate_settings_artifact(session))
         standalone <- read_settings(output$settings_download)
         expect_identical(standalone$tlg_order, saved_order)
+        expect_identical(standalone$tlg_labels, labels)
+        expect_identical(standalone$tlg_options, options)
         expect_identical(standalone$settings$method, "linear")
 
         # Editing after the first export must be read at download time.
@@ -60,6 +66,8 @@ local({
         export_env$.export_settings(zip_dir, session)
         zip_file <- file.path(zip_dir, "settings.yaml")
         expect_identical(read_settings(zip_file)$tlg_order, updated_order)
+        expect_identical(read_settings(zip_file)$tlg_labels, standalone$tlg_labels)
+        expect_identical(read_settings(zip_file)$tlg_options, standalone$tlg_options)
         expect_identical(read_settings(zip_file, version = 2)$tlg_order, saved_order)
         expect_identical(read_settings(output$settings_download)$tlg_order, updated_order)
       })

@@ -15,7 +15,7 @@ local({
     "modules/common/reactable.R", "modules/tab_tlg/tlg_module.R",
     "modules/tab_tlg/tlg_option_text.R", "modules/tab_tlg/tlg_option_select.R",
     "modules/tab_tlg/tlg_option_numeric.R", "modules/tab_tlg/tlg_option_table.R",
-    "modules/tab_tlg.R"
+    "modules/tab_tlg.R", "modules/tab_data/data_upload.R", "modules/tab_nca/zip.R"
   )) source(file.path(shiny_dir, path), local = TRUE)
 }, envir = parent.env(environment()))
 
@@ -65,8 +65,30 @@ describe("Submitted TLG settings: fresh-session round trip", {
       expect_identical(session$userData$tlg_order()$t_pkct01$Comment, "Check source data")
       expect_null(session$userData$tlg_labels()$t_pkct01$order_comment)
       .contract_export_session(session)
-      .export_settings(saved$dir, session)
-      saved$payload <- read_settings(file.path(saved$dir, "settings.yaml"))
+      session$userData$results <- list()
+      session$userData$exploration_custom_names <- function() character()
+      prepare_export_files(
+        saved$dir, res_nca = NULL, settings = NULL, grouping_vars = character(),
+        input = list(res_tree = c("settings_file", "tlg_tables"),
+                     plot_formats = character(), table_formats = "csv",
+                     tlg_table_formats = "csv"),
+        session = session, progress = list(set = function(...) NULL, inc = function(...) NULL)
+      )
+      archive <- tempfile(fileext = ".zip")
+      withr::defer(unlink(archive))
+      zip::zipr(archive, list.files(saved$dir, recursive = TRUE),
+                root = saved$dir, mode = "mirror")
+      extracted <- withr::local_tempdir()
+      utils::unzip(archive, exdir = extracted)
+      expect_true(file.exists(file.path(extracted, "settings.yaml")))
+      tables <- list.files(file.path(extracted, "TLGs"), "\\.csv$", recursive = TRUE,
+                           full.names = TRUE)
+      tables <- tables[!grepl("manifest", basename(tables))]
+      expect_length(tables, 1L)
+      expect_equal(read.csv(tables[[1]])$Mean, c(1, 3))
+      saved$upload <- .read_uploaded_file(file.path(extracted, "settings.yaml"), "settings.yaml")
+      expect_identical(saved$upload$status, "success")
+      saved$payload <- saved$upload$content
 
       # A draft removal has not changed the actual outputs; export their submitted order.
       draft <- tlg_order()
@@ -80,8 +102,14 @@ describe("Submitted TLG settings: fresh-session round trip", {
       expect_length(session$userData$tlg_outputs("table"), 0)
     })
 
-    restored <- reactiveVal(saved$payload)
+    restored <- reactiveVal(NULL)
     testServer(tab_tlg_server, args = list(data = data, settings_override = restored), {
+      session$flushReact()
+      session$userData$settings_versions <- reactiveVal(list())
+      errors <- .apply_uploaded_settings(
+        list(saved$upload), list(), restored, reactiveVal(NULL), session, session$ns
+      )
+      expect_length(errors, 0)
       session$flushReact()
       expect_length(session$userData$tlg_outputs(), 0)
       session$setInputs(submit_tlg_order = 1)

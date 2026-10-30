@@ -381,6 +381,9 @@ tlg_module_server <- function(id, data, type, render_list, options = NULL, # nol
         # had run. Hand the condition back so it can be re-raised below; re-raising here would
         # simply be caught by this same handler.
         if (inherits(e, "shiny.silent.error")) return(e)
+        if (inherits(e, "tlg_not_applicable")) {
+          return(paste0("Not applicable: ", conditionMessage(e)))
+        }
         # The call can contain an entire dataset when invoked through do.call().
         # Log the actionable message without dumping subject records to the console.
         log_error("Error in list rendering: ", conditionMessage(e))

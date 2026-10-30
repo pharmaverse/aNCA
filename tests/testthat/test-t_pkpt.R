@@ -568,3 +568,17 @@ describe("t_pkpt label attributes", {
     expect_equal(attr(out[[1]], "tlg_subtitle"), "Mine")
   })
 })
+
+describe("t_pkpt08_uri: absent versus filtered urine data", {
+  it("classifies absent urine as not applicable while retaining a programmatic error", {
+    expect_error(t_pkpt08_uri(pkpt_data), class = "tlg_not_applicable")
+  })
+
+  it("identifies exclusions and parameter filters when urine records exist", {
+    urine <- transform(pkpt_data, PPSPEC = "uRiNe", PPSUMXF = "Y")
+    expect_error(t_pkpt08_uri(urine), "after summary exclusions and parameter filtering")
+    urine$PPSUMXF <- ""
+    expect_error(t_pkpt08_uri(urine, param_filter = "Absent"), "Check PPSUMXF and param_filter")
+    expect_equal(t_pkpt08_uri(urine)[[1]]$Mean[1], 21)
+  })
+})
