@@ -1,3 +1,4 @@
+source(system.file("shiny/functions/utils-tlg-settings.R", package = "aNCA"), local = TRUE)
 # Tests for the bulk TLG export helpers (issue #1344).
 local({
   library(shiny)

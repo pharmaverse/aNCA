@@ -228,16 +228,14 @@ nca_setup_server <- function(id, data, adnca_data, extra_group_vars, settings_ov
         # rows that differ from their data-derived default (value-based).
         export_settings$units <- changed_units(session$userData$units_table())
         export_settings$ratio_table <- ratio_table()
-        payload <- list(
+        payload <- c(list(
           settings = export_settings,
           mapping = session$userData$mapping,
           slope_rules = slope_rules(),
           filters = session$userData$applied_filters,
           time_duplicate_keys = session$userData$time_duplicate_keys,
-          nca_ran = isTRUE(session$userData$nca_ran),
-          tlg_labels = if (is.function(session$userData$tlg_labels)) session$userData$tlg_labels(),
-          tlg_order = if (is.function(session$userData$tlg_order)) session$userData$tlg_order()
-        )
+          nca_ran = isTRUE(session$userData$nca_ran)
+        ), .tlg_settings_payload(session))
 
         dataset_name <- session$userData$dataset_filename %||% ""
 

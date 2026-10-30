@@ -857,6 +857,29 @@ describe("stashed ggplot labelling", {
     expect_null(attr(p, "ggplot"))
   })
 })
+describe("Concentration plots: explicit empty split selection", {
+  it("renders one combined individual plot without changing the concentration values", {
+    for (render in list(g_pkcg01_lin, g_pkcg02_lin)) {
+      plots <- render(adnca, plotgroup_vars = character(), plotly = FALSE)
+      expect_length(plots, 1L)
+      expect_s3_class(plots[[1]], "ggplot")
+      expect_gt(nrow(plots[[1]]$data), 0L)
+      expect_true(all(plots[[1]]$data$AVAL %in% adnca$AVAL))
+      expect_equal(plots[[1]]$labels$subtitle, "Treatment Group: Dummy Treatment (N=3)")
+    }
+  })
+
+  it("renders one combined mean plot with the expected timepoint averages", {
+    mean_data <- mutate(adnca, DOSEA = 100, AVALC = as.character(AVAL))
+    plots <- g_pkcg03_lin(mean_data, plotgroup_vars = character(), plotly = FALSE)
+    expect_length(plots, 1L)
+    expect_s3_class(plots[[1]], "ggplot")
+    expected <- tapply(mean_data$AVAL, mean_data$NFRLT, mean)
+    expect_equal(plots[[1]]$data$mean,
+                 as.numeric(expected[as.character(plots[[1]]$data$NFRLT)]))
+    expect_equal(plots[[1]]$labels$subtitle, "")
+  })
+})
 
 describe("pkcg03: logarithmic error-bar coordinates", {
   it("truncates only log display coordinates and explains the floor without changing statistics", {

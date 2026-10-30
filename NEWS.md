@@ -34,6 +34,7 @@
 ## Tables, listings & graphs
 
 * **TLG labels:** Customize titles, subtitles, and footnotes for all 33 catalog entries, retain edits when submitting the order again or restoring settings, and preserve readable labels in interactive and exported outputs (#1476).
+* **TLG settings:** Restore submitted selections and applied sidebar filters, grouping, options, labels, and comments from standalone or ZIP settings; customize outputs in the sidebars and use Order for selection (#1528).
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
 * **Table customization:** Choose grouping, covariate comparisons, statistics, parameters, timepoints, and listing columns, with readable group headers and warnings for unavailable grouping variables (#1343, #1356, #1531).

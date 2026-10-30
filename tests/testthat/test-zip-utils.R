@@ -1,3 +1,4 @@
+source(system.file("shiny/functions/utils-tlg-settings.R", package = "aNCA"), local = TRUE)
 # Source the Shiny helper to test pure utility functions
 source(
   file.path(system.file("shiny", package = "aNCA"), "functions", "zip-utils.R"),

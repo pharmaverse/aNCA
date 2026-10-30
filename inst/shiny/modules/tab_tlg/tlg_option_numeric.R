@@ -22,14 +22,26 @@ tlg_option_numeric_ui <- function(id, opt_def, data) {
 #'                      values or choices etc.
 #' @param reset_trigger a reactive expression on which the module will restore its returned value
 #'                      to the default one.
+#' @param value_override Reactive numeric value restored from settings.
 #' @returns a reactive with the input value
-tlg_option_numeric_server <- function(id, opt_def, data, reset_trigger) {
+tlg_option_numeric_server <- function(id, opt_def, data, reset_trigger,
+                                      value_override = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-    #' Reset the input to default value upon reset_trigger
-    observeEvent(reset_trigger(), shinyjs::reset("numeric"))
+    default <- opt_def$default %||% NA_real_
+    value <- reactiveVal(default)
+    observeEvent(input$numeric, {
+      if (!"numeric" %in% names(input)) return()
+      value(input$numeric %||% NA_real_)
+    }, ignoreNULL = FALSE)
+    observeEvent(value_override(), {
+      value(value_override() %||% default)
+      updateNumericInput(session, "numeric", value = value())
+    }, ignoreNULL = FALSE, priority = 100)
+    observeEvent(reset_trigger(), {
+      value(default)
+      updateNumericInput(session, "numeric", value = default)
+    }, ignoreInit = TRUE)
 
-    reactive({
-      input$numeric
-    })
+    value
   })
 }

@@ -170,7 +170,7 @@ describe("tlg_module_server", {
         refresh(1L)
         session$flushReact()
         expect_match(output$param_filter$html, 'value="Cmax" selected', fixed = TRUE)
-        expect_match(output$options$html, 'value="Custom title"', fixed = TRUE)
+        expect_match(output$options$html, ">Custom title</textarea>", fixed = TRUE)
 
         session$setInputs(`param_var-select` = "PARAMCD", `param_filter-select` = NULL)
         session$elapse(800)
@@ -537,7 +537,9 @@ describe("tlg_module_server: warning surfacing", {
   })
 
   it("leaves untyped warnings to the console rather than notifying", {
-    expect_length(notes_from(render_list_warns_untyped), 0)
+    expect_warning(notes <- notes_from(render_list_warns_untyped),
+                   "Removed 3 rows containing missing values")
+    expect_length(notes, 0)
   })
 })
 
@@ -667,10 +669,10 @@ describe(".carry_forward_option_values", {
     expect_equal(out$title$default, "")
   })
 
-  it("carries live select values and leaves numeric options alone", {
+  it("carries live select and numeric values", {
     out <- .carry_forward_option_values(options, list(strat = c("A", "B"), xmin = 5))
     expect_equal(out$strat$default, c("A", "B"))
-    expect_equal(out$xmin$default, 0)
+    expect_equal(out$xmin$default, 5)
   })
 
   it("passes .group_label_* section headers through untouched", {
@@ -694,19 +696,19 @@ describe("tlg_module_server: label values on UI refresh", {
       {
         session$setInputs(`title-text` = "Catalog Title")
         initial <- output$options$html
-        expect_match(initial, 'value="Catalog Title"', fixed = TRUE)
+        expect_match(initial, ">Catalog Title</textarea>", fixed = TRUE)
 
         session$setInputs(`title-text` = "User Edit")
         # Typing must not recreate the widget and disturb focus/cursor position.
         expect_identical(output$options$html, initial)
         refresh(1L)
         session$flushReact()
-        expect_match(output$options$html, 'value="User Edit"', fixed = TRUE)
+        expect_match(output$options$html, ">User Edit</textarea>", fixed = TRUE)
 
         session$setInputs(`title-text` = "")
         refresh(2L)
         session$flushReact()
-        expect_match(output$options$html, 'value=""', fixed = TRUE)
+        expect_match(output$options$html, "></textarea>", fixed = TRUE)
       }
     )
   })
@@ -719,13 +721,13 @@ describe("tlg_option_text_server reset", {
   # actually sent to the client rather than on the returned reactive (which only ever
   # echoes `input$text` and would stay green with no observer at all).
   # `shiny::MockShinySession` records no input messages, so the update is captured by
-  # mocking `updateTextInput` itself.  Asserting on the returned reactive would not do:
+  # mocking `updateTextAreaInput` itself.  Asserting on the returned reactive would not do:
   # it only ever echoes `input$text`, and stays green even with the observer deleted.
   capture_reset <- function(default) {
     captured <- NULL
     testthat::local_mocked_bindings(
       # Name imposed by shiny's API, so it cannot be snake_case.
-      updateTextInput = function(session, input_id, ...) { # nolint: object_name_linter.
+      updateTextAreaInput = function(session, input_id, ...) { # nolint: object_name_linter.
         captured <<- list(input_id = input_id, value = list(...)$value)
       },
       .package = "shiny"
@@ -755,7 +757,7 @@ describe("tlg_option_text_server reset", {
   })
 
   it("clears the box when the option declares no default", {
-    # updateTextInput(value = NULL) is a no-op, so an absent default must become "".
+    # updateTextAreaInput(value = NULL) is a no-op, so an absent default must become "".
     captured <- capture_reset(NULL)
     expect_equal(captured$input_id, "text")
     expect_equal(captured$value, "")
@@ -959,7 +961,7 @@ describe("tlg_module_server: select values on UI refresh", {
         data = reactive(data.frame(NFRLT = c(0.5, 1), AVAL = c(2, 8))),
         type = "table",
         render_list = function(data, time_filter = NULL, ...) {
-          if (!is.null(time_filter)) data <- data[data$NFRLT %in% time_filter, ]
+          if (length(time_filter)) data <- data[data$NFRLT %in% time_filter, ]
           list(data)
         },
         options = list(
