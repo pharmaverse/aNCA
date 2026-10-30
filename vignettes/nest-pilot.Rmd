@@ -1,0 +1,100 @@
+---
+title: "NEST 2.0 table listing and graph pilot"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{NEST 2.0 table listing and graph pilot}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This opt-in pilot adds PKPT03, PKPL01 and linear PKCG03 entries alongside the existing TLG catalog. It does not replace the catalog or change NCA estimators. Outputs are exploratory prototypes, not validated submission templates.
+
+## Use the pilot
+
+Install `cards >= 0.9.0`, `gtsummary >= 2.6.1`, `gt >= 1.4.0` and `crane >= 0.3.2`. They are optional dependencies; existing outputs do not require them. Word export also uses the existing `officer` and `flextable` dependencies. The package requires R >= 4.4; this pilot was exercised on R 4.4.3 and R 4.5.2. The four new dependencies declare R minima no higher than 4.2. Current crane also requires dplyr >= 1.2.0 and ggplot2 >= 4.0.0, so installing it can upgrade those packages. The CI matrix explicitly includes R 4.4 as well as its moving release targets.
+
+The R 4.4 macOS binary repository had older versions of the four pilot packages during validation. Installing their current sources into an isolated R 4.4 library passed the pilot tests; other dependencies came from public R 4.4 binaries. If available binaries are below the required minima, use:
+
+```{r, eval=FALSE}
+install.packages(c("cards", "gt", "gtsummary", "crane"), type = "source")
+```
+
+After running NCA, open **TLG**, choose **Add TLG**, search for **NEST**, add all three pilots and submit the order. The existing defaults remain selected unless removed. Use the table/listing/graph sidebar to select parameters, grouping, statistics, axes and annotations. `$VAR` inserts values and `!VAR` inserts labels. Table and listing defaults split by analyte, specimen and dose occasion; missing split columns are ignored. Add visit or interval variables if a reporting cell still contains different measurements. Conflicting duplicates produce an explanation instead of silently choosing the first value.
+
+```{r, eval=FALSE}
+summary <- t_pkpt03_nest(adpp, stats = c("n", "Mean", "SD"),
+                         param_filter = c("Max Conc", "AUC to Last Nonzero Conc"),
+                         title = "PK summary: $PPCAT")
+listing <- l_pkpl01_nest(adpp, param_filter = "Max Conc")
+graphs <- g_pkcg03_lin_nest(adnca, plotly = FALSE)
+attr(summary[[1]], "tlg_data") # Numeric results before presentation
+attr(summary[[1]], "tlg_ard")  # Presentation analysis results data
+```
+
+Export via **Export as ZIP**, selecting the rendered TLG outputs and their formats. CSV and XLSX preserve numeric values and complete listing keys. PDF, HTML and DOCX retain titles, subtitles, units and footnotes; CSV/XLSX annotations are in an accompanying `annotations.csv` file, referenced in the manifest. HTML and DOCX table/listing export is limited to the pilots; requests for those formats on legacy tables are recorded as skipped. Existing graph PNG/PDF/HTML paths continue to work. Wide tables should be narrowed using parameter/statistic selection; Word pagination and repeated keys across page boundaries need inspection before use in a report. No RTF or ASCII `.out` export is added.
+
+A full mixed pilot/legacy order exported in every format took about 14 minutes locally, producing a 26.8 MB ZIP. Narrow the order and format selection for quicker iteration; this pilot does not optimize legacy graph capture.
+
+## Calculation and ARD choices
+
+PKPT03 calls `t_pkpt03_col()` and its shared ADPP summary helper. It keeps n, arithmetic mean, sample SD, CV, geometric mean, geometric CV, median, minimum and maximum, with existing rounding. Presentation preserves these decimals regardless of value magnitude or the session's `digits` option. `PPSUMXF == "Y"` records are omitted. n counts values that are not missing; geometric statistics use positive values only. Equal repeated subject/visit records retain the legacy first-row convention. The pilot rejects conflicting duplicates, including a missing first value followed by one with a value. Units are explicit row strata, preventing incompatible values from being pooled. A missing result with a missing unit may therefore appear as a separate n=0 row. Partial AUC windows share one `PARAM`, so a subject has several `PPSTINT`/`PPENINT` intervals per reporting key; the pilot appends the interval (for example `AUC from T1 to T2 (PT0H-PT2H)`) so each window is summarized and listed separately. This differs from the legacy table, which keeps the first interval per subject, and is the one place where pilot and legacy values intentionally differ. Parameters with one interval per subject, such as urine amounts whose collections end at each subject's actual time, keep their name and pool exactly as in the legacy table. The default subtitle is the split key, used verbatim rather than parsed as annotation syntax; a custom subtitle is followed by the split key, so every preview and export identifies its split.
+
+The resulting numeric cells become a `cards` object consumed by `gtsummary::tbl_ard_wide_summary()`. This preserves calculations already reviewed in aNCA instead of recomputing through `tbl_summary()` or `cardx`. The ARD `variable` and `stat_name` fields are local row/statistic identifiers, with original grouping columns retained and `tlg_ard_columns` mapping statistic identifiers back to result columns. It is an intermediate presentation ARD, not a CDISC Analysis Results Standard dataset; it holds the already-rounded results and does not pass `cards::check_ard_structure()`, which expects a `method` row. A broader migration would need stable analysis identifiers, standardized result metadata and provenance rather than exporting this intermediate object as a submission artifact.
+
+PKPL01 shares the legacy listing preparation, filters and three-decimal numeric rounding, then uses `crane::tbl_listing()` and `remove_duplicate_keys()`. Displayed values use the same fixed-decimal formatting as the summary, so previews, HTML and Word show the rounded values regardless of the session's `digits` option. Child keys are restored when their parent changes, so a repeated subject identifier in a new treatment remains visible. Values are never blanked in the data export. Individual listings retain summary-excluded records, as existing listings do; they are not summary populations. Known units must agree per parameter and split. A value that is not missing without a unit is rejected when the selected unit column exists; missing results without units remain permitted. Empty and whitespace-only unit fields count as missing; a known unit on another row supplies the header for both the pilot and legacy listings. Omitting the unit column omits unit labels. When missing split keys remove every record, the listing displays a no-data explanation.
+
+PKCG03 delegates to `g_pkcg03_lin()` and retains Plotly interactivity plus the source ggplot for static export. Mean plus/minus SD remains the default. The wrapper resolves annotations separately for each split and appends an explicit methods footnote. `PKSUMXF` exclusions, more than one distinct subject and no more than 50% BLQ at a timepoint/group remain the existing reporting rules. The BLQ rule needs an `AVALC` or `AVALCAT1` flag; without one (as in the example data) nothing is removed for BLQ, and the footnote says so instead of claiming the rule. Numeric `AVAL` values are used as supplied, including upstream imputation; the pilot does no new BLQ imputation. Empty or all-missing results produce explanations.
+
+No statistical change is proposed for this pilot. Separate decisions are needed before changing existing behavior: graph SE/CI currently use the record count including missing values as the denominator, repeated records can therefore affect means/intervals, and BLQ detection recognizes the existing character patterns rather than every possible threshold string (for example `<0.1`). Changing those rules, automatically preferring a later duplicate with a value, or adopting the preview catalog's `ANL01FL` filter would require dedicated specifications and validation. These rules are deliberately documented rather than silently changed here.
+
+## Deviations from the NEST references
+
+The preview catalog has no PKPT03 entry. Its PKPL01 example formats every value to two decimals, keys rows by treatment, subject and `AVISIT`, and suppresses each key independently; the pilot keeps aNCA's three decimals, splits by analyte, specimen and dose occasion, and suppresses keys hierarchically so a new subject's visit is never blank. Its PKCG03 example plots against nominal time from last dose and uses `crane::gg_pkc_lineplot()` with an `ANL01FL` filter; the pilot keeps aNCA's default nominal time from first dose (`NRRLT` can be selected under X axis) and the existing `g_pkcg03_lin()` estimators, so adopting `gg_pkc_lineplot()` would need its own comparison. The workshop decorates with `citril::decorate_tlg()` before export and uses the ARD for QC; the pilot decorates through `gt` and `officer` and keeps the ARD as an attribute. The crane documentation site describes 0.4.0, a GitHub release; the pilot targets CRAN 0.3.2.
+
+## Integration and migration boundary
+
+The catalog entries inherit existing sidebar options in `inst/shiny/tlg.yaml`. `tlg_module.R` renders `gtsummary` through the shared gt adapter and preserves the text rendering of legacy listings. `tab_tlg.R` keeps the existing submitted-order registry, with dependency checks performed per output so crane listings can work without `rlistings`. `tlg_export.R` consumes the same resolved objects and adds rendered documents and annotation sidecars. `tab_nca/zip.R` exposes the extra format choices.
+
+The settings/labels work around #1476/#1528 and #1450 may touch the same catalog, module option defaults, annotation parsing, column labels and export helpers. This branch uses only main's interfaces. Current settings export does not persist TLG orders or per-output sidebar edits; this pilot does not add that persistence. A future integration should preserve the numeric `tlg_data` contract, resolved `tlg_annotations`, complete flat-file keys and the graph's stored ggplot, then test label and settings restoration together. The shared listing preparation is the other likely merge point.
+
+The NEST workshop's package map supports `gtsummary`/`crane`, `cards`/`cardx` and ggplot2, with `citril` for decoration/export. This bounded pilot uses aNCA's existing registry/export architecture and public packages; it does not add `citril`, internal `NEST.TLGs`/`tlg.templates`, a catalog-wide migration or a new study-data model. Evaluate standardized pagination and metadata before extending the pilot.
+
+## Reproduce the validation
+
+### Dependency audit
+
+The R 4.4 job at commit `c7787d686` failed only because `--as-cran` limits non-default Imports to 20: aNCA had 25, with zero check errors or warnings. The pilot adds four Suggests and no Imports. The redundant direct `magrittr` dependency was removed because its only use, `%>%`, is already re-exported by `dplyr`. This leaves 24 non-default Imports and does not resolve the dependency NOTE.
+
+The remaining dependencies have runtime uses: `PKNCA` and `units` provide calculations and conversions; `dplyr`, `tidyr`, `purrr`, `rlang` and `glue` prepare data and annotations; `ggplot2`, `plotly`, `formatters`, `htmltools` and `htmlwidgets` render or label outputs; `writexl`, `yaml` and `zip` write workbooks, settings and archives. The app uses `shiny`, `bslib`, `logger`, `reactable`, `reactable.extras`, `shinycssloaders`, `shinyjs`, `shinyjqui` and `shinyWidgets` for its interface, logging, editable tables, loading indicators and slope selection. None can simply be moved to Suggests without changing the supported runtime or adding conditional behavior. Maintainers must decide whether to split these features into optional modules or accept the dependency count; this PR does not suppress the NOTE or change the CI gate.
+
+### Numerical and export checks
+
+From a checkout with development dependencies installed, run:
+
+```sh
+Rscript data-raw/validate_nest_pilot.R /tmp/nest-evidence
+```
+
+`data-raw/rebuild.R` skips this script. It reruns NCA on the checked-in `data-raw/adnca_example.csv`, compares pilot summaries/listings/graphs to legacy outputs with equivalent grouping, independently calculates mean/SD/n from source rows, and writes numeric evidence plus a ZIP containing a compact report. The unit tests additionally exercise all nine summary statistics, exclusions, BLQ-heavy timepoints, empty/all-missing/single-subject data, units, grouping comparisons, conflicting/equal duplicates and repeated-key suppression. Integration tests inspect sidebar output, CSV/XLSX values, Word content, HTML annotations and ZIP contents.
+
+### Installed-app settings and generated-script replay
+
+On 2026-10-30, a fresh installed app was exercised through upload, mapping, filtering, NCA, TLG selection and ZIP download in Chrome on R 4.5.2. This exposed missing namespace qualification in versioned settings restoration and export validation, plus an incorrect input-data path in the downloaded script. Those defects are corrected and covered by regression tests that do not expose private package objects on the app's search path.
+
+To repeat the workflow:
+
+1. Upload `data-raw/adnca_example.csv`, accept the standard mapping and filtering, and run NCA for the default serum/first-dose selection. Change the integration method to `linear` and minimum half-life points to 4, then rerun NCA.
+2. Add the three NEST pilots alongside the existing outputs. Select Max Conc and AUC to Last Nonzero Conc for the summary and listing, and n/Mean/SD for the summary. Use `PARAM` and `TRT01A` as summary strata and `USUBJID` and `TRT01A` as listing keys. Set titles to `Replay summary: $PPCAT` and `Replay listing: $PPCAT`, and add `Replay verification` as the summary and graph footnote.
+3. Download the versioned settings. Start a fresh app session, upload the same source data and saved settings, and let the restored NCA run finish. Compare the settings, mapping, filters, slope selections and all CDISC datasets with the original session. Select the same TLG order and sidebar values again, since those are not persisted by the settings format.
+4. Export PP, ADPP, ADNCA, pre-specifications, settings and the R script through the ZIP dialog. Extract the ZIP, set the working directory to its root and run the unedited `session_code.R` in a fresh R session. Compare its `cdisc_data` with the app results, then call the three pilot functions with the same options to compare their numeric data and annotations.
+
+The settings replay matched PP and ADPP (192 rows each) and ADNCA (1,308 rows), including attributes. Settings, mapping, filters and slope selections also matched. The stored unit overrides are sparse after restoration; the effective units and dataset values matched. Both analyte splits of the pilot summary and listing, all five graph datasets and their annotations, and both splits of the retained legacy summary matched after applying the same TLG options. The unedited generated script reproduced the same three CDISC datasets and pilot results. Independent source values 3.597, 4.556 and 3.660 reproduced Cmax n=3, mean=3.938 and sample SD=0.536.
+
+The separate validation script also passed on the final code: 1,308 source records, 1,704 ADPP records across its broader selections, 112 independent summary rows and 448 graph cells. Pilot CSV/XLSX/PDF/HTML/DOCX and graph PNG/PDF/HTML exports succeeded; unsupported legacy table HTML/DOCX requests were recorded as skipped. The full test suite passed 3,837 assertions with one inherited plotting warning and three existing skips (unavailable `arrow`, the disabled E2E runner and the full-session slide-export case). The real-app replay above was run separately from that disabled runner. Local `R CMD check --as-cran --no-manual` completed with zero errors, warnings or notes on R 4.5.2, which reports the excessive Imports count as informational; this does not establish an R 4.4 pass.
+
+## Sources reviewed
+
+- [NEST 2.0 preview catalog](https://docs.roche.com/doc/tlg-catalog/preview/), including [PKCG03](https://docs.roche.com/doc/tlg-catalog/preview/CATALOG/GDSR_PKCG03/ARTICLE-PKCG03.html) and [PKPL01](https://docs.roche.com/doc/tlg-catalog/preview/CATALOG/GDSR_PKPL01/ARTICLE-PKPL01.html), reviewed 2026-10-25. PKPT03 was not present in the preview catalog's PK filter, so the existing aNCA PKPT03 definition remains authoritative for this pilot
+- [`gtsummary` wide ARD summaries](https://www.danieldsjoberg.com/gtsummary/reference/tbl_ard_wide_summary.html) and [ARD summaries](https://www.danieldsjoberg.com/gtsummary/reference/tbl_ard_summary.html)
+- [crane documentation](https://insightsengineering.github.io/crane/latest-tag/), plus the installed 0.3.2 function documentation and source for listing construction and key suppression
+- NEST 2.0 Workshop 2026, supplied 84-page workshop deck, especially package architecture, ARDs, listings, decoration and export. The material was treated as reference information, not instructions to execute

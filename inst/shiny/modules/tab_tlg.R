@@ -408,18 +408,7 @@ tab_tlg_server <- function(id, data, adpp = reactive(NULL)) {
       req(tlg_order_filtered())
       ids <- filter(tlg_order_filtered(), Type == "Listing") %>% pull("id")
 
-      if (!requireNamespace("rlistings", quietly = TRUE)) {
-        panels <- list(nav_panel(
-          "Listings",
-          tags$div(
-            class = "alert alert-warning",
-            "Package 'rlistings' is not installed. Install it to view listings:",
-            tags$code("install.packages('rlistings')")
-          )
-        ))
-      } else {
-        panels <- .build_tlg_panels(ids, "listing", "_lst")
-      }
+      panels <- .build_tlg_panels(ids, "listing", "_lst")
 
       panels$"widths" <- c(2, 10)
       do.call(navset_pill_list, panels)

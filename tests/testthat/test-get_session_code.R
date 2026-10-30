@@ -182,6 +182,25 @@ describe("clean_deparse()", {
   })
 })
 
+describe("get_session_code", {
+  it("reads the raw data beside the exported script from an extracted ZIP", {
+    dest <- tempfile("script-replay-")
+    dir.create(dest)
+    on.exit(unlink(dest, recursive = TRUE))
+    raw <- data.frame(USUBJID = c("S1", "S2"), AVAL = c(1.25, 2.5))
+    saveRDS(raw, file.path(dest, "input_data.rds"))
+    script <- file.path(dest, "session_code.R")
+    get_session_code(list(userData = list()), output_path = script)
+    code <- readLines(script)
+    env <- new.env()
+    withr::with_dir(dest, {
+      eval(parse(text = head(code, grep("^adnca_data <-", code))), envir = env)
+    })
+    expect_equal(env$data_path, "input_data.rds")
+    expect_equal(env$adnca_data, raw)
+  })
+})
+
 describe("get_settings_code: ", {
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   placeholder <- "settings_list"
@@ -198,6 +217,14 @@ describe("get_settings_code: ", {
 
     it("writes a script R file output and substitutes placeholders", {
       expect_true(file.exists(output_file))
+    })
+
+    it("reads the data file supplied by the caller", {
+      code <- readLines(output_file)
+      env <- new.env()
+      eval(parse(text = head(code, grep("^adnca_data <-", code))), envir = env)
+      expect_equal(env$data_path, data_file)
+      expect_equal(env$adnca_data, read_pk(data_file))
     })
 
     it("substitutes placeholders in the output file", {
