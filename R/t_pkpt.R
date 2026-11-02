@@ -1,3 +1,9 @@
+# Columns identifying one subject's value within a summary row. Shared with the
+# NEST pilot, which rejects conflicting values within the same key.
+.pkpp_dedup_cols <- function(df, strat_vars, col_group_var = NULL) {
+  intersect(c("USUBJID", strat_vars, "AVISIT", col_group_var, "PPCAT", "PARAM"), names(df))
+}
+
 #' Shared table builder for ADPP summary tables (pkpt03 / pkpt08 pattern).
 #'
 #' Deduplicates to one row per subject x stratum, then applies `summary_fn` to
@@ -43,10 +49,7 @@
     # measurements, and collapsing them silently discarded whole analytes (a parent/metabolite
     # pair reduced to the parent alone). Duplicate rows from repeated dose events share both,
     # so they still collapse as intended.
-    dedup_cols <- intersect(
-      c("USUBJID", strat_vars, "AVISIT", col_group_var, "PPCAT", "PARAM"),
-      names(df)
-    )
+    dedup_cols <- .pkpp_dedup_cols(df, strat_vars, col_group_var)
     df <- df[!duplicated(df[dedup_cols]), , drop = FALSE]
   }
 

@@ -1340,3 +1340,76 @@ p_pkpg06_mp:
     footnote:
       type: text
       label: Footnote
+
+# Bounded NEST 2.0 pilots. Legacy catalog entries remain the defaults.
+t_pkpt03_nest:
+  template: t_pkpt03_col
+  is_default: false
+  fun: t_pkpt03_nest
+  label: "pkpt03 - NEST pilot summary"
+  description: "NEST pilot: existing PK statistics through a wide gtsummary ARD"
+  options:
+    stats:
+      label: "Statistics to show"
+      type: select
+      multiple: true
+      choices:
+        "n": "n"
+        Mean: Mean
+        SD: SD
+        "CV%": CV_pct
+        Median: Median
+        "Geometric Mean": GeoMean
+        "Geometric CV%": GeoCV_pct
+        Min: Min
+        Max: Max
+    list_vars:
+      label: "Split tables by"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT", "PPSPEC", "ATPTREF"]
+    strat_var:
+      label: "Stratify by (rows)"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["TRT01A", "PARAM"]
+    .help_nest: "Requires cards, gtsummary and gt. Units are retained as row keys. Conflicting repeated values require finer grouping."
+    .group_label_labs: "Annotations"
+    title:
+      type: text
+      label: Title
+    subtitle:
+      type: text
+      label: Subtitle
+    footnote:
+      type: text
+      label: Footnote
+
+l_pkpl01_nest:
+  template: l_pkpl01
+  is_default: false
+  fun: l_pkpl01_nest
+  label: "pkpl01 - NEST pilot listing"
+  description: "NEST pilot: individual PK parameters with crane"
+  options:
+    listgroup_vars:
+      label: "Table grouping variables"
+      type: select
+      choices: .colnames
+      multiple: true
+      default: ["PPCAT", "PPSPEC", "ATPTREF"]
+    .help_nest: "Requires crane, gtsummary and gt. Repeated keys are hidden in previews; CSV/XLSX keep complete keys. Include visit/dose when values differ."
+
+g_pkcg03_lin_nest:
+  template: g_pkcg03_lin
+  is_default: false
+  fun: g_pkcg03_lin_nest
+  label: "pkcg03 - NEST pilot mean linear"
+  description: "NEST pilot: existing mean graph with explicit BLQ and exclusion methods"
+  options:
+    footnote:
+      type: text
+      label: Additional footnote
+    .help_nest: "Uses the existing aNCA statistics. Mean +/- SD is the pilot default. The methods footnote is retained alongside custom text."
