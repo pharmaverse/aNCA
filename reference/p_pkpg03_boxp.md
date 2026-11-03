@@ -54,15 +54,20 @@ p_pkpg04_boxp(data, ...)
 
 - title:
 
-  Optional plot title string.
+  Optional plot title. Supports `$COLUMN` value tokens and `!COLUMN`
+  column-label tokens, resolved within each plot's data split.
 
 - subtitle:
 
-  Optional plot subtitle string.
+  Optional plot subtitle string. When `NULL`, generated from each plot's
+  analyte, specimen, visit (when available), and parameter/unit pairs.
+  Use `""` to suppress the subtitle. Supports the same annotation tokens
+  as `title`.
 
 - footnote:
 
-  Optional footnote string.
+  Optional footnote string. Supports the same annotation tokens as
+  `title`.
 
 - ylab:
 

@@ -17,7 +17,10 @@ t_pkct01(
   time_var = "NFRLT",
   time_filter = NULL,
   col_group_var = NULL,
-  stats = NULL
+  stats = NULL,
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 
 t_pkct01_dose(data, strat_var = c("DOSEA", "ATPTREF", "NFRLT"), ...)
@@ -85,6 +88,22 @@ t_pkct01_dose_tad(data, strat_var = c("DOSEA", "ATPTREF", "NRRLT"), ...)
   Optional character vector of statistics to display, chosen from
   `c("n", "n_blq", "Mean", "SD", "CV_pct", "Median", "GeoMean", "GeoCV_pct", "Min", "Max")`.
   `NULL` (default) shows all of them.
+
+- title:
+
+  Table title. Supports `$VAR` / `!VAR` annotation syntax (see
+  [`parse_annotation()`](https://pharmaverse.github.io/aNCA/reference/parse_annotation.md)).
+  Attached to each returned table as a `tlg_title` attribute.
+
+- subtitle:
+
+  Per-table subtitle. `NULL` (default) names each `list_vars` split
+  variable and its value, so a table split by analyte and specimen says
+  which combination it covers.
+
+- footnote:
+
+  Table footnote, attached as a `tlg_footnote` attribute.
 
 - ...:
 

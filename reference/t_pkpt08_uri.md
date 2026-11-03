@@ -18,7 +18,10 @@ t_pkpt08_uri(
   value_var = "AVAL",
   param_filter = NULL,
   col_group_var = NULL,
-  stats = NULL
+  stats = NULL,
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 ```
 
@@ -74,6 +77,21 @@ t_pkpt08_uri(
   `c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")`.
   `NULL` (default) shows all of them. Names not produced by this table
   are ignored.
+
+- title:
+
+  Table title. Supports `$VAR` / `!VAR` annotation syntax (see
+  [`parse_annotation()`](https://pharmaverse.github.io/aNCA/reference/parse_annotation.md)).
+  Attached to each returned table as a `tlg_title` attribute.
+
+- subtitle:
+
+  Per-table subtitle. `NULL` (default) names each `list_vars` split
+  variable and its value.
+
+- footnote:
+
+  Table footnote, attached as a `tlg_footnote` attribute.
 
 ## Value
 

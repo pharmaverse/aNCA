@@ -11,7 +11,7 @@ combination in the ADPP data."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9209</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9210</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,15 +121,18 @@ on the boxes (pkpg04 style). Default: <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
-<dd><p>Optional plot title string.</p></dd>
+<dd><p>Optional plot title. Supports <code>$COLUMN</code> value tokens and
+<code>!COLUMN</code> column-label tokens, resolved within each plot's data split.</p></dd>
 
 
 <dt id="arg-subtitle">subtitle<a class="anchor" aria-label="anchor" href="#arg-subtitle"></a></dt>
-<dd><p>Optional plot subtitle string.</p></dd>
+<dd><p>Optional plot subtitle string. When <code>NULL</code>, generated from
+each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
+Use <code>""</code> to suppress the subtitle. Supports the same annotation tokens as <code>title</code>.</p></dd>
 
 
 <dt id="arg-footnote">footnote<a class="anchor" aria-label="anchor" href="#arg-footnote"></a></dt>
-<dd><p>Optional footnote string.</p></dd>
+<dd><p>Optional footnote string. Supports the same annotation tokens as <code>title</code>.</p></dd>
 
 
 <dt id="arg-ylab">ylab<a class="anchor" aria-label="anchor" href="#arg-ylab"></a></dt>

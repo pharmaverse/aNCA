@@ -19,7 +19,8 @@
   [\#1420](https://github.com/pharmaverse/aNCA/issues/1420)).
 - **Saved sessions:** Save versioned YAML settings and restore mappings,
   filters, exclusions, ratios, units, and previous NCA runs from YAML or
-  ZIP, including reusable templates and startup settings
+  ZIP, including reusable templates, startup settings, and version
+  selection in installed packages
   ([\#514](https://github.com/pharmaverse/aNCA/issues/514),
   [\#832](https://github.com/pharmaverse/aNCA/issues/832),
   [\#860](https://github.com/pharmaverse/aNCA/issues/860),
@@ -30,7 +31,8 @@
   [\#1103](https://github.com/pharmaverse/aNCA/issues/1103),
   [\#1104](https://github.com/pharmaverse/aNCA/issues/1104),
   [\#1195](https://github.com/pharmaverse/aNCA/issues/1195),
-  [\#1225](https://github.com/pharmaverse/aNCA/issues/1225)).
+  [\#1225](https://github.com/pharmaverse/aNCA/issues/1225),
+  [\#1476](https://github.com/pharmaverse/aNCA/issues/1476)).
 - **Settings stability:** Preserve parameter and summary selections
   during setup changes, apply filters consistently, and ignore invalid
   partial intervals in uploaded settings
@@ -160,14 +162,21 @@
   [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
   [\#1441](https://github.com/pharmaverse/aNCA/issues/1441)).
 - **Mean profiles:** Corrected subject-based BLQ filtering and one-sided
-  whiskers, and restored combined concentration plots that overlay
-  subjects by default
+  whiskers, restored combined concentration plots that overlay subjects
+  by default, and explicitly truncate log-scale values and error bars at
+  the plotting floor without changing statistics
   ([\#555](https://github.com/pharmaverse/aNCA/issues/555),
   [\#1316](https://github.com/pharmaverse/aNCA/issues/1316),
-  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356)).
+  [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
+  [\#1476](https://github.com/pharmaverse/aNCA/issues/1476)).
 
 ### Tables, listings & graphs
 
+- **TLG labels:** Customize titles, subtitles, and footnotes for all 33
+  catalog entries, retain edits when submitting the order again or
+  restoring settings, and preserve readable labels in interactive and
+  exported outputs
+  ([\#1476](https://github.com/pharmaverse/aNCA/issues/1476)).
 - **TLG catalog:** Added concentration and PK summaries, dose-normalized
   and urine outputs, geometric mean ratios with 90% confidence
   intervals, boxplots, dose-proportionality plots, and individual
@@ -185,22 +194,26 @@
   [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
   [\#1531](https://github.com/pharmaverse/aNCA/issues/1531)).
 - **Urine outputs:** Restrict urine tables and listings to urine
-  specimens and report missing specimen information
+  specimens report missing specimen information, and distinguish absent
+  urine parameters from records removed by filters or exclusions
   ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335),
   [\#1343](https://github.com/pharmaverse/aNCA/issues/1343),
   [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
+  [\#1476](https://github.com/pharmaverse/aNCA/issues/1476),
   [\#1531](https://github.com/pharmaverse/aNCA/issues/1531)).
 
 ### Exports & CDISC
 
 - **ZIP exports:** Export results, settings, plots, and TLGs using
   current selections, with PDF/HTML/PNG graphs, XLSX/CSV/PDF tables,
-  study-based filenames, and a manifest of output statuses
+  study-based filenames, a manifest of output statuses, and working
+  validation in installed packages
   ([\#638](https://github.com/pharmaverse/aNCA/issues/638),
   [\#1000](https://github.com/pharmaverse/aNCA/issues/1000),
   [\#1136](https://github.com/pharmaverse/aNCA/issues/1136),
   [\#1344](https://github.com/pharmaverse/aNCA/issues/1344),
-  [\#1428](https://github.com/pharmaverse/aNCA/issues/1428)).
+  [\#1428](https://github.com/pharmaverse/aNCA/issues/1428),
+  [\#1476](https://github.com/pharmaverse/aNCA/issues/1476)).
 - **Slides:** Customize slide sections and grouping, include
   dose-normalized summaries, and add a PK parameter glossary
   ([\#791](https://github.com/pharmaverse/aNCA/issues/791),
@@ -208,10 +221,13 @@
   [\#1054](https://github.com/pharmaverse/aNCA/issues/1054),
   [\#1326](https://github.com/pharmaverse/aNCA/issues/1326)).
 - **Reproducible scripts:** Export R scripts that use saved mappings,
-  filters, ratios, units, and BLQ rules to reproduce app results
+  filters, ratios, units, and BLQ rules to reproduce app results, honor
+  the requested dataset path or bundled ZIP input, and run without
+  configured ratios
   ([\#789](https://github.com/pharmaverse/aNCA/issues/789),
   [\#1189](https://github.com/pharmaverse/aNCA/issues/1189),
-  [\#1445](https://github.com/pharmaverse/aNCA/issues/1445)).
+  [\#1445](https://github.com/pharmaverse/aNCA/issues/1445),
+  [\#1476](https://github.com/pharmaverse/aNCA/issues/1476)).
 - **Export validation:** Validate selected non-TLG exports and CDISC
   field types and lengths before saving, report custom-field validation
   limits, and block exports on validation or XPT-writing failures

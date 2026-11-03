@@ -14,6 +14,8 @@ l_pkcl02_uri(
   urine_specs = c("URINE"),
   listgroup_vars = c("PARAM", "PCSPEC"),
   displaying_vars = NULL,
+  title = paste0("Listing of Urine PK Concentration and Volume ",
+    "by Treatment Group, Subject and Nominal Time, PK Population"),
   ...
 )
 ```
@@ -39,6 +41,13 @@ l_pkcl02_uri(
   Character vector of columns to display. When `NULL` (default), uses
   `c("NFRLT", "AFRLT", "AVAL")` plus `VOLUME`/`VOLUMEU` if those columns
   exist in the data.
+
+- title:
+
+  Main listing title. Bound as a named parameter rather than left to
+  `...` so the sidebar can expose it: forwarding a user-supplied `title`
+  through `...` while the wrapper also sets one is a duplicate-argument
+  error at render time.
 
 - ...:
 

@@ -138,6 +138,12 @@ pkcg03(
 
 A list of ggplot objects for each unique group.
 
+## Details
+
+For logarithmic views, displayed means and error-bar endpoints below
+0.001 are truncated at 0.001 and explained in the footnote. Calculated
+statistics and the linear panel of side-by-side plots are unchanged.
+
 ## Author
 
 Kezia Kobana magic numbers for footnote position and margin, work in app

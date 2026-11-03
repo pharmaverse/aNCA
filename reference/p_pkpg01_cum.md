@@ -77,11 +77,15 @@ p_pkpg01_per(
 
 - title:
 
-  Optional plot title.
+  Optional plot title. Supports `$COLUMN` value tokens and `!COLUMN`
+  column-label tokens, resolved within each plot's data split.
 
 - subtitle:
 
-  Optional plot subtitle.
+  Optional plot subtitle string. When `NULL`, generated from each plot's
+  analyte, specimen, visit (when available), and parameter/unit pairs.
+  Use `""` to suppress the subtitle. Supports the same annotation tokens
+  as `title`.
 
 - footnote:
 

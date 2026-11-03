@@ -11,7 +11,7 @@ computed during the NCA run – they are not derived on the fly."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">aNCA</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9209</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9210</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,10 @@ computed during the NCA run – they are not derived on the fly.</p>
 <span>  strat_var <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRT01A"</span>, <span class="st">"PARAM"</span><span class="op">)</span>,</span>
 <span>  value_var <span class="op">=</span> <span class="st">"AVAL"</span>,</span>
 <span>  col_group_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  stats <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  stats <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  subtitle <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  footnote <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -138,6 +141,21 @@ statistic block is repeated once per level, nested under a group header.
 <dd><p>Optional character vector of statistics to display, chosen from
 <code>c("n", "Mean", "SD", "CV_pct", "GeoMean", "GeoCV_pct", "Median", "Min", "Max")</code>. <code>NULL</code> (default) shows all of them. Names not produced by this
 table are ignored.</p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Table title. Supports <code>$VAR</code> / <code>!VAR</code> annotation syntax (see
+<code><a href="parse_annotation.html">parse_annotation()</a></code>). Attached to each returned table as a <code>tlg_title</code>
+attribute.</p></dd>
+
+
+<dt id="arg-subtitle">subtitle<a class="anchor" aria-label="anchor" href="#arg-subtitle"></a></dt>
+<dd><p>Per-table subtitle. <code>NULL</code> (default) names each <code>list_vars</code>
+split variable and its value.</p></dd>
+
+
+<dt id="arg-footnote">footnote<a class="anchor" aria-label="anchor" href="#arg-footnote"></a></dt>
+<dd><p>Table footnote, attached as a <code>tlg_footnote</code> attribute.</p></dd>
 
 </dl></div>
     <div class="section level2">

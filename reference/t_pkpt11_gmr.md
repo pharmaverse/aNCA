@@ -13,7 +13,10 @@ t_pkpt11_gmr(
   list_vars = c("PPCAT"),
   strat_var = "TRT01A",
   param_var = "PARAM",
-  value_var = "AVAL"
+  value_var = "AVAL",
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 ```
 
@@ -54,6 +57,21 @@ t_pkpt11_gmr(
 - value_var:
 
   Column containing the numeric analysis value. Default: `"AVAL"`.
+
+- title:
+
+  Table title. Supports `$VAR` / `!VAR` annotation syntax (see
+  [`parse_annotation()`](https://pharmaverse.github.io/aNCA/reference/parse_annotation.md)).
+  Attached to each returned table as a `tlg_title` attribute.
+
+- subtitle:
+
+  Per-table subtitle. `NULL` (default) names each `list_vars` split
+  variable and its value.
+
+- footnote:
+
+  Table footnote, attached as a `tlg_footnote` attribute.
 
 ## Value
 

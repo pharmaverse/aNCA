@@ -14,7 +14,10 @@ t_pkpt03_col(
   value_var = "AVAL",
   param_filter = NULL,
   col_group_var = NULL,
-  stats = NULL
+  stats = NULL,
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 
 t_pkpt03_MP_col(data, ...)
@@ -67,6 +70,21 @@ t_pkpt03_MP_col(data, ...)
   `NULL` (default) shows all of them. Names not produced by this table
   are ignored.
 
+- title:
+
+  Table title. Supports `$VAR` / `!VAR` annotation syntax (see
+  [`parse_annotation()`](https://pharmaverse.github.io/aNCA/reference/parse_annotation.md)).
+  Attached to each returned table as a `tlg_title` attribute.
+
+- subtitle:
+
+  Per-table subtitle. `NULL` (default) names each `list_vars` split
+  variable and its value.
+
+- footnote:
+
+  Table footnote, attached as a `tlg_footnote` attribute.
+
 - ...:
 
   Additional arguments forwarded to `t_pkpt03_col()`.
@@ -78,7 +96,8 @@ data frame has one column per `strat_var` followed by the statistics:
 `n`, `Mean`, `SD`, `CV_pct`, `GeoMean`, `GeoCV_pct`, `Median`, `Min`,
 `Max`. When `col_group_var` is set, the statistic columns are prefixed
 per group level and a `col_groups` attribute drives the rendered
-two-level header.
+two-level header. `tlg_title` / `tlg_subtitle` / `tlg_footnote`
+attributes carry the resolved label text.
 
 ## Functions
 

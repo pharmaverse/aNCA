@@ -67,7 +67,10 @@ p_pkpg02_doseprop(
 
 - subtitle:
 
-  Optional plot subtitle.
+  Optional plot subtitle string. When `NULL`, generated from each plot's
+  analyte, specimen, visit (when available), and parameter/unit pairs.
+  Use `""` to suppress the subtitle. Supports the same annotation tokens
+  as `title`.
 
 - footnote:
 
