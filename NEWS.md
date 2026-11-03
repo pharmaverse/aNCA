@@ -22,7 +22,7 @@
 ## Ratios & units
 
 * **Ratios:** Use formula-style cards for bioavailability and interval ratios, with additional grouping variables, corrected reference averaging, and working result and summary selectors (#868, #1135, #1198, #1250, #1260, #1273, #1297).
-* **Units:** Search units by parameter, accept missing or unrecognized units, and preserve custom and simplified units across settings, results, and generated scripts (#861, #870, #907, #1027, #1159, #1190, #1216, #1531).
+* **Units:** Search units by parameter, edit custom units in the Parameter Units table with automatically recalculated conversion factors, accept missing or unrecognized units, and preserve custom and simplified units across settings, results, and generated scripts (#861, #870, #907, #1027, #1159, #1190, #1216, #1531, #1539).
 
 ## Exploration & plots
 
