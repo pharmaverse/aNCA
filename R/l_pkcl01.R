@@ -101,10 +101,10 @@ l_pkcl01 <- function(
 
   # If the title was not user defined use the listgroup_vars argument to do it
   if (is.null(subtitle)) {
-    subtitle <- paste(paste0("!", listgroup_vars),
-                      paste0("$", listgroup_vars),
-                      sep = ": ",
-                      collapse = "\n")
+    subtitle <- if (!length(listgroup_vars)) "" else paste(
+      paste0("!", listgroup_vars), paste0("$", listgroup_vars),
+      sep = ": ", collapse = "\n"
+    )
   }
 
   # A sidebar table option with no rows configured arrives as an empty data frame rather than
@@ -187,7 +187,7 @@ l_pkcl01 <- function(
   data_grouped <- data %>%
     mutate(across(all_of(listgroup_vars), as.character)) %>%
     rowwise() %>%
-    dplyr::mutate(id_list = interaction(!!!syms(listgroup_vars))) %>%
+    dplyr::mutate(id_list = .tlg_group_ids(!!!syms(listgroup_vars))) %>%
 
     # Format number of digits
     mutate(across(

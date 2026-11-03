@@ -126,23 +126,73 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
 #' @param reset_trigger a reactive expression on which the module will restore its returned value
 #'                      to the default one.
 #' @param grouping_vars Reactive grouping variables for the `.pknca_groups` default.
+#' @param value_override Reactive selection restored from settings.
+#' @param choices_from Reactive source column for a dependent filter selector.
 #' @returns a reactive with the input value
 tlg_option_select_server <- function(id, opt_def, data, reset_trigger,
-                                     grouping_vars = reactive(character())) {
+                                     grouping_vars = reactive(character()),
+                                     value_override = reactive(NULL),
+                                     choices_from = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
-    #' Reset the input to default value upon reset_trigger
-    observeEvent(reset_trigger(), {
-      config <- .tlg_select_config(opt_def, data, grouping_vars)
-      updatePickerInput(session, "select", selected = config$selected)
+    config <- reactive({
+      definition <- .tlg_select_definition(opt_def, choices_from())
+      tryCatch(.tlg_select_config(definition, data, grouping_vars),
+               shiny.silent.error = function(e) NULL)
     })
+    value <- reactiveVal(NULL)
+    selected <- function(candidate, warn = FALSE) {
+      .tlg_select_value(candidate, config(), opt_def$multiple, id, warn)
+    }
+    observeEvent(input$select, {
+      if (!"select" %in% names(input)) return()
+      value(selected(input$select))
+    }, ignoreNULL = FALSE)
+    observeEvent(value_override(), {
+      restored <- value_override()
+      if (is.null(config()) && is.null(restored)) {
+        value(NULL)
+      } else {
+        value(selected(if (is.null(restored)) config()$selected else restored,
+                       warn = !is.null(restored)))
+        updatePickerInput(session, "select", selected = value())
+      }
+    }, ignoreNULL = FALSE, priority = if (is.null(opt_def$choices_from)) 100 else 90)
+    observeEvent(config()$choices, {
+      req(config())
+      value(selected(if (is.null(value())) config()$selected else value(),
+                     warn = !is.null(value())))
+      updatePickerInput(session, "select", choices = config()$choices, selected = value())
+    })
+    observeEvent(reset_trigger(), {
+      value(if (is.null(config())) NULL else selected(config()$selected))
+      updatePickerInput(session, "select", selected = value())
+    }, ignoreInit = TRUE)
 
     reactive({
-      # A `multiple` pickerInput with nothing selected returns NULL (a single
-      # select returns ""). Coerce NULL to "" so an unset optional widget flows
-      # through the option filter as "use the function default" rather than
-      # tripping the is-null guard in tlg_module_server that halts the whole
-      # render (which blanked every table carrying an empty multi-select).
-      input$select %||% ""
+      if (is.null(config()) && is.null(value())) return(NULL)
+      if (is.null(value())) selected(config()$selected) else value()
     })
   })
+}
+
+#' Keep valid selections without confusing an explicit clear with an absent input.
+#' @noRd
+.tlg_select_value <- function(candidate, config, multiple, id, warn = FALSE) {
+  candidate <- as.character(candidate)
+  if (is.null(config)) return(candidate)
+  available <- as.character(config$choices)
+  missing <- setdiff(candidate, c("", available))
+  if (warn && length(missing)) {
+    showNotification(paste0("Skipped unavailable TLG selections for ", id, ": ",
+                            paste(missing, collapse = ", ")), type = "warning")
+  }
+  kept <- intersect(candidate, available)
+  if (!isTRUE(multiple) && !length(kept)) "" else kept
+}
+
+#' Resolve the source column for a dependent selector.
+#' @noRd
+.tlg_select_definition <- function(definition, column) {
+  if (length(column) == 1L && nzchar(column)) definition$choices <- paste0("$", column)
+  definition
 }

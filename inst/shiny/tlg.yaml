@@ -606,6 +606,7 @@ l_pkcl01:
     displaying_vars:
       label: "Displayed variables"
       type: select
+      empty_uses_default: true
       choices: .colnames
       multiple: true
       default: ["NFRLT", "AFRLT", "AVALC"]
@@ -768,6 +769,7 @@ l_pkcl02_uri:
     displaying_vars:
       label: "Displayed variables"
       type: select
+      empty_uses_default: true
       choices: .colnames
       multiple: true
     .help_columns: "Choose data columns to display alongside the listing grouping variables. Clear the selection to show the default time, concentration, and available volume columns."

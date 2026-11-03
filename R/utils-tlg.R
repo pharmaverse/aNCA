@@ -575,3 +575,11 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
   attr(df, "tlg_footnote") <- .tlg_label(data, footnote)
   df
 }
+
+#' Build split identifiers, with one combined group for an explicit empty selection.
+#' @param ... Grouping vectors supplied by the rendering function.
+#' @returns A factor of interaction keys, or the recyclable single level `all`.
+#' @noRd
+.tlg_group_ids <- function(...) {
+  if (length(list(...))) interaction(...) else factor("all")
+}
