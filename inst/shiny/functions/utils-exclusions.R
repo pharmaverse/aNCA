@@ -101,6 +101,12 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
     exclusion_list(append(current, list_new_reason))
     updateTextInput(session, "exclusion_reason", value = "")
     updateReactable(table_id, selected = NA)
+
+    type_label <- .exclusion_type_label(nca_checked, tlg_checked)
+    log_info(
+      "Exclusion added: ", length(rows_sel), " rows, type=", type_label,
+      ", reason='", reason, "'"
+    )
   }
 }
 
@@ -221,7 +227,8 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
 #' @param registered_ids reactiveVal holding character vector of registered IDs.
 #' @param input Shiny input object.
 #' @noRd
-.register_remove_observers <- function(exclusion_list, registered_ids, input) {
+.register_remove_observers <- function(exclusion_list, registered_ids, input,
+                                       on_remove = NULL) {
   lst <- exclusion_list()
   already <- registered_ids()
   new_ids <- setdiff(
@@ -233,6 +240,10 @@ EXCL_COLOR_PARAM <- "#FFF3CD"  # yellow — parameter exclusion
       local_id <- xbtn_id
       observeEvent(input[[local_id]], {
         current <- exclusion_list()
+        removed <- Filter(function(x) x$xbtn_id == local_id, current)
+        if (is.function(on_remove) && length(removed) > 0) {
+          on_remove(removed[[1]])
+        }
         exclusion_list(Filter(function(x) x$xbtn_id != local_id, current))
       }, ignoreInit = TRUE, once = TRUE)
     })
