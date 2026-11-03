@@ -21,7 +21,8 @@ p_pkpg06_mp(
 \item{list_vars}{Columns to split plots by. Defaults to the derived \code{RATIO}
 label and \code{PPSPEC}; varying profile identifiers are retained as well.}
 
-\item{title}{Optional plot title string.}
+\item{title}{Optional plot title. Supports \verb{$COLUMN} value tokens and
+\code{!COLUMN} column-label tokens, resolved within each plot's data split.}
 
 \item{subtitle}{Optional plot subtitle; defaults to the analyte pair and profile identifiers.}
 

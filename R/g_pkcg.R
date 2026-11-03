@@ -834,6 +834,9 @@ p_pkcg03_sbs_dose <- function(data, ...) {
 #'   )
 #' }
 
+#' @details For logarithmic views, displayed means and error-bar endpoints below
+#'   0.001 are truncated at 0.001 and explained in the footnote. Calculated
+#'   statistics and the linear panel of side-by-side plots are unchanged.
 #' @export
 #' @author Kezia Kobana
 
@@ -970,19 +973,45 @@ pkcg03 <- function(
         parse_annotation(plot_data, footnote)
       }
     }
-    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
-
-
     df_stats <- compute_summary_stats(
       plot_data, xvar, yvar, mean_group_var, interval_value, mid_value
     )
+    # Separate display coordinates from the calculated statistics. Only log-view
+    # coordinates use the existing 0.001 plotting floor, including error-bar bounds.
+    df_stats$.plot_mid <- df_stats[[mid_value]]
+    df_stats$.plot_lower <- df_stats[[whiskers_value[1]]]
+    df_stats$.plot_upper <- df_stats[[whiskers_value[2]]]
+    if (scale == "SBS") {
+      req_sbs_pkgs()
+      df_stats <- bind_rows(
+        mutate(df_stats, view = "Linear view"),
+        mutate(df_stats, view = "Semilogarithmic view (Log10)")
+      )
+    }
+    log_rows <- if (scale == "SBS") {
+      df_stats$view == "Semilogarithmic view (Log10)"
+    } else {
+      rep(scale == "LOG", nrow(df_stats))
+    }
+    display_cols <- c(".plot_mid", ".plot_lower", ".plot_upper")
+    if (any(as.matrix(df_stats[log_rows, display_cols]) < 1e-3, na.rm = TRUE)) {
+      footnote <- paste(
+        c(footnote[nzchar(footnote)],
+          "Log view: values and error bars below 0.001 are truncated at 0.001."),
+        collapse = "<br>"
+      )
+    }
+    df_stats[log_rows, display_cols] <- lapply(
+      df_stats[log_rows, display_cols], pmax, 1e-3
+    )
+    footnote_y <- 0.1 + (0.05 * length(unlist(strsplit(footnote, "\n|<br>"))))
     strata_n <- paste0(mean_group_var, "_N")
 
     plot <- ggplot2::ggplot(
       data = df_stats,
       mapping = aes(
         x = .data[[xvar]],
-        y = .data[[mid_value]],
+        y = .data[[".plot_mid"]],
         color = .data[[strata_n]],
         shape = .data[[strata_n]],
         group = .data[[strata_n]]
@@ -992,8 +1021,8 @@ pkcg03 <- function(
       geom_line(na.rm = TRUE) +
       geom_errorbar(
         aes(
-          ymin = .data[[whiskers_value[1]]],
-          ymax = .data[[whiskers_value[max(1, length(whiskers_value))]]]
+          ymin = .data[[".plot_lower"]],
+          ymax = .data[[".plot_upper"]]
         ),
         width = 0.45,
         na.rm = TRUE
@@ -1021,14 +1050,7 @@ pkcg03 <- function(
       ) +
       coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax))
 
-    aval_stat <- mid_value
     if (scale == "LOG") {
-
-      plot$data[[aval_stat]] <- ifelse(
-        plot$data[[aval_stat]] < 1e-3,
-        yes = 1e-3, no = plot$data[[aval_stat]]
-      )
-
       if (!plotly) {
         suppressMessages(
           plot <- plot +
@@ -1041,21 +1063,6 @@ pkcg03 <- function(
     }
 
     if (scale == "SBS") {
-
-      req_sbs_pkgs()
-      # Create SBS version of data and plot
-      sbs_data  <- bind_rows(plot$data %>% dplyr::mutate(view = "Linear view"),
-                             plot$data %>%
-                               dplyr::mutate(view = "Semilogarithmic view (Log10)")) %>%
-
-        dplyr::mutate(
-          !!sym(aval_stat) := ifelse(
-            !!sym(aval_stat) < 1e-3 & view == "Semilogarithmic view (Log10)",
-            yes = 1e-3, no = !!sym(aval_stat)
-          )
-        )
-
-      plot$data <- sbs_data
 
       plot <- plot +
         facet_wrap(~ view, scales = "free_y") +
@@ -1076,7 +1083,7 @@ pkcg03 <- function(
         plot <- plot +
           geom_line(
             aes(
-              y = !!sym(mid_value),
+              y = .data[[".plot_mid"]],
               group = !!sym(mean_group_var)
             )
           )

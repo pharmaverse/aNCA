@@ -298,8 +298,8 @@ describe("resolve_whiskers (via pkcg03)", {
     )[[1]]
     layer_eb <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
     expect_false(is.null(layer_eb))
-    expect_equal(rlang::as_label(layer_eb$mapping$ymin), "mean_sdi_lwr")
-    expect_equal(rlang::as_label(layer_eb$mapping$ymax), "mean_sdi_upr")
+    expect_equal(rlang::eval_tidy(layer_eb$mapping$ymin, p$data), p$data$mean_sdi_lwr)
+    expect_equal(rlang::eval_tidy(layer_eb$mapping$ymax, p$data), p$data$mean_sdi_upr)
   })
 
   it("pkcg03 with 'Upper' whisker uses mean as lower bound", {
@@ -310,8 +310,8 @@ describe("resolve_whiskers (via pkcg03)", {
       plotly           = FALSE
     )[[1]]
     layer_eb <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    expect_equal(rlang::as_label(layer_eb$mapping$ymin), "mean")
-    expect_equal(rlang::as_label(layer_eb$mapping$ymax), "mean_sdi_upr")
+    expect_equal(rlang::eval_tidy(layer_eb$mapping$ymin, p$data), p$data$mean)
+    expect_equal(rlang::eval_tidy(layer_eb$mapping$ymax, p$data), p$data$mean_sdi_upr)
   })
 
   it("pkcg03 with 'Lower' whisker uses mean as upper bound", {
@@ -322,8 +322,8 @@ describe("resolve_whiskers (via pkcg03)", {
       plotly           = FALSE
     )[[1]]
     layer_eb <- Find(function(l) inherits(l$geom, "GeomErrorbar"), p$layers)
-    expect_equal(rlang::as_label(layer_eb$mapping$ymin), "mean_sdi_lwr")
-    expect_equal(rlang::as_label(layer_eb$mapping$ymax), "mean")
+    expect_equal(rlang::eval_tidy(layer_eb$mapping$ymin, p$data), p$data$mean_sdi_lwr)
+    expect_equal(rlang::eval_tidy(layer_eb$mapping$ymax, p$data), p$data$mean)
   })
 })
 
