@@ -4,7 +4,7 @@
 
 * **Data upload:** Combine multiple files, see accepted formats and size limits, and receive clearer upload and mapping errors (#821, #1365, #1367).
 * **Data mapping:** Map excretion times and body-weight units, enter dose duration and treatment intervals directly, and continue after mapping errors or duplicate-row cancellation without stuck loading indicators (#745, #959, #1051, #1402, #1420).
-* **Saved sessions:** Save versioned YAML settings and restore mappings, filters, exclusions, ratios, units, and previous NCA runs from YAML or ZIP, including reusable templates and startup settings (#514, #832, #860, #901, #993, #1082, #1091, #1103, #1104, #1195, #1225).
+* **Saved sessions:** Save versioned YAML settings and restore mappings, filters, exclusions, ratios, units, and previous NCA runs from YAML or ZIP, including reusable templates, startup settings, and version selection in installed packages (#514, #832, #860, #901, #993, #1082, #1091, #1103, #1104, #1195, #1225, #1476).
 * **Settings stability:** Preserve parameter and summary selections during setup changes, apply filters consistently, and ignore invalid partial intervals in uploaded settings (#840, #1008, #1060, #1092, #1347).
 
 ## NCA calculations & results
@@ -29,20 +29,21 @@
 * **Exploration:** Compare original and dose-normalized profiles, customize axes and legends, and use shared facet scales with automatic conversion of compatible units (#712, #817, #818, #894, #984, #986, #988, #1424).
 * **Reusable plots:** Save named plot snapshots to ZIP, browse saved plots, and copy R code that reproduces the current exploration plot (#794, #1002, #1137, #1327).
 * **Plot display:** Fixed overlapping axis labels, ignored ticks and zero limits, blank panels, incorrect grouping labels, missing titles, and box/violin rendering (#786, #890, #1336, #1356, #1441).
-* **Mean profiles:** Corrected subject-based BLQ filtering and one-sided whiskers, and restored combined concentration plots that overlay subjects by default (#555, #1316, #1356).
+* **Mean profiles:** Corrected subject-based BLQ filtering and one-sided whiskers, restored combined concentration plots that overlay subjects by default, and explicitly truncate log-scale values and error bars at the plotting floor without changing statistics (#555, #1316, #1356, #1476).
 
 ## Tables, listings & graphs
 
+* **TLG labels:** Customize titles, subtitles, and footnotes for all 33 catalog entries, retain edits when submitting the order again or restoring settings, and preserve readable labels in interactive and exported outputs (#1476).
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
 * **Table customization:** Choose grouping, covariate comparisons, statistics, parameters, timepoints, and listing columns, with readable group headers and warnings for unavailable grouping variables (#1343, #1356, #1531).
-* **Urine outputs:** Restrict urine tables and listings to urine specimens and report missing specimen information (#1335, #1343, #1356, #1531).
+* **Urine outputs:** Restrict urine tables and listings to urine specimens report missing specimen information, and distinguish absent urine parameters from records removed by filters or exclusions (#1335, #1343, #1356, #1476, #1531).
 
 ## Exports & CDISC
 
-* **ZIP exports:** Export results, settings, plots, and TLGs using current selections, with PDF/HTML/PNG graphs, XLSX/CSV/PDF tables, study-based filenames, and a manifest of output statuses (#638, #1000, #1136, #1344, #1428).
+* **ZIP exports:** Export results, settings, plots, and TLGs using current selections, with PDF/HTML/PNG graphs, XLSX/CSV/PDF tables, study-based filenames, a manifest of output statuses, and working validation in installed packages (#638, #1000, #1136, #1344, #1428, #1476).
 * **Slides:** Customize slide sections and grouping, include dose-normalized summaries, and add a PK parameter glossary (#791, #972, #1054, #1326).
-* **Reproducible scripts:** Export R scripts that use saved mappings, filters, ratios, units, and BLQ rules to reproduce app results (#789, #1189, #1445).
+* **Reproducible scripts:** Export R scripts that use saved mappings, filters, ratios, units, and BLQ rules to reproduce app results, honor the requested dataset path or bundled ZIP input, and run without configured ratios (#789, #1189, #1445, #1476).
 * **Export validation:** Validate selected non-TLG exports and CDISC field types and lengths before saving, report custom-field validation limits, and block exports on validation or XPT-writing failures (#1452).
 * **CDISC metadata:** Include pre-specifications, session information, custom grouping variables, dose reference, route, and exclusion flags in exported datasets (#829, #998, #1077, #1141, #1276).
 * **CDISC corrections:** Report acceptance criteria with satisfied flags as `Y` and violations as blank, identify dose-aware methods through `PPANMETH`, and correct CORRXY and TMAX labels (#481, #787, #1102, #1242, #1332).

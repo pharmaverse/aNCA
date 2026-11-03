@@ -86,6 +86,11 @@ A list of ggplot objects for each unique group.
 \description{
 This function generates a list of ggplots for Mean PK concentration-time profiles.
 }
+\details{
+For logarithmic views, displayed means and error-bar endpoints below
+0.001 are truncated at 0.001 and explained in the footnote. Calculated
+statistics and the linear panel of side-by-side plots are unchanged.
+}
 \examples{
 \dontrun{
   adnca <- adnca_example

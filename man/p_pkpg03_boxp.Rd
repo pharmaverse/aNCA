@@ -37,11 +37,14 @@ Default: \code{c("PPCAT", "PPSPEC")}.}
 \item{all_points}{Logical. When \code{TRUE}, individual data points are overlaid
 on the boxes (pkpg04 style). Default: \code{FALSE}.}
 
-\item{title}{Optional plot title string.}
+\item{title}{Optional plot title. Supports \verb{$COLUMN} value tokens and
+\code{!COLUMN} column-label tokens, resolved within each plot's data split.}
 
-\item{subtitle}{Optional plot subtitle string.}
+\item{subtitle}{Optional plot subtitle string. When \code{NULL}, generated from
+each plot's analyte, specimen, visit (when available), and parameter/unit pairs.
+Use \code{""} to suppress the subtitle. Supports the same annotation tokens as \code{title}.}
 
-\item{footnote}{Optional footnote string.}
+\item{footnote}{Optional footnote string. Supports the same annotation tokens as \code{title}.}
 
 \item{ylab}{Y-axis label. Defaults to the label attribute of \code{value_var}.}
 
