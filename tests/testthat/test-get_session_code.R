@@ -186,6 +186,41 @@ describe("get_settings_code: ", {
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   placeholder <- "settings_list"
 
+  it("reads the requested dataset path instead of a hardcoded relative location", {
+    script_file <- withr::local_tempfile(fileext = ".R")
+    get_settings_code(test_path("data/test-settings.yaml"), data_file, script_file)
+    code <- readLines(script_file)
+    env <- new.env(parent = environment())
+    eval(parse(text = grep("^(data_path|adnca_data) <-", code, value = TRUE)), env)
+    expect_identical(env$data_path, data_file)
+    expect_equal(env$adnca_data, read_pk(data_file))
+  })
+
+  it("runs the ratio step when an exported settings file contains no ratio rows", {
+    settings <- read_settings(test_path("data/test-settings.yaml"))
+    settings$settings$ratio_table <- data.frame(TestParameter = character())
+    settings$tlg_order <- list(t_pkct01 = list(Selection = FALSE, Comment = "Saved order"))
+    settings_file <- withr::local_tempfile(fileext = ".yaml")
+    script_file <- withr::local_tempfile(fileext = ".R")
+    yaml::write_yaml(settings, settings_file)
+    expect_null(read_settings(settings_file)$settings$ratio_table)
+    get_settings_code(settings_file, data_file, output_path = script_file)
+
+    # Execute the generated assignment and its downstream calculation, rather
+    # than only checking that placeholders disappeared from the script.
+    code <- parse(script_file)
+    ratio_assignment <- Filter(function(expr) {
+      is.call(expr) && identical(expr[[1]], as.name("<-")) &&
+        identical(expr[[2]], as.name("ratio_table"))
+    }, as.list(code))
+    env <- new.env(parent = environment())
+    eval(ratio_assignment[[1]], envir = env)
+    expect_identical(nrow(env$ratio_table), 0L)
+    result <- calculate_table_ratios(FIXTURE_PKNCA_RES, env$ratio_table)
+    expect_equal(result$result$PPORRES, FIXTURE_PKNCA_RES$result$PPORRES)
+    expect_equal(nrow(result$result), nrow(FIXTURE_PKNCA_RES$result))
+  })
+
   describe("with legacy settings (no mapping in YAML)", {
     setts_file <- testthat::test_path("data/test-settings.yaml")
     output_file <- tempfile(fileext = ".R")
@@ -277,6 +312,19 @@ describe("get_session_code: ", {
   data_file <- testthat::test_path("data/test-multispec-ADNCA.csv")
   output_file <- tempfile(fileext = ".R")
   placeholder <- "settings_list"
+
+  it("reads the input dataset beside the ZIP session script", {
+    export_dir <- withr::local_tempdir()
+    saveRDS(data.frame(USUBJID = "S1", AVAL = 3.597), file.path(export_dir, "input_data.rds"))
+    script <- file.path(export_dir, "session_code.R")
+    get_session_code(list(userData = list()), script)
+    code <- readLines(script)
+    withr::local_dir(export_dir)
+    env <- new.env(parent = environment())
+    eval(parse(text = grep("^(data_path|adnca_data) <-", code, value = TRUE)), env)
+    expect_identical(env$data_path, "input_data.rds")
+    expect_equal(env$adnca_data$AVAL, 3.597)
+  })
 
   default_mapping <- list(
     select_STUDYID = "STUDYID",

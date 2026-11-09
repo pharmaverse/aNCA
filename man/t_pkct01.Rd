@@ -16,7 +16,10 @@ t_pkct01(
   time_var = "NFRLT",
   time_filter = NULL,
   col_group_var = NULL,
-  stats = NULL
+  stats = NULL,
+  title = NULL,
+  subtitle = NULL,
+  footnote = NULL
 )
 
 t_pkct01_dose(data, strat_var = c("DOSEA", "ATPTREF", "NFRLT"), ...)
@@ -63,6 +66,16 @@ statistic block is repeated once per level, nested under a group header.
 
 \item{stats}{Optional character vector of statistics to display, chosen from
 \code{c("n", "n_blq", "Mean", "SD", "CV_pct", "Median", "GeoMean", "GeoCV_pct", "Min", "Max")}. \code{NULL} (default) shows all of them.}
+
+\item{title}{Table title. Supports \verb{$VAR} / \code{!VAR} annotation syntax (see
+\code{\link[=parse_annotation]{parse_annotation()}}). Attached to each returned table as a \code{tlg_title}
+attribute.}
+
+\item{subtitle}{Per-table subtitle. \code{NULL} (default) names each \code{list_vars}
+split variable and its value, so a table split by analyte and specimen says
+which combination it covers.}
+
+\item{footnote}{Table footnote, attached as a \code{tlg_footnote} attribute.}
 
 \item{...}{Additional arguments forwarded to \code{\link[=t_pkct01]{t_pkct01()}}.}
 }
