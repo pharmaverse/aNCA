@@ -327,7 +327,7 @@ t_pkpt03_MP_col:
     title:
       type: text
       label: Title
-      default: "Summary of Analyte Ratios by Treatment Arm, PK Population"
+      default: "Summary of Metabolite to Parent Ratios by Treatment Arm, PK Population."
     subtitle:
       type: text
       label: Subtitle
