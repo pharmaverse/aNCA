@@ -61,11 +61,17 @@ in the ARD identify the source result row. This is not a CDISC submission ARD.
 \description{
 Adapts \code{\link[=t_pkpt03_col]{t_pkpt03_col()}} results to a \code{cards} ARD and a \code{gtsummary} wide
 summary. Statistics, rounding and summary exclusions use the existing aNCA
-implementation. Units are retained as row keys. Parameters with several
-intervals per subject (\code{PPSTINT}/\code{PPENINT}, e.g. partial AUC windows) are
-summarized per interval, with the interval appended to \code{PARAM}; one interval
-per subject (e.g. urine collections) pools as before. Conflicting duplicate
+implementation. Units are retained as row keys. Intervals supplied in
+\code{PPSTINT}/\code{PPENINT} (e.g. partial AUC windows) are appended to \code{PARAM} after
+summary exclusions, even when each subject has only one window. Known urine
+parameters with one collection interval per subject pool as before, using
+the first value per row that is not missing or blank, checking \code{PARAMCD},
+\code{PPTESTCD}, then the parameter name against aNCA metadata. Excluded rows do
+not affect grouping.
+Unknown parameters with interval bounds remain separated. Conflicting duplicate
 values are rejected rather than silently selecting one measurement.
 Presentation preserves the existing decimal precision independently of the
-session's \code{digits} option.
+session's \code{digits} option. Row keys use compact default headers and left
+alignment. Repeated parent strata are suppressed in the display; parameter
+names, units and the complete numeric export keys remain visible.
 }

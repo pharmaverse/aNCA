@@ -32,6 +32,40 @@ describe("NEST dependency and metadata boundary", {
                      rep("Amt Rec", 3))
   })
 
+  it("uses stable parameter metadata rather than observed window multiplicity", {
+    d <- nest_interval_fixture()
+    d <- d[d$PARAM == "AUC" & d$PPENINT == "PT2H", ]
+    for (id_var in c("PARAMCD", "PPTESTCD")) {
+      input <- d
+      names(input)[names(input) == "PARAMCD"] <- id_var
+      input$PARAM <- "Custom exposure label"
+      out <- .nest_interval_param(input, "PARAM", "USUBJID")
+      expect_identical(out$PARAM, rep("Custom exposure label (PT0H-PT2H)", 3))
+    }
+    # Missing codes and unrecognized labels must not silently pool interval bounds.
+    d$PARAMCD <- NULL
+    expect_identical(.nest_interval_param(d, "PARAM", "USUBJID")$PARAM,
+                     rep("AUC (PT0H-PT2H)", 3))
+    urine <- nest_urine_fixture()
+    urine$PARAM <- "Amt Rec from T1 to T2"
+    for (codes in list(NULL, rep(NA_character_, 3), rep("", 3))) {
+      urine$PARAMCD <- codes
+      expect_identical(.nest_interval_param(urine, "PARAM", "USUBJID")$PARAM,
+                       urine$PARAM)
+    }
+  })
+
+  it("falls back per row without overriding a nonblank preferred code", {
+    d <- nest_urine_fixture()
+    d$PARAM <- "Custom parameter"
+    d$PARAMCD <- c("RCAMINT", NA_character_, "AUCINT")
+    d$PPTESTCD <- c("AUCINT", "RCAMINT", "RCAMINT")
+    out <- .nest_interval_param(d, "PARAM", "USUBJID")
+    expect_identical(out$PARAM, c("Custom parameter", "Custom parameter",
+                                  "Custom parameter (PT0H-PT24H)"))
+    expect_identical(d$PARAM, rep("Custom parameter", 3))
+  })
+
   it("keeps annotation line breaks and escapes markup for gt", {
     skip_if_not_installed("gt")
     expect_identical(as.character(.nest_html_lines("a<b & c\nd")), "a&lt;b &amp; c<br>d")

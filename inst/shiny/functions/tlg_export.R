@@ -655,7 +655,10 @@ write_tlg_exports <- function(entries,
 .tlg_pdf_frame <- function(x) {
   if (!inherits(x, "gtsummary")) return(.prepare_export_frame(x))
   frame <- as.data.frame(gtsummary::as_tibble(x, col_labels = TRUE))
-  names(frame) <- names(.prepare_export_frame(x))
+  headers <- names(.prepare_export_frame(x))
+  keys <- seq_len(attr(x, "tlg_key_count") %||% 0L)
+  headers[keys] <- names(frame)[keys]
+  names(frame) <- headers
   wrap <- function(text) {
     vapply(text, function(s) {
       if (is.na(s)) "" else paste(strwrap(s, width = 24), collapse = "\n")

@@ -3,14 +3,18 @@
 #' Uses the same data preparation, rounding and annotation parser as
 #' [l_pkpl01()], with `crane::tbl_listing()` for presentation. Displayed values
 #' keep the existing three-decimal rounding regardless of the session's `digits`
-#' option. Parameters with several intervals per subject (`PPSTINT`/`PPENINT`,
-#' e.g. partial AUC windows) are listed per interval, with the interval appended
-#' to the parameter name; one interval per subject (e.g. urine) keeps one column.
+#' option. Intervals supplied in `PPSTINT`/`PPENINT` (e.g. partial AUC windows)
+#' are appended to the parameter name even when each subject has only one window.
+#' Known urine parameters with one collection interval per subject keep one column,
+#' using the first value per row that is not missing or blank, checking `PARAMCD`,
+#' `PPTESTCD`, then the parameter name against aNCA metadata.
+#' Unknown parameters with interval bounds remain separated.
 #' A custom subtitle is followed by the split key so every listing identifies
 #' its split.
 #' Repeated keys are suppressed within their parent groups only. Excluded
 #' records remain in this individual listing. Conflicting values/units within a
 #' reporting key require more grouping variables and produce an explanatory error.
+#' Row keys are left aligned with compact default headers; custom labels are retained.
 #'
 #' @inheritParams l_pkpl01
 #' @param listgroup_vars Columns used to split listings. Defaults to analyte,
@@ -92,18 +96,12 @@ l_pkpl01_nest <- function(data, listgroup_vars = c("PPCAT", "PPSPEC", "ATPTREF")
   if (length(value_ids)) {
     table <- gtsummary::modify_fmt_fun(table, all_of(value_ids) ~ .nest_format_number)
   }
-  headers <- setNames(as.list(vapply(names(frame), function(v) .nest_label(frame, v),
+  headers <- setNames(as.list(vapply(names(frame), function(v) .nest_header_label(frame, v),
                                      character(1))), ids)
   table <- do.call(gtsummary::modify_header, c(list(x = table), headers))
-  original <- table$table_body
-  if (length(key_ids)) table <- crane::remove_duplicate_keys(table, keys = all_of(key_ids))
-  # crane suppresses each key independently; restore child keys at parent boundaries.
-  for (i in seq_along(key_ids)) {
-    prefix <- original[key_ids[seq_len(i)]]
-    same <- c(FALSE, vapply(seq_len(nrow(prefix) - 1L), function(j) {
-      identical(unname(as.list(prefix[j, ])), unname(as.list(prefix[j + 1L, ])))
-    }, logical(1)))
-    table$table_body[[key_ids[i]]][!same] <- as.character(original[[key_ids[i]]][!same])
+  if (length(key_ids)) {
+    table <- gtsummary::modify_column_alignment(table, columns = all_of(key_ids), align = "left")
+    table <- gtsummary::modify_table_body(table, .nest_suppress_keys, keys = key_ids)
   }
   attr(table, "tlg_key_count") <- length(key_cols)
   .nest_attach(table, frame, list(title = main_title %||% "", subtitle = subtitles %||% "",

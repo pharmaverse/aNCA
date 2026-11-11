@@ -72,6 +72,42 @@ describe("NEST catalog and Shiny integration", {
     )
   })
 
+  it("keeps partial-AUC windows visible through summary exclusions and listing selection", {
+    skip_if_not_installed("crane", "0.3.2")
+    d <- nest_interval_fixture()
+    retained <- (d$USUBJID == "1" & d$PPENINT %in% "PT2H") |
+      (d$USUBJID != "1" & d$PPENINT %in% "PT6H")
+    d$PPSUMXF[!retained] <- "Y"
+    opts <- .TLG_DEFINITIONS$t_pkpt03_nest$options[c("param_filter", "stats")]
+    shiny::testServer(tlg_module_server,
+      args = list(data = shiny::reactive(d), type = "table",
+                  render_list = t_pkpt03_nest, options = opts), {
+        session$setInputs(`param_filter-select` = "AUC", `stats-select` = c("n", "Mean"),
+                          entries_per_page = "All")
+        session$elapse(800)
+        frame <- attr(tlg_list()[[1]], "tlg_data")
+        expect_equal(as.numeric(frame$n), c(1, 2))
+        expect_equal(as.numeric(frame$Mean), c(3, 15))
+        expect_match(output$tlg_output$html, "AUC (PT0H-PT2H)", fixed = TRUE)
+        expect_match(output$tlg_output$html, "AUC (PT0H-PT6H)", fixed = TRUE)
+      }
+    )
+    opts <- .TLG_DEFINITIONS$l_pkpl01_nest$options[c("param_var", "param_filter")]
+    shiny::testServer(tlg_module_server,
+      args = list(data = shiny::reactive(d[retained, ]), type = "listing",
+                  render_list = l_pkpl01_nest, options = opts), {
+        session$setInputs(`param_var-select` = "PARAM", `param_filter-select` = "AUC",
+                          entries_per_page = "All")
+        session$elapse(800)
+        frame <- attr(tlg_list()[[1]], "tlg_data")
+        expect_equal(as.numeric(frame[["AUC (PT0H-PT2H)"]]), c(3, NA, NA))
+        expect_equal(as.numeric(frame[["AUC (PT0H-PT6H)"]]), c(NA, 12, 18))
+        expect_match(output$tlg_output$html, "AUC (PT0H-PT2H) (h*mg/L)", fixed = TRUE)
+        expect_match(output$tlg_output$html, "AUC (PT0H-PT6H) (h*mg/L)", fixed = TRUE)
+      }
+    )
+  })
+
   it("renders a no-data explanation when a selected listing split is entirely missing", {
     skip_if_not_installed("crane", "0.3.2")
     d <- nest_adpp_fixture()
@@ -177,7 +213,7 @@ describe("NEST exports", {
     tables <- lengths(regmatches(xml, gregexpr("<w:tbl[ >]", xml)))
     expect_gt(tables, 1)
     text <- officer::docx_summary(officer::read_docx(path))$text
-    expect_equal(sum(text == get_label("USUBJID", type = "ADPP")), tables)
+    expect_equal(sum(text == "Subject"), tables)
     expect_true(all(c("Parameter Category: DrugA", "Specimen Material Type: SERUM") %in% text))
   })
 
@@ -244,8 +280,10 @@ describe("NEST exports", {
     summary_csv <- list.files(file.path(dest, "Tables/csv"), recursive = TRUE, full.names = TRUE)
     summary_flat <- read.csv(summary_csv, check.names = FALSE)
     expect_equal(summary_flat$Mean[summary_flat$Parameter == "AUC"], 123456.790)
+    expect_equal(summary_flat[[get_label("TRT01A", type = "ADPP")]], c("A", "A"))
     summary_workbook <- readxl::read_xlsx(file.path(dest, "Tables/xlsx/pkpt03_nest.xlsx"))
     expect_equal(summary_workbook$Mean[summary_workbook$Parameter == "AUC"], 123456.790)
+    expect_equal(summary_workbook[[get_label("TRT01A", type = "ADPP")]], c("A", "A"))
     html <- paste(readLines(file.path(dest, "Tables/html/pkpt03_nest.html")), collapse = "\n")
     expect_match(html, "Study Drug", fixed = TRUE)
     expect_match(html, "Pilot methods", fixed = TRUE)
@@ -253,9 +291,11 @@ describe("NEST exports", {
     for (value in expected_values) expect_match(html, value, fixed = TRUE)
     pdf_frame <- .tlg_pdf_frame(tables[[1]])
     expect_identical(
-      unname(unlist(pdf_frame[pdf_frame$Parameter == "AUC", c("Mean", "Min", "Max")])),
+      unname(unlist(pdf_frame[pdf_frame[["PK Parameter"]] == "AUC", c("Mean", "Min", "Max")])),
       expected_values
     )
+    expect_equal(pdf_frame[["Treatment Group"]], c("A", ""))
+    expect_match(html, "Treatment Group", fixed = TRUE)
     listing_html <- paste(readLines(file.path(dest, "Listings/html/pkpl01_nest.html")),
                           collapse = "\n")
     expect_match(listing_html, "Cmax (mg/L)", fixed = TRUE)
@@ -265,6 +305,7 @@ describe("NEST exports", {
     doc <- officer::read_docx(file.path(dest, "Tables/docx/pkpt03_nest.docx"))
     word <- officer::docx_summary(doc)
     expect_true(all(c("Study Drug", "Pilot methods", "2.333") %in% word$text))
+    expect_true(all(c("Treatment Group", "PK Parameter", "Unit") %in% word$text))
     expect_true(all(expected_values %in% word$text))
     notes <- read.csv(file.path(dest, "Tables/annotations/pkpt03_nest.annotations.csv"))
     expect_equal(notes$footnote, "Pilot methods")

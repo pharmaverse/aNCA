@@ -55,8 +55,29 @@ describe("t_pkpt03_nest", {
 
     d$DOSEA <- c(2.5, 2.5, 10, 10, 10, 10)
     table <- t_pkpt03_nest(d, strat_var = c("DOSEA", "PARAM"), stats = "n")[[1]]
-    expect_identical(gtsummary::as_tibble(table, col_labels = FALSE)$key_1,
-                     c("2.5", "2.5", "10", "10"))
+    expect_identical(table$table_body$key_1, c("2.5", NA_character_, "10", NA_character_))
+    expect_equal(as.numeric(attr(table, "tlg_data")$DOSEA), c(2.5, 2.5, 10, 10))
+  })
+
+  it("groups parent labels only in the display and keeps every parameter and unit visible", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    d <- nest_adpp_fixture()
+    other <- d
+    other$TRT01A <- "B"
+    table <- t_pkpt03_nest(rbind(d, other), stats = c("n", "Mean"))[[1]]
+    expect_identical(table$table_body$key_1, c("A", NA_character_, "B", NA_character_))
+    expect_equal(as.vector(table$table_body$key_2), rep(c("AUC", "Cmax"), 2))
+    expect_equal(as.vector(table$table_body$key_3), rep(c("h*mg/L", "mg/L"), 2))
+    expect_equal(as.vector(attr(table, "tlg_data")$TRT01A), c("A", "A", "B", "B"))
+    expect_equal(as.numeric(attr(table, "tlg_data")$Mean), rep(c(6, 2.333), 2))
+    headers <- table$table_styling$header
+    keys <- headers[headers$column %in% c("key_1", "key_2", "key_3"), ]
+    expect_equal(keys$label, c("Treatment Group", "PK Parameter", "Unit"))
+    expect_true(all(keys$align == "left"))
+
+    # Parameter-first custom layouts keep their treatment values on every row.
+    custom <- t_pkpt03_nest(rbind(d, other), strat_var = c("PARAM", "TRT01A"))[[1]]
+    expect_equal(as.vector(custom$table_body$key_2), c("A", "B", "A", "B"))
   })
 
   it("summarizes each interval of an interval parameter separately", {
@@ -68,6 +89,30 @@ describe("t_pkpt03_nest", {
     expect_equal(as.numeric(frame$Mean), c(6, 12, 2.333))
   })
 
+  it("keeps complementary partial-AUC windows separate after missing records or exclusions", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    d <- nest_interval_fixture()
+    d <- d[d$PARAM == "AUC", ]
+    retained <- (d$USUBJID == "1" & d$PPENINT == "PT2H") |
+      (d$USUBJID != "1" & d$PPENINT == "PT6H")
+    d$PPSUMXF[!retained] <- "Y"
+    for (input in list(d, d[retained, ])) {
+      table <- t_pkpt03_nest(input, param_filter = "AUC", stats = c("n", "Mean", "SD"))[[1]]
+      frame <- attr(table, "tlg_data")
+      expect_equal(as.vector(frame$PARAM), c("AUC (PT0H-PT2H)", "AUC (PT0H-PT6H)"))
+      expect_equal(as.numeric(frame$n), c(1, 2))
+      expect_equal(as.numeric(frame$Mean), c(3, 15))
+      expect_equal(as.numeric(frame$SD), c(NA_real_, round(sd(c(12, 18)), 3)))
+      expect_equal(table$table_body$stat_2, c("3", "15"))
+    }
+    # All subjects retain the same window: its identity must still be explicit.
+    d$PPSUMXF <- ifelse(d$PPENINT == "PT6H", "Y", "")
+    frame <- attr(t_pkpt03_nest(d, stats = c("n", "Mean"))[[1]], "tlg_data")
+    expect_equal(as.vector(frame$PARAM), "AUC (PT0H-PT2H)")
+    expect_equal(as.numeric(frame$n), 3)
+    expect_equal(as.numeric(frame$Mean), 6)
+  })
+
   it("pools parameters with one interval per subject, matching the legacy table", {
     skip_if_not_installed("gtsummary", "2.6.1")
     urine <- nest_urine_fixture()
@@ -76,6 +121,36 @@ describe("t_pkpt03_nest", {
     expect_equal(as.numeric(frame$n), 3)
     expect_equal(frame, t_pkpt03_col(urine, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
                                      strat_var = c("TRT01A", "PARAM", "AVALU"))[[1]])
+  })
+
+  it("does not let excluded urine windows change eligible grouping or statistics", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    urine <- nest_urine_fixture()
+    extra <- urine[1, ]
+    extra$PPENINT <- "PT6H"
+    extra$AVAL <- 1
+    extra$PPSUMXF <- "Y"
+    expected <- attr(t_pkpt03_nest(urine, stats = c("n", "Mean", "SD"))[[1]], "tlg_data")
+    for (input in list(rbind(urine, extra), rbind(extra, urine))) {
+      frame <- attr(t_pkpt03_nest(input, stats = c("n", "Mean", "SD"))[[1]], "tlg_data")
+      expect_equal(frame, expected)
+      expect_equal(as.numeric(frame$n), 3)
+      expect_equal(as.numeric(frame$Mean), 6)
+      expect_equal(as.numeric(frame$SD), 3)
+    }
+  })
+
+  it("uses nonblank parameter codes per row to retain urine pooling", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    urine <- nest_urine_fixture()
+    urine$PARAM <- "Custom amount"
+    urine$PPTESTCD <- urine$PARAMCD
+    urine$PARAMCD <- c(NA_character_, "", " ")
+    frame <- attr(t_pkpt03_nest(urine, stats = c("n", "Mean", "SD"))[[1]], "tlg_data")
+    expect_equal(as.vector(frame$PARAM), "Custom amount")
+    expect_equal(as.numeric(frame$n), 3)
+    expect_equal(as.numeric(frame$Mean), 6)
+    expect_equal(as.numeric(frame$SD), 3)
   })
 
   it("uses split keys literally as default subtitles", {
@@ -127,5 +202,15 @@ describe("NEST summary labels", {
     attr(d$PPCAT, "label") <- "Analyte name"
     table <- t_pkpt03_nest(d, param_filter = "Cmax", title = "!PPCAT: $PPCAT")[[1]]
     expect_equal(attr(table, "tlg_annotations")$title, "Analyte name: Drug")
+  })
+
+  it("keeps custom row headers instead of replacing them with catalog defaults", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    d <- nest_adpp_fixture()
+    attr(d$TRT01A, "label") <- "Assigned regimen"
+    attr(d$PARAM, "label") <- "Endpoint"
+    table <- t_pkpt03_nest(d)[[1]]
+    expect_true(all(c("Assigned regimen", "Endpoint") %in% table$table_styling$header$label))
+    expect_equal(attr(attr(table, "tlg_data")$TRT01A, "label"), "Assigned regimen")
   })
 })

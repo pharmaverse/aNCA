@@ -14,6 +14,10 @@ describe("l_pkpl01_nest", {
     expect_true("Cmax (mg/L)" %in% table$table_styling$header$label)
     expect_equal(as.vector(table$table_body$col_1), c("A", NA, NA))
     expect_equal(as.vector(table$table_body$col_2), c("1", "2", "3"))
+    headers <- table$table_styling$header
+    keys <- headers[headers$column %in% c("col_1", "col_2"), ]
+    expect_equal(keys$label, c("Treatment Group", "Subject"))
+    expect_true(all(keys$align == "left"))
     selected <- l_pkpl01_nest(d, param_filter = "Cmax")[[1]]
     expect_named(attr(selected, "tlg_data"), c("TRT01A", "USUBJID", "Cmax"))
     expect_match(l_pkpl01_nest(d, param_filter = "absent")[[1]], "No data")
@@ -76,6 +80,39 @@ describe("l_pkpl01_nest", {
     urine <- attr(l_pkpl01_nest(nest_urine_fixture())[[1]], "tlg_data")
     expect_named(urine, c("TRT01A", "USUBJID", "Amt Rec"))
     expect_equal(as.numeric(urine[["Amt Rec"]]), c(3, 6, 9))
+  })
+
+  it("retains partial-AUC window columns when subjects have complementary records", {
+    skip_if_not_installed("crane", "0.3.2")
+    d <- nest_interval_fixture()
+    d <- d[d$PARAM == "AUC", ]
+    retained <- (d$USUBJID == "1" & d$PPENINT == "PT2H") |
+      (d$USUBJID != "1" & d$PPENINT == "PT6H")
+    d$PPSUMXF[!retained] <- "Y"
+    table <- l_pkpl01_nest(d[retained, ], param_filter = "AUC")[[1]]
+    frame <- attr(table, "tlg_data")
+    expect_named(frame, c("TRT01A", "USUBJID", "AUC (PT0H-PT2H)", "AUC (PT0H-PT6H)"))
+    expect_equal(as.numeric(frame[["AUC (PT0H-PT2H)"]]), c(3, NA, NA))
+    expect_equal(as.numeric(frame[["AUC (PT0H-PT6H)"]]), c(NA, 12, 18))
+    expect_true("AUC (PT0H-PT2H) (h*mg/L)" %in% table$table_styling$header$label)
+    expect_true("AUC (PT0H-PT6H) (h*mg/L)" %in% table$table_styling$header$label)
+    # Listings retain excluded records; window labels agree with the summary.
+    complete <- attr(l_pkpl01_nest(d, param_filter = "AUC")[[1]], "tlg_data")
+    expect_equal(as.numeric(complete[["AUC (PT0H-PT2H)"]]), c(3, 6, 9))
+    expect_equal(as.numeric(complete[["AUC (PT0H-PT6H)"]]), c(6, 12, 18))
+  })
+
+  it("uses nonblank parameter codes per row to keep one urine listing column", {
+    skip_if_not_installed("crane", "0.3.2")
+    urine <- nest_urine_fixture()
+    urine$PARAM <- "Custom amount"
+    urine$PPTESTCD <- urine$PARAMCD
+    urine$PARAMCD <- factor(c(NA_character_, "", " "))
+    table <- l_pkpl01_nest(urine)[[1]]
+    frame <- attr(table, "tlg_data")
+    expect_named(frame, c("TRT01A", "USUBJID", "Custom amount"))
+    expect_equal(as.numeric(frame[["Custom amount"]]), c(3, 6, 9))
+    expect_true("Custom amount (h*mg/L)" %in% table$table_styling$header$label)
   })
 
   it("follows a custom subtitle with the split key", {

@@ -2,13 +2,19 @@
 #'
 #' Adapts [t_pkpt03_col()] results to a `cards` ARD and a `gtsummary` wide
 #' summary. Statistics, rounding and summary exclusions use the existing aNCA
-#' implementation. Units are retained as row keys. Parameters with several
-#' intervals per subject (`PPSTINT`/`PPENINT`, e.g. partial AUC windows) are
-#' summarized per interval, with the interval appended to `PARAM`; one interval
-#' per subject (e.g. urine collections) pools as before. Conflicting duplicate
+#' implementation. Units are retained as row keys. Intervals supplied in
+#' `PPSTINT`/`PPENINT` (e.g. partial AUC windows) are appended to `PARAM` after
+#' summary exclusions, even when each subject has only one window. Known urine
+#' parameters with one collection interval per subject pool as before, using
+#' the first value per row that is not missing or blank, checking `PARAMCD`,
+#' `PPTESTCD`, then the parameter name against aNCA metadata. Excluded rows do
+#' not affect grouping.
+#' Unknown parameters with interval bounds remain separated. Conflicting duplicate
 #' values are rejected rather than silently selecting one measurement.
 #' Presentation preserves the existing decimal precision independently of the
-#' session's `digits` option.
+#' session's `digits` option. Row keys use compact default headers and left
+#' alignment. Repeated parent strata are suppressed in the display; parameter
+#' names, units and the complete numeric export keys remain visible.
 #'
 #' @inheritParams t_pkpt03_col
 #' @param list_vars Columns used to split tables. Defaults to analyte,
@@ -23,7 +29,8 @@
 #'   `stat_name` are local row/column identifiers; `tlg_ard_columns` maps the
 #'   statistic identifiers to the original result columns. Grouping columns
 #'   in the ARD identify the source result row. This is not a CDISC submission ARD.
-#' @importFrom dplyr as_tibble `%>%`
+#' @importFrom dplyr all_of as_tibble `%>%`
+#' @importFrom formatters var_labels
 #' @importFrom stats setNames
 #' @export
 t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
@@ -49,6 +56,10 @@ t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
   lapply(seq_along(frames), function(i) {
     frame <- frames[[i]]
     if (!nrow(frame)) return("No data available for this NEST summary.")
+    # The legacy summary's row binding drops source labels; preserve pilot overrides.
+    labels <- var_labels(data[intersect(strat_var, names(frame))])
+    labels <- labels[!is.na(labels) & nzchar(labels)]
+    var_labels(frame)[names(labels)] <- labels
     table <- .nest_wide_summary(frame)
     notes <- .nest_annotations(splits[[i]], title, subtitle %||% "", footnote)
     # Every output names its split in the subtitle, after any custom text. The
@@ -93,9 +104,14 @@ t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
   })
   table <- gtsummary::modify_column_hide(table, columns = "label")
   if (length(keys)) {
-    headers <- setNames(as.list(vapply(keys, function(v) .nest_label(frame, v),
+    headers <- setNames(as.list(vapply(keys, function(v) .nest_header_label(frame, v),
                                        character(1))), key_ids)
     table <- do.call(gtsummary::modify_header, c(list(x = table), headers))
+    table <- gtsummary::modify_column_alignment(table, columns = all_of(key_ids), align = "left")
+    # Suppress only the prefix before the parameter/unit; each result stays identifiable.
+    first_result_key <- match(TRUE, keys %in% c("PARAM", "AVALU"), nomatch = length(keys) + 1L)
+    parent_ids <- key_ids[seq_len(first_result_key - 1L)]
+    table <- gtsummary::modify_table_body(table, .nest_suppress_keys, keys = parent_ids)
   }
   groups <- attr(frame, "col_groups")
   for (group in names(groups)) {

@@ -56,12 +56,16 @@ to presentation only.
 Uses the same data preparation, rounding and annotation parser as
 \code{\link[=l_pkpl01]{l_pkpl01()}}, with \code{crane::tbl_listing()} for presentation. Displayed values
 keep the existing three-decimal rounding regardless of the session's \code{digits}
-option. Parameters with several intervals per subject (\code{PPSTINT}/\code{PPENINT},
-e.g. partial AUC windows) are listed per interval, with the interval appended
-to the parameter name; one interval per subject (e.g. urine) keeps one column.
+option. Intervals supplied in \code{PPSTINT}/\code{PPENINT} (e.g. partial AUC windows)
+are appended to the parameter name even when each subject has only one window.
+Known urine parameters with one collection interval per subject keep one column,
+using the first value per row that is not missing or blank, checking \code{PARAMCD},
+\code{PPTESTCD}, then the parameter name against aNCA metadata.
+Unknown parameters with interval bounds remain separated.
 A custom subtitle is followed by the split key so every listing identifies
 its split.
 Repeated keys are suppressed within their parent groups only. Excluded
 records remain in this individual listing. Conflicting values/units within a
 reporting key require more grouping variables and produce an explanatory error.
+Row keys are left aligned with compact default headers; custom labels are retained.
 }

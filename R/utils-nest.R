@@ -24,6 +24,33 @@
   if (is.null(label) || is.na(label) || !nzchar(label)) name else label
 }
 
+# Compact report headers without replacing custom labels or flat-file metadata.
+.nest_header_label <- function(data, name) {
+  label <- .nest_label(data, name)
+  short <- c(TRT01A = "Treatment Group", USUBJID = "Subject", AVISIT = "Visit",
+             PARAM = "PK Parameter", AVALU = "Unit")
+  if (name %in% names(short) && label %in% c(name, get_label(name, "ADPP"))) {
+    unname(short[[name]])
+  } else {
+    label
+  }
+}
+
+# Each child key stays visible when any parent changes. Only the display is changed.
+.nest_suppress_keys <- function(body, keys) {
+  original <- body
+  if (!nrow(body)) return(body)
+  for (i in seq_along(keys)) {
+    prefix <- original[keys[seq_len(i)]]
+    same <- c(FALSE, vapply(seq_len(nrow(prefix) - 1L), function(j) {
+      identical(unname(as.list(prefix[j, ])), unname(as.list(prefix[j + 1L, ])))
+    }, logical(1)))
+    body[[keys[i]]] <- as.character(original[[keys[i]]])
+    body[[keys[i]]][same] <- NA_character_
+  }
+  body
+}
+
 .nest_attach <- function(table, data, annotations) {
   attr(table, "tlg_data") <- data
   attr(table, "tlg_annotations") <- lapply(annotations, function(x) {
@@ -74,17 +101,23 @@
   ifelse(is.na(x), "", trimws(formatC(x + 0, format = "f", digits = 3, drop0trailing = TRUE)))
 }
 
-# Partial AUC windows share one PARAM, so a subject has several intervals per
-# reporting key. Name those intervals so their values are neither pooled nor
-# rejected as duplicates. Parameters with one interval per subject (urine
-# collections end at each subject's actual time) keep their name and pool.
+# Interval identity must not depend on how many windows each subject retains.
+# Only known urine parameters pool single collection intervals: their end times
+# can differ by subject. Other parameters keep every supplied interval explicit.
 .nest_interval_param <- function(data, param_var, keys) {
   if (!all(c(param_var, "PPSTINT", "PPENINT") %in% names(data))) return(data)
   interval <- !is.na(data$PPSTINT) & !is.na(data$PPENINT)
   keys <- intersect(unique(c(keys, param_var)), names(data))
   cells <- unique(data[interval, c(keys, "PPSTINT", "PPENINT"), drop = FALSE])
   repeated <- unique(cells[[param_var]][duplicated(cells[keys])])
-  rename <- interval & data[[param_var]] %in% repeated
+  id <- rep(NA_character_, nrow(data))
+  for (v in intersect(c("PARAMCD", "PPTESTCD", param_var), names(data))) {
+    missing_id <- is.na(id) | !nzchar(trimws(id))
+    id[missing_id] <- as.character(data[[v]])[missing_id]
+  }
+  urine <- metadata_nca_parameters[metadata_nca_parameters$TYPE %in% "Urine", ]
+  urine_ids <- unlist(urine[c("PPTESTCD", "PPTEST", "PKNCA")], use.names = FALSE)
+  rename <- interval & (!id %in% urine_ids | data[[param_var]] %in% repeated)
   param <- as.character(data[[param_var]])
   param[rename] <- paste0(param[rename], " (", data$PPSTINT[rename], "-",
                           data$PPENINT[rename], ")")

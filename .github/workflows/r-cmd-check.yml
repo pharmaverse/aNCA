@@ -35,7 +35,6 @@ jobs:
           - {os: ubuntu-latest, r: 'release'}
           - {os: ubuntu-latest, r: 'devel'}
           - {os: ubuntu-latest, r: 'oldrel'}
-          - {os: ubuntu-latest, r: '4.4'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -88,17 +87,11 @@ jobs:
           if (check_error_on == "") {
             check_error_on <- "note"
           }
-          testthat::test_file(".github/tests/test-r-cmd-check-policy.R", stop_on_failure = TRUE)
-          is_r44 <- getRversion() >= "4.4" && getRversion() < "4.5"
-          check_result <- rcmdcheck::rcmdcheck(
+          rcmdcheck::rcmdcheck(
             args = c("--no-manual", "--as-cran"),
-            error_on = if (is_r44) "never" else check_error_on,
+            error_on = check_error_on,
             check_dir = "check"
           )
-          if (is_r44) {
-            source(".github/scripts/r-cmd-check-policy.R")
-            check_r_cmd_results(check_result)
-          }
         shell: Rscript {0}
 
       - name: Upload check results

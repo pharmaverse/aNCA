@@ -9,6 +9,7 @@ nest_adpp_fixture <- function() {
 # Two partial-AUC intervals share PARAM "AUC"; Cmax has no interval.
 nest_interval_fixture <- function() {
   d <- nest_adpp_fixture()
+  d$PARAMCD <- ifelse(d$PARAM == "AUC", "AUCINT", "CMAX")
   d$PPSTINT <- ifelse(d$PARAM == "AUC", "PT0H", NA_character_)
   d$PPENINT <- ifelse(d$PARAM == "AUC", "PT2H", NA_character_)
   later <- d[d$PARAM == "AUC", ]
@@ -21,6 +22,7 @@ nest_interval_fixture <- function() {
 nest_urine_fixture <- function() {
   d <- nest_adpp_fixture()[nest_adpp_fixture()$PARAM == "AUC", ]
   d$PARAM <- "Amt Rec"
+  d$PARAMCD <- "RCAMINT"
   d$PPSTINT <- "PT0H"
   d$PPENINT <- c("PT24.117H", "PT23.881H", "PT24H")
   d
