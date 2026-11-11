@@ -16,7 +16,8 @@ describe("t_pkpt03_nest", {
     expect_identical(table$table_body$stat_2, c("6", "2.333"))
     ard <- attr(table, "tlg_ard")
     expect_equal(unlist(ard$stat[ard$stat_name == "s2"]), as.numeric(frame$Mean))
-    expect_equal(frame, t_pkpt03_col(d, strat_var = c("TRT01A", "PARAM", "AVALU"))[[1]])
+    expect_equal(frame, t_pkpt03_col(d, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
+                                     strat_var = c("TRT01A", "PARAM", "AVALU"))[[1]])
     expect_equal(as.vector(frame$AVALU), c("h*mg/L", "mg/L"))
   })
 
@@ -196,6 +197,34 @@ describe("t_pkpt03_nest", {
 })
 
 describe("NEST summary labels", {
+  it("renders custom headers and comparison labels literally in HTML", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    d <- nest_adpp_fixture()
+    attr(d$TRT01A, "label") <- "Dose <nominal> & regimen"
+    d$SEX <- rep(c("F <reference> & control", "M", "M"), each = 2)
+    table <- t_pkpt03_nest(d, col_group_var = "SEX", stats = c("n", "Mean"))[[1]]
+    html <- gt::as_raw_html(.nest_gt(table))
+    expect_match(html, "Dose &lt;nominal&gt; &amp; regimen", fixed = TRUE)
+    expect_match(html, "F &lt;reference&gt; &amp; control", fixed = TRUE)
+    column <- paste0("F <reference> & control", .GROUP_SEP, "Mean")
+    expect_equal(as.numeric(attr(table, "tlg_data")[[column]]), c(3, 1))
+  })
+
+  it("preserves literal custom headers and comparison labels in Word", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    skip_if_not_installed("flextable")
+    skip_if_not_installed("officer")
+    d <- nest_adpp_fixture()
+    attr(d$TRT01A, "label") <- "Dose <nominal> & regimen"
+    d$SEX <- rep(c("F <reference> & control", "M", "M"), each = 2)
+    table <- t_pkpt03_nest(d, col_group_var = "SEX", stats = c("n", "Mean"))[[1]]
+    dest <- withr::local_tempfile(fileext = ".docx")
+    flextable::save_as_docx(gtsummary::as_flex_table(table), path = dest)
+    text <- officer::docx_summary(officer::read_docx(dest))$text
+    expect_true("Dose <nominal> & regimen" %in% text)
+    expect_true("F <reference> & control" %in% text)
+  })
+
   it("preserves custom labels in annotation references after splitting", {
     skip_if_not_installed("gtsummary", "2.6.1")
     d <- nest_adpp_fixture()

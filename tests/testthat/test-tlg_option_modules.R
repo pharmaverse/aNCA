@@ -152,6 +152,38 @@ describe("tlg_option_text_server", {
 # ---------------------------------------------------------------------------
 
 describe("tlg_option_select_ui", {
+  it("emits selected options in declared grouping order instead of data-column order", {
+    df <- shiny::reactive(data.frame(PARAM = "Cmax", USUBJID = "S1", TRT01A = "A", AVAL = 1))
+    for (default in list(c("TRT01A", "PARAM"), ".pknca_groups")) {
+      opt_def <- list(choices = ".colnames", default = default, multiple = TRUE)
+      html <- as.character(shiny::isolate(tlg_option_select_ui(
+        "m-strat_var", opt_def, df, grouping_vars = shiny::reactive(c("TRT01A", "PARAM"))
+      )))
+      selected_tags <- regmatches(html, gregexpr('<option value="[^"]+" selected', html))[[1]]
+      selected <- sub('<option value="([^"]+)" selected', "\\1", selected_tags)
+      expect_identical(selected, c("TRT01A", "PARAM"))
+    }
+  })
+
+  it("keeps named choices and carried-forward selection order", {
+    opt_def <- list(
+      choices = c(Subject = "USUBJID", Parameter = "PARAM", Treatment = "TRT01A"),
+      default = c("TRT01A", "PARAM", "absent"), multiple = TRUE
+    )
+    df <- shiny::reactive(data.frame())
+    config <- shiny::isolate(.tlg_select_config(opt_def, df))
+    expect_identical(config$choices,
+                     c(Treatment = "TRT01A", Parameter = "PARAM", Subject = "USUBJID"))
+    opt_def$default <- c("PARAM", "TRT01A")
+    config <- shiny::isolate(.tlg_select_config(opt_def, df))
+    expect_identical(config$choices,
+                     c(Parameter = "PARAM", Treatment = "TRT01A", Subject = "USUBJID"))
+    opt_def$default <- NULL
+    expect_identical(shiny::isolate(.tlg_select_config(opt_def, df))$choices, opt_def$choices)
+    opt_def$default <- ".all"
+    expect_identical(shiny::isolate(.tlg_select_config(opt_def, df))$choices, opt_def$choices)
+  })
+
   it("shows the empty-selection label without adding a bulk-select choice", {
     df <- shiny::reactive(data.frame(PARAM = c("Cmax", "AUC", "Cmax")))
     opt_def <- list(choices = "$PARAM", placeholder = "All parameters", multiple = TRUE)
@@ -576,4 +608,65 @@ describe(".urine_spec_values", {
   it("ignores NA specimen values", {
     expect_equal(.urine_spec_values(data.frame(PCSPEC = c(NA, "URINE"))), "URINE")
   })
+})
+
+describe("tlg_option_select_server: catalog reset after remount", {
+  it("resets choice order after custom remounts without reordering user input", {
+    updates <- list()
+    testthat::local_mocked_bindings(
+      updatePickerInput = function(session, input_id, ...) { # nolint: object_name_linter.
+        updates[[length(updates) + 1L]] <<- list(...)
+      },
+      .package = "shinyWidgets"
+    )
+    trigger <- shiny::reactiveVal(0L)
+    shiny::testServer(
+      tlg_option_select_server,
+      args = list(
+        opt_def = list(choices = ".colnames", default = c("TRT01A", "PARAM"), multiple = TRUE),
+        data = shiny::reactive(data.frame(PARAM = "Cmax", USUBJID = "S1", TRT01A = "A")),
+        reset_trigger = trigger
+      ),
+      {
+        session$setInputs(select = c("PARAM", "USUBJID"))
+        expect_identical(session$getReturned()(), c("PARAM", "USUBJID"))
+        trigger(1L)
+        session$flushReact()
+        update <- tail(updates, 1)[[1]]
+        expect_identical(update$choices, c("TRT01A", "PARAM", "USUBJID"))
+        expect_identical(update$selected, c("TRT01A", "PARAM"))
+        session$setInputs(select = c("USUBJID", "TRT01A"))
+        expect_identical(session$getReturned()(), c("USUBJID", "TRT01A"))
+      }
+    )
+  })
+
+  for (default in c(".all", ".pknca_groups", "")) {
+    it(paste("restores the declared", shQuote(default), "default"), {
+      updates <- list()
+      testthat::local_mocked_bindings(
+        updatePickerInput = function(session, input_id, ...) { # nolint: object_name_linter.
+          updates[[length(updates) + 1L]] <<- list(...)$selected
+        },
+        .package = "shinyWidgets"
+      )
+      trigger <- shiny::reactiveVal(0L)
+      shiny::testServer(
+        tlg_option_select_server,
+        args = list(
+          opt_def = list(type = "select", choices = ".colnames", default = default),
+          data = shiny::reactive(data.frame(NFRLT = 1, AVAL = 2)),
+          reset_trigger = trigger,
+          grouping_vars = shiny::reactive(c("NFRLT", "absent"))
+        ),
+        {
+          session$setInputs(select = "AVAL")
+          trigger(1L)
+          session$flushReact()
+          expected <- switch(default, .all = c("NFRLT", "AVAL"), .pknca_groups = "NFRLT", "")
+          expect_identical(tail(updates, 1)[[1]], expected)
+        }
+      )
+    })
+  }
 })

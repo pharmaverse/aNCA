@@ -4,6 +4,7 @@ local({
   library(logger)
   shiny_dir <- system.file("shiny", package = "aNCA")
   source(file.path(shiny_dir, "functions", "zip-utils.R"), local = TRUE)
+  source(file.path(shiny_dir, "functions", "utils-tlg.R"), local = TRUE)
   source(file.path(shiny_dir, "functions", "tlg_export.R"), local = TRUE)
   source(file.path(shiny_dir, "modules", "tab_tlg.R"), local = TRUE)
   for (file in c("tlg_module", "tlg_option_select", "tlg_option_text")) {
@@ -24,6 +25,13 @@ describe("NEST catalog and Shiny integration", {
     expect_equal(defs$t_pkpt03_nest$options$list_vars$type, "select")
     expect_true(defs$t_pkpt03_col$is_default)
     expect_true(defs$l_pkpl01$is_default)
+    expect_equal(defs$t_pkpt03_nest$options$title$default, "Summary of PK Parameters")
+    expect_equal(defs$t_pkpt03_nest$options$footnote$default,
+                 "Summary-excluded records are omitted; n counts nonmissing values.")
+    expect_equal(defs$l_pkpl01_nest$options$footnote$default,
+                 "Individual values include summary-excluded records.")
+    # Methods are appended by the graph wrapper; the optional extra text starts empty.
+    expect_identical(defs$g_pkcg03_lin_nest$options$footnote$default, "")
   })
 
   it("updates listing selection and annotations and renders HTML in the module", {
@@ -185,6 +193,24 @@ describe("NEST exports", {
     }
   })
 
+
+  it("keeps custom Word footnotes at the table's readable 8 pt size", {
+    skip_if_not_installed("gtsummary", "2.6.1")
+    skip_if_not_installed("officer")
+    skip_if_not_installed("flextable")
+    tables <- t_pkpt03_nest(nest_adpp_fixture(), footnote = "First note\nSecond note")
+    path <- tempfile(fileext = ".docx")
+    on.exit(unlink(path))
+    .write_nest_document(tables, path, "docx")
+    doc <- officer::read_docx(path)
+    styles <- officer::styles_info(doc)
+    # Word stores font sizes in half-points: 16 represents 8 pt.
+    expect_equal(as.numeric(styles$font.size[styles$style_id == "NESTFootnote"]), 16)
+    word <- officer::docx_summary(doc)
+    notes <- word[word$text %in% c("First note", "Second note"), ]
+    expect_equal(notes$text, c("First note", "Second note"))
+    expect_equal(notes$style_name, rep("NEST footnote", 2))
+  })
 
   it("keeps wide Word listings readable by splitting columns and repeating keys", {
     skip_if_not_installed("crane", "0.3.2")

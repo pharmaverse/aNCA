@@ -39,10 +39,17 @@
     names(df)[!grouped] <- headers[!grouped]
   }
   if (inherits(df, "listing_df") && requireNamespace("rlistings", quietly = TRUE)) {
+    labels <- list(
+      tlg_title = formatters::main_title(df),
+      tlg_subtitle = formatters::subtitles(df),
+      tlg_footnote = formatters::main_footer(df)
+    )
     disp <- tryCatch(rlistings::listing_dispcols(df), error = function(e) NULL)
     if (length(disp) > 0 && all(disp %in% names(df))) {
       df <- as.data.frame(df)[, disp, drop = FALSE]
     }
+    # Keep display metadata for PDF, even after dropping the listing class/working columns.
+    for (key in names(labels)) attr(df, key) <- labels[[key]]
   }
   .flatten_export_cols(df)
 }
@@ -322,7 +329,7 @@ write_tlg_exports <- function(entries,
   tryCatch({
     grDevices::pdf(file.path(target_dir, rel), width = 10, height = 6, onefile = TRUE)
     on.exit(grDevices::dev.off(), add = TRUE)
-    for (p in drawable) print(p)
+    for (p in drawable) print(p + do.call(ggplot2::labs, as.list(.tlg_plot_labels(p))))
   }, error = function(e) {
     status <<- "error"
     note   <<- conditionMessage(e)
@@ -354,7 +361,7 @@ write_tlg_exports <- function(entries,
   tryCatch({
     sections <- unlist(
       lapply(seq_along(plots), function(i) {
-        list(htmltools::tags$h2(leaf[i]), .tlg_as_widget(plots[[i]]))
+        list(htmltools::tags$h2(leaf[i]), .tlg_ggplotly(plots[[i]]))
       }),
       recursive = FALSE
     )
@@ -383,16 +390,6 @@ write_tlg_exports <- function(entries,
   } else {
     as.character(label)[1]
   }
-}
-
-#' Coerce one graph output to something `save_html()` can embed.
-#'
-#' The concentration plots are already plotly widgets, carrying the title, subtitle and
-#' footnote as layout annotations.  The `p_pkpg*` builders return plain ggplots, which have
-#' to be converted -- the same thing `save_ggplot_format()` does for its HTML branch.
-#' @noRd
-.tlg_as_widget <- function(x) {
-  if (inherits(x, "plotly")) x else plotly::ggplotly(x)
 }
 
 #' Write one TLG's tables or listings, in each requested format.
@@ -538,8 +535,13 @@ write_tlg_exports <- function(entries,
       )
       annotations <- attr(frames[[i]], "tlg_annotations")
       if (is.null(annotations)) {
-        formatters::main_title(mpf) <- title
-        if (nzchar(captions[i])) formatters::subtitles(mpf) <- captions[i]
+        item_title <- attr(frames[[i]], "tlg_title")
+        if (is.null(item_title)) item_title <- title
+        formatters::main_title(mpf) <- gsub("<br>", "\n", item_title, fixed = TRUE)
+        # parse_annotation() uses <br> for display; formatters expects separate text lines.
+        subtitle <- .tlg_pdf_lines(c(captions[i], attr(frames[[i]], "tlg_subtitle")))
+        formatters::subtitles(mpf) <- unique(subtitle)
+        formatters::main_footer(mpf) <- .tlg_pdf_lines(attr(frames[[i]], "tlg_footnote"))
       } else {
         formatters::main_title(mpf) <- annotations$title
         formatters::subtitles(mpf) <- annotations$subtitle
@@ -568,6 +570,13 @@ write_tlg_exports <- function(entries,
     note   <<- conditionMessage(e)
   })
   .tlg_manifest_row(g_id, entry, rel, status, note)
+}
+
+#' Turn TLG annotation line breaks into plain PDF label lines.
+#' @noRd
+.tlg_pdf_lines <- function(text) {
+  lines <- unlist(strsplit(gsub("<br>", "\n", text, fixed = TRUE), "\n", fixed = TRUE))
+  as.character(lines[!is.na(lines) & nzchar(lines)])
 }
 
 #' Section captions for the splits of a table PDF.
@@ -752,6 +761,9 @@ write_tlg_exports <- function(entries,
       doc, "Title", "Title", fp_t = officer::fp_text(bold = TRUE, font.size = 14),
       fp_p = officer::fp_par(padding.bottom = 6)
     )
+    doc <- officer::docx_set_paragraph_style(
+      doc, "NESTFootnote", "NEST footnote", fp_t = officer::fp_text(font.size = 8)
+    )
     doc <- officer::body_set_default_section(doc, officer::prop_section(
       page_size = officer::page_size(orient = "landscape")
     ))
@@ -775,7 +787,7 @@ write_tlg_exports <- function(entries,
         ft <- flextable::set_table_properties(ft, layout = "autofit", width = 1)
         doc <- flextable::body_add_flextable(doc, ft)
       }
-      doc <- add_lines(doc, annotations$footnote)
+      doc <- add_lines(doc, annotations$footnote, style = "NEST footnote")
     }
     print(doc, target = path)
   }

@@ -165,6 +165,33 @@ describe("NEST listing unit metadata", {
 })
 
 describe("NEST listing labels", {
+  it("renders parameter names and custom headers literally in HTML", {
+    skip_if_not_installed("crane", "0.3.2")
+    d <- nest_adpp_fixture()
+    d$PARAM[d$PARAM == "Cmax"] <- "Cmax <terminal> & peak"
+    attr(d$TRT01A, "label") <- "Dose <nominal> & regimen"
+    table <- l_pkpl01_nest(d)[[1]]
+    html <- gt::as_raw_html(.nest_gt(table))
+    expect_match(html, "Cmax &lt;terminal&gt; &amp; peak (mg/L)", fixed = TRUE)
+    expect_match(html, "Dose &lt;nominal&gt; &amp; regimen", fixed = TRUE)
+    expect_equal(as.numeric(attr(table, "tlg_data")[["Cmax <terminal> & peak"]]), c(1, 2, 4))
+  })
+
+  it("preserves literal parameter names and custom headers in Word", {
+    skip_if_not_installed("crane", "0.3.2")
+    skip_if_not_installed("flextable")
+    skip_if_not_installed("officer")
+    d <- nest_adpp_fixture()
+    d$PARAM[d$PARAM == "Cmax"] <- "Cmax <terminal> & peak"
+    attr(d$TRT01A, "label") <- "Dose <nominal> & regimen"
+    table <- l_pkpl01_nest(d)[[1]]
+    dest <- withr::local_tempfile(fileext = ".docx")
+    flextable::save_as_docx(gtsummary::as_flex_table(table), path = dest)
+    text <- officer::docx_summary(officer::read_docx(dest))$text
+    expect_true("Cmax <terminal> & peak (mg/L)" %in% text)
+    expect_true("Dose <nominal> & regimen" %in% text)
+  })
+
   it("preserves custom labels through filtering, splitting and sorting plain data frames", {
     skip_if_not_installed("crane", "0.3.2")
     d <- nest_adpp_fixture()

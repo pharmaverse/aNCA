@@ -106,7 +106,7 @@ t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
   if (length(keys)) {
     headers <- setNames(as.list(vapply(keys, function(v) .nest_header_label(frame, v),
                                        character(1))), key_ids)
-    table <- do.call(gtsummary::modify_header, c(list(x = table), headers))
+    table <- do.call(gtsummary::modify_header, c(list(x = table, text_interpret = "none"), headers))
     table <- gtsummary::modify_column_alignment(table, columns = all_of(key_ids), align = "left")
     # Suppress only the prefix before the parameter/unit; each result stays identifiable.
     first_result_key <- match(TRUE, keys %in% c("PARAM", "AVALU"), nomatch = length(keys) + 1L)
@@ -117,7 +117,8 @@ t_pkpt03_nest <- function(data, list_vars = c("PPCAT", "PPSPEC", "ATPTREF"),
   for (group in names(groups)) {
     cols <- paste0("stat_", match(groups[[group]], stat_cols))
     table <- do.call(gtsummary::modify_spanning_header,
-                     c(list(x = table), setNames(as.list(rep(group, length(cols))), cols)))
+                     c(list(x = table, text_interpret = "none"),
+                       setNames(as.list(rep(group, length(cols))), cols)))
   }
   attr(table, "tlg_key_count") <- length(keys)
   attr(table, "tlg_ard") <- ard

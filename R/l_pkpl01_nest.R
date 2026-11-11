@@ -98,7 +98,7 @@ l_pkpl01_nest <- function(data, listgroup_vars = c("PPCAT", "PPSPEC", "ATPTREF")
   }
   headers <- setNames(as.list(vapply(names(frame), function(v) .nest_header_label(frame, v),
                                      character(1))), ids)
-  table <- do.call(gtsummary::modify_header, c(list(x = table), headers))
+  table <- do.call(gtsummary::modify_header, c(list(x = table, text_interpret = "none"), headers))
   if (length(key_ids)) {
     table <- gtsummary::modify_column_alignment(table, columns = all_of(key_ids), align = "left")
     table <- gtsummary::modify_table_body(table, .nest_suppress_keys, keys = key_ids)

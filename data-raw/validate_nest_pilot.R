@@ -112,6 +112,7 @@ entries <- list(t_pkpt03_nest = entry("table", summary[selected]),
                 g_pkcg03_lin_nest = entry("graph", graphs[1]),
                 t_pkpt03_col = entry("table", legacy[selected]))
 source("inst/shiny/functions/zip-utils.R")
+source("inst/shiny/functions/utils-tlg.R")
 source("inst/shiny/functions/tlg_export.R")
 manifest <- write_tlg_exports(entries, file.path(dest, "exports"),
                               ggplot_formats = c("png", "pdf", "html"),
