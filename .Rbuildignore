@@ -16,10 +16,11 @@ _\.new\.png$
 inst/shiny/tests/testthat/_snaps
 ^cran-comments\.md$
 ^CITATION\.cff$
-^NEWS\.md$
 ^data-raw$
 ^vignettes/
 ^inst/shiny/www/\.sass_cache_keys$
 ^new-dev\.zip$
 ^cran-release-checklist\.md$
 ^tests/testthat/Rplots\.pdf$
+^inst/extras/validation_reports/
+^inst/shiny/log($|/)
