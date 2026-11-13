@@ -43,7 +43,7 @@
 
 * **ZIP exports:** Export results, settings, plots, and TLGs using current selections, with PDF/HTML/PNG graphs, XLSX/CSV/PDF tables, study-based filenames, a manifest of output statuses, and working validation in installed packages (#638, #1000, #1136, #1344, #1428, #1476).
 * **Slides:** Customize slide sections and grouping, include dose-normalized summaries, and add a PK parameter glossary (#791, #972, #1054, #1326).
-* **Reproducible scripts:** Export R scripts that use saved mappings, filters, ratios, units, and BLQ rules to reproduce app results, honor the requested dataset path or bundled ZIP input, and run without configured ratios (#789, #1189, #1445, #1476).
+* **Reproducible scripts:** Export R scripts that use saved mappings, filters, ratios, units, and BLQ rules to reproduce app results, honor the requested dataset path or bundled ZIP input, request explicit installation when aNCA is missing, and run without configured ratios (#789, #1189, #1445, #1476).
 * **Export validation:** Validate selected non-TLG exports and CDISC field types and lengths before saving, report custom-field validation limits, and block exports on validation or XPT-writing failures (#1452).
 * **CDISC metadata:** Include pre-specifications, session information, custom grouping variables, dose reference, route, and exclusion flags in exported datasets (#829, #998, #1077, #1141, #1276).
 * **CDISC corrections:** Report acceptance criteria with satisfied flags as `Y` and violations as blank, identify dose-aware methods through `PPANMETH`, and correct CORRXY and TMAX labels (#481, #787, #1102, #1242, #1332).
@@ -51,8 +51,8 @@
 ## Help & compatibility
 
 * **Help and navigation:** Added parameter references, ratio and R-script guides, contextual help, session information, clearer labels, and resizable sidebars (#899, #975, #1015, #1023, #1090, #1156, #1251, #1300, #1333).
-* **PKNCA compatibility:** Fixed development-version failures affecting start imputation, duplicate R2ADJ results, half-life selection, excretion parameters, and dose-escalation reports; R >= 4.4 is now required (#1102).
-* **App startup:** Fixed installed-package and read-only deployment startup failures and recovery after NCA errors (#913, #1107, #1378).
+* **PKNCA compatibility:** Fixed development-version failures affecting start imputation, duplicate R2ADJ results, half-life selection, excretion parameters, and dose-escalation reports; excretion parameters are registered for namespace-only calls as well as attached use; R >= 4.4 is now required (#1102).
+* **App startup:** Fixed installed-package and read-only deployment startup failures, keep application logs in a writable temporary or configured directory, restore the upload-limit option on exit, and recover after NCA errors (#913, #1107, #1378).
 * **Optional dependencies:** Reporting packages `rlistings`, `officer`, and `flextable` are now optional, with notifications when required for an output (#1106).
 
 # aNCA 0.1.0
