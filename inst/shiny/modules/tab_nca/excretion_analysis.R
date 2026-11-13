@@ -67,8 +67,34 @@ excretion_ui <- function(id) {
     paste("Please ensure WTBL and WTBLU columns exist in the dose data.",
           "No adjustments can be made.")
   } else {
-    NULL
+    .excretion_data_error(input, data)
   }
+}
+
+# Validate collection intervals and weight values before calling PKNCA or units.
+.excretion_data_error <- function(input, data) {
+  samples <- data$conc$data[data$conc$data$PCSPEC %in% input$matrix_select, , drop = FALSE]
+  if ("sample" %in% input$interval_types) {
+    start <- samples$AFRLT
+    end <- samples[[input$end_time_col]]
+    if (!is.numeric(start) || any(!is.finite(start) | !is.finite(end) | end <= start)) {
+      return("Collection end times must be finite and after their start times.")
+    }
+  }
+  if (isTRUE(input$adjust_bw)) {
+    weight <- data$dose$data$WTBL
+    if (!is.numeric(weight) || any(!is.finite(weight) | weight <= 0)) {
+      return("Body weights must be finite, positive numbers.")
+    }
+    valid_units <- tryCatch(
+      all(units::ud_are_convertible(data$dose$data$WTBLU, "kg")),
+      error = function(e) FALSE
+    )
+    if (!isTRUE(valid_units)) {
+      return("Body-weight units must be recognized mass units, such as kg or g.")
+    }
+  }
+  NULL
 }
 
 # Server function
@@ -144,87 +170,97 @@ excretion_server <- function(id, input_pknca_data) {
       }
       end_time_col <- input$end_time_col
 
-      dose_col <- data$dose$columns$dose
-      doseu <- data$dose$columns$doseu
-      weight_col <- "WTBL"
-      weightu <- "WTBLU"
+      tryCatch({
+        dose_col <- data$dose$columns$dose
+        doseu <- data$dose$columns$doseu
+        weight_col <- "WTBL"
+        weightu <- "WTBLU"
 
-      # Adjust dose by bodyweight if selected
-      if (input$adjust_bw) {
-        # mutate dose_col and doseu to be dose * weight
-        data$dose$data <- data$dose$data %>%
-          mutate(
-            # Create units objects per row
-            dose_with_unit = pmap(list(.d = !!sym(dose_col), .u = !!sym(doseu)),
-                                  ~ set_units(..1, ..2, mode = "standard")),
-            weight_with_unit = pmap(list(.w = !!sym(weight_col), .wu = !!sym(weightu)),
-                                    ~ set_units(..1, ..2, mode = "standard")),
+        # Adjust dose by bodyweight if selected
+        if (input$adjust_bw) {
+          # mutate dose_col and doseu to be dose * weight
+          data$dose$data <- data$dose$data %>%
+            mutate(
+              # Create units objects per row
+              dose_with_unit = pmap(list(.d = !!sym(dose_col), .u = !!sym(doseu)),
+                                    ~ units::set_units(..1, ..2, mode = "standard")),
+              weight_with_unit = pmap(list(.w = !!sym(weight_col), .wu = !!sym(weightu)),
+                                      ~ units::set_units(..1, ..2, mode = "standard")),
 
-            # Multiply units objects
-            dose_total_unit = map2(dose_with_unit, weight_with_unit, ~ .x * .y),
+              # Multiply units objects
+              dose_total_unit = map2(dose_with_unit, weight_with_unit, ~ .x * .y),
 
-            # Assign numeric result and unit string to original columns
-            !!dose_col := map_dbl(dose_total_unit, drop_units),
-            !!doseu := map_chr(dose_total_unit, deparse_unit)
-          )
+              # Assign numeric result and unit string to original columns
+              !!dose_col := map_dbl(dose_total_unit, units::drop_units),
+              !!doseu := map_chr(dose_total_unit, units::deparse_unit)
+            )
 
-        # Update units
-        data$units <- PKNCA_build_units_table(data$conc, data$dose)
-      }
+          # Update units
+          data$units <- PKNCA_build_units_table(data$conc, data$dose)
+        }
 
-      # Update intervals
-      # Translate user-selected PPTESTCDs to PKNCA column names
-      pknca_params <- translate_terms(input$param_select, "PPTESTCD", "PKNCA")
+        # Update intervals
+        # Translate user-selected PPTESTCDs to PKNCA column names
+        pknca_params <- translate_terms(input$param_select, "PPTESTCD", "PKNCA")
 
-      # dose profile intervals
-      data$intervals <- format_pkncadata_intervals(data$conc,
-                                                   data$dose) %>%
-        mutate(across(any_of(pknca_params), ~ TRUE, .names = "{.col}"),
-               type_interval = "profile") %>%
-        filter(PCSPEC %in% input$matrix_select)
+        # dose profile intervals
+        data$intervals <- format_pkncadata_intervals(data$conc,
+                                                     data$dose) %>%
+          mutate(across(any_of(pknca_params), ~ TRUE, .names = "{.col}"),
+                 type_interval = "profile") %>%
+          filter(PCSPEC %in% input$matrix_select)
 
-      # excretion sample intervals
-      # add one row with start AFRLT and end_time_col
-      # Obtain all possible pknca parameters
-      all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
-                                  c("start", "end"))
+        # excretion sample intervals
+        # add one row with start AFRLT and end_time_col
+        # Obtain all possible pknca parameters
+        all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
+                                    c("start", "end"))
 
-      conc_groups <- unname(unlist(data$conc$columns$groups))
+        conc_groups <- unname(unlist(data$conc$columns$groups))
 
-      excretion_intervals <- data$conc$data %>%
-        group_by(!!!syms(conc_groups)) %>%
-        select(any_of(c(conc_groups, end_time_col, "AFRLT"))) %>%
-        mutate(PCSPEC = as.character(PCSPEC)) %>%
-        rename(start = AFRLT, end = !!sym(end_time_col)) %>%
-        filter(PCSPEC %in% input$matrix_select) %>%
-        distinct() %>%
-        # Create logical columns with only TRUE for the NCA parameters requested by the user
-        mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
-        mutate(across(any_of(pknca_params), ~ TRUE, .names = "{.col}"),
-               type_interval = "sample")
+        excretion_intervals <- data$conc$data %>%
+          group_by(!!!syms(conc_groups)) %>%
+          select(any_of(c(conc_groups, end_time_col, "AFRLT"))) %>%
+          mutate(PCSPEC = as.character(PCSPEC)) %>%
+          rename(start = AFRLT, end = !!sym(end_time_col)) %>%
+          filter(PCSPEC %in% input$matrix_select) %>%
+          distinct() %>%
+          # Create logical columns with only TRUE for the NCA parameters requested by the user
+          mutate(!!!setNames(rep(FALSE, length(all_pknca_params)), all_pknca_params)) %>%
+          mutate(across(any_of(pknca_params), ~ TRUE, .names = "{.col}"),
+                 type_interval = "sample")
 
-      # Combine dose profile intervals and excretion sample intervals
-      data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
-        filter(type_interval %in% input$interval_types) %>%
-        arrange(PCSPEC, start, end)
-      if (nrow(data$intervals) == 0) {
-        showNotification("No intervals match the selected matrices and interval types.",
-                         type = "warning")
-        return(NULL)
-      }
+        # Combine dose profile intervals and excretion sample intervals
+        data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
+          filter(type_interval %in% input$interval_types) %>%
+          arrange(PCSPEC, start, end)
+        if (nrow(data$intervals) == 0) {
+          showNotification("No intervals match the selected matrices and interval types.",
+                           type = "warning")
+          return(NULL)
+        }
 
-      data$units <- data$units  %>%
-        mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
-               conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
+        data$units <- data$units  %>%
+          mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
+                 conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
 
-      data$options$keep_interval_cols <- c("ATPTREF", "type_interval")
-      # These helper columns were ignored by older PKNCA; do not send undeclared metadata.
-      # Actual sample volumes remain in data$conc$data for excretion calculations.
-      data$intervals <- select(data$intervals, -any_of(c("DOSNOA", "VOLUME")))
-      # Run PKNCA analysis
-      suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
-        # Apply standard CDISC names
-        mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+        data$options$keep_interval_cols <- c("ATPTREF", "type_interval")
+        # These helper columns were ignored by older PKNCA; do not send undeclared metadata.
+        # Actual sample volumes remain in data$conc$data for excretion calculations.
+        data$intervals <- select(data$intervals, -any_of(c("DOSNOA", "VOLUME")))
+        # Run PKNCA analysis
+        suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
+          # Apply standard CDISC names
+          mutate(PPTESTCD = translate_terms(PPTESTCD, "PKNCA", "PPTESTCD"))
+      }, error = function(e) {
+        log_error("Excretion calculation failed: {conditionMessage(e)}")
+        showNotification(
+          paste("Excretion calculation failed. Check collection times, volumes,",
+                "dose and weight units, then try again."),
+          type = "error", duration = NULL
+        )
+        NULL
+      })
     }) %>%
       bindEvent(input$submit_btn)
 

@@ -3,6 +3,7 @@ local({
   library(shiny)
   library(purrr)
   library(units)
+  library(logger)
   source(system.file("shiny/modules/tab_nca/excretion_analysis.R", package = "aNCA"),
          local = TRUE)
   selector_label <- function(...) NULL
@@ -62,6 +63,70 @@ describe("excretion analysis selections", {
 })
 
 describe("excretion calculations", {
+  it("rejects a start-time column used as the end time and recovers after correction", {
+    shiny::testServer(
+      excretion_server,
+      args = list(input_pknca_data = reactive(excretion_fixture())),
+      {
+        session$setInputs(adjust_bw = FALSE, matrix_select = "URINE", end_time_col = "AFRLT",
+                          param_select = "RCAMINT", interval_types = "sample", submit_btn = 1)
+        expect_null(analysis_result())
+        expect_false(session$isClosed())
+        session$setInputs(end_time_col = "AEFRLT", submit_btn = 2)
+        expect_gt(nrow(analysis_result()$result), 0)
+        expect_false(session$isClosed())
+      }
+    )
+  })
+
+  for (bad_unit in c("unknown", "m", NA_character_)) {
+    it(paste("rejects invalid body-weight units", bad_unit, "and permits retry"), {
+      original <- excretion_fixture()
+      bad <- original
+      bad$dose$data$WTBLU <- bad_unit
+      data <- reactiveVal(bad)
+      shiny::testServer(
+        excretion_server,
+        args = list(input_pknca_data = data),
+        {
+          session$setInputs(adjust_bw = TRUE, matrix_select = "URINE", end_time_col = "AEFRLT",
+                            param_select = "RCAMINT", interval_types = "profile", submit_btn = 1)
+          expect_null(analysis_result())
+          expect_false(session$isClosed())
+          data(original)
+          session$setInputs(submit_btn = 2)
+          expect_gt(nrow(analysis_result()$result), 0)
+          expect_identical(input_pknca_data(), original)
+          expect_false(session$isClosed())
+        }
+      )
+    })
+  }
+
+  it("contains unexpected PKNCA errors and allows another calculation", {
+    run <- PKNCA::pk.nca
+    state <- new.env()
+    state$fail <- TRUE
+    testthat::local_mocked_bindings(pk.nca = function(...) {
+      if (state$fail) stop("simulated PKNCA failure")
+      run(...)
+    }, .package = "PKNCA")
+    shiny::testServer(
+      excretion_server,
+      args = list(input_pknca_data = reactive(excretion_fixture())),
+      {
+        session$setInputs(adjust_bw = FALSE, matrix_select = "URINE", end_time_col = "AEFRLT",
+                          param_select = "RCAMINT", interval_types = "sample", submit_btn = 1)
+        expect_null(analysis_result())
+        expect_false(session$isClosed())
+        state$fail <- FALSE
+        session$setInputs(submit_btn = 2)
+        expect_gt(nrow(analysis_result()$result), 0)
+        expect_false(session$isClosed())
+      }
+    )
+  })
+
   it("calculates amount recovered with weight adjustment unchecked", {
     original <- excretion_fixture()
     shiny::testServer(
