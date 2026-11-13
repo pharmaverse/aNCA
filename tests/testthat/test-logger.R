@@ -2,7 +2,9 @@ describe("application log files", {
   logger_env <- new.env(parent = asNamespace("logger"))
   source(system.file("shiny/functions/utils.R", package = "aNCA"), local = logger_env)
   # Capture configuration locally instead of changing the test process's logger.
-  logger_env$log_layout <- logger_env$log_formatter <- logger_env$log_threshold <- function(...) NULL
+  ignore_config <- function(...) NULL
+  logger_env$log_layout <- logger_env$log_formatter <- ignore_config
+  logger_env$log_threshold <- ignore_config
   appenders <- list()
   logger_env$log_appender <- function(appender, index = 1) {
     appenders[[index]] <<- appender
