@@ -218,6 +218,9 @@ excretion_server <- function(id, input_pknca_data) {
                conversion_factor = get_conversion_factor(PPORRESU, PPSTRESU))
 
       data$options$keep_interval_cols <- c("ATPTREF", "type_interval")
+      # These helper columns were ignored by older PKNCA; do not send undeclared metadata.
+      # Actual sample volumes remain in data$conc$data for excretion calculations.
+      data$intervals <- select(data$intervals, -any_of(c("DOSNOA", "VOLUME")))
       # Run PKNCA analysis
       suppressWarnings(PKNCA::pk.nca(data, verbose = FALSE)) %>%
         # Apply standard CDISC names

@@ -74,6 +74,8 @@ describe("excretion calculations", {
         expect_true(nrow(result) > 0)
         expect_true(is.numeric(result$PPORRES))
         expect_true(all(result$PPTESTCD == "RCAMINT"))
+        expect_false(any(c("DOSNOA", "VOLUME") %in% names(result)))
+        expect_identical(analysis_result()$data$conc$data$VOLUME, original$conc$data$VOLUME)
         samples <- original$conc$data %>% filter(PCSPEC == "URINE")
         index <- match(result$start, samples$AFRLT)
         expect_false(anyNA(index))
