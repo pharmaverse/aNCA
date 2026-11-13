@@ -7,8 +7,8 @@ entries are grouped under 0.2.0; no internal tooling changes were added to NEWS.
 ## Conservative package scope
 
 - Vignettes, pkgdown sources, development data scripts, and historical validation
-  reports remain outside the source package. NEWS is included; the citation is
-  updated for the proposed 2026 release.
+  reports remain outside the source package. NEWS is included; the original
+  package citation is retained.
 - The reported Sass cache, `new-dev.zip`, legacy app log directory, generated
   test `Rplots.pdf`, and this
   release checklist are excluded from source builds.
