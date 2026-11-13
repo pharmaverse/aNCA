@@ -54,9 +54,9 @@ Local validation uses Debian 13, R 4.5.3, CRAN PKNCA 0.12.1, and roxygen2
 7.3.3. Focused logger, option cleanup, script generation, and SDTM tests passed.
 The installed app's browser smoke and namespace-only registration tests passed
 with the installed package directory made read-only for the test. Its write
-permissions were restored afterward. The final package check passed 4,242
+permissions were restored afterward. The final package check passed 4,262
 expectations with no test failures or warnings and two explicit skips. It reports 0 errors, 0 warnings, and the single
-environment time-verification NOTE. The checked archive is 2,621,677 bytes.
+environment time-verification NOTE. The checked archive is 2,623,147 bytes.
 Details are recorded in `cran-comments.md`.
 
 The earlier preparation was also tested with `mockery`, `vdiffr`, and `ggh4x`
@@ -122,8 +122,11 @@ absent: that causes a missing-column error in both versions.
 
 A follow-up fix should align retained metadata with actual interval columns,
 preserve concentration volumes used for excretion calculations, and test both
-output shape and numerical results across dependency versions. It should cover
-the additional excretion module too, which constructs its own interval table
-and retained-column list. No runtime VOLUME fix is included in this investigation.
+output shape and numerical results across dependency versions. The additional
+excretion module now removes unused DOSNOA and VOLUME interval metadata while
+preserving concentration sample volumes. Its 20 focused assertions pass with
+both dependency versions, including recovered amounts without weight adjustment
+and weight-adjusted fraction-to-percent conversion. No general NCA VOLUME fix
+is included; the main NCA path described above still needs that follow-up.
 Track it under the existing
 [PKNCA compatibility issue #481](https://github.com/pharmaverse/aNCA/issues/481).

@@ -37,7 +37,7 @@
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
 * **Table customization:** Choose grouping, covariate comparisons, statistics, parameters, timepoints, and listing columns, with readable group headers and warnings for unavailable grouping variables (#1343, #1356, #1531).
-* **Urine outputs:** Restrict urine tables and listings to urine specimens report missing specimen information, and distinguish absent urine parameters from records removed by filters or exclusions (#1335, #1343, #1356, #1476, #1531).
+* **Urine outputs:** Select urine matrices regardless of case in excretion analysis and validate selections before calculation; restrict urine tables and listings to urine specimens, report missing specimen information, and distinguish absent urine parameters from records removed by filters or exclusions (#1335, #1343, #1356, #1476, #1531).
 
 ## Exports & CDISC
 
