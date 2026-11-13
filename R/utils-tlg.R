@@ -33,7 +33,7 @@
 #' Carry the widget's title, subtitle and footnote onto the ggplot behind it.
 #'
 #' On the plotly path these are set with `layout()` on the widget, not with `labs()`, so the
-#' ggplot stashed by [.with_ggplot()] -- the one the PNG and PDF export actually renders --
+#' ggplot stashed by `.with_ggplot()` -- the one the PNG and PDF export actually renders --
 #' would come out with no titles at all while the on-screen plot has them.  Applying them
 #' here keeps the downloaded image the same as what the user saw, which is the same reason
 #' the log scale is re-applied to the stashed ggplot rather than left to `layout()` (#1344).
@@ -226,7 +226,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #' by convention).
 #'
 #' Used by [t_pkpt03_col()], [t_pkpt08_uri()], and [t_pkpt11_gmr()] via
-#' [.build_pkpp_table()].  Placed here so future table functions can reuse it
+#' `.build_pkpp_table()`.  Placed here so future table functions can reuse it
 #' without duplicating the stat logic.
 #'
 #' @param vals Numeric vector (NAs already handled by caller or this function).
@@ -265,7 +265,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 }
 
 #' Human-readable display labels for the descriptive-statistic columns shared by
-#' the summary tables (`t_pkct01`, and everything built via [.build_pkpp_table()]).
+#' the summary tables (`t_pkct01`, and everything built via `.build_pkpp_table()`).
 #'
 #' The data frames keep their terse programmatic column names (`GeoMean`,
 #' `CV_pct`, ...) so downstream code and tests can reference them; these labels
@@ -289,8 +289,8 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #'
 #' Only statistic columns are touched; grouping/key columns (already labelled via
 #' [apply_labels()]) are left as-is.  Group-comparison tables prefix each
-#' statistic column with `"<level><.GROUP_SEP>"` (see [.pivot_group_blocks()]);
-#' the prefix is stripped before the [.STAT_LABELS] lookup so a prefixed leaf
+#' statistic column with `"<level><.GROUP_SEP>"` (see `.pivot_group_blocks()`);
+#' the prefix is stripped before the `.STAT_LABELS` lookup so a prefixed leaf
 #' such as `"Male<SEP>Mean"` still gets the "Mean" label.  Applied AFTER the
 #' `rbind` in the builders because `rbind` drops per-column attributes.
 #'
@@ -313,8 +313,8 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #' result to the statistics the user asked for, leaving every key / grouping
 #' column (and, for group-comparison tables, the column order) intact.  A column
 #' is a statistic column when its base name -- the part after any
-#' `"<level><.GROUP_SEP>"` prefix, matching [.apply_stat_labels()] -- is one of
-#' the names in [.STAT_LABELS].  Requested statistics that a given table never
+#' `"<level><.GROUP_SEP>"` prefix, matching `.apply_stat_labels()` -- is one of
+#' the names in `.STAT_LABELS`.  Requested statistics that a given table never
 #' produces (e.g. `n_blq` on ADPP tables, `GeoMean` on `t_pkpt08_uri`) are
 #' silently ignored.
 #'
@@ -349,7 +349,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #' A control character (unit separator) is used so it can never collide with
 #' real column-label text (arm names, RACE strings, ...).  The prefixed names
 #' are only a uniqueness device -- the group->columns mapping is carried
-#' explicitly via the `col_groups` attribute (see [.make_col_groups()]), so
+#' explicitly via the `col_groups` attribute (see `.make_col_groups()`), so
 #' render code never has to parse these names back apart.
 #' @noRd
 .GROUP_SEP <- ""
@@ -357,7 +357,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #' Ordered levels of a column-group variable.
 #'
 #' Natural (numeric-aware) sort of the non-missing values, with `NA` coerced to
-#' a literal `"NA"` level appended last -- mirroring how [.natural_sort_key()]
+#' a literal `"NA"` level appended last -- mirroring how `.natural_sort_key()`
 #' and the row-key handling keep missing values visible rather than dropping
 #' them.
 #'
@@ -389,7 +389,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #' @param data The data frame the table is built from.
 #' @param reserved Character vector of variables that must NOT be reused as the
 #'   comparison variable (stratification / parameter / split columns).
-#' @return A character vector of ordered group levels (from [.group_levels()]).
+#' @return A character vector of ordered group levels (from `.group_levels()`).
 #' @noRd
 .resolve_col_group <- function(col_group_var, data, reserved) {
   if (!col_group_var %in% names(data)) {
@@ -421,17 +421,17 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #' of `cell_df` and the resulting one-row statistic block is renamed with a
 #' `"<level><.GROUP_SEP><stat>"` prefix; all blocks are then `cbind`'d together.
 #' Empty subsets still yield a rectangular `n = 0 / NA` block (both
-#' [.summarise_adpp()] and `.summarise_group()` handle empty input), so the
+#' `.summarise_adpp()` and `.summarise_group()` handle empty input), so the
 #' result is the same width regardless of which levels are populated in this cell.
 #'
-#' Readable leaf labels are (re-)applied by [.apply_stat_labels()] on the final
+#' Readable leaf labels are (re-)applied by `.apply_stat_labels()` on the final
 #' wide table AFTER the builder's `rbind` (which drops column attributes), so this
 #' helper only computes and prefixes the blocks.
 #'
 #' @param cell_df Rows for a single (stratum x parameter) / row-key cell.
 #' @param group_var Column whose levels become side-by-side groups.
 #' @param group_levels Ordered levels defining the column order
-#'   (from [.resolve_col_group()]).
+#'   (from `.resolve_col_group()`).
 #' @param block_fn Function taking a data-frame subset and returning a one-row
 #'   statistic data frame (e.g. `.summarise_group`, or a `summary_fn` wrapper).
 #' @return A one-row data frame of all per-group statistic blocks, side by side.
@@ -453,7 +453,7 @@ filter_metabolite_rows <- function(data, caller = "filter_metabolite_rows", allo
 #'
 #' Consumed at render time by `define_col_groups()` to emit
 #' `reactable::colGroup()` spanners.  Storing the exact leaf names (rather than
-#' re-deriving them by parsing) means a group value containing [.GROUP_SEP] can
+#' re-deriving them by parsing) means a group value containing `.GROUP_SEP` can
 #' never corrupt the grouping.
 #'
 #' @param group_levels Ordered group levels.

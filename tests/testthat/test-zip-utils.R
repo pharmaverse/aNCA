@@ -270,6 +270,7 @@ describe("selected export artifact validation", {
 
 describe("save_table_format", {
   it("propagates XPT writer failures so export cannot silently continue", {
+    skip_if_not_installed("mockery")
     mockery::stub(
       save_table_format,
       "haven::write_xpt",

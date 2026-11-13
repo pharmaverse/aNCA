@@ -19,3 +19,7 @@ inst/shiny/tests/testthat/_snaps
 ^NEWS\.md$
 ^data-raw$
 ^vignettes/
+^inst/shiny/www/\.sass_cache_keys$
+^new-dev\.zip$
+^cran-release-checklist\.md$
+^tests/testthat/Rplots\.pdf$
