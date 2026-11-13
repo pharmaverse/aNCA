@@ -163,10 +163,12 @@
 .setup_auto_replay <- function(uploaded_data, auto_replay, data_step,
                                trigger_mapping_submit,
                                processed_data, pknca_data, session) {
+  auto_replay_ready <- reactiveVal(FALSE)
   # Step 1: Detect settings upload and trigger mapping submission.
   observeEvent(uploaded_data$settings_override(), {
     override <- uploaded_data$settings_override()
     if (is.null(override) || is.null(override$mapping)) return()
+    auto_replay_ready(FALSE)
     .start_auto_replay(
       override, auto_replay, data_step, trigger_mapping_submit, session
     )
@@ -216,7 +218,6 @@
   })
 
   # Step 4: Signal that data processing is complete.
-  auto_replay_ready <- reactiveVal(FALSE)
   observeEvent(pknca_data(), {
     if (!auto_replay()) return()
     if (is.null(pknca_data())) {
