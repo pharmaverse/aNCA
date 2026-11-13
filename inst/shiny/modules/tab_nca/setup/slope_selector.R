@@ -154,17 +154,34 @@ slope_selector_server <- function( # nolint
         reason_col = "REASON"
       )
 
-      if (changes$in_data || changes$in_options) {
-        # New data or options changes (e.g. min.hl.points): regenerate all plots
-        plot_outputs(get_halflife_plots(
-          new_pknca_data, title_vars = "ATPTREF"
-        )[["plots"]])
-      } else if (changes$in_hl_adj) {
-        # Modify plots with new half-life adjustments (inclusions/exclusions)
-        plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
-      } else if (changes$in_selected_intervals) {
-        # Add/remove plots based on intervals (selection from nca_setup.R)
-        plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
+      updated <- tryCatch({
+        if (changes$in_data || changes$in_options) {
+          # New data or options changes (e.g. min.hl.points): regenerate all plots
+          plot_outputs(get_halflife_plots(
+            new_pknca_data, title_vars = "ATPTREF"
+          )[["plots"]])
+        } else if (changes$in_hl_adj) {
+          # Modify plots with new half-life adjustments (inclusions/exclusions)
+          plot_outputs(handle_hl_adj_change(new_pknca_data, pknca_data(), plot_outputs()))
+        } else if (changes$in_selected_intervals) {
+          # Add/remove plots based on intervals (selection from nca_setup.R)
+          plot_outputs(handle_interval_change(new_pknca_data, pknca_data(), plot_outputs()))
+        }
+        TRUE
+      }, error = function(e) {
+        log_error("Slope plot update failed: {conditionMessage(e)}")
+        showNotification(
+          paste("Slope plots could not be updated. Review the data and NCA settings,",
+                "then try again."),
+          type = "error", duration = NULL
+        )
+        FALSE
+      })
+      if (!updated) {
+        plot_outputs(list())
+        session$userData$results$slope_selector <- list()
+        pknca_data(NULL)
+        return()
       }
 
       # Update the searching widget choices based on the new data

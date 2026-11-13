@@ -120,13 +120,14 @@ identical shared result columns; retaining the metadata additionally produced a
 VOLUME result column. Do not blindly add VOLUME to retained columns when it is
 absent: that causes a missing-column error in both versions.
 
-A follow-up fix should align retained metadata with actual interval columns,
-preserve concentration volumes used for excretion calculations, and test both
-output shape and numerical results across dependency versions. The additional
-excretion module now removes unused DOSNOA and VOLUME interval metadata while
-preserving concentration sample volumes. Its 20 focused assertions pass with
-both dependency versions, including recovered amounts without weight adjustment
-and weight-adjusted fraction-to-percent conversion. No general NCA VOLUME fix
-is included; the main NCA path described above still needs that follow-up.
+The default NCA interval table now omits incidental VOLUME metadata unless
+VOLUME is explicitly retained or used for concentration grouping. Individual
+concentration sample volumes are preserved. Serum and urine calculations match
+an explicitly retained-metadata reference in every shared result column under
+both CRAN 0.12.1 and development 0.12.1.9003. The additional excretion module
+already removes unused DOSNOA and VOLUME interval metadata. Unexpected slope
+plot calculation errors are now reported without disconnecting the session;
+failed plots are cleared and a corrected calculation can regenerate them.
+Focused coverage is in `test-interval-metadata.R`.
 Track it under the existing
 [PKNCA compatibility issue #481](https://github.com/pharmaverse/aNCA/issues/481).

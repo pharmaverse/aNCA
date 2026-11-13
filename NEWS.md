@@ -51,7 +51,7 @@
 ## Help & compatibility
 
 * **Help and navigation:** Added parameter references, ratio and R-script guides, contextual help, session information, clearer labels, and resizable sidebars (#899, #975, #1015, #1023, #1090, #1156, #1251, #1300, #1333).
-* **PKNCA compatibility:** Fixed development-version failures affecting start imputation, duplicate R2ADJ results, half-life selection, excretion parameters, and dose-escalation reports; excretion parameters are registered for namespace-only calls as well as attached use; R >= 4.4 is now required (#1102).
+* **PKNCA compatibility:** Fixed development-version failures affecting start imputation, duplicate R2ADJ results, half-life selection, excretion parameters, and dose-escalation reports; excretion parameters are registered for namespace-only calls as well as attached use; collection-volume interval metadata no longer blocks NCA or slope plots, and slope-generation errors remain recoverable; R >= 4.4 is now required (#1102).
 * **App startup:** Fixed installed-package and read-only deployment startup failures, keep application logs in a writable temporary or configured directory, restore the upload-limit option on exit, and recover after NCA errors (#913, #1107, #1378).
 * **Optional dependencies:** Reporting packages `rlistings`, `officer`, and `flextable` are now optional, with notifications when required for an output (#1106).
 

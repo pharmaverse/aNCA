@@ -44,4 +44,4 @@ repeat remote incoming checks on a CRAN-capable network, and
 replace these candidate results with the final submission evidence. Scientific
 acceptance testing for the accumulated changes since 0.1.0 remains a maintainer
 release responsibility. See `cran-release-checklist.md` for the scope and the
-confirmed interval-metadata incompatibility with unreleased PKNCA.
+interval-metadata compatibility checks with unreleased PKNCA.
