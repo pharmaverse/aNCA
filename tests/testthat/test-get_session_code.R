@@ -378,3 +378,17 @@ describe("get_session_code: ", {
     expect_false(any(grepl(placeholder, file_content)))
   })
 })
+
+
+describe("generated script dependency checks", {
+  it("does not execute package installation commands", {
+    template <- system.file("www/templates/script_template.R", package = "aNCA")
+    code <- parse(template)
+    calls_install <- function(x) {
+      if (!is.call(x) && !is.expression(x)) return(FALSE)
+      if (is.call(x) && identical(x[[1]], as.name("install.packages"))) return(TRUE)
+      any(vapply(as.list(x), calls_install, logical(1)))
+    }
+    expect_false(calls_install(code))
+  })
+})
