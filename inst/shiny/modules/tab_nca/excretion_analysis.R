@@ -50,6 +50,27 @@ excretion_ui <- function(id) {
 }
 
 
+# Return a user-facing validation message before starting an excretion calculation.
+.excretion_input_error <- function(input, data) {
+  end_time_col <- input$end_time_col
+  if (length(input$matrix_select) == 0) {
+    "Please select at least one matrix."
+  } else if (length(input$param_select) == 0) {
+    "Please select at least one excretion parameter."
+  } else if (length(input$interval_types) == 0) {
+    "Please select at least one interval type."
+  } else if (length(end_time_col) != 1L || !end_time_col %in% names(data$conc$data)) {
+    "Please select an end time column."
+  } else if (!is.numeric(data$conc$data[[end_time_col]])) {
+    "The end time column must be numeric."
+  } else if (isTRUE(input$adjust_bw) && !all(c("WTBL", "WTBLU") %in% names(data$dose$data))) {
+    paste("Please ensure WTBL and WTBLU columns exist in the dose data.",
+          "No adjustments can be made.")
+  } else {
+    NULL
+  }
+}
+
 # Server function
 excretion_server <- function(id, input_pknca_data) {
   moduleServer(id, function(input, output, session) {
@@ -79,7 +100,7 @@ excretion_server <- function(id, input_pknca_data) {
       }
 
       updateSelectInput(session, "matrix_select", choices = pcspecs,
-                        selected = if ("Urine" %in% pcspecs) "Urine" else NULL)
+                        selected = pcspecs[toupper(trimws(pcspecs)) == "URINE"])
 
       # Rendering the map end time column selector
       selector_label(input = input,
@@ -116,6 +137,13 @@ excretion_server <- function(id, input_pknca_data) {
       req(input_pknca_data())
       data <- input_pknca_data()
 
+      input_error <- .excretion_input_error(input, data)
+      if (!is.null(input_error)) {
+        showNotification(input_error, type = "warning")
+        return(NULL)
+      }
+      end_time_col <- input$end_time_col
+
       dose_col <- data$dose$columns$dose
       doseu <- data$dose$columns$doseu
       weight_col <- "WTBL"
@@ -123,15 +151,6 @@ excretion_server <- function(id, input_pknca_data) {
 
       # Adjust dose by bodyweight if selected
       if (input$adjust_bw) {
-        # Check if weight columns exist
-        if (!(weight_col %in% names(data$dose$data)) || !(weightu %in% names(data$dose$data))) {
-          showNotification(
-            glue::glue("Please ensure {weight_col} and {weightu} columns exist in the dose data.
-                      No adjustments can be made."), type = "warning"
-          )
-          return(NULL)
-        }
-
         # mutate dose_col and doseu to be dose * weight
         data$dose$data <- data$dose$data %>%
           mutate(
@@ -166,13 +185,6 @@ excretion_server <- function(id, input_pknca_data) {
 
       # excretion sample intervals
       # add one row with start AFRLT and end_time_col
-      end_time_col <- input$end_time_col
-
-      if (is.null(end_time_col) || end_time_col == "") {
-        showNotification("Please select an end time column.", type = "error")
-        return(NULL)
-      }
-
       # Obtain all possible pknca parameters
       all_pknca_params <- setdiff(names(PKNCA::get.interval.cols()),
                                   c("start", "end"))
@@ -195,6 +207,11 @@ excretion_server <- function(id, input_pknca_data) {
       data$intervals <- bind_rows(data$intervals, excretion_intervals) %>%
         filter(type_interval %in% input$interval_types) %>%
         arrange(PCSPEC, start, end)
+      if (nrow(data$intervals) == 0) {
+        showNotification("No intervals match the selected matrices and interval types.",
+                         type = "warning")
+        return(NULL)
+      }
 
       data$units <- data$units  %>%
         mutate(PPSTRESU = ifelse(PPTESTCD == "fe", "%", PPSTRESU),
