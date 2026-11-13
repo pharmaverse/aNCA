@@ -84,12 +84,46 @@ The all-excluded fixture now accepts only the two specific empty concentration /
 time warnings introduced upstream, while preserving its exclusion assertions.
 Other warnings are not suppressed by the handler.
 
-A focused development-PKNCA run found a separate incompatibility: the start
-imputation regression test calls upstream `pk.nca()` with a `VOLUME` interval
-column that newer upstream validation rejects. The run had 242 passed
-expectations and one error, plus six fixture setup warnings about automatic dose
-intervals and mixed routes. This is an upgrade/compatibility risk, not a failure
-with the supported CRAN dependency. No calculation behavior was changed to
-accommodate an unreleased dependency in this branch. Track it under the existing
-[PKNCA compatibility issue #481](https://github.com/pharmaverse/aNCA/issues/481)
-before adopting that upstream version.
+The VOLUME incompatibility is confirmed in the actual aNCA calculation path,
+not only in a test's direct upstream call. Both the selected fork's main and
+pharmaverse/aNCA main still point to `1a1c99bd459d48cbe6b6dad6556c8b3a8a82e4be`;
+the upstream PKNCA main commit above is also unchanged at investigation time.
+
+`format_pkncadata_intervals()` carries VOLUME when the concentration data contain
+that column, while the default `PKNCA_update_data_object()` retained-column
+option omits it. Development PKNCA now calls `assert_intervals()` in `pk.nca()`
+and rejects undeclared columns. `PKNCA_calculate_nca()` does not sanitize the
+intervals before its upstream call. The Shiny setup passes only extra grouping
+variables for retention, so VOLUME is not automatically covered there either.
+Generated scripts use the same update/calculation functions.
+
+Reproduction used subject S1-01 / DrugA from the bundled example, with serum
+parameters cmax, auclast, aucinf.obs, half.life and urine parameters ae, volpk, fe:
+
+| Input / option | CRAN PKNCA 0.12.1 | Development PKNCA 0.12.1.9003 |
+| --- | --- | --- |
+| Serum, VOLUME present but entirely NA, default options | Pass | VOLUME error |
+| Serum, VOLUME/VOLUMEU columns absent | Pass | Pass |
+| Serum, existing VOLUME explicitly retained | Pass | Pass |
+| Urine, 32 nonmissing VOLUME samples, default options | Pass | VOLUME error |
+| Same urine input, existing VOLUME explicitly retained | Pass | Pass |
+
+Both the direct `PKNCA::pk.nca()` call and `PKNCA_calculate_nca()` reproduce the
+error. This confirms a user-facing compatibility problem when adopting the
+upcoming dependency, while current CRAN PKNCA remains unaffected.
+
+Two diagnostic adjustments were checked without changing repository calculation
+code: declaring existing VOLUME as retained interval metadata, and removing
+VOLUME from intervals while preserving it on concentration records. For both
+serum and urine under both dependency versions, these alternatives produced
+identical shared result columns; retaining the metadata additionally produced a
+VOLUME result column. Do not blindly add VOLUME to retained columns when it is
+absent: that causes a missing-column error in both versions.
+
+A follow-up fix should align retained metadata with actual interval columns,
+preserve concentration volumes used for excretion calculations, and test both
+output shape and numerical results across dependency versions. It should cover
+the additional excretion module too, which constructs its own interval table
+and retained-column list. No runtime VOLUME fix is included in this investigation.
+Track it under the existing
+[PKNCA compatibility issue #481](https://github.com/pharmaverse/aNCA/issues/481).
