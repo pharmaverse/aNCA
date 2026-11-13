@@ -1,7 +1,7 @@
 citHeader("If you use this software, please cite it as below:")
 
 bibentry(
-  bibtype = "Unpublished",
+  bibtype = "Manual",
   title = "aNCA: A Dynamic Shiny App to perform NCA",
   author = c(
     person(given = "Ercan", family = "Suekuer", email = "ercan.suekuer@roche.com"),
@@ -12,7 +12,7 @@ bibentry(
     person(given = "Lucy", family = "Aspridis", email = "lucy.aspridis@gmail.com"),
     person(given = "Valentin", family = "Legras", email = "anca.pharmaverse@gmail.com")
   ),
-  year = "2025",
+  year = "2026",
   note = sprintf("Version %s; License: Apache-2.0", meta$Version),
   url = "https://github.com/pharmaverse/aNCA"
 )
