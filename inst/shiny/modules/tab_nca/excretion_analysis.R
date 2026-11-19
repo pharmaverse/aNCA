@@ -33,6 +33,19 @@ excretion_ui <- function(id) {
             selectInput(ns("matrix_select"), "Select Matrices:", choices = NULL, multiple = TRUE),
             uiOutput(ns("map_end_col_ui_wrapper")),
             checkboxInput(ns("adjust_bw"), "Adjust for Body Weight", value = TRUE),
+            checkboxInput(ns("pooled_excreta"), "Pooled excreta", value = FALSE),
+            conditionalPanel(
+              condition = sprintf("input['%s']", ns("pooled_excreta")),
+              selectizeInput(
+                ns("pool_vars"),
+                "Pool samples by:",
+                choices = NULL,
+                multiple = TRUE,
+                options = list(
+                  placeholder = "Select one or more variables"
+                )
+              )
+            ),
             uiOutput(ns("param_select_ui_wrapper")),
             checkboxGroupInput(
               ns("interval_types"),
@@ -80,6 +93,22 @@ excretion_server <- function(id, input_pknca_data) {
 
       updateSelectInput(session, "matrix_select", choices = pcspecs,
                         selected = if ("Urine" %in% pcspecs) "Urine" else NULL)
+
+      pool_vars <- .excretion_pooling_variables(
+        conc_data,
+        input_pknca_data()$dose$data
+      )
+      selected_pool_vars <- intersect(isolate(input$pool_vars), pool_vars)
+      if (length(selected_pool_vars) == 0 && "GROUP" %in% pool_vars) {
+        selected_pool_vars <- "GROUP"
+      }
+      updateSelectizeInput(
+        session,
+        "pool_vars",
+        choices = pool_vars,
+        selected = selected_pool_vars,
+        server = TRUE
+      )
 
       # Rendering the map end time column selector
       selector_label(input = input,
@@ -150,6 +179,27 @@ excretion_server <- function(id, input_pknca_data) {
           )
 
         # Update units
+        data$units <- PKNCA_build_units_table(data$conc, data$dose)
+      }
+
+      if (isTRUE(input$pooled_excreta)) {
+        data$dose$data <- tryCatch(
+          .excretion_pool_doses(
+            dose_data = data$dose$data,
+            dose_col = dose_col,
+            dose_group_columns = data$dose$columns$groups,
+            pool_vars = input$pool_vars
+          ),
+          error = function(e) {
+            showNotification(conditionMessage(e), type = "warning")
+            NULL
+          }
+        )
+
+        if (is.null(data$dose$data)) {
+          return(NULL)
+        }
+
         data$units <- PKNCA_build_units_table(data$conc, data$dose)
       }
 
@@ -238,6 +288,67 @@ excretion_server <- function(id, input_pknca_data) {
   })
 }
 
+.excretion_pooling_variables <- function(conc_data, dose_data) {
+  excluded_vars <- c(
+    "AFRLT", "ARRLT", "ATPTREF", "AVAL", "AVALU", "CONCDUR", "DOSEA",
+    "DOSETRT", "DOSEU", "DOSNOA", "EVID", "NFRLT", "PARAM", "PCSPEC",
+    "ROUTE", "RRLTU", "STUDYID", "USUBJID", "VOLUME", "VOLUMEU", "WTBL",
+    "WTBLU", "std_route"
+  )
+
+  setdiff(intersect(names(conc_data), names(dose_data)), excluded_vars)
+}
+
+.excretion_pool_doses <- function(dose_data,
+                                  dose_col,
+                                  dose_group_columns,
+                                  pool_vars) {
+  pool_vars <- unique(pool_vars[!is.na(pool_vars) & nzchar(pool_vars)])
+  if (length(pool_vars) == 0) {
+    stop("Select at least one variable that identifies each pooled sample.")
+  }
+
+  missing_vars <- setdiff(pool_vars, names(dose_data))
+  if (length(missing_vars) > 0) {
+    stop(
+      "Pooling variable(s) not found in dose data: ",
+      paste(missing_vars, collapse = ", "), "."
+    )
+  }
+
+  missing_pool_values <- pool_vars[vapply(pool_vars, function(var) {
+    any(is.na(dose_data[[var]]) | dose_data[[var]] == "")
+  }, logical(1))]
+  if (length(missing_pool_values) > 0) {
+    stop(
+      "Pooling variable(s) contain missing values: ",
+      paste(missing_pool_values, collapse = ", "), "."
+    )
+  }
+
+  dose_groups <- setdiff(unname(unlist(dose_group_columns)), "USUBJID")
+  pool_keys <- unique(c(dose_groups, "DOSNOA", pool_vars))
+  missing_keys <- setdiff(pool_keys, names(dose_data))
+  if (length(missing_keys) > 0) {
+    stop(
+      "Cannot calculate pooled doses; missing dose grouping variable(s): ",
+      paste(missing_keys, collapse = ", "), "."
+    )
+  }
+
+  dose_values <- .excretion_unit_value(dose_data[[dose_col]])
+  invalid_doses <- is.na(dose_values) & !is.na(dose_data[[dose_col]])
+  if (any(invalid_doses)) {
+    stop("Dose values must be numeric to calculate a pooled dose denominator.")
+  }
+  dose_data[[dose_col]] <- dose_values
+
+  dose_data %>%
+    group_by(!!!syms(pool_keys)) %>%
+    mutate(!!dose_col := sum(!!sym(dose_col))) %>%
+    ungroup()
+}
+               
 # Excretion analysis help button dropdown
 excretion_help_ui <- function() {
   dropdown(
@@ -256,6 +367,11 @@ excretion_help_ui <- function() {
         tags$li(
           tags$b("Adjust for Body Weight"),
           ": Optionally adjust dose by body weight if available."
+        ),
+        tags$li(
+          tags$b("Pooled Excreta"),
+          ": Select the variable(s) identifying each pool. The dose denominator is the ",
+          "cumulative dose for the animals in that pool."
         ),
         tags$li(
           tags$b("Select Parameters"), ": Pick excretion PK parameters to calculate."
