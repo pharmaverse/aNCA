@@ -112,6 +112,25 @@ changed_units <- function(units) {
   units[keep, , drop = FALSE]
 }
 
+#' Recalculate the conversion factor of a units table row
+#'
+#' Used after the target unit (`PPSTRESU`) of a row is edited, e.g. in the
+#' Parameter Units modal of the App. Units are read as character values, so
+#' data frames and tibbles behave the same way.
+#'
+#' @param units A units table with `PPORRESU` and `PPSTRESU` columns.
+#' @param row Index of the row to recalculate.
+#'
+#' @returns The conversion factor from `PPORRESU` to `PPSTRESU` for that row,
+#'   or `NA` if the units are not convertible.
+#' @examples
+#' units <- data.frame(PPTESTCD = "cmax", PPORRESU = "ug/mL", PPSTRESU = "ng/mL")
+#' recalculate_conversion_factor(units, 1)
+#' @export
+recalculate_conversion_factor <- function(units, row) {
+  get_conversion_factor(units$PPORRESU[[row]], units$PPSTRESU[[row]])
+}
+
 
 #' Convert Numeric Value and Unit to ISO 8601 Duration
 #'
