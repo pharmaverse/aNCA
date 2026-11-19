@@ -40,10 +40,18 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          if command -v google-chrome >/dev/null || command -v google-chrome-stable >/dev/null; then
+            exit 0
+          fi
+
           sudo apt-get update -qq
-          sudo apt-get install -qq -y wget gnupg
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get install -qq -y wget
+          sudo install -d -m 0755 /etc/apt/keyrings
+          key_file="$(mktemp)"
+          trap 'rm -f "$key_file"' EXIT
+          wget -nv -O "$key_file" https://dl.google.com/linux/linux_signing_key.pub
+          sudo install -m 0644 "$key_file" /etc/apt/keyrings/google-chrome.asc
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update -qq
           sudo apt-get install -qq -y google-chrome-stable
 
@@ -54,7 +62,7 @@ jobs:
           use-public-rspm: true
 
       - name: Install R Dependencies
-        uses: r-lib/actions/setup-r-dependencies@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
+        uses: r-lib/actions/setup-r-dependencies@f9a764fea8d5c63df6ef9a5c7795bf7deb5d7e05 # v2
         with:
           extra-packages: |
             local::.
