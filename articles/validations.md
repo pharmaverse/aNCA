@@ -7,7 +7,7 @@ The current validation methods for aNCA are listed here:
 - **Code coverage \>90%.** You can check this either in our [GitHub
   README badge](https://github.com/pharmaverse/aNCA) or by running
   yourself
-  [`covr::package_coverage()`](http://covr.r-lib.org/reference/package_coverage.md)
+  [`covr::package_coverage()`](https://covr.r-lib.org/reference/package_coverage.html)
   in our repository (after cloning)
 - **CI/CD workflow passing.** Testing package installation on Ubuntu
   (22.04) & Windows (latest), unit function tests and general
