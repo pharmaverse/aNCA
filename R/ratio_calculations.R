@@ -82,6 +82,8 @@ multiple_matrix_ratios <- function(data, matrix_col, conc_col, units_col,
 #' @param adjusting_factor Numeric to multiply the ratio. Default is 1.
 #' @param custom_pptestcd Optional character. If provided, will be used as the PPTESTCD value.
 #' @returns A data.frame result object with the calculated ratios.
+#'   Undefined ratios (missing or non-finite inputs, zero denominators, or
+#'   non-finite results) are retained as `NA_real_`.
 #' @export
 calculate_ratios <- function(
   data,
@@ -177,9 +179,17 @@ calculate_ratios.data.frame <- function(
     ) %>%
     ungroup() %>%
     mutate(
-      PPORRES = (PPORRES / PPORRES_ref) * adjusting_factor,
+      PPORRES = ifelse(
+        is.finite(PPORRES) & is.finite(PPORRES_ref) & PPORRES_ref != 0,
+        (PPORRES / PPORRES_ref) * adjusting_factor,
+        NA_real_
+      ),
       PPSTRES = if ("PPSTRES" %in% names(.) & "PPSTRES_ref" %in% names(.)) {
-        (PPSTRES / PPSTRES_ref) * adjusting_factor
+        ifelse(
+          is.finite(PPSTRES) & is.finite(PPSTRES_ref) & PPSTRES_ref != 0,
+          (PPSTRES / PPSTRES_ref) * adjusting_factor,
+          NA_real_
+        )
       } else {
         NULL
       },
@@ -190,6 +200,7 @@ calculate_ratios.data.frame <- function(
         NULL
       }
     ) %>%
+    mutate(across(any_of(c("PPORRES", "PPSTRES")), ~ replace(., !is.finite(.), NA_real_))) %>%
     rowwise() %>%
     mutate(
       ppanmeth_test_groups = paste0(

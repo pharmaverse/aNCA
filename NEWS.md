@@ -4,7 +4,7 @@
 
 * **Data upload:** Combine multiple files, see accepted formats and size limits, and receive clearer upload and mapping errors (#821, #1365, #1367).
 * **Data mapping:** Map excretion times and body-weight units, enter dose duration and treatment intervals directly, and continue after mapping errors or duplicate-row cancellation without stuck loading indicators (#745, #959, #1051, #1402, #1420).
-* **Saved sessions:** Save versioned YAML settings and restore mappings, filters, exclusions, ratios, units, and previous NCA runs from YAML or ZIP, including reusable templates, startup settings, and version selection in installed packages (#514, #832, #860, #901, #993, #1082, #1091, #1103, #1104, #1195, #1225, #1476).
+* **Saved sessions:** Save versioned YAML settings and restore mappings, filters, exclusions, ratios, units, and previous NCA runs from YAML or ZIP, including reusable templates, startup settings, and single or selected saved versions in installed packages (#514, #832, #860, #901, #993, #1082, #1091, #1103, #1104, #1195, #1225, #1450, #1476).
 * **Settings stability:** Preserve parameter and summary selections during setup changes, apply filters consistently, and ignore invalid partial intervals in uploaded settings (#840, #1008, #1060, #1092, #1347).
 
 ## NCA calculations & results
@@ -33,6 +33,7 @@
 
 ## Tables, listings & graphs
 
+* **Analyte ratios:** M/P tables, listings, and boxplots use configured ADPP ratios, including inverse directions, with explicit test/reference labels and separate dose and route profiles. Parameters for the same comparison share a page; point overlays retain recorded values, and missing ratios give setup guidance (#1450).
 * **TLG labels:** Customize titles, subtitles, and footnotes for all 33 catalog entries, retain edits when submitting the order again or restoring settings, and preserve readable labels in interactive and exported outputs (#1476).
 * **TLG catalog:** Added concentration and PK summaries, dose-normalized and urine outputs, geometric mean ratios with 90% confidence intervals, boxplots, dose-proportionality plots, and individual listings (#1343).
 * **TLG selection:** Search and select outputs by dataset, manage the order with bulk controls, and receive explanations for unavailable outputs or missing NCA results (#1335, #1356, #1530).
