@@ -18,9 +18,11 @@ local({
   library(shinyWidgets)
   shiny_dir <- system.file("shiny", package = "aNCA")
   for (f in list(
+    c("functions", "utils.R"),
     c("functions", "tlg_add_picker.R"),
     c("functions", "zip-utils.R"),
     c("functions", "utils-tlg.R"),
+    c("functions", "utils-tlg-settings.R"),
     c("functions", "tlg_export.R"),
     c("modules", "tab_tlg", "tlg_module.R"),
     # All four option types: tlg_module_server() resolves the per-option server by name
@@ -74,40 +76,6 @@ describe("tab_tlg_server: add-picker selection", {
       session$setInputs(confirm_add_tlg = 1)
       session$flushReact()
       expect_identical(tlg_order()$Selection, before)
-    })
-  })
-})
-
-describe("tab_tlg_server: Order Details edit write-back", {
-  it("writes an edited Footnote into the matching full-frame row", {
-    testServer(tab_tlg_server, args = list(data = test_data), {
-      session$flushReact()
-      # First selected (displayed) row maps to the first Selection == TRUE row.
-      first_id <- tlg_order()$id[tlg_order()$Selection][1]
-
-      # selected_tlg_state()$edit() is fed by the nested reactable module's
-      # edit_<col> input; set it through the namespaced id and clear the debounce.
-      session$setInputs(
-        `selected_tlg_table-edit_Footnote` = list(row = 1, column = "Footnote", value = "My note")
-      )
-      session$elapse(800)
-      session$flushReact()
-
-      row <- tlg_order()[tlg_order()$id == first_id, ]
-      expect_equal(row$Footnote, "My note")
-    })
-  })
-
-  it("ignores an edit targeting a non-editable column", {
-    testServer(tab_tlg_server, args = list(data = test_data), {
-      session$flushReact()
-      before <- tlg_order()
-      session$setInputs(
-        `selected_tlg_table-edit_Footnote` = list(row = 1, column = "Type", value = "HACKED")
-      )
-      session$elapse(800)
-      session$flushReact()
-      expect_identical(tlg_order()$Type, before$Type)
     })
   })
 })
@@ -266,7 +234,7 @@ describe("tab_tlg_server: TLG export registry", {
       expect_gt(length(ids), 0)
       # Ids are the catalog keys, and every entry carries its definition and type.
       entry <- get(ids[1], envir = .tlg_registry)
-      expect_setequal(names(entry), c("def", "type", "items", "labels"))
+      expect_setequal(names(entry), c("def", "type", "items", "labels", "options", "comment"))
       expect_true(entry$type %in% c("table", "listing", "graph"))
       expect_true(is.function(entry$items))
     })
@@ -383,6 +351,8 @@ describe("tab_tlg_server: sidebar label settings", {
       expect_identical(session$userData$tlg_labels()$t_pkct01, edited)
       expect_identical(session$userData$tlg_labels()$p_pkpg02_doseprop,
                        list(title = "Saved graph", subtitle = ""))
+      session$setInputs(submit_tlg_order = 2)
+      render_tlg_panels(output)
       expect_match(output[[paste0(prefix, "options")]]$html, "Assay: !AVAL", fixed = TRUE)
       do.call(session$setInputs, setNames(list(c("1", "3")), paste0(prefix, "time_filter-select")))
       session$elapse(800)
@@ -422,7 +392,7 @@ describe("tab_tlg_server: sidebar label settings", {
       session$setInputs(submit_tlg_order = 1)
       render_tlg_panels(output)
       expect_identical(session$userData$tlg_labels()$t_pkct01, restored()$tlg_labels$t_pkct01)
-      expect_match(output$`1_tbl-options`$html, 'value="Uploaded title"', fixed = TRUE)
+      expect_match(output$`1_tbl-options`$html, ">Uploaded title</textarea>", fixed = TRUE)
     })
   })
 })
@@ -444,6 +414,106 @@ describe("tab_tlg_server: companion settings compatibility", {
       session$flushReact()
       expect_identical(session$userData$tlg_labels()$t_pkct01$title, "Earlier version")
       expect_identical(session$userData$tlg_order()$t_pkct01$Footnote, "Earlier note")
+    })
+  })
+})
+
+describe("TLG order settings validation", {
+  it("matches catalog names and skips removed entries with a warning", {
+    saved <- list(
+      removed_output = list(Selection = TRUE),
+      t_pkct01 = list(Selection = FALSE, Footnote = "Saved note", id = 99, Label = "Old label")
+    )
+    expect_warning(
+      result <- .normalize_tlg_order(saved, rev(names(.TLG_DEFINITIONS))),
+      "Skipped TLGs no longer in the catalog: removed_output"
+    )
+    expect_identical(result, list(t_pkct01 = list(Selection = FALSE, Footnote = "Saved note")))
+  })
+
+  it("accepts blank and missing text while rejecting malformed fields", {
+    saved <- list(t_pkct01 = list(
+      Selection = NA, Footnote = NULL, Stratification = "", Comment = c("one", "two")
+    ))
+    messages <- character()
+    result <- withCallingHandlers(
+      .normalize_tlg_order(saved, names(.TLG_DEFINITIONS)),
+      warning = function(w) {
+        messages <<- c(messages, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    )
+    expect_length(messages, 2)
+    expect_identical(result$t_pkct01, list(Footnote = NA_character_, Stratification = ""))
+    expect_identical(.normalize_tlg_order(NULL, names(.TLG_DEFINITIONS)), list())
+    expect_warning(.normalize_tlg_order(list(list(Selection = TRUE)), "t_pkct01"), "unique catalog")
+    expect_warning(
+      .normalize_tlg_order(list(t_pkct01 = "bad row"), "t_pkct01"), "invalid TLG order row"
+    )
+  })
+
+  it("restores reordered catalog entries and leaves new entries at their defaults", {
+    catalog_ids <- c("new_output", "t_pkct01_dose", "t_pkct01")
+    defaults <- data.frame(
+      id = 1:3,
+      Selection = c(FALSE, TRUE, FALSE),
+      Footnote = NA_character_,
+      Label = c("New output", "Current dose label", "Current label")
+    )
+    saved <- .normalize_tlg_order(list(
+      t_pkct01 = list(Selection = TRUE, Footnote = "Saved note"),
+      t_pkct01_dose = list(Selection = FALSE)
+    ), catalog_ids)
+    restored <- .restore_tlg_order(defaults, saved, catalog_ids)
+    expect_identical(restored$Selection, c(FALSE, FALSE, TRUE))
+    expect_identical(restored$Footnote, c(NA_character_, NA_character_, "Saved note"))
+    expect_identical(restored[c("id", "Label")], defaults[c("id", "Label")])
+  })
+})
+
+describe("TLG order restore compatibility", {
+  it("refreshes an existing table and resets absent fields and legacy settings to defaults", {
+    restored <- reactiveVal(NULL)
+    testServer(tab_tlg_server, args = list(data = test_data, settings_override = restored), {
+      session$flushReact()
+      initial <- displayed_order()
+      restored(list(tlg_order = list(t_pkct01_dose = list(
+        Selection = TRUE, Footnote = "First version", Comment = "Keep only in first version"
+      ))))
+      session$flushReact()
+      expect_equal(nrow(displayed_order()), nrow(initial) + 1L)
+      expect_equal(session$userData$tlg_order()$t_pkct01_dose$Footnote, "First version")
+      expect_named(displayed_order(), c("Type", "Dataset", "Output"))
+      expect_true(session$userData$tlg_order()$t_pkct01$Selection) # New catalog row keeps default.
+
+      restored(list(tlg_order = list(t_pkct01_dose = list(Selection = FALSE))))
+      session$flushReact()
+      expect_identical(displayed_order(), initial)
+      expect_true(is.na(session$userData$tlg_order()$t_pkct01_dose$Comment))
+      expect_true(is.na(session$userData$tlg_order()$t_pkct01_dose$Footnote))
+
+      restored(list(tlg_order = list(t_pkct01 = list(Selection = FALSE))))
+      session$flushReact()
+      expect_false(session$userData$tlg_order()$t_pkct01$Selection)
+      restored(list(settings = list(method = "linear")))
+      session$flushReact()
+      expect_identical(displayed_order(), initial)
+    })
+  })
+
+  it("preserves urine deselections when data arrives later and retains defaults for new outputs", {
+    data <- reactiveVal(NULL)
+    restored <- reactiveVal(list(tlg_order = list(t_pkpt08_uri = list(Selection = FALSE))))
+    testServer(tab_tlg_server, args = list(data = data, settings_override = restored), {
+      session$flushReact()
+      data(list(conc = list(data = data.frame(PCSPEC = "URINE", AVAL = 1))))
+      session$flushReact()
+      expect_false(session$userData$tlg_order()$t_pkpt08_uri$Selection)
+      expect_true(session$userData$tlg_order()$l_pkcl02_uri$Selection)
+      expect_true(session$userData$tlg_order()$t_pkct01$Selection)
+      data(list(conc = list(data = data.frame(PCSPEC = "URINE", AVAL = 2))))
+      session$flushReact()
+      expect_false(session$userData$tlg_order()$t_pkpt08_uri$Selection)
     })
   })
 })

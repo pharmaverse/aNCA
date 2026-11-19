@@ -474,16 +474,14 @@ get_tree_ids_for_texts <- function(tree, texts) {
 
   settings_list$ratio_table <- session$userData$ratio_table()
 
-  list(
+  c(list(
     settings = settings_list,
     mapping = session$userData$mapping,
     slope_rules = session$userData$slope_rules(),
     filters = session$userData$applied_filters,
     time_duplicate_keys = session$userData$time_duplicate_keys,
-    nca_ran = isTRUE(session$userData$nca_ran),
-    tlg_labels = if (is.function(session$userData$tlg_labels)) session$userData$tlg_labels(),
-    tlg_order = if (is.function(session$userData$tlg_order)) session$userData$tlg_order()
-  )
+    nca_ran = isTRUE(session$userData$nca_ran)
+  ), .tlg_settings_payload(session))
 }
 
 # Validate the settings payload without creating the settings file.

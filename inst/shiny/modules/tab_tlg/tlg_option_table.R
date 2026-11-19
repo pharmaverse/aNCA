@@ -23,8 +23,10 @@ tlg_option_table_ui <- function(id, opt_def, data) {
 #'                      choices etc.
 #' @param reset_trigger a reactive expression on which the module will restore its returned value
 #'                      to the default one.
+#' @param value_override Reactive table restored from settings.
 #' @returns a reactive containing a tibble with modifications provided by the user
-tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
+tlg_option_table_server <- function(id, opt_def, data, reset_trigger,
+                                    value_override = reactive(NULL)) {
   moduleServer(id, function(input, output, session) {
     #' Generates default table based on provided default option definition
     default_table <- if (length(opt_def$default_rows) == 0) {
@@ -106,18 +108,24 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
     }) %>%
       shiny::bindEvent(list(output_table(), refresh_reactable()))
 
-    #' Attach observers that listen to any changes provided by the user.
-    observe({
-      req(output_table())
-      purrr::walk(names(opt_def$cols), function(colname) {
-        observeEvent(input[[colname]], {
-          edit <- input[[colname]]
-          edited_vars <- edits_table()
-          edited_vars[edit$row, edit$column] <- edit$value
-          edits_table(edited_vars)
-        })
+    # Register each edit observer once; restoring/confirming a table must not
+    # accumulate listeners that replay stale edits.
+    purrr::walk(names(opt_def$cols), function(colname) {
+      observeEvent(input[[colname]], {
+        edit <- input[[colname]]
+        edited_vars <- edits_table()
+        edited_vars[edit$row, edit$column] <- edit$value
+        edits_table(edited_vars)
       })
     })
+
+    observeEvent(value_override(), {
+      restored <- value_override() %||% default_table
+      output_table(restored)
+      edits_table(restored)
+      reset_reactable_memory()
+      refresh_reactable(refresh_reactable() + 1)
+    }, ignoreNULL = FALSE, priority = 100)
 
     #' Add a new row to the edit table
     observeEvent(input$add_row, {
@@ -156,7 +164,9 @@ tlg_option_table_server <- function(id, opt_def, data, reset_trigger) {
     observeEvent(reset_trigger(), {
       reset_reactable_memory()
       output_table(default_table)
-    })
+      edits_table(default_table)
+      refresh_reactable(refresh_reactable() + 1)
+    }, ignoreInit = TRUE)
 
     output_table
   })

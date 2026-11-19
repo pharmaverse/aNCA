@@ -1,3 +1,4 @@
+source(system.file("shiny/functions/utils-tlg-settings.R", package = "aNCA"), local = TRUE)
 # Tests for shared TLG helpers in R/utils-tlg.R.
 
 describe("split_and_apply: annotation labels", {

@@ -418,3 +418,15 @@ describe("l_pkcl02_uri", {
     expect_equal(actual, expected)
   })
 })
+
+
+describe("l_pkcl01: explicit empty split selection", {
+  it("combines all records in one listing when no split columns are selected", {
+    skip_if_not_installed("rlistings")
+    result <- l_pkcl01(adnca, listgroup_vars = character(), grouping_vars = "USUBJID")
+    expect_named(result, "all")
+    expect_equal(nrow(result[[1]]), nrow(adnca))
+    expect_setequal(result[[1]]$USUBJID, adnca$USUBJID)
+    expect_equal(as.numeric(result[[1]]$AVAL[2:3]), as.numeric(adnca$AVAL[2:3]))
+  })
+})
