@@ -1,11 +1,5 @@
 describe("SDTM example datasets", {
 
-  # Skip all tests if the .rda files have not been generated yet
-  skip_if_not(
-    file.exists(system.file("data", "dm_example.rda", package = "aNCA")),
-    message = "SDTM example .rda files not yet generated — run data-raw/sdtm_example.R first"
-  )
-
   data("adnca_example", package = "aNCA", envir = environment())
   data("dm_example", package = "aNCA", envir = environment())
   data("pc_example", package = "aNCA", envir = environment())

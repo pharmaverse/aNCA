@@ -17,11 +17,11 @@
 #' @param col_group_var Optional column whose levels become side-by-side column
 #'   groups: each statistic block is repeated once per level. `NULL` (default)
 #'   produces the flat single-block table.
-#' @param group_levels Ordered group levels (from [.resolve_col_group()]),
+#' @param group_levels Ordered group levels (from `.resolve_col_group()`),
 #'   shared across splits so every table has the same columns. Ignored when
 #'   `col_group_var` is `NULL`.
 #' @param stats Optional character vector of terse statistic names to keep
-#'   (see [.select_stats()]). `NULL` (default) keeps every statistic.
+#'   (see `.select_stats()`). `NULL` (default) keeps every statistic.
 #' @return A labeled `data.frame`. When `col_group_var` is set it also carries a
 #'   `col_groups` attribute (level -> leaf column names) for the render layer.
 #' @noRd

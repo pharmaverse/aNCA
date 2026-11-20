@@ -74,6 +74,45 @@ describe("apply_mapping", {
     )
   })
 
+  it("rejects columns mapped from entirely missing or blank values", {
+    test_df$TIME <- NA_real_
+    test_df$CONC <- c(NA, "", "  ")
+    expect_error(
+      apply_mapping(test_df, mapping),
+      "contain only missing or blank values: AVAL, AFRLT"
+    )
+  })
+
+  it("rejects empty analysis inputs that are used without an explicit mapping", {
+    test_df$DOSEA <- NA_real_
+    test_df$VOLUME <- c(1, 2, 3)
+    test_df$AEFRLT <- NA_real_
+    test_df$VOLUMEU <- ""
+    expect_error(apply_mapping(test_df, mapping), "missing or blank values: DOSEA, AEFRLT, VOLUMEU")
+  })
+
+  it("rejects empty optional columns explicitly selected for analysis, grouping, or exclusion", {
+    test_df$TAU <- NA_real_
+    test_df$COHORT <- ""
+    mapping$TRTRINT <- "TAU"
+    mapping$Grouping_Variables <- "COHORT"
+    test_df$EXCLUSION <- NA_character_
+    mapping$NCAwXRS <- "EXCLUSION"
+    expect_error(
+      apply_mapping(test_df, mapping),
+      "missing or blank values: TRTRINT, COHORT, EXCLUSION"
+    )
+  })
+
+  it("allows partially populated columns and unused empty columns", {
+    test_df$TIME <- c(1, NA, 3)
+    test_df$AEFRLT <- c(2, NA, 4)
+    test_df$UNUSED <- NA
+    result <- apply_mapping(test_df, mapping)
+    expect_equal(as.numeric(result$AFRLT), test_df$TIME)
+    expect_equal(as.numeric(result$AEFRLT), test_df$AEFRLT)
+  })
+
   it("apply labels correctly when missing", {
     var_labels(test_df) <- rep(NA_character_, length(names(test_df)))
     mapping <- as.list(setNames(names(test_df), names(expected_df)))

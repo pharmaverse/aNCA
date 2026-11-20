@@ -3,7 +3,9 @@
 ## Please, set your working directory to this file:
 # setwd("path/to/this/file/script_template.R")
 
-if (!require("aNCA")) install.packages("aNCA")
+if (!requireNamespace("aNCA", quietly = TRUE)) {
+  stop("Package 'aNCA' is required. Install it with install.packages('aNCA') and rerun.")
+}
 library(aNCA)
 library(dplyr)
 

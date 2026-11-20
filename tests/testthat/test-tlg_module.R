@@ -508,6 +508,7 @@ describe("tlg_module_server: warning surfacing", {
 
   notes_from <- function(render_list) {
     notes <- character(0)
+    skip_if_not_installed("mockery")
     mockery::stub(
       tlg_module_server, "showNotification",
       function(ui, ...) notes[[length(notes) + 1]] <<- ui
@@ -537,7 +538,11 @@ describe("tlg_module_server: warning surfacing", {
   })
 
   it("leaves untyped warnings to the console rather than notifying", {
-    expect_length(notes_from(render_list_warns_untyped), 0)
+    expect_warning(
+      notes <- notes_from(render_list_warns_untyped),
+      "Removed 3 rows containing missing values", fixed = TRUE
+    )
+    expect_length(notes, 0)
   })
 })
 
@@ -1073,6 +1078,7 @@ describe("tlg_module_server: concise diagnostics", {
   it("shows absent urine data as not applicable without logging an error", {
     logged <- list()
     render_module <- tlg_module_server
+    skip_if_not_installed("mockery")
     mockery::stub(render_module, "log_error", function(...) {
       logged[[length(logged) + 1L]] <<- list(...)
     })
