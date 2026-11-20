@@ -12,8 +12,8 @@ The current validation methods for aNCA are listed here:
 - **CI/CD workflow passing.** Testing package installation on Ubuntu
   (22.04) & Windows (latest), unit function tests and general
   documentation aspects (completeness, spelling…)
-- **Internal company validations.** So far, we obtained a successfully
-  validated report from Roche; see the
+- **Internal company validations.** Roche validated aNCA v0.1.0.9004;
+  this historical report does not validate the current release. See the
   [report](https://github.com/pharmaverse/aNCA/blob/main/inst/extras/validation_reports/v0.1.0-roche-report.pdf).
   The validation methodology can be consulted
   [here](https://pharmar.org/posts/case-studies/roche-case-study/), or

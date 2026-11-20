@@ -14,6 +14,16 @@ pk.calc.ertmax(
   first.tmax = NULL,
   options = list()
 )
+
+anca_calc_ertmax(
+  conc,
+  volume,
+  time,
+  duration.conc,
+  check = TRUE,
+  first.tmax = NULL,
+  options = list()
+)
 ```
 
 ## Arguments

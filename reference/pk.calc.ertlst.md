@@ -7,6 +7,8 @@ rate
 
 ``` r
 pk.calc.ertlst(conc, volume, time, duration.conc, check = TRUE)
+
+anca_calc_ertlst(conc, volume, time, duration.conc, check = TRUE)
 ```
 
 ## Arguments

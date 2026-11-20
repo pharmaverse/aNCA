@@ -1,6 +1,6 @@
 # Changelog
 
-## aNCA (development version)
+## aNCA 0.2.0
 
 ### Data & settings
 
@@ -18,10 +18,10 @@
   [\#1402](https://github.com/pharmaverse/aNCA/issues/1402),
   [\#1420](https://github.com/pharmaverse/aNCA/issues/1420)).
 - **Saved sessions:** Save versioned YAML settings and restore mappings,
-  filters, exclusions, ratios, units, and previous NCA runs from YAML or
-  ZIP, including reusable templates, startup settings, and version
-  selection in installed packages
-  ([\#514](https://github.com/pharmaverse/aNCA/issues/514),
+  filters, exclusions, ratios, units, and previous NCA runs repeatedly
+  from YAML or ZIP without stuck loading indicators, including reusable
+  templates, startup settings, and version selection in installed
+  packages ([\#514](https://github.com/pharmaverse/aNCA/issues/514),
   [\#832](https://github.com/pharmaverse/aNCA/issues/832),
   [\#860](https://github.com/pharmaverse/aNCA/issues/860),
   [\#901](https://github.com/pharmaverse/aNCA/issues/901),
@@ -193,9 +193,12 @@
   ([\#1343](https://github.com/pharmaverse/aNCA/issues/1343),
   [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
   [\#1531](https://github.com/pharmaverse/aNCA/issues/1531)).
-- **Urine outputs:** Restrict urine tables and listings to urine
-  specimens report missing specimen information, and distinguish absent
-  urine parameters from records removed by filters or exclusions
+- **Urine outputs:** Select urine matrices regardless of case in
+  excretion analysis and validate selections, collection times, and
+  body-weight units before calculation, with recoverable calculation
+  errors; restrict urine tables and listings to urine specimens, report
+  missing specimen information, and distinguish absent urine parameters
+  from records removed by filters or exclusions
   ([\#1335](https://github.com/pharmaverse/aNCA/issues/1335),
   [\#1343](https://github.com/pharmaverse/aNCA/issues/1343),
   [\#1356](https://github.com/pharmaverse/aNCA/issues/1356),
@@ -222,8 +225,8 @@
   [\#1326](https://github.com/pharmaverse/aNCA/issues/1326)).
 - **Reproducible scripts:** Export R scripts that use saved mappings,
   filters, ratios, units, and BLQ rules to reproduce app results, honor
-  the requested dataset path or bundled ZIP input, and run without
-  configured ratios
+  the requested dataset path or bundled ZIP input, request explicit
+  installation when aNCA is missing, and run without configured ratios
   ([\#789](https://github.com/pharmaverse/aNCA/issues/789),
   [\#1189](https://github.com/pharmaverse/aNCA/issues/1189),
   [\#1445](https://github.com/pharmaverse/aNCA/issues/1445),
@@ -265,10 +268,16 @@
   [\#1333](https://github.com/pharmaverse/aNCA/issues/1333)).
 - **PKNCA compatibility:** Fixed development-version failures affecting
   start imputation, duplicate R2ADJ results, half-life selection,
-  excretion parameters, and dose-escalation reports; R \>= 4.4 is now
-  required ([\#1102](https://github.com/pharmaverse/aNCA/issues/1102)).
+  excretion parameters, and dose-escalation reports; excretion
+  parameters are registered for namespace-only calls as well as attached
+  use; collection-volume interval metadata no longer blocks NCA or slope
+  plots, and slope-generation errors remain recoverable; R \>= 4.4 is
+  now required
+  ([\#1102](https://github.com/pharmaverse/aNCA/issues/1102)).
 - **App startup:** Fixed installed-package and read-only deployment
-  startup failures and recovery after NCA errors
+  startup failures, keep application logs in a writable temporary or
+  configured directory, restore the upload-limit option on exit, and
+  recover after NCA errors
   ([\#913](https://github.com/pharmaverse/aNCA/issues/913),
   [\#1107](https://github.com/pharmaverse/aNCA/issues/1107),
   [\#1378](https://github.com/pharmaverse/aNCA/issues/1378)).

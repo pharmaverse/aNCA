@@ -6,6 +6,8 @@ Calculate the total urine volume
 
 ``` r
 pk.calc.volpk(volume)
+
+anca_calc_volpk(volume)
 ```
 
 ## Arguments

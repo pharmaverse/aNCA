@@ -70,6 +70,9 @@
 - [`adnca_example`](https://pharmaverse.github.io/aNCA/reference/adnca_example.md)
   : adnca_example
 
+- [`anca_calc_fe()`](https://pharmaverse.github.io/aNCA/reference/anca_calc_fe.md)
+  : Compatibility alias for PKNCA fraction excreted
+
 - [`apply_filters()`](https://pharmaverse.github.io/aNCA/reference/apply_filters.md)
   : Apply Filters to a Dataset
 
@@ -340,13 +343,16 @@
   : Calculate the maximum excretion rate
 
 - [`pk.calc.ertlst()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.ertlst.md)
+  [`anca_calc_ertlst()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.ertlst.md)
   : Calculate the midpoint collection time of the last measurable
   excretion rate
 
 - [`pk.calc.ertmax()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.ertmax.md)
+  [`anca_calc_ertmax()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.ertmax.md)
   : Calculate the midpoint collection time of the maximum excretion rate
 
 - [`pk.calc.volpk()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.volpk.md)
+  [`anca_calc_volpk()`](https://pharmaverse.github.io/aNCA/reference/pk.calc.volpk.md)
   : Calculate the total urine volume
 
 - [`pk_dose_qc_plot()`](https://pharmaverse.github.io/aNCA/reference/pk_dose_qc_plot.md)
