@@ -65,11 +65,21 @@ describe("filter_breaks", {
   })
 
   ## Core filtering logic
-  it("should return all breaks when min_cm_distance is 0", {
+  it("should use only label spacing when min_cm_distance is 0", {
     breaks <- c(0, 1, 2, 3, 4, 5)
+    plot_without_labels <- base_plot + theme(axis.text.x = element_blank())
     expect_equal(
-      filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 0),
+      filter_breaks(breaks = breaks, plot = plot_without_labels, min_cm_distance = 0),
       breaks
+    )
+
+    # The ticks are 0.5 cm apart, so labels 0.75 cm wide need every other tick.
+    expect_equal(
+      aNCA:::.thin_breaks(
+        breaks, label_sizes_cm = rep(0.75, length(breaks)), min_cm_distance = 0,
+        scale_range = c(0, 5), panel_size_cm = 2.5
+      ),
+      c(0, 2, 4)
     )
   })
 
