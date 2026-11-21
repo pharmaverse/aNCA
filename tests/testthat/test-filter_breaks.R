@@ -65,8 +65,15 @@ describe("filter_breaks", {
   })
 
   ## Core filtering logic
-  it("should return all breaks when min_cm_distance is 0", {
+  it("should use only label spacing when min_cm_distance is 0", {
     breaks <- c(0, 1, 2, 3, 4, 5)
+    label_size_cm <- 0.25
+    testthat::local_mocked_bindings(
+      .panel_size_cm = function(...) 5.5,
+      .label_extents_cm = function(labels, ...) rep(label_size_cm, length(labels))
+    )
+
+    # A 5.5 cm panel over the expanded 0-10 range gives 0.5 cm between ticks.
     expect_equal(
       filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 0),
       breaks
@@ -78,6 +85,12 @@ describe("filter_breaks", {
     expect_equal(
       filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 100),
       0
+    )
+
+    label_size_cm <- 0.75
+    expect_equal(
+      filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 0),
+      c(0, 2, 4)
     )
   })
 
