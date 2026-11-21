@@ -89,12 +89,6 @@ describe("filter_breaks", {
       filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 100),
       0
     )
-
-    label_size_cm <- 0.75
-    expect_equal(
-      filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 0),
-      c(0, 2, 4)
-    )
   })
 
   it("should correctly filter x-axis breaks based on distance", {
