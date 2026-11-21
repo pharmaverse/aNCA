@@ -10,7 +10,9 @@ describe("namespace-only PKNCA extensions", {
       "loadNamespace('aNCA')",
       "stopifnot(!('package:aNCA' %in% search()))",
       "stopifnot(all(c('ertlst', 'ertmax', 'volpk', 'fe') %in% names(PKNCA::get.interval.cols())))",
-      "fun <- utils::getAnywhere(PKNCA::get.interval.cols()[['volpk']]$FUN)$objs[[1]]",
+      "callback <- PKNCA::get.interval.cols()[['volpk']]$FUN",
+      "owner <- if (callback %in% getNamespaceExports('PKNCA')) 'PKNCA' else 'aNCA'",
+      "fun <- getExportedValue(owner, callback)",
       "stopifnot(isTRUE(all.equal(fun(c(1, 2, 3)), 6)))"
     ), script)
     output <- suppressWarnings(system2(file.path(R.home("bin"), "Rscript"),
