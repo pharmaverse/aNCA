@@ -138,7 +138,9 @@ describe("convert_volume_units()", {
     result <- convert_volume_units(df)
     expect_equal(result$VOLUME, 1000)
     expect_equal(result$VOLUMEU, "mL")
-    expect_equal(result$AMOUNTU, "ug")
+
+    # UDUNITS can render equivalent units with different symbols.
+    expect_equal(units::ud_convert(1, result$AMOUNTU, "g"), 1e-6, tolerance = 1e-12)
   })
 
   it("should apply fallback conversion when direct conversion is not possible", {
@@ -178,7 +180,10 @@ describe("convert_volume_units()", {
       stringsAsFactors = FALSE
     )
     result <- convert_volume_units(df)
-    expect_true(result$AMOUNTU[1] == "L ug")
+
+    expect_equal(result$VOLUME, 1)
+    expect_equal(result$VOLUMEU, "L")
+    expect_equal(units::ud_convert(1, result$AMOUNTU, "L g"), 1e-6, tolerance = 1e-12)
   })
 
   it("should handle multiple rows correctly", {
