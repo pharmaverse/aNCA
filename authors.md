@@ -4,7 +4,7 @@
 
 - **Ercan Suekuer**. Author. [](https://orcid.org/0009-0001-1626-1526)
 
-- **Gerardo Jose Rodriguez**. Author.
+- **Gerardo Jose Rodriguez**. Author, maintainer.
   [](https://orcid.org/0000-0003-1413-0060)
 
 - **Pascal Baertschi**. Author.
@@ -17,7 +17,7 @@
 
 - **Lucy Aspridis**. Author. [](https://orcid.org/0009-0003-1300-3622)
 
-- **Valentin Legras**. Author, maintainer.
+- **Valentin Legras**. Author.
 
 - **F. Hoffmann-La Roche AG**. Copyright holder, funder.
 
