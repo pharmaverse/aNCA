@@ -1,7 +1,24 @@
-# Code owners for aNCA
-#
-# These maintainers are automatically requested for review on pull requests.
-# See https://docs.github.com/articles/about-code-owners for syntax.
+# Default reviewers for all files
+* @Gero1999 @Shaakon35
 
-# Default owners for everything in the repository
-*       @Gero1999 @Shaakon35 @h5hoang
+# GitHub uses the last matching rule. Repeat both default owners on TLG rules.
+
+# TLG modules, configuration, assets, tests and guides
+*tlg* @Gero1999 @Shaakon35 @h5hoang
+
+# PK tables, listings and graphs (implementations, tests and reference pages)
+/R/t_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/R/l_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/R/g_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/R/p_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/tests/testthat/test-t_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/tests/testthat/test-l_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/tests/testthat/test-g_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/tests/testthat/test-p_pk*.R @Gero1999 @Shaakon35 @h5hoang
+/tests/testthat/_snaps/*_pk*/ @Gero1999 @Shaakon35 @h5hoang
+/man/t_pk*.Rd @Gero1999 @Shaakon35 @h5hoang
+/man/l_pk*.Rd @Gero1999 @Shaakon35 @h5hoang
+/man/g_pk*.Rd @Gero1999 @Shaakon35 @h5hoang
+/man/p_pk*.Rd @Gero1999 @Shaakon35 @h5hoang
+/man/pkcg*.Rd @Gero1999 @Shaakon35 @h5hoang
+/man/keep_blq_timepoints.Rd @Gero1999 @Shaakon35 @h5hoang
