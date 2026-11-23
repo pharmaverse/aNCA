@@ -57,6 +57,40 @@ Because NCA calculations are **model-independent**, they make fewer assumptions 
 - **Parameter Ratios:** Comparison of exposure levels (e.g., metabolite-to-parent ratios) for deeper insights into the drug’s behavior.
 - **Clearance and Volume of Distribution:** Derived from AUC and half-life, these parameters help understand how efficiently the body eliminates the drug and how widely it distributes.
 
+### **4. Glossary of Common NCA Parameters:**
+
+The table below gives a short meaning for the parameters most often reported by aNCA. The first column shows the name used in the app results, with its CDISC `PPTESTCD` code. Units depend on the units of your concentration, time and dose data; the ones shown here are typical examples.
+
+| Parameter (code) | Plain-English meaning | Typical unit |
+|------------------|-----------------------|--------------|
+| Cmax (`CMAX`) | Highest concentration observed after a dose | ng/mL |
+| Tmax (`TMAX`) | Time at which Cmax was observed | h |
+| Cmin (`CMIN`) | Lowest concentration observed in the interval | ng/mL |
+| Ctrough (`CTROUGH`) | Concentration just before the next dose | ng/mL |
+| Clast (`CLST`) | Last measurable (non-zero) concentration | ng/mL |
+| Tlast (`TLST`) | Time of the last measurable concentration | h |
+| Tlag (`TLAG`) | Delay between dosing and the first measurable concentration | h |
+| Cavg (`CAVG`) | Average concentration over the dosing interval | ng/mL |
+| AUClast (`AUCLST`) | Total exposure from dosing up to the last measurable concentration | h·ng/mL |
+| AUCall (`AUCALL`) | Like AUClast, but also includes the area down to any zero or BLQ values after Tlast | h·ng/mL |
+| AUCinf (`AUCIFO`) | Total exposure from dosing extrapolated to infinity | h·ng/mL |
+| AUC %Extrapolation (`AUCPEO`) | Share of AUCinf that comes from extrapolation rather than measured data; a high value makes AUCinf less reliable | % |
+| AUC from T1 to T2 (`AUCINT`) | Exposure over a chosen time window (partial AUC) | h·ng/mL |
+| Lambda z (`LAMZ`) | Terminal elimination rate constant, from the slope of the log concentration curve in the terminal phase | 1/h |
+| Half-life (`LAMZHL`) | Time for the concentration to fall by half in the terminal phase | h |
+| R Squared Adjusted (`R2ADJ`) | How well the terminal phase points fit a straight line on the log scale; values close to 1 mean a reliable Lambda z | (none) |
+| Lambda z Span (`LAMZSPN`) | Length of the terminal phase used for Lambda z, counted in half-lives | (none) |
+| MRT (`MRTIFO`) | Average time a drug molecule stays in the body | h |
+| CL (`CLO`) | Clearance: volume of plasma cleared of drug per unit time. After oral or other extravascular dosing this is apparent clearance (CL/F) | L/h |
+| Vz (`VZO`) | Apparent volume of distribution in the terminal phase (Vz/F after extravascular dosing) | L |
+| Vss (`VSSO`) | Volume of distribution at steady state | L |
+| Peak Trough Ratio (`PTROUGHR`) | Cmax divided by Ctrough within a dosing interval | (none) |
+| Swing (`SWING`) | Relative change from trough to peak, (Cmax − Cmin) / Cmin | (none) |
+| Dose-normalised parameters (e.g. `CMAXD`, `AUCLSTD`) | The same parameter divided by the dose, used to compare doses or check dose proportionality | e.g. ng/mL/mg |
+| Fraction excreted (`FREXINT`) | Fraction of the dose recovered in urine or another excretion sample over a time window | % |
+
+Parameters ending in "Obs" use the last observed concentration for extrapolation, while those ending in "Pred" use the concentration predicted by the Lambda z fit.
+
 ---
 
 ## Challenges and Common Actions in NCA Analysis
