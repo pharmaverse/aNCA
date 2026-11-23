@@ -18,6 +18,7 @@ In which section do you have questions?
 - [Uploading & supported data formats](#uploading--supported-data-formats)
 - [What are duplicates and how to resolve them?](#what-are-duplicates-and-how-to-resolve-them)
 - [How does the exported reproducible script work?](#how-does-the-exported-reproducible-script-work)
+- [Understanding your NCA results](#understanding-your-nca-results)
 - [Validation and CDISC outputs](#validation-and-cdisc-outputs)
 - [Building the website locally](#building-the-pkgdown-site-locally)
 - [Reporting bugs & requesting features](#reporting-bugs--requesting-features)
@@ -78,6 +79,40 @@ Practical workarounds:
 
 If you'd like this feature built into the app (an option to choose nominal/actual/conditional), please open an enhancement request on the [GitHub repository](https://github.com/pharmaverse/aNCA/issues).
 </details>
+
+
+### Understanding your NCA results {#understanding-your-nca-results}
+
+<details>
+<summary><strong>Why is my half-life (or AUCinf, CL, volume) `NA`?</strong></summary>
+
+Half-life comes from Lambda z, the slope of the terminal phase on a log scale. If Lambda z cannot be estimated, every parameter that depends on it (half-life, AUCinf, clearance, volumes, MRT) is also `NA`. Common reasons:
+
+- Fewer than the minimum number of points after Cmax (3 by default).
+- The terminal points are not falling, for example a flat profile or a second peak.
+- The points were BLQ and dropped by the BLQ rule (see below).
+
+You can check and adjust the points used for the slope in the **Slope Selector** tab of the NCA setup. The [background article](background.html) explains how half-life is derived.
+</details>
+
+<details>
+<summary><strong>What does AUC %Extrapolation mean and when should I worry about it?</strong></summary>
+
+AUCinf is AUClast plus an extrapolated part from Tlast to infinity. `AUCPEO` (or `AUCPEP`) is the share of AUCinf that comes from that extrapolation. A large value means AUCinf rests mostly on the estimated slope and not on measured data, so AUCinf, CL and the volumes become less reliable. Values above 20% are commonly treated as a warning sign. You can set this threshold as a flag rule in the NCA settings, and flagged parameters are left out of the descriptive statistics.
+</details>
+
+<details>
+<summary><strong>Why did some BLQ points disappear from my profile?</strong></summary>
+
+BLQ (below the limit of quantification) values are handled by the BLQ imputation strategy in the NCA setup. By default there is no BLQ handling. If you choose **Positional BLQ imputation**, BLQ values before the first and after the last measurable concentration are dropped by default and those in between are kept; **Tmax based imputation** sets BLQ values before Tmax to 0 and drops those after it. Each position can be set to drop, keep or a fixed value. Dropping or keeping late BLQ points can change Tlast, AUClast and the terminal slope.
+</details>
+
+<details>
+<summary><strong>What is the difference between AUClast and AUCinf?</strong></summary>
+
+AUClast is the exposure measured from dosing up to the last measurable concentration (Tlast). AUCinf adds an estimate of the exposure after Tlast, using Lambda z. AUClast is always available when there is data, while AUCinf needs a valid terminal slope. See the [glossary in the background article](background.html) for other parameters.
+</details>
+
 
 
 ### Validation and CDISC outputs {#validation-and-cdisc-outputs}
