@@ -30,10 +30,13 @@ CMAX
 CORRXY
 CRITy
 CRITyFL
+Cavg
 Clast
 Cmax
+Cmin
 ConcY
 Cond
+Ctrough
 Customise
 Customizable
 DM
@@ -63,6 +66,7 @@ LAMZLL
 LAMZNPT
 LAMZSPN
 METABFL
+MRT
 MRTMDO
 MRTMDP
 MSCW
@@ -135,6 +139,7 @@ TestGroups
 TestParameter
 TimeX
 Timepoint
+Tlag
 Tlast
 Tmax
 Tooltip
@@ -144,6 +149,8 @@ UX
 VOLUMEU
 VSSMDO
 VSSMDP
+Vss
+Vz
 WTBL
 WTBLU
 Walkthrough
