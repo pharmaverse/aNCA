@@ -11,30 +11,29 @@ vignette: >
 ---
 
 # Background: Understanding Non-Compartmental Analysis (NCA) and the Role of aNCA
-This document will help you understand the fundamentals of Non-Compartmental Analysis (NCA) in pharmacokinetics (PK) and the challenges analysts face when performing NCA. It also explains why the aNCA application was developed and how it aims to streamline and enhance the NCA workflow. For a video-content referring to all these concepts you can also visit the [R Pharma aNCA video](https://www.youtube.com/watch?v=RW1zbnDkTCM).
-This document will help you understand the fundamentals of Non-Compartmental Analysis (NCA) in pharmacokinetics (PK) and the challenges analysts face when performing NCA. It also explains why the aNCA application was developed and how it aims to streamline and enhance the NCA workflow.
+This document will help you understand the fundamentals of Non-Compartmental Analysis (NCA) in pharmacokinetics (PK) and the challenges analysts face when performing NCA. It also explains why the aNCA application was developed and how it aims to streamline and enhance the NCA workflow. A video covering these concepts is also available: [R Pharma aNCA video](https://www.youtube.com/watch?v=RW1zbnDkTCM).
 
 ## What is Pharmacokinetics and Why Does NCA Matter?
 
-Drug development is not just about studying how drugs act on the body (*pharmacodynamics*); it’s equally important to understand how the body interacts with drugs. This is what we call **pharmacokinetics (PK)**—the study of how drugs are absorbed, distributed, metabolized, and excreted over time.
+Drug development is not just about studying how drugs act on the body (*pharmacodynamics*); it is equally important to understand what the body does to the drug. This is **pharmacokinetics (PK)**: the study of how drugs are absorbed, distributed, metabolized, and excreted over time.
 
-To visualize this, we use PK curves: graphs showing drug concentration plotted against time after dosing. These curves tell us how long a drug stays in the patient's system, helping us determine the optimal dose that balances efficacy and safety. The sweet spot—where drug levels are high enough to have an effect but not so high as to cause toxicity—is called the **therapeutic window**. 
+To visualize this, we use PK curves: graphs showing drug concentration plotted against time after dosing. These curves show how high drug levels rise and how long the drug stays in the body, which helps choose a dose that balances efficacy and safety. The range where drug levels are high enough to have an effect but not so high as to cause toxicity is called the **therapeutic window**. 
 
-**One of the main goals of PK analysis is to calculate the dose that achieves this window for the longest and safest period.**
+**One of the main goals of PK analysis is to find a dose and dosing schedule that keep drug levels within this window.**
 
 ---
 
 ## What Is Non-Compartmental Analysis (NCA)?
 
-When it comes to evaluating PK data, analysis approaches can range from simple to highly complex. On one end, you have **compartmental models**, where drug movement between body compartments (like blood, liver, or muscle) is described mathematically using differential equations. On the other end, you have **Non-Compartmental Analysis (NCA)**, which simplifies the process by treating the body as a "black box."
+When it comes to evaluating PK data, analysis approaches can range from simple to highly complex. On one end, you have **compartmental models**, where the body is described as one or more theoretical compartments (for example, a central compartment for blood and well-perfused organs and a peripheral one for other tissues), and drug movement between them is described with differential equations. On the other end, you have **Non-Compartmental Analysis (NCA)**, which simplifies the process by treating the body as a "black box."
 
-In NCA, instead of modeling how a drug moves between compartments, we focus only on the *macroparameters*—high-level PK metrics that describe overall drug behavior. These include:
+In NCA, instead of modeling how a drug moves between compartments, we calculate summary PK parameters directly from the observed concentration-time data. These include:
 - **AUC (Area Under the Curve)**: A measure of total drug exposure over time.  
-- **Cmax**: The peak concentration of the drug in the blood.  
-- **Tmax**: The time it takes to reach peak concentration.  
-- **Half-life ($t_{1/2}$)**: The time required for the drug concentration to drop by half, which helps calculate elimination rates.
+- **Cmax**: The highest observed drug concentration, usually in plasma or blood.  
+- **Tmax**: The time at which Cmax is observed.  
+- **Half-life ($t_{1/2}$)**: The time for the drug concentration to fall by half during the terminal phase, derived from the terminal elimination rate constant (lambda z).
 
-Because NCA calculations are **model-independent**, they make fewer assumptions about drug distribution and can often provide quick, robust results.
+Because NCA does not require a structural model, it makes fewer assumptions about drug distribution and can often provide quick, robust results. Parameters that rely on extrapolation, such as AUCinf, clearance and volume, still assume that elimination in the terminal phase is first order.
 
 ---
 
@@ -66,7 +65,7 @@ Despite its mathematical simplicity, **performing NCA can be operationally compl
 ### **1. Pre-Analysis Steps**:
 - **Exclusions:** Identifying which data points (outliers, missing data, or post-dose anomalies) should be excluded from the analysis.
 - **Method Selection:** Analysts decide which slope estimation, extrapolation techniques, or AUC intervals are most appropriate.
-- **Customized Intervals:** Tailoring intervals for partial AUCs or adding coefficient ratios.
+- **Customized Intervals:** Tailoring intervals for partial AUCs or adding parameter ratios.
 
 ### **2. Data Preparation**:
 - PK analysis requires significant **data cleaning, preparation, and mapping**. The data follows strict standards, such as **CDISC SDTM**, to ensure it can be used directly in regulatory workflows.
@@ -74,7 +73,7 @@ Despite its mathematical simplicity, **performing NCA can be operationally compl
 
 ### **3. Post-Analysis Steps (CDISC Outputs and Reporting)**:
 - Output from NCA must meet **CDISC compliance** standards for submission to regulatory agencies like the FDA or EMA. Typical datasets include:
-  - **PP (Pharmacokinetic Parameters):** Lists macroparameters (e.g., AUC, Tmax, Cmax, half-life) for each individual.
+  - **PP (Pharmacokinetic Parameters):** Lists the PK parameters (e.g., AUC, Tmax, Cmax, half-life) for each individual.
   - **ADPP (Analysis Dataset for Pharmacokinetic Parameters):** A more detailed, CDISC-compliant dataset linked to analysis-ready inputs.
 - Outputs are used to generate **Tables, Listings, and Graphs (TLGs)**, which are essential in **dose-escalation studies**, bioequivalence trials, and drug approval submissions. These provide visual, tabular, and narrative summaries of the NCA results, allowing stakeholders and regulators to understand findings at a glance.
 
