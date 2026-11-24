@@ -1,3 +1,9 @@
+# aNCA (development version)
+
+## Bug Fixes
+
+* **Analyte ratios:** M/P tables, listings, and boxplots use configured ADPP ratios, including inverse directions, with explicit test/reference labels and separate dose and route profiles. Parameters for the same comparison share a page; point overlays retain recorded values, and missing ratios give setup guidance (#1450).
+
 # aNCA 0.2.0
 
 ## Data & settings

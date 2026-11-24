@@ -18,7 +18,15 @@ l_pkpl01(
   param_filter = NULL
 )
 
-l_pkpl01_mp(data, ...)
+l_pkpl01_mp(
+  data,
+  listgroup_vars = c("RATIO", "PPSPEC"),
+  param_var = "PARAM",
+  title = "Listing of Individual Analyte Ratios (Test / Reference)",
+  value_var = "AVAL",
+  unit_var = "AVALU",
+  ...
+)
 }
 \arguments{
 \item{data}{A CDISC ADPP data frame (from \code{export_cdisc()$adpp}).}
@@ -60,8 +68,16 @@ same engine as \code{\link[=l_pkcl01]{l_pkcl01()}}.  Returns one listing per uni
 }
 \section{Functions}{
 \itemize{
-\item \code{l_pkpl01_mp()}: Listing filtered to metabolite rows (pkpl01 M/P).
-Uses the same METABFL -> PPCAT -> PARAM fallback as \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
+\item \code{l_pkpl01_mp()}: Listing of configured analyte ratios (pkpl01 M/P),
+including inverse ratios. The \code{RATIO} subtitle identifies test / reference.
+Displays the configured analyte ratios already present in ADPP, without
+recalculating them. Defaults to splitting by \code{RATIO} and \code{PPSPEC}; varying
+profile identifiers are retained too. Missing values remain blank and
+summary-excluded records remain in the listing. Each page has subjects as
+rows within treatment and configured parameters as columns. Parameters with
+the same direction and profile share a page; a different direction or route
+appears on a separate page. Parameter names and codes retain their ADPP
+labels, including custom codes. See \code{\link[=t_pkpt03_MP_col]{t_pkpt03_MP_col()}}.
 
 }}
 \examples{
