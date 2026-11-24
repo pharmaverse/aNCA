@@ -159,7 +159,7 @@ LAB_OPTIONS <- c("title", "subtitle", "footnote")
 DYNAMIC_TITLE_ENTRIES <- c(
   "g_pkcg01_lin", "g_pkcg01_log", "g_pkcg01_sbs",
   "g_pkcg02_lin", "g_pkcg02_log", "g_pkcg02_sbs",
-  "g_pkcg03_lin", "g_pkcg03_log", "g_pkcg03_sbs",
+  "g_pkcg03_lin", "g_pkcg03_log", "g_pkcg03_sbs", "g_pkcg03_lin_nest",
   "p_pkcg03_lin_dose", "p_pkcg03_log_dose", "p_pkcg03_sbs_dose"
 )
 

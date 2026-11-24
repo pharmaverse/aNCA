@@ -1,3 +1,9 @@
+# aNCA (development version)
+
+## New Features
+
+* **NEST pilot:** Opt in to PKPT03 summaries, PKPL01 listings and linear PKCG03 graphs built on the existing calculations, with compact headers and Word footnotes, grouped row labels, sidebar annotations and HTML/Word table and listing exports in the ZIP; partial-AUC windows remain separate when records are missing or excluded (#1548).
+
 # aNCA 0.2.0
 
 ## Data & settings

@@ -473,7 +473,7 @@ zip_ui <- function(id) {
             div(
               selectizeInput(
                 ns("tlg_table_formats"),
-                "Rendered TLG tables and listings:",
+                "Rendered TLG tables and listings (HTML/DOCX: NEST pilots):",
                 choices = TLG_TABLE_FORMATS,
                 selected = tlg_table_formats,
                 multiple = TRUE
@@ -928,7 +928,7 @@ SLIDE_NODES <- "results_slides"
 # dropped from the second and never renders.
 TLG_NODES   <- c("tlg_tables", "tlg_listings", "tlg_graphs")
 TLG_GRAPH_FORMATS <- c("png", "pdf", "html")
-TLG_TABLE_FORMATS <- c("csv", "xlsx", "pdf")
+TLG_TABLE_FORMATS <- c("csv", "xlsx", "pdf", "html", "docx")
 # PDF rather than PNG for graphs: it is written as one multi-page document per TLG, so a
 # per-subject output is a single file to page through instead of twenty-odd images, and it
 # is vector rather than raster.  PNG stays a click away for anyone who wants images to drop

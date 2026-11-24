@@ -113,6 +113,13 @@ tlg_option_select_ui <- function(id, opt_def, data, grouping_vars = reactive(cha
     selected <- intersect(grouping_vars(), names(conc_df))
   }
 
+  # The browser submits selected options in DOM order, not `selected` order.
+  # Put defaults (or carried-forward edits) first without losing choice labels.
+  if (isTRUE(opt_def$multiple)) {
+    selected_order <- match(selected, choices, nomatch = 0L)
+    choices <- choices[unique(c(selected_order, seq_along(choices)))]
+  }
+
   # Multi-selects use Deselect all; only single-selects need an unset choice.
   list(choices = if (isTRUE(opt_def$multiple)) choices else c("", choices),
        selected = selected)
@@ -133,7 +140,7 @@ tlg_option_select_server <- function(id, opt_def, data, reset_trigger,
     #' Reset the input to default value upon reset_trigger
     observeEvent(reset_trigger(), {
       config <- .tlg_select_config(opt_def, data, grouping_vars)
-      updatePickerInput(session, "select", selected = config$selected)
+      updatePickerInput(session, "select", choices = config$choices, selected = config$selected)
     })
 
     reactive({

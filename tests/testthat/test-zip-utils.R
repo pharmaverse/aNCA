@@ -71,6 +71,23 @@ describe(".build_exploration_allowlist", {
 })
 
 describe("prepare_export_files validation gate", {
+  it("validates artifacts using only the installed package's public search path", {
+    env <- source_app_exports("functions/zip-utils.R")
+    session <- list(userData = list())
+    empty <- env$.validate_export_artifacts(list(res_tree = character()), session, NULL)
+    expect_equal(nrow(empty), 0L)
+    missing_raw <- env$.validate_export_artifacts(list(res_tree = "r_script"), session, NULL)
+    missing_raw <- missing_raw[missing_raw$Output == "input_data.rds", ]
+    expect_equal(missing_raw$Output, "input_data.rds")
+    expect_equal(missing_raw$Severity, "error")
+    expect_equal(missing_raw$Observed, "NULL")
+    specs <- env$.pre_specs_export_payload(
+      "adpp", list(adpp = data.frame(USUBJID = "S1", AVAL = 1))
+    )
+    expect_named(specs, "ADPP")
+    expect_setequal(specs$ADPP$Variable, c("USUBJID", "AVAL"))
+  })
+
   it("exports selected custom analysis groups but blocks an unselected column", {
     target_dir <- tempfile("anca-custom-export-")
     dir.create(target_dir)
