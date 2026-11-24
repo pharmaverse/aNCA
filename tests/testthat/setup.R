@@ -353,6 +353,8 @@ base::local({
                                    include_half.life = "include_half.life"),
       data.dose = PKNCA::PKNCAdose(FIXTURE_DOSE_DATA, DOSEA ~ AFRLT | USUBJID,
                                    route = "ROUTE", duration = "ADOSEDUR", doseu = "DOSEU"),
+      intervals = FIXTURE_INTERVALS %>%
+        select(start, end, USUBJID, all_of(all_params)),
       units = units_table
     ),
     warning = function(w) {

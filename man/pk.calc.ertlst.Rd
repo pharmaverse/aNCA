@@ -2,9 +2,12 @@
 % Please edit documentation in R/PKNCA_extra_parameters.R
 \name{pk.calc.ertlst}
 \alias{pk.calc.ertlst}
+\alias{anca_calc_ertlst}
 \title{Calculate the midpoint collection time of the last measurable excretion rate}
 \usage{
 pk.calc.ertlst(conc, volume, time, duration.conc, check = TRUE)
+
+anca_calc_ertlst(conc, volume, time, duration.conc, check = TRUE)
 }
 \arguments{
 \item{conc}{The concentration in the excreta (e.g., urine or feces)}

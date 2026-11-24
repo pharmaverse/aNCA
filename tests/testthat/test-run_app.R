@@ -49,3 +49,25 @@ describe("run_app input validation", {
     )
   })
 })
+
+
+describe("run_app option cleanup", {
+  it("restores the upload limit after successful startup", {
+    withr::local_options(shiny.maxRequestSize = 12345)
+    testthat::local_mocked_bindings(runApp = function(...) {
+      expect_equal(getOption("shiny.maxRequestSize"), 30 * 1024^2)
+    }, .package = "shiny")
+    run_app()
+    expect_equal(getOption("shiny.maxRequestSize"), 12345)
+  })
+
+  it("restores options when startup or validation fails", {
+    withr::local_options(shiny.maxRequestSize = NULL)
+    expect_error(run_app(datapath = "/nonexistent/file.csv"), "Data file does not exist")
+    expect_null(getOption("shiny.maxRequestSize"))
+    testthat::local_mocked_bindings(runApp = function(...) stop("startup failed"),
+                                    .package = "shiny")
+    expect_error(run_app(), "startup failed")
+    expect_null(getOption("shiny.maxRequestSize"))
+  })
+})

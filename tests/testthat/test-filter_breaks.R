@@ -47,6 +47,7 @@ describe("filter_breaks", {
     breaks_clean <- c(1, 2, 5, 8)
 
     # For the next call to filter_breaks, pretend the panel is 10 cm wide
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
 
     expect_equal(
@@ -64,11 +65,21 @@ describe("filter_breaks", {
   })
 
   ## Core filtering logic
-  it("should return all breaks when min_cm_distance is 0", {
+  it("should use only label spacing when min_cm_distance is 0", {
     breaks <- c(0, 1, 2, 3, 4, 5)
+    plot_without_labels <- base_plot + theme(axis.text.x = element_blank())
     expect_equal(
-      filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 0),
+      filter_breaks(breaks = breaks, plot = plot_without_labels, min_cm_distance = 0),
       breaks
+    )
+
+    # The ticks are 0.5 cm apart, so labels 0.75 cm wide need every other tick.
+    expect_equal(
+      aNCA:::.thin_breaks(
+        breaks, label_sizes_cm = rep(0.75, length(breaks)), min_cm_distance = 0,
+        scale_range = c(0, 5), panel_size_cm = 2.5
+      ),
+      c(0, 2, 4)
     )
   })
 
@@ -85,6 +96,7 @@ describe("filter_breaks", {
     min_dist  <- 1.5
     breaks_out <- c(0, 2.5, 5, 8)
 
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
 
     expect_equal(
@@ -100,6 +112,7 @@ describe("filter_breaks", {
     breaks_out <- c(0, 3, 7)
 
     # For the next call to filter_breaks, pretend the panel is 20 cm tall
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 20)
 
     expect_equal(
@@ -115,6 +128,7 @@ describe("filter_breaks", {
 
     # A 10 cm panel over the expanded 0-10 range puts the breaks 0.91 cm apart, so labels
     # needing 3 cm leave room for only every fourth one
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
     mockery::stub(filter_breaks, ".label_extents_cm", rep(3, length(breaks)))
 
@@ -127,6 +141,7 @@ describe("filter_breaks", {
   it("should keep min_cm_distance as a floor when the labels are narrow", {
     breaks <- c(0, 0.2, 1, 2)
 
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
     mockery::stub(filter_breaks, ".label_extents_cm", rep(0.1, length(breaks)))
 
@@ -140,6 +155,7 @@ describe("filter_breaks", {
   it("should size the gap from the two labels either side of it", {
     breaks <- c(0, 1, 2, 3)
 
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
     mockery::stub(filter_breaks, ".label_extents_cm", c(0.2, 0.2, 3, 0.2))
 
@@ -153,6 +169,7 @@ describe("filter_breaks", {
   it("should measure the gap against the last break it kept, not the first", {
     breaks <- 0:4
 
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
     mockery::stub(filter_breaks, ".label_extents_cm", c(3, 0.2, 0.2, 0.2, 0.2))
 
@@ -177,6 +194,7 @@ describe("filter_breaks", {
 
   it("should drop breaks that fit by position but not by label", {
     breaks <- 0:10
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
 
     short <- filter_breaks(breaks = breaks, plot = base_plot, min_cm_distance = 0.1)
@@ -191,6 +209,7 @@ describe("filter_breaks", {
 
   ## Breaks outside the plotted range
   it("should never return a break that falls outside the plotted range", {
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
     kept <- filter_breaks(breaks = 0:40, plot = base_plot, min_cm_distance = 0.1)
 
@@ -208,6 +227,7 @@ describe("filter_breaks", {
       coord_cartesian(xlim = c(51, 100)) +
       theme_test()
 
+    skip_if_not_installed("mockery")
     mockery::stub(filter_breaks, ".panel_size_cm", 10)
 
     x_range <- ggplot_build(zoomed)$layout$panel_params[[1]]$x.range

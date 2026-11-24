@@ -1,28 +1,35 @@
 #' Sets up the logger package for the application.
 #'
-#' @details
-#' The application logs everything to a log file located in `/log` directory. If such folder
-#' does not exist, it will be created. Logfile for each session will be separate. The application
-#' will keep 5 log files at any given time - if this number is exceeded, the oldest log file
-#' will be deleted.
+#' Logs are stored in a temporary directory by default. Set `aNCA_LOG_DIR` to
+#' choose another writable directory. Only aNCA log files are rotated; other
+#' files are never removed. At most five aNCA log files are retained.
 #'
-#' In addition, information of the level specified by the user will be logged to console.
-#' As a default, this level is INFO - this is so that the user has good information on what is
-#' happening inside the app, but is not overwhelmed with tracing and debugging information. This
-#' level can be changed using `aNCA_LOG_LEVEL` environmental variable, set for example in
-#' `.Renviron` file.
-setup_logger <- function() {
+#' Console verbosity is controlled by `aNCA_LOG_LEVEL` (default: INFO).
+setup_logger <- function(
+  log_dir = Sys.getenv("aNCA_LOG_DIR", file.path(tempdir(), "aNCA", "logs"))
+) {
+  if (!dir.exists(log_dir)) dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
+  if (!dir.exists(log_dir) || file.access(log_dir, 2) != 0) {
+    stop("Cannot write application logs. Set aNCA_LOG_DIR to a writable directory.")
+  }
+  existing_logs <- list.files(
+    log_dir, pattern = "^aNCA_app_[0-9]{6}-[0-9]{6}-.*[.]log$", full.names = TRUE
+  )
+  info <- file.info(existing_logs)
+  existing_logs <- existing_logs[!info$isdir]
+  if (length(existing_logs) >= 5) {
+    oldest <- order(file.info(existing_logs)$mtime)
+    file.remove(existing_logs[oldest[seq_len(length(existing_logs) - 4L)]])
+  }
+  logfile_name <- tempfile(
+    paste0("aNCA_app_", format(Sys.time(), "%y%m%d-%H%M%S-")),
+    tmpdir = log_dir, fileext = ".log"
+  )
+
   log_layout(layout_glue_colors)
   log_formatter(formatter_glue)
   log_threshold(TRACE)
   log_threshold(Sys.getenv("aNCA_LOG_LEVEL", "INFO"), index = 2)
-
-  log_dir <- "./log"
-  if (!dir.exists(log_dir)) dir.create(log_dir)
-  existing_logs <- list.files(log_dir, full.names = TRUE)
-  if (length(existing_logs) >= 5) file.remove(sort(existing_logs)[1]) # keep only five log files
-  logfile_name <- paste0(log_dir, "/aNCA_app_", format(Sys.time(), "%y%m%d-%H%M%S-"), ".log")
-
   log_appender(appender_file(logfile_name))
   log_appender(appender_console, index = 2)
 }

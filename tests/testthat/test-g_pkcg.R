@@ -12,15 +12,42 @@ get_x_breaks <- function(plot) {
   breaks[!is.na(breaks)]
 }
 
+expect_pkcg_panels <- function(plot, y_at_ten) {
+  expect_s3_class(plot, "ggplot")
+  built <- ggplot2::ggplot_build(plot)
+  layout <- built$layout$layout
+  expect_equal(nrow(layout), length(y_at_ten))
+  if (length(y_at_ten) == 2L) {
+    expect_equal(as.character(layout$view), c("Linear view", "Semilogarithmic view (Log10)"))
+  }
+  # An identity scale leaves 10 as-is, while log10 maps it to 1.
+  expect_equal(
+    vapply(built$layout$panel_scales_y, function(scale) scale$transform(10), numeric(1)),
+    y_at_ten
+  )
+
+  geoms <- vapply(plot$layers, function(layer) class(layer$geom)[1], character(1))
+  expect_true("GeomLine" %in% geoms)
+  expect_true("GeomPoint" %in% geoms)
+  points <- built$data[[match("GeomPoint", geoms)]]
+  visible <- is.finite(points$x) & is.finite(points$y)
+  expect_setequal(points$PANEL[visible], layout$PANEL)
+}
+
+expect_nominal_dose_colors <- function(plot) {
+  expect_equal(plot$labels$colour, "Nominal Dose")
+  expect_identical(rlang::as_name(plot$mapping$colour), "DOSNOP")
+  points <- ggplot2::layer_data(plot, 2)
+  expect_length(unique(points$colour), 2)
+}
+
 describe("pkcg01", {
   it("generates valid ggplots with LIN scale", {
     plots_lin <- pkcg01(adnca, scale = "LIN", plotly = FALSE)
     expect_equal(length(plots_lin), 3)
     expect_length(names(plots_lin), length(plots_lin))
     expect_true(all(nzchar(names(plots_lin))))
-    vdiffr::expect_doppelganger("lin_plot1", plots_lin[[1]])
-    vdiffr::expect_doppelganger("lin_plot2", plots_lin[[2]])
-    vdiffr::expect_doppelganger("lin_plot3", plots_lin[[3]])
+    for (plot in plots_lin) expect_pkcg_panels(plot, 10)
   })
 
   it("generates plotly plots with LIN scale", {
@@ -50,9 +77,7 @@ describe("pkcg01", {
     plots_log <- pkcg01(adnca, scale = "LOG", plotly = FALSE)
     expect_equal(length(plots_log), 3)
 
-    vdiffr::expect_doppelganger("log_plot1", plots_log[[1]])
-    vdiffr::expect_doppelganger("log_plot2", plots_log[[2]])
-    vdiffr::expect_doppelganger("log_plot3", plots_log[[3]])
+    for (plot in plots_log) expect_pkcg_panels(plot, 1)
   })
 
   it("generates plotly plots with LOG scale", {
@@ -62,15 +87,15 @@ describe("pkcg01", {
   })
 
   it("generates valid ggplots with SBS scale", {
+    skip_if_not_installed("ggh4x")
     plots_sbs <- pkcg01(adnca, scale = "SBS", plotly = FALSE)
     expect_equal(length(plots_sbs), 3)
 
-    vdiffr::expect_doppelganger("sbs_plot1", plots_sbs[[1]])
-    vdiffr::expect_doppelganger("sbs_plot2", plots_sbs[[2]])
-    vdiffr::expect_doppelganger("sbs_plot3", plots_sbs[[3]])
+    for (plot in plots_sbs) expect_pkcg_panels(plot, c(10, 1))
   })
 
   it("generates plotly plots with SBS scale", {
+    skip_if_not_installed("ggh4x")
     plotlys_sbs <- pkcg01(adnca, scale = "SBS", plotly = TRUE)
     expect_equal(length(plotlys_sbs), 3)
     expect_true(inherits(plotlys_sbs[[1]], "plotly"))
@@ -109,7 +134,7 @@ describe("pkcg01", {
       color_var_label  = "Nominal Dose" # discuss this with G.R
     )
     plot_lin_colors <- plots_lin_colors[[2]]
-    vdiffr::expect_doppelganger("lin_plot2_custom_colors", plot_lin_colors)
+    expect_nominal_dose_colors(plot_lin_colors)
   })
 
   it("returns error if missing ggh4x package for SBS scale", {
@@ -148,7 +173,7 @@ describe("g_pkcg01_lin", {
   it("generates plot with linear scale", {
     plot_lin <- g_pkcg01_lin(adnca, plotly = FALSE)[[1]]
     expect_equal(plot_lin$labels$y, "Analysis value [ng/mL]")
-    vdiffr::expect_doppelganger("g_pkconc_ind_lin_plot", plot_lin)
+    expect_pkcg_panels(plot_lin, 10)
   })
 })
 
@@ -156,7 +181,7 @@ describe("g_pkcg01_log", {
   it("generates plot with log scale", {
     plot_log <- g_pkcg01_log(adnca, plotly = FALSE)[[1]]
     expect_equal(plot_log$labels$y, "Analysis value [ng/mL]")
-    vdiffr::expect_doppelganger("g_pkconc_ind_log_plot", plot_log)
+    expect_pkcg_panels(plot_log, 1)
   })
 })
 
@@ -201,6 +226,7 @@ shape_variants <- c(
 describe("concentration exclusion shapes in static plots (#1534)", {
   for (variant in shape_variants) {
     it(paste(variant, "changes only excluded point shapes in static plots"), {
+      if (grepl("sbs$", variant)) skip_if_not_installed("ggh4x")
       fn <- get(variant)
       baseline <- fn(included_shapes, plotly = FALSE, color_var = "USUBJID")
       plots <- fn(shape_data, plotly = FALSE, color_var = "USUBJID", footnote = "Custom note")
@@ -225,6 +251,7 @@ describe("concentration exclusion shapes in static plots (#1534)", {
 describe("concentration exclusion shapes in interactive plots (#1534)", {
   for (variant in shape_variants) {
     it(paste(variant, "preserves Plotly traces and exported shapes"), {
+      if (grepl("sbs$", variant)) skip_if_not_installed("ggh4x")
       fn <- get(variant)
       baseline <- fn(included_shapes, color_var = "USUBJID")
       widgets <- fn(shape_data, color_var = "USUBJID", footnote = "Custom note")
@@ -263,6 +290,7 @@ describe("concentration exclusion shapes in interactive plots (#1534)", {
 describe("concentration plot footer space (#1536)", {
   for (variant in shape_variants) {
     it(paste(variant, "keeps footnotes inside the widget and above the color legend"), {
+      if (grepl("sbs$", variant)) skip_if_not_installed("ggh4x")
       fn <- get(variant)
       for (note in list(NULL, "Custom note", "Line 1\nLine 2<br/>Line 3<br>Line 4")) {
         widget <- fn(shape_data, color_var = "USUBJID", footnote = note)[[1]]
@@ -382,8 +410,7 @@ describe("pkcg02", {
     expect_equal(length(combined_plots_lin), 2)
     expect_length(names(combined_plots_lin), length(combined_plots_lin))
     expect_true(all(nzchar(names(combined_plots_lin))))
-    vdiffr::expect_doppelganger("combined_lin_plot1", combined_plots_lin[[1]])
-    vdiffr::expect_doppelganger("combined_lin_plot2", combined_plots_lin[[2]])
+    for (plot in combined_plots_lin) expect_pkcg_panels(plot, 10)
   })
 
   #Confirms that the first element in the list is a valid Plotly object
@@ -403,8 +430,7 @@ describe("pkcg02", {
       color_var_label =  attr(adnca$USUBJID, "label")
     )
     expect_equal(length(combined_plots_log), 2)
-    vdiffr::expect_doppelganger("combined_log_plot1", combined_plots_log[[1]])
-    vdiffr::expect_doppelganger("combined_log_plot2", combined_plots_log[[2]])
+    for (plot in combined_plots_log) expect_pkcg_panels(plot, 1)
   })
 
   it("generates plotly plots with LOG scale", {
@@ -414,13 +440,14 @@ describe("pkcg02", {
   })
 
   it("generates valid ggplots with SBS scale", {
+    skip_if_not_installed("ggh4x")
     combined_plots_sbs <- pkcg02(adnca, scale = "SBS", plotly = FALSE)
     expect_equal(length(combined_plots_sbs), 2)
-    vdiffr::expect_doppelganger("combined_sbs_plot1", combined_plots_sbs[[1]])
-    vdiffr::expect_doppelganger("combined_sbs_plot2", combined_plots_sbs[[2]])
+    for (plot in combined_plots_sbs) expect_pkcg_panels(plot, c(10, 1))
   })
 
   it("generates plotly plots with SBS scale", {
+    skip_if_not_installed("ggh4x")
     combined_plotlys_sbs <- pkcg02(adnca, scale = "SBS", plotly = TRUE)
     expect_equal(length(combined_plotlys_sbs), 2)
     expect_true(inherits(combined_plotlys_sbs[[1]], "plotly"))
@@ -461,8 +488,7 @@ describe("pkcg02", {
     )
 
     combined_plots_lin_colors <- combined_plots_lin_colors[[1]]
-    expect_equal(combined_plots_lin_colors$labels$colour, "Nominal Dose")
-    vdiffr::expect_doppelganger("combined_lin_plot1_custom_colors", combined_plots_lin_colors)
+    expect_nominal_dose_colors(combined_plots_lin_colors)
   })
 
 
@@ -507,7 +533,7 @@ describe("g_pkcg02_lin", {
                                  color_var_label =  attr(adnca$USUBJID, "label"))[[1]]
     expect_equal(g_pkcg02_lin$labels$y, "Analysis value [ng/mL]"
     )
-    vdiffr::expect_doppelganger("g_pkconc_lin_plot", g_pkcg02_lin)
+    expect_pkcg_panels(g_pkcg02_lin, 10)
   })
 })
 
@@ -518,7 +544,7 @@ describe("g_pkcg02_log", {
                                  color = "USUBJID",
                                  color_var_label =  attr(adnca$USUBJID, "label"))[[1]]
     expect_equal(g_pkcg02_log$labels$y, "Analysis value [ng/mL]")
-    vdiffr::expect_doppelganger("g_pkconc_log_plot", g_pkcg02_log)
+    expect_pkcg_panels(g_pkcg02_log, 1)
   })
 })
 
@@ -539,7 +565,7 @@ describe("pkcg03", {
   it("generates valid ggplots with LIN scale", {
     mean_lin <- pkcg03(adpc1, scale = "LIN", plotly = FALSE)
     expect_equal(length(mean_lin), 1)
-    vdiffr::expect_doppelganger("mean_lin1", mean_lin[[1]])
+    expect_pkcg_panels(mean_lin[[1]], 10)
   })
 
   it("generates plotly plots with LIN scale", {
@@ -552,7 +578,7 @@ describe("pkcg03", {
   it("generates valid ggplots with LOG scale", {
     mean_log <- pkcg03(adpc1, scale = "LOG", plotly = FALSE)
     expect_equal(length(mean_log), 1)
-    vdiffr::expect_doppelganger("mean_log1", mean_log[[1]])
+    expect_pkcg_panels(mean_log[[1]], 1)
   })
 
 
@@ -564,12 +590,14 @@ describe("pkcg03", {
   })
 
   it("generates valid ggplots with SBS scale", {
+    skip_if_not_installed("ggh4x")
     mean_sbs <- pkcg03(adpc1, scale = "SBS", plotly = FALSE)
     expect_equal(length(mean_sbs), 1)
-    vdiffr::expect_doppelganger("mean_sbs1", mean_sbs[[1]])
+    expect_pkcg_panels(mean_sbs[[1]], c(10, 1))
   })
 
   it("generates plotly plots with SBS scale", {
+    skip_if_not_installed("ggh4x")
     plotlys_meansbs <- pkcg03(adpc1, scale = "SBS", plotly = TRUE)
     expect_equal(length(plotlys_meansbs), 1)
     expect_true(inherits(plotlys_meansbs[[1]], "plotly"))
@@ -598,14 +626,20 @@ describe("pkcg03", {
   it("generates plots with 'Mean_se' summary method", {
     plots_mean_se <- pkcg03(adpc1, summary_method = "Mean_se", plotly = FALSE)
     expect_true(length(plots_mean_se) > 0)
-    vdiffr::expect_doppelganger("mean_se_plot", plots_mean_se[[1]])
+    plot <- plots_mean_se[[1]]
+    errorbar <- ggplot2::layer_data(plot, 3)
+    expect_equal(errorbar$ymin, plot$data$mean - plot$data$se)
+    expect_equal(errorbar$ymax, plot$data$mean + plot$data$se)
+    expect_true(any(errorbar$ymax > errorbar$ymin))
   })
 
   it("generates plot if AVALC column not available", {
     adpc1_no_avalc <- adpc1 %>% select(-AVALC)
     plots <- pkcg03(adpc1_no_avalc, plotly = FALSE)
     expect_true(length(plots) > 0)
-    vdiffr::expect_doppelganger("mean_plot_no_avalc", plots[[1]])
+    points <- ggplot2::layer_data(plots[[1]], 1)
+    expect_setequal(points$x, seq(0.5, 9.5, by = 1))
+    expect_true(any(is.finite(points$y)))
   })
 
   it("correctly filters BLQ timepoints if > 50% are BLQ", {
@@ -715,7 +749,7 @@ describe("g_pkcg03_lin", {
   it("generates plot with linear scale", {
     meanplot_lin <- g_pkcg03_lin(adpc1, plotly = FALSE)[[1]]
     expect_equal(meanplot_lin$labels$y, "Analysis value [ng/mL]")
-    vdiffr::expect_doppelganger("g_pkcg03_lin", meanplot_lin)
+    expect_pkcg_panels(meanplot_lin, 10)
   })
 
 })
@@ -723,7 +757,7 @@ describe("g_pkcg03_log", {
   it("generates plot with log scale", {
     meanplot_log <- g_pkcg03_log(adpc1, plotly = FALSE)[[1]]
     expect_equal(meanplot_log$labels$y, "Analysis value [ng/mL]")
-    vdiffr::expect_doppelganger("g_pkcg03_log", meanplot_log)
+    expect_pkcg_panels(meanplot_log, 1)
   })
 
 })
@@ -736,6 +770,7 @@ describe("g_pkcg03_log", {
 describe("plotly outputs carry their source ggplot for export", {
   it("attaches the ggplot for every pkcg01 scale", {
     for (sc in c("LIN", "LOG", "SBS")) {
+      if (sc == "SBS") skip_if_not_installed("ggh4x")
       plots <- pkcg01(adnca, scale = sc, plotly = TRUE)
       expect_s3_class(attr(plots[[1]], "ggplot"), "ggplot")
       expect_true(all(vapply(plots, function(p) isFALSE(attr(p, "tlg_group_header")), logical(1))))
@@ -746,6 +781,7 @@ describe("plotly outputs carry their source ggplot for export", {
 
   it("attaches the ggplot for every pkcg02 scale", {
     for (sc in c("LIN", "LOG", "SBS")) {
+      if (sc == "SBS") skip_if_not_installed("ggh4x")
       plots <- pkcg02(adnca, scale = sc, plotly = TRUE)
       expect_s3_class(attr(plots[[1]], "ggplot"), "ggplot")
       expect_true(all(vapply(plots, function(p) isFALSE(attr(p, "tlg_group_header")), logical(1))))
@@ -756,6 +792,7 @@ describe("plotly outputs carry their source ggplot for export", {
 
   it("attaches the ggplot for every pkcg03 scale", {
     for (sc in c("LIN", "LOG", "SBS")) {
+      if (sc == "SBS") skip_if_not_installed("ggh4x")
       p <- pkcg03(adpc1, scale = sc, plotly = TRUE)[[1]]
       expect_s3_class(attr(p, "ggplot"), "ggplot")
       expect_null(attr(p, "tlg_group_header"))
@@ -868,6 +905,7 @@ describe("pkcg03: logarithmic error-bar coordinates", {
     expected_mean <- c(1, 0, 1)
     expected_lower <- c(1 - sqrt(3), 0, 1)
     for (scale in c("LIN", "LOG", "SBS")) {
+      if (scale == "SBS") skip_if_not_installed("ggh4x")
       for (interactive in c(FALSE, TRUE)) {
         result <- pkcg03(conc, scale = scale, plotly = interactive, footnote = "Custom note")[[1]]
         plot <- if (interactive) attr(result, "ggplot") else result

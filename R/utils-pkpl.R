@@ -1,5 +1,10 @@
-# Shared preparation for the legacy and NEST listing renderers. Keep pivoting,
-# rounding, labels, filters and annotation resolution identical.
+#' Shared preparation for the legacy and NEST listing renderers.
+#'
+#' Keep pivoting, rounding, labels, filters and annotation resolution identical.
+#' @importFrom dplyr all_of first mutate select
+#' @importFrom tidyr pivot_wider
+#' @importFrom formatters var_labels
+#' @noRd
 .pkpl01_listings <- function(data, listgroup_vars, grouping_vars, param_var,
                              value_var, unit_var, title, subtitle, footnote,
                              param_filter, render_listing) {
@@ -30,19 +35,19 @@
     col_labels <- .pkpl_column_labels(df, param_var, unit_var)
 
     wide <- df %>%
-      dplyr::mutate(
+      mutate(
         .val_fmt = round(as.numeric(.data[[value_var]]), 3)
       ) %>%
-      dplyr::select(dplyr::all_of(c(
+      select(all_of(c(
         intersect(listgroup_vars, names(df)),
         grouping_vars, param_var, ".val_fmt"
       ))) %>%
-      tidyr::pivot_wider(
-        names_from  = dplyr::all_of(param_var),
+      pivot_wider(
+        names_from  = all_of(param_var),
         values_from = ".val_fmt",
         # When a subject has multiple rows for the same PARAM (e.g. multi-
         # interval ADPP), take the first value rather than creating list-columns.
-        values_fn   = dplyr::first,
+        values_fn   = first,
         values_fill = NA_real_
       )
 

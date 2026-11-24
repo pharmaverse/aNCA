@@ -379,6 +379,12 @@ PKNCA_update_data_object <- function( # nolint: object_name_linter
     blq_imputation_rule = blq_imputation_rule
   )
 
+  # VOLUME belongs to individual collection samples. Unless explicitly retained,
+  # omit its incidental dose-interval copy (ignored by older PKNCA releases).
+  if (!"VOLUME" %in% c(group_vars(data$conc), data$options$keep_interval_cols)) {
+    data$intervals <- select(data$intervals, -any_of("VOLUME"))
+  }
+
   # Apply custom units table
   if (!is.null(custom_units_table)) {
     common_cols <- intersect(names(data$units), names(custom_units_table))
