@@ -56,6 +56,7 @@ apply_mapping <- function(
   .validate_column_mapping(mapping, req_mappings)
 
   new_dataset <- dataset
+  selected_columns <- c(mapping$Grouping_Variables, mapping$NCAwXRS)
 
   # Drop meta-mapping keys that are not column renames: Grouping_Variables,
   # Metabolites, and NCAwXRS select existing columns / drive downstream options
@@ -108,6 +109,32 @@ apply_mapping <- function(
   # Remove variables that are now redundant due to the renaming
   redundant_cols <- unname(mapping)[!unname(mapping) %in% names(mapping)]
   new_dataset <- new_dataset[!names(new_dataset) %in% redundant_cols]
+
+  # Standard analysis columns can be used downstream by name without a mapping.
+  metadata <- metadata_nca_variables
+  analysis_columns <- metadata[metadata$Dataset == "ADNCA" & metadata$is.mapped %in% TRUE, ]
+  # Exclusion reason columns are only used when selected.
+  implicit_columns <- setdiff(analysis_columns$Variable, "NCAwXRS")
+  checked_columns <- intersect(
+    c(names(mapping), selected_columns, implicit_columns, "EVID", "PARAMCD"),
+    names(new_dataset)
+  )
+  empty <- vapply(new_dataset[checked_columns], function(column) {
+    if (is.character(column) || is.factor(column)) {
+      return(all(is.na(column) | trimws(column) == ""))
+    }
+    all(is.na(column))
+  }, logical(1))
+  empty_columns <- names(empty)[empty]
+
+  if (length(empty_columns)) {
+    stop(
+      "These columns contain only missing or blank values: ",
+      paste(empty_columns, collapse = ", "),
+      ". Choose populated columns, or populate or remove the empty columns in the source dataset.",
+      call. = FALSE
+    )
+  }
 
   # Special case: make ATPTREF a factor. TODO: Try make it in the mapping obj
   if (!is.null(new_dataset$ATPTREF)) {

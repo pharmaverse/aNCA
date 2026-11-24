@@ -2,9 +2,20 @@
 % Please edit documentation in R/PKNCA_extra_parameters.R
 \name{pk.calc.ertmax}
 \alias{pk.calc.ertmax}
+\alias{anca_calc_ertmax}
 \title{Calculate the midpoint collection time of the maximum excretion rate}
 \usage{
 pk.calc.ertmax(
+  conc,
+  volume,
+  time,
+  duration.conc,
+  check = TRUE,
+  first.tmax = NULL,
+  options = list()
+)
+
+anca_calc_ertmax(
   conc,
   volume,
   time,

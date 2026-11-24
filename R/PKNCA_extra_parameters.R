@@ -188,11 +188,36 @@ pk.calc.volpk <- function(volume) { #nolint
   sum(volume)
 }
 
+# PKNCA 0.12.1 resolves dotted function names through getAnywhere(), which
+# evaluates getS3method() in its caller. PKNCA does not import that utility, so
+# registration fails with only base attached. Non-dotted exported aliases retain
+# the original functions and signatures without attaching utils during .onLoad.
+# Export is required because CRAN PKNCA uses get() on the search path at run time.
+#' @rdname pk.calc.ertlst
+#' @export
+anca_calc_ertlst <- pk.calc.ertlst
+#' @rdname pk.calc.ertmax
+#' @export
+anca_calc_ertmax <- pk.calc.ertmax
+#' @rdname pk.calc.volpk
+#' @export
+anca_calc_volpk <- pk.calc.volpk
+
+#' Compatibility alias for PKNCA fraction excreted
+#'
+#' This non-dotted alias lets older PKNCA releases resolve the calculation
+#' callback while aNCA is attached. Prefer [PKNCA::pk.calc.fe()] for direct calls.
+#' @inheritParams PKNCA::pk.calc.fe
+#' @returns Fraction of the dose excreted, as returned by [PKNCA::pk.calc.fe()].
+#' @importFrom PKNCA pk.calc.fe
+#' @export
+anca_calc_fe <- pk.calc.fe
+
 register_anca_pknca_extra_parameters <- function() {
   register_interval_col_if_absent("ertlst", function() {
     PKNCA::add.interval.col(
       "ertlst",
-      FUN = "pk.calc.ertlst",
+      FUN = "anca_calc_ertlst",
       unit_type = "time",
       pretty_name = "Tlast excretion rate",
       desc = "Midpoint time of last excretion rate"
@@ -208,7 +233,7 @@ register_anca_pknca_extra_parameters <- function() {
   register_interval_col_if_absent("ertmax", function() {
     PKNCA::add.interval.col(
       "ertmax",
-      FUN = "pk.calc.ertmax",
+      FUN = "anca_calc_ertmax",
       unit_type = "time",
       pretty_name = "Tmax excretion rate",
       desc = "Midpoint time of max excretion rate"
@@ -224,7 +249,7 @@ register_anca_pknca_extra_parameters <- function() {
   register_interval_col_if_absent("volpk", function() {
     PKNCA::add.interval.col(
       "volpk",
-      FUN = "pk.calc.volpk",
+      FUN = "anca_calc_volpk",
       values = c(FALSE, TRUE),
       unit_type = "volume",
       pretty_name = "Total Urine Volume",
@@ -243,7 +268,7 @@ register_anca_pknca_extra_parameters <- function() {
   register_interval_col_if_absent("fe", function() {
     PKNCA::add.interval.col(
       "fe",
-      FUN = "pk.calc.fe",
+      FUN = "anca_calc_fe",
       unit_type = "amount_dose",
       pretty_name = "Fraction excreted",
       values = c(FALSE, TRUE),

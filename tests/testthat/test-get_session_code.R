@@ -380,10 +380,12 @@ describe("get_session_code: ", {
 })
 
 describe("get_settings_code: configured ratio replay", {
-  it("executes all three forward and inverse ratios with empty unit overrides", {
+  it("replays three forward and inverse ratios from ZIP with empty unit overrides", {
     raw <- subset(adnca_example, PCSPEC == "SERUM")
     subjects <- raw$USUBJID[!duplicated(raw$ROUTE)]
     raw <- raw[raw$USUBJID %in% subjects & raw$ATPTREF %in% c("DOSE 1", "DOSE 2"), ]
+    # Serum profiles have no collection volumes; omit those empty optional source columns.
+    raw <- raw[, setdiff(names(raw), c("VOLUME", "VOLUMEU"))]
     mapped <- intersect(MAPPING_DESIRED_ORDER, names(raw))
     mapping <- as.list(stats::setNames(mapped, mapped))
     mapping$Metabolites <- "Metab-DrugA"
@@ -418,8 +420,15 @@ describe("get_settings_code: configured ratio replay", {
     dir.create(script_directory)
     script <- file.path(script_directory, "replay.R")
     get_settings_code(settings_path, data_path = "../input_data.rds", output_path = script)
+    archive <- file.path(directory, "ratios.zip")
+    zip::zipr(archive, c("settings.yaml", "input_data.rds", "R"), root = directory)
+    extracted <- withr::local_tempdir()
+    utils::unzip(archive, exdir = extracted)
+    uploaded <- read_settings(file.path(extracted, "settings.yaml"))
+    expect_equal(uploaded$settings$ratio_table, ratios)
+
     replay <- new.env(parent = globalenv())
-    withr::with_dir(script_directory, sys.source(script, envir = replay))
+    withr::with_dir(file.path(extracted, "R"), sys.source("replay.R", envir = replay))
     expect_equal(replay$ratio_table, ratios)
     expect_null(replay$units_table)
 
@@ -440,5 +449,18 @@ describe("get_settings_code: configured ratio replay", {
       expect_setequal(actual$ROUTE, unique(raw$ROUTE))
       expect_setequal(actual$ATPTREF, c("DOSE 1", "DOSE 2"))
     }
+  })
+})
+
+describe("generated script dependency checks", {
+  it("does not execute package installation commands", {
+    template <- system.file("www/templates/script_template.R", package = "aNCA")
+    code <- parse(template)
+    calls_install <- function(x) {
+      if (!is.call(x) && !is.expression(x)) return(FALSE)
+      if (is.call(x) && identical(x[[1]], as.name("install.packages"))) return(TRUE)
+      any(vapply(as.list(x), calls_install, logical(1)))
+    }
+    expect_false(calls_install(code))
   })
 })

@@ -2,9 +2,12 @@
 % Please edit documentation in R/PKNCA_extra_parameters.R
 \name{pk.calc.volpk}
 \alias{pk.calc.volpk}
+\alias{anca_calc_volpk}
 \title{Calculate the total urine volume}
 \usage{
 pk.calc.volpk(volume)
+
+anca_calc_volpk(volume)
 }
 \arguments{
 \item{volume}{The volume (or mass) of the sample}

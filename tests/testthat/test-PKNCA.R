@@ -200,7 +200,20 @@ describe("PKNCA_create_data_object", {
     mapping_all$NCAwXRS <- c("NCA1XRS", "NCA2XRS")
 
     pknca_excl_subj1 <- PKNCA_create_data_object(adnca_excl_cols, mapping = mapping_one)
-    pknca_excl_all <- PKNCA_create_data_object(adnca_excl_cols, mapping = mapping_all)
+    # Development PKNCA warns when every concentration is excluded; CRAN 0.12.1 does not.
+    # Keep this edge case covered and allow only its two specific validation warnings.
+    empty_warnings <- character(0)
+    expected_warnings <- c("No concentration data given", "No time data given")
+    pknca_excl_all <- withCallingHandlers(
+      PKNCA_create_data_object(adnca_excl_cols, mapping = mapping_all),
+      warning = function(w) {
+        if (conditionMessage(w) %in% expected_warnings) {
+          empty_warnings <<- c(empty_warnings, conditionMessage(w))
+          invokeRestart("muffleWarning")
+        }
+      }
+    )
+    expect_true(length(empty_warnings) == 0 || setequal(empty_warnings, expected_warnings))
     excl_col <- pknca_excl_subj1$conc$columns$exclude
     expect_true(all(
       suppressWarnings(PKNCA::pk.nca(pknca_excl_subj1))[["result"]][["USUBJID"]] == subjs[2]
