@@ -407,3 +407,71 @@ describe("pivot_wider_pknca_results flagging integration", {
     expect_equal(status[1], "FLAGGED")
   })
 })
+
+describe("pivot_wider_pknca_results LAMZMTD and LAMZIX derivation", {
+  make_s5_pknca <- function() {
+    d <- adnca_example[adnca_example$USUBJID == "S1-05" & adnca_example$AFRLT <= 24, ]
+    pknca_data <- PKNCA_create_data_object(d)
+    pknca_data <- PKNCA_update_data_object(
+      pknca_data,
+      method = "lin up/log down",
+      selected_analytes = "Metab-DrugA",
+      selected_profile = "DOSE 1",
+      selected_pcspec = "SERUM"
+    )
+    pknca_data$intervals$half.life <- TRUE
+    pknca_data$intervals$impute <- NA_character_
+    pknca_data
+  }
+
+  run_pivot <- function(pknca_data) {
+    res <- suppressWarnings(PKNCA_calculate_nca(pknca_data))
+    res$result$PPTESTCD <- translate_terms(res$result$PPTESTCD, "PKNCA", "PPTESTCD")
+    pivot_wider_pknca_results(res)
+  }
+
+  it("reports Best slope when no manual slope flags are set", {
+    pw <- run_pivot(make_s5_pknca())
+    expect_equal(pw$LAMZMTD, "Best slope")
+    expect_equal(pw$LAMZIX, "6,7,8,9")
+  })
+
+  it("reports Manual and omits excluded points for exclusion-only rules", {
+    pknca_data <- make_s5_pknca()
+    rules <- data.frame(
+      STUDYID = "S1", USUBJID = "S1-05", PARAM = "Metab-DrugA", PCSPEC = "SERUM",
+      TYPE = "Exclusion", RANGE = "7.513", REASON = "outlier",
+      stringsAsFactors = FALSE
+    )
+    pw <- run_pivot(update_pknca_with_rules(pknca_data, rules))
+    expect_equal(pw$LAMZMTD, "Manual")
+    expect_equal(pw$LAMZIX, "6,7,9")
+  })
+
+  it("reports Manual and selected indices when selection clears exclude_half.life to NA", {
+    pknca_data <- make_s5_pknca()
+    rules <- data.frame(
+      STUDYID = "S1", USUBJID = "S1-05", PARAM = "Metab-DrugA", PCSPEC = "SERUM",
+      TYPE = "Selection", RANGE = "4.448:12.082", REASON = "manual",
+      stringsAsFactors = FALSE
+    )
+    pw <- run_pivot(update_pknca_with_rules(pknca_data, rules))
+    expect_equal(pw$LAMZMTD, "Manual")
+    expect_equal(pw$LAMZIX, "6,7,8,9")
+  })
+
+  it("reports Manual and exact non-excluded indices for mixed selection and exclusion", {
+    pknca_data <- make_s5_pknca()
+    rules <- data.frame(
+      STUDYID = c("S1", "S1"), USUBJID = c("S1-05", "S1-05"),
+      PARAM = c("Metab-DrugA", "Metab-DrugA"), PCSPEC = c("SERUM", "SERUM"),
+      TYPE = c("Exclusion", "Selection"),
+      RANGE = c("7.513", "4.448:12.082"),
+      REASON = c("outlier", "manual"),
+      stringsAsFactors = FALSE
+    )
+    pw <- run_pivot(update_pknca_with_rules(pknca_data, rules))
+    expect_equal(pw$LAMZMTD, "Manual")
+    expect_equal(pw$LAMZIX, "6,7,9")
+  })
+})
